@@ -18,7 +18,7 @@ async function getContact({ serverUrl, phoneNumber }) {
     }
 }
 
-async function createContact({serverUrl, phoneNumber, newContactName, newContactType }) {
+async function createContact({ serverUrl, phoneNumber, newContactName, newContactType }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     if (!!rcUnifiedCrmExtJwt) {
         const contactRes = await axios.post(
@@ -50,7 +50,7 @@ async function createContact({serverUrl, phoneNumber, newContactName, newContact
 }
 
 async function openContactPage({ config, platformName, phoneNumber }) {
-    const { matched: contactMatched, contactInfo } = await getContact({ phoneNumber });
+    const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: config.serverUrl, phoneNumber });
     if (!contactMatched) {
         return;
     }

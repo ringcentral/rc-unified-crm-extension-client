@@ -933,6 +933,8 @@ function getServiceConfig(serviceName) {
     // buttonEventPath: '/button-click',
     contactMatchPath: '/contacts/match',
     viewMatchedContactPath: '/contacts/view',
+    contactMatchTtl: 7 * 24 * 60 * 60 * 1000, // contact match cache time in seconds, set as 7 days
+    contactNoMatchTtl: 7 * 24 * 60 * 60 * 1000, // contact no match cache time in seconds, default is 5 minutes, from v1.10.2
 
     // show auth/unauth button in ringcentral widgets
     authorizationPath: '/authorize',

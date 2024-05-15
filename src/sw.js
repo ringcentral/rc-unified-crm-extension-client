@@ -22,7 +22,7 @@ async function openPopupWindow() {
   // const redirectUri = chrome.identity.getRedirectURL('redirect.html'); //  set this when oauth with chrome.identity.launchWebAuthFlow
   const popupUri = `popup.html?multipleTabsSupport=1&disableLoginPopup=1&appServer=https://platform.ringcentral.com&redirectUri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html&enableAnalytics=1&showSignUpButton=1&clientId=3rJq9BxcTCm-I7CFcY19ew&appVersion=${packageJson.version}&userAgent=RingCentral CRM Extension&disableNoiseReduction=false`;
   let popup;
-  if (!!extensionWindowStatus.state && (extensionWindowStatus.state === 'maximized' || extensionWindowStatus.state === 'fullscreen')) {
+  if (!!extensionWindowStatus?.state && (extensionWindowStatus.state === 'maximized' || extensionWindowStatus.state === 'fullscreen')) {
     popup = await chrome.windows.create({
       url: popupUri,
       type: 'popup',
@@ -35,10 +35,10 @@ async function openPopupWindow() {
       url: popupUri,
       type: 'popup',
       focused: true,
-      width: extensionWindowStatus.width ?? 315,
-      height: extensionWindowStatus.height ?? 566,
-      left: extensionWindowStatus.left ?? 50,
-      top: extensionWindowStatus.top ?? 50
+      width: extensionWindowStatus?.width ?? 315,
+      height: extensionWindowStatus?.height ?? 566,
+      left: extensionWindowStatus?.left ?? 50,
+      top: extensionWindowStatus?.top ?? 50
     });
   }
   await chrome.storage.local.set({
@@ -46,7 +46,7 @@ async function openPopupWindow() {
   });
   try {
     let { customCrmConfigUrl } = await chrome.storage.local.get({ customCrmConfigUrl: null });
-    if (!!customCrmConfigUrl || customCrmConfigUrl === '') {
+    if (!!!customCrmConfigUrl || customCrmConfigUrl === '') {
       customCrmConfigUrl = baseConfig.defaultCrmConfigUrl;
       await chrome.storage.local.set({ customCrmConfigUrl });
     }
@@ -56,6 +56,7 @@ async function openPopupWindow() {
     }
   }
   catch (e) {
+    console.error(e)
     // ignore
   }
   return false;
@@ -96,13 +97,11 @@ async function registerPlatform(tabUrl) {
 }
 
 chrome.action.onClicked.addListener(async function (tab) {
+  await openPopupWindow();
   const platformInfo = await chrome.storage.local.get('platform-info');
   if (isObjectEmpty(platformInfo)) {
     const registered = await registerPlatform(tab.url);
-    if (registered) {
-      openPopupWindow();
-    }
-    else {
+    if (!registered) {
       chrome.notifications.create({
         type: 'basic',
         iconUrl: '/images/logo32.png',
