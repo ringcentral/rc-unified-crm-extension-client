@@ -1,0 +1,5 @@
+{
+  "defaultCrmConfigUrl": "https://lite-http-tunnel-s52m.onrender.com/crmConfig",
+  "mixpanelToken": "04acd7cb2e1867dcf98b6e8cf5ee1e1c",
+  "version": "0.8.14"
+}
