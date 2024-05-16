@@ -97,11 +97,14 @@ async function registerPlatform(tabUrl) {
 }
 
 chrome.action.onClicked.addListener(async function (tab) {
-  await openPopupWindow();
   const platformInfo = await chrome.storage.local.get('platform-info');
   if (isObjectEmpty(platformInfo)) {
     const registered = await registerPlatform(tab.url);
-    if (!registered) {
+    if (registered) {
+      await openPopupWindow();
+    }
+    else
+    {
       chrome.notifications.create({
         type: 'basic',
         iconUrl: '/images/logo32.png',
