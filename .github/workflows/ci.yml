@@ -23,5 +23,5 @@ jobs:
           with:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             BRANCH: build
-            FOLDER: extension
+            FOLDER: dist
             CLEAN: true
