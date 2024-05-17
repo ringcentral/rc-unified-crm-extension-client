@@ -54,7 +54,7 @@ function getLogPageRender({config, logType, triggerType, platformName, direction
             let additionalFields = {};
             let additionalFieldsValue = {};
             for (const f of additionalChoiceFields) {
-                if (!!f.contactDependent && !contactList[0]?.additionalInfo?.hasOwnProperty(f.const)) {
+                if (!contactList[0]?.additionalInfo?.hasOwnProperty(f.const)) {
                     continue;
                 }
                 additionalFields[f.const] = {
@@ -66,7 +66,7 @@ function getLogPageRender({config, logType, triggerType, platformName, direction
                 additionalFieldsValue[f.const] = contactList[0].additionalInfo[f.const][0].const;
             }
             for (const f of additionalCheckBoxFields) {
-                if (!!f.contactDependent && !contactList[0]?.additionalInfo?.hasOwnProperty(f.const)) {
+                if (!contactList[0]?.additionalInfo?.hasOwnProperty(f.const)) {
                     continue;
                 }
                 additionalFields[f.const] = {
@@ -77,7 +77,7 @@ function getLogPageRender({config, logType, triggerType, platformName, direction
                 additionalFieldsValue[f.const] = f.defaultValue ?? false;
             }
             for (const f of additionalInputFields) {
-                if (!!f.contactDependent && !contactList[0]?.additionalInfo?.hasOwnProperty(f.const)) {
+                if (!contactList[0]?.additionalInfo?.hasOwnProperty(f.const)) {
                     continue;
                 }
                 additionalFields[f.const] = {
