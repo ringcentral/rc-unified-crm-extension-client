@@ -48,6 +48,7 @@ async function setupConfig({ customCrmConfigUrl }) {
         const customCrmConfigJson = await (await fetch(customCrmConfigUrl)).json();
         if (customCrmConfigJson) {
             await chrome.storage.local.set({ customCrmConfig: customCrmConfigJson });
+            await chrome.storage.local.remove('platform-info')
         }
         // Update status to let user know options were saved.
         const status = document.getElementById('status');

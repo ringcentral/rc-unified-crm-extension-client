@@ -320,9 +320,6 @@ window.addEventListener('message', async (e) => {
             if (data.path.startsWith('/conversations/') || data.path.startsWith('/composeText')) {
               window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
             }
-            else if (data.path.startsWith('/calls/active/')) {
-              window.postMessage({ type: 'rc-expandable-call-note-open' }, '*');
-            }
           }
           break;
         case 'rc-post-message-request':
