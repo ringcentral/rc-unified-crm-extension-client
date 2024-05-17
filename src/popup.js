@@ -634,7 +634,23 @@ window.addEventListener('message', async (e) => {
                 });
               break;
             case '/messageLogger':
-              if (data.body.triggerType === 'logForm') {
+              const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
+              const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationId}`;
+              const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
+              if (messageAutoLogOn && data.body.triggerType === 'auto' && !!existingConversationLogPref[messageLogPrefId]) {
+                await addLog({
+                  serverUrl: config.serverUrl,
+                  logType: 'Message',
+                  logInfo: data.body.conversation,
+                  isMain: true,
+                  note: '',
+                  additionalSubmission: existingConversationLogPref[messageLogPrefId].additionalSubmission,
+                  contactId: existingConversationLogPref[messageLogPrefId].contact.id,
+                  contactType: existingConversationLogPref[messageLogPrefId].contact.type,
+                  contactName: existingConversationLogPref[messageLogPrefId].contact.name
+                });
+              }
+              else if (data.body.triggerType === 'logForm') {
                 if (data.body.redirect) {
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   let additionalSubmission = {};
@@ -682,7 +698,6 @@ window.addEventListener('message', async (e) => {
                 }
               }
               else {
-                const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
                 if (!messageAutoLogOn && data.body.triggerType === 'auto') {
                   break;
                 }

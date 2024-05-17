@@ -46,6 +46,16 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                     if (isMain) {
                         showNotification({ level: 'success', message: 'message log added', ttl: 3000 });
                         trackSyncMessageLog();
+                        let messageLogPrefCache = {};
+                        messageLogPrefCache[`rc-crm-conversation-pref-${logInfo.conversationId}`] = {
+                            contact: {
+                                id: contactId,
+                                type: contactType,
+                                name: contactName
+                            },
+                            additionalSubmission
+                        };
+                        await chrome.storage.local.set(messageLogPrefCache);
                     }
                     await chrome.storage.local.set({ [`rc-crm-conversation-log-${logInfo.conversationLogId}`]: { logged: true } });
                 }
