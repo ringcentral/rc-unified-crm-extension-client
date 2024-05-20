@@ -356,7 +356,7 @@ window.addEventListener('message', async (e) => {
                           `response_type=code` +
                           `&action=Login` +
                           `&client_id=${platform.clientId}` +
-                          `&state=${customState === '' ? `platform=${platform.name}` : customState}` +
+                          `&state=platform=${platform.name}` +
                           '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
                       }
                       else {
@@ -379,7 +379,7 @@ window.addEventListener('message', async (e) => {
                         `response_type=code` +
                         `&client_id=${platform.clientId}` +
                         `${!!platform.scopes ? `&scope=${platform.scopes}` : ''}` +
-                        `&state=platform=${platform.name}` +
+                        `&state=${customState === '' ? `platform=${platform.name}` : customState}` +
                         '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
                     }
                     handleThirdPartyOAuthWindow(authUri);
