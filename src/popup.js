@@ -518,16 +518,23 @@ window.addEventListener('message', async (e) => {
               });
               const { matched: callContactMatched, message: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: config.serverUrl, phoneNumber: contactPhoneNumber });
               let note = '';
+              let callLogSubject = ''
               switch (data.body.triggerType) {
                 // createLog and editLog share the same page
                 case 'createLog':
                   note = await getCachedNote({ sessionId: data.body.call.sessionId });
                 case 'editLog':
-                  if (!!fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logData?.note) {
-                    note = fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId).logData.note;
+                  if (!!fetchedCallLogs) {
+                    if (!!fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logData?.note) {
+                      note = fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId).logData.note;
+                    }
+                    if (fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logData?.subject) {
+                      callLogSubject = fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId).logData.subject;
+                  
+                    }
                   }
                   // add your codes here to log call to your service
-                  const callPage = logPage.getLogPageRender({ config, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logData?.subject, note });
+                  const callPage = logPage.getLogPageRender({ config, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-update-call-log-page',
                     page: callPage,

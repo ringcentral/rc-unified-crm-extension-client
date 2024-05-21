@@ -1,4 +1,4 @@
-function getLogPageRender({config, logType, triggerType, platformName, direction, contactInfo, subject, note }) {
+function getLogPageRender({ config, logType, triggerType, platformName, direction, contactInfo, subject, note }) {
     const additionalChoiceFields = logType === 'Call' ?
         config.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'selection') ?? [] :
         config.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'selection') ?? [];
@@ -43,7 +43,7 @@ function getLogPageRender({config, logType, triggerType, platformName, direction
             }
         }
         callFormData = {
-            activityTitle: subject ?? defaultActivityTitle,
+            activityTitle: (!!subject & subject !== '') ? subject : defaultActivityTitle,
             note: note ?? '',
         }
     }
@@ -235,7 +235,7 @@ function getLogPageRender({config, logType, triggerType, platformName, direction
     return page;
 }
 
-function getUpdatedLogPageRender({config, logType, platformName, updateData }) {
+function getUpdatedLogPageRender({ config, logType, platformName, updateData }) {
     const updatedFieldKey = updateData.keys[0];
     let page = updateData.page;
     // update target field value
