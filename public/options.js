@@ -20,6 +20,10 @@ const saveOptions = () => {
     );
 };
 
+const clearPlatformInfo = async () => {
+    await chrome.storage.local.remove('platform-info')
+}
+
 // Restores select box and checkbox state using the preferences
 // stored in chrome.storage.
 const restoreOptions = () => {
@@ -42,13 +46,12 @@ const restoreOptions = () => {
 async function setupConfig({ customCrmConfigUrl }) {
     try {
         await chrome.storage.local.remove('customCrmConfig');
-        if(customCrmConfigUrl === '') {
+        if (customCrmConfigUrl === '') {
             return;
         }
         const customCrmConfigJson = await (await fetch(customCrmConfigUrl)).json();
         if (customCrmConfigJson) {
             await chrome.storage.local.set({ customCrmConfig: customCrmConfigJson });
-            await chrome.storage.local.remove('platform-info')
         }
         // Update status to let user know options were saved.
         const status = document.getElementById('status');
@@ -67,3 +70,4 @@ async function setupConfig({ customCrmConfigUrl }) {
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.getElementById('save').addEventListener('click', saveOptions);
+document.getElementById('clear platform info').addEventListener('click', clearPlatformInfo);
