@@ -485,8 +485,12 @@ window.addEventListener('message', async (e) => {
                 });
               break;
             case '/callLogger':
-              // data.body.call?.to?.phoneNumber?.length > 4 to distinguish extension from external number
-              if (data.body.triggerType !== "logForm" && data.body.triggerType && data.body.call?.to?.phoneNumber?.length > 4) {
+              // extensions numers should NOT be logged
+              if (data?.body?.toEntity?.phoneNumbers[0]?.phoneType === 'extension') {
+                showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
+                break;
+              }
+              if (data.body.triggerType !== "logForm" && data.body.triggerType) {
                 // Sync events - update log
                 if (data.body.triggerType === 'callLogSync') {
                   if (!!data.body.call?.recording?.link) {
@@ -653,6 +657,11 @@ window.addEventListener('message', async (e) => {
                 });
               break;
             case '/messageLogger':
+              // extensions numers should NOT be logged
+              if (data?.body?.correspondentEntity?.phoneNumbers[0]?.phoneType === 'extension') {
+                showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
+                break;
+              }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
