@@ -33,18 +33,18 @@ const logoContainerStyle = {
     columnGap: '6px'
 }
 
-let config = null;
+let manifest = null;
 
 export default () => {
     useEffect(() => {
         checkFirstTime();
         async function checkFirstTime() {
-            config = (await chrome.storage.local.get('customCrmConfig')).customCrmConfig;
+            manifest = (await chrome.storage.local.get('customCrmManifest')).customCrmManifest;
             let platformName = '';
             const hostname = window.location.hostname;
-            const platforms = Object.keys(config.platforms);
+            const platforms = Object.keys(manifest.platforms);
             for (const p of platforms) {
-                if (hostname.includes(config.platforms[p].urlIdentifier)) {
+                if (hostname.includes(manifest.platforms[p].urlIdentifier)) {
                     platformName = p;
                     break;
                 }
@@ -52,8 +52,8 @@ export default () => {
             const isFirstTime = await chrome.storage.local.get('isFirstTime');
             if (isObjectEmpty(isFirstTime) && platformName !== '') {
                 setIsOpen(true);
-                setDocLink(config.platforms[platformName].embeddedOnCrmPage.welcomePage.docLink);
-                setVideoLink(config.platforms[platformName].embeddedOnCrmPage.welcomePage.videoLink);
+                setDocLink(manifest.platforms[platformName].embeddedOnCrmPage.welcomePage.docLink);
+                setVideoLink(manifest.platforms[platformName].embeddedOnCrmPage.welcomePage.videoLink);
                 await chrome.storage.local.set({ isFirstTime: false });
                 trackFirstTimeSetup();
             }
@@ -132,7 +132,7 @@ export default () => {
                             <RcTypography
                                 variant='body1'
                             >
-                                By {config.author}
+                                By {manifest.author}
                             </RcTypography>
                             <br />
                             <div style={logoContainerStyle}>

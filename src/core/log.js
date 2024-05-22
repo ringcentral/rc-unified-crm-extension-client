@@ -81,8 +81,8 @@ async function getLog({ serverUrl, logType, sessionIds }) {
     }
 }
 
-async function openLog({ config, platformName, hostname, logId, contactType }) {
-    const logPageUrl = config.platforms[platformName].logPageUrl
+async function openLog({ manifest, platformName, hostname, logId, contactType }) {
+    const logPageUrl = manifest.platforms[platformName].logPageUrl
         .replace('{hostname}', hostname)
         .replaceAll('{logId}', logId)
         .replaceAll('{contactType}', contactType);

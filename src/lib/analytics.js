@@ -1,10 +1,9 @@
-import manifest from '../../public/manifest.json';
-import config from '../config.json';
+import manifest from '../manifest.json';
 import mixpanel from 'mixpanel-browser';
 
-const useAnalytics = !!config.mixpanelToken;
+const useAnalytics = !!manifest.mixpanelToken;
 if (useAnalytics) {
-    mixpanel.init(config.mixpanelToken);
+    mixpanel.init(manifest.mixpanelToken);
 }
 
 const appName = 'RingCentral CRM Extension';

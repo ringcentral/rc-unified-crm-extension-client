@@ -1,13 +1,13 @@
-function getLogPageRender({ config, logType, triggerType, platformName, direction, contactInfo, subject, note }) {
+function getLogPageRender({ manifest, logType, triggerType, platformName, direction, contactInfo, subject, note }) {
     const additionalChoiceFields = logType === 'Call' ?
-        config.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'selection') ?? [] :
-        config.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'selection') ?? [];
+        manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'selection') ?? [] :
+        manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'selection') ?? [];
     const additionalCheckBoxFields = logType === 'Call' ?
-        config.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [] :
-        config.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [];
+        manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [] :
+        manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [];
     const additionalInputFields = logType === 'Call' ?
-        config.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [] :
-        config.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [];
+        manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [] :
+        manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [];
     // format contact list
     const contactList = contactInfo.map(c => { return { const: c.id, title: c.name, type: c.type, description: c.type ? `${c.type} - ${c.id}` : '', additionalInfo: c.additionalInfo } });
     const defaultActivityTitle = direction === 'Inbound' ?
@@ -115,7 +115,7 @@ function getLogPageRender({ config, logType, triggerType, platformName, directio
                 }
             }
             if (contactList[0].const === 'createNewContact') {
-                if (!!config.platforms[platformName].contactTypes) {
+                if (!!manifest.platforms[platformName].contactTypes) {
                     newContactWidget.newContactType = {};
                 }
                 newContactWidget.newContactName = {
@@ -153,7 +153,7 @@ function getLogPageRender({ config, logType, triggerType, platformName, directio
                         newContactType: {
                             title: 'Contact type',
                             type: 'string',
-                            oneOf: config.platforms[platformName].contactTypes?.map(t => { return { const: t, title: t } }) ?? [],
+                            oneOf: manifest.platforms[platformName].contactTypes?.map(t => { return { const: t, title: t } }) ?? [],
                         },
                         ...callSchemas,
                         ...additionalFields
@@ -181,7 +181,7 @@ function getLogPageRender({ config, logType, triggerType, platformName, directio
                 },
                 formData: {
                     contact: contactList[0].const,
-                    newContactType: config.platforms[platformName].contactTypes ? config.platforms[platformName].contactTypes[0] : '',
+                    newContactType: manifest.platforms[platformName].contactTypes ? manifest.platforms[platformName].contactTypes[0] : '',
                     newContactName: '',
                     contactType: contactList[0]?.type ?? '',
                     contactName: contactList[0]?.title ?? '',
@@ -235,23 +235,23 @@ function getLogPageRender({ config, logType, triggerType, platformName, directio
     return page;
 }
 
-function getUpdatedLogPageRender({ config, logType, platformName, updateData }) {
+function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }) {
     const updatedFieldKey = updateData.keys[0];
     let page = updateData.page;
     // update target field value
     page.formData = updateData.formData;
     const additionalChoiceFields = logType === 'Call' ?
-        config.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'selection') ?? [] :
-        config.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'selection') ?? [];
+        manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'selection') ?? [] :
+        manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'selection') ?? [];
     const additionalCheckBoxFields = logType === 'Call' ?
-        config.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [] :
-        config.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [];
+        manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [] :
+        manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [];
     switch (updatedFieldKey) {
         case 'contact':
             const contact = page.schema.properties.contact.oneOf.find(c => c.const === page.formData.contact);
             // New contact fields
             if (contact.const === 'createNewContact') {
-                if (!!config.platforms[platformName].contactTypes) {
+                if (!!manifest.platforms[platformName].contactTypes) {
                     page.uiSchema.newContactType = {};
                 }
                 page.uiSchema.newContactName = {

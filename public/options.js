@@ -2,7 +2,7 @@ let timerId = '';
 
 // Saves options to chrome.storage
 const saveOptions = () => {
-    const customCrmConfigUrl = document.getElementById('customCrmConfigUrl').value;
+    const customCrmManifestUrl = document.getElementById('customCrmManifestUrl').value;
     const region = document.getElementById('region').value;
     const c2dDelay = document.getElementById('c2dDelay').value;
     const autoLogCountdown = document.getElementById('autoLogCountdown').value;
@@ -13,9 +13,9 @@ const saveOptions = () => {
     const overridingPhoneNumberFormat3 = document.getElementById('overridingPhoneNumberFormat3').value;
 
     chrome.storage.local.set(
-        { customCrmConfigUrl, selectedRegion: region, c2dDelay, autoLogCountdown, bullhornDefaultActionCode, renderQuickAccessButton, overridingPhoneNumberFormat, overridingPhoneNumberFormat2, overridingPhoneNumberFormat3 },
+        { customCrmManifestUrl, selectedRegion: region, c2dDelay, autoLogCountdown, bullhornDefaultActionCode, renderQuickAccessButton, overridingPhoneNumberFormat, overridingPhoneNumberFormat2, overridingPhoneNumberFormat3 },
         () => {
-            setupConfig({ customCrmConfigUrl });
+            setupManifest({ customCrmManifestUrl });
         }
     );
 };
@@ -28,9 +28,9 @@ const clearPlatformInfo = async () => {
 // stored in chrome.storage.
 const restoreOptions = () => {
     chrome.storage.local.get(
-        { customCrmConfigUrl: '', selectedRegion: 'US', c2dDelay: '0', autoLogCountdown: '20', bullhornDefaultActionCode: '', renderQuickAccessButton: true, overridingPhoneNumberFormat: '', overridingPhoneNumberFormat2: '', overridingPhoneNumberFormat3: '' },
+        { customCrmManifestUrl: '', selectedRegion: 'US', c2dDelay: '0', autoLogCountdown: '20', bullhornDefaultActionCode: '', renderQuickAccessButton: true, overridingPhoneNumberFormat: '', overridingPhoneNumberFormat2: '', overridingPhoneNumberFormat3: '' },
         (items) => {
-            document.getElementById('customCrmConfigUrl').value = items.customCrmConfigUrl;
+            document.getElementById('customCrmManifestUrl').value = items.customCrmManifestUrl;
             document.getElementById('region').value = items.selectedRegion;
             document.getElementById('c2dDelay').value = items.c2dDelay;
             document.getElementById('autoLogCountdown').value = items.autoLogCountdown;
@@ -43,15 +43,15 @@ const restoreOptions = () => {
     );
 };
 
-async function setupConfig({ customCrmConfigUrl }) {
+async function setupManifest({ customCrmManifestUrl }) {
     try {
-        await chrome.storage.local.remove('customCrmConfig');
-        if (customCrmConfigUrl === '') {
+        await chrome.storage.local.remove('customCrmManifest');
+        if (customCrmManifestUrl === '') {
             return;
         }
-        const customCrmConfigJson = await (await fetch(customCrmConfigUrl)).json();
-        if (customCrmConfigJson) {
-            await chrome.storage.local.set({ customCrmConfig: customCrmConfigJson });
+        const customCrmManifestJson = await (await fetch(customCrmManifestUrl)).json();
+        if (customCrmManifestJson) {
+            await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
         }
         // Update status to let user know options were saved.
         const status = document.getElementById('status');
@@ -62,9 +62,9 @@ async function setupConfig({ customCrmConfigUrl }) {
         clearTimeout(timerId);
         // Update status to let user know options were saved.
         const status = document.getElementById('status');
-        status.textContent = 'Config file error';
+        status.textContent = 'Manifest file error';
         status.style = 'color: red';
-        await chrome.storage.local.remove('customCrmConfig');
+        await chrome.storage.local.remove('customCrmManifest');
     }
 }
 

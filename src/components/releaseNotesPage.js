@@ -1,17 +1,17 @@
 import axios from 'axios';
 
-async function getReleaseNotesPageRender({ config, platformName, registeredVersion }) {
-    const releaseNotesResponse = await axios.get(`${config.serverUrl}/releaseNotes`);
+async function getReleaseNotesPageRender({ manifest, platformName, registeredVersion }) {
+    const releaseNotesResponse = await axios.get(`${manifest.serverUrl}/releaseNotes`);
     const releaseNotes = releaseNotesResponse.data;
     const registeredVersionNumbers = registeredVersion.split('.').map(v => parseInt(v));
-    const currentVersionNumbers = config.version.split('.').map(v => parseInt(v));
-    if (!!releaseNotes[config.version] &&
+    const currentVersionNumbers = manifest.version.split('.').map(v => parseInt(v));
+    if (!!releaseNotes[manifest.version] &&
         (currentVersionNumbers[0] > registeredVersionNumbers[0] ||
             currentVersionNumbers[0] === registeredVersionNumbers[0] && currentVersionNumbers[1] > registeredVersionNumbers[1] ||
             currentVersionNumbers[0] === registeredVersionNumbers[0] && currentVersionNumbers[1] === registeredVersionNumbers[1] && currentVersionNumbers[2] > registeredVersionNumbers[2])
     ) {
-        const globalNotes = releaseNotes[config.version].global ?? [];
-        const platformNotes = releaseNotes[config.version][platformName] ?? [];
+        const globalNotes = releaseNotes[manifest.version].global ?? [];
+        const platformNotes = releaseNotes[manifest.version][platformName] ?? [];
         const allNotes = globalNotes.concat(platformNotes);
         const allTypes = allNotes.map(n => { return n.type }).filter((value, index, array) => { return array.indexOf(value) === index; });
         let notesRender = [];
@@ -40,7 +40,7 @@ async function getReleaseNotesPageRender({ config, platformName, registeredVersi
         }
         return {
             id: 'releaseNotesPage',
-            title: `Release Notes (v${config.version})`,
+            title: `Release Notes (v${manifest.version})`,
             schema: {
                 type: 'object',
                 properties: notesRender

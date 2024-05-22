@@ -49,15 +49,15 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
     }
 }
 
-async function openContactPage({ config, platformName, phoneNumber }) {
-    const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: config.serverUrl, phoneNumber });
+async function openContactPage({ manifest, platformName, phoneNumber }) {
+    const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber });
     if (!contactMatched) {
         return;
     }
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     let platformInfo = await chrome.storage.local.get('platform-info');
     if (platformInfo['platform-info'].hostname === 'temp') {
-        const hostnameRes = await axios.get(`${config.serverUrl}/hostname?jwtToken=${rcUnifiedCrmExtJwt}`);
+        const hostnameRes = await axios.get(`${manifest.serverUrl}/hostname?jwtToken=${rcUnifiedCrmExtJwt}`);
         platformInfo['platform-info'].hostname = hostnameRes.data;
         await chrome.storage.local.set(platformInfo);
     }
@@ -75,7 +75,7 @@ async function openContactPage({ config, platformName, phoneNumber }) {
     }
     for (const c of contactInfo) {
         const hostname = platformInfo['platform-info'].hostname;
-        const contactPageUrl = config.platforms[platformName].contactPageUrl
+        const contactPageUrl = manifest.platforms[platformName].contactPageUrl
             .replace('{hostname}', hostname)
             .replaceAll('{contactId}', c.id)
             .replaceAll('{contactType}', c.type);
