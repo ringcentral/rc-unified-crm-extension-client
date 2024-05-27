@@ -1,4 +1,8 @@
-function getLogPageRender({ manifest, logType, triggerType, platformName, direction, contactInfo, subject, note }) {
+const outboundCallIcon = require('../images/outboundCallIcon.png');
+const inboundCallIcon = require('../images/inboundCallIcon.png');
+const conflictLogIcon = require('../images/conflictLogIcon.png');
+
+function getLogPageRender({ manifest, logType, triggerType, platformName, direction, contactInfo, subject, note, isUnresolved }) {
     const additionalChoiceFields = logType === 'Call' ?
         manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'selection') ?? [] :
         manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'selection') ?? [];
@@ -150,6 +154,10 @@ function getLogPageRender({ manifest, logType, triggerType, platformName, direct
                             title: '',
                             type: 'string'
                         },
+                        isUnresolved: {
+                            title: '',
+                            type: 'boolean'
+                        },
                         newContactType: {
                             title: 'Contact type',
                             type: 'string',
@@ -173,6 +181,9 @@ function getLogPageRender({ manifest, logType, triggerType, platformName, direct
                     triggerType: {
                         "ui:widget": "hidden",
                     },
+                    isUnresolved: {
+                        "ui:widget": "hidden",
+                    },
                     submitButtonOptions: {
                         submitText: 'Save',
                     },
@@ -186,6 +197,7 @@ function getLogPageRender({ manifest, logType, triggerType, platformName, direct
                     contactType: contactList[0]?.type ?? '',
                     contactName: contactList[0]?.title ?? '',
                     triggerType,
+                    isUnresolved: !!isUnresolved,
                     ...callFormData,
                     ...additionalFieldsValue
                 }
@@ -339,5 +351,55 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
     return page;
 }
 
+function getUnresolvedLogsPageRender({ unresolvedLogs }) {
+    const logsList = []
+    for (const sessionId of Object.keys(unresolvedLogs)) {
+        const isMultipleContactConflit = unresolvedLogs[sessionId].contactInfo.length > 1;
+        logsList.push({
+            const: sessionId,
+            title: unresolvedLogs[sessionId].phoneNumber,
+            description: isMultipleContactConflit ? 'Conflict: Multiple matched contacts' : 'Conflict: Multiple associations',
+            meta: unresolvedLogs[sessionId].date,
+            icon: unresolvedLogs[sessionId].direction === 'Inbound' ? inboundCallIcon : outboundCallIcon,
+        });
+    }
+    return {
+        id: 'unresolve', // tab id, required
+        title: 'Unresolve',
+        type: 'tab', // tab type
+        iconUri: conflictLogIcon, // icon for tab, 24x24
+        activeIconUri: conflictLogIcon, // icon for tab in active status, 24x24
+        priority: 11,
+        // schema and uiSchema are used to customize page, api is the same as [react-jsonschema-form](https://rjsf-team.github.io/react-jsonschema-form)
+        schema: {
+            type: 'object',
+            required: [],
+            properties: {
+                "warning": {
+                    "type": "string",
+                    "description": "Unresolved call logs are listed below. They cannot be auto logged because of conflicts like multiple matched contacts, multiple associations etc."
+                },
+                "session": {
+                    "type": "string",
+                    "oneOf": logsList
+                },
+            },
+        },
+        uiSchema: {
+            warning: {
+                "ui:field": "admonition",
+                "ui:severity": "warning",  // "warning", "info", "error", "success"
+            },
+            session: {
+                "ui:field": "list",
+            },
+        },
+        formData: {
+            session: '',
+        },
+    }
+}
+
 exports.getLogPageRender = getLogPageRender;
 exports.getUpdatedLogPageRender = getUpdatedLogPageRender;
+exports.getUnresolvedLogsPageRender = getUnresolvedLogsPageRender;

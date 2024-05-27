@@ -1,5 +1,5 @@
 const auth = require('./core/auth');
-const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote } = require('./core/log');
+const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, cacheUnresolvedLog, getCallLogCache, getAllUnresolvedLogs, resolveCachedLog } = require('./core/log');
 const { getContact, createContact, openContactPage } = require('./core/contact');
 const { responseMessage, isObjectEmpty, showNotification } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
@@ -9,6 +9,7 @@ const logPage = require('./components/logPage');
 const authPage = require('./components/authPage');
 const feedbackPage = require('./components/feedbackPage');
 const releaseNotesPage = require('./components/releaseNotesPage');
+const moment = require('moment');
 const {
   identify,
   reset,
@@ -83,6 +84,17 @@ async function getCustomManifest() {
 }
 
 getCustomManifest();
+
+async function showUnresolvedTabPage(){
+  const unresolvedLogs = await getAllUnresolvedLogs();
+  if (Object.keys(unresolvedLogs).length > 0) {
+    const unresolvedLogsPage = logPage.getUnresolvedLogsPageRender({ unresolvedLogs });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+      type: 'rc-adapter-register-customized-page',
+      page: unresolvedLogsPage,
+    }, '*');
+  }
+}
 
 // Interact with RingCentral Embeddable Voice:
 window.addEventListener('message', async (e) => {
@@ -200,6 +212,7 @@ window.addEventListener('message', async (e) => {
               reset();
               identify({ extensionId: rcUserInfo?.rcExtensionId, rcAccountId: rcUserInfo?.rcAccountId, platformName });
               group({ rcAccountId: rcUserInfo?.rcAccountId });
+              await showUnresolvedTabPage();
             }
             catch (e) {
               reset();
@@ -320,6 +333,9 @@ window.addEventListener('message', async (e) => {
         case 'rc-route-changed-notify':
           if (data.path !== '/') {
             trackPage(data.path);
+            if (data.path === '/customizedTabs/unresolve') {
+              await showUnresolvedTabPage();
+            }
           }
           if (!!data.path) {
             if (data.path.startsWith('/conversations/') || data.path.startsWith('/composeText')) {
@@ -410,6 +426,31 @@ window.addEventListener('message', async (e) => {
               );
               break;
             case '/customizedPage/inputChanged':
+              if (data.body.page.id === 'unresolve') {
+                const unresolvedSessionId = data.body.formData.session;
+                const unresolvedLog = await getCallLogCache({ sessionId: unresolvedSessionId });
+                const callPage = logPage.getLogPageRender({
+                  manifest,
+                  logType: 'Call',
+                  triggerType: 'createLog',
+                  platformName,
+                  direction: unresolvedLog.direction,
+                  contactInfo: unresolvedLog.contactInfo,
+                  subject: unresolvedLog.subject,
+                  note: unresolvedLog.note,
+                  isUnresolved: true
+                });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-update-call-log-page',
+                  page: callPage,
+                }, '*');
+
+                // navigate to call log page
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-navigate-to',
+                  path: `/log/call/${unresolvedSessionId}`,
+                }, '*');
+              }
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-post-message-response',
                 responseId: data.requestId,
@@ -485,12 +526,13 @@ window.addEventListener('message', async (e) => {
                 });
               break;
             case '/callLogger':
+              let isAutoLog = false;
               // extensions numers should NOT be logged
               if (data?.body?.toEntity?.phoneNumbers[0]?.phoneType === 'extension') {
                 showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
                 break;
               }
-              if (data.body.triggerType !== "logForm" && data.body.triggerType) {
+              if (data.body.triggerType !== "logForm" && data.body.triggerType !== "createLog") {
                 // Sync events - update log
                 if (data.body.triggerType === 'callLogSync') {
                   if (!!data.body.call?.recording?.link) {
@@ -506,12 +548,13 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
                 }
-                // Auto log: presence events, but not hang up event
-                if (data.body.triggerType === 'presenceUpdate' && data.body.call.result !== 'Disconnected') {
-                  break;
+                // Auto log: presence events, and Disconnect result
+                if (data.body.triggerType === 'presenceUpdate' && data.body.call.result === 'Disconnected') {
+                  data.body.triggerType = 'createLog';
+                  isAutoLog = true;
                 }
                 else {
-                  data.body.triggerType = 'createLog';
+                  break;
                 }
               }
               window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -540,18 +583,46 @@ window.addEventListener('message', async (e) => {
 
                     }
                   }
-                  // add your codes here to log call to your service
-                  const callPage = logPage.getLogPageRender({ manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-update-call-log-page',
-                    page: callPage,
-                  }, '*');
+                  let hasConflict = false;
+                  if (callMatchedContact.length > 1) {
+                    hasConflict = true;
+                  }
+                  else if (!!callMatchedContact[0]?.additionalInfo) {
+                    const additionalFieldsKeys = Object.keys(callMatchedContact[0].additionalInfo);
+                    for (const key of additionalFieldsKeys) {
+                      const field = callMatchedContact[0].additionalInfo[key];
+                      if (Array.isArray(field) && field.length > 1) {
+                        hasConflict = true;
+                      }
+                    }
+                  }
+                  if (isAutoLog && hasConflict) {
+                    window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                    await cacheUnresolvedLog({
+                      sessionId: data.body.call.sessionId,
+                      phoneNumber: contactPhoneNumber,
+                      direction: data.body.call.direction,
+                      contactInfo: callMatchedContact ?? [],
+                      subject: callLogSubject,
+                      note,
+                      date: moment(data.body.call.startTime).format('MM/DD/YYYY')
+                    });
+                    await showUnresolvedTabPage();
+                  }
+                  else {
+                    // add your codes here to log call to your service
+                    const callPage = logPage.getLogPageRender({ manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-update-call-log-page',
+                      page: callPage,
+                    }, '*');
 
-                  // navigate to call log page
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: `/log/call/${data.body.call.sessionId}`,
-                  }, '*');
+                    // navigate to call log page
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: `/log/call/${data.body.call.sessionId}`,
+                    }, '*');
+                  }
                   break;
                 case 'viewLog':
                   if (manifest.platforms[platformName].canOpenLogPage) {
@@ -596,6 +667,10 @@ window.addEventListener('message', async (e) => {
                           contactType: data.body.formData.newContactName === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                           contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
                         });
+                      if (!!data.body.formData.isUnresolved) {
+                        await resolveCachedLog({ sessionId: data.body.call.sessionId });
+                        await showUnresolvedTabPage();
+                      }
                       break;
                     case 'editLog':
                       await updateLog({

@@ -134,9 +134,43 @@ async function getCachedNote({ sessionId }) {
     }
 }
 
+async function cacheUnresolvedLog({ sessionId, phoneNumber, direction, contactInfo, subject, note, date }) {
+    let existingUnresolvedLogs = await chrome.storage.local.get({ unresolvedLogs: {} });
+    existingUnresolvedLogs.unresolvedLogs[sessionId] = {
+        phoneNumber,
+        direction,
+        contactInfo,
+        subject,
+        note,
+        date
+    }
+    await chrome.storage.local.set(existingUnresolvedLogs);
+    console.log(`call log cached for ${sessionId}`);
+}
+
+async function getCallLogCache({ sessionId }) {
+    const existingUnresolvedLogs = await chrome.storage.local.get({ unresolvedLogs: {} });
+    return existingUnresolvedLogs?.unresolvedLogs[sessionId];
+}
+
+async function getAllUnresolvedLogs() {
+    const existingUnresolvedLogs = await chrome.storage.local.get({ unresolvedLogs: {} });
+    return existingUnresolvedLogs.unresolvedLogs;
+}
+
+async function resolveCachedLog({ sessionId }) {
+    let existingUnresolvedLogs = await chrome.storage.local.get({ unresolvedLogs: {} });
+    delete existingUnresolvedLogs.unresolvedLogs[sessionId];
+    await chrome.storage.local.set(existingUnresolvedLogs);
+}
+
 exports.addLog = addLog;
 exports.getLog = getLog;
 exports.openLog = openLog;
 exports.updateLog = updateLog;
 exports.cacheCallNote = cacheCallNote;
 exports.getCachedNote = getCachedNote;
+exports.cacheUnresolvedLog = cacheUnresolvedLog;
+exports.getCallLogCache = getCallLogCache;
+exports.getAllUnresolvedLogs = getAllUnresolvedLogs;
+exports.resolveCachedLog = resolveCachedLog;
