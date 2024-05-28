@@ -353,23 +353,25 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
 
 function getUnresolvedLogsPageRender({ unresolvedLogs }) {
     const logsList = []
-    for (const sessionId of Object.keys(unresolvedLogs)) {
-        const isMultipleContactConflit = unresolvedLogs[sessionId].contactInfo.length > 1;
+    for (const cacheId of Object.keys(unresolvedLogs)) {
+        const isMultipleContactConflit = unresolvedLogs[cacheId].contactInfo.length > 1;
+        const contactName = isMultipleContactConflit ? 'Multiple contacts' : unresolvedLogs[cacheId].contactInfo[0].name;
         logsList.push({
-            const: sessionId,
-            title: unresolvedLogs[sessionId].phoneNumber,
+            const: cacheId,
+            title: `${contactName} (${unresolvedLogs[cacheId].phoneNumber})`,
             description: isMultipleContactConflit ? 'Conflict: Multiple matched contacts' : 'Conflict: Multiple associations',
-            meta: unresolvedLogs[sessionId].date,
-            icon: unresolvedLogs[sessionId].direction === 'Inbound' ? inboundCallIcon : outboundCallIcon,
+            meta: unresolvedLogs[cacheId].date,
+            icon: unresolvedLogs[cacheId].direction === 'Inbound' ? inboundCallIcon : outboundCallIcon,
         });
     }
     return {
         id: 'unresolve', // tab id, required
         title: 'Unresolve',
         type: 'tab', // tab type
+        hidden: Object.keys(unresolvedLogs).length === 0,
         iconUri: conflictLogIcon, // icon for tab, 24x24
         activeIconUri: conflictLogIcon, // icon for tab in active status, 24x24
-        priority: 11,
+        priority: 9,
         // schema and uiSchema are used to customize page, api is the same as [react-jsonschema-form](https://rjsf-team.github.io/react-jsonschema-form)
         schema: {
             type: 'object',
@@ -379,7 +381,7 @@ function getUnresolvedLogsPageRender({ unresolvedLogs }) {
                     "type": "string",
                     "description": "Unresolved call logs are listed below. They cannot be auto logged because of conflicts like multiple matched contacts, multiple associations etc."
                 },
-                "session": {
+                "record": {
                     "type": "string",
                     "oneOf": logsList
                 },
@@ -390,12 +392,13 @@ function getUnresolvedLogsPageRender({ unresolvedLogs }) {
                 "ui:field": "admonition",
                 "ui:severity": "warning",  // "warning", "info", "error", "success"
             },
-            session: {
+            record: {
                 "ui:field": "list",
+                "ui:showIconAsAvatar": false
             },
         },
         formData: {
-            session: '',
+            record: '',
         },
     }
 }

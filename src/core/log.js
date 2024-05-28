@@ -28,6 +28,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                     if (!!existingCallRecording[recordingSessionId]) {
                         await updateLog({ logType: 'Call', sessionId: logInfo.sessionId, recordingLink: existingCallRecording[recordingSessionId].recordingLink })
                     }
+                    await resolveCachedLog({ type: 'Call', id: logInfo.sessionId });
                 }
                 else {
                     showNotification({ level: 'warning', message: addCallLogRes.data.message, ttl: 3000 });
@@ -43,7 +44,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                 }
                 const messageLogRes = await axios.post(`${serverUrl}/messageLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (messageLogRes.data.successful) {
-                    if (isMain) {
+                    if (isMain & messageLogRes.data.logIds.length > 0) {
                         showNotification({ level: 'success', message: 'message log added', ttl: 3000 });
                         trackSyncMessageLog();
                         let messageLogPrefCache = {};
@@ -58,6 +59,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                         await chrome.storage.local.set(messageLogPrefCache);
                     }
                     await chrome.storage.local.set({ [`rc-crm-conversation-log-${logInfo.conversationLogId}`]: { logged: true } });
+                    await resolveCachedLog({ type: 'Message', id: logInfo.conversationId });
                 }
                 break;
         }
@@ -134,9 +136,10 @@ async function getCachedNote({ sessionId }) {
     }
 }
 
-async function cacheUnresolvedLog({ sessionId, phoneNumber, direction, contactInfo, subject, note, date }) {
+async function cacheUnresolvedLog({ type, id, phoneNumber, direction, contactInfo, subject, note, date }) {
     let existingUnresolvedLogs = await chrome.storage.local.get({ unresolvedLogs: {} });
-    existingUnresolvedLogs.unresolvedLogs[sessionId] = {
+    existingUnresolvedLogs.unresolvedLogs[`${type}-${id}`] = {
+        type,
         phoneNumber,
         direction,
         contactInfo,
@@ -145,12 +148,12 @@ async function cacheUnresolvedLog({ sessionId, phoneNumber, direction, contactIn
         date
     }
     await chrome.storage.local.set(existingUnresolvedLogs);
-    console.log(`call log cached for ${sessionId}`);
+    console.log(`log cached for ${type}-${id}`);
 }
 
-async function getCallLogCache({ sessionId }) {
+async function getLogCache({ cacheId }) {
     const existingUnresolvedLogs = await chrome.storage.local.get({ unresolvedLogs: {} });
-    return existingUnresolvedLogs?.unresolvedLogs[sessionId];
+    return existingUnresolvedLogs?.unresolvedLogs[cacheId];
 }
 
 async function getAllUnresolvedLogs() {
@@ -158,10 +161,12 @@ async function getAllUnresolvedLogs() {
     return existingUnresolvedLogs.unresolvedLogs;
 }
 
-async function resolveCachedLog({ sessionId }) {
+async function resolveCachedLog({ type, id }) {
     let existingUnresolvedLogs = await chrome.storage.local.get({ unresolvedLogs: {} });
-    delete existingUnresolvedLogs.unresolvedLogs[sessionId];
-    await chrome.storage.local.set(existingUnresolvedLogs);
+    if (!!existingUnresolvedLogs.unresolvedLogs[`${type}-${id}`]) {
+        delete existingUnresolvedLogs.unresolvedLogs[`${type}-${id}`];
+        await chrome.storage.local.set(existingUnresolvedLogs);
+    }
 }
 
 exports.addLog = addLog;
@@ -171,6 +176,5 @@ exports.updateLog = updateLog;
 exports.cacheCallNote = cacheCallNote;
 exports.getCachedNote = getCachedNote;
 exports.cacheUnresolvedLog = cacheUnresolvedLog;
-exports.getCallLogCache = getCallLogCache;
+exports.getLogCache = getLogCache;
 exports.getAllUnresolvedLogs = getAllUnresolvedLogs;
-exports.resolveCachedLog = resolveCachedLog;
