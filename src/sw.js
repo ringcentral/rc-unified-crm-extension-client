@@ -44,21 +44,6 @@ async function openPopupWindow() {
   await chrome.storage.local.set({
     popupWindowId: popup.id,
   });
-  try {
-    let { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: null });
-    if (!!!customCrmManifestUrl || customCrmManifestUrl === '') {
-      customCrmManifestUrl = baseManifest.defaultCrmManifestUrl;
-      await chrome.storage.local.set({ customCrmManifestUrl });
-    }
-    const customCrmManifestJson = await (await fetch(customCrmManifestUrl)).json();
-    if (customCrmManifestJson) {
-      await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
-    }
-  }
-  catch (e) {
-    console.error(e)
-    // ignore
-  }
   return false;
 }
 
@@ -103,8 +88,7 @@ chrome.action.onClicked.addListener(async function (tab) {
     if (registered) {
       await openPopupWindow();
     }
-    else
-    {
+    else {
       chrome.notifications.create({
         type: 'basic',
         iconUrl: '/images/logo32.png',
@@ -161,6 +145,25 @@ chrome.alarms.onAlarm.addListener(async () => {
   await chrome.windows.remove(loginWindowInfo.id);
   await chrome.storage.local.remove('loginWindowInfo');
 });
+
+chrome.runtime.onInstalled.addListener(async () => {
+  try {
+    let { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: null });
+    if (!!!customCrmManifestUrl || customCrmManifestUrl === '') {
+      customCrmManifestUrl = baseManifest.defaultCrmManifestUrl;
+      await chrome.storage.local.set({ customCrmManifestUrl });
+    }
+    const customCrmManifestJson = await (await fetch(customCrmManifestUrl)).json();
+    if (customCrmManifestJson) {
+      await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
+    }
+  }
+  catch (e) {
+    console.error(e)
+    // ignore
+  }
+}
+)
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   console.log(sender.tab ?

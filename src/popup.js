@@ -312,7 +312,7 @@ window.addEventListener('message', async (e) => {
               type: 'openPopupWindow'
             });
             if (!!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Open contact web page from incoming call')?.value) {
-              openContactPage({ manifest, platformName, phoneNumber: data.call.direction === 'Inbound' ? data.call.from.phoneNumber : data.call.to.phoneNumber });
+              await openContactPage({ manifest, platformName, phoneNumber: data.call.direction === 'Inbound' ? data.call.from.phoneNumber : data.call.to.phoneNumber });
             }
           }
           break;
@@ -538,7 +538,7 @@ window.addEventListener('message', async (e) => {
               break;
             case '/contacts/view':
               window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-              openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber });
+              await openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber });
               window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               responseMessage(
                 data.requestId,
@@ -548,6 +548,7 @@ window.addEventListener('message', async (e) => {
               break;
             case '/callLogger':
               let isAutoLog = false;
+              const callAutoPopup = !!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Auto pop up call log page')?.value;
               // extensions numers should NOT be logged
               if (data?.body?.toEntity?.phoneNumbers[0]?.phoneType === 'extension') {
                 showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
@@ -605,7 +606,7 @@ window.addEventListener('message', async (e) => {
                     }
                   }
                   const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ contactInfo: callMatchedContact });
-                  if (isAutoLog) {
+                  if (isAutoLog && !callAutoPopup) {
                     // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
                     if (hasConflict) {
                       window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
@@ -659,14 +660,16 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
                 case 'viewLog':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   if (manifest.platforms[platformName].canOpenLogPage) {
                     for (const c of callMatchedContact) {
                       openLog({ manifest, platformName, hostname: platformHostname, logId: fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: c.type });
                     }
                   }
                   else {
-                    openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber });
+                    await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber });
                   }
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 case 'logForm':
                   let additionalSubmission = {};
@@ -771,12 +774,13 @@ window.addEventListener('message', async (e) => {
                 break;
               }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
+              const messageAutoPopup = !!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Auto pop up message log page')?.value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
               let getContactMatchResult = null;
               window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
               // Case: auto log
-              if (messageAutoLogOn && data.body.triggerType === 'auto') {
+              if (messageAutoLogOn && data.body.triggerType === 'auto' && !messageAutoPopup) {
                 // Sub-case: has existing pref setup, log directly
                 if (!!existingConversationLogPref[messageLogPrefId]) {
                   await addLog({
@@ -1177,6 +1181,14 @@ function getServiceManifest(serviceName) {
     feedbackPath: '/feedback',
     settingsPath: '/settings',
     settings: [
+      {
+        name: 'Auto pop up call log page',
+        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Auto pop up call log page')?.value ?? false)
+      },
+      {
+        name: 'Auto pop up message log page',
+        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Auto pop up message log page')?.value ?? false)
+      },
       {
         name: 'Open contact web page from incoming call',
         value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Open contact web page from incoming call')?.value ?? false)
