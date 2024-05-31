@@ -549,10 +549,14 @@ window.addEventListener('message', async (e) => {
             case '/callLogger':
               let isAutoLog = false;
               const callAutoPopup = !!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Auto pop up call log page')?.value;
+
               // extensions numers should NOT be logged
-              if (data?.body?.toEntity?.phoneNumbers[0]?.phoneType === 'extension') {
-                showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
-                break;
+              if (!!data?.body?.toEntity?.phoneNumbers && data.body.toEntity.phoneNumbers.length > 1) {
+                data.body.toEntity.phoneNumbers = data.body.toEntity.phoneNumbers.filter(p => p.phoneType !== 'extension');
+                if (data.body.toEntity.phoneNumbers.length === 0) {
+                  showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
+                  break;
+                }
               }
               // Sync events - update log
               if (data.body.triggerType === 'callLogSync') {
@@ -605,7 +609,7 @@ window.addEventListener('message', async (e) => {
 
                     }
                   }
-                  const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ contactInfo: callMatchedContact });
+                  const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog, contactInfo: callMatchedContact });
                   if (isAutoLog && !callAutoPopup) {
                     // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
                     if (hasConflict) {
@@ -769,9 +773,12 @@ window.addEventListener('message', async (e) => {
               break;
             case '/messageLogger':
               // extensions numers should NOT be logged
-              if (data?.body?.correspondentEntity?.phoneNumbers[0]?.phoneType === 'extension') {
-                showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
-                break;
+              if (!!data?.body?.correspondentEntity?.phoneNumbers && data?.body?.correspondentEntity?.phoneNumbers.length > 1) {
+                data.body.correspondentEntity.phoneNumbers = data.body.correspondentEntity.phoneNumbers.filter(p => p.phoneType !== 'extension');
+                if (data.body.correspondentEntity.phoneNumbers.length === 0) {
+                  showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
+                  break;
+                }
               }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
               const messageAutoPopup = !!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Auto pop up message log page')?.value;
@@ -800,7 +807,7 @@ window.addEventListener('message', async (e) => {
                     serverUrl: manifest.serverUrl,
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber
                   })).contactInfo;
-                  const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ contactInfo: getContactMatchResult });
+                  const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult });
                   // Sub-case: has conflict, cache unresolved log
                   if (hasConflict) {
                     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
@@ -1037,7 +1044,10 @@ window.addEventListener('message', async (e) => {
   }
 });
 
-function getLogConflictInfo({ contactInfo }) {
+function getLogConflictInfo({ isAutoLog, contactInfo }) {
+  if (!isAutoLog) {
+    return { hasConflict: false, autoSelectAdditionalSubmission: {} }
+  }
   let hasConflict = false;
   let autoSelectAdditionalSubmission = {};
   if (contactInfo.length > 1) {
