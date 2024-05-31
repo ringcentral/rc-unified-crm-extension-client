@@ -748,7 +748,7 @@ window.addEventListener('message', async (e) => {
               break;
             case '/callLogger/match':
               let callLogMatchData = {};
-              const { successful, callLogs, message: getLogMessage } = await getLog({ serverUrl: manifest.serverUrl, logType: 'Call', sessionIds: data.body.sessionIds.toString() });
+              const { successful, callLogs } = await getLog({ serverUrl: manifest.serverUrl, logType: 'Call', sessionIds: data.body.sessionIds.toString() });
               if (successful) {
                 for (const sessionId of data.body.sessionIds) {
                   const correspondingLog = callLogs.find(l => l.sessionId === sessionId);
@@ -758,7 +758,7 @@ window.addEventListener('message', async (e) => {
                 }
               }
               else {
-                showNotification({ level: 'warning', message: getLogMessage, ttl: 3000 });
+                showNotification({ level: 'warning', message: 'Cannot find call log', ttl: 3000 });
                 break;
               }
               responseMessage(

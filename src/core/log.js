@@ -20,7 +20,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                     sessionIds: [logInfo.sessionId]
                 }, '*');
                 if (addCallLogRes.data.successful) {
-                    showNotification({ level: 'success', message: 'call log added', ttl: 3000 });
+                    showNotification({ level: 'success', message: 'Call log added', ttl: 3000 });
                     trackSyncCallLog({ hasNote: note !== '' });
                     // check for remaining recording link
                     const recordingSessionId = `rec-link-${logInfo.sessionId}`;
@@ -45,7 +45,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                 const messageLogRes = await axios.post(`${serverUrl}/messageLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (messageLogRes.data.successful) {
                     if (isMain & messageLogRes.data.logIds.length > 0) {
-                        showNotification({ level: 'success', message: 'message log added', ttl: 3000 });
+                        showNotification({ level: 'success', message: 'Message log added', ttl: 3000 });
                         trackSyncMessageLog();
                         let messageLogPrefCache = {};
                         messageLogPrefCache[`rc-crm-conversation-pref-${logInfo.conversationId}`] = {
@@ -113,7 +113,7 @@ async function updateLog({ serverUrl, logType, sessionId, recordingLink, subject
                         console.log('call recording update done');
                     }
                     else {
-                        showNotification({ level: 'success', message: 'call log updated', ttl: 3000 });
+                        showNotification({ level: 'success', message: 'Call log updated', ttl: 3000 });
                     }
                 }
         }
