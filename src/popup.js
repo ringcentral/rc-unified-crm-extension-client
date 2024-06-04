@@ -837,49 +837,49 @@ window.addEventListener('message', async (e) => {
               }
               // Case: manual log, submit
               else if (data.body.triggerType === 'logForm') {
-                // if (data.body.redirect) {
-                let additionalSubmission = {};
-                const additionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
-                for (const f of additionalFields) {
-                  if (data.body.formData[f.const] != "none") {
-                    additionalSubmission[f.const] = data.body.formData[f.const];
+                if (data.body.redirect) {
+                  let additionalSubmission = {};
+                  const additionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
+                  for (const f of additionalFields) {
+                    if (data.body.formData[f.const] != "none") {
+                      additionalSubmission[f.const] = data.body.formData[f.const];
+                    }
                   }
-                }
-                let newContactInfo = {};
-                if (data.body.formData.contact === 'createNewContact') {
-                  const newContactResp = await createContact({
-                    serverUrl: manifest.serverUrl,
-                    phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
-                    newContactName: data.body.formData.newContactName,
-                    newContactType: data.body.formData.newContactType
-                  });
-                  newContactInfo = newContactResp.contactInfo;
-                }
-                await addLog({
-                  serverUrl: manifest.serverUrl,
-                  logType: 'Message',
-                  logInfo: data.body.conversation,
-                  isMain: true,
-                  note: '',
-                  additionalSubmission,
-                  contactId: newContactInfo?.id ?? data.body.formData.contact,
-                  contactType: data.body.formData.newContactName === '' ? data.body.formData.contactType : data.body.formData.newContactType,
-                  contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
-                });
-                for (const trailingConversations of trailingSMSLogInfo) {
+                  let newContactInfo = {};
+                  if (data.body.formData.contact === 'createNewContact') {
+                    const newContactResp = await createContact({
+                      serverUrl: manifest.serverUrl,
+                      phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
+                      newContactName: data.body.formData.newContactName,
+                      newContactType: data.body.formData.newContactType
+                    });
+                    newContactInfo = newContactResp.contactInfo;
+                  }
                   await addLog({
                     serverUrl: manifest.serverUrl,
                     logType: 'Message',
-                    logInfo: trailingConversations,
-                    isMain: false,
+                    logInfo: data.body.conversation,
+                    isMain: true,
                     note: '',
                     additionalSubmission,
                     contactId: newContactInfo?.id ?? data.body.formData.contact,
                     contactType: data.body.formData.newContactName === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                     contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
                   });
+                  for (const trailingConversations of trailingSMSLogInfo) {
+                    await addLog({
+                      serverUrl: manifest.serverUrl,
+                      logType: 'Message',
+                      logInfo: trailingConversations,
+                      isMain: false,
+                      note: '',
+                      additionalSubmission,
+                      contactId: newContactInfo?.id ?? data.body.formData.contact,
+                      contactType: data.body.formData.newContactName === '' ? data.body.formData.contactType : data.body.formData.newContactType,
+                      contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
+                    });
+                  }
                 }
-                // }
               }
               // Case: manual log, open page
               else {
