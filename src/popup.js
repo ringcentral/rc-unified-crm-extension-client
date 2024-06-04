@@ -381,7 +381,7 @@ window.addEventListener('message', async (e) => {
                       }
                       else {
                         const { crm_extension_bullhornUsername } = await chrome.storage.local.get({ crm_extension_bullhornUsername: null });
-                        showNotification({ level: 'warning', message: 'Bullhorn authorize error. Please try again in 30 seconds', ttl: 30000 });
+                        showNotification({ level: 'warning', message: 'Bullhorn authorize error. Please refresh Bullhorn webpage and try again.', ttl: 30000 });
                         const { data: crm_extension_bullhorn_user_urls } = await axios.get(`https://rest.bullhornstaffing.com/rest-services/loginInfo?username=${crm_extension_bullhornUsername}`);
                         await chrome.storage.local.set({ crm_extension_bullhorn_user_urls });
                         if (crm_extension_bullhorn_user_urls?.oauthUrl) {
@@ -551,9 +551,14 @@ window.addEventListener('message', async (e) => {
               const callAutoPopup = !!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Auto pop up call log page')?.value;
 
               // extensions numers should NOT be logged
-              if (!!data?.body?.toEntity?.phoneNumbers && data.body.toEntity.phoneNumbers.length > 1) {
-                data.body.toEntity.phoneNumbers = data.body.toEntity.phoneNumbers.filter(p => p.phoneType !== 'extension');
-                if (data.body.toEntity.phoneNumbers.length === 0) {
+              if (data.body.call.direction === 'Inbound') {
+                if (!!data?.body?.call?.from?.extensionNumber) {
+                  showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
+                  break;
+                }
+              }
+              else {
+                if (!!data?.body?.call?.to?.extensionNumber) {
                   showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
                   break;
                 }
@@ -772,14 +777,6 @@ window.addEventListener('message', async (e) => {
                 });
               break;
             case '/messageLogger':
-              // extensions numers should NOT be logged
-              if (!!data?.body?.correspondentEntity?.phoneNumbers && data?.body?.correspondentEntity?.phoneNumbers.length > 1) {
-                data.body.correspondentEntity.phoneNumbers = data.body.correspondentEntity.phoneNumbers.filter(p => p.phoneType !== 'extension');
-                if (data.body.correspondentEntity.phoneNumbers.length === 0) {
-                  showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
-                  break;
-                }
-              }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
               const messageAutoPopup = !!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Auto pop up message log page')?.value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationId}`;
