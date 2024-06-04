@@ -357,12 +357,12 @@ window.addEventListener('message', async (e) => {
               const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
               crmAuthed = !!rcUnifiedCrmExtJwt;
               if (!rcUnifiedCrmExtJwt) {
-                switch (platform.authType) {
+                switch (platform.auth.type) {
                   case 'oauth':
                     let authUri;
                     let customState = '';
-                    if (!!platform.customState) {
-                      customState = platform.customState;
+                    if (!!platform.auth.oauth.customState) {
+                      customState = platform.auth.oauth.customState;
                     }
                     // Unique: Pipedrive
                     if (platformName === 'pipedrive') {
@@ -375,7 +375,7 @@ window.addEventListener('message', async (e) => {
                         authUri = `${crm_extension_bullhorn_user_urls.oauthUrl}/authorize?` +
                           `response_type=code` +
                           `&action=Login` +
-                          `&client_id=${platform.clientId}` +
+                          `&client_id=${platform.auth.oauth.clientId}` +
                           `&state=platform=${platform.name}` +
                           '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
                       }
@@ -388,17 +388,17 @@ window.addEventListener('message', async (e) => {
                           authUri = `${crm_extension_bullhorn_user_urls.oauthUrl}/authorize?` +
                             `response_type=code` +
                             `&action=Login` +
-                            `&client_id=${platform.clientId}` +
+                            `&client_id=${platform.auth.oauth.clientId}` +
                             `&state=platform=${platform.name}` +
                             '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
                         }
                       }
                     }
                     else {
-                      authUri = `${platform.authUrl}?` +
+                      authUri = `${platform.auth.oauth.authUrl}?` +
                         `response_type=code` +
-                        `&client_id=${platform.clientId}` +
-                        `${!!platform.scope && platform.scope != '' ? `&${platform.scope}` : ''}` +
+                        `&client_id=${platform.auth.oauth.clientId}` +
+                        `${!!platform.auth.oauth.scope && platform.auth.oauth.scope != '' ? `&${platform.auth.oauth.scope}` : ''}` +
                         `&state=${customState === '' ? `platform=${platform.name}` : customState}` +
                         '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
                     }

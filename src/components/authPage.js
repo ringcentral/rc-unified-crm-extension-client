@@ -1,5 +1,5 @@
 function getAuthPageRender({ manifest, platformName }) {
-    const authPage = manifest.platforms[platformName].page.auth;
+    const authPage = manifest.platforms[platformName].auth.apiKey.page;
     const pageTitle = authPage.title;
     const required = authPage.content.filter(c => c.required).map(c => { return c.const });
     const warning = authPage.warning ? {
