@@ -35,7 +35,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                 }
                 break;
             case 'Message':
-                if (moment(logInfo.date).diff(new Date(), 'days') <= -1) {
+                if (moment(logInfo.creationTime).isSame(new Date(), "day")) {
                     const isLogged = await chrome.storage.local.get(`rc-crm-conversation-log-${logInfo.conversationLogId}`);
                     if (isLogged[`rc-crm-conversation-log-${logInfo.conversationLogId}`]?.logged) {
                         console.log(`skipping logged conversation on date ${logInfo.date}`)
