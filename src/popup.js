@@ -893,6 +893,7 @@ window.addEventListener('message', async (e) => {
                       contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
                     });
                   }
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                 }
               }
               // Case: manual log, open page
@@ -940,8 +941,8 @@ window.addEventListener('message', async (e) => {
                 if (!isTrailing) {
                   leadingSMSCallReady = true;
                 }
+                window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
-              window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               // response to widget
               responseMessage(
                 data.requestId,
