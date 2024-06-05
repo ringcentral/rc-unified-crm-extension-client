@@ -510,6 +510,9 @@ window.addEventListener('message', async (e) => {
                   if (contactMatched) {
                     matchedContacts[contactPhoneNumber] = [];
                     for (var contactInfoItem of contactInfo) {
+                      if (contactInfoItem.isNewContact) {
+                        continue;
+                      }
                       matchedContacts[contactPhoneNumber].push({
                         id: contactInfoItem.id,
                         type: platformName,
