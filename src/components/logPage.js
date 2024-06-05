@@ -13,15 +13,15 @@ function getLogPageRender({ manifest, logType, triggerType, platformName, direct
         manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [] :
         manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [];
     // format contact list
-    const contactList = contactInfo.map(c => { return { const: c.id, title: c.name, type: c.type, description: c.type ? `${c.type} - ${c.id}` : '', additionalInfo: c.additionalInfo } });
+    const contactList = contactInfo.map(c => { return { const: c.id, title: c.name, type: c.type, description: c.type ? `${c.type} - ${c.id}` : '', additionalInfo: c.additionalInfo, isNewContact: !!c.isNewContact } });
     const defaultActivityTitle = direction === 'Inbound' ?
         `Inbound ${logType} from ${contactList[0]?.title ?? ''}` :
         `Outbound ${logType} to ${contactList[0]?.title ?? ''}`;
     // add option to create new contact
-    contactList.push({
-        const: 'createNewContact',
-        title: 'Create new contact...'
-    });
+    // contactList.push({
+    //     const: 'createNewContact',
+    //     title: 'Create new contact...'
+    // });
     let callSchemas = {};
     let callUISchemas = {};
     let callFormData = {};
@@ -118,7 +118,7 @@ function getLogPageRender({ manifest, logType, triggerType, platformName, direct
                     "ui:widget": "hidden",
                 }
             }
-            if (contactList[0].const === 'createNewContact') {
+            if (contactList[0].isNewContact) {
                 if (!!manifest.platforms[platformName].contactTypes) {
                     newContactWidget.newContactType = {};
                 }
@@ -262,7 +262,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
         case 'contact':
             const contact = page.schema.properties.contact.oneOf.find(c => c.const === page.formData.contact);
             // New contact fields
-            if (contact.const === 'createNewContact') {
+            if (contact.isNewContact) {
                 if (!!manifest.platforms[platformName].contactTypes) {
                     page.uiSchema.newContactType = {};
                 }

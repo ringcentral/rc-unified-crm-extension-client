@@ -66,6 +66,9 @@ async function openContactPage({ manifest, platformName, phoneNumber }) {
         const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
         if (crm_extension_bullhorn_user_urls?.atsUrl) {
             for (const c of contactInfo) {
+                if (c.isNewContact) {
+                    continue;
+                }
                 const newTab = window.open(`${crm_extension_bullhorn_user_urls.atsUrl}/BullhornStaffing/OpenWindow.cfm?Entity=${c.type}&id=${c.id}&view=Overview`, '_blank', 'popup');
                 newTab.blur();
                 window.focus();
@@ -74,6 +77,9 @@ async function openContactPage({ manifest, platformName, phoneNumber }) {
         return;
     }
     for (const c of contactInfo) {
+        if (c.isNewContact) {
+            continue;
+        }
         const hostname = platformInfo['platform-info'].hostname;
         const contactPageUrl = manifest.platforms[platformName].contactPageUrl
             .replace('{hostname}', hostname)

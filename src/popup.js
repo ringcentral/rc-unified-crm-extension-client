@@ -598,6 +598,11 @@ window.addEventListener('message', async (e) => {
                 sessionIds: data.body.call.sessionId
               });
               const { matched: callContactMatched, message: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber });
+              if (!callContactMatched) {
+                showNotification({ level: 'warning', message: callLogContactMatchMessage, ttl: 3000 });
+                window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                break;
+              }
               let note = '';
               let callLogSubject = ''
               switch (data.body.triggerType) {
