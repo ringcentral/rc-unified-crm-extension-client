@@ -17,11 +17,6 @@ function getLogPageRender({ manifest, logType, triggerType, platformName, direct
     const defaultActivityTitle = direction === 'Inbound' ?
         `Inbound ${logType} from ${contactList[0]?.title ?? ''}` :
         `Outbound ${logType} to ${contactList[0]?.title ?? ''}`;
-    // add option to create new contact
-    // contactList.push({
-    //     const: 'createNewContact',
-    //     title: 'Create new contact...'
-    // });
     let callSchemas = {};
     let callUISchemas = {};
     let callFormData = {};

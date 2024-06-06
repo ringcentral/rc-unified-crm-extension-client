@@ -172,7 +172,7 @@ window.addEventListener('message', async (e) => {
             registered = true;
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-register-third-party-service',
-              service: getServiceManifest(platformName)
+              service: getServiceManifest(platform.displayName)
             }, '*');
           }
           break;
