@@ -310,7 +310,9 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                     oneOf: [...contact.additionalInfo[f.const], { const: 'none', title: 'None' }],
                     associationField: f.contactDependent
                 }
-                additionalFieldsValue[f.const] = contact.additionalInfo[f.const][0].const;
+                additionalFieldsValue[f.const] = f.contactDependent ?
+                    contact.additionalInfo[f.const][0].const :
+                    page.formData[f.const];
             }
             for (const f of additionalCheckBoxFields) {
                 if (f.contactDependent && !contact?.additionalInfo?.hasOwnProperty(f.const)) {
@@ -321,7 +323,9 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                     type: 'boolean',
                     associationField: f.contactDependent
                 }
-                additionalFieldsValue[f.const] = f.defaultValue;
+                additionalFieldsValue[f.const] = f.contactDependent ?
+                    f.defaultValue :
+                    page.formData[f.const];
             }
             page.schema.properties = {
                 ...page.schema.properties,

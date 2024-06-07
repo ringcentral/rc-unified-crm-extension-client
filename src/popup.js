@@ -664,6 +664,13 @@ window.addEventListener('message', async (e) => {
                   else {
                     // add your codes here to log call to your service
                     const callPage = logPage.getLogPageRender({ manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note });
+                    // CASE: Bullhorn default action code
+                    if (platformName === 'bullhorn') {
+                      const { bullhornDefaultActionCode } = await chrome.storage.local.get({ bullhornDefaultActionCode: null });
+                      if (!!bullhornDefaultActionCode && callPage.schema.properties.noteActions?.oneOf.some(o => o.const === bullhornDefaultActionCode)) {
+                        callPage.formData.noteActions = bullhornDefaultActionCode;
+                      }
+                    }
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-update-call-log-page',
                       page: callPage,
@@ -928,6 +935,13 @@ window.addEventListener('message', async (e) => {
                   direction: '',
                   contactInfo: getContactMatchResult.contactInfo ?? []
                 });
+                // CASE: Bullhorn default action code
+                if (platformName === 'bullhorn') {
+                  const { bullhornDefaultActionCode } = await chrome.storage.local.get({ bullhornDefaultActionCode: null });
+                  if (!!bullhornDefaultActionCode && messagePage.schema.properties.noteActions?.oneOf.some(o => o.const === bullhornDefaultActionCode)) {
+                    messagePage.formData.noteActions = bullhornDefaultActionCode;
+                  }
+                }
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-update-messages-log-page',
                   page: messagePage

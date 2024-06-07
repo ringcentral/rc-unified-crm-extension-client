@@ -28,12 +28,11 @@ const clearPlatformInfo = async () => {
 // stored in chrome.storage.
 const restoreOptions = () => {
     chrome.storage.local.get(
-        { customCrmManifestUrl: '', selectedRegion: 'US', c2dDelay: '0', autoLogCountdown: '20', bullhornDefaultActionCode: '', renderQuickAccessButton: true, overridingPhoneNumberFormat: '', overridingPhoneNumberFormat2: '', overridingPhoneNumberFormat3: '' },
+        { customCrmManifestUrl: '', selectedRegion: 'US', c2dDelay: '0', bullhornDefaultActionCode: '', renderQuickAccessButton: true, overridingPhoneNumberFormat: '', overridingPhoneNumberFormat2: '', overridingPhoneNumberFormat3: '' },
         (items) => {
             document.getElementById('customCrmManifestUrl').value = items.customCrmManifestUrl;
             document.getElementById('region').value = items.selectedRegion;
             document.getElementById('c2dDelay').value = items.c2dDelay;
-            document.getElementById('autoLogCountdown').value = items.autoLogCountdown;
             document.getElementById('bullhornDefaultActionCode').value = items.bullhornDefaultActionCode;
             document.getElementById('renderQuickAccessButton').checked = items.renderQuickAccessButton;
             document.getElementById('overridingPhoneNumberFormat').value = items.overridingPhoneNumberFormat;
