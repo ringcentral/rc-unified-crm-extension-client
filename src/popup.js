@@ -542,7 +542,7 @@ window.addEventListener('message', async (e) => {
               break;
             case '/contacts/view':
               window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-              await openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber });
+              await openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber, contactId: data.body.id, contactType: data.body.contactType });
               window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               responseMessage(
                 data.requestId,
@@ -693,7 +693,7 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   if (manifest.platforms[platformName].canOpenLogPage) {
                     // if callMatchedContact elements only have the same value of "type", then open log page once
-                    const uniqueContactTypes = [...new Set(callMatchedContact.map(c => c.type))];
+                    const uniqueContactTypes = [...new Set(callMatchedContact.map(c => c.type))].filter(u => !!u);
                     if (uniqueContactTypes.length === 1) {
                       openLog({ manifest, platformName, hostname: platformHostname, logId: fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: uniqueContactTypes[0] });
                     } else {
@@ -703,7 +703,8 @@ window.addEventListener('message', async (e) => {
                     }
                   }
                   else {
-                    await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber });
+                    const matchedEntity = data.body.call.direction === 'Inbound' ? data.body.fromEntity : data.body.toEntity;
+                    await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: matchedEntity.id, contactType: matchedEntity.contactType });
                   }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;

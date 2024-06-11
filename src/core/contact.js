@@ -49,11 +49,7 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
     }
 }
 
-async function openContactPage({ manifest, platformName, phoneNumber }) {
-    const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber });
-    if (!contactMatched) {
-        return;
-    }
+async function openContactPage({ manifest, platformName, phoneNumber, contactId, contactType }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     let platformInfo = await chrome.storage.local.get('platform-info');
     if (platformInfo['platform-info'].hostname === 'temp') {
@@ -61,31 +57,45 @@ async function openContactPage({ manifest, platformName, phoneNumber }) {
         platformInfo['platform-info'].hostname = hostnameRes.data;
         await chrome.storage.local.set(platformInfo);
     }
-    // Unique: Bullhorn
-    if (platformName === 'bullhorn') {
-        const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
-        if (crm_extension_bullhorn_user_urls?.atsUrl) {
-            for (const c of contactInfo) {
-                if (c.isNewContact) {
-                    continue;
-                }
-                const newTab = window.open(`${crm_extension_bullhorn_user_urls.atsUrl}/BullhornStaffing/OpenWindow.cfm?Entity=${c.type}&id=${c.id}&view=Overview`, '_blank', 'popup');
-                newTab.blur();
-                window.focus();
-            }
-        }
-        return;
-    }
-    for (const c of contactInfo) {
-        if (c.isNewContact) {
-            continue;
-        }
-        const hostname = platformInfo['platform-info'].hostname;
+    const hostname = platformInfo['platform-info'].hostname;
+    if (!!contactId) {
         const contactPageUrl = manifest.platforms[platformName].contactPageUrl
             .replace('{hostname}', hostname)
-            .replaceAll('{contactId}', c.id)
-            .replaceAll('{contactType}', c.type);
+            .replaceAll('{contactId}', contactId)
+            .replaceAll('{contactType}', contactType);
         window.open(contactPageUrl);
+    }
+    else {
+        const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber });
+        if (!contactMatched) {
+            return;
+        }
+        // Unique: Bullhorn
+        if (platformName === 'bullhorn') {
+            const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
+            if (crm_extension_bullhorn_user_urls?.atsUrl) {
+                for (const c of contactInfo) {
+                    if (c.isNewContact) {
+                        continue;
+                    }
+                    const newTab = window.open(`${crm_extension_bullhorn_user_urls.atsUrl}/BullhornStaffing/OpenWindow.cfm?Entity=${c.type}&id=${c.id}&view=Overview`, '_blank', 'popup');
+                    newTab.blur();
+                    window.focus();
+                }
+            }
+            return;
+        }
+        for (const c of contactInfo) {
+            if (c.isNewContact) {
+                continue;
+            }
+            const hostname = platformInfo['platform-info'].hostname;
+            const contactPageUrl = manifest.platforms[platformName].contactPageUrl
+                .replace('{hostname}', hostname)
+                .replaceAll('{contactId}', c.id)
+                .replaceAll('{contactType}', c.type);
+            window.open(contactPageUrl);
+        }
     }
 }
 
