@@ -148,7 +148,7 @@ window.addEventListener('message', async (e) => {
 
             RCAdapter.showFeedback({
               onFeedback: function () {
-                const feedbackPageRender = feedbackPage.getFeedbackPageRender();
+                const feedbackPageRender = feedbackPage.getFeedbackPageRender({ pageConfig: manifest.platforms[platformName].page.feedback });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-register-customized-page',
                   page: feedbackPageRender
@@ -1014,7 +1014,7 @@ window.addEventListener('message', async (e) => {
                 responseId: data.requestId,
                 response: { data: 'ok' },
               }, '*');
-              const feedbackPageRender = feedbackPage.getFeedbackPageRender();
+              const feedbackPageRender = feedbackPage.getFeedbackPageRender({ pageConfig: manifest.platforms[platformName].page.feedback });
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
                 page: feedbackPageRender
@@ -1051,9 +1051,15 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 case 'feedbackPage':
-                  const feedbackText = encodeURIComponent(data.body.button.formData.feedback);
-                  const platformNameInUrl = platformName.charAt(0).toUpperCase() + platformName.slice(1)
-                  const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLSd3vF5MVJ5RAo1Uldy0EwsibGR8ZVucPW4E3JUnyAkHz2_Zpw/viewform?usp=pp_url&entry.912199227=${data.body.button.formData.score}&entry.2052354973=${platformNameInUrl}&entry.844920872=${feedbackText}&entry.1467064016=${rcUserInfo.rcUserName}&entry.1822789675=${rcUserInfo.rcUserEmail}`;
+                  // const platformNameInUrl = platformName.charAt(0).toUpperCase() + platformName.slice(1)
+                  let formUrl = manifest.platforms[platformName].page.feedback.url
+                  for (const formKey of Object.keys(data.body.button.formData)) {
+                    formUrl = formUrl.replace(`{${formKey}}`, encodeURIComponent(data.body.button.formData[formKey]));
+                  }
+                  formUrl = formUrl
+                    .replace('{crmName}', manifest.platforms[platformName].displayName)
+                    .replace('{userName}', rcUserInfo.rcUserName)
+                    .replace('{userEmail}', rcUserInfo.rcUserEmail)
                   window.open(formUrl, '_blank');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
@@ -1161,7 +1167,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   }
   else if (request.type === 'navigate') {
     if (request.path === '/feedback') {
-      const feedbackPageRender = feedbackPage.getFeedbackPageRender();
+      const feedbackPageRender = feedbackPage.getFeedbackPageRender({ pageConfig: manifest.platforms[platformName].page.feedback });
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: feedbackPageRender
