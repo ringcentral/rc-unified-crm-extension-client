@@ -2,7 +2,7 @@ const outboundCallIcon = require('../images/outboundCallIcon.png');
 const inboundCallIcon = require('../images/inboundCallIcon.png');
 const conflictLogIcon = require('../images/conflictLogIcon.png');
 
-function getLogPageRender({ manifest, logType, triggerType, platformName, direction, contactInfo, subject, note, isUnresolved }) {
+function getLogPageRender({ manifest, logType, triggerType, platformName, direction, contactInfo, subject, note, loggedContactId, isUnresolved }) {
     const additionalChoiceFields = logType === 'Call' ?
         manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'selection') ?? [] :
         manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'selection') ?? [];
@@ -231,7 +231,7 @@ function getLogPageRender({ manifest, logType, triggerType, platformName, direct
                     }
                 },
                 formData: {
-                    contact: contactList[0].const,
+                    contact: loggedContactId ?? contactList[0].const,
                     activityTitle: subject ?? '',
                     triggerType,
                     note: note ?? ''

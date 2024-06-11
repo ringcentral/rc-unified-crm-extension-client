@@ -482,10 +482,10 @@ window.addEventListener('message', async (e) => {
               noShowNotification = true;
               let matchedContacts = {};
               const { tempContactMatchTask } = await chrome.storage.local.get({ tempContactMatchTask: null });
-              if (data.body.phoneNumbers.length === 1 && !!tempContactMatchTask) {
+              if (data.body.phoneNumbers.length === 1 && !!tempContactMatchTask && tempContactMatchTask.phoneNumber === data.body.phoneNumbers[0]) {
                 matchedContacts[tempContactMatchTask.phoneNumber] = [
                   {
-                    id: tempContactMatchTask.id,
+                    id: tempContactMatchTask.contactId,
                     type: platformName,
                     name: tempContactMatchTask.contactName,
                     phoneNumbers: [
@@ -499,35 +499,35 @@ window.addEventListener('message', async (e) => {
                 ];
                 await chrome.storage.local.remove('tempContactMatchTask');
               }
-              else {
-                for (const contactPhoneNumber of data.body.phoneNumbers) {
-                  // skip contact with just extension number
-                  if (!contactPhoneNumber.startsWith('+')) {
-                    continue;
-                  }
-                  // query on 3rd party API to get the matched contact info and return
-                  const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber });
-                  if (contactMatched) {
+              for (const contactPhoneNumber of data.body.phoneNumbers) {
+                // skip contact with just extension number
+                if (!contactPhoneNumber.startsWith('+')) {
+                  continue;
+                }
+                // query on 3rd party API to get the matched contact info and return
+                const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber });
+                if (contactMatched) {
+                  if (!!!matchedContacts[contactPhoneNumber]) {
                     matchedContacts[contactPhoneNumber] = [];
-                    for (var contactInfoItem of contactInfo) {
-                      if (contactInfoItem.isNewContact) {
-                        continue;
-                      }
-                      matchedContacts[contactPhoneNumber].push({
-                        id: contactInfoItem.id,
-                        type: platformName,
-                        name: contactInfoItem.name,
-                        phoneNumbers: [
-                          {
-                            phoneNumber: contactPhoneNumber,
-                            phoneType: 'direct'
-                          }
-                        ],
-                        entityType: platformName,
-                        contactType: contactInfoItem.type,
-                        additionalInfo: contactInfoItem.additionalInfo
-                      });
+                  }
+                  for (var contactInfoItem of contactInfo) {
+                    if (contactInfoItem.isNewContact) {
+                      continue;
                     }
+                    matchedContacts[contactPhoneNumber].push({
+                      id: contactInfoItem.id,
+                      type: platformName,
+                      name: contactInfoItem.name,
+                      phoneNumbers: [
+                        {
+                          phoneNumber: contactPhoneNumber,
+                          phoneType: 'direct'
+                        }
+                      ],
+                      entityType: platformName,
+                      contactType: contactInfoItem.type,
+                      additionalInfo: contactInfoItem.additionalInfo
+                    });
                   }
                 }
               }
@@ -662,8 +662,13 @@ window.addEventListener('message', async (e) => {
                   }
                   // Case: auto log OFF, open log page
                   else {
+                    let loggedContactId = null;
+                    const existingCallLogRecord = await chrome.storage.local.get(`rc-crm-call-log-${data.body.call.sessionId}`);
+                    if (!!existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`]) {
+                      loggedContactId = existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`].contact.id;
+                    }
                     // add your codes here to log call to your service
-                    const callPage = logPage.getLogPageRender({ manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note });
+                    const callPage = logPage.getLogPageRender({ manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId });
                     // CASE: Bullhorn default action code
                     if (platformName === 'bullhorn') {
                       const { bullhornDefaultActionCode } = await chrome.storage.local.get({ bullhornDefaultActionCode: null });
@@ -783,7 +788,14 @@ window.addEventListener('message', async (e) => {
                 for (const sessionId of data.body.sessionIds) {
                   const correspondingLog = callLogs.find(l => l.sessionId === sessionId);
                   if (!!correspondingLog?.matched) {
-                    callLogMatchData[sessionId] = [{ id: sessionId, note: '' }];
+                    const existingCallLogRecord = await chrome.storage.local.get(`rc-crm-call-log-${sessionId}`);
+                    if (!!existingCallLogRecord[`rc-crm-call-log-${sessionId}`]) {
+                      callLogMatchData[sessionId] = [{ id: sessionId, note: '', contact: { id: existingCallLogRecord[`rc-crm-call-log-${sessionId}`].contact?.id } }];
+                    }
+                    else {
+                      callLogMatchData[sessionId] = [{ id: sessionId, note: '' }];
+
+                    }
                   }
                 }
               }

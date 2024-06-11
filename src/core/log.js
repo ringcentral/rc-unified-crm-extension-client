@@ -33,6 +33,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                 else {
                     showNotification({ level: 'warning', message: addCallLogRes.data.message, ttl: 3000 });
                 }
+                await chrome.storage.local.set({ [`rc-crm-call-log-${logInfo.sessionId}`]: { contact: { id: contactId } } });
                 break;
             case 'Message':
                 if (!moment(logInfo.creationTime).isSame(new Date(), "day")) {
