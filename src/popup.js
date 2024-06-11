@@ -1060,7 +1060,7 @@ window.addEventListener('message', async (e) => {
                     path: 'goBack',
                   }, '*');
                   break;
-                case 'deleteUnresolveButton':
+                case 'removeUnresolveButton':
                   await resolveCachedLog({ type: 'Call', id: data.body.button.formData.id });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',

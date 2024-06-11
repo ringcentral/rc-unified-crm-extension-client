@@ -163,9 +163,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         },
                         ...callSchemas,
                         ...additionalFields,
-                        deleteUnresolveButton: {
+                        removeUnresolveButton: {
                             "type": "string",
-                            "title": "Delete",
+                            "title": "Remove from unresolved list",
                         }
                     }
                 },
@@ -192,7 +192,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     submitButtonOptions: {
                         submitText: 'Save',
                     },
-                    deleteUnresolveButton: {
+                    removeUnresolveButton: {
                         "ui:field": "button",
                         "ui:variant": "contained", // "text", "outlined", "contained", "plain"
                         "ui:fullWidth": true,
@@ -379,11 +379,12 @@ function getUnresolvedLogsPageRender({ unresolvedLogs }) {
     const logsList = []
     for (const cacheId of Object.keys(unresolvedLogs)) {
         const isMultipleContactConflit = unresolvedLogs[cacheId].contactInfo.length > 1;
+        const isNoContact = unresolvedLogs[cacheId].contactInfo.length === 1;
         const contactName = isMultipleContactConflit ? 'Multiple contacts' : unresolvedLogs[cacheId].contactInfo[0].name;
         logsList.push({
             const: cacheId,
             title: `${contactName} (${unresolvedLogs[cacheId].phoneNumber})`,
-            description: isMultipleContactConflit ? 'Conflict: Multiple matched contacts' : 'Conflict: Multiple associations',
+            description: isNoContact ? 'Missing: No matched contact' : (isMultipleContactConflit ? 'Conflict: Multiple matched contacts' : 'Conflict: Multiple associations'),
             meta: unresolvedLogs[cacheId].date,
             icon: unresolvedLogs[cacheId].direction === 'Inbound' ? inboundCallIcon : outboundCallIcon,
         });
