@@ -2,7 +2,7 @@ const outboundCallIcon = require('../images/outboundCallIcon.png');
 const inboundCallIcon = require('../images/inboundCallIcon.png');
 const conflictLogIcon = require('../images/conflictLogIcon.png');
 
-function getLogPageRender({ manifest, logType, triggerType, platformName, direction, contactInfo, subject, note, loggedContactId, isUnresolved }) {
+function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, subject, note, loggedContactId, isUnresolved }) {
     const additionalChoiceFields = logType === 'Call' ?
         manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'selection') ?? [] :
         manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'selection') ?? [];
@@ -128,6 +128,9 @@ function getLogPageRender({ manifest, logType, triggerType, platformName, direct
                     required: requiredFieldNames,
                     properties: {
                         ...warningField,
+                        id: {
+                            type: 'string'
+                        },
                         contact: {
                             title: 'Contact',
                             type: 'string',
@@ -159,10 +162,17 @@ function getLogPageRender({ manifest, logType, triggerType, platformName, direct
                             oneOf: manifest.platforms[platformName].contactTypes?.map(t => { return { const: t, title: t } }) ?? [],
                         },
                         ...callSchemas,
-                        ...additionalFields
+                        ...additionalFields,
+                        deleteUnresolveButton: {
+                            "type": "string",
+                            "title": "Delete",
+                        }
                     }
                 },
                 uiSchema: {
+                    id: {
+                        "ui:widget": "hidden",
+                    },
                     warning: {
                         "ui:field": "admonition", // or typography to show raw text
                         "ui:severity": "warning", // "warning", "info", "error", "success"
@@ -182,10 +192,18 @@ function getLogPageRender({ manifest, logType, triggerType, platformName, direct
                     submitButtonOptions: {
                         submitText: 'Save',
                     },
+                    deleteUnresolveButton: {
+                        "ui:field": "button",
+                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                        "ui:fullWidth": true,
+                        "ui:color": "danger.b03",
+                        "ui:widget": isUnresolved ? "show" : "hidden",
+                    },
                     ...callUISchemas,
                     ...newContactWidget
                 },
                 formData: {
+                    id,
                     contact: contactList[0].const,
                     newContactType: manifest.platforms[platformName].contactTypes ? manifest.platforms[platformName].contactTypes[0] : '',
                     newContactName: '',
@@ -205,6 +223,9 @@ function getLogPageRender({ manifest, logType, triggerType, platformName, direct
                     type: 'object',
                     required: ['activityTitle'],
                     properties: {
+                        id: {
+                            type: 'string'
+                        },
                         contact: {
                             title: 'Contact',
                             type: 'string',
@@ -222,6 +243,9 @@ function getLogPageRender({ manifest, logType, triggerType, platformName, direct
                     }
                 },
                 uiSchema: {
+                    id: {
+                        "ui:widget": "hidden",
+                    },
                     note: {
                         "ui:placeholder": 'Enter note...',
                         "ui:widget": "textarea",
@@ -231,6 +255,7 @@ function getLogPageRender({ manifest, logType, triggerType, platformName, direct
                     }
                 },
                 formData: {
+                    id,
                     contact: loggedContactId ?? contactList[0].const,
                     activityTitle: subject ?? '',
                     triggerType,

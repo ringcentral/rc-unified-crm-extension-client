@@ -1,5 +1,5 @@
 const auth = require('./core/auth');
-const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, cacheUnresolvedLog, getLogCache, getAllUnresolvedLogs } = require('./core/log');
+const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, cacheUnresolvedLog, getLogCache, getAllUnresolvedLogs, resolveCachedLog } = require('./core/log');
 const { getContact, createContact, openContactPage } = require('./core/contact');
 const { responseMessage, isObjectEmpty, showNotification } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
@@ -433,7 +433,9 @@ window.addEventListener('message', async (e) => {
               if (data.body.page.id === 'unresolve') {
                 const unresolvedRecordId = data.body.formData.record;
                 const unresolvedLog = await getLogCache({ cacheId: unresolvedRecordId });
+                const pageId = unresolvedRecordId.split('-')[1];
                 const logPageRender = logPage.getLogPageRender({
+                  id: pageId,
                   manifest,
                   logType: unresolvedLog.type,
                   triggerType: 'createLog',
@@ -445,7 +447,6 @@ window.addEventListener('message', async (e) => {
                   isUnresolved: true
                 });
 
-                const pageId = unresolvedRecordId.split('-')[1];
 
                 if (unresolvedLog.type === 'Call') {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -668,7 +669,7 @@ window.addEventListener('message', async (e) => {
                       loggedContactId = existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`].contact.id;
                     }
                     // add your codes here to log call to your service
-                    const callPage = logPage.getLogPageRender({ manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId });
+                    const callPage = logPage.getLogPageRender({ id: data.body.call.sessionId, manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId });
                     // CASE: Bullhorn default action code
                     if (platformName === 'bullhorn') {
                       const { bullhornDefaultActionCode } = await chrome.storage.local.get({ bullhornDefaultActionCode: null });
@@ -940,6 +941,7 @@ window.addEventListener('message', async (e) => {
                 }
                 // add your codes here to log call to your service
                 const messagePage = logPage.getLogPageRender({
+                  id: data.body.conversation.conversationId,
                   manifest,
                   logType: 'Message',
                   triggerType: data.body.triggerType,
@@ -1057,6 +1059,14 @@ window.addEventListener('message', async (e) => {
                     type: 'rc-adapter-navigate-to',
                     path: 'goBack',
                   }, '*');
+                  break;
+                case 'deleteUnresolveButton':
+                  await resolveCachedLog({ type: 'Call', id: data.body.button.formData.id });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack',
+                  }, '*');
+                  await showUnresolvedTabPage();
                   break;
               }
               break;

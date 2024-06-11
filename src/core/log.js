@@ -179,3 +179,4 @@ exports.getCachedNote = getCachedNote;
 exports.cacheUnresolvedLog = cacheUnresolvedLog;
 exports.getLogCache = getLogCache;
 exports.getAllUnresolvedLogs = getAllUnresolvedLogs;
+exports.resolveCachedLog = resolveCachedLog;
