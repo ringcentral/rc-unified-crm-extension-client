@@ -812,6 +812,10 @@ window.addEventListener('message', async (e) => {
                 });
               break;
             case '/messageLogger':
+              if (!!data?.body?.conversation?.correspondents[0]?.extensionNumber) {
+                showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
+                break;
+              }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
               const messageAutoPopup = !!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Auto pop up message log page')?.value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationId}`;
