@@ -42,6 +42,7 @@ let trailingSMSLogInfo = [];
 let firstTimeLogoutAbsorbed = false;
 
 import axios from 'axios';
+axios.defaults.timeout = 30000; // Set default timeout to 5 seconds
 
 async function checkC2DCollision() {
   try {
@@ -1092,9 +1093,12 @@ window.addEventListener('message', async (e) => {
   }
   catch (e) {
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-    console.log(e)
+    console.log(e);
     if (e.response && e.response.data && !noShowNotification && typeof e.response.data === 'string') {
       showNotification({ level: 'warning', message: e.response.data, ttl: 5000 });
+    }
+    else if(e.message.includes('timeout')){
+      showNotification({ level: 'warning', message: 'Timeout', ttl: 5000 });
     }
     else {
       console.error(e);
