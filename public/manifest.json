@@ -27,7 +27,10 @@
         "./c2d/index.js",
         "./content.js"
       ],
-      "all_frames": true
+      "all_frames": true,
+      "exclude_globs": [
+        "://*.bullhornstaffing.com/content/*"
+      ]
     }
   ],
   "web_accessible_resources": [
