@@ -217,6 +217,9 @@ window.addEventListener('message', async (e) => {
               reset();
               identify({ extensionId: rcUserInfo?.rcExtensionId, rcAccountId: rcUserInfo?.rcAccountId, platformName });
               group({ rcAccountId: rcUserInfo?.rcAccountId });
+              // setup headers for server side analytics
+              axios.defaults.headers.common['rc-extension-id'] = rcUserInfo?.rcExtensionId;
+              axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId;
               await showUnresolvedTabPage();
             }
             catch (e) {

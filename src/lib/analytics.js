@@ -37,7 +37,7 @@ function track(event, properties = {}) {
     if (!useAnalytics) {
         return;
     }
-    mixpanel.track(event, { appName, version, ...properties });
+    mixpanel.track(event, { appName, version, collectedFrom: 'client', ...properties });
 }
 
 exports.trackPage = function page(name, properties = {}) {
