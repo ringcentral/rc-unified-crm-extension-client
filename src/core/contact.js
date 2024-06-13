@@ -59,11 +59,23 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
     }
     const hostname = platformInfo['platform-info'].hostname;
     if (!!contactId) {
-        const contactPageUrl = manifest.platforms[platformName].contactPageUrl
-            .replace('{hostname}', hostname)
-            .replaceAll('{contactId}', contactId)
-            .replaceAll('{contactType}', contactType);
-        window.open(contactPageUrl);
+        // Unique: Bullhorn
+        if (platformName === 'bullhorn') {
+            const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
+            if (crm_extension_bullhorn_user_urls?.atsUrl) {
+                const newTab = window.open(`${crm_extension_bullhorn_user_urls.atsUrl}/BullhornStaffing/OpenWindow.cfm?Entity=${contactType}&id=${contactId}&view=Overview`, '_blank', 'popup');
+                newTab.blur();
+                window.focus();
+            }
+            return;
+        }
+        else {
+            const contactPageUrl = manifest.platforms[platformName].contactPageUrl
+                .replace('{hostname}', hostname)
+                .replaceAll('{contactId}', contactId)
+                .replaceAll('{contactType}', contactType);
+            window.open(contactPageUrl);
+        }
     }
     else {
         const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber });
