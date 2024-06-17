@@ -860,7 +860,6 @@ window.addEventListener('message', async (e) => {
                   const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult });
                   // Sub-case: has conflict, cache unresolved log
                   if (hasConflict) {
-                    window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                     await cacheUnresolvedLog({
                       type: 'Message',
                       id: data.body.conversation.conversationId,
@@ -870,7 +869,6 @@ window.addEventListener('message', async (e) => {
                     });
                     await showUnresolvedTabPage();
                     showNotification({ level: 'warning', message: 'Unable to log message with unresolved conflict.', ttl: 3000 });
-
                   }
                   // Sub-case: no conflict, log directly
                   else {
@@ -932,7 +930,6 @@ window.addEventListener('message', async (e) => {
                       contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
                     });
                   }
-                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                 }
               }
               // Case: manual log, open page
@@ -951,7 +948,6 @@ window.addEventListener('message', async (e) => {
                   leadingSMSCallReady = false;
                   trailingSMSLogInfo = [];
                 }
-                window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                 if (!isTrailing) {
                   getContactMatchResult = await getContact({
                     serverUrl: manifest.serverUrl,
@@ -988,8 +984,8 @@ window.addEventListener('message', async (e) => {
                 if (!isTrailing) {
                   leadingSMSCallReady = true;
                 }
-                window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
+              window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               // response to widget
               responseMessage(
                 data.requestId,
