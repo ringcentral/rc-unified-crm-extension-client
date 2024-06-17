@@ -40,7 +40,7 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
             type: 'rc-adapter-trigger-contact-match',
             phoneNumbers: [phoneNumber],
         }, '*');
-        await chrome.storage.local.set({ tempContactMatchTask: { contactId: contactRes.data.contact.id, phoneNumber, contactName: newContactName } });
+        await chrome.storage.local.set({ tempContactMatchTask: { contactId: contactRes.data.contact.id, phoneNumber, contactName: newContactName, contactType: newContactType } });
         analytics.createNewContact();
         return { matched: contactRes.data.successful, contactInfo: contactRes.data.contact };
     }

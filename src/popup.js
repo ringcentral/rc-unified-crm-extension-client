@@ -499,42 +499,45 @@ window.addEventListener('message', async (e) => {
                         phoneType: 'direct'
                       }
                     ],
-                    entityType: platformName
+                    entityType: platformName,
+                    contactType: tempContactMatchTask.contactType
                   }
                 ];
                 await chrome.storage.local.remove('tempContactMatchTask');
               }
-              for (const contactPhoneNumber of data.body.phoneNumbers) {
-                // skip contact with just extension number
-                if (!contactPhoneNumber.startsWith('+')) {
-                  continue;
-                }
-                // query on 3rd party API to get the matched contact info and return
-                const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber });
-                if (contactMatched) {
-                  if (!!!matchedContacts[contactPhoneNumber]) {
-                    matchedContacts[contactPhoneNumber] = [];
+              else{
+                for (const contactPhoneNumber of data.body.phoneNumbers) {
+                  // skip contact with just extension number
+                  if (!contactPhoneNumber.startsWith('+')) {
+                    continue;
                   }
-                  for (var contactInfoItem of contactInfo) {
-                    if (contactInfoItem.isNewContact) {
-                      continue;
+                  // query on 3rd party API to get the matched contact info and return
+                  const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber });
+                  if (contactMatched) {
+                    if (!!!matchedContacts[contactPhoneNumber]) {
+                      matchedContacts[contactPhoneNumber] = [];
                     }
-                    matchedContacts[contactPhoneNumber].push({
-                      id: contactInfoItem.id,
-                      type: platformName,
-                      name: contactInfoItem.name,
-                      phoneNumbers: [
-                        {
-                          phoneNumber: contactPhoneNumber,
-                          phoneType: 'direct'
-                        }
-                      ],
-                      entityType: platformName,
-                      contactType: contactInfoItem.type,
-                      additionalInfo: contactInfoItem.additionalInfo
-                    });
+                    for (var contactInfoItem of contactInfo) {
+                      if (contactInfoItem.isNewContact) {
+                        continue;
+                      }
+                      matchedContacts[contactPhoneNumber].push({
+                        id: contactInfoItem.id,
+                        type: platformName,
+                        name: contactInfoItem.name,
+                        phoneNumbers: [
+                          {
+                            phoneNumber: contactPhoneNumber,
+                            phoneType: 'direct'
+                          }
+                        ],
+                        entityType: platformName,
+                        contactType: contactInfoItem.type,
+                        additionalInfo: contactInfoItem.additionalInfo
+                      });
+                    }
                   }
-                }
+              }
               }
               // return matched contact object with phone number as key
               responseMessage(
