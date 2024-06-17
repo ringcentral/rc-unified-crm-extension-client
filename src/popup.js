@@ -488,7 +488,10 @@ window.addEventListener('message', async (e) => {
               let matchedContacts = {};
               const { tempContactMatchTask } = await chrome.storage.local.get({ tempContactMatchTask: null });
               if (data.body.phoneNumbers.length === 1 && !!tempContactMatchTask && tempContactMatchTask.phoneNumber === data.body.phoneNumbers[0]) {
+                const cachedMatching = document.querySelector("#rc-widget-adapter-frame").contentWindow.phone.contactMatcher.data[tempContactMatchTask.phoneNumber];
+                const platformContactMatching = !!cachedMatching ? cachedMatching[platformName]?.data : [];
                 matchedContacts[tempContactMatchTask.phoneNumber] = [
+                  ...platformContactMatching,
                   {
                     id: tempContactMatchTask.contactId,
                     type: platformName,
@@ -505,7 +508,7 @@ window.addEventListener('message', async (e) => {
                 ];
                 await chrome.storage.local.remove('tempContactMatchTask');
               }
-              else{
+              else {
                 for (const contactPhoneNumber of data.body.phoneNumbers) {
                   // skip contact with just extension number
                   if (!contactPhoneNumber.startsWith('+')) {
@@ -537,7 +540,7 @@ window.addEventListener('message', async (e) => {
                       });
                     }
                   }
-              }
+                }
               }
               // return matched contact object with phone number as key
               responseMessage(
@@ -654,11 +657,11 @@ window.addEventListener('message', async (e) => {
                 }
               }
               // Cases: open form when 1.create 2.edit 3.view on CRM page
-              else{
+              else {
                 const { callLogs: fetchedCallLogs } = await getLog({
                   serverUrl: manifest.serverUrl,
                   logType: 'Call',
-                  sessionIds: data.body.call.sessionId, 
+                  sessionIds: data.body.call.sessionId,
                   requireDetails: data.body.triggerType === 'editLog'
                 });
                 const { matched: callContactMatched, message: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber });
@@ -740,7 +743,7 @@ window.addEventListener('message', async (e) => {
                         type: 'rc-adapter-update-call-log-page',
                         page: callPage,
                       }, '*');
-  
+
                       // navigate to call log page
                       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                         type: 'rc-adapter-navigate-to',
