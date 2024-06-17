@@ -562,7 +562,7 @@ window.addEventListener('message', async (e) => {
               break;
             case '/callLogger':
               let isAutoLog = false;
-              const callAutoPopup = !!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Auto pop up call log page')?.value;
+              const callAutoPopup = !!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Auto log call - only pop up log page')?.value;
 
               // extensions numers should NOT be logged
               if (data.body.call.direction === 'Inbound') {
@@ -627,6 +627,9 @@ window.addEventListener('message', async (e) => {
                         newContactType: data.body.formData.newContactType
                       });
                       newContactInfo = newContactResp.contactInfo;
+                      if (!!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Open contact web page after creating it')?.value){
+                        await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
+                      }
                     }
                     await addLog(
                       {
@@ -831,7 +834,7 @@ window.addEventListener('message', async (e) => {
                 break;
               }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
-              const messageAutoPopup = !!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Auto pop up message log page')?.value;
+              const messageAutoPopup = !!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Auto log SMS - only pop up log page')?.value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
               let getContactMatchResult = null;
@@ -905,6 +908,9 @@ window.addEventListener('message', async (e) => {
                       newContactType: data.body.formData.newContactType
                     });
                     newContactInfo = newContactResp.contactInfo;
+                    if (!!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Open contact web page after creating it')?.value){
+                      await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
+                    }
                   }
                   await addLog({
                     serverUrl: manifest.serverUrl,
@@ -1082,7 +1088,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'removeUnresolveButton':
-                  await resolveCachedLog({ type: 'Call', id: data.body.button.formData.id });
+                  await resolveCachedLog({ type: data.body.button.formData.logType, id: data.body.button.formData.id });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: 'goBack',
@@ -1267,11 +1273,11 @@ function getServiceManifest(serviceName) {
     settings: [
       {
         name: 'Auto log call - only pop up log page',
-        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Auto pop up call log page')?.value ?? false)
+        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Auto log call - only pop up log page')?.value ?? false)
       },
       {
         name: 'Auto log SMS - only pop up log page',
-        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Auto pop up message log page')?.value ?? false)
+        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Auto log SMS - only pop up log page')?.value ?? false)
       },
       {
         name: 'Open contact web page from incoming call',

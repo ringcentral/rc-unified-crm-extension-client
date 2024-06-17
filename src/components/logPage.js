@@ -156,6 +156,10 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                             title: '',
                             type: 'boolean'
                         },
+                        logType:{
+                            title: '',
+                            type: 'string'
+                        },
                         newContactType: {
                             title: 'Contact type',
                             type: 'string',
@@ -186,6 +190,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     triggerType: {
                         "ui:widget": "hidden",
                     },
+                    logType: {
+                        "ui:widget": "hidden",
+                    },
                     isUnresolved: {
                         "ui:widget": "hidden",
                     },
@@ -210,6 +217,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     contactType: contactList[0]?.type ?? '',
                     contactName: contactList[0]?.title ?? '',
                     triggerType,
+                    logType,
                     isUnresolved: !!isUnresolved,
                     ...callFormData,
                     ...additionalFieldsValue
@@ -383,7 +391,7 @@ function getUnresolvedLogsPageRender({ unresolvedLogs }) {
         const contactName = isMultipleContactConflit ? 'Multiple contacts' : unresolvedLogs[cacheId].contactInfo[0].name;
         logsList.push({
             const: cacheId,
-            title: `${contactName} (${unresolvedLogs[cacheId].phoneNumber})`,
+            title: `${contactName} (${unresolvedLogs[cacheId]?.phoneNumber ?? unresolvedLogs[cacheId].contactInfo[0].phone})`,
             description: isNoContact ? 'Missing: No matched contact' : (isMultipleContactConflit ? 'Conflict: Multiple matched contacts' : 'Conflict: Multiple associations'),
             meta: unresolvedLogs[cacheId].date,
             icon: unresolvedLogs[cacheId].direction === 'Inbound' ? inboundCallIcon : outboundCallIcon,
