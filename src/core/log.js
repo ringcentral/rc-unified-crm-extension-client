@@ -70,12 +70,12 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
     }
 }
 
-async function getLog({ serverUrl, logType, sessionIds }) {
+async function getLog({ serverUrl, logType, sessionIds, requireDetails }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     if (!!rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
-                const callLogRes = await axios.get(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}&sessionIds=${sessionIds}`);
+                const callLogRes = await axios.get(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}&sessionIds=${sessionIds}&requireDetails=${requireDetails}`);
                 return { successful: callLogRes.data.successful, callLogs: callLogRes.data.logs };
         }
     }
