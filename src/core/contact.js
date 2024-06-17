@@ -59,7 +59,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
     }
     const hostname = platformInfo['platform-info'].hostname;
     if (!!contactId) {
-        // Unique: Bullhorn
+        // Unique: Bullhorn 
         if (platformName === 'bullhorn') {
             const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
             if (crm_extension_bullhorn_user_urls?.atsUrl) {
