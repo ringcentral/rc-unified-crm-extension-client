@@ -34,6 +34,7 @@ let registered = false;
 let crmAuthed = false;
 let platform = null;
 let platformName = '';
+let platformHostname = '';
 let rcUserInfo = {};
 let extensionUserSettings = null;
 // trailing SMS logs need to know if leading SMS log is ready and page is open. The waiting is for getContact call
@@ -756,19 +757,11 @@ window.addEventListener('message', async (e) => {
                     break;
                   case 'viewLog':
                     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                    const matchedEntity = data.body.call.direction === 'Inbound' ? data.body.fromEntity : data.body.toEntity;
                     if (manifest.platforms[platformName].canOpenLogPage) {
-                      // if callMatchedContact elements only have the same value of "type", then open log page once
-                      const uniqueContactTypes = [...new Set(callMatchedContact.map(c => c.type))].filter(u => !!u);
-                      if (uniqueContactTypes.length === 1) {
-                        openLog({ manifest, platformName, hostname: platformHostname, logId: fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: uniqueContactTypes[0] });
-                      } else {
-                        for (const c of callMatchedContact) {
-                          openLog({ manifest, platformName, hostname: platformHostname, logId: fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: c.type });
-                        }
-                      }
+                      openLog({ manifest, platformName, hostname: platformHostname, logId: fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: matchedEntity.contactType });
                     }
                     else {
-                      const matchedEntity = data.body.call.direction === 'Inbound' ? data.body.fromEntity : data.body.toEntity;
                       await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: matchedEntity.id, contactType: matchedEntity.contactType });
                     }
                     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
