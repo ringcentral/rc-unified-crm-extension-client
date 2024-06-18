@@ -909,7 +909,7 @@ window.addEventListener('message', async (e) => {
                     });
                     newContactInfo = newContactResp.contactInfo;
                     if (!!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Open contact web page after creating it')?.value){
-                      await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
+                      await openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                     }
                   }
                   await addLog({
@@ -936,6 +936,7 @@ window.addEventListener('message', async (e) => {
                       contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
                     });
                   }
+                  await showUnresolvedTabPage();
                 }
               }
               // Case: manual log, open page
