@@ -50,6 +50,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
     switch (triggerType) {
         case 'createLog':
         case 'manual':
+        case 'auto':
             let additionalFields = {};
             let additionalFieldsValue = {};
             for (const f of additionalChoiceFields) {

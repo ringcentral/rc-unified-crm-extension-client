@@ -627,7 +627,7 @@ window.addEventListener('message', async (e) => {
                         newContactType: data.body.formData.newContactType
                       });
                       newContactInfo = newContactResp.contactInfo;
-                      if (!!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Open contact web page after creating it')?.value){
+                      if (!!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Open contact web page after creating it')?.value) {
                         await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                       }
                     }
@@ -908,7 +908,7 @@ window.addEventListener('message', async (e) => {
                       newContactType: data.body.formData.newContactType
                     });
                     newContactInfo = newContactResp.contactInfo;
-                    if (!!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Open contact web page after creating it')?.value){
+                    if (!!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Open contact web page after creating it')?.value) {
                       await openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                     }
                   }
@@ -941,7 +941,8 @@ window.addEventListener('message', async (e) => {
               }
               // Case: manual log, open page
               else {
-                if (!messageAutoLogOn && data.body.triggerType === 'auto') {
+                if ((!messageAutoLogOn && data.body.triggerType === 'auto') || (data.body.redirect != undefined && data.body.prefill != undefined && !data.body.redirect && !data.body.prefill)) {
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 }
                 const isTrailing = !data.body.redirect && data.body.triggerType !== 'auto';
