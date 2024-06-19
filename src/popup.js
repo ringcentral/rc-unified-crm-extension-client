@@ -41,6 +41,7 @@ let extensionUserSettings = null;
 let leadingSMSCallReady = false;
 let trailingSMSLogInfo = [];
 let firstTimeLogoutAbsorbed = false;
+let autoPopupMainConverastionId = null;
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 5 seconds
@@ -340,6 +341,9 @@ window.addEventListener('message', async (e) => {
           trackEditSettings({ changedItem: 'auto-message-log', status: data.autoLog });
           break;
         case 'rc-route-changed-notify':
+          if (!data.path.startsWith('/log/message')) {
+            autoPopupMainConverastionId = null;
+          }
           if (data.path !== '/') {
             trackPage(data.path);
             if (data.path === '/customizedTabs/unresolve') {
@@ -822,6 +826,10 @@ window.addEventListener('message', async (e) => {
                 });
               break;
             case '/messageLogger':
+              // Case: when auto log and auto pop turned ON, we need to know which event is for the conversation that user is looking at
+              if (!!!autoPopupMainConverastionId) {
+                autoPopupMainConverastionId = data.body.conversation.conversationId;
+              }
               if (!!data?.body?.conversation?.correspondents[0]?.extensionNumber) {
                 showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
                 break;
@@ -932,7 +940,7 @@ window.addEventListener('message', async (e) => {
                   await showUnresolvedTabPage();
                 }
               }
-              // Case: manual log, open page
+              // Case: manual log, open page OR auto log with auto pop up log page ON
               else {
                 if ((!messageAutoLogOn && data.body.triggerType === 'auto') || (data.body.redirect != undefined && data.body.prefill != undefined && !data.body.redirect && !data.body.prefill)) {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
@@ -972,6 +980,13 @@ window.addEventListener('message', async (e) => {
                     messagePage.formData.noteActions = bullhornDefaultActionCode;
                   }
                 }
+
+                // to stop following unlogged message events override current message log page
+                if (messageAutoLogOn && data.body.triggerType === 'auto' && messageAutoPopup && data.body.conversation.conversationId != autoPopupMainConverastionId) {
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
+                }
+
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-update-messages-log-page',
                   page: messagePage
@@ -982,6 +997,7 @@ window.addEventListener('message', async (e) => {
                   type: 'rc-adapter-navigate-to',
                   path: `/log/messages/${data.body.conversation.conversationId}`, // conversation id that you received from message logger event
                 }, '*');
+
                 if (!isTrailing) {
                   leadingSMSCallReady = true;
                 }
