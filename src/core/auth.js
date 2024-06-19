@@ -26,7 +26,7 @@ async function apiKeyLogin({ serverUrl, apiKey, apiUrl, username, password }) {
             }
         });
         setAuth(true);
-        showNotification({ level: 'success', message: 'Successfully authorized.', ttl: 3000 });
+        showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully authorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
         await chrome.storage.local.set({
             ['rcUnifiedCrmExtJwt']: res.data.jwtToken
         });
@@ -63,7 +63,7 @@ async function onAuthCallback({ serverUrl, callbackUri }) {
     const crmUserInfo = { name: res.data.name };
     await chrome.storage.local.set({ crmUserInfo });
     setAuth(true, crmUserInfo.name);
-    showNotification({ level: 'success', message: 'Successfully authorized.', ttl: 3000 });
+    showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully authorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
     await chrome.storage.local.set({
         ['rcUnifiedCrmExtJwt']: res.data.jwtToken
     });
@@ -73,12 +73,13 @@ async function onAuthCallback({ serverUrl, callbackUri }) {
 
 async function unAuthorize({ serverUrl, platformName, rcUnifiedCrmExtJwt }) {
     try {
-        await axios.post(`${serverUrl}/unAuthorize?jwtToken=${rcUnifiedCrmExtJwt}`);
+        const res = await axios.post(`${serverUrl}/unAuthorize?jwtToken=${rcUnifiedCrmExtJwt}`);
         // Unique: Bullhorn
         if (platformName === 'bullhorn') {
             await chrome.storage.local.remove('crm_extension_bullhornUsername');
             await chrome.storage.local.remove('crm_extension_bullhorn_user_urls');
         }
+        showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully unauthorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
         trackCrmLogout()
     }
     catch (e) {

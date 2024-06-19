@@ -20,7 +20,6 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                     sessionIds: [logInfo.sessionId]
                 }, '*');
                 if (addCallLogRes.data.successful) {
-                    showNotification({ level: 'success', message: 'Call log added', ttl: 3000 });
                     trackSyncCallLog({ hasNote: note !== '' });
                     // check for remaining recording link
                     const recordingSessionId = `rec-link-${logInfo.sessionId}`;
@@ -30,9 +29,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                     }
                     await resolveCachedLog({ type: 'Call', id: logInfo.sessionId });
                 }
-                else {
-                    showNotification({ level: 'warning', message: addCallLogRes.data.message, ttl: 3000 });
-                }
+                showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'success', message: addCallLogRes.data.returnMessage?.message ?? 'Call log added', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000 });
                 await chrome.storage.local.set({ [`rc-crm-call-log-${logInfo.sessionId}`]: { contact: { id: contactId } } });
                 break;
             case 'Message':
@@ -46,7 +43,6 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                 const messageLogRes = await axios.post(`${serverUrl}/messageLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (messageLogRes.data.successful) {
                     if (isMain & messageLogRes.data.logIds.length > 0) {
-                        showNotification({ level: 'success', message: 'Message log added', ttl: 3000 });
                         trackSyncMessageLog();
                         let messageLogPrefCache = {};
                         messageLogPrefCache[`rc-crm-conversation-pref-${logInfo.conversationId}`] = {
@@ -59,6 +55,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                         };
                         await chrome.storage.local.set(messageLogPrefCache);
                     }
+                    showNotification({ level: messageLogRes.data.returnMessage?.messageType ?? 'success', message: messageLogRes.data.returnMessage?.message ?? 'Message log added', ttl: messageLogRes.data.returnMessage?.ttl ?? 3000 });
                     await chrome.storage.local.set({ [`rc-crm-conversation-log-${logInfo.conversationLogId}`]: { logged: true } });
                     await resolveCachedLog({ type: 'Message', id: logInfo.conversationId });
                 }
@@ -66,7 +63,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
         }
     }
     else {
-        showNotification({ level: 'warning', message: 'Please go to Settings and authorize CRM platform', ttl: 3000 });
+        showNotification({ level: 'warning', message: 'Please go to Settings and connect to CRM platform', ttl: 3000 });
     }
 }
 
@@ -76,11 +73,12 @@ async function getLog({ serverUrl, logType, sessionIds, requireDetails }) {
         switch (logType) {
             case 'Call':
                 const callLogRes = await axios.get(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}&sessionIds=${sessionIds}&requireDetails=${requireDetails}`);
+                showNotification({level: callLogRes.data.returnMessage?.messageType, message: callLogRes.data.returnMessage?.message, ttl: callLogRes.data.returnMessage?.ttl})
                 return { successful: callLogRes.data.successful, callLogs: callLogRes.data.logs };
         }
     }
     else {
-        return { successful: false, message: 'Please go to Settings and authorize CRM platform' };
+        return { successful: false, message: 'Please go to Settings and connect to CRM platform' };
     }
 }
 
@@ -114,7 +112,7 @@ async function updateLog({ serverUrl, logType, sessionId, recordingLink, subject
                         console.log('call recording update done');
                     }
                     else {
-                        showNotification({ level: 'success', message: 'Call log updated', ttl: 3000 });
+                        showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'success', message: callLogRes.data.returnMessage?.message ?? 'Call log updated', ttl: callLogRes.data.returnMessage?.ttl ?? 3000 });
                     }
                 }
         }

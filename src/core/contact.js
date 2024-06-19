@@ -11,10 +11,23 @@ async function getContact({ serverUrl, phoneNumber }) {
     if (overridingPhoneNumberFormat3) overridingFormats.push(overridingPhoneNumberFormat3);
     if (!!rcUnifiedCrmExtJwt) {
         const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${overridingFormats.toString()}`);
-        return { matched: contactRes.data.successful, message: contactRes.data.message, contactInfo: contactRes.data.contact };
+        return {
+            matched: contactRes.data.successful,
+            returnMessage: contactRes.data.returnMessage,
+            contactInfo: contactRes.data.contact
+        };
     }
     else {
-        return { matched: false, message: 'Please go to Settings and authorize CRM platform', contactInfo: null };
+        return {
+            matched: false,
+            returnMessage:
+            {
+                message: 'Please go to Settings and connect to CRM platform',
+                messageType: 'warning',
+                ttl: 3000
+            },
+            contactInfo: null
+        };
     }
 }
 
@@ -29,12 +42,6 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
                 newContactType
             }
         );
-        if (!!!contactRes.data?.successful && contactRes.data?.message === 'Failed to create contact.') {
-            await chrome.runtime.sendMessage(
-                {
-                    type: 'notifyToReconnectCRM'
-                })
-        }
         // force trigger contact matcher
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-trigger-contact-match',
@@ -42,10 +49,22 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
         }, '*');
         await chrome.storage.local.set({ tempContactMatchTask: { contactId: contactRes.data.contact.id, phoneNumber, contactName: newContactName, contactType: newContactType } });
         analytics.createNewContact();
-        return { matched: contactRes.data.successful, contactInfo: contactRes.data.contact };
+        return {
+            matched: contactRes.data.successful,
+            contactInfo: contactRes.data.contact,
+            returnMessage: contactRes.data.returnMessage
+        };
     }
     else {
-        return { matched: false, message: 'Please go to Settings and authorize CRM platform', contactInfo: null };
+        return {
+            matched: false,
+            returnMessage: {
+                message: 'Please go to Settings and connect to CRM platform',
+                messageType: 'warning',
+                ttl: 3000
+            },
+            contactInfo: null
+        };
     }
 }
 

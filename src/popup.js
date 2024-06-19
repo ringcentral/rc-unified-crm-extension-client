@@ -198,7 +198,7 @@ window.addEventListener('message', async (e) => {
               );
             }
             else if (!rcUnifiedCrmExtJwt) {
-              showNotification({ level: 'warning', message: 'Please authorize CRM platform account via Settings.', ttl: 10000 });
+              showNotification({ level: 'warning', message: 'Please go to Settings and connect to CRM platform', ttl: 10000 });
             }
             try {
               const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;
@@ -358,7 +358,7 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-post-message-request':
           if (!crmAuthed && (data.path === '/callLogger' || data.path === '/messageLogger')) {
-            showNotification({ level: 'warning', message: 'Please authorize CRM platform account via Settings.', ttl: 10000 });
+            showNotification({ level: 'warning', message: 'Please go to Settings and connect to CRM platform', ttl: 10000 });
             break;
           }
           switch (data.path) {
@@ -625,13 +625,13 @@ window.addEventListener('message', async (e) => {
                   case 'createLog':
                     let newContactInfo = {};
                     if (data.body.formData.contact === 'createNewContact') {
-                      const newContactResp = await createContact({
+                      const { contactInfo: newContactInfo, returnMessage: newContactReturnMessage } = await createContact({
                         serverUrl: manifest.serverUrl,
                         phoneNumber: contactPhoneNumber,
                         newContactName: data.body.formData.newContactName,
                         newContactType: data.body.formData.newContactType
                       });
-                      newContactInfo = newContactResp.contactInfo;
+                      showNotification({ level: newContactReturnMessage?.messageType, message: newContactReturnMessage?.message, ttl: newContactReturnMessage?.ttl });
                       if (!!extensionUserSettings && extensionUserSettings.find(e => e.name === 'Open contact web page after creating it')?.value) {
                         await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                       }
@@ -672,9 +672,9 @@ window.addEventListener('message', async (e) => {
                   sessionIds: data.body.call.sessionId,
                   requireDetails: data.body.triggerType === 'editLog'
                 });
-                const { matched: callContactMatched, message: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber });
+                const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber });
+                showNotification({ level: callLogContactMatchMessage?.messageType, message: callLogContactMatchMessage?.message, ttl: callLogContactMatchMessage?.ttl });
                 if (!callContactMatched) {
-                  showNotification({ level: 'warning', message: callLogContactMatchMessage, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 }
@@ -815,10 +815,6 @@ window.addEventListener('message', async (e) => {
                   }
                 }
               }
-              else {
-                showNotification({ level: 'warning', message: 'Cannot find call log', ttl: 3000 });
-                break;
-              }
               responseMessage(
                 data.requestId,
                 {
@@ -889,6 +885,7 @@ window.addEventListener('message', async (e) => {
                     });
                   }
                 }
+                window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
               // Case: manual log, submit
               else if (data.body.triggerType === 'logForm') {
@@ -938,6 +935,7 @@ window.addEventListener('message', async (e) => {
                     });
                   }
                   await showUnresolvedTabPage();
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                 }
               }
               // Case: manual log, open page OR auto log with auto pop up log page ON
@@ -1001,8 +999,8 @@ window.addEventListener('message', async (e) => {
                 if (!isTrailing) {
                   leadingSMSCallReady = true;
                 }
+                window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
-              window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               // response to widget
               responseMessage(
                 data.requestId,
