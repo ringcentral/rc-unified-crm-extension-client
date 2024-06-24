@@ -44,7 +44,7 @@ let firstTimeLogoutAbsorbed = false;
 let autoPopupMainConverastionId = null;
 
 import axios from 'axios';
-axios.defaults.timeout = 30000; // Set default timeout to 5 seconds
+axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
 
 async function checkC2DCollision() {
   try {
@@ -172,6 +172,9 @@ window.addEventListener('message', async (e) => {
             platformName = platformInfo['platform-info'].platformName;
             platformHostname = platformInfo['platform-info'].hostname;
             platform = manifest.platforms[platformName];
+            if (!!platform.requestConfig?.timeout) {
+              axios.defaults.timeout = platform.requestConfig.timeout;
+            }
             registered = true;
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-register-third-party-service',
