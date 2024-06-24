@@ -173,7 +173,7 @@ window.addEventListener('message', async (e) => {
             platformHostname = platformInfo['platform-info'].hostname;
             platform = manifest.platforms[platformName];
             if (!!platform.requestConfig?.timeout) {
-              axios.defaults.timeout = platform.requestConfig.timeout;
+              axios.defaults.timeout = platform.requestConfig.timeout * 1000;
             }
             registered = true;
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
