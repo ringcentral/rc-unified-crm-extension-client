@@ -164,7 +164,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         newContactType: {
                             title: 'Contact type',
                             type: 'string',
-                            oneOf: manifest.platforms[platformName].contactTypes?.map(t => { return { const: t, title: t } }) ?? [],
+                            oneOf: manifest.platforms[platformName].contactTypes?.map(t => { return { const: t.value, title: t.display } }) ?? [],
                         },
                         ...callSchemas,
                         ...additionalFields,
@@ -213,7 +213,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 formData: {
                     id,
                     contact: contactList[0].const,
-                    newContactType: manifest.platforms[platformName].contactTypes ? manifest.platforms[platformName].contactTypes[0] : '',
+                    newContactType: manifest.platforms[platformName].contactTypes ? manifest.platforms[platformName].contactTypes[0].value : '',
                     newContactName: '',
                     contactType: contactList[0]?.type ?? '',
                     contactName: contactList[0]?.title ?? '',

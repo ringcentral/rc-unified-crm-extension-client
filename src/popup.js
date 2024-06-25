@@ -1144,7 +1144,11 @@ function getLogConflictInfo({ isAutoLog, contactInfo }) {
   }
   let hasConflict = false;
   let autoSelectAdditionalSubmission = {};
-  if (contactInfo.length > 1) {
+  contactInfo = contactInfo.filter(c => !c.isNewContact);
+  if (contactInfo.length === 0) {
+    hasConflict = true;
+  }
+  else if (contactInfo.length > 1) {
     hasConflict = true;
   }
   else if (!!contactInfo[0]?.additionalInfo) {
