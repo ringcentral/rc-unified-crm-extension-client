@@ -387,7 +387,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
 function getUnresolvedLogsPageRender({ unresolvedLogs }) {
     const logsList = []
     for (const cacheId of Object.keys(unresolvedLogs)) {
-        const isMultipleContactConflit = unresolvedLogs[cacheId].contactInfo.length > 1;
+        const isMultipleContactConflit = unresolvedLogs[cacheId].contactInfo.filter(c => !c.isNewContact).length > 1;
         const isNoContact = unresolvedLogs[cacheId].contactInfo.length === 1;
         const contactName = isMultipleContactConflit ? 'Multiple contacts' : unresolvedLogs[cacheId].contactInfo[0].name;
         logsList.push({
