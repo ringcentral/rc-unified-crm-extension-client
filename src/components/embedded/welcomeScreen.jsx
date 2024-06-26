@@ -51,9 +51,9 @@ export default () => {
             }
             const isFirstTime = await chrome.storage.local.get('isFirstTime');
             if (isObjectEmpty(isFirstTime) && platformName !== '') {
-                setIsOpen(true);
                 setDocLink(manifest.platforms[platformName].embeddedOnCrmPage.welcomePage.docLink);
                 setVideoLink(manifest.platforms[platformName].embeddedOnCrmPage.welcomePage.videoLink);
+                setIsOpen(true);
                 await chrome.storage.local.set({ isFirstTime: false });
                 trackFirstTimeSetup();
             }
@@ -132,7 +132,7 @@ export default () => {
                             <RcTypography
                                 variant='body1'
                             >
-                                By {manifest.author}
+                                By {manifest?.author?.name}
                             </RcTypography>
                             <br />
                             <div style={logoContainerStyle}>
