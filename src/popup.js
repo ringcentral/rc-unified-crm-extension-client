@@ -225,6 +225,7 @@ window.addEventListener('message', async (e) => {
               // setup headers for server side analytics
               axios.defaults.headers.common['rc-extension-id'] = rcUserInfo?.rcExtensionId;
               axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId;
+              axios.defaults.headers.common['developer-author-name'] = manifest?.author?.name ?? "";
               await showUnresolvedTabPage();
             }
             catch (e) {
