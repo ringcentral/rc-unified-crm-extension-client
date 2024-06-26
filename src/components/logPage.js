@@ -97,7 +97,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 };
             }
             else if (contactList.length === 1) {
-                warningMessage = {
+                warningField = {
                     warning: {
                         type: 'string',
                         description: "No contact found. Enter a name to have a placeholder contact made for you.",
