@@ -143,7 +143,7 @@ async function Initialize() {
     await RenderQuickAccessButton();
   }
   // Case: C2D renders extra elements inside Bullhorn note section
-  if (!window.location.href.startsWith('https://app.bullhornstaffing.com/content')) {
+  if (!window.location.href.startsWith('https://app.bullhornstaffing.com/content/record/JobOrder')) {
     await initializeC2D();
   }
 }
