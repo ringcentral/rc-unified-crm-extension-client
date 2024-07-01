@@ -60,10 +60,13 @@ async function onAuthCallback({ serverUrl, callbackUri }) {
         oauthCallbackUrl = `${serverUrl}/oauth-callback?callbackUri=${callbackUri}&hostname=${hostname}`;
     }
     const res = await axios.get(oauthCallbackUrl);
+    showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully authorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
+    if (!!!res.data.jwtToken) {
+        return;
+    }
     const crmUserInfo = { name: res.data.name };
     await chrome.storage.local.set({ crmUserInfo });
     setAuth(true, crmUserInfo.name);
-    showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully authorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
     await chrome.storage.local.set({
         ['rcUnifiedCrmExtJwt']: res.data.jwtToken
     });
