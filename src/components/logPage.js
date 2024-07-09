@@ -390,13 +390,31 @@ function getUnresolvedLogsPageRender({ unresolvedLogs }) {
         const isMultipleContactConflit = unresolvedLogs[cacheId].contactInfo.filter(c => !c.isNewContact).length > 1;
         const isNoContact = unresolvedLogs[cacheId].contactInfo.length === 1;
         const contactName = isMultipleContactConflit ? 'Multiple contacts' : unresolvedLogs[cacheId].contactInfo[0].name;
-        logsList.push({
-            const: cacheId,
-            title: `${contactName} ${unresolvedLogs[cacheId]?.phoneNumber ? `(${unresolvedLogs[cacheId]?.phoneNumber})` : ''}`,
-            description: isNoContact ? 'Missing: No matched contact' : (isMultipleContactConflit ? 'Conflict: Multiple matched contacts' : 'Conflict: Multiple associations'),
-            meta: unresolvedLogs[cacheId].date,
-            icon: unresolvedLogs[cacheId].direction === 'Inbound' ? inboundCallIcon : outboundCallIcon,
-        });
+        if (isMultipleContactConflit || isNoContact) {
+            logsList.push({
+                const: cacheId,
+                title: `${contactName} ${unresolvedLogs[cacheId]?.phoneNumber ? `(${unresolvedLogs[cacheId]?.phoneNumber})` : ''}`,
+                description: isNoContact ? 'Missing: No matched contact' : 'Conflict: Multiple matched contacts',
+                meta: unresolvedLogs[cacheId].date,
+                icon: unresolvedLogs[cacheId].direction === 'Inbound' ? inboundCallIcon : outboundCallIcon,
+            });
+        }
+        else {
+            const multiplAssociations = [];
+            const targetContact = unresolvedLogs[cacheId].contactInfo.find(c => !c.isNewContact);
+            for (const association of Object.keys(targetContact.additionalInfo)) {
+                if (Array.isArray(targetContact.additionalInfo[association]) || targetContact.additionalInfo[association].length > 1) {
+                    multiplAssociations.push(association);
+                }
+            }
+            logsList.push({
+                const: cacheId,
+                title: `${contactName} ${unresolvedLogs[cacheId]?.phoneNumber ? `(${unresolvedLogs[cacheId]?.phoneNumber})` : ''}`,
+                description: `Conflict: Multiple associations - ${multiplAssociations.toString()}`,
+                meta: unresolvedLogs[cacheId].date,
+                icon: unresolvedLogs[cacheId].direction === 'Inbound' ? inboundCallIcon : outboundCallIcon,
+            });
+        }
     }
     return {
         id: 'unresolve', // tab id, required
