@@ -133,10 +133,19 @@ chrome.alarms.onAlarm.addListener(async () => {
   const loginWindowUrl = tabs[0].url
   console.log('loginWindowUrl', loginWindowUrl);
   const platformInfo = await chrome.storage.local.get('platform-info');
-  if (loginWindowUrl.indexOf(manifest.platforms[platformInfo['platform-info'].platformName].auth.oauth.redirectUri) !== 0) {
-    chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
-    return;
+  if (!!platformInfo['platform-info']?.platformName) {
+    if (loginWindowUrl.indexOf(manifest.platforms[platformInfo['platform-info']?.platformName]?.auth?.oauth?.redirectUri) !== 0) {
+      chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
+      return;
+    }
   }
+  else {
+    if (loginWindowUrl.indexOf(baseManifest.defaultRedirectUri) !== 0) {
+      chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
+      return;
+    }
+  }
+
   console.log('login success', loginWindowUrl);
   chrome.runtime.sendMessage({
     type: 'oauthCallBack',
