@@ -13,9 +13,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://*.ringcentral.com/*",
-        "https://*.ngrok-free.app/*",
-        "https://lite-http-tunnel-s52m.onrender.com/*",
+        "https://developers.ringcentral.com/*",
         "https://*.pipedrive.com/*",
         "https://*.insightly.com/*",
         "https://*.clio.com/*",
@@ -40,9 +38,7 @@
         "/c2d/*"
       ],
       "matches": [
-        "https://*.ringcentral.com/*",
-        "https://*.ngrok-free.app/*",
-        "https://lite-http-tunnel-s52m.onrender.com/*",
+        "https://developers.ringcentral.com/*",
         "https://*.pipedrive.com/*",
         "https://*.insightly.com/*",
         "https://*.clio.com/*",
