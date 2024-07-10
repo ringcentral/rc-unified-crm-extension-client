@@ -1248,6 +1248,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   // Unique: Pipedrive
   else if (request.type === 'pipedriveCallbackUri' && !(await auth.checkAuth())) {
     await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive` });
+    crmAuthed = true;
     console.log('pipedriveAltAuthDone')
     chrome.runtime.sendMessage(
       {
