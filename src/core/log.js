@@ -188,7 +188,12 @@ function getConflictContentFromUnresolvedLog(log) {
         const targetContact = log.contactInfo.find(c => !c.isNewContact);
         for (const association of Object.keys(targetContact.additionalInfo)) {
             if (Array.isArray(targetContact.additionalInfo[association]) || targetContact.additionalInfo[association].length > 1) {
-                multiplAssociations.push(association);
+                const associationPascalCaseWithSpace = association
+                    // insert a space before all caps
+                    .replace(/([A-Z])/g, ' $1')
+                    // uppercase the first character
+                    .replace(/^./, function (str) { return str.toUpperCase(); })
+                multiplAssociations.push(associationPascalCaseWithSpace);
             }
         }
         return {
