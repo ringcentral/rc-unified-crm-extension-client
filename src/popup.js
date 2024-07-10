@@ -379,7 +379,7 @@ window.addEventListener('message', async (e) => {
                     }
                     // Unique: Pipedrive
                     if (platformName === 'pipedrive') {
-                      authUri = manifest.platforms.pipedrive.redirectUri;
+                      authUri = manifest.platforms.pipedrive.auth.oauth.redirectUri;
                     }
                     // Unique: Bullhorn
                     else if (platformName === 'bullhorn') {
