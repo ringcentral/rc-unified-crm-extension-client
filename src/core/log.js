@@ -30,7 +30,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                     await resolveCachedLog({ type: 'Call', id: logInfo.sessionId });
                     showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'success', message: addCallLogRes.data.returnMessage?.message ?? 'Call log added', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000 });
                 }
-                else{
+                else {
                     showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'warning', message: addCallLogRes.data.returnMessage?.message ?? 'Failed to save call log', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000 });
                 }
                 await chrome.storage.local.set({ [`rc-crm-call-log-${logInfo.sessionId}`]: { contact: { id: contactId } } });
@@ -76,7 +76,7 @@ async function getLog({ serverUrl, logType, sessionIds, requireDetails }) {
         switch (logType) {
             case 'Call':
                 const callLogRes = await axios.get(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}&sessionIds=${sessionIds}&requireDetails=${requireDetails}`);
-                showNotification({level: callLogRes.data.returnMessage?.messageType, message: callLogRes.data.returnMessage?.message, ttl: callLogRes.data.returnMessage?.ttl})
+                showNotification({ level: callLogRes.data.returnMessage?.messageType, message: callLogRes.data.returnMessage?.message, ttl: callLogRes.data.returnMessage?.ttl })
                 return { successful: callLogRes.data.successful, callLogs: callLogRes.data.logs };
         }
     }
@@ -140,7 +140,7 @@ async function getCachedNote({ sessionId }) {
 
 async function cacheUnresolvedLog({ type, id, phoneNumber, direction, contactInfo, subject, note, date }) {
     let existingUnresolvedLogs = await chrome.storage.local.get({ unresolvedLogs: {} });
-    existingUnresolvedLogs.unresolvedLogs[`${type}-${id}`] = {
+    let log = {
         type,
         phoneNumber,
         direction,
@@ -148,9 +148,11 @@ async function cacheUnresolvedLog({ type, id, phoneNumber, direction, contactInf
         subject,
         note,
         date
-    }
+    };
+    existingUnresolvedLogs.unresolvedLogs[`${type}-${id}`] = log;
     await chrome.storage.local.set(existingUnresolvedLogs);
     console.log(`log cached for ${type}-${id}`);
+    return log;
 }
 
 async function getLogCache({ cacheId }) {
@@ -171,6 +173,36 @@ async function resolveCachedLog({ type, id }) {
     }
 }
 
+function getConflictContentFromUnresolvedLog(log) {
+    const isMultipleContact = log.contactInfo.filter(c => !c.isNewContact).length > 1;
+    const isNoContact = log.contactInfo.length === 1;
+    const contactName = isMultipleContact ? 'Multiple contacts' : log.contactInfo[0].name;
+    if (isMultipleContact || isNoContact) {
+        return {
+            title: `${contactName} ${log?.phoneNumber ? `(${log?.phoneNumber})` : ''}`,
+            description: isNoContact ? 'Missing: no matched contact' : 'Conflict: multiple matched contacts'
+        }
+    }
+    else {
+        const multiplAssociations = [];
+        const targetContact = log.contactInfo.find(c => !c.isNewContact);
+        for (const association of Object.keys(targetContact.additionalInfo)) {
+            if (Array.isArray(targetContact.additionalInfo[association]) || targetContact.additionalInfo[association].length > 1) {
+                const associationPascalCaseWithSpace = association
+                    // insert a space before all caps
+                    .replace(/([A-Z])/g, ' $1')
+                    // uppercase the first character
+                    .replace(/^./, function (str) { return str.toUpperCase(); })
+                multiplAssociations.push(associationPascalCaseWithSpace);
+            }
+        }
+        return {
+            title: `${contactName} ${log?.phoneNumber ? `(${log?.phoneNumber})` : ''}`,
+            description: `Conflict: multiple associated ${multiplAssociations.toString()}`
+        }
+    }
+}
+
 exports.addLog = addLog;
 exports.getLog = getLog;
 exports.openLog = openLog;
@@ -181,3 +213,4 @@ exports.cacheUnresolvedLog = cacheUnresolvedLog;
 exports.getLogCache = getLogCache;
 exports.getAllUnresolvedLogs = getAllUnresolvedLogs;
 exports.resolveCachedLog = resolveCachedLog;
+exports.getConflictContentFromUnresolvedLog = getConflictContentFromUnresolvedLog;

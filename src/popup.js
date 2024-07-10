@@ -1,5 +1,5 @@
 const auth = require('./core/auth');
-const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, cacheUnresolvedLog, getLogCache, getAllUnresolvedLogs, resolveCachedLog } = require('./core/log');
+const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, cacheUnresolvedLog, getLogCache, getAllUnresolvedLogs, resolveCachedLog, getConflictContentFromUnresolvedLog } = require('./core/log');
 const { getContact, createContact, openContactPage } = require('./core/contact');
 const { responseMessage, isObjectEmpty, showNotification } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
@@ -704,7 +704,7 @@ window.addEventListener('message', async (e) => {
                       // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
                       if (hasConflict) {
                         window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                        await cacheUnresolvedLog({
+                        const conflictLog = await cacheUnresolvedLog({
                           type: 'Call',
                           id: data.body.call.sessionId,
                           phoneNumber: contactPhoneNumber,
@@ -715,7 +715,8 @@ window.addEventListener('message', async (e) => {
                           date: moment(data.body.call.startTime).format('MM/DD/YYYY')
                         });
                         await showUnresolvedTabPage();
-                        showNotification({ level: 'warning', message: 'Unable to log call with unresolved conflict.', ttl: 3000 });
+                        const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
+                        showNotification({ level: 'warning', message: `Unable to log call due to ${conflictContent.description}. Please review each item under Unresolve tab to resolve the conflicts.`, ttl: 30000 });
                       }
                       // Case: auto log and no conflict, log directly
                       else {
@@ -876,7 +877,7 @@ window.addEventListener('message', async (e) => {
                   const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult, logType: 'Message' });
                   // Sub-case: has conflict, cache unresolved log
                   if (hasConflict) {
-                    await cacheUnresolvedLog({
+                    const conflictLog = await cacheUnresolvedLog({
                       type: 'Message',
                       id: data.body.conversation.conversationId,
                       direction: '',
@@ -884,7 +885,8 @@ window.addEventListener('message', async (e) => {
                       date: moment(data.body.conversation.messages[0].creationTime).format('MM/DD/YYYY')
                     });
                     await showUnresolvedTabPage();
-                    showNotification({ level: 'warning', message: 'Unable to log message with unresolved conflict.', ttl: 3000 });
+                    const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
+                    showNotification({ level: 'warning', message: `Unable to log message due to ${conflictContent.description}. Please review each item under Unresolve tab to resolve the conflicts.`, ttl: 30000 });
                   }
                   // Sub-case: no conflict, log directly
                   else {
