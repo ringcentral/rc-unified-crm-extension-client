@@ -13,7 +13,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://developers.ringcentral.com/*",
+        "https://*.labs.ringcentral.com/*",
         "https://*.pipedrive.com/*",
         "https://*.insightly.com/*",
         "https://*.clio.com/*",
@@ -38,7 +38,7 @@
         "/c2d/*"
       ],
       "matches": [
-        "https://developers.ringcentral.com/*",
+        "https://*.labs.ringcentral.com/*",
         "https://*.pipedrive.com/*",
         "https://*.insightly.com/*",
         "https://*.clio.com/*",
