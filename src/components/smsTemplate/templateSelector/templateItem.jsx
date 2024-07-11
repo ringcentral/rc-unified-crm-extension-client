@@ -34,7 +34,7 @@ export default ({
 
     function applyMessage(e) {
         const message = e.target.getAttribute('value');
-        const textArea = document.querySelector("#rc-widget-adapter-frame").contentWindow.document.querySelector('.ConversationPanel_root > * > * > textarea');
+        const textArea = document.querySelector("#rc-widget-adapter-frame").contentWindow.document.querySelector('.ComposeTextPanel_root > * > * > textarea') ?? document.querySelector("#rc-widget-adapter-frame").contentWindow.document.querySelector('.ConversationPanel_root > * > * > textarea');
         setNativeValue(textArea, message);
         textArea.dispatchEvent(new Event('input', { bubbles: true }))  // to mimic user type event
         setIsOpen(false);
