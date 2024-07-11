@@ -432,7 +432,7 @@ window.addEventListener('message', async (e) => {
               }
               else {
                 window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                auth.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
+                await auth.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
                 window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
               responseMessage(
@@ -1134,6 +1134,61 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   await showUnresolvedTabPage();
                   break;
+                case 'openFactoryResetPage':
+                  const factoryResetPage = {
+                    id: 'factoryResetPage',
+                    title: 'Factory Reset',
+                    type: 'page',
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        warning: {
+                          type: "string",
+                          description: "Factory reset will disconnect both CRM and RingCentral accounts from this extension and log you out."
+                        },
+                        factoryResetButton: {
+                          type: "string",
+                          title: "Reset",
+                        },
+                      }
+                    },
+                    uiSchema: {
+                      warning: {
+                        "ui:field": "admonition",
+                        "ui:severity": "warning",  // "warning", "info", "error", "success"
+                      },
+                      factoryResetButton: {
+                        "ui:field": "button",
+                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                        "ui:fullWidth": true
+                      },
+                    }
+                  };
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: factoryResetPage
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: '/customized/factoryResetPage', // page id
+                  }, '*');
+                  break;
+                case 'factoryResetButton':
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack',
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                  if (!!rcUnifiedCrmExtJwt) {
+                    await auth.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
+                  }
+                  await chrome.storage.local.remove('platform-info');
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-logout'
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
               }
               break;
             default:
@@ -1367,6 +1422,12 @@ function getServiceManifest(serviceName) {
       {
         name: 'Open contact web page after creating it',
         value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Open contact web page after creating it')?.value ?? true)
+      },
+      {
+        id: "openFactoryResetPage",
+        type: "button",
+        name: "Factory Reset",
+        buttonLabel: "Reset"
       }
     ],
 
