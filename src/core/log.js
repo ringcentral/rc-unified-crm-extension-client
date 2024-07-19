@@ -112,6 +112,7 @@ async function updateLog({ serverUrl, logType, sessionId, recordingLink, subject
                         if (!!existingCallRecording[recordingSessionId]) {
                             await chrome.storage.local.remove(recordingSessionId);
                         }
+                        showNotification({ level: 'success', message: 'Call recording link uploaded.', ttl: 3000 });
                         console.log('call recording update done');
                     }
                     else {

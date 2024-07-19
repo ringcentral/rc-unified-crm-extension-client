@@ -1,7 +1,7 @@
 const auth = require('./core/auth');
 const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, cacheUnresolvedLog, getLogCache, getAllUnresolvedLogs, resolveCachedLog, getConflictContentFromUnresolvedLog } = require('./core/log');
 const { getContact, createContact, openContactPage } = require('./core/contact');
-const { responseMessage, isObjectEmpty, showNotification } = require('./lib/util');
+const { responseMessage, isObjectEmpty, showNotification, dismissNotification } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
 const { apiKeyLogin } = require('./core/auth');
 const { openDB } = require('idb');
@@ -42,6 +42,7 @@ let leadingSMSCallReady = false;
 let trailingSMSLogInfo = [];
 let firstTimeLogoutAbsorbed = false;
 let autoPopupMainConverastionId = null;
+let currentNotificationId = null;
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
@@ -201,7 +202,7 @@ window.addEventListener('message', async (e) => {
               );
             }
             else if (!rcUnifiedCrmExtJwt) {
-              showNotification({ level: 'warning', message: 'Please go to Settings and connect to CRM platform', ttl: 60000 });
+              currentNotificationId = await showNotification({ level: 'warning', message: 'Please go to Settings and connect to CRM platform', ttl: 60000 });
             }
             try {
               const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;
@@ -229,10 +230,9 @@ window.addEventListener('message', async (e) => {
               await showUnresolvedTabPage();
               // TEMP:
               const storedTemplates = await chrome.storage.local.get('rc-sms-templates');
-              if(!!storedTemplates && !isObjectEmpty(storedTemplates))
-              {
+              if (!!storedTemplates && !isObjectEmpty(storedTemplates)) {
                 const templates = storedTemplates['rc-sms-templates'];
-                for(const t of templates){
+                for (const t of templates) {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-message-request',
                     requestId: Date.now().toString(),
@@ -1310,6 +1310,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     else if (request.platform === 'thirdParty') {
       const returnedToken = await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri });
       crmAuthed = !!returnedToken;
+      if (crmAuthed) {
+        await dismissNotification({ notificationId: currentNotificationId });
+      }
     }
     sendResponse({ result: 'ok' });
   }
@@ -1317,6 +1320,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   else if (request.type === 'pipedriveCallbackUri' && !(await auth.checkAuth())) {
     await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive` });
     crmAuthed = true;
+    await dismissNotification({ notificationId: currentNotificationId });
     console.log('pipedriveAltAuthDone')
     chrome.runtime.sendMessage(
       {
@@ -1367,6 +1371,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       apiUrl: request.apiUrl
     });
     crmAuthed = !!returnedToken;
+    if (crmAuthed) {
+      await dismissNotification({ notificationId: currentNotificationId });
+    }
     window.postMessage({ type: 'rc-apiKey-input-modal-close', platform: platform.name }, '*');
     chrome.runtime.sendMessage({
       type: 'openPopupWindow'

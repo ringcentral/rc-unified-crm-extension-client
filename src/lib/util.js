@@ -5,18 +5,19 @@ function secondsToHourMinuteSecondString(totalSeconds) {
     return `${hours}h${minutes}m${seconds}s`;
 }
 
-function showNotification({ level, message, ttl }) {
+async function showNotification({ level, message, ttl }) {
     if (!level || !message || isObjectEmpty(message)) {
         return;
     }
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-        type: 'rc-adapter-message-request',
-        requestId: Date.now().toString(),
-        path: '/custom-alert-message',
-        alertMessage: message,
-        alertLevel: level,
-        ttl
-    }, '*');
+    const notificationId = await RCAdapter.alertMessage({ message, ttl, level });
+    return notificationId;
+}
+
+async function dismissNotification({notificationId}){
+    if(!!notificationId)
+    {
+        await RCAdapter.dismissMessage(notificationId);
+    }
 }
 
 function responseMessage(responseId, response) {
@@ -33,5 +34,6 @@ function isObjectEmpty(obj) {
 
 exports.secondsToHourMinuteSecondString = secondsToHourMinuteSecondString;
 exports.showNotification = showNotification;
+exports.dismissNotification = dismissNotification;
 exports.responseMessage = responseMessage;
 exports.isObjectEmpty = isObjectEmpty;
