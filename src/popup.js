@@ -1200,6 +1200,7 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-logout'
                   }, '*');
+                  await chrome.storage.local.remove('unresolvedLogs');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
               }
