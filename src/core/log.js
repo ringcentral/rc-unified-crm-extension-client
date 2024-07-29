@@ -199,7 +199,8 @@ function getConflictContentFromUnresolvedLog(log) {
         }
         return {
             title: `${contactName} ${log?.phoneNumber ? `(${log?.phoneNumber})` : ''}`,
-            description: `Conflict: multiple associated ${multiplAssociations.toString()}`
+            description: `Conflict: multiple associated ${multiplAssociations.toString()}`,
+            type: log.type
         }
     }
 }

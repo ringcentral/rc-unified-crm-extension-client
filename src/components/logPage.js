@@ -1,6 +1,7 @@
 const outboundCallIcon = require('../images/outboundCallIcon.png');
 const inboundCallIcon = require('../images/inboundCallIcon.png');
 const conflictLogIcon = require('../images/conflictLogIcon.png');
+const smsMessageIcon = require('../images/smsMessageIcon.png');
 const logCore = require('../core/log');
 
 function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, subject, note, loggedContactId, isUnresolved }) {
@@ -388,13 +389,13 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
 function getUnresolvedLogsPageRender({ unresolvedLogs }) {
     const logsList = []
     for (const cacheId of Object.keys(unresolvedLogs)) {
-        const { title, description } = logCore.getConflictContentFromUnresolvedLog(unresolvedLogs[cacheId]);
+        const { title, description, type } = logCore.getConflictContentFromUnresolvedLog(unresolvedLogs[cacheId]);
         logsList.push({
             const: cacheId,
             title,
             description,
             meta: unresolvedLogs[cacheId].date,
-            icon: unresolvedLogs[cacheId].direction === 'Inbound' ? inboundCallIcon : outboundCallIcon,
+            icon: type === 'Message' ? smsMessageIcon : (unresolvedLogs[cacheId].direction === 'Inbound' ? inboundCallIcon : outboundCallIcon),
         });
     }
     return {
