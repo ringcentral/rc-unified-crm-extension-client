@@ -104,6 +104,11 @@ async function showUnresolvedTabPage(path) {
   }
 }
 
+let errorLogs = [];
+window.onerror = (event, source, lineno, colno, error) => {
+  errorLogs.push({ event, source, lineno, colno, error })
+};
+
 // Interact with RingCentral Embeddable Voice:
 window.addEventListener('message', async (e) => {
   const data = e.data;
@@ -152,7 +157,7 @@ window.addEventListener('message', async (e) => {
 
             RCAdapter.showFeedback({
               onFeedback: function () {
-                const feedbackPageRender = feedbackPage.getFeedbackPageRender({ pageConfig: manifest.platforms[platformName].page.feedback });
+                const feedbackPageRender = feedbackPage.getFeedbackPageRender({ pageConfig: manifest.platforms[platformName].page.feedback, version: manifest.version });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-register-customized-page',
                   page: feedbackPageRender
@@ -1083,7 +1088,7 @@ window.addEventListener('message', async (e) => {
                 responseId: data.requestId,
                 response: { data: 'ok' },
               }, '*');
-              const feedbackPageRender = feedbackPage.getFeedbackPageRender({ pageConfig: manifest.platforms[platformName].page.feedback });
+              const feedbackPageRender = feedbackPage.getFeedbackPageRender({ pageConfig: manifest.platforms[platformName].page.feedback, version: manifest.version });
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
                 page: feedbackPageRender
@@ -1147,26 +1152,68 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   await showUnresolvedTabPage();
                   break;
-                case 'openFactoryResetPage':
-                  const factoryResetPage = {
-                    id: 'factoryResetPage',
-                    title: 'Factory Reset',
+                case 'openAboutPage':
+                  let isOnline = false;
+                  try {
+                    const isServiceOnlineResponse = await axios.get(`${manifest.serverUrl}/is-alive`);
+                    isOnline = isServiceOnlineResponse.status === 200;
+                  }
+                  catch (e) {
+                    isOnline = false;
+                  }
+                  const aboutPage = {
+                    id: 'aboutPage',
+                    title: 'About',
                     type: 'page',
                     schema: {
                       type: 'object',
                       properties: {
-                        warning: {
+                        version: {
+                          type: "string",
+                          description: `Version: v${manifest.version}`
+                        },
+                        isServiceOnline: {
+                          type: "string",
+                          description: `Server status: ${isOnline ? 'Online' : 'Offline'}`
+                        },
+                        checkForUpdateButton: {
+                          type: "string",
+                          title: "Check for update",
+                        },
+                        generateErrorLogButton: {
+                          type: "string",
+                          title: "Download error log",
+                        },
+                        factoryResetWarning: {
                           type: "string",
                           description: "Factory reset will disconnect both CRM and RingCentral accounts from this extension and log you out."
                         },
                         factoryResetButton: {
                           type: "string",
-                          title: "Reset",
-                        },
+                          title: "Factory Reset",
+                        }
                       }
                     },
                     uiSchema: {
-                      warning: {
+                      version: {
+                        "ui:field": "typography",
+                        "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                      },
+                      isServiceOnline: {
+                        "ui:field": "typography",
+                        "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                      },
+                      generateErrorLogButton: {
+                        "ui:field": "button",
+                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                        "ui:fullWidth": true
+                      },
+                      checkForUpdateButton: {
+                        "ui:field": "button",
+                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                        "ui:fullWidth": true
+                      },
+                      factoryResetWarning: {
                         "ui:field": "admonition",
                         "ui:severity": "warning",  // "warning", "info", "error", "success"
                       },
@@ -1179,11 +1226,11 @@ window.addEventListener('message', async (e) => {
                   };
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
-                    page: factoryResetPage
+                    page: aboutPage
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
-                    path: '/customized/factoryResetPage', // page id
+                    path: '/customized/aboutPage', // page id
                   }, '*');
                   break;
                 case 'factoryResetButton':
@@ -1202,6 +1249,22 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   await chrome.storage.local.remove('unresolvedLogs');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
+                case 'generateErrorLogButton':
+                  const errorLogFileName = "[RingCentral CRM Extension]ErrorLogs.txt";
+                  const errorLogFileContent = JSON.stringify(errorLogs);
+                  DownloadTextFile({ filename: errorLogFileName, text: errorLogFileContent });
+                  break;
+                case 'checkForUpdateButton':
+                  const registeredVersionInfo = await chrome.storage.local.get('rc-crm-extension-version');
+                  const localVersion = registeredVersionInfo['rc-crm-extension-version'];
+                  const onlineVerison = manifest.version;
+                  if (localVersion === onlineVerison) {
+                    showNotification({ level: 'success', message: `You are using the latest version (${localVersion})`, ttl: 5000 });
+                  }
+                  else {
+                    showNotification({ level: 'warning', message: `New version (${onlineVerison}) is available, please go to chrome://extensions and press "Update"`, ttl: 5000 });
+                  }
                   break;
               }
               break;
@@ -1229,6 +1292,20 @@ window.addEventListener('message', async (e) => {
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
   }
 });
+
+function DownloadTextFile({ filename, text }) {
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
+}
+
 
 function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction }) {
   if (!isAutoLog) {
@@ -1346,7 +1423,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   }
   else if (request.type === 'navigate') {
     if (request.path === '/feedback') {
-      const feedbackPageRender = feedbackPage.getFeedbackPageRender({ pageConfig: manifest.platforms[platformName].page.feedback });
+      const feedbackPageRender = feedbackPage.getFeedbackPageRender({ pageConfig: manifest.platforms[platformName].page.feedback, version: manifest.version });
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: feedbackPageRender
@@ -1445,10 +1522,10 @@ function getServiceManifest(serviceName) {
         value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Open contact web page after creating it')?.value ?? true)
       },
       {
-        id: "openFactoryResetPage",
+        id: "openAboutPage",
         type: "button",
-        name: "Factory Reset",
-        buttonLabel: "Reset"
+        name: "About",
+        buttonLabel: "Open"
       }
     ],
 

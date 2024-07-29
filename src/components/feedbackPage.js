@@ -1,4 +1,4 @@
-function getFeedbackPageRender({ pageConfig }) {
+function getFeedbackPageRender({ pageConfig, version }) {
     let properties = {};
     let uiSchema = {
         submitButtonOptions: {
@@ -40,6 +40,13 @@ function getFeedbackPageRender({ pageConfig }) {
                 break;
         }
     }
+    properties['version'] = {
+        type: 'string',
+        title: 'Version'
+    };
+    uiSchema['version'] = {
+        "ui:widget": "hidden"
+    }
     return {
         id: 'feedbackPage',
         title: 'Feedback',
@@ -49,7 +56,9 @@ function getFeedbackPageRender({ pageConfig }) {
             properties
         },
         uiSchema,
-        formData: {}
+        formData: {
+            version
+        }
     }
 }
 
