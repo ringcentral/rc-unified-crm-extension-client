@@ -157,16 +157,11 @@ window.addEventListener('message', async (e) => {
 
             RCAdapter.showFeedback({
               onFeedback: function () {
-                const feedbackPageRender = feedbackPage.getFeedbackPageRender({ pageConfig: manifest.platforms[platformName].page.feedback, version: manifest.version });
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                  type: 'rc-adapter-register-customized-page',
-                  page: feedbackPageRender
+                window.postMessage({
+                  path: '/custom-button-click',
+                  type: 'rc-post-message-request',
+                  body: { button: { id: 'openAboutPage' } }
                 });
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                  type: 'rc-adapter-navigate-to',
-                  path: `/customized/${feedbackPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
-                }, '*');
-                trackOpenFeedback();
               },
             });
           }
@@ -1138,6 +1133,7 @@ window.addEventListener('message', async (e) => {
                     .replace('{crmName}', manifest.platforms[platformName].displayName)
                     .replace('{userName}', rcUserInfo.rcUserName)
                     .replace('{userEmail}', rcUserInfo.rcUserEmail)
+                    .replace('{version}', manifest.version)
                   window.open(formUrl, '_blank');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
@@ -1176,6 +1172,14 @@ window.addEventListener('message', async (e) => {
                           type: "string",
                           description: `Server status: ${isOnline ? 'Online' : 'Offline'}`
                         },
+                        openUserGuideButton: {
+                          type: "string",
+                          title: "Open user guide",
+                        },
+                        openReleaseNoteButton: {
+                          type: "string",
+                          title: "Open release notes",
+                        },
                         checkForUpdateButton: {
                           type: "string",
                           title: "Check for update",
@@ -1184,13 +1188,17 @@ window.addEventListener('message', async (e) => {
                           type: "string",
                           title: "Download error log",
                         },
+                        openFeedbackPageButton: {
+                          type: "string",
+                          title: "Submit feedback",
+                        },
                         factoryResetWarning: {
                           type: "string",
                           description: "Factory reset will disconnect both CRM and RingCentral accounts from this extension and log you out."
                         },
                         factoryResetButton: {
                           type: "string",
-                          title: "Factory Reset",
+                          title: "Factory reset",
                         }
                       }
                     },
@@ -1208,10 +1216,26 @@ window.addEventListener('message', async (e) => {
                         "ui:variant": "contained", // "text", "outlined", "contained", "plain"
                         "ui:fullWidth": true
                       },
+                      openUserGuideButton: {
+                        "ui:field": "button",
+                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                        "ui:fullWidth": true
+                      },
+                      openReleaseNoteButton: {
+                        "ui:field": "button",
+                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                        "ui:fullWidth": true
+                      },
                       checkForUpdateButton: {
                         "ui:field": "button",
                         "ui:variant": "contained", // "text", "outlined", "contained", "plain"
                         "ui:fullWidth": true
+                      },
+                      openFeedbackPageButton: {
+                        "ui:field": "button",
+                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                        "ui:fullWidth": true,
+                        "ui:color": "success.b03"
                       },
                       factoryResetWarning: {
                         "ui:field": "admonition",
@@ -1220,7 +1244,8 @@ window.addEventListener('message', async (e) => {
                       factoryResetButton: {
                         "ui:field": "button",
                         "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true
+                        "ui:fullWidth": true,
+                        "ui:color": "danger.b03"
                       },
                     }
                   };
@@ -1265,6 +1290,18 @@ window.addEventListener('message', async (e) => {
                   else {
                     showNotification({ level: 'warning', message: `New version (${onlineVerison}) is available, please go to chrome://extensions and press "Update"`, ttl: 5000 });
                   }
+                  break;
+                case 'openUserGuideButton':
+                  window.open(`https://ringcentral.github.io/rc-unified-crm-extension/${platformName}/`);
+                  break;
+                case 'openReleaseNoteButton':
+                  window.open('https://ringcentral.github.io/rc-unified-crm-extension/release-notes/');
+                  break;
+                case 'openFeedbackPageButton':
+                  chrome.runtime.sendMessage({
+                    type: "openPopupWindow",
+                    navigationPath: "/feedback"
+                  });
                   break;
               }
               break;
