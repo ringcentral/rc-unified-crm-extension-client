@@ -717,7 +717,7 @@ window.addEventListener('message', async (e) => {
                         callLogSubject = fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId).logData.subject;
                       }
                     }
-                    const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog, contactInfo: callMatchedContact, logType: 'Call', direction: data.body.call.direction });
+                    const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog, contactInfo: callMatchedContact, logType: 'Call', direction: data.body.call.direction, isVoicemail: false });
                     if (isAutoLog && !callAutoPopup) {
                       // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
                       if (hasConflict) {
@@ -892,7 +892,7 @@ window.addEventListener('message', async (e) => {
                     serverUrl: manifest.serverUrl,
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber
                   })).contactInfo;
-                  const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult, logType: 'Message' });
+                  const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult, logType: 'Message', isVoicemail: true });
                   // Sub-case: has conflict, cache unresolved log
                   if (hasConflict) {
                     const conflictLog = await cacheUnresolvedLog({
@@ -1012,9 +1012,17 @@ window.addEventListener('message', async (e) => {
                 // CASE: Bullhorn default action code
                 if (platformName === 'bullhorn') {
                   const bullhornDefaultNoteAction = extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction');
-                  const smsDefaultNoteAction = bullhornDefaultNoteAction?.items?.find(i => i.id === "bullhornMessageNoteAction");
-                  if (!!smsDefaultNoteAction && getContactMatchResult.contactInfo[0].additionalInfo.noteActions?.some(o => o.const === smsDefaultNoteAction.value)) {
-                    messagePage.formData.noteActions = smsDefaultNoteAction.value
+                  if (data.body.conversation.type === 'VoiceMail') {
+                    const voicemailDefaultNoteAction = bullhornDefaultNoteAction?.items?.find(i => i.id === "bullhornVoicemailNoteAction");
+                    if (!!voicemailDefaultNoteAction && getContactMatchResult.contactInfo[0].additionalInfo.noteActions?.some(o => o.const === voicemailDefaultNoteAction.value)) {
+                      messagePage.formData.noteActions = voicemailDefaultNoteAction.value
+                    }
+                  }
+                  else {
+                    const smsDefaultNoteAction = bullhornDefaultNoteAction?.items?.find(i => i.id === "bullhornMessageNoteAction");
+                    if (!!smsDefaultNoteAction && getContactMatchResult.contactInfo[0].additionalInfo.noteActions?.some(o => o.const === smsDefaultNoteAction.value)) {
+                      messagePage.formData.noteActions = smsDefaultNoteAction.value
+                    }
                   }
                 }
 
@@ -1344,7 +1352,7 @@ function DownloadTextFile({ filename, text }) {
 }
 
 
-function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction }) {
+function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoicemail }) {
   if (!isAutoLog) {
     return { hasConflict: false, autoSelectAdditionalSubmission: {} }
   }
@@ -1384,12 +1392,23 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction }) {
           }
         }
         else if (logType === 'Message') {
-          const smsDefaultNoteAction = bullhornDefaultNoteAction.items.find(i => i.id === "bullhornMessageNoteAction");
-          if (!!smsDefaultNoteAction && contactInfo[0].additionalInfo.noteActions?.some(o => o.const === smsDefaultNoteAction.value)) {
-            autoSelectAdditionalSubmission = {
-              noteActions: smsDefaultNoteAction.value
-            };
-            hasConflict = false;
+          if (isVoicemail) {
+            const voicemailDefaultNoteAction = bullhornDefaultNoteAction?.items?.find(i => i.id === "bullhornVoicemailNoteAction");
+            if (!!voicemailDefaultNoteAction && contactInfo[0].additionalInfo.noteActions?.some(o => o.const === voicemailDefaultNoteAction.value)) {
+              autoSelectAdditionalSubmission = {
+                noteActions: voicemailDefaultNoteAction.value
+              };
+              hasConflict = false;
+            }
+          }
+          else {
+            const smsDefaultNoteAction = bullhornDefaultNoteAction.items.find(i => i.id === "bullhornMessageNoteAction");
+            if (!!smsDefaultNoteAction && contactInfo[0].additionalInfo.noteActions?.some(o => o.const === smsDefaultNoteAction.value)) {
+              autoSelectAdditionalSubmission = {
+                noteActions: smsDefaultNoteAction.value
+              };
+              hasConflict = false;
+            }
           }
         }
       }
@@ -1594,6 +1613,13 @@ function getServiceManifest(serviceName) {
             type: "string",
             name: "SMS Message Note Action",
             value: extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(i => i.id === 'bullhornMessageNoteAction')?.value ?? "",
+            placeholder: "input note action name for message conversation..."
+          },
+          {
+            id: "bullhornVoicemailNoteAction",
+            type: "string",
+            name: "Voicemail Note Action",
+            value: extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(i => i.id === 'bullhornVoicemailNoteAction')?.value ?? "",
             placeholder: "input note action name for message conversation..."
           },
           {
