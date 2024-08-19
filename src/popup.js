@@ -1105,18 +1105,6 @@ window.addEventListener('message', async (e) => {
             case '/settings':
               extensionUserSettings = data.body.settings;
               await chrome.storage.local.set({ extensionUserSettings });
-              for (const setting of extensionUserSettings) {
-                if (!!!settings.items) {
-                  trackEditSettings({ changedItem: setting.name.replaceAll(' ', '-'), status: setting.value });
-                }
-                else {
-                  for (const item of settings.items) {
-                    if (item.name === setting.name) {
-                      trackEditSettings({ changedItem: item.id, status: item.value });
-                    }
-                  }
-                }
-              }
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
@@ -1543,6 +1531,7 @@ function getServiceManifest(serviceName) {
     authorizationPath: '/authorize',
     authorizedTitle: 'Logout',
     unauthorizedTitle: 'Connect',
+    authorizationLogo: platform?.logoUrl ?? '',
     showAuthRedDot: true,
     authorized: false,
     authorizedAccount: '',
@@ -1562,20 +1551,37 @@ function getServiceManifest(serviceName) {
     settingsPath: '/settings',
     settings: [
       {
+        id: "popupLogPageAfterCall",
+        type: "boolean",
+        groupId: "logging",
         name: 'Auto log call - only pop up log page',
         value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Auto log call - only pop up log page')?.value ?? false)
       },
       {
+        id: "popupLogPageAfterSMS",
+        type: "boolean",
+        groupId: "logging",
         name: 'Auto log SMS - only pop up log page',
         value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Auto log SMS - only pop up log page')?.value ?? false)
       },
       {
-        name: 'Open contact web page from incoming call',
-        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Open contact web page from incoming call')?.value ?? false)
-      },
-      {
-        name: 'Open contact web page after creating it',
-        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Open contact web page after creating it')?.value ?? true)
+        id: 'contacts',
+        type: 'group',
+        name: 'Contacts',
+        items: [
+          {
+            id: 'openContactPageFromIncomingCall',
+            type: 'boolean',
+            name: 'Open contact web page from incoming call',
+            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.name === 'Open contact web page from incoming call')?.value ?? false)
+          },
+          {
+            id: 'openContactPageAfterCreation',
+            type: 'boolean',
+            name: 'Open contact web page after creating it',
+            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.name === 'Open contact web page after creating it')?.value ?? true)
+          }
+        ]
       },
       {
         id: "openAboutPage",
