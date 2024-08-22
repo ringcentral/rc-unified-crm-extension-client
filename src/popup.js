@@ -177,9 +177,10 @@ window.addEventListener('message', async (e) => {
               axios.defaults.timeout = platform.requestConfig.timeout * 1000;
             }
             registered = true;
+            const serviceManifest = await getServiceManifest(platform.name);
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-register-third-party-service',
-              service: getServiceManifest(platform.name)
+              service: serviceManifest
             }, '*');
           }
           break;
@@ -589,7 +590,7 @@ window.addEventListener('message', async (e) => {
               break;
             case '/callLogger':
               let isAutoLog = false;
-              const callAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.name === 'Auto log call - only pop up log page')?.value;
+              const callAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.id === "popupLogPageAfterCall")?.value;
 
               // extensions numers should NOT be logged
               if (data.body.call.direction === 'Inbound') {
@@ -866,7 +867,7 @@ window.addEventListener('message', async (e) => {
                 break;
               }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
-              const messageAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.name === 'Auto log SMS - only pop up log page')?.value;
+              const messageAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.id === "popupLogPageAfterSMS")?.value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
               let getContactMatchResult = null;
@@ -1202,6 +1203,7 @@ window.addEventListener('message', async (e) => {
                       version: {
                         "ui:field": "typography",
                         "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                        "ui:align": "center"
                       },
                       isServiceOnline: {
                         "ui:field": "typography",
@@ -1518,7 +1520,7 @@ function handleThirdPartyOAuthWindow(oAuthUri) {
 }
 
 
-function getServiceManifest(serviceName) {
+async function getServiceManifest(serviceName) {
   const services = {
     name: serviceName,
     customizedPageInputChangedEventPath: '/customizedPage/inputChanged',
@@ -1535,17 +1537,18 @@ function getServiceManifest(serviceName) {
     showAuthRedDot: true,
     authorized: false,
     authorizedAccount: '',
+    info: `Developed by ${manifest?.author?.name ?? 'Unknown'}`,
 
     // Enable call log sync feature
     callLoggerPath: '/callLogger',
     callLogPageInputChangedEventPath: '/callLogger/inputChanged',
     callLogEntityMatcherPath: '/callLogger/match',
-    callLoggerAutoSettingLabel: 'Auto log call',
+    callLoggerAutoSettingLabel: 'Log phone calls automatically',
 
     messageLoggerPath: '/messageLogger',
     messagesLogPageInputChangedEventPath: '/messageLogger/inputChanged',
     messageLogEntityMatcherPath: '/messageLogger/match',
-    messageLoggerAutoSettingLabel: 'Auto log SMS',
+    messageLoggerAutoSettingLabel: 'Log SMS conversations automatically',
 
     feedbackPath: '/feedback',
     settingsPath: '/settings',
@@ -1554,39 +1557,53 @@ function getServiceManifest(serviceName) {
         id: "popupLogPageAfterCall",
         type: "boolean",
         groupId: "logging",
-        name: 'Auto log call - only pop up log page',
-        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Auto log call - only pop up log page')?.value ?? false)
+        name: 'Open call logging page after call',
+        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === "popupLogPageAfterCall")?.value ?? false)
       },
       {
         id: "popupLogPageAfterSMS",
         type: "boolean",
         groupId: "logging",
-        name: 'Auto log SMS - only pop up log page',
-        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Auto log SMS - only pop up log page')?.value ?? false)
+        name: 'Open SMS logging page after message',
+        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === "popupLogPageAfterSMS")?.value ?? false)
       },
       {
         id: 'contacts',
-        type: 'group',
+        type: 'section',
         name: 'Contacts',
         items: [
+          {
+            id: "numberFormatterTitle",
+            name: "Contact page",
+            type: "typography",
+            variant: "title2",
+            value: "Open contact page",
+          },
           {
             id: 'openContactPageFromIncomingCall',
             type: 'boolean',
             name: 'Open contact web page from incoming call',
-            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.name === 'Open contact web page from incoming call')?.value ?? false)
+            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === "openContactPageFromIncomingCall")?.value ?? false)
           },
           {
             id: 'openContactPageAfterCreation',
             type: 'boolean',
             name: 'Open contact web page after creating it',
-            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.name === 'Open contact web page after creating it')?.value ?? true)
+            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === "openContactPageAfterCreation")?.value ?? true)
+          },
+          {
+            id: "numberFormatterTitle",
+            name: "Number formatter",
+            type: "typography",
+            variant: "title2",
+            value: "Phone number format alternatives",
           }
         ]
       },
       {
         id: "openAboutPage",
         type: "button",
-        name: "About page",
+        name: "About",
         buttonLabel: "Open"
       }
     ],
@@ -1636,6 +1653,44 @@ function getServiceManifest(serviceName) {
           },
         ]
       });
+  };
+  if (serviceName === 'clio' || serviceName === 'insightly') {
+    // TEMP
+    const { overridingPhoneNumberFormat, overridingPhoneNumberFormat2, overridingPhoneNumberFormat3 } =
+      await chrome.storage.local.get({ overridingPhoneNumberFormat: null, overridingPhoneNumberFormat2: null, overridingPhoneNumberFormat3: null });
+    if (!!overridingPhoneNumberFormat || !!overridingPhoneNumberFormat2 || !!overridingPhoneNumberFormat3) {
+      await chrome.storage.local.remove('overridingPhoneNumberFormat');
+      await chrome.storage.local.remove('overridingPhoneNumberFormat2');
+      await chrome.storage.local.remove('overridingPhoneNumberFormat3');
+    }
+    const numberFormatterComponent = [
+      {
+        id: "info",
+        name: "info",
+        type: "admonition",
+        severity: "warning",
+        value: "Please input your overriding phone number format: (please use * to represent a number, eg. (***) ***-****)",
+      },
+      {
+        id: "overridingPhoneNumberFormat",
+        name: "Format 1",
+        type: "string",
+        value: overridingPhoneNumberFormat ?? (!!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat')?.value ?? "")),
+      },
+      {
+        id: "overridingPhoneNumberFormat2",
+        name: "Format 2",
+        type: "string",
+        value: overridingPhoneNumberFormat2 ?? (!!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat2')?.value ?? "")),
+      },
+      {
+        id: "overridingPhoneNumberFormat3",
+        name: "Format 3",
+        type: "string",
+        value: overridingPhoneNumberFormat3 ?? (!!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat3')?.value ?? "")),
+      }
+    ]
+    services.settings.find(s => s.id === 'contacts').items.push(...numberFormatterComponent);
   }
   return services;
 }

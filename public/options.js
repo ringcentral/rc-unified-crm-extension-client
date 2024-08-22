@@ -4,14 +4,10 @@ let timerId = '';
 const saveOptions = () => {
     const customCrmManifestUrl = document.getElementById('customCrmManifestUrl').value;
     const c2dDelay = document.getElementById('c2dDelay').value;
-    const autoLogCountdown = document.getElementById('autoLogCountdown').value;
     const renderQuickAccessButton = document.getElementById('renderQuickAccessButton').checked;
-    const overridingPhoneNumberFormat = document.getElementById('overridingPhoneNumberFormat').value;
-    const overridingPhoneNumberFormat2 = document.getElementById('overridingPhoneNumberFormat2').value;
-    const overridingPhoneNumberFormat3 = document.getElementById('overridingPhoneNumberFormat3').value;
 
     chrome.storage.local.set(
-        { customCrmManifestUrl, c2dDelay, autoLogCountdown, renderQuickAccessButton, overridingPhoneNumberFormat, overridingPhoneNumberFormat2, overridingPhoneNumberFormat3 },
+        { customCrmManifestUrl, c2dDelay, renderQuickAccessButton },
         () => {
             setupManifest({ customCrmManifestUrl });
         }
@@ -26,14 +22,11 @@ const clearPlatformInfo = async () => {
 // stored in chrome.storage.
 const restoreOptions = () => {
     chrome.storage.local.get(
-        { customCrmManifestUrl: '', c2dDelay: '0', renderQuickAccessButton: true, overridingPhoneNumberFormat: '', overridingPhoneNumberFormat2: '', overridingPhoneNumberFormat3: '' },
+        { customCrmManifestUrl: '', c2dDelay: '0', renderQuickAccessButton: true },
         (items) => {
             document.getElementById('customCrmManifestUrl').value = items.customCrmManifestUrl;
             document.getElementById('c2dDelay').value = items.c2dDelay;
             document.getElementById('renderQuickAccessButton').checked = items.renderQuickAccessButton;
-            document.getElementById('overridingPhoneNumberFormat').value = items.overridingPhoneNumberFormat;
-            document.getElementById('overridingPhoneNumberFormat2').value = items.overridingPhoneNumberFormat2;
-            document.getElementById('overridingPhoneNumberFormat3').value = items.overridingPhoneNumberFormat3;
         }
     );
 };

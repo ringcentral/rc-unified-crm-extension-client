@@ -3,8 +3,10 @@ import analytics from '../lib/analytics';
 
 async function getContact({ serverUrl, phoneNumber }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const { overridingPhoneNumberFormat, overridingPhoneNumberFormat2, overridingPhoneNumberFormat3 } =
-        await chrome.storage.local.get({ overridingPhoneNumberFormat: '', overridingPhoneNumberFormat2: '', overridingPhoneNumberFormat3: '' });
+    const { extensionUserSettings } = await await chrome.storage.local.get('extensionUserSettings');
+    const overridingPhoneNumberFormat  =extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat')?.value ?? null;
+    const overridingPhoneNumberFormat2  =extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat2')?.value ?? null;
+    const overridingPhoneNumberFormat3  =extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat3')?.value ?? null;
     const overridingFormats = [];
     if (overridingPhoneNumberFormat) { overridingFormats.push('+1**********'); overridingFormats.push(overridingPhoneNumberFormat); }
     if (overridingPhoneNumberFormat2) overridingFormats.push(overridingPhoneNumberFormat2);
