@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { showNotification } from '../lib/util';
 import { trackCrmLogin, trackCrmLogout } from '../lib/analytics';
+import { openDB } from 'idb';
 
 async function submitPlatformSelection(platform) {
     await chrome.storage.local.set({
@@ -47,6 +48,9 @@ async function apiKeyLogin({ serverUrl, apiKey, apiUrl, username, password }) {
 }
 
 async function onAuthCallback({ serverUrl, callbackUri }) {
+    const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;
+    const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
+    const rcInfo = await indexDB.get('keyvaluepairs', 'dataFetcherV2-storageData');
     const platformInfo = await chrome.storage.local.get('platform-info');
     const hostname = platformInfo['platform-info'].hostname;
     let oauthCallbackUrl = '';
@@ -54,10 +58,10 @@ async function onAuthCallback({ serverUrl, callbackUri }) {
     if (platformInfo['platform-info'].platformName === 'bullhorn') {
         const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
         const { crm_extension_bullhornUsername } = await chrome.storage.local.get({ crm_extension_bullhornUsername: null });
-        oauthCallbackUrl = `${serverUrl}/oauth-callback?callbackUri=${callbackUri}&hostname=${hostname}&tokenUrl=${crm_extension_bullhorn_user_urls.oauthUrl}/token&apiUrl=${crm_extension_bullhorn_user_urls.restUrl}&username=${crm_extension_bullhornUsername}`;
+        oauthCallbackUrl = `${serverUrl}/oauth-callback?callbackUri=${callbackUri}&hostname=${hostname}&tokenUrl=${crm_extension_bullhorn_user_urls.oauthUrl}/token&apiUrl=${crm_extension_bullhorn_user_urls.restUrl}&username=${crm_extension_bullhornUsername}&rcAccountId=${rcInfo.value.cachedData.extensionInfo.account.id}`;
     }
     else {
-        oauthCallbackUrl = `${serverUrl}/oauth-callback?callbackUri=${callbackUri}&hostname=${hostname}`;
+        oauthCallbackUrl = `${serverUrl}/oauth-callback?callbackUri=${callbackUri}&hostname=${hostname}&rcAccountId=${rcInfo.value.cachedData.extensionInfo.account.id}`;
     }
     const res = await axios.get(oauthCallbackUrl);
     showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully authorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
