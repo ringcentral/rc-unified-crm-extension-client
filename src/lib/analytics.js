@@ -158,3 +158,8 @@ exports.createNewContact = function createNewContact() {
         appName
     })
 }
+exports.trackFactoryReset = function trackFactoryReset() {
+    track('Factory reset', {
+        appName
+    })
+}

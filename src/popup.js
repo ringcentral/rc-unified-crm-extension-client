@@ -9,6 +9,8 @@ const logPage = require('./components/logPage');
 const authPage = require('./components/authPage');
 const feedbackPage = require('./components/feedbackPage');
 const releaseNotesPage = require('./components/releaseNotesPage');
+const supportPage = require('./components/supportPage');
+const aboutPage = require('./components/aboutPage');
 const moment = require('moment');
 const {
   identify,
@@ -24,7 +26,8 @@ const {
   trackCreateMeeting,
   trackEditSettings,
   trackConnectedCall,
-  trackOpenFeedback
+  trackOpenFeedback,
+  trackFactoryReset
 } = require('./lib/analytics');
 
 window.__ON_RC_POPUP_WINDOW = 1;
@@ -1145,7 +1148,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   await showUnresolvedTabPage();
                   break;
-                case 'openAboutPage':
+                case 'openSupportPage':
                   let isOnline = false;
                   try {
                     const isServiceOnlineResponse = await axios.get(`${manifest.serverUrl}/is-alive`);
@@ -1154,102 +1157,21 @@ window.addEventListener('message', async (e) => {
                   catch (e) {
                     isOnline = false;
                   }
-                  const aboutPage = {
-                    id: 'aboutPage',
-                    title: 'About',
-                    type: 'page',
-                    schema: {
-                      type: 'object',
-                      properties: {
-                        version: {
-                          type: "string",
-                          description: `Version: v${manifest.version}`
-                        },
-                        isServiceOnline: {
-                          type: "string",
-                          description: `Server status: ${isOnline ? 'Online' : 'Offline'}`
-                        },
-                        openUserGuideButton: {
-                          type: "string",
-                          title: "Open user guide",
-                        },
-                        openReleaseNoteButton: {
-                          type: "string",
-                          title: "Open release notes",
-                        },
-                        checkForUpdateButton: {
-                          type: "string",
-                          title: "Check for update",
-                        },
-                        generateErrorLogButton: {
-                          type: "string",
-                          title: "Download error log",
-                        },
-                        openFeedbackPageButton: {
-                          type: "string",
-                          title: "Submit feedback",
-                        },
-                        factoryResetWarning: {
-                          type: "string",
-                          description: "Factory reset will disconnect both CRM and RingCentral accounts from this extension and log you out."
-                        },
-                        factoryResetButton: {
-                          type: "string",
-                          title: "Factory reset",
-                        }
-                      }
-                    },
-                    uiSchema: {
-                      version: {
-                        "ui:field": "typography",
-                        "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
-                        "ui:align": "center"
-                      },
-                      isServiceOnline: {
-                        "ui:field": "typography",
-                        "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
-                      },
-                      generateErrorLogButton: {
-                        "ui:field": "button",
-                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true
-                      },
-                      openUserGuideButton: {
-                        "ui:field": "button",
-                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true
-                      },
-                      openReleaseNoteButton: {
-                        "ui:field": "button",
-                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true
-                      },
-                      checkForUpdateButton: {
-                        "ui:field": "button",
-                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true
-                      },
-                      openFeedbackPageButton: {
-                        "ui:field": "button",
-                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true,
-                        "ui:color": "success.b03"
-                      },
-                      factoryResetWarning: {
-                        "ui:field": "admonition",
-                        "ui:severity": "warning",  // "warning", "info", "error", "success"
-                      },
-                      factoryResetButton: {
-                        "ui:field": "button",
-                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true,
-                        "ui:color": "danger.b03"
-                      },
-                    }
-                  };
+                  const supportPageRender = supportPage.getSupportPageRender({ manifest, isOnline });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
-                    page: aboutPage
+                    page: supportPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: '/customized/supportPage', // page id
+                  }, '*');
+                  break;
+                case 'openAboutPage':
+                  const aboutPageRender = aboutPage.getAboutPageRender({ manifest });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: aboutPageRender
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
@@ -1272,6 +1194,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   await chrome.storage.local.remove('unresolvedLogs');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  trackFactoryReset();
                   break;
                 case 'generateErrorLogButton':
                   const errorLogFileName = "[RingCentral CRM Extension]ErrorLogs.txt";
@@ -1289,17 +1212,27 @@ window.addEventListener('message', async (e) => {
                     showNotification({ level: 'warning', message: `New version (${onlineVerison}) is available, please go to chrome://extensions and press "Update"`, ttl: 5000 });
                   }
                   break;
-                case 'openUserGuideButton':
-                  window.open(`https://ringcentral.github.io/rc-unified-crm-extension/${platformName}/`);
-                  break;
-                case 'openReleaseNoteButton':
-                  window.open('https://ringcentral.github.io/rc-unified-crm-extension/release-notes/');
-                  break;
                 case 'openFeedbackPageButton':
                   chrome.runtime.sendMessage({
                     type: "openPopupWindow",
                     navigationPath: "/feedback"
                   });
+                  break;
+                case 'documentation':
+                  window.open(`https://ringcentral.github.io/rc-unified-crm-extension/${platformName}/`);
+                  trackPage('/documentation');
+                  break;
+                case 'releaseNotes':
+                  window.open('https://ringcentral.github.io/rc-unified-crm-extension/release-notes/');
+                  trackPage('/releaseNotes');
+                  break;
+                case 'getSupport':
+                  window.open('https://community.ringcentral.com/groups/unified-crm-extension-22?utm_source=crm-extension&utm_medium=link&utm_campaign=in-app-link');
+                  trackPage('/getSupport');
+                  break;
+                case 'writeReview':
+                  trackPage('/writeReview');
+                  window.open('https://chromewebstore.google.com/detail/ringcentral-crm-extension/kkhkjhafgdlihndcbnebljipgkandkhh/reviews');
                   break;
               }
               break;
@@ -1523,6 +1456,7 @@ function handleThirdPartyOAuthWindow(oAuthUri) {
 async function getServiceManifest(serviceName) {
   const services = {
     name: serviceName,
+    displayName: platform.displayName,
     customizedPageInputChangedEventPath: '/customizedPage/inputChanged',
     contactMatchPath: '/contacts/match',
     viewMatchedContactPath: '/contacts/view',
@@ -1599,6 +1533,12 @@ async function getServiceManifest(serviceName) {
             value: "Phone number format alternatives",
           }
         ]
+      },
+      {
+        id: "openSupportPage",
+        type: "button",
+        name: "Support",
+        buttonLabel: "Open"
       },
       {
         id: "openAboutPage",
