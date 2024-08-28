@@ -11,6 +11,7 @@ const feedbackPage = require('./components/feedbackPage');
 const releaseNotesPage = require('./components/releaseNotesPage');
 const supportPage = require('./components/supportPage');
 const aboutPage = require('./components/aboutPage');
+const developerSettingsPage = require('./components/developerSettingsPage');
 const moment = require('moment');
 const {
   identify,
@@ -119,6 +120,10 @@ window.addEventListener('message', async (e) => {
   try {
     if (data) {
       switch (data.type) {
+        case 'toggle-developer-mode':
+          await chrome.storage.local.set({ developerMode: data.toggle });
+          showNotification({ level: 'success', message: `Developer mode is turn ${data.toggle ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
+          break;
         case 'rc-region-settings-notify':
           // get region settings from widget
           console.log('rc-region-settings-notify:', data);
@@ -1178,6 +1183,19 @@ window.addEventListener('message', async (e) => {
                     path: '/customized/aboutPage', // page id
                   }, '*');
                   break;
+                case 'openDeveloperSettingsPage':
+                  const { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: '' });
+
+                  const developerSettingsPageRender = developerSettingsPage.getDeveloperSettingsPageRender({ customUrl: customCrmManifestUrl });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: developerSettingsPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: '/customized/developerSettingsPage', // page id
+                  }, '*');
+                  break;
                 case 'factoryResetButton':
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
@@ -1233,6 +1251,29 @@ window.addEventListener('message', async (e) => {
                 case 'writeReview':
                   trackPage('/writeReview');
                   window.open('https://chromewebstore.google.com/detail/ringcentral-crm-extension/kkhkjhafgdlihndcbnebljipgkandkhh/reviews');
+                  break;
+                case 'developerSettingsPage':
+                  try {
+                    const customManifestUrl = data.body.button.formData.customManifestUrl;
+                    if (customManifestUrl === '') {
+                      return;
+                    }
+                    await chrome.storage.local.set({ customCrmManifestUrl: customManifestUrl });
+
+                    await chrome.storage.local.remove('customCrmManifest');
+                    const customCrmManifestJson = await (await fetch(customManifestUrl)).json();
+                    if (customCrmManifestJson) {
+                      await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
+                      showNotification({ level: 'success', message: 'Custom manifest file updated. Please reload the extension.', ttl: 5000 });
+                    }
+                  }
+                  catch (e) {
+                    showNotification({ level: 'warning', message: 'Failed to get custom manifest file', ttl: 5000 });
+                  }
+                  break;
+                case 'clearPlatformInfoButton':
+                  await chrome.storage.local.remove('platform-info');
+                  showNotification({ level: 'success', message: 'Platform info cleared. Please close the extension and open from CRM page.', ttl: 5000 });
                   break;
               }
               break;
@@ -1538,13 +1579,15 @@ async function getServiceManifest(serviceName) {
         id: "openSupportPage",
         type: "button",
         name: "Support",
-        buttonLabel: "Open"
+        buttonLabel: "Open",
+        buttonType: "link",
       },
       {
         id: "openAboutPage",
         type: "button",
         name: "About",
-        buttonLabel: "Open"
+        buttonLabel: "Open",
+        buttonType: "link",
       }
     ],
 
@@ -1631,6 +1674,18 @@ async function getServiceManifest(serviceName) {
       }
     ]
     services.settings.find(s => s.id === 'contacts').items.push(...numberFormatterComponent);
+  }
+  const { developerMode } = await chrome.storage.local.get({ developerMode: false });
+  if (developerMode) {
+    services.settings.push(
+      {
+        id: 'openDeveloperSettingsPage',
+        type: 'button',
+        name: 'Developer settings',
+        buttonLabel: 'Open',
+        buttonType: "link",
+      }
+    )
   }
   return services;
 }
