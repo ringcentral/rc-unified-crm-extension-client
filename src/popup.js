@@ -9,6 +9,9 @@ const logPage = require('./components/logPage');
 const authPage = require('./components/authPage');
 const feedbackPage = require('./components/feedbackPage');
 const releaseNotesPage = require('./components/releaseNotesPage');
+const supportPage = require('./components/supportPage');
+const aboutPage = require('./components/aboutPage');
+const developerSettingsPage = require('./components/developerSettingsPage');
 const moment = require('moment');
 const {
   identify,
@@ -24,7 +27,8 @@ const {
   trackCreateMeeting,
   trackEditSettings,
   trackConnectedCall,
-  trackOpenFeedback
+  trackOpenFeedback,
+  trackFactoryReset
 } = require('./lib/analytics');
 
 window.__ON_RC_POPUP_WINDOW = 1;
@@ -116,6 +120,10 @@ window.addEventListener('message', async (e) => {
   try {
     if (data) {
       switch (data.type) {
+        case 'toggle-developer-mode':
+          await chrome.storage.local.set({ developerMode: data.toggle });
+          showNotification({ level: 'success', message: `Developer mode is turn ${data.toggle ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
+          break;
         case 'rc-region-settings-notify':
           // get region settings from widget
           console.log('rc-region-settings-notify:', data);
@@ -177,9 +185,10 @@ window.addEventListener('message', async (e) => {
               axios.defaults.timeout = platform.requestConfig.timeout * 1000;
             }
             registered = true;
+            const serviceManifest = await getServiceManifest(platform.name);
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-register-third-party-service',
-              service: getServiceManifest(platform.name)
+              service: serviceManifest
             }, '*');
           }
           break;
@@ -589,7 +598,7 @@ window.addEventListener('message', async (e) => {
               break;
             case '/callLogger':
               let isAutoLog = false;
-              const callAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.name === 'Auto log call - only pop up log page')?.value;
+              const callAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.id === "popupLogPageAfterCall")?.value;
 
               // extensions numers should NOT be logged
               if (data.body.call.direction === 'Inbound') {
@@ -866,7 +875,7 @@ window.addEventListener('message', async (e) => {
                 break;
               }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
-              const messageAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.name === 'Auto log SMS - only pop up log page')?.value;
+              const messageAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.id === "popupLogPageAfterSMS")?.value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
               let getContactMatchResult = null;
@@ -1105,18 +1114,6 @@ window.addEventListener('message', async (e) => {
             case '/settings':
               extensionUserSettings = data.body.settings;
               await chrome.storage.local.set({ extensionUserSettings });
-              for (const setting of extensionUserSettings) {
-                if (!!!settings.items) {
-                  trackEditSettings({ changedItem: setting.name.replaceAll(' ', '-'), status: setting.value });
-                }
-                else {
-                  for (const item of settings.items) {
-                    if (item.name === setting.name) {
-                      trackEditSettings({ changedItem: item.id, status: item.value });
-                    }
-                  }
-                }
-              }
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
@@ -1156,7 +1153,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   await showUnresolvedTabPage();
                   break;
-                case 'openAboutPage':
+                case 'openSupportPage':
                   let isOnline = false;
                   try {
                     const isServiceOnlineResponse = await axios.get(`${manifest.serverUrl}/is-alive`);
@@ -1165,105 +1162,38 @@ window.addEventListener('message', async (e) => {
                   catch (e) {
                     isOnline = false;
                   }
-                  const aboutPage = {
-                    id: 'aboutPage',
-                    title: 'About',
-                    type: 'page',
-                    schema: {
-                      type: 'object',
-                      properties: {
-                        version: {
-                          type: "string",
-                          description: `Version: v${manifest.version}`
-                        },
-                        isServiceOnline: {
-                          type: "string",
-                          description: `Server status: ${isOnline ? 'Online' : 'Offline'}`
-                        },
-                        openUserGuideButton: {
-                          type: "string",
-                          title: "Open user guide",
-                        },
-                        openReleaseNoteButton: {
-                          type: "string",
-                          title: "Open release notes",
-                        },
-                        checkForUpdateButton: {
-                          type: "string",
-                          title: "Check for update",
-                        },
-                        generateErrorLogButton: {
-                          type: "string",
-                          title: "Download error log",
-                        },
-                        openFeedbackPageButton: {
-                          type: "string",
-                          title: "Submit feedback",
-                        },
-                        factoryResetWarning: {
-                          type: "string",
-                          description: "Factory reset will disconnect both CRM and RingCentral accounts from this extension and log you out."
-                        },
-                        factoryResetButton: {
-                          type: "string",
-                          title: "Factory reset",
-                        }
-                      }
-                    },
-                    uiSchema: {
-                      version: {
-                        "ui:field": "typography",
-                        "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
-                      },
-                      isServiceOnline: {
-                        "ui:field": "typography",
-                        "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
-                      },
-                      generateErrorLogButton: {
-                        "ui:field": "button",
-                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true
-                      },
-                      openUserGuideButton: {
-                        "ui:field": "button",
-                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true
-                      },
-                      openReleaseNoteButton: {
-                        "ui:field": "button",
-                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true
-                      },
-                      checkForUpdateButton: {
-                        "ui:field": "button",
-                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true
-                      },
-                      openFeedbackPageButton: {
-                        "ui:field": "button",
-                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true,
-                        "ui:color": "success.b03"
-                      },
-                      factoryResetWarning: {
-                        "ui:field": "admonition",
-                        "ui:severity": "warning",  // "warning", "info", "error", "success"
-                      },
-                      factoryResetButton: {
-                        "ui:field": "button",
-                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true,
-                        "ui:color": "danger.b03"
-                      },
-                    }
-                  };
+                  const supportPageRender = supportPage.getSupportPageRender({ manifest, isOnline });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
-                    page: aboutPage
+                    page: supportPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: '/customized/supportPage', // page id
+                  }, '*');
+                  break;
+                case 'openAboutPage':
+                  const aboutPageRender = aboutPage.getAboutPageRender({ manifest });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: aboutPageRender
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: '/customized/aboutPage', // page id
+                  }, '*');
+                  break;
+                case 'openDeveloperSettingsPage':
+                  const { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: '' });
+
+                  const developerSettingsPageRender = developerSettingsPage.getDeveloperSettingsPageRender({ customUrl: customCrmManifestUrl });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: developerSettingsPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: '/customized/developerSettingsPage', // page id
                   }, '*');
                   break;
                 case 'factoryResetButton':
@@ -1282,6 +1212,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   await chrome.storage.local.remove('unresolvedLogs');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  trackFactoryReset();
                   break;
                 case 'generateErrorLogButton':
                   const errorLogFileName = "[RingCentral CRM Extension]ErrorLogs.txt";
@@ -1299,17 +1230,50 @@ window.addEventListener('message', async (e) => {
                     showNotification({ level: 'warning', message: `New version (${onlineVerison}) is available, please go to chrome://extensions and press "Update"`, ttl: 5000 });
                   }
                   break;
-                case 'openUserGuideButton':
-                  window.open(`https://ringcentral.github.io/rc-unified-crm-extension/${platformName}/`);
-                  break;
-                case 'openReleaseNoteButton':
-                  window.open('https://ringcentral.github.io/rc-unified-crm-extension/release-notes/');
-                  break;
                 case 'openFeedbackPageButton':
                   chrome.runtime.sendMessage({
                     type: "openPopupWindow",
                     navigationPath: "/feedback"
                   });
+                  break;
+                case 'documentation':
+                  window.open(`https://ringcentral.github.io/rc-unified-crm-extension/${platformName}/`);
+                  trackPage('/documentation');
+                  break;
+                case 'releaseNotes':
+                  window.open('https://ringcentral.github.io/rc-unified-crm-extension/release-notes/');
+                  trackPage('/releaseNotes');
+                  break;
+                case 'getSupport':
+                  window.open('https://community.ringcentral.com/groups/unified-crm-extension-22?utm_source=crm-extension&utm_medium=link&utm_campaign=in-app-link');
+                  trackPage('/getSupport');
+                  break;
+                case 'writeReview':
+                  trackPage('/writeReview');
+                  window.open('https://chromewebstore.google.com/detail/ringcentral-crm-extension/kkhkjhafgdlihndcbnebljipgkandkhh/reviews');
+                  break;
+                case 'developerSettingsPage':
+                  try {
+                    const customManifestUrl = data.body.button.formData.customManifestUrl;
+                    if (customManifestUrl === '') {
+                      return;
+                    }
+                    await chrome.storage.local.set({ customCrmManifestUrl: customManifestUrl });
+
+                    await chrome.storage.local.remove('customCrmManifest');
+                    const customCrmManifestJson = await (await fetch(customManifestUrl)).json();
+                    if (customCrmManifestJson) {
+                      await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
+                      showNotification({ level: 'success', message: 'Custom manifest file updated. Please reload the extension.', ttl: 5000 });
+                    }
+                  }
+                  catch (e) {
+                    showNotification({ level: 'warning', message: 'Failed to get custom manifest file', ttl: 5000 });
+                  }
+                  break;
+                case 'clearPlatformInfoButton':
+                  await chrome.storage.local.remove('platform-info');
+                  showNotification({ level: 'success', message: 'Platform info cleared. Please close the extension and open from CRM page.', ttl: 5000 });
                   break;
               }
               break;
@@ -1530,9 +1494,10 @@ function handleThirdPartyOAuthWindow(oAuthUri) {
 }
 
 
-function getServiceManifest(serviceName) {
+async function getServiceManifest(serviceName) {
   const services = {
     name: serviceName,
+    displayName: platform.displayName,
     customizedPageInputChangedEventPath: '/customizedPage/inputChanged',
     contactMatchPath: '/contacts/match',
     viewMatchedContactPath: '/contacts/view',
@@ -1543,45 +1508,86 @@ function getServiceManifest(serviceName) {
     authorizationPath: '/authorize',
     authorizedTitle: 'Logout',
     unauthorizedTitle: 'Connect',
+    authorizationLogo: platform?.logoUrl ?? '',
     showAuthRedDot: true,
     authorized: false,
     authorizedAccount: '',
+    info: `Developed by ${manifest?.author?.name ?? 'Unknown'}`,
 
     // Enable call log sync feature
     callLoggerPath: '/callLogger',
     callLogPageInputChangedEventPath: '/callLogger/inputChanged',
     callLogEntityMatcherPath: '/callLogger/match',
-    callLoggerAutoSettingLabel: 'Auto log call',
+    callLoggerAutoSettingLabel: 'Log phone calls automatically',
 
     messageLoggerPath: '/messageLogger',
     messagesLogPageInputChangedEventPath: '/messageLogger/inputChanged',
     messageLogEntityMatcherPath: '/messageLogger/match',
-    messageLoggerAutoSettingLabel: 'Auto log SMS',
+    messageLoggerAutoSettingLabel: 'Log SMS conversations automatically',
 
     feedbackPath: '/feedback',
     settingsPath: '/settings',
     settings: [
       {
-        name: 'Auto log call - only pop up log page',
-        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Auto log call - only pop up log page')?.value ?? false)
+        id: "popupLogPageAfterCall",
+        type: "boolean",
+        groupId: "logging",
+        name: 'Open call logging page after call',
+        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === "popupLogPageAfterCall")?.value ?? false)
       },
       {
-        name: 'Auto log SMS - only pop up log page',
-        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Auto log SMS - only pop up log page')?.value ?? false)
+        id: "popupLogPageAfterSMS",
+        type: "boolean",
+        groupId: "logging",
+        name: 'Open SMS logging page after message',
+        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === "popupLogPageAfterSMS")?.value ?? false)
       },
       {
-        name: 'Open contact web page from incoming call',
-        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Open contact web page from incoming call')?.value ?? false)
+        id: 'contacts',
+        type: 'section',
+        name: 'Contacts',
+        items: [
+          {
+            id: "numberFormatterTitle",
+            name: "Contact page",
+            type: "typography",
+            variant: "title2",
+            value: "Open contact page",
+          },
+          {
+            id: 'openContactPageFromIncomingCall',
+            type: 'boolean',
+            name: 'Open contact web page from incoming call',
+            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === "openContactPageFromIncomingCall")?.value ?? false)
+          },
+          {
+            id: 'openContactPageAfterCreation',
+            type: 'boolean',
+            name: 'Open contact web page after creating it',
+            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === "openContactPageAfterCreation")?.value ?? true)
+          },
+          {
+            id: "numberFormatterTitle",
+            name: "Number formatter",
+            type: "typography",
+            variant: "title2",
+            value: "Phone number format alternatives",
+          }
+        ]
       },
       {
-        name: 'Open contact web page after creating it',
-        value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Open contact web page after creating it')?.value ?? true)
+        id: "openSupportPage",
+        type: "button",
+        name: "Support",
+        buttonLabel: "Open",
+        buttonType: "link",
       },
       {
         id: "openAboutPage",
         type: "button",
-        name: "About page",
-        buttonLabel: "Open"
+        name: "About",
+        buttonLabel: "Open",
+        buttonType: "link",
       }
     ],
 
@@ -1630,6 +1636,56 @@ function getServiceManifest(serviceName) {
           },
         ]
       });
+  };
+  if (serviceName === 'clio' || serviceName === 'insightly') {
+    // TEMP
+    const { overridingPhoneNumberFormat, overridingPhoneNumberFormat2, overridingPhoneNumberFormat3 } =
+      await chrome.storage.local.get({ overridingPhoneNumberFormat: null, overridingPhoneNumberFormat2: null, overridingPhoneNumberFormat3: null });
+    if (!!overridingPhoneNumberFormat || !!overridingPhoneNumberFormat2 || !!overridingPhoneNumberFormat3) {
+      await chrome.storage.local.remove('overridingPhoneNumberFormat');
+      await chrome.storage.local.remove('overridingPhoneNumberFormat2');
+      await chrome.storage.local.remove('overridingPhoneNumberFormat3');
+    }
+    const numberFormatterComponent = [
+      {
+        id: "info",
+        name: "info",
+        type: "admonition",
+        severity: "warning",
+        value: "Please input your overriding phone number format: (please use * to represent a number, eg. (***) ***-****)",
+      },
+      {
+        id: "overridingPhoneNumberFormat",
+        name: "Format 1",
+        type: "string",
+        value: overridingPhoneNumberFormat ?? (!!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat')?.value ?? "")),
+      },
+      {
+        id: "overridingPhoneNumberFormat2",
+        name: "Format 2",
+        type: "string",
+        value: overridingPhoneNumberFormat2 ?? (!!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat2')?.value ?? "")),
+      },
+      {
+        id: "overridingPhoneNumberFormat3",
+        name: "Format 3",
+        type: "string",
+        value: overridingPhoneNumberFormat3 ?? (!!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat3')?.value ?? "")),
+      }
+    ]
+    services.settings.find(s => s.id === 'contacts').items.push(...numberFormatterComponent);
+  }
+  const { developerMode } = await chrome.storage.local.get({ developerMode: false });
+  if (developerMode) {
+    services.settings.push(
+      {
+        id: 'openDeveloperSettingsPage',
+        type: 'button',
+        name: 'Developer settings',
+        buttonLabel: 'Open',
+        buttonType: "link",
+      }
+    )
   }
   return services;
 }

@@ -6,7 +6,8 @@ import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 // Input {id} = sessionId from RC
 async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, additionalSubmission, contactId, contactType, contactName }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const { overridingPhoneNumberFormat } = await chrome.storage.local.get({ overridingPhoneNumberFormat: '' });
+    const { extensionUserSettings } = await chrome.storage.local.get('extensionUserSettings');
+    const overridingPhoneNumberFormat = (!!extensionUserSettings && !isObjectEmpty(extensionUserSettings)) ? (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat')?.value ?? '') : "";
     if (!!subject) {
         logInfo['customSubject'] = subject;
     }

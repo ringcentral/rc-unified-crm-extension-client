@@ -1,14 +1,19 @@
 import axios from 'axios';
 import analytics from '../lib/analytics';
+import { isObjectEmpty } from '../lib/util';
 
 async function getContact({ serverUrl, phoneNumber }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const { overridingPhoneNumberFormat, overridingPhoneNumberFormat2, overridingPhoneNumberFormat3 } =
-        await chrome.storage.local.get({ overridingPhoneNumberFormat: '', overridingPhoneNumberFormat2: '', overridingPhoneNumberFormat3: '' });
     const overridingFormats = [];
-    if (overridingPhoneNumberFormat) { overridingFormats.push('+1**********'); overridingFormats.push(overridingPhoneNumberFormat); }
-    if (overridingPhoneNumberFormat2) overridingFormats.push(overridingPhoneNumberFormat2);
-    if (overridingPhoneNumberFormat3) overridingFormats.push(overridingPhoneNumberFormat3);
+    const { extensionUserSettings } = await chrome.storage.local.get('extensionUserSettings');
+    if (!!extensionUserSettings && !isObjectEmpty(extensionUserSettings)) {
+        const overridingPhoneNumberFormat = extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat')?.value ?? null;
+        const overridingPhoneNumberFormat2 = extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat2')?.value ?? null;
+        const overridingPhoneNumberFormat3 = extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat3')?.value ?? null;
+        if (overridingPhoneNumberFormat) { overridingFormats.push('+1**********'); overridingFormats.push(overridingPhoneNumberFormat); }
+        if (overridingPhoneNumberFormat2) overridingFormats.push(overridingPhoneNumberFormat2);
+        if (overridingPhoneNumberFormat3) overridingFormats.push(overridingPhoneNumberFormat3);
+    }
     if (!!rcUnifiedCrmExtJwt) {
         const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${overridingFormats.toString()}`);
         return {
