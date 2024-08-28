@@ -1276,6 +1276,11 @@ window.addEventListener('message', async (e) => {
                   showNotification({ level: 'success', message: 'Platform info cleared. Please close the extension and open from CRM page.', ttl: 5000 });
                   break;
               }
+              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-post-message-response',
+                responseId: data.requestId,
+                response: { data: 'ok' },
+              }, '*');
               break;
             default:
               break;
