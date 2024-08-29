@@ -348,7 +348,7 @@ window.addEventListener('message', async (e) => {
             chrome.runtime.sendMessage({
               type: 'openPopupWindow'
             });
-            if (!!extensionUserSettings && extensionUserSettings?.find(e => e.name === 'Open contact web page from incoming call')?.value) {
+            if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'openContactPageFromIncomingCall')?.value) {
               await openContactPage({ manifest, platformName, phoneNumber: data.call.direction === 'Inbound' ? data.call.from.phoneNumber : data.call.to.phoneNumber });
             }
           }
@@ -665,7 +665,7 @@ window.addEventListener('message', async (e) => {
                       newContactInfo = createContactResult.contactInfo;
                       const newContactReturnMessage = createContactResult.returnMessage;
                       showNotification({ level: newContactReturnMessage?.messageType, message: newContactReturnMessage?.message, ttl: newContactReturnMessage?.ttl });
-                      if (!!extensionUserSettings && extensionUserSettings?.find(e => e.name === 'Open contact web page after creating it')?.value) {
+                      if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'openContactPageAfterCreation')?.value) {
                         await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                       }
                     }
@@ -951,7 +951,7 @@ window.addEventListener('message', async (e) => {
                       newContactType: data.body.formData.newContactType
                     });
                     newContactInfo = newContactResp.contactInfo;
-                    if (!!extensionUserSettings && extensionUserSettings?.find(e => e.name === 'Open contact web page after creating it')?.value) {
+                    if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'openContactPageAfterCreation')?.value) {
                       await openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                     }
                   }
@@ -1570,13 +1570,6 @@ async function getServiceManifest(serviceName) {
             type: 'boolean',
             name: 'Open contact web page after creating it',
             value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === "openContactPageAfterCreation")?.value ?? true)
-          },
-          {
-            id: "numberFormatterTitle",
-            name: "Number formatter",
-            type: "typography",
-            variant: "title2",
-            value: "Phone number format alternatives",
           }
         ]
       },
@@ -1678,6 +1671,14 @@ async function getServiceManifest(serviceName) {
         value: overridingPhoneNumberFormat3 ?? (!!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat3')?.value ?? "")),
       }
     ]
+    services.settings.find(s => s.id === 'contacts').items.push(
+      {
+        id: "numberFormatterTitle",
+        name: "Number formatter",
+        type: "typography",
+        variant: "title2",
+        value: "Phone number format alternatives",
+      });
     services.settings.find(s => s.id === 'contacts').items.push(...numberFormatterComponent);
   }
   const { developerMode } = await chrome.storage.local.get({ developerMode: false });
