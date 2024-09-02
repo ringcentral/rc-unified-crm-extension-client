@@ -120,10 +120,6 @@ window.addEventListener('message', async (e) => {
   try {
     if (data) {
       switch (data.type) {
-        case 'toggle-developer-mode':
-          await chrome.storage.local.set({ developerMode: data.toggle });
-          showNotification({ level: 'success', message: `Developer mode is turn ${data.toggle ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
-          break;
         case 'rc-region-settings-notify':
           // get region settings from widget
           console.log('rc-region-settings-notify:', data);
@@ -168,7 +164,7 @@ window.addEventListener('message', async (e) => {
                 window.postMessage({
                   path: '/custom-button-click',
                   type: 'rc-post-message-request',
-                  body: { button: { id: 'openAboutPage' } }
+                  body: { button: { id: 'openSupportPage' } }
                 });
               },
             });
@@ -1080,12 +1076,16 @@ window.addEventListener('message', async (e) => {
               break;
             case '/messageLogger/match':
               let localMessageLogs = {};
-              for (const conversationLogId of data.body.conversationLogIds) {
+              const messageMatchPromises = data.body.conversationLogIds.map(async (conversationLogId) => {
                 const savedMessageLogRecord = await chrome.storage.local.get(conversationLogId);
+                return { conversationLogId, savedMessageLogRecord };
+              });
+              const messageMatchResults = await Promise.all(messageMatchPromises);
+              messageMatchResults.forEach(({ conversationLogId, savedMessageLogRecord }) => {
                 if (!!savedMessageLogRecord && !isObjectEmpty(savedMessageLogRecord)) {
-                  localMessageLogs[conversationLogId] = [{ id: 'dummyId' }]
+                  localMessageLogs[conversationLogId] = [{ id: 'dummyId' }];
                 }
-              }
+              });
               responseMessage(
                 data.requestId,
                 {
@@ -1114,6 +1114,9 @@ window.addEventListener('message', async (e) => {
             case '/settings':
               extensionUserSettings = data.body.settings;
               await chrome.storage.local.set({ extensionUserSettings });
+              if (data.body.setting.id === "toggleDeveloperMode") {
+                showNotification({ level: 'success', message: `Developer mode is turn ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
+              }
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
@@ -1563,13 +1566,13 @@ async function getServiceManifest(serviceName) {
             id: 'openContactPageFromIncomingCall',
             type: 'boolean',
             name: 'Open contact web page from incoming call',
-            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === "openContactPageFromIncomingCall")?.value ?? false)
+            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'contacts')?.items.find(e => e.id === "openContactPageFromIncomingCall")?.value ?? false)
           },
           {
             id: 'openContactPageAfterCreation',
             type: 'boolean',
             name: 'Open contact web page after creating it',
-            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === "openContactPageAfterCreation")?.value ?? true)
+            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'contacts')?.items.find(e => e.id === "openContactPageAfterCreation")?.value ?? true)
           }
         ]
       },
@@ -1586,6 +1589,19 @@ async function getServiceManifest(serviceName) {
         name: "About",
         buttonLabel: "Open",
         buttonType: "link",
+      },
+      {
+        id: "advancedFeatures",
+        type: "group",
+        name: "Advanced features",
+        items: [
+          {
+            id: 'toggleDeveloperMode',
+            type: 'boolean',
+            name: 'Developer mode',
+            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleDeveloperMode")?.value ?? false)
+          }
+        ]
       }
     ],
 
@@ -1681,8 +1697,8 @@ async function getServiceManifest(serviceName) {
       });
     services.settings.find(s => s.id === 'contacts').items.push(...numberFormatterComponent);
   }
-  const { developerMode } = await chrome.storage.local.get({ developerMode: false });
-  if (developerMode) {
+
+  if (!!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleDeveloperMode")?.value)) {
     services.settings.push(
       {
         id: 'openDeveloperSettingsPage',
