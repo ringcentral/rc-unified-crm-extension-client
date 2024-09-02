@@ -344,7 +344,7 @@ window.addEventListener('message', async (e) => {
             chrome.runtime.sendMessage({
               type: 'openPopupWindow'
             });
-            if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'openContactPageFromIncomingCall')?.value) {
+            if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromIncomingCall')?.value) {
               await openContactPage({ manifest, platformName, phoneNumber: data.call.direction === 'Inbound' ? data.call.from.phoneNumber : data.call.to.phoneNumber });
             }
           }
@@ -661,7 +661,7 @@ window.addEventListener('message', async (e) => {
                       newContactInfo = createContactResult.contactInfo;
                       const newContactReturnMessage = createContactResult.returnMessage;
                       showNotification({ level: newContactReturnMessage?.messageType, message: newContactReturnMessage?.message, ttl: newContactReturnMessage?.ttl });
-                      if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'openContactPageAfterCreation')?.value) {
+                      if (!!extensionUserSettings && extensionUserSettings.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageAfterCreation')?.value) {
                         await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                       }
                     }
@@ -947,7 +947,7 @@ window.addEventListener('message', async (e) => {
                       newContactType: data.body.formData.newContactType
                     });
                     newContactInfo = newContactResp.contactInfo;
-                    if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'openContactPageAfterCreation')?.value) {
+                    if (!!extensionUserSettings && extensionUserSettings.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageAfterCreation')?.value) {
                       await openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                     }
                   }
