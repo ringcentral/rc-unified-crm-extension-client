@@ -321,13 +321,13 @@ window.addEventListener('message', async (e) => {
         case 'rc-call-end-notify':
           // get call on call end event
           const callDurationInSeconds = (data.call.endTime - data.call.startTime) / 1000;
-          trackCallEnd({ durationInSeconds: callDurationInSeconds });
+          trackCallEnd({ direction: data.call.direction, durationInSeconds: callDurationInSeconds });
           break;
         case 'rc-ringout-call-notify':
           // get call on active call updated event
           if (data.call.telephonyStatus === 'NoCall' && data.call.terminationType === 'final') {
             const callDurationInSeconds = (data.call.endTime - data.call.startTime) / 1000;
-            trackCallEnd({ durationInSeconds: callDurationInSeconds });
+            trackCallEnd({ direction: data.call.direction, durationInSeconds: callDurationInSeconds });
           }
           if (data.call.telephonyStatus === 'CallConnected') {
             trackConnectedCall();
