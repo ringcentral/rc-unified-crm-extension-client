@@ -108,10 +108,11 @@ exports.trackConnectedCall = function trackConnectedCall() {
         appName
     });
 }
-exports.trackCallEnd = function trackCallEnd({ durationInSeconds, direction }) {
+exports.trackCallEnd = function trackCallEnd({ durationInSeconds, direction, result }) {
     track('A call is ended', {
         direction,
         durationInSeconds,
+        result,
         appName
     });
 }

@@ -318,17 +318,8 @@ window.addEventListener('message', async (e) => {
             trackAnsweredCall();
           }
           break;
-        case 'rc-call-end-notify':
-          // get call on call end event
-          const callDurationInSeconds = (data.call.endTime - data.call.startTime) / 1000;
-          trackCallEnd({ direction: data.call.direction, durationInSeconds: callDurationInSeconds });
-          break;
         case 'rc-ringout-call-notify':
           // get call on active call updated event
-          if (data.call.telephonyStatus === 'NoCall' && data.call.terminationType === 'final') {
-            const callDurationInSeconds = (data.call.endTime - data.call.startTime) / 1000;
-            trackCallEnd({ direction: data.call.direction, durationInSeconds: callDurationInSeconds });
-          }
           if (data.call.telephonyStatus === 'CallConnected') {
             trackConnectedCall();
           }
@@ -356,6 +347,13 @@ window.addEventListener('message', async (e) => {
               break;
             case 'Meeting Scheduled':
               trackCreateMeeting();
+              break;
+            case 'WebRTC Call Ended':
+              trackCallEnd({
+                direction: data.properties.direction, 
+                durationInSeconds: data.properties.duration,
+                result: data.properties.result
+              });
               break;
           }
           break;
@@ -1093,24 +1091,6 @@ window.addEventListener('message', async (e) => {
                 }
               );
               break;
-            case '/feedback':
-              // response to widget
-              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                type: 'rc-post-message-response',
-                responseId: data.requestId,
-                response: { data: 'ok' },
-              }, '*');
-              const feedbackPageRender = feedbackPage.getFeedbackPageRender({ pageConfig: manifest.platforms[platformName].page.feedback, version: manifest.version });
-              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                type: 'rc-adapter-register-customized-page',
-                page: feedbackPageRender
-              });
-              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                type: 'rc-adapter-navigate-to',
-                path: `/customized/${feedbackPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
-              }, '*');
-              trackOpenFeedback();
-              break;
             case '/settings':
               extensionUserSettings = data.body.settings;
               await chrome.storage.local.set({ extensionUserSettings });
@@ -1533,7 +1513,6 @@ async function getServiceManifest(serviceName) {
     messageLogEntityMatcherPath: '/messageLogger/match',
     messageLoggerAutoSettingLabel: 'Log SMS conversations automatically',
 
-    feedbackPath: '/feedback',
     settingsPath: '/settings',
     settings: [
       {
