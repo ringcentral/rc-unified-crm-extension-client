@@ -120,6 +120,9 @@ window.addEventListener('message', async (e) => {
   try {
     if (data) {
       switch (data.type) {
+        case 'rc-calling-settings-notify':
+          await chrome.storage.local.set({ callWith: data.callWith, callingMode: data.callingMode });
+          break;
         case 'rc-region-settings-notify':
           // get region settings from widget
           console.log('rc-region-settings-notify:', data);
@@ -349,10 +352,13 @@ window.addEventListener('message', async (e) => {
               trackCreateMeeting();
               break;
             case 'WebRTC Call Ended':
+              const { callWith, callingMode } = await chrome.storage.local.get({ callWith: null, callingMode: null });
               trackCallEnd({
-                direction: data.properties.direction, 
+                direction: data.properties.direction,
                 durationInSeconds: data.properties.duration,
-                result: data.properties.result
+                result: data.properties.result,
+                callWith,
+                callingMode
               });
               break;
           }
