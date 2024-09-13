@@ -8,6 +8,11 @@ if (useAnalytics) {
 
 const appName = 'RingCentral CRM Extension';
 const version = manifest.version;
+let author = '';
+
+exports.setAuthor = function setAuthor(authorName){
+    author = authorName;
+}
 
 exports.reset = function reset() {
     mixpanel.reset();
@@ -21,7 +26,8 @@ exports.identify = function identify({ platformName, rcAccountId, extensionId })
     mixpanel.people.set({
         crmPlatform: platformName,
         rcAccountId,
-        version
+        version,
+        author
     });
 }
 
@@ -52,6 +58,7 @@ exports.trackPage = function page(name, properties = {}) {
             {
                 appName,
                 version,
+                author,
                 path: window.location.pathname,
                 childPath,
                 search: window.location.search,
@@ -70,42 +77,58 @@ exports.trackPage = function page(name, properties = {}) {
 
 exports.trackFirstTimeSetup = function trackFirstTimeSetup() {
     track('First time setup', {
-        appName
+        appName,
+        version,
+        author
     });
 }
 exports.trackRcLogin = function trackRcLogin() {
     track('Login with RingCentral account', {
-        appName
+        appName,
+        version,
+        author
     });
 }
 exports.trackRcLogout = function trackRcLogout() {
     track('Logout with RingCentral account', {
-        appName
+        appName,
+        version,
+        author
     });
 }
 exports.trackCrmLogin = function trackCrmLogin() {
     track('Login with CRM account', {
-        appName
+        appName,
+        version,
+        author
     });
 }
 exports.trackCrmLogout = function trackCrmLogout() {
     track('Logout with CRM account', {
-        appName
+        appName,
+        version,
+        author
     });
 }
 exports.trackPlacedCall = function trackPlacedCall() {
     track('A new call placed', {
-        appName
+        appName,
+        version,
+        author
     });
 }
 exports.trackAnsweredCall = function trackAnsweredCall() {
     track('A new call answered', {
-        appName
+        appName,
+        version,
+        author
     });
 }
 exports.trackConnectedCall = function trackConnectedCall() {
     track('A new call connected', {
-        appName
+        appName,
+        version,
+        author
     });
 }
 exports.trackCallEnd = function trackCallEnd({ durationInSeconds, direction, result, callWith, callingMode }) {
@@ -115,55 +138,75 @@ exports.trackCallEnd = function trackCallEnd({ durationInSeconds, direction, res
         result,
         callWith,
         callingMode,
-        appName
+        appName,
+        version,
+        author
     });
 }
 exports.trackSentSMS = function trackSentSMS() {
     track('A new SMS sent', {
-        appName
+        appName,
+        version,
+        author
     });
 }
 exports.trackSyncCallLog = function trackSyncCallLog({ hasNote }) {
     track('Sync call log', {
         hasNote,
-        appName
+        appName,
+        version,
+        author
     })
 }
 exports.trackSyncMessageLog = function trackSyncMessageLog() {
     track('Sync message log', {
-        appName
+        appName,
+        version,
+        author
     })
 }
 exports.trackEditSettings = function trackEditSettings({ changedItem, status }) {
     track('Edit settings', {
         changedItem,
         status,
-        appName
+        appName,
+        version,
+        author
     })
 }
 
 exports.trackCreateMeeting = function trackCreateMeeting() {
     track('Create meeting', {
-        appName
+        appName,
+        version,
+        author
     })
 }
 exports.trackOpenFeedback = function trackOpenFeedback() {
     track('Open feedback', {
-        appName
+        appName,
+        version,
+        author
     })
 }
 exports.trackSubmitFeedback = function trackSubmitFeedback() {
     track('Submit feedback', {
-        appName
+        appName,
+        version,
+        author
     })
 }
 exports.createNewContact = function createNewContact() {
     track('Create a new contact', {
-        appName
+        appName,
+        version,
+        author
     })
 }
 exports.trackFactoryReset = function trackFactoryReset() {
     track('Factory reset', {
-        appName
+        appName,
+        version,
+        author
     })
 }

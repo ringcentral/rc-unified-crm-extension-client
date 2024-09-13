@@ -7,6 +7,18 @@ let pipedriveInstallationTabId;
 let pipedriveCallbackUri;
 let cachedClickToXRequest;
 
+async function fetchManifest(){
+  let { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: null });
+  if (!!!customCrmManifestUrl || customCrmManifestUrl === '') {
+    customCrmManifestUrl = baseManifest.defaultCrmManifestUrl;
+    await chrome.storage.local.set({ customCrmManifestUrl });
+  }
+  const customCrmManifestJson = await (await fetch(customCrmManifestUrl)).json();
+  if (customCrmManifestJson) {
+    await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
+  }
+}
+
 async function openPopupWindow() {
   console.log('open popup');
   const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
@@ -44,6 +56,7 @@ async function openPopupWindow() {
   await chrome.storage.local.set({
     popupWindowId: popup.id,
   });
+  await fetchManifest();
   return false;
 }
 
@@ -146,25 +159,6 @@ chrome.alarms.onAlarm.addListener(async () => {
   await chrome.windows.remove(loginWindowInfo.id);
   await chrome.storage.local.remove('loginWindowInfo');
 });
-
-chrome.runtime.onInstalled.addListener(async () => {
-  try {
-    let { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: null });
-    if (!!!customCrmManifestUrl || customCrmManifestUrl === '') {
-      customCrmManifestUrl = baseManifest.defaultCrmManifestUrl;
-      await chrome.storage.local.set({ customCrmManifestUrl });
-    }
-    const customCrmManifestJson = await (await fetch(customCrmManifestUrl)).json();
-    if (customCrmManifestJson) {
-      await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
-    }
-  }
-  catch (e) {
-    console.error(e)
-    // ignore
-  }
-}
-)
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   console.log(sender.tab ?

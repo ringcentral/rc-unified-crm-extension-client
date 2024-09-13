@@ -14,6 +14,7 @@ const aboutPage = require('./components/aboutPage');
 const developerSettingsPage = require('./components/developerSettingsPage');
 const moment = require('moment');
 const {
+  setAuthor,
   identify,
   reset,
   group,
@@ -88,6 +89,7 @@ async function getCustomManifest() {
   const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
   if (!!customCrmManifest) {
     manifest = customCrmManifest;
+    setAuthor(manifest?.author?.name ?? "");
   }
 }
 
@@ -1226,20 +1228,40 @@ window.addEventListener('message', async (e) => {
                   });
                   break;
                 case 'documentation':
-                  window.open(`https://ringcentral.github.io/rc-unified-crm-extension/${platformName}/`);
-                  trackPage('/documentation');
+                  if (!!platform?.documentationUrl) {
+                    window.open(platform.documentationUrl);
+                    trackPage('/documentation');
+                  }
+                  else {
+                    showNotification({ level: 'warning', message: 'Documentation URL is not set', ttl: 3000 });
+                  }
                   break;
                 case 'releaseNotes':
-                  window.open('https://ringcentral.github.io/rc-unified-crm-extension/release-notes/');
-                  trackPage('/releaseNotes');
+                  if (!!platform?.releaseNotesUrl) {
+                    window.open(platform.releaseNotesUrl);
+                    trackPage('/releaseNotes');
+                  }
+                  else {
+                    showNotification({ level: 'warning', message: 'Release notes URL is not set', ttl: 3000 });
+                  }
                   break;
                 case 'getSupport':
-                  window.open('https://community.ringcentral.com/groups/unified-crm-extension-22?utm_source=crm-extension&utm_medium=link&utm_campaign=in-app-link');
-                  trackPage('/getSupport');
+                  if (!!platform?.getSupportUrl) {
+                    window.open(platform.getSupportUrl);
+                    trackPage('/getSupport');
+                  }
+                  else {
+                    showNotification({ level: 'warning', message: 'Get support URL is not set', ttl: 3000 });
+                  }
                   break;
                 case 'writeReview':
-                  trackPage('/writeReview');
-                  window.open('https://chromewebstore.google.com/detail/ringcentral-crm-extension/kkhkjhafgdlihndcbnebljipgkandkhh/reviews');
+                  if (!!platform?.writeReviewUrl) {
+                    window.open(platform.writeReviewUrl);
+                    trackPage('/writeReview');
+                  }
+                  else {
+                    showNotification({ level: 'warning', message: 'Write review URL is not set', ttl: 3000 });
+                  }
                   break;
                 case 'developerSettingsPage':
                   try {
