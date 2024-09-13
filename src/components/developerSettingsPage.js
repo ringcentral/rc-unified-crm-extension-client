@@ -6,6 +6,10 @@ function getDeveloperSettingsPageRender({ customUrl }) {
         schema: {
             type: 'object',
             properties: {
+                customManifestWarning:{
+                    type: "string",
+                    description: "Please be careful here. A custom url is not trusted by RingCentral."
+                },
                 customManifestUrl: {
                     type: "string",
                     title: "Custom manifest URL"
@@ -21,6 +25,10 @@ function getDeveloperSettingsPageRender({ customUrl }) {
             }
         },
         uiSchema: {
+            customManifestWarning:{
+                "ui:field": "admonition",
+                "ui:severity": "warning",  // "warning", "info", "error", "success"
+            },
             submitButtonOptions: {
                 submitText: 'Submit'
             },
