@@ -8,7 +8,7 @@ function getDeveloperSettingsPageRender({ customUrl }) {
             properties: {
                 customManifestWarning:{
                     type: "string",
-                    description: "Please be careful here. A custom url is not trusted by RingCentral."
+                    description: "Please be careful that a custom url is not trusted by RingCentral."
                 },
                 customManifestUrl: {
                     type: "string",
