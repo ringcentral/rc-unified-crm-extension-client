@@ -1658,7 +1658,7 @@ async function getServiceManifest(serviceName) {
         ]
       });
   };
-  if (serviceName === 'clio' || serviceName === 'insightly' || serviceName === 'netsuite') {
+  if (serviceName === 'clio' || serviceName === 'insightly') {
     // TEMP
     const { overridingPhoneNumberFormat, overridingPhoneNumberFormat2, overridingPhoneNumberFormat3 } =
       await chrome.storage.local.get({ overridingPhoneNumberFormat: null, overridingPhoneNumberFormat2: null, overridingPhoneNumberFormat3: null });
