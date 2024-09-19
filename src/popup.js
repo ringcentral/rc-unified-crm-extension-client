@@ -745,7 +745,7 @@ window.addEventListener('message', async (e) => {
                         });
                         await showUnresolvedTabPage();
                         const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
-                        showNotification({ level: 'warning', message: `Unable to log call due to ${conflictContent.description}. Please review each item under Unresolve tab to resolve the conflicts.`, ttl: 30000 });
+                        showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Review all conflict on the "Unlogged" tab.`, ttl: 5000 });
                       }
                       // Case: auto log and no conflict, log directly
                       else {
@@ -915,7 +915,7 @@ window.addEventListener('message', async (e) => {
                     });
                     await showUnresolvedTabPage();
                     const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
-                    showNotification({ level: 'warning', message: `Unable to log message due to ${conflictContent.description}. Please review each item under Unresolve tab to resolve the conflicts.`, ttl: 30000 });
+                    showNotification({ level: 'warning', message: `Message not logged. ${conflictContent.description}. Review all conflict on the "Unlogged" tab.`, ttl: 5000 });
                   }
                   // Sub-case: no conflict, log directly
                   else {

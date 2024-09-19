@@ -400,7 +400,7 @@ function getUnresolvedLogsPageRender({ unresolvedLogs }) {
     }
     return {
         id: 'unresolve', // tab id, required
-        title: 'Unresolve',
+        title: 'Unlogged',
         type: 'tab', // tab type
         hidden: Object.keys(unresolvedLogs).length === 0,
         iconUri: conflictLogIcon, // icon for tab, 24x24

@@ -182,7 +182,7 @@ function getConflictContentFromUnresolvedLog(log) {
     if (isMultipleContact || isNoContact) {
         return {
             title: `${contactName} ${log?.phoneNumber ? `(${log?.phoneNumber})` : ''}`,
-            description: isNoContact ? 'Missing: no matched contact' : 'Conflict: multiple matched contacts'
+            description: isNoContact ? 'There is no matched contact' : 'There are multiple matched contacts'
         }
     }
     else {
@@ -200,7 +200,7 @@ function getConflictContentFromUnresolvedLog(log) {
         }
         return {
             title: `${contactName} ${log?.phoneNumber ? `(${log?.phoneNumber})` : ''}`,
-            description: `Conflict: multiple associated ${multiplAssociations.toString()}`,
+            description: `There are multiple associated "${multiplAssociations.toString()}".`,
             type: log.type
         }
     }
