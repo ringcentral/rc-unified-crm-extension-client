@@ -1624,35 +1624,35 @@ async function getServiceManifest(serviceName) {
           {
             id: "bullhornInboundCallNoteAction",
             type: "string",
-            name: "Inbound Call Note Action",
+            name: "Default action for inbound calls",
             value: extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(i => i.id === 'bullhornInboundCallNoteAction')?.value ?? "",
-            placeholder: "input note action name for inbound call..."
+            placeholder: "Enter action value"
           },
           {
             id: "bullhornOutboundCallNoteAction",
             type: "string",
-            name: "Outbound Call Note Action",
+            name: "Default action for outbound calls",
             value: extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(i => i.id === 'bullhornOutboundCallNoteAction')?.value ?? "",
-            placeholder: "input note action name for outbound call..."
+            placeholder: "Enter action value"
           },
           {
             id: "bullhornMessageNoteAction",
             type: "string",
-            name: "SMS Message Note Action",
+            name: "Default action for SMS",
             value: extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(i => i.id === 'bullhornMessageNoteAction')?.value ?? "",
-            placeholder: "input note action name for message conversation..."
+            placeholder: "Enter action value"
           },
           {
             id: "bullhornVoicemailNoteAction",
             type: "string",
-            name: "Voicemail Note Action",
+            name: "Default action for voicemails",
             value: extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(i => i.id === 'bullhornVoicemailNoteAction')?.value ?? "",
-            placeholder: "input note action name for message conversation..."
+            placeholder: "Enter action value"
           },
           {
             id: "bullhornApplyToAutoLog",
             type: "boolean",
-            name: "Apply to auto log",
+            name: "Use default values for auto-logged notes",
             value: extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(i => i.id === 'bullhornApplyToAutoLog')?.value ?? false,
           },
         ]
