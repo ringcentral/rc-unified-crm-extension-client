@@ -19,7 +19,8 @@
         "https://*.clio.com/*",
         "https://*.redtailtechnology.com/*",
         "https://*.bullhornstaffing.com/*",
-        "https://*.app.netsuite.com/*"
+        "https://*.app.netsuite.com/*",
+        "https://*.service-now.com/*"
       ],
       "js": [
         "./c2d/index.js",
@@ -44,7 +45,8 @@
         "https://*.clio.com/*",
         "https://*.redtailtechnology.com/*",
         "https://*.bullhornstaffing.com/*",
-        "https://*.app.netsuite.com/*"
+        "https://*.app.netsuite.com/*",
+        "https://*.service-now.com/*"
       ]
     }
   ],
