@@ -7,7 +7,7 @@ let pipedriveInstallationTabId;
 let pipedriveCallbackUri;
 let cachedClickToXRequest;
 
-async function fetchManifest(){
+async function fetchManifest() {
   let { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: null });
   if (!!!customCrmManifestUrl || customCrmManifestUrl === '') {
     customCrmManifestUrl = baseManifest.defaultCrmManifestUrl;
@@ -97,6 +97,7 @@ async function registerPlatform(tabUrl) {
 chrome.action.onClicked.addListener(async function (tab) {
   const platformInfo = await chrome.storage.local.get('platform-info');
   if (isObjectEmpty(platformInfo)) {
+    await fetchManifest();
     const registered = await registerPlatform(tab.url);
     if (registered) {
       await openPopupWindow();
