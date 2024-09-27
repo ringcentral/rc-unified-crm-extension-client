@@ -29,7 +29,8 @@ const {
   trackEditSettings,
   trackConnectedCall,
   trackOpenFeedback,
-  trackFactoryReset
+  trackFactoryReset,
+  trackUpdateCallRecordingLink
 } = require('./lib/analytics');
 
 window.__ON_RC_POPUP_WINDOW = 1;
@@ -656,6 +657,7 @@ window.addEventListener('message', async (e) => {
               if (data.body.triggerType === 'callLogSync') {
                 if (!!data.body.call?.recording?.link) {
                   console.log('call recording updating...');
+                  trackUpdateCallRecordingLink({ processState: 'start' });
                   await chrome.storage.local.set({ ['rec-link-' + data.body.call.sessionId]: { recordingLink: data.body.call.recording.link } });
                   await updateLog(
                     {
@@ -664,6 +666,7 @@ window.addEventListener('message', async (e) => {
                       sessionId: data.body.call.sessionId,
                       recordingLink: data.body.call.recording.link
                     });
+                  trackUpdateCallRecordingLink({ processState: 'finish' });
                 }
                 break;
               }
@@ -1686,11 +1689,11 @@ async function getServiceManifest(serviceName) {
     buttonEventPath: '/custom-button-click'
   }
   if (serviceName === 'bullhorn') {
-    services.settings.push(
+    services.settings.unshift(
       {
         id: "bullhornDefaultNoteAction",
         type: "section",
-        name: "Bullhorn Default Note Action",
+        name: "Bullhorn options",
         items: [
           {
             id: "bullhornInboundCallNoteAction",

@@ -10,7 +10,7 @@ const appName = 'RingCentral CRM Extension';
 const version = manifest.version;
 let author = '';
 
-exports.setAuthor = function setAuthor(authorName){
+exports.setAuthor = function setAuthor(authorName) {
     author = authorName;
 }
 
@@ -208,5 +208,13 @@ exports.trackFactoryReset = function trackFactoryReset() {
         appName,
         version,
         author
+    })
+}
+exports.trackUpdateCallRecordingLink = function trackUpdateCallRecordingLink({ processState }) {
+    track('Call recording update', {
+        appName,
+        version,
+        author,
+        processState
     })
 }
