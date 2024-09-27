@@ -177,6 +177,15 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-adapter-pushAdapterState':
           extensionUserSettings = (await chrome.storage.local.get('extensionUserSettings')).extensionUserSettings;
+          // TEMP - update open contact from incoming call value
+          if (extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromIncomingCall')?.value === true) {
+            extensionUserSettings.find(e => e.id === 'contacts').items.find(e => e.id === 'openContactPageFromIncomingCall').value = 'onFirstRing';
+            await chrome.storage.local.set({ extensionUserSettings });
+          }
+          if (extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromIncomingCall')?.value === false) {
+            extensionUserSettings.find(e => e.id === 'contacts').items.find(e => e.id === 'openContactPageFromIncomingCall').value = 'disabled';
+            await chrome.storage.local.set({ extensionUserSettings });
+          }
           if (!registered) {
             const platformInfo = await chrome.storage.local.get('platform-info');
             platformName = platformInfo['platform-info'].platformName;
@@ -330,19 +339,47 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case "rc-active-call-notify":
-          if (data.call.telephonyStatus === 'CallConnected') {
-            window.postMessage({ type: 'rc-expandable-call-note-open', sessionId: data.call.sessionId }, '*');
-          }
-          if (data.call.telephonyStatus === 'NoCall' && data.call.terminationType === 'final') {
-            window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
-          }
-          if (data.call.telephonyStatus === 'Ringing' && data.call.direction === 'Inbound') {
-            chrome.runtime.sendMessage({
-              type: 'openPopupWindow'
-            });
-            if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromIncomingCall')?.value) {
-              await openContactPage({ manifest, platformName, phoneNumber: data.call.direction === 'Inbound' ? data.call.from.phoneNumber : data.call.to.phoneNumber });
-            }
+          switch (data.call.telephonyStatus) {
+            case 'CallConnected':
+              window.postMessage({ type: 'rc-expandable-call-note-open', sessionId: data.call.sessionId }, '*');
+              switch (data.call.direction) {
+                case 'Inbound':
+                  chrome.runtime.sendMessage({
+                    type: 'openPopupWindow'
+                  });
+                  if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromIncomingCall')?.value === 'onAnswer') {
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber });
+                  }
+                  break;
+                case 'Outbound':
+                  if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromOutgoingCall')?.value === 'onAnswer') {
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber });
+                  }
+                  break;
+              }
+              break;
+            case 'NoCall':
+              if (data.call.terminationType === 'final') {
+                window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
+              }
+              break;
+            case 'Ringing':
+              switch (data.call.direction) {
+                case 'Inbound':
+                  chrome.runtime.sendMessage({
+                    type: 'openPopupWindow'
+                  });
+                  if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromIncomingCall')?.value === 'onFirstRing') {
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber });
+                  }
+                  break;
+                case 'Outbound':
+                  if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromOutgoingCall')?.value === 'onFirstRing') {
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber });
+                  }
+                  break;
+              }
+              break;
           }
           break;
         case 'rc-analytics-track':
@@ -1571,14 +1608,48 @@ async function getServiceManifest(serviceName) {
           },
           {
             id: 'openContactPageFromIncomingCall',
-            type: 'boolean',
-            name: 'Open contact web page from incoming call',
-            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'contacts')?.items.find(e => e.id === "openContactPageFromIncomingCall")?.value ?? false)
+            type: 'option',
+            name: 'Open contact from incoming call',
+            options: [
+              {
+                id: 'disabled',
+                name: 'Disabled'
+              },
+              {
+                id: 'onFirstRing',
+                name: 'On first ring'
+              },
+              {
+                id: 'onAnswer',
+                name: 'On answer'
+              }
+            ],
+            value: extensionUserSettings?.find(e => e.id === 'contacts')?.items.find(e => e.id === "openContactPageFromIncomingCall")?.value ?? 'disabled'
+          },
+          {
+            id: 'openContactPageFromOutgoingCall',
+            type: 'option',
+            name: 'Open contact from outgoing call',
+            options: [
+              {
+                id: 'disabled',
+                name: 'Disabled'
+              },
+              {
+                id: 'onFirstRing',
+                name: 'On first ring'
+              },
+              {
+                id: 'onAnswer',
+                name: 'On answer'
+              }
+            ],
+            value: extensionUserSettings?.find(e => e.id === 'contacts')?.items.find(e => e.id === "openContactPageFromOutgoingCall")?.value ?? 'disabled'
           },
           {
             id: 'openContactPageAfterCreation',
             type: 'boolean',
-            name: 'Open contact web page after creating it',
+            name: 'Open contact after creating it',
             value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'contacts')?.items.find(e => e.id === "openContactPageAfterCreation")?.value ?? true)
           }
         ]

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import analytics from '../lib/analytics';
 import { isObjectEmpty } from '../lib/util';
+import { showNotification } from '../lib/util';
 
 async function getContact({ serverUrl, phoneNumber }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
@@ -74,6 +75,7 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
 }
 
 async function openContactPage({ manifest, platformName, phoneNumber, contactId, contactType }) {
+    showNotification({ level: 'success', message: 'Trying to find and open contact page...', ttl: 5000 });
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     let platformInfo = await chrome.storage.local.get('platform-info');
     if (platformInfo['platform-info'].hostname === 'temp') {
