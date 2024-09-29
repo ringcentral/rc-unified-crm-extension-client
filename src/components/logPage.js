@@ -405,7 +405,7 @@ function getUnresolvedLogsPageRender({ unresolvedLogs }) {
         hidden: Object.keys(unresolvedLogs).length === 0,
         iconUri: conflictLogIcon, // icon for tab, 24x24
         activeIconUri: conflictLogIcon, // icon for tab in active status, 24x24
-        priority: 9,
+        priority: 45,
         unreadCount: Object.keys(unresolvedLogs).length,
         // schema and uiSchema are used to customize page, api is the same as [react-jsonschema-form](https://rjsf-team.github.io/react-jsonschema-form)
         schema: {
