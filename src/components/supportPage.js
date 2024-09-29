@@ -26,6 +26,10 @@ function getSupportPageRender({ manifest, isOnline }) {
                     type: "string",
                     description: "Share a feature request",
                 },
+                isServiceOnline: {
+                    type: "string",
+                    description: `Server status: ${isOnline ? 'Online' : 'Offline'}`
+                },
                 version: {
                     type: "string",
                     description: `Version: v${manifest.version}`
@@ -34,13 +38,13 @@ function getSupportPageRender({ manifest, isOnline }) {
                     type: "string",
                     title: "Check for update",
                 },
-                isServiceOnline: {
-                    type: "string",
-                    description: `Server status: ${isOnline ? 'Online' : 'Offline'}`
-                },
                 generateErrorLogButton: {
                     type: "string",
                     title: "Download error log",
+                },
+                clearLogConflictsButton:{
+                    type: "string",
+                    title: "Clear log conflicts",
                 },
                 factoryResetWarning: {
                     type: "string",
@@ -96,6 +100,12 @@ function getSupportPageRender({ manifest, isOnline }) {
                 "ui:field": "button",
                 "ui:variant": "outlined", // "text", "outlined", "contained", "plain"
                 "ui:fullWidth": false
+            },
+            clearLogConflictsButton: {
+                "ui:field": "button",
+                "ui:variant": "outlined", // "text", "outlined", "contained", "plain"
+                "ui:fullWidth": false,
+                "ui:color": "danger.b03"
             },
             factoryResetWarning: {
                 "ui:field": "admonition",

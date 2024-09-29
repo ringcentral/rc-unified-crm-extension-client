@@ -1227,6 +1227,10 @@ window.addEventListener('message', async (e) => {
                     path: '/customized/developerSettingsPage', // page id
                   }, '*');
                   break;
+                case 'clearLogConflictsButton':
+                  await chrome.storage.local.remove('unresolvedLogs');
+                  showNotification({ level: 'success', message: 'All unresolved logs cleared', ttl: 3000 });
+                  break;
                 case 'factoryResetButton':
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
