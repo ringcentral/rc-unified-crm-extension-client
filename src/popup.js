@@ -97,6 +97,8 @@ async function getCustomManifest() {
 getCustomManifest();
 
 async function showUnresolvedTabPage(path) {
+  // TEMP: hide it for now
+  return;
   const unresolvedLogs = await getAllUnresolvedLogs();
   const unresolvedLogsPage = logPage.getUnresolvedLogsPageRender({ unresolvedLogs });
   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -785,7 +787,7 @@ window.addEventListener('message', async (e) => {
                         });
                         await showUnresolvedTabPage();
                         const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
-                        showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Review all conflict on the "Unlogged" tab.`, ttl: 5000 });
+                        showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Please log it manually on call history page`, ttl: 5000 });
                       }
                       // Case: auto log and no conflict, log directly
                       else {
