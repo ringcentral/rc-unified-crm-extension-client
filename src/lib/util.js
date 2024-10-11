@@ -5,11 +5,11 @@ function secondsToHourMinuteSecondString(totalSeconds) {
     return `${hours}h${minutes}m${seconds}s`;
 }
 
-async function showNotification({ level, message, ttl }) {
+async function showNotification({ level, message, ttl, details = null }) {
     if (!level || !message || isObjectEmpty(message)) {
         return;
     }
-    const notificationId = await RCAdapter.alertMessage({ message, ttl, level });
+    const notificationId = await RCAdapter.alertMessage({ message, ttl, level , details});
     return notificationId;
 }
 
