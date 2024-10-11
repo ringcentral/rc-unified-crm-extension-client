@@ -12,7 +12,8 @@ function getAuthPageRender({ manifest, platformName }) {
     for (const c of authPage.content) {
         content[c.const] = {
             title: c.title,
-            type: c.type
+            type: c.type,
+            description: c.description
         }
     }
     let uiSchema = {
