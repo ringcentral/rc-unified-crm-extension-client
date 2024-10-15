@@ -218,3 +218,11 @@ exports.trackUpdateCallRecordingLink = function trackUpdateCallRecordingLink({ p
         processState
     })
 }
+
+exports.trackMissingServiceWorker = function trackMissingServiceWorker() {
+    track('Service worker missing', {
+        appName,
+        version,
+        author
+    })
+}

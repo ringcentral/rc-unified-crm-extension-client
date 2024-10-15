@@ -167,7 +167,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     "from the extension");
   if (request.type === "openPopupWindow") {
     registerPlatform(sender.tab.url);
-    await openPopupWindow();
+    openPopupWindow();
     if (request.navigationPath) {
       chrome.runtime.sendMessage({
         type: 'navigate',
@@ -175,7 +175,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       })
     }
     sendResponse({ result: 'ok' });
-    return;
+    return true;
   }
   // Unique: Pipedrive
   if (request.type === "openPopupWindowOnPipedriveDirectPage") {
