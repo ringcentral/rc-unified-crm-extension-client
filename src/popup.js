@@ -1178,14 +1178,6 @@ window.addEventListener('message', async (e) => {
                     path: 'goBack',
                   }, '*');
                   break;
-                case 'removeUnresolveButton':
-                  await resolveCachedLog({ type: data.body.button.formData.logType, id: data.body.button.formData.id });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: 'goBack',
-                  }, '*');
-                  await showUnresolvedTabPage();
-                  break;
                 case 'openSupportPage':
                   let isOnline = false;
                   try {

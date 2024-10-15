@@ -169,11 +169,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                             oneOf: manifest.platforms[platformName].contactTypes?.map(t => { return { const: t.value, title: t.display } }) ?? [],
                         },
                         ...callSchemas,
-                        ...additionalFields,
-                        removeUnresolveButton: {
-                            "type": "string",
-                            "title": "Remove from unresolved list",
-                        }
+                        ...additionalFields
                     }
                 },
                 uiSchema: {
@@ -201,13 +197,6 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     },
                     submitButtonOptions: {
                         submitText: 'Save',
-                    },
-                    removeUnresolveButton: {
-                        "ui:field": "button",
-                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                        "ui:fullWidth": true,
-                        "ui:color": "danger.b03",
-                        "ui:widget": isUnresolved ? "show" : "hidden",
                     },
                     ...callUISchemas,
                     ...newContactWidget
