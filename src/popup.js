@@ -137,6 +137,12 @@ window.addEventListener('message', async (e) => {
             )
           }
           break;
+        case 'rc-adapter-side-drawer-open-notify':
+          chrome.runtime.sendMessage({
+            type: 'sideWidgetOpen',
+            opened: data.open
+          });
+          break;
         case 'rc-dialer-status-notify':
           if (data.ready) {
             // check for Click-To-Dial or Click-To-SMS cached action
@@ -761,6 +767,9 @@ window.addEventListener('message', async (e) => {
                   // createLog and editLog share the same page
                   case 'createLog':
                     note = await getCachedNote({ sessionId: data.body.call.sessionId });
+                    if (data.body.aiNote) {
+                      note = note + '\n' + data.body.aiNote;
+                    }
                   case 'editLog':
                     if (!!fetchedCallLogs) {
                       if (!!fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logData?.note) {
