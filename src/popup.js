@@ -198,7 +198,7 @@ window.addEventListener('message', async (e) => {
               axios.defaults.timeout = platform.requestConfig.timeout * 1000;
             }
             registered = true;
-            const serviceManifest = await getServiceManifest(platform.name);
+            const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-register-third-party-service',
               service: serviceManifest
@@ -770,7 +770,7 @@ window.addEventListener('message', async (e) => {
                         callLogSubject = fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId).logData.subject;
                       }
                     }
-                    const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog, contactInfo: callMatchedContact, logType: 'Call', direction: data.body.call.direction, isVoicemail: false });
+                    const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog, contactInfo: callMatchedContact, logType: 'callLog', direction: data.body.call.direction, isVoicemail: false });
                     if (isAutoLog && !callAutoPopup) {
                       // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
                       if (hasConflict) {
@@ -818,21 +818,19 @@ window.addEventListener('message', async (e) => {
                       }
                       // add your codes here to log call to your service
                       const callPage = logPage.getLogPageRender({ id: data.body.call.sessionId, manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId });
-                      // CASE: Bullhorn default action code
-                      if (platformName === 'bullhorn') {
-                        if (!!extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')) {
-                          if (data.body.call.direction === 'Inbound') {
-                            const inboundCallDefaultNoteAction = extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items?.find(i => i.id === "bullhornInboundCallNoteAction");
-                            if (!!inboundCallDefaultNoteAction && callPage.schema.properties.noteActions?.oneOf.some(o => o.const === inboundCallDefaultNoteAction.value)) {
-                              callPage.formData.noteActions = inboundCallDefaultNoteAction.value;
-                            }
-                          }
-                          else {
-                            const outboundCallDefaultNoteAction = extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items?.find(i => i.id === "bullhornOutboundCallNoteAction");
-                            if (!!outboundCallDefaultNoteAction && callPage.schema.properties.noteActions?.oneOf.some(o => o.const === outboundCallDefaultNoteAction.value)) {
-                              callPage.formData.noteActions = outboundCallDefaultNoteAction.value;
-                            }
-                          }
+                      // default form value from user settings
+                      if (data.body.call.direction === 'Inbound') {
+                        const inboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'inboundCall', logType: 'callLog' });
+                        const inboundCallMappedOption = callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, inboundCallDefaultValue.value))?.const;
+                        if (!!inboundCallDefaultValue && !!inboundCallMappedOption) {
+                          callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
+                        }
+                      }
+                      if (data.body.call.direction === 'Outbound') {
+                        const outboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'outboundCall', logType: 'callLog' });
+                        const outboundCallMappedOption = callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, outboundCallDefaultValue.value))?.const;
+                        if (!!outboundCallDefaultValue && !!outboundCallMappedOption) {
+                          callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
                         }
                       }
                       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -945,7 +943,7 @@ window.addEventListener('message', async (e) => {
                     serverUrl: manifest.serverUrl,
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber
                   })).contactInfo;
-                  const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult, logType: 'Message', isVoicemail: true });
+                  const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult, logType: 'messageLog', isVoicemail: true });
                   // Sub-case: has conflict, cache unresolved log
                   if (hasConflict) {
                     const conflictLog = await cacheUnresolvedLog({
@@ -1062,20 +1060,19 @@ window.addEventListener('message', async (e) => {
                   direction: '',
                   contactInfo: getContactMatchResult.contactInfo ?? []
                 });
-                // CASE: Bullhorn default action code
-                if (platformName === 'bullhorn') {
-                  const bullhornDefaultNoteAction = extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction');
-                  if (data.body.conversation.type === 'VoiceMail') {
-                    const voicemailDefaultNoteAction = bullhornDefaultNoteAction?.items?.find(i => i.id === "bullhornVoicemailNoteAction");
-                    if (!!voicemailDefaultNoteAction && getContactMatchResult.contactInfo[0].additionalInfo.noteActions?.some(o => o.const === voicemailDefaultNoteAction.value)) {
-                      messagePage.formData.noteActions = voicemailDefaultNoteAction.value
-                    }
+                // default form value from user settings
+                if (data.body.conversation.type === 'VoiceMail') {
+                  const voicemailDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'voicemail', logType: 'messageLog' });
+                  const voicemailMappedOption = messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, voicemailDefaultValue.value))?.const;
+                  if (!!voicemailDefaultValue && !!voicemailMappedOption) {
+                    messagePage.formData[voicemailDefaultValue.field] = voicemailMappedOption;
                   }
-                  else {
-                    const smsDefaultNoteAction = bullhornDefaultNoteAction?.items?.find(i => i.id === "bullhornMessageNoteAction");
-                    if (!!smsDefaultNoteAction && getContactMatchResult.contactInfo[0].additionalInfo.noteActions?.some(o => o.const === smsDefaultNoteAction.value)) {
-                      messagePage.formData.noteActions = smsDefaultNoteAction.value
-                    }
+                }
+                else {
+                  const smsDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'message', logType: 'messageLog' });
+                  const smsMappedOption = messagePage.schema.properties[smsDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, smsDefaultValue.value))?.const;
+                  if (!!smsMappedOption && !!smsDefaultValue) {
+                    messagePage.formData[smsDefaultValue.field] = smsMappedOption;
                   }
                 }
 
@@ -1369,6 +1366,25 @@ function DownloadTextFile({ filename, text }) {
   document.body.removeChild(element);
 }
 
+function getAdditionalFieldDefaultValuesFromSetting({ caseType, logType }) {
+  const additionalFields = platform.page[logType].additionalFields;
+  if (!!additionalFields) {
+    for (const field of additionalFields) {
+      const defaultValueSetting = platform.settings.find(s => s.id == field.defaultSettingId);
+      if (!!defaultValueSetting) {
+        const valueItem = defaultValueSetting.items.find(i => i.id === field.defaultSettingValues[caseType].settingId)
+        if (!!valueItem) {
+          return { field: field.const, value: extensionUserSettings?.find(e => e.id === defaultValueSetting.id)?.items?.find(i => i.id === valueItem.id)?.value };
+        }
+      }
+    }
+  }
+}
+
+// A fuzzy string compare that ignores cases and spaces
+function rawTextCompare(str1, str2) {
+  return str1.toLowerCase().replace(/\s/g, '') === str2.toLowerCase().replace(/\s/g, '');
+}
 
 function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoicemail }) {
   if (!isAutoLog) {
@@ -1384,65 +1400,41 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
     hasConflict = true;
   }
   else if (!!contactInfo[0]?.additionalInfo) {
-    // CASE: Bullhorn default action code
-    if (platformName === 'bullhorn' && !!extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items?.find(i => i.id === "bullhornApplyToAutoLog")?.value) {
-      hasConflict = true;
-      const bullhornDefaultNoteAction = extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction');
-      if (!!bullhornDefaultNoteAction) {
-        if (logType === 'Call') {
-          if (direction === 'Inbound') {
-            const inboundCallDefaultNoteAction = bullhornDefaultNoteAction.items.find(i => i.id === "bullhornInboundCallNoteAction");
-            if (!!inboundCallDefaultNoteAction && contactInfo[0].additionalInfo.noteActions?.some(o => o.const === inboundCallDefaultNoteAction.value)) {
-              autoSelectAdditionalSubmission = {
-                noteActions: inboundCallDefaultNoteAction.value
-              };
-              hasConflict = false;
+    const additionalFieldsKeys = Object.keys(contactInfo[0].additionalInfo);
+    for (const key of additionalFieldsKeys) {
+      const field = contactInfo[0].additionalInfo[key];
+      if (Array.isArray(field)) {
+        if (field.length > 1) {
+          let caseType = '';
+          if (logType === 'callLog') {
+            if (direction === 'Inbound') {
+              caseType = 'inboundCall';
             }
+            else {
+              caseType = 'outboundCall';
+            }
+          }
+          else if (logType === 'messageLog') {
+            if (isVoicemail) {
+              caseType = 'voicemail';
+            }
+            else {
+              caseType = 'message';
+            }
+          }
+          const fieldDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType, logType });
+          const fieldMappedOption = contactInfo[0].additionalInfo[key]?.find(o => rawTextCompare(o.const, fieldDefaultValue.value))?.const;
+          if (!!fieldDefaultValue && !!fieldMappedOption) {
+            autoSelectAdditionalSubmission[key] = fieldMappedOption;
+            continue;
           }
           else {
-            const outboundCallDefaultNoteAction = bullhornDefaultNoteAction.items.find(i => i.id === "bullhornOutboundCallNoteAction");
-            if (!!outboundCallDefaultNoteAction && contactInfo[0].additionalInfo.noteActions?.some(o => o.const === outboundCallDefaultNoteAction.value)) {
-              autoSelectAdditionalSubmission = {
-                noteActions: outboundCallDefaultNoteAction.value
-              };
-              hasConflict = false;
-            }
-          }
-        }
-        else if (logType === 'Message') {
-          if (isVoicemail) {
-            const voicemailDefaultNoteAction = bullhornDefaultNoteAction?.items?.find(i => i.id === "bullhornVoicemailNoteAction");
-            if (!!voicemailDefaultNoteAction && contactInfo[0].additionalInfo.noteActions?.some(o => o.const === voicemailDefaultNoteAction.value)) {
-              autoSelectAdditionalSubmission = {
-                noteActions: voicemailDefaultNoteAction.value
-              };
-              hasConflict = false;
-            }
-          }
-          else {
-            const smsDefaultNoteAction = bullhornDefaultNoteAction.items.find(i => i.id === "bullhornMessageNoteAction");
-            if (!!smsDefaultNoteAction && contactInfo[0].additionalInfo.noteActions?.some(o => o.const === smsDefaultNoteAction.value)) {
-              autoSelectAdditionalSubmission = {
-                noteActions: smsDefaultNoteAction.value
-              };
-              hasConflict = false;
-            }
+            return { hasConflict: true, autoSelectAdditionalSubmission: {} };
           }
         }
       }
-    }
-    else {
-      const additionalFieldsKeys = Object.keys(contactInfo[0].additionalInfo);
-      for (const key of additionalFieldsKeys) {
-        const field = contactInfo[0].additionalInfo[key];
-        if (Array.isArray(field)) {
-          if (field.length > 1) {
-            hasConflict = true;
-          }
-          else {
-            autoSelectAdditionalSubmission[key] = field[0].const;
-          }
-        }
+      else {
+        autoSelectAdditionalSubmission[key] = field[0].const;
       }
     }
   }
@@ -1548,7 +1540,7 @@ function handleThirdPartyOAuthWindow(oAuthUri) {
 }
 
 
-async function getServiceManifest(serviceName) {
+async function getServiceManifest({ serviceName, customSettings }) {
   const services = {
     name: serviceName,
     displayName: platform.displayName,
@@ -1686,49 +1678,51 @@ async function getServiceManifest(serviceName) {
 
     buttonEventPath: '/custom-button-click'
   }
-  if (serviceName === 'bullhorn') {
-    services.settings.unshift(
-      {
-        id: "bullhornDefaultNoteAction",
-        type: "section",
-        name: "Bullhorn options",
-        items: [
-          {
-            id: "bullhornInboundCallNoteAction",
-            type: "string",
-            name: "Default action for inbound calls",
-            value: extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(i => i.id === 'bullhornInboundCallNoteAction')?.value ?? "",
-            placeholder: "Enter action value"
-          },
-          {
-            id: "bullhornOutboundCallNoteAction",
-            type: "string",
-            name: "Default action for outbound calls",
-            value: extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(i => i.id === 'bullhornOutboundCallNoteAction')?.value ?? "",
-            placeholder: "Enter action value"
-          },
-          {
-            id: "bullhornMessageNoteAction",
-            type: "string",
-            name: "Default action for SMS",
-            value: extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(i => i.id === 'bullhornMessageNoteAction')?.value ?? "",
-            placeholder: "Enter action value"
-          },
-          {
-            id: "bullhornVoicemailNoteAction",
-            type: "string",
-            name: "Default action for voicemails",
-            value: extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(i => i.id === 'bullhornVoicemailNoteAction')?.value ?? "",
-            placeholder: "Enter action value"
-          },
-          {
-            id: "bullhornApplyToAutoLog",
-            type: "boolean",
-            name: "Use default values for auto-logged notes",
-            value: extensionUserSettings?.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(i => i.id === 'bullhornApplyToAutoLog')?.value ?? false,
-          },
-        ]
-      });
+  if (!!customSettings) {
+    for (const cs of customSettings) {
+      const items = [];
+      for (const item of cs.items) {
+        switch (item.type) {
+          case 'inputField':
+            items.push({
+              id: item.id,
+              type: 'string',
+              name: item.name,
+              placeHolder: item.placeHolder ?? "",
+              value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(i => i.id === item.id)?.value ?? ""
+            });
+            break;
+          case 'bool':
+            items.push({
+              id: item.id,
+              type: item.type,
+              name: item.name,
+              placeHolder: item.placeHolder ?? "",
+              value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(i => i.id === item.id)?.value ?? false
+            });
+            break;
+          case 'warning':
+            items.push(
+              {
+                id: item.id,
+                name: item.name,
+                type: 'admonition',
+                severity: 'warning',
+                value: item.value
+              }
+            )
+            break;
+        }
+      }
+      services.settings.unshift(
+        {
+          id: cs.id,
+          type: cs.type,
+          name: cs.name,
+          items
+        }
+      );
+    }
   };
   if (serviceName === 'clio' || serviceName === 'insightly') {
     // TEMP
