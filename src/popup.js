@@ -12,6 +12,7 @@ const releaseNotesPage = require('./components/releaseNotesPage');
 const supportPage = require('./components/supportPage');
 const aboutPage = require('./components/aboutPage');
 const developerSettingsPage = require('./components/developerSettingsPage');
+const crmSetupErrorPage = require('./components/crmSetupErrorPage');
 const moment = require('moment');
 const {
   setAuthor,
@@ -191,6 +192,9 @@ window.addEventListener('message', async (e) => {
           }
           if (!registered) {
             const platformInfo = await chrome.storage.local.get('platform-info');
+            if (isObjectEmpty(platformInfo)) {
+              renderCRMSetupErrorPage();
+            }
             platformName = platformInfo['platform-info'].platformName;
             platformHostname = platformInfo['platform-info'].hostname;
             platform = manifest.platforms[platformName];
@@ -209,6 +213,9 @@ window.addEventListener('message', async (e) => {
           // get login status from widget
           console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
           const platformInfo = await chrome.storage.local.get('platform-info');
+          if (isObjectEmpty(platformInfo)) {
+            renderCRMSetupErrorPage();
+          }
           platformName = platformInfo['platform-info'].platformName;
           rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
           if (data.loggedIn) {
@@ -1547,6 +1554,17 @@ function handleThirdPartyOAuthWindow(oAuthUri) {
   });
 }
 
+function renderCRMSetupErrorPage() {
+  const crmSetupErrorPageRender = crmSetupErrorPage.getCRMSetupErrorPageRender();
+  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+    type: 'rc-adapter-register-customized-page',
+    page: crmSetupErrorPageRender
+  });
+  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+    type: 'rc-adapter-navigate-to',
+    path: '/customized/crmSetupErrorPage', // page id
+  }, '*');
+}
 
 async function getServiceManifest(serviceName) {
   const services = {
