@@ -181,15 +181,6 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-adapter-pushAdapterState':
           extensionUserSettings = (await chrome.storage.local.get('extensionUserSettings')).extensionUserSettings;
-          // TEMP - update open contact from incoming call value
-          if (extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromIncomingCall')?.value === true) {
-            extensionUserSettings.find(e => e.id === 'contacts').items.find(e => e.id === 'openContactPageFromIncomingCall').value = 'onFirstRing';
-            await chrome.storage.local.set({ extensionUserSettings });
-          }
-          if (extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromIncomingCall')?.value === false) {
-            extensionUserSettings.find(e => e.id === 'contacts').items.find(e => e.id === 'openContactPageFromIncomingCall').value = 'disabled';
-            await chrome.storage.local.set({ extensionUserSettings });
-          }
           if (!registered) {
             const platformInfo = await chrome.storage.local.get('platform-info');
             if (isObjectEmpty(platformInfo)) {
@@ -220,7 +211,19 @@ window.addEventListener('message', async (e) => {
           rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
           if (data.loggedIn) {
             document.getElementById('rc-widget').style.zIndex = 0;
-            const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+            let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+            // TEMP - migrate bullhorn user ID
+            if (platformName === 'bullhorn') {
+              const { crm_extension_bullhorn_user_id_migrated } = await chrome.storage.local.get({ crm_extension_bullhorn_user_id_migrated: false });
+              if (!!!crm_extension_bullhorn_user_id_migrated) {
+                const migratedJWT = await axios.get(`${manifest.serverUrl}/temp-bullhorn-migrate-userId?jwtToken=${rcUnifiedCrmExtJwt}`);
+                if (!!migratedJWT?.data?.jwtToken) {
+                  rcUnifiedCrmExtJwt = migratedJWT.data.jwtToken;
+                  await chrome.storage.local.set({ rcUnifiedCrmExtJwt });
+                }
+                await chrome.storage.local.set({ crm_extension_bullhorn_user_id_migrated: true });
+              }
+            }
             crmAuthed = !!rcUnifiedCrmExtJwt;
             // Unique: Pipedrive
             if (platformName === 'pipedrive' && !(await auth.checkAuth())) {
