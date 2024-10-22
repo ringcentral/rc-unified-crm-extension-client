@@ -14,6 +14,10 @@ function getLocalCachedContact({ phoneNumber, platformName }) {
         return result;
     }
     const contactUnderCRM = contact[platformName]?.data;
+    if(!!!contactUnderCRM)
+    {
+        return result;
+    }
     for (const c of contactUnderCRM) {
         result.push({
             id: c.id,

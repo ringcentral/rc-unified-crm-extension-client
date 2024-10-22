@@ -97,6 +97,79 @@ async function getCustomManifest() {
 
 getCustomManifest();
 
+let retroAutoCallLogMaxAttempt = 0;
+let retroAutoCallLogIntervalId;
+let retroAutoCallLogNotificationId;
+let retroLoggedCount = 0;
+
+async function retroAutoCallLog() {
+  if (retroAutoCallLogMaxAttempt > 0) {
+    retroAutoCallLogMaxAttempt--;
+    const effectiveTotal = 10;
+    let effectiveCount = 0;
+    const itemsPerPage = 50;
+    const pageNumber = 1;
+    const { calls, hasMore } = await RCAdapter.getUnloggedCalls(itemsPerPage, pageNumber)
+    const isAutoLog = await chrome.storage.local.get({ rc_callLogger_auto_log_notify: false })
+    if (isAutoLog) {
+      if (!!!retroAutoCallLogNotificationId) {
+        retroAutoCallLogNotificationId = showNotification({ level: 'success', message: 'Attempting to sync historical call logs in the background...', ttl: 5000 });
+      }
+      for (const c of calls) {
+        if (effectiveCount >= effectiveTotal) {
+          break;
+        }
+        const contactPhoneNumber = c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber;
+        const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName });
+        if (!callContactMatched) {
+          continue;
+        }
+        const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog, contactInfo: callMatchedContact, logType: 'Call', direction: c.direction, isVoicemail: false });
+        if (!hasConflict) {
+          const callLogSubject = c.direction === 'Inbound' ?
+            `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
+            `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
+          const note = await getCachedNote({ sessionId: c.sessionId });
+          const exsitingLog = await getLog({
+            serverUrl: manifest.serverUrl,
+            logType: 'Call',
+            sessionIds: c.sessionId,
+            requireDetails: false
+          });
+          if (!!!exsitingLog?.callLogs || !exsitingLog.callLogs[0].matched) {
+            await addLog(
+              {
+                serverUrl: manifest.serverUrl,
+                logType: 'Call',
+                logInfo: c,
+                isMain: true,
+                note,
+                subject: callLogSubject,
+                additionalSubmission: autoSelectAdditionalSubmission,
+                contactId: callMatchedContact[0]?.id,
+                contactType: callMatchedContact[0]?.type,
+                contactName: callMatchedContact[0]?.name,
+                showNotification: false
+              });
+            retroLoggedCount++;
+            effectiveCount++;
+          }
+        }
+      }
+      if (!hasMore) {
+        clearInterval(retroAutoCallLogIntervalId);
+        dismissNotification({ notificationId: retroAutoCallLogNotificationId });
+        showNotification({ level: 'success', message: `Historical call syncing finished. ${retroLoggedCount} call(s) synced.`, ttl: 5000 });
+      }
+    }
+  }
+  else {
+    clearInterval(retroAutoCallLogIntervalId);
+    dismissNotification({ notificationId: retroAutoCallLogNotificationId });
+    showNotification({ level: 'success', message: `Historical call syncing finished. ${retroLoggedCount} call(s) synced.`, ttl: 5000 });
+  }
+}
+
 async function showUnresolvedTabPage(path) {
   // TEMP: hide it for now
   return;
@@ -198,6 +271,8 @@ window.addEventListener('message', async (e) => {
               type: 'rc-adapter-register-third-party-service',
               service: serviceManifest
             }, '*');
+            retroAutoCallLogMaxAttempt = 10;
+            retroAutoCallLogIntervalId = setInterval(retroAutoCallLog, 60000);
           }
           break;
         case 'rc-login-status-notify':
