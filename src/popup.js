@@ -656,15 +656,28 @@ window.addEventListener('message', async (e) => {
               if (data.body.call.direction === 'Inbound') {
                 if (!!data?.body?.call?.from?.extensionNumber) {
                   showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
+                  responseMessage(
+                    data.requestId,
+                    {
+                      data: 'ok'
+                    }
+                  );
                   break;
                 }
               }
               else {
                 if (!!data?.body?.call?.to?.extensionNumber) {
                   showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
+                  responseMessage(
+                    data.requestId,
+                    {
+                      data: 'ok'
+                    }
+                  );
                   break;
                 }
               }
+
               // Sync events - update log
               if (data.body.triggerType === 'callLogSync') {
                 if (!!data.body.call?.recording?.link) {
@@ -680,6 +693,12 @@ window.addEventListener('message', async (e) => {
                     });
                   trackUpdateCallRecordingLink({ processState: 'finish' });
                 }
+                responseMessage(
+                  data.requestId,
+                  {
+                    data: 'ok'
+                  }
+                );
                 break;
               }
               // Auto log: presence events, and Disconnect result
@@ -689,6 +708,12 @@ window.addEventListener('message', async (e) => {
                   isAutoLog = true;
                 }
                 else {
+                  responseMessage(
+                    data.requestId,
+                    {
+                      data: 'ok'
+                    }
+                  );
                   break;
                 }
               }
@@ -763,6 +788,12 @@ window.addEventListener('message', async (e) => {
                 showNotification({ level: callLogContactMatchMessage?.messageType, message: callLogContactMatchMessage?.message, ttl: callLogContactMatchMessage?.ttl });
                 if (!callContactMatched) {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  responseMessage(
+                    data.requestId,
+                    {
+                      data: 'ok'
+                    }
+                  );
                   break;
                 }
                 let note = '';
