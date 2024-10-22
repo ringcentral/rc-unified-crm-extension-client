@@ -260,23 +260,6 @@ window.addEventListener('message', async (e) => {
               axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId;
               axios.defaults.headers.common['developer-author-name'] = manifest?.author?.name ?? "";
               await showUnresolvedTabPage();
-              // TEMP:
-              const storedTemplates = await chrome.storage.local.get('rc-sms-templates');
-              if (!!storedTemplates && !isObjectEmpty(storedTemplates)) {
-                const templates = storedTemplates['rc-sms-templates'];
-                for (const t of templates) {
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-message-request',
-                    requestId: Date.now().toString(),
-                    path: '/create-sms-template',
-                    body: {
-                      displayName: t.name,
-                      text: t.message
-                    },
-                  }, '*');
-                }
-                await chrome.storage.local.remove('rc-sms-templates');
-              }
             }
             catch (e) {
               reset();
