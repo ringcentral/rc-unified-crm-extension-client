@@ -3,7 +3,41 @@ import analytics from '../lib/analytics';
 import { isObjectEmpty } from '../lib/util';
 import { showNotification } from '../lib/util';
 
-async function getContact({ serverUrl, phoneNumber }) {
+function getLocalCachedContact({ phoneNumber, platformName }) {
+    const allCachedContacts = document.querySelector("#rc-widget-adapter-frame").contentWindow.phone.contactMatcher.data;
+    let result = [];
+    if (!allCachedContacts) {
+        return result;
+    }
+    const contact = allCachedContacts[phoneNumber];
+    if (!!!contact) {
+        return result;
+    }
+    const contactUnderCRM = contact[platformName]?.data;
+    for (const c of contactUnderCRM) {
+        result.push({
+            id: c.id,
+            name: c.name,
+            type: c.contactType,
+            phone: phoneNumber,
+            isNewContact: c.isNewContact,
+            additionalInfo: c.additionalInfo
+        });
+    }
+    return result;
+}
+
+async function getContact({ serverUrl, phoneNumber, platformName, isForceRefresh = false }) {
+    if (!isForceRefresh) {
+        const cachedContact = getLocalCachedContact({ phoneNumber, platformName });
+        if (cachedContact.length > 0) {
+            return {
+                matched: true,
+                returnMessage: null,
+                contactInfo: cachedContact
+            };
+        }
+    }
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const overridingFormats = [];
     const { extensionUserSettings } = await chrome.storage.local.get('extensionUserSettings');

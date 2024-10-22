@@ -586,7 +586,7 @@ window.addEventListener('message', async (e) => {
                     continue;
                   }
                   // query on 3rd party API to get the matched contact info and return
-                  const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber });
+                  const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isForceRefresh: true });
                   if (contactMatched) {
                     if (!!!matchedContacts[contactPhoneNumber]) {
                       matchedContacts[contactPhoneNumber] = [];
@@ -767,7 +767,7 @@ window.addEventListener('message', async (e) => {
                   sessionIds: data.body.call.sessionId,
                   requireDetails: data.body.triggerType === 'editLog'
                 });
-                const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber });
+                const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName });
                 showNotification({ level: callLogContactMatchMessage?.messageType, message: callLogContactMatchMessage?.message, ttl: callLogContactMatchMessage?.ttl });
                 if (!callContactMatched) {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
@@ -967,7 +967,8 @@ window.addEventListener('message', async (e) => {
                 else {
                   getContactMatchResult = (await getContact({
                     serverUrl: manifest.serverUrl,
-                    phoneNumber: data.body.conversation.correspondents[0].phoneNumber
+                    phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
+                    platformName
                   })).contactInfo;
                   const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult, logType: 'Message', isVoicemail: true });
                   // Sub-case: has conflict, cache unresolved log
@@ -1073,7 +1074,8 @@ window.addEventListener('message', async (e) => {
                 if (!isTrailing) {
                   getContactMatchResult = await getContact({
                     serverUrl: manifest.serverUrl,
-                    phoneNumber: data.body.conversation.correspondents[0].phoneNumber
+                    phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
+                    platformName
                   });
                 }
                 // add your codes here to log call to your service

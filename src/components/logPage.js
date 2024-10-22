@@ -98,7 +98,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     }
                 };
             }
-            else if (contactList.length === 1) {
+            else if (contactList.length === 1 && contactList[0].isNewContact) {
                 warningField = {
                     warning: {
                         type: 'string',
