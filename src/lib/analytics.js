@@ -219,8 +219,11 @@ exports.trackUpdateCallRecordingLink = function trackUpdateCallRecordingLink({ p
     })
 }
 
-exports.trackMissingServiceWorker = function trackMissingServiceWorker() {
+exports.trackMissingServiceWorker = async function trackMissingServiceWorker() {
+    const platformInfo = await chrome.storage.local.get('platform-info');
+    const platformName = platformInfo['platform-info'].platformName;
     track('Service worker missing', {
+        crmPlatform: platformName,
         appName,
         version,
         author

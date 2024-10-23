@@ -122,6 +122,8 @@ dist
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 
+.DS_Store
+
 # yarn v2
 .yarn/cache
 .yarn/unplugged
@@ -131,4 +133,6 @@ dist
 /dist.zip
 
 /public/noise-reduction
+/public/smart-note-plugin
+/public/embeddable/plugins.json
 /src/manifest.json
