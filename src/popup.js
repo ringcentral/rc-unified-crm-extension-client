@@ -149,7 +149,7 @@ async function retroAutoCallLog() {
                 contactId: callMatchedContact[0]?.id,
                 contactType: callMatchedContact[0]?.type,
                 contactName: callMatchedContact[0]?.name,
-                showNotification: false
+                isShowNotification: false
               });
             retroLoggedCount++;
             effectiveCount++;

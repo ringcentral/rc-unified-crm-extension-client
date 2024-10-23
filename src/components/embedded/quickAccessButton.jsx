@@ -25,6 +25,7 @@ function QuickAccessButton(
                     function (response) {
                         if (response === undefined) {
                             trackMissingServiceWorker();
+                            alert('It seems that RingCentral CRM Extension service worker has just crashed.')
                         }
                     }
                 );

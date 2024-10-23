@@ -4,7 +4,7 @@ import { isObjectEmpty, showNotification } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 
 // Input {id} = sessionId from RC
-async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, additionalSubmission, contactId, contactType, contactName, showNotification = true }) {
+async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, additionalSubmission, contactId, contactType, contactName, isShowNotification = true }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { extensionUserSettings } = await chrome.storage.local.get('extensionUserSettings');
     const overridingPhoneNumberFormat = (!!extensionUserSettings && !isObjectEmpty(extensionUserSettings)) ? (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat')?.value ?? '') : "";
@@ -29,12 +29,12 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                         await updateLog({ logType: 'Call', sessionId: logInfo.sessionId, recordingLink: existingCallRecording[recordingSessionId].recordingLink })
                     }
                     await resolveCachedLog({ type: 'Call', id: logInfo.sessionId });
-                    if (showNotification) {
+                    if (isShowNotification) {
                         showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'success', message: addCallLogRes.data.returnMessage?.message ?? 'Call log added', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000 });
                     }
                 }
                 else {
-                    if (showNotification) {
+                    if (isShowNotification) {
                         showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'warning', message: addCallLogRes.data.returnMessage?.message ?? 'Failed to save call log', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000 });
                     }
                 }
@@ -63,7 +63,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                         };
                         await chrome.storage.local.set(messageLogPrefCache);
                     }
-                    if (showNotification) {
+                    if (isShowNotification) {
                         showNotification({ level: messageLogRes.data.returnMessage?.messageType ?? 'success', message: messageLogRes.data.returnMessage?.message ?? 'Message log added', ttl: messageLogRes.data.returnMessage?.ttl ?? 3000 });
                     }
                     await chrome.storage.local.set({ [`rc-crm-conversation-log-${logInfo.conversationLogId}`]: { logged: true } });
