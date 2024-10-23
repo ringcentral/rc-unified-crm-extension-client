@@ -113,7 +113,7 @@ async function retroAutoCallLog() {
     const isAutoLog = await chrome.storage.local.get({ rc_callLogger_auto_log_notify: false })
     if (isAutoLog) {
       if (!!!retroAutoCallLogNotificationId) {
-        retroAutoCallLogNotificationId = showNotification({ level: 'success', message: 'Attempting to sync historical call logs in the background...', ttl: 5000 });
+        retroAutoCallLogNotificationId = await showNotification({ level: 'success', message: 'Attempting to sync historical call logs in the background...', ttl: 5000 });
       }
       for (const c of calls) {
         if (effectiveCount >= effectiveTotal) {
@@ -124,7 +124,7 @@ async function retroAutoCallLog() {
         if (!callContactMatched) {
           continue;
         }
-        const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog, contactInfo: callMatchedContact, logType: 'Call', direction: c.direction, isVoicemail: false });
+        const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog, contactInfo: callMatchedContact, logType: 'callLog', direction: c.direction, isVoicemail: false });
         if (!hasConflict) {
           const callLogSubject = c.direction === 'Inbound' ?
             `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
