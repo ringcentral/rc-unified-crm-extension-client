@@ -110,7 +110,7 @@ async function retroAutoCallLog() {
     const itemsPerPage = 50;
     const pageNumber = 1;
     const { calls, hasMore } = await RCAdapter.getUnloggedCalls(itemsPerPage, pageNumber)
-    const isAutoLog = await chrome.storage.local.get({ rc_callLogger_auto_log_notify: false })
+    const { rc_callLogger_auto_log_notify: isAutoLog } = await chrome.storage.local.get({ rc_callLogger_auto_log_notify: false })
     if (isAutoLog) {
       if (!!!retroAutoCallLogNotificationId) {
         retroAutoCallLogNotificationId = await showNotification({ level: 'success', message: 'Attempting to sync historical call logs in the background...', ttl: 5000 });
