@@ -430,6 +430,47 @@ window.addEventListener('message', async (e) => {
             case 'NoCall':
               if (data.call.terminationType === 'final') {
                 window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
+                const callAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.id === "popupLogPageAfterCall")?.value;
+                if (callAutoPopup) {
+                  const contactPhoneNumber = data.call.direction === 'Inbound' ?
+                    data.call.from.phoneNumber :
+                    data.call.to.phoneNumber;
+                  const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName });
+                  const callLogSubject = data.call.direction === 'Inbound' ?
+                    `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
+                    `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
+                  const note = await getCachedNote({ sessionId: data.call.sessionId });
+                  const callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId: null });
+                  // default form value from user settings
+                  if (data.call.direction === 'Inbound') {
+                    const inboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'inboundCall', logType: 'callLog' });
+                    if (!!inboundCallDefaultValue) {
+                      const inboundCallMappedOption = callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, inboundCallDefaultValue.value))?.const;
+                      if (!!inboundCallMappedOption) {
+                        callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
+                      }
+                    }
+                  }
+                  if (data.call.direction === 'Outbound') {
+                    const outboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'outboundCall', logType: 'callLog' });
+                    if (!!outboundCallDefaultValue) {
+                      const outboundCallMappedOption = callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, outboundCallDefaultValue.value))?.const;
+                      if (!!outboundCallMappedOption) {
+                        callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
+                      }
+                    }
+                  }
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-update-call-log-page',
+                    page: callPage,
+                  }, '*');
+
+                  // navigate to call log page
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/log/call/${data.call.sessionId}`,
+                  }, '*');
+                }
               }
               break;
             case 'Ringing':
@@ -1253,7 +1294,7 @@ window.addEventListener('message', async (e) => {
               if (data.body.setting.id === "toggleDeveloperMode") {
                 showNotification({ level: 'success', message: `Developer mode is turn ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
               }
-              else{
+              else {
                 showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
               }
               break;
