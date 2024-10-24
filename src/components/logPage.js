@@ -107,7 +107,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 };
             }
             let requiredFieldNames = [];
-            if (contactList.length === 1) { requiredFieldNames = ['newContactName'] };
+            if (contactList.length === 1 && contactList.some(c => c.isNewContact)) { requiredFieldNames = ['newContactName'] };
             let newContactWidget = {
                 newContactName: {
                     "ui:widget": "hidden",

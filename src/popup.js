@@ -44,8 +44,6 @@ let platformName = '';
 let platformHostname = '';
 let rcUserInfo = {};
 let extensionUserSettings = null;
-// trailing SMS logs need to know if leading SMS log is ready and page is open. The waiting is for getContact call
-let leadingSMSCallReady = false;
 let trailingSMSLogInfo = [];
 let firstTimeLogoutAbsorbed = false;
 let autoPopupMainConverastionId = null;
@@ -920,16 +918,20 @@ window.addEventListener('message', async (e) => {
                       // default form value from user settings
                       if (data.body.call.direction === 'Inbound') {
                         const inboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'inboundCall', logType: 'callLog' });
-                        const inboundCallMappedOption = callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, inboundCallDefaultValue.value))?.const;
-                        if (!!inboundCallDefaultValue && !!inboundCallMappedOption) {
-                          callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
+                        if (!!inboundCallDefaultValue) {
+                          const inboundCallMappedOption = callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, inboundCallDefaultValue.value))?.const;
+                          if (!!inboundCallMappedOption) {
+                            callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
+                          }
                         }
                       }
                       if (data.body.call.direction === 'Outbound') {
                         const outboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'outboundCall', logType: 'callLog' });
-                        const outboundCallMappedOption = callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, outboundCallDefaultValue.value))?.const;
-                        if (!!outboundCallDefaultValue && !!outboundCallMappedOption) {
-                          callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
+                        if (!!outboundCallDefaultValue) {
+                          const outboundCallMappedOption = callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, outboundCallDefaultValue.value))?.const;
+                          if (!!outboundCallMappedOption) {
+                            callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
+                          }
                         }
                       }
                       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -1135,13 +1137,18 @@ window.addEventListener('message', async (e) => {
                 }
                 const isTrailing = !data.body.redirect && data.body.triggerType !== 'auto';
                 if (isTrailing) {
-                  if (!leadingSMSCallReady) {
-                    trailingSMSLogInfo.push(data.body.conversation);
-                    break;
-                  }
+                  trailingSMSLogInfo.push(data.body.conversation);
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  // response to widget
+                  responseMessage(
+                    data.requestId,
+                    {
+                      data: 'ok'
+                    }
+                  );
+                  break;
                 }
                 else {
-                  leadingSMSCallReady = false;
                   trailingSMSLogInfo = [];
                 }
                 if (!isTrailing) {
@@ -1164,16 +1171,20 @@ window.addEventListener('message', async (e) => {
                 // default form value from user settings
                 if (data.body.conversation.type === 'VoiceMail') {
                   const voicemailDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'voicemail', logType: 'messageLog' });
-                  const voicemailMappedOption = messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, voicemailDefaultValue.value))?.const;
-                  if (!!voicemailDefaultValue && !!voicemailMappedOption) {
-                    messagePage.formData[voicemailDefaultValue.field] = voicemailMappedOption;
+                  if (!!voicemailDefaultValue) {
+                    const voicemailMappedOption = messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, voicemailDefaultValue.value))?.const;
+                    if (!!voicemailMappedOption) {
+                      messagePage.formData[voicemailDefaultValue.field] = voicemailMappedOption;
+                    }
                   }
                 }
                 else {
                   const smsDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'message', logType: 'messageLog' });
-                  const smsMappedOption = messagePage.schema.properties[smsDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, smsDefaultValue.value))?.const;
-                  if (!!smsMappedOption && !!smsDefaultValue) {
-                    messagePage.formData[smsDefaultValue.field] = smsMappedOption;
+                  if (!!smsDefaultValue) {
+                    const smsMappedOption = messagePage.schema.properties[smsDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, smsDefaultValue.value))?.const;
+                    if (!!smsMappedOption) {
+                      messagePage.formData[smsDefaultValue.field] = smsMappedOption;
+                    }
                   }
                 }
 
@@ -1194,9 +1205,6 @@ window.addEventListener('message', async (e) => {
                   path: `/log/messages/${data.body.conversation.conversationId}`, // conversation id that you received from message logger event
                 }, '*');
 
-                if (!isTrailing) {
-                  leadingSMSCallReady = true;
-                }
                 window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
               // response to widget
@@ -1468,8 +1476,8 @@ function DownloadTextFile({ filename, text }) {
 }
 
 function getAdditionalFieldDefaultValuesFromSetting({ caseType, logType }) {
-  const additionalFields = platform.page[logType].additionalFields;
-  if (!!additionalFields) {
+  const additionalFields = platform?.page[logType]?.additionalFields;
+  if (!!additionalFields && !!platform.settings && platform.settings.length > 0) {
     for (const field of additionalFields) {
       const defaultValueSetting = platform.settings.find(s => s.id == field.defaultSettingId);
       if (!!defaultValueSetting) {
@@ -1480,6 +1488,7 @@ function getAdditionalFieldDefaultValuesFromSetting({ caseType, logType }) {
       }
     }
   }
+  return null;
 }
 
 // A fuzzy string compare that ignores cases and spaces
@@ -1524,18 +1533,23 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
             }
           }
           const fieldDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType, logType });
-          const fieldMappedOption = contactInfo[0].additionalInfo[key]?.find(o => rawTextCompare(o.const, fieldDefaultValue.value))?.const;
-          if (!!fieldDefaultValue && !!fieldMappedOption) {
-            autoSelectAdditionalSubmission[key] = fieldMappedOption;
-            continue;
+          if (!!fieldDefaultValue) {
+            const fieldMappedOption = contactInfo[0].additionalInfo[key]?.find(o => rawTextCompare(o.const, fieldDefaultValue.value))?.const;
+            if (!!fieldMappedOption) {
+              autoSelectAdditionalSubmission[key] = fieldMappedOption;
+              continue;
+            }
           }
-          else {
-            return { hasConflict: true, autoSelectAdditionalSubmission: {} };
-          }
+          return { hasConflict: true, autoSelectAdditionalSubmission: {} };
         }
       }
       else {
-        autoSelectAdditionalSubmission[key] = field[0].const;
+        if (!!field[0] && !!field[0].const) {
+          autoSelectAdditionalSubmission[key] = field[0].const;
+        }
+        else if (!!contactInfo[0].additionalInfo[key]) {
+          autoSelectAdditionalSubmission[key] = contactInfo[0].additionalInfo[key];
+        }
       }
     }
   }

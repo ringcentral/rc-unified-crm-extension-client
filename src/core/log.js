@@ -183,7 +183,7 @@ async function resolveCachedLog({ type, id }) {
 
 function getConflictContentFromUnresolvedLog(log) {
     const isMultipleContact = log.contactInfo.filter(c => !c.isNewContact).length > 1;
-    const isNoContact = log.contactInfo.length === 1;
+    const isNoContact = log.contactInfo.length === 1 && log.contactInfo.some(c => c.isNewContact);
     const contactName = isMultipleContact ? 'Multiple contacts' : log.contactInfo[0].name;
     if (isMultipleContact || isNoContact) {
         return {
