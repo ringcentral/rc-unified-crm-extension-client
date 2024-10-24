@@ -1253,6 +1253,9 @@ window.addEventListener('message', async (e) => {
               if (data.body.setting.id === "toggleDeveloperMode") {
                 showNotification({ level: 'success', message: `Developer mode is turn ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
               }
+              else{
+                showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
+              }
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
