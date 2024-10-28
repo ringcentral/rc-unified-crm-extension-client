@@ -8,6 +8,7 @@
     "tabs",
     "background",
     "unlimitedStorage",
+    "offscreen",
     "notifications"
   ],
   "content_scripts": [

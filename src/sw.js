@@ -6,6 +6,7 @@ let manifest;
 let pipedriveInstallationTabId;
 let pipedriveCallbackUri;
 let cachedClickToXRequest;
+let openOffscreenWindowPromise = null;
 
 async function fetchManifest() {
   let { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: null });
@@ -18,6 +19,50 @@ async function fetchManifest() {
     await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
   }
 }
+
+const embeddableUriFlags = `multipleTabsSupport=1&disableLoginPopup=1&appServer=https://platform.ringcentral.com&redirectUri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html&enableAnalytics=1&showSignUpButton=1&clientId=3rJq9BxcTCm-I7CFcY19ew&appVersion=${packageJson.version}&userAgent=RingCentral CRM Extension&disableNoiseReduction=false&enableSMSTemplate=1&enableLoadMoreCalls=1&disableGlip=false`;
+async function openOffscreenWindow() {
+  const offscreenUrl = chrome.runtime.getURL(`offscreen.html?${embeddableUriFlags}&mainTab=true`);
+  const existingContexts = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT'],
+    documentUrls: [offscreenUrl]
+  });
+  if (existingContexts.length > 0) {
+    return;
+  }
+  if (openOffscreenWindowPromise) {
+    await openOffscreenWindowPromise;
+    return;
+  }
+  if (!chrome.offscreen) {
+    // notify user that offscreen is not supported
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: '/images/logo32.png',
+      title: `Browser not supported`,
+      message: "Please update your browser to the latest version to use RingCentral CRM Extension.",
+      priority: 1
+    });
+    return;
+  }
+  openOffscreenWindowPromise = chrome.offscreen.createDocument({
+    url: offscreenUrl,
+    reasons: [
+      'AUDIO_PLAYBACK',
+      'USER_MEDIA',
+      'WEB_RTC',
+      'LOCAL_STORAGE',
+      'BLOBS',
+      'DOM_PARSER',
+      'DOM_SCRAPING',
+    ],
+    justification: 'reason for needing the document',
+  });
+  await openOffscreenWindowPromise;
+  openOffscreenWindowPromise = null;
+}
+
+openOffscreenWindow();
 
 async function openPopupWindow() {
   console.log('open popup');
@@ -32,7 +77,7 @@ async function openPopupWindow() {
   }
   const { extensionWindowStatus } = await chrome.storage.local.get({ extensionWindowStatus: null });
   // const redirectUri = chrome.identity.getRedirectURL('redirect.html'); //  set this when oauth with chrome.identity.launchWebAuthFlow
-  const popupUri = `popup.html?multipleTabsSupport=1&disableLoginPopup=1&appServer=https://platform.ringcentral.com&redirectUri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html&enableAnalytics=1&showSignUpButton=1&clientId=3rJq9BxcTCm-I7CFcY19ew&appVersion=${packageJson.version}&userAgent=RingCentral CRM Extension&disableNoiseReduction=false&enableSMSTemplate=1&enableLoadMoreCalls=1&disableGlip=false`;
+  const popupUri = `popup.html?${embeddableUriFlags}&mainTab=false`;
   let popup;
   if (!!extensionWindowStatus?.state && (extensionWindowStatus.state === 'maximized' || extensionWindowStatus.state === 'fullscreen')) {
     popup = await chrome.windows.create({
@@ -152,11 +197,15 @@ chrome.alarms.onAlarm.addListener(async () => {
   }
 
   console.log('login success', loginWindowUrl);
-  chrome.runtime.sendMessage({
-    type: 'oauthCallBack',
-    platform: loginWindowInfo.platform,
-    callbackUri: loginWindowUrl
-  });
+  const { rcLoginTabId } = await chrome.storage.local.get('rcLoginTabId');
+  chrome.tabs.sendMessage(
+    rcLoginTabId,
+    {
+      type: 'oauthCallBack',
+      platform: loginWindowInfo.platform,
+      callbackUri: loginWindowUrl
+    }
+  );
   await chrome.windows.remove(loginWindowInfo.id);
   await chrome.storage.local.remove('loginWindowInfo');
 });
@@ -213,7 +262,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       loginWindowInfo: {
         platform: 'rc',
         id: loginWindow.id
-      }
+      },
+      rcLoginTabId: sender.tab.id,
     });
     chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
     sendResponse({ result: 'ok' });
