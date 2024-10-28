@@ -152,6 +152,13 @@ async function retroAutoCallLog() {
             retroLoggedCount++;
             effectiveCount++;
           }
+          else {
+            // force call log matcher check
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+              type: 'rc-adapter-trigger-call-logger-match',
+              sessionIds: [exsitingLog.callLogs[0].sessionId]
+            }, '*');
+          }
         }
       }
       if (!hasMore) {
@@ -269,8 +276,6 @@ window.addEventListener('message', async (e) => {
               type: 'rc-adapter-register-third-party-service',
               service: serviceManifest
             }, '*');
-            retroAutoCallLogMaxAttempt = 10;
-            retroAutoCallLogIntervalId = setInterval(retroAutoCallLog, 60000);
           }
           break;
         case 'rc-login-status-notify':
@@ -515,6 +520,10 @@ window.addEventListener('message', async (e) => {
         case 'rc-callLogger-auto-log-notify':
           await chrome.storage.local.set({ rc_callLogger_auto_log_notify: data.autoLog });
           trackEditSettings({ changedItem: 'auto-call-log', status: data.autoLog });
+          if (!!data.autoLog && !!crmAuthed) {
+            retroAutoCallLogMaxAttempt = 10;
+            retroAutoCallLogIntervalId = setInterval(retroAutoCallLog, 60000);
+          }
           break;
         case 'rc-messageLogger-auto-log-notify':
           await chrome.storage.local.set({ rc_messageLogger_auto_log_notify: data.autoLog });
