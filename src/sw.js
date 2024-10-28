@@ -25,7 +25,6 @@ async function openOffscreenWindow() {
   const offscreenUrl = chrome.runtime.getURL(`offscreen.html?${embeddableUriFlags}&mainTab=true`);
   const existingContexts = await chrome.runtime.getContexts({
     contextTypes: ['OFFSCREEN_DOCUMENT'],
-    documentUrls: [offscreenUrl]
   });
   if (existingContexts.length > 0) {
     return;
@@ -197,9 +196,9 @@ chrome.alarms.onAlarm.addListener(async () => {
   }
 
   console.log('login success', loginWindowUrl);
-  const { rcLoginTabId } = await chrome.storage.local.get('rcLoginTabId');
+  const { loginTabId } = await chrome.storage.local.get('loginTabId');
   chrome.tabs.sendMessage(
-    rcLoginTabId,
+    loginTabId,
     {
       type: 'oauthCallBack',
       platform: loginWindowInfo.platform,
@@ -263,7 +262,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         platform: 'rc',
         id: loginWindow.id
       },
-      rcLoginTabId: sender.tab.id,
+      loginTabId: sender.tab.id,
     });
     chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
     sendResponse({ result: 'ok' });
@@ -280,7 +279,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       loginWindowInfo: {
         platform: 'thirdParty',
         id: loginWindow.id
-      }
+      },
+      loginTabId: sender.tab.id,
     });
     chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
     sendResponse({ result: 'ok' });
