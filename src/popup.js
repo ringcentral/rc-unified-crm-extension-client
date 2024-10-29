@@ -437,10 +437,28 @@ window.addEventListener('message', async (e) => {
                 window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
                 const callAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.id === "popupLogPageAfterCall")?.value;
                 if (callAutoPopup) {
+
+                  const isExtensionNumber = data.call.direction === 'Inbound' ?
+                    !!data.call.from.extensionNumber :
+                    !!data.call.to.extensionNumber;
+
+                  const allowExtensionNumberLogging = !!extensionUserSettings && extensionUserSettings.find(e => e.id === 'contacts')?.items.find(e => e.id === "allowExtensionNumberLogging")?.value;
+
+                  if (isExtensionNumber && !!!allowExtensionNumberLogging) {
+                    responseMessage(
+                      data.requestId,
+                      {
+                        data: 'OK'
+                      }
+                    );
+                    return;
+                  }
+
                   const contactPhoneNumber = data.call.direction === 'Inbound' ?
-                    data.call.from.phoneNumber :
-                    data.call.to.phoneNumber;
-                  const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName });
+                    (data.call.from.phoneNumber ?? data.call.from.extensionNumber) :
+                    (data.call.to.phoneNumber ?? data.call.to.extensionNumber);
+
+                  const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
                   const callLogSubject = data.call.direction === 'Inbound' ?
                     `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
                     `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
@@ -757,30 +775,32 @@ window.addEventListener('message', async (e) => {
             case '/callLogger':
               let isAutoLog = false;
               const callAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.id === "popupLogPageAfterCall")?.value;
-
               // extensions numers should NOT be logged
-              if (data.body.call.direction === 'Inbound') {
-                if (!!data?.body?.call?.from?.extensionNumber) {
-                  showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
-                  responseMessage(
-                    data.requestId,
-                    {
-                      data: 'ok'
-                    }
-                  );
-                  break;
+              const allowExtensionNumberLogging = !!extensionUserSettings && extensionUserSettings.find(e => e.id === 'contacts')?.items.find(e => e.id === "allowExtensionNumberLogging")?.value;
+              if (!!!allowExtensionNumberLogging) {
+                if (data.body.call.direction === 'Inbound') {
+                  if (!!data?.body?.call?.from?.extensionNumber) {
+                    showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
+                    responseMessage(
+                      data.requestId,
+                      {
+                        data: 'ok'
+                      }
+                    );
+                    break;
+                  }
                 }
-              }
-              else {
-                if (!!data?.body?.call?.to?.extensionNumber) {
-                  showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
-                  responseMessage(
-                    data.requestId,
-                    {
-                      data: 'ok'
-                    }
-                  );
-                  break;
+                else {
+                  if (!!data?.body?.call?.to?.extensionNumber) {
+                    showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
+                    responseMessage(
+                      data.requestId,
+                      {
+                        data: 'ok'
+                      }
+                    );
+                    break;
+                  }
                 }
               }
 
@@ -824,9 +844,13 @@ window.addEventListener('message', async (e) => {
                 }
               }
               window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+              const isExtensionNumber = data.body.call.direction === 'Inbound' ?
+                !!data.body.call.from.extensionNumber :
+                !!data.body.call.to.extensionNumber;
+
               const contactPhoneNumber = data.body.call.direction === 'Inbound' ?
-                data.body.call.from.phoneNumber :
-                data.body.call.to.phoneNumber;
+                (data.body.call.from.phoneNumber ?? data.body.call.from.extensionNumber) :
+                (data.body.call.to.phoneNumber ?? data.body.call.to.extensionNumber);
 
               // Case: log form
               if (data.body.triggerType === 'logForm') {
@@ -890,7 +914,7 @@ window.addEventListener('message', async (e) => {
                   sessionIds: data.body.call.sessionId,
                   requireDetails: data.body.triggerType === 'editLog'
                 });
-                const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName });
+                const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
                 showNotification({ level: callLogContactMatchMessage?.messageType, message: callLogContactMatchMessage?.message, ttl: callLogContactMatchMessage?.ttl });
                 if (!callContactMatched) {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
@@ -1818,6 +1842,13 @@ async function getServiceManifest({ serviceName, customSettings }) {
             ],
             value: extensionUserSettings?.find(e => e.id === 'contacts')?.items.find(e => e.id === "openContactPageFromOutgoingCall")?.value ?? 'disabled'
           },
+          (platform.enableExtensionNumberLoggingSetting ?
+            {
+              id: 'allowExtensionNumberLogging',
+              type: 'boolean',
+              name: 'Allow extension number logging',
+              value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'contacts')?.items.find(e => e.id === "allowExtensionNumberLogging")?.value ?? false)
+            } : {}),
           {
             id: 'openContactPageAfterCreation',
             type: 'boolean',

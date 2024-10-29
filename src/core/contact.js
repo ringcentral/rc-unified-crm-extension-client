@@ -31,7 +31,7 @@ function getLocalCachedContact({ phoneNumber, platformName }) {
     return result;
 }
 
-async function getContact({ serverUrl, phoneNumber, platformName, isForceRefresh = false }) {
+async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNumber = false, isForceRefresh = false }) {
     if (!isForceRefresh) {
         const cachedContact = getLocalCachedContact({ phoneNumber, platformName });
         if (cachedContact.length > 0) {
@@ -54,7 +54,7 @@ async function getContact({ serverUrl, phoneNumber, platformName, isForceRefresh
         if (overridingPhoneNumberFormat3) overridingFormats.push(overridingPhoneNumberFormat3);
     }
     if (!!rcUnifiedCrmExtJwt) {
-        const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${overridingFormats.toString()}`);
+        const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${overridingFormats.toString()}&isExtension=${isExtensionNumber}`);
         return {
             matched: contactRes.data.successful,
             returnMessage: contactRes.data.returnMessage,
