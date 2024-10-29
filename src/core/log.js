@@ -15,6 +15,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
         switch (logType) {
             case 'Call':
                 const addCallLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+                await chrome.storage.local.set({ [`rc-crm-call-log-${logInfo.sessionId}`]: { contact: { id: contactId } } });
                 // force call log matcher check
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-trigger-call-logger-match',
@@ -26,7 +27,11 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                     const recordingSessionId = `rec-link-${logInfo.sessionId}`;
                     const existingCallRecording = await chrome.storage.local.get(recordingSessionId);
                     if (!!existingCallRecording[recordingSessionId]) {
-                        await updateLog({ logType: 'Call', sessionId: logInfo.sessionId, recordingLink: existingCallRecording[recordingSessionId].recordingLink })
+                        if (!logInfo.recording) {
+                            await updateLog({ serverUrl, logType: 'Call', sessionId: logInfo.sessionId, recordingLink: existingCallRecording[recordingSessionId].recordingLink });
+                        } else {
+                            await chrome.storage.local.remove(recordingSessionId);
+                        }
                     }
                     await resolveCachedLog({ type: 'Call', id: logInfo.sessionId });
                     if (isShowNotification) {
@@ -38,7 +43,6 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                         showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'warning', message: addCallLogRes.data.returnMessage?.message ?? 'Failed to save call log', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000 });
                     }
                 }
-                await chrome.storage.local.set({ [`rc-crm-call-log-${logInfo.sessionId}`]: { contact: { id: contactId } } });
                 break;
             case 'Message':
                 if (!moment(logInfo.creationTime).isSame(new Date(), "day")) {
