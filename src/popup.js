@@ -1545,7 +1545,7 @@ function getAdditionalFieldDefaultValuesFromSetting({ caseType, logType }) {
 }
 
 // A fuzzy string compare that ignores cases and spaces
-function rawTextCompare(str1, str2) {
+function rawTextCompare(str1 = '', str2 = '') {
   return str1.toLowerCase().replace(/\s/g, '') === str2.toLowerCase().replace(/\s/g, '');
 }
 
