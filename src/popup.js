@@ -1891,6 +1891,17 @@ async function getServiceManifest({ serviceName, customSettings }) {
               }
             )
             break;
+          case 'option':
+            items.push(
+              {
+                id: item.id,
+                type: "option",
+                name: item.name,
+                options: item.options,
+                value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(e => e.id === item.id)?.value ?? 'fullSummary'
+              }
+            )
+            break;
         }
       }
       services.settings.unshift(
