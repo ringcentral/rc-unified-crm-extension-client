@@ -985,7 +985,7 @@ window.addEventListener('message', async (e) => {
                       let loggedContactId = null;
                       const existingCallLogRecord = await chrome.storage.local.get(`rc-crm-call-log-${data.body.call.sessionId}`);
                       if (!!existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`]) {
-                        loggedContactId = existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`].contact.id;
+                        loggedContactId = existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`].contact?.id ?? null;
                       }
                       // add your codes here to log call to your service
                       const callPage = logPage.getLogPageRender({ id: data.body.call.sessionId, manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId });
@@ -1061,19 +1061,29 @@ window.addEventListener('message', async (e) => {
               break;
             case '/callLogger/match':
               let callLogMatchData = {};
-              const { successful, callLogs } = await getLog({ serverUrl: manifest.serverUrl, logType: 'Call', sessionIds: data.body.sessionIds.toString(), requireDetails: false });
-              if (successful) {
-                for (const sessionId of data.body.sessionIds) {
-                  const correspondingLog = callLogs.find(l => l.sessionId === sessionId);
-                  if (!!correspondingLog?.matched) {
-                    const existingCallLogRecord = await chrome.storage.local.get(`rc-crm-call-log-${sessionId}`);
-                    if (!!existingCallLogRecord[`rc-crm-call-log-${sessionId}`]) {
-                      callLogMatchData[sessionId] = [{ id: sessionId, note: '', contact: { id: existingCallLogRecord[`rc-crm-call-log-${sessionId}`].contact?.id } }];
-                    }
-                    else {
+              let noLocalMatchedSessionIds = [];
+              const existingCallLogRecords = await chrome.storage.local.get(
+                data.body.sessionIds.map(sessionId => `rc-crm-call-log-${sessionId}`)
+              );
+              for (const sessionId of data.body.sessionIds) {
+                if (!!existingCallLogRecords[`rc-crm-call-log-${sessionId}`]) {
+                  callLogMatchData[sessionId] = [{ id: sessionId, note: '', contact: { id: existingCallLogRecords[`rc-crm-call-log-${sessionId}`].contact?.id } }];
+                } else {
+                  noLocalMatchedSessionIds.push(sessionId);
+                }
+              }
+              if (noLocalMatchedSessionIds.length > 0) {
+                const { successful, callLogs } = await getLog({ serverUrl: manifest.serverUrl, logType: 'Call', sessionIds: noLocalMatchedSessionIds.toString(), requireDetails: false });
+                if (successful) {
+                  const newLocalMatchedCallLogRecords = {};
+                  for (const sessionId of noLocalMatchedSessionIds) {
+                    const correspondingLog = callLogs.find(l => l.sessionId === sessionId);
+                    if (!!correspondingLog?.matched) {
                       callLogMatchData[sessionId] = [{ id: sessionId, note: '' }];
+                      newLocalMatchedCallLogRecords[`rc-crm-call-log-${sessionId}`] = { logId: correspondingLog.logId, contact: { id: correspondingLog.contact?.id } };
                     }
                   }
+                  await chrome.storage.local.set(newLocalMatchedCallLogRecords);
                 }
               }
               responseMessage(

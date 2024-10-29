@@ -15,7 +15,12 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
         switch (logType) {
             case 'Call':
                 const addCallLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
-                await chrome.storage.local.set({ [`rc-crm-call-log-${logInfo.sessionId}`]: { contact: { id: contactId } } });
+                if (addCallLogRes.data.successful) {
+                    await chrome.storage.local.set({ [`rc-crm-call-log-${logInfo.sessionId}`]: {
+                        contact: { id: contactId },
+                        logId: addCallLogRes.data.logId,
+                    } });
+                }
                 // force call log matcher check
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-trigger-call-logger-match',
