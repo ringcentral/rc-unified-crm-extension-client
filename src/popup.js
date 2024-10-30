@@ -472,6 +472,10 @@ window.addEventListener('message', async (e) => {
                       if (!!inboundCallMappedOption) {
                         callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
                       }
+                      else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue) {
+                        callPage.schema.properties[inboundCallDefaultValue.field].oneOf.push({ const: inboundCallDefaultValue.value, title: inboundCallDefaultValue.value });
+                        callPage.formData[inboundCallDefaultValue.field] = inboundCallDefaultValue.value;
+                      }
                     }
                   }
                   if (data.call.direction === 'Outbound') {
@@ -480,6 +484,10 @@ window.addEventListener('message', async (e) => {
                       const outboundCallMappedOption = callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, outboundCallDefaultValue.value))?.const;
                       if (!!outboundCallMappedOption) {
                         callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
+                      }
+                      else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue) {
+                        callPage.schema.properties[outboundCallDefaultValue.field].oneOf.push({ const: outboundCallDefaultValue.value, title: outboundCallDefaultValue.value });
+                        callPage.formData[outboundCallDefaultValue.field] = outboundCallDefaultValue.value;
                       }
                     }
                   }
@@ -997,6 +1005,10 @@ window.addEventListener('message', async (e) => {
                           if (!!inboundCallMappedOption) {
                             callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
                           }
+                          else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue) {
+                            callPage.schema.properties[inboundCallDefaultValue.field].oneOf.push({ const: inboundCallDefaultValue.value, title: inboundCallDefaultValue.value });
+                            callPage.formData[inboundCallDefaultValue.field] = inboundCallDefaultValue.value;
+                          }
                         }
                       }
                       if (data.body.call.direction === 'Outbound') {
@@ -1005,6 +1017,10 @@ window.addEventListener('message', async (e) => {
                           const outboundCallMappedOption = callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, outboundCallDefaultValue.value))?.const;
                           if (!!outboundCallMappedOption) {
                             callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
+                          }
+                          else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue) {
+                            callPage.schema.properties[outboundCallDefaultValue.field].oneOf.push({ const: outboundCallDefaultValue.value, title: outboundCallDefaultValue.value });
+                            callPage.formData[outboundCallDefaultValue.field] = outboundCallDefaultValue.value;
                           }
                         }
                       }
@@ -1103,7 +1119,7 @@ window.addEventListener('message', async (e) => {
               }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
               const messageAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.id === "popupLogPageAfterSMS")?.value;
-              const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationId}`;
+              const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
               let getContactMatchResult = null;
               window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -1129,7 +1145,7 @@ window.addEventListener('message', async (e) => {
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
                     platformName
                   })).contactInfo;
-                  const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult, logType: 'messageLog', isVoicemail: true });
+                  const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult, logType: 'messageLog', isVoicemail: data.body.conversation.type === 'VoiceMail' });
                   // Sub-case: has conflict, cache unresolved log
                   if (hasConflict) {
                     const conflictLog = await cacheUnresolvedLog({
@@ -1260,6 +1276,10 @@ window.addEventListener('message', async (e) => {
                     if (!!voicemailMappedOption) {
                       messagePage.formData[voicemailDefaultValue.field] = voicemailMappedOption;
                     }
+                    else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == voicemailDefaultValue.field)?.allowCustomValue) {
+                      messagePage.schema.properties[voicemailDefaultValue.field].oneOf.push({ const: voicemailDefaultValue.value, title: voicemailDefaultValue.value });
+                      messagePage.formData[voicemailDefaultValue.field] = voicemailDefaultValue.value;
+                    }
                   }
                 }
                 else {
@@ -1268,6 +1288,10 @@ window.addEventListener('message', async (e) => {
                     const smsMappedOption = messagePage.schema.properties[smsDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, smsDefaultValue.value))?.const;
                     if (!!smsMappedOption) {
                       messagePage.formData[smsDefaultValue.field] = smsMappedOption;
+                    }
+                    else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == smsDefaultValue.field)?.allowCustomValue) {
+                      messagePage.schema.properties[smsDefaultValue.field].oneOf.push({ const: smsDefaultValue.value, title: smsDefaultValue.value });
+                      messagePage.formData[smsDefaultValue.field] = smsDefaultValue.value;
                     }
                   }
                 }
@@ -1626,6 +1650,11 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
               autoSelectAdditionalSubmission[key] = fieldMappedOption;
               continue;
             }
+            const allowCustomValue = !!platform?.page[logType]?.additionalFields.find(f => f.const == key)?.allowCustomValue;
+            if (allowCustomValue) {
+              autoSelectAdditionalSubmission[key] = fieldDefaultValue.value;
+              continue;
+            }
           }
           return { hasConflict: true, autoSelectAdditionalSubmission: {} };
         }
@@ -1917,8 +1946,7 @@ async function getServiceManifest({ serviceName, customSettings }) {
               id: item.id,
               type: item.type,
               name: item.name,
-              placeHolder: item.placeHolder ?? "",
-              value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(i => i.id === item.id)?.value ?? false
+              value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(i => i.id === item.id)?.value ?? item.defaultValue
             });
             break;
           case 'warning':
@@ -1939,7 +1967,7 @@ async function getServiceManifest({ serviceName, customSettings }) {
                 type: "option",
                 name: item.name,
                 options: item.options,
-                value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(e => e.id === item.id)?.value ?? 'fullSummary'
+                value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(e => e.id === item.id)?.value ?? ""
               }
             )
             break;

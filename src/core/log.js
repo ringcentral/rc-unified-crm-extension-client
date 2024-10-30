@@ -62,7 +62,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                     if (isMain & messageLogRes.data.logIds.length > 0) {
                         trackSyncMessageLog();
                         let messageLogPrefCache = {};
-                        messageLogPrefCache[`rc-crm-conversation-pref-${logInfo.conversationId}`] = {
+                        messageLogPrefCache[`rc-crm-conversation-pref-${logInfo.conversationLogId}`] = {
                             contact: {
                                 id: contactId,
                                 type: contactType,
