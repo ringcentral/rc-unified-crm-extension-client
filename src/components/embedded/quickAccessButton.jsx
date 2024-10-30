@@ -3,6 +3,7 @@ import { RcIconButton } from '@ringcentral/juno';
 import activeLogo from '../../images/activeLogo.svg';
 import defaultLogo from '../../images/defaultLogo.svg';
 import { trackMissingServiceWorker } from '../../lib/analytics';
+import { sendMessageToExtension } from '../../lib/sendMessage';
 
 function QuickAccessButton(
     {
@@ -18,7 +19,7 @@ function QuickAccessButton(
             size='large'
             style={showDialer ? { padding: '0px', background: '#FF7A00' } : { padding: '0px', background: '#FFFFFF' }}
             onClick={() => {
-                chrome.runtime.sendMessage(
+                sendMessageToExtension(
                     {
                         type: 'openPopupWindow'
                     },
