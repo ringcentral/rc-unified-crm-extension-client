@@ -234,3 +234,11 @@ exports.trackMissingServiceWorker = async function trackMissingServiceWorker() {
         rcExtensionId
     })
 }
+
+exports.trackCRMSetupError = async function trackCRMSetupError() {
+    track('CRM setup error', {
+        appName,
+        version,
+        author
+    })
+}

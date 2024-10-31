@@ -31,7 +31,8 @@ const {
   trackConnectedCall,
   trackOpenFeedback,
   trackFactoryReset,
-  trackUpdateCallRecordingLink
+  trackUpdateCallRecordingLink,
+  trackCRMSetupError
 } = require('./lib/analytics');
 
 window.__ON_RC_POPUP_WINDOW = 1;
@@ -1756,6 +1757,7 @@ function renderCRMSetupErrorPage() {
     type: 'rc-adapter-navigate-to',
     path: '/customized/crmSetupErrorPage', // page id
   }, '*');
+  trackCRMSetupError();
 }
 
 async function getServiceManifest({ serviceName, customSettings }) {
@@ -1900,7 +1902,7 @@ async function getServiceManifest({ serviceName, customSettings }) {
           {
             id: 'toggleAutoOpenWithCRM',
             type: 'boolean',
-            name: `Auto open extension when open ${platformName}`,
+            name: 'Auto open extesion',
             value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleAutoOpenWithCRM")?.value ?? false)
           },
         ]
