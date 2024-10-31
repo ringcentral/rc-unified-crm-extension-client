@@ -1335,7 +1335,10 @@ window.addEventListener('message', async (e) => {
               extensionUserSettings = data.body.settings;
               await chrome.storage.local.set({ extensionUserSettings });
               if (data.body.setting.id === "toggleDeveloperMode") {
-                showNotification({ level: 'success', message: `Developer mode is turn ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
+                showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
+              }
+              else if (data.body.setting.id === "toggleAutoOpenWithCRM") {
+                showNotification({ level: 'success', message: `Auto open is turned ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
               }
               else {
                 showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
@@ -1893,7 +1896,13 @@ async function getServiceManifest({ serviceName, customSettings }) {
             type: 'boolean',
             name: 'Developer mode',
             value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleDeveloperMode")?.value ?? false)
-          }
+          },
+          {
+            id: 'toggleAutoOpenWithCRM',
+            type: 'boolean',
+            name: `Auto open extension when open ${platformName}`,
+            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleAutoOpenWithCRM")?.value ?? false)
+          },
         ]
       }
     ],

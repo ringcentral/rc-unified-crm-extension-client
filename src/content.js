@@ -142,6 +142,14 @@ async function Initialize() {
   if (!window.location.href.startsWith('https://app.bullhornstaffing.com/content/record/JobOrder')) {
     await initializeC2D();
   }
+
+  const { extensionUserSettings } = await chrome.storage.local.get('extensionUserSettings');
+  if(!!extensionUserSettings && !!extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleAutoOpenWithCRM")?.value)
+  {
+    chrome.runtime.sendMessage({
+      type: 'openPopupWindow'
+    });
+  }
 }
 
 Initialize();
