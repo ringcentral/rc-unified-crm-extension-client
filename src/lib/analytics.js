@@ -234,3 +234,12 @@ exports.trackMissingServiceWorker = async function trackMissingServiceWorker() {
         rcExtensionId
     })
 }
+
+exports.trackChromeAPIError = async function trackChromeAPIError(errorMessage) {
+    track('Chrome API error ', {
+        appName,
+        version,
+        author,
+        errorMessage,
+    })
+}

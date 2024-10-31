@@ -5,7 +5,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { RcThemeProvider } from '@ringcentral/juno';
 import axios from 'axios';
-
+import { sendMessageToExtension } from './lib/sendMessage';
 console.log('import content js to web page');
 
 async function initializeC2D() {
@@ -26,7 +26,7 @@ async function initializeC2D() {
     function (phoneNumber) {
       console.log('Click To Dial:', phoneNumber);
       // alert('Click To Dial:' + phoneNumber);
-      chrome.runtime.sendMessage({
+      sendMessageToExtension({
         type: 'c2d',
         phoneNumber,
       });
@@ -37,7 +37,7 @@ async function initializeC2D() {
     function (phoneNumber) {
       console.log('Click To SMS:', phoneNumber);
       // alert('Click To SMS:' + phoneNumber);
-      chrome.runtime.sendMessage({
+      sendMessageToExtension({
         type: 'c2sms',
         phoneNumber,
       });
@@ -63,7 +63,7 @@ chrome.runtime.onMessage.addListener(
     }
     // Unique: Pipedrive
     if (request.action === 'needCallbackUri') {
-      chrome.runtime.sendMessage({
+      sendMessageToExtension({
         type: 'pipedriveCallbackUri',
         callbackUri: window.location.href
       });
@@ -147,7 +147,7 @@ async function Initialize() {
 Initialize();
 // Unique: Pipedrive
 if (window.location.pathname === '/pipedrive-redirect') {
-  chrome.runtime.sendMessage({ type: "openPopupWindowOnPipedriveDirectPage", platform: 'pipedrive', hostname: 'temp' });
+  sendMessageToExtension({ type: "openPopupWindowOnPipedriveDirectPage", platform: 'pipedrive', hostname: 'temp' });
   const rcStepper = window.document.querySelector('#rc-stepper');
   rcStepper.innerHTML = '(2/3) Please sign in on the extension with your RingCentral account. If nothing happens, please try refreshing this page and wait for a few seconds.';
 }
@@ -166,7 +166,7 @@ function registerInsightlyApiKey() {
   if (window.location.pathname === '/Users/UserSettings' && window.location.hostname.includes('insightly.com')) {
     const insightlyApiKey = document.querySelector('#apikey').innerHTML;
     const insightlyApiUrl = document.querySelector('#apiUrl').firstChild.innerHTML;
-    chrome.runtime.sendMessage({
+    sendMessageToExtension({
       type: 'insightlyAuth',
       apiKey: insightlyApiKey,
       apiUrl: insightlyApiUrl
