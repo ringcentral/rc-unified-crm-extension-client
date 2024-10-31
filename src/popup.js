@@ -1598,10 +1598,17 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
   }
   else if (!!contactInfo[0]?.additionalInfo) {
     const additionalFieldsKeys = Object.keys(contactInfo[0].additionalInfo);
+    // go through all additional fields
     for (const key of additionalFieldsKeys) {
-      const field = contactInfo[0].additionalInfo[key];
-      if (Array.isArray(field)) {
-        if (field.length > 1) {
+      const fieldOptions = contactInfo[0].additionalInfo[key];
+      // check if this contact's field options exist and
+      // 1. Only 1 option -> directly choose it
+      // 2. More than 1 option -> Check default value setup
+      //    2.1 If no default value -> Report conflict
+      //    2.2 If default value -> Apply it
+      // 3. zero option ->  
+      if (Array.isArray(fieldOptions)) {
+        if (fieldOptions.length > 1) {
           let caseType = '';
           if (logType === 'callLog') {
             if (direction === 'Inbound') {
@@ -1629,13 +1636,8 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
           }
           return { hasConflict: true, autoSelectAdditionalSubmission: {} };
         }
-      }
-      else {
-        if (!!field[0] && !!field[0].const) {
-          autoSelectAdditionalSubmission[key] = field[0].const;
-        }
-        else if (!!contactInfo[0].additionalInfo[key]) {
-          autoSelectAdditionalSubmission[key] = contactInfo[0].additionalInfo[key];
+        else if (fieldOptions.length === 1) {
+          autoSelectAdditionalSubmission[key] = fieldOptions[0].const;
         }
       }
     }
