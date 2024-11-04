@@ -45,6 +45,25 @@ let platformName = '';
 let platformHostname = '';
 let rcUserInfo = {};
 let extensionUserSettings = null;
+function getUserSettingSubmission() {
+  if (!!!platform || !!!platform.settings) {
+    return null;
+  }
+  const result = [];
+  const submitSettings = platform.settings.filter(s => s.isIncludedInLogSubmission);
+  for (const s of submitSettings) {
+    for (const item of s.items) {
+      const targetUserSetting = extensionUserSettings?.find(e => e.id === s.id)?.items?.find(e => e.id === item.id);
+      if (!!targetUserSetting) {
+        result.push({
+          id: targetUserSetting.id,
+          value: targetUserSetting.value
+        });
+      }
+    }
+  }
+  return result;
+}
 let trailingSMSLogInfo = [];
 let firstTimeLogoutAbsorbed = false;
 let autoPopupMainConverastionId = null;
@@ -863,7 +882,9 @@ window.addEventListener('message', async (e) => {
 
               // Case: log form
               if (data.body.triggerType === 'logForm') {
-                let additionalSubmission = {};
+                let additionalSubmission = {
+                  customSettings: getUserSettingSubmission()
+                };
                 const additionalFields = manifest.platforms[platformName].page?.callLog?.additionalFields ?? [];
                 for (const f of additionalFields) {
                   if (data.body.formData[f.const] != "none") {
@@ -1180,7 +1201,9 @@ window.addEventListener('message', async (e) => {
               // Case: manual log, submit
               else if (data.body.triggerType === 'logForm') {
                 if (data.body.redirect) {
-                  let additionalSubmission = {};
+                  let additionalSubmission = {
+                    customSettings: getUserSettingSubmission()
+                  };
                   const additionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
                   for (const f of additionalFields) {
                     if (data.body.formData[f.const] != "none") {
@@ -1597,7 +1620,7 @@ function getAdditionalFieldDefaultValuesFromSetting({ caseType, logType }) {
       const defaultValueSetting = platform.settings.find(s => s.id == field.defaultSettingId);
       if (!!defaultValueSetting) {
         const valueItem = defaultValueSetting.items.find(i => i.id === field.defaultSettingValues[caseType].settingId)
-        if (!!valueItem) {
+        if (!!valueItem && extensionUserSettings?.find(e => e.id === defaultValueSetting.id)?.items?.find(i => i.id === valueItem.id)?.value != '') {
           return { field: field.const, value: extensionUserSettings?.find(e => e.id === defaultValueSetting.id)?.items?.find(i => i.id === valueItem.id)?.value };
         }
       }
@@ -1612,11 +1635,13 @@ function rawTextCompare(str1 = '', str2 = '') {
 }
 
 function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoicemail }) {
+  let autoSelectAdditionalSubmission = {
+    customeSettings: getUserSettingSubmission()
+  };
   if (!isAutoLog) {
-    return { hasConflict: false, autoSelectAdditionalSubmission: {} }
+    return { hasConflict: false, autoSelectAdditionalSubmission }
   }
   let hasConflict = false;
-  let autoSelectAdditionalSubmission = {};
   contactInfo = contactInfo.filter(c => !c.isNewContact);
   if (contactInfo.length === 0) {
     hasConflict = true;
@@ -1951,7 +1976,7 @@ async function getServiceManifest({ serviceName, customSettings }) {
               type: 'string',
               name: item.name,
               placeHolder: item.placeHolder ?? "",
-              value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(i => i.id === item.id)?.value ?? ""
+              value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(i => i.id === item.id)?.value ?? (item.defaultValue ?? "")
             });
             break;
           case 'bool':
@@ -1959,7 +1984,7 @@ async function getServiceManifest({ serviceName, customSettings }) {
               id: item.id,
               type: item.type,
               name: item.name,
-              value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(i => i.id === item.id)?.value ?? item.defaultValue
+              value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(i => i.id === item.id)?.value ?? (item.defaultValue ?? false)
             });
             break;
           case 'warning':
@@ -1980,7 +2005,7 @@ async function getServiceManifest({ serviceName, customSettings }) {
                 type: "option",
                 name: item.name,
                 options: item.options,
-                value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(e => e.id === item.id)?.value ?? ""
+                value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(e => e.id === item.id)?.value ?? (item.defaultValue ?? "")
               }
             )
             break;
