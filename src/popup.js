@@ -1636,7 +1636,7 @@ function rawTextCompare(str1 = '', str2 = '') {
 
 function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoicemail }) {
   let autoSelectAdditionalSubmission = {
-    customeSettings: getUserSettingSubmission()
+    customSettings: getUserSettingSubmission()
   };
   if (!isAutoLog) {
     return { hasConflict: false, autoSelectAdditionalSubmission }
