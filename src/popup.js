@@ -1104,7 +1104,7 @@ window.addEventListener('message', async (e) => {
               }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
               const messageAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.id === "popupLogPageAfterSMS")?.value;
-              const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationId}`;
+              const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
               let getContactMatchResult = null;
               window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
