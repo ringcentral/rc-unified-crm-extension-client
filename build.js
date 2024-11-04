@@ -5,8 +5,11 @@ const fs = require('fs');
 
 
 async function runBuild() {
-    // delete dist folder
+
+    // delete embeddable index
     fs.rm('./dist', { recursive: true, force: true }, (err) => { });
+    // delete dist folder
+    fs.rm('./public/embeddable/index.html', { recursive: true, force: true }, (err) => { });
 
     build({
         entryPoints: ['src/content.js', 'src/popup.js', 'src/sw.js', 'src/root.jsx'],

@@ -1130,7 +1130,7 @@ window.addEventListener('message', async (e) => {
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
                     platformName
                   })).contactInfo;
-                  const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult, logType: 'messageLog', isVoicemail: true });
+                  const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult, logType: 'messageLog', isVoicemail: data.body.conversation.type === 'VoiceMail' });
                   // Sub-case: has conflict, cache unresolved log
                   if (hasConflict) {
                     const conflictLog = await cacheUnresolvedLog({
