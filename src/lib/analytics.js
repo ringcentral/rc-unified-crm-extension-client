@@ -243,3 +243,11 @@ exports.trackChromeAPIError = async function trackChromeAPIError(errorMessage) {
         errorMessage,
     })
 }
+
+exports.trackCRMSetupError = async function trackCRMSetupError() {
+    track('CRM setup error', {
+        appName,
+        version,
+        author
+    })
+}

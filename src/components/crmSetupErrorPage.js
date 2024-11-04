@@ -3,6 +3,7 @@ function getCRMSetupErrorPageRender() {
         id: 'crmSetupErrorPage',
         title: 'Unable to detect CRM',
         type: 'page',
+        hideBackButton: true,
         schema: {
             type: 'object',
             properties: {
@@ -12,7 +13,7 @@ function getCRMSetupErrorPageRender() {
                 },
                 message:{
                     type: 'string',
-                    description: "We couldn't detect a supported CRM. To properly identify your CRM, please follow these steps:",
+                    description: "To properly identify your CRM, please follow these steps:",
                 },
                 step1:{
                     type: 'string',
@@ -24,27 +25,15 @@ function getCRMSetupErrorPageRender() {
                 },
                 step3:{
                     type: 'string',
-                    description: 'From within the CRM, click the orange badge to launch the Unified CRM extension.'
+                    description: 'Open the Unified CRM extension.'
                 },
                 helperMessage:{
                     type: 'string',
                     description: 'If your CRM is detected successfully, this message will not appear.'
                 },
-                resourceTitle:{
-                    type: 'string',
-                    description: 'Resources:'
-                },
                 supportedCRMLink:{
                     type: 'string',
                     description: 'Supported CRMs'
-                },
-                documentationLink:{
-                    type: 'string',
-                    description: 'Documentation'
-                },
-                communityLink:{
-                    type: 'string',
-                    description: 'Community'
                 }
             }
         },
@@ -76,30 +65,11 @@ function getCRMSetupErrorPageRender() {
               "ui:field": "typography",
               "ui:variant": "body1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
             },
-            resourceTitle: {
-              "ui:field": "typography",
-              "ui:variant": "body1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
-            },
             supportedCRMLink:{
                 "ui:field": "link", // supported from v2.0.1
                 "ui:variant": "body1",
                 "ui:underline": true,
-                "ui:href": "https://ringcentral.github.io/rc-unified-crm-extension/crm/",  
-                "ui:bulletedList": true, // show text as list item // supported from v2.0.1      
-            },
-            documentationLink:{
-                "ui:field": "link", // supported from v2.0.1
-                "ui:variant": "body1",
-                "ui:underline": true,
-                "ui:href": "https://ringcentral.github.io/rc-unified-crm-extension/users/access/",        
-                "ui:bulletedList": true, // show text as list item // supported from v2.0.1
-            },
-            communityLink:{
-                "ui:field": "link", // supported from v2.0.1
-                "ui:variant": "body1",
-                "ui:underline": true,
-                "ui:href": "https://community.ringcentral.com/groups/unified-crm-extension-22",        
-                "ui:bulletedList": true, // show text as list item // supported from v2.0.1
+                "ui:href": "https://ringcentral.github.io/rc-unified-crm-extension/crm/"     
             }
         }
     };

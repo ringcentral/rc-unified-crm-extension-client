@@ -31,7 +31,8 @@ const {
   trackConnectedCall,
   trackOpenFeedback,
   trackFactoryReset,
-  trackUpdateCallRecordingLink
+  trackUpdateCallRecordingLink,
+  trackCRMSetupError
 } = require('./lib/analytics');
 
 window.__ON_RC_POPUP_WINDOW = 1;
@@ -1359,7 +1360,10 @@ window.addEventListener('message', async (e) => {
               extensionUserSettings = data.body.settings;
               await chrome.storage.local.set({ extensionUserSettings });
               if (data.body.setting.id === "toggleDeveloperMode") {
-                showNotification({ level: 'success', message: `Developer mode is turn ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
+                showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
+              }
+              else if (data.body.setting.id === "toggleAutoOpenWithCRM") {
+                showNotification({ level: 'success', message: `Auto open is turned ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
               }
               else {
                 showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
@@ -1622,10 +1626,17 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
   }
   else if (!!contactInfo[0]?.additionalInfo) {
     const additionalFieldsKeys = Object.keys(contactInfo[0].additionalInfo);
+    // go through all additional fields
     for (const key of additionalFieldsKeys) {
-      const field = contactInfo[0].additionalInfo[key];
-      if (Array.isArray(field)) {
-        if (field.length > 1) {
+      const fieldOptions = contactInfo[0].additionalInfo[key];
+      // check if this contact's field options exist and
+      // 1. Only 1 option -> directly choose it
+      // 2. More than 1 option -> Check default value setup
+      //    2.1 If no default value -> Report conflict
+      //    2.2 If default value -> Apply it
+      // 3. zero option ->  
+      if (Array.isArray(fieldOptions)) {
+        if (fieldOptions.length > 1) {
           let caseType = '';
           if (logType === 'callLog') {
             if (direction === 'Inbound') {
@@ -1658,13 +1669,8 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
           }
           return { hasConflict: true, autoSelectAdditionalSubmission: {} };
         }
-      }
-      else {
-        if (!!field[0] && !!field[0].const) {
-          autoSelectAdditionalSubmission[key] = field[0].const;
-        }
-        else if (!!contactInfo[0].additionalInfo[key]) {
-          autoSelectAdditionalSubmission[key] = contactInfo[0].additionalInfo[key];
+        else if (fieldOptions.length === 1) {
+          autoSelectAdditionalSubmission[key] = fieldOptions[0].const;
         }
       }
     }
@@ -1780,6 +1786,7 @@ function renderCRMSetupErrorPage() {
     type: 'rc-adapter-navigate-to',
     path: '/customized/crmSetupErrorPage', // page id
   }, '*');
+  trackCRMSetupError();
 }
 
 async function getServiceManifest({ serviceName, customSettings }) {
@@ -1920,7 +1927,13 @@ async function getServiceManifest({ serviceName, customSettings }) {
             type: 'boolean',
             name: 'Developer mode',
             value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleDeveloperMode")?.value ?? false)
-          }
+          },
+          {
+            id: 'toggleAutoOpenWithCRM',
+            type: 'boolean',
+            name: 'Auto open extesion',
+            value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleAutoOpenWithCRM")?.value ?? false)
+          },
         ]
       }
     ],
