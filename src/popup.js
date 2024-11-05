@@ -467,26 +467,26 @@ window.addEventListener('message', async (e) => {
                   const callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId: null });
                   // default form value from user settings
                   if (data.call.direction === 'Inbound') {
-                    const inboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'inboundCall', logType: 'callLog' });
-                    if (!!inboundCallDefaultValue) {
+                    const inboundCallDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'inboundCall', logType: 'callLog' });
+                    for (const inboundCallDefaultValue of inboundCallDefaultValues) {
                       const inboundCallMappedOption = callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, inboundCallDefaultValue.value))?.const;
                       if (!!inboundCallMappedOption) {
                         callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
                       }
-                      else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue) {
+                      else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[inboundCallDefaultValue.field]?.oneOff) {
                         callPage.schema.properties[inboundCallDefaultValue.field].oneOf.push({ const: inboundCallDefaultValue.value, title: inboundCallDefaultValue.value });
                         callPage.formData[inboundCallDefaultValue.field] = inboundCallDefaultValue.value;
                       }
                     }
                   }
                   if (data.call.direction === 'Outbound') {
-                    const outboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'outboundCall', logType: 'callLog' });
-                    if (!!outboundCallDefaultValue) {
+                    const outboundCallDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'outboundCall', logType: 'callLog' });
+                    for (const outboundCallDefaultValue of outboundCallDefaultValues) {
                       const outboundCallMappedOption = callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, outboundCallDefaultValue.value))?.const;
                       if (!!outboundCallMappedOption) {
                         callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
                       }
-                      else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue) {
+                      else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf) {
                         callPage.schema.properties[outboundCallDefaultValue.field].oneOf.push({ const: outboundCallDefaultValue.value, title: outboundCallDefaultValue.value });
                         callPage.formData[outboundCallDefaultValue.field] = outboundCallDefaultValue.value;
                       }
@@ -1000,26 +1000,26 @@ window.addEventListener('message', async (e) => {
                       const callPage = logPage.getLogPageRender({ id: data.body.call.sessionId, manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId });
                       // default form value from user settings
                       if (data.body.call.direction === 'Inbound') {
-                        const inboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'inboundCall', logType: 'callLog' });
-                        if (!!inboundCallDefaultValue) {
+                        const inboundCallDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'inboundCall', logType: 'callLog' });
+                        for (const inboundCallDefaultValue of inboundCallDefaultValues) {
                           const inboundCallMappedOption = callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, inboundCallDefaultValue.value))?.const;
                           if (!!inboundCallMappedOption) {
                             callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
                           }
-                          else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue) {
+                          else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf) {
                             callPage.schema.properties[inboundCallDefaultValue.field].oneOf.push({ const: inboundCallDefaultValue.value, title: inboundCallDefaultValue.value });
                             callPage.formData[inboundCallDefaultValue.field] = inboundCallDefaultValue.value;
                           }
                         }
                       }
                       if (data.body.call.direction === 'Outbound') {
-                        const outboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'outboundCall', logType: 'callLog' });
-                        if (!!outboundCallDefaultValue) {
+                        const outboundCallDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'outboundCall', logType: 'callLog' });
+                        for (const outboundCallDefaultValue of outboundCallDefaultValues) {
                           const outboundCallMappedOption = callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, outboundCallDefaultValue.value))?.const;
                           if (!!outboundCallMappedOption) {
                             callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
                           }
-                          else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue) {
+                          else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf) {
                             callPage.schema.properties[outboundCallDefaultValue.field].oneOf.push({ const: outboundCallDefaultValue.value, title: outboundCallDefaultValue.value });
                             callPage.formData[outboundCallDefaultValue.field] = outboundCallDefaultValue.value;
                           }
@@ -1271,26 +1271,26 @@ window.addEventListener('message', async (e) => {
                 });
                 // default form value from user settings
                 if (data.body.conversation.type === 'VoiceMail') {
-                  const voicemailDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'voicemail', logType: 'messageLog' });
-                  if (!!voicemailDefaultValue) {
+                  const voicemailDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'voicemail', logType: 'messageLog' });
+                  for (const voicemailDefaultValue of voicemailDefaultValues) {
                     const voicemailMappedOption = messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, voicemailDefaultValue.value))?.const;
                     if (!!voicemailMappedOption) {
                       messagePage.formData[voicemailDefaultValue.field] = voicemailMappedOption;
                     }
-                    else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == voicemailDefaultValue.field)?.allowCustomValue) {
+                    else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == voicemailDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf) {
                       messagePage.schema.properties[voicemailDefaultValue.field].oneOf.push({ const: voicemailDefaultValue.value, title: voicemailDefaultValue.value });
                       messagePage.formData[voicemailDefaultValue.field] = voicemailDefaultValue.value;
                     }
                   }
                 }
                 else {
-                  const smsDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'message', logType: 'messageLog' });
-                  if (!!smsDefaultValue) {
+                  const smsDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'message', logType: 'messageLog' });
+                  for (const smsDefaultValue of smsDefaultValues) {
                     const smsMappedOption = messagePage.schema.properties[smsDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, smsDefaultValue.value))?.const;
                     if (!!smsMappedOption) {
                       messagePage.formData[smsDefaultValue.field] = smsMappedOption;
                     }
-                    else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == smsDefaultValue.field)?.allowCustomValue) {
+                    else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == smsDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[smsDefaultValue.field]?.oneOf) {
                       messagePage.schema.properties[smsDefaultValue.field].oneOf.push({ const: smsDefaultValue.value, title: smsDefaultValue.value });
                       messagePage.formData[smsDefaultValue.field] = smsDefaultValue.value;
                     }
@@ -1592,18 +1592,19 @@ function DownloadTextFile({ filename, text }) {
 
 function getAdditionalFieldDefaultValuesFromSetting({ caseType, logType }) {
   const additionalFields = platform?.page[logType]?.additionalFields;
+  const result = [];
   if (!!additionalFields && !!platform.settings && platform.settings.length > 0) {
     for (const field of additionalFields) {
       const defaultValueSetting = platform.settings.find(s => s.id == field.defaultSettingId);
       if (!!defaultValueSetting) {
         const valueItem = defaultValueSetting.items.find(i => i.id === field.defaultSettingValues[caseType].settingId)
         if (!!valueItem) {
-          return { field: field.const, value: extensionUserSettings?.find(e => e.id === defaultValueSetting.id)?.items?.find(i => i.id === valueItem.id)?.value };
+          result.push({ field: field.const, value: extensionUserSettings?.find(e => e.id === defaultValueSetting.id)?.items?.find(i => i.id === valueItem.id)?.value });
         }
       }
     }
   }
-  return null;
+  return result;
 }
 
 // A fuzzy string compare that ignores cases and spaces
@@ -1654,20 +1655,24 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
               caseType = 'message';
             }
           }
-          const fieldDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType, logType });
-          if (!!fieldDefaultValue) {
+          const fieldDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType, logType });
+          let allMatched = true;
+          for (const fieldDefaultValue of fieldDefaultValues) {
             const fieldMappedOption = contactInfo[0].additionalInfo[key]?.find(o => rawTextCompare(o.const, fieldDefaultValue.value))?.const;
             if (!!fieldMappedOption) {
               autoSelectAdditionalSubmission[key] = fieldMappedOption;
-              continue;
             }
-            const allowCustomValue = !!platform?.page[logType]?.additionalFields.find(f => f.const == key)?.allowCustomValue;
-            if (allowCustomValue) {
-              autoSelectAdditionalSubmission[key] = fieldDefaultValue.value;
-              continue;
+            else {
+              const allowCustomValue = !!platform?.page[logType]?.additionalFields.find(f => f.const == key)?.allowCustomValue;
+              if (allowCustomValue) {
+                autoSelectAdditionalSubmission[key] = fieldDefaultValue.value;
+              }
+              else {
+                allMatched = false;
+              }
             }
           }
-          return { hasConflict: true, autoSelectAdditionalSubmission: {} };
+          return { hasConflict: !allMatched, autoSelectAdditionalSubmission };
         }
         else if (fieldOptions.length === 1) {
           autoSelectAdditionalSubmission[key] = fieldOptions[0].const;
