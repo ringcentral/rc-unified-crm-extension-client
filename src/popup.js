@@ -1339,16 +1339,19 @@ window.addEventListener('message', async (e) => {
               break;
             case '/messageLogger/match':
               let localMessageLogs = {};
-              const messageMatchPromises = data.body.conversationLogIds.map(async (conversationLogId) => {
-                const savedMessageLogRecord = await chrome.storage.local.get(conversationLogId);
-                return { conversationLogId, savedMessageLogRecord };
-              });
-              const messageMatchResults = await Promise.all(messageMatchPromises);
-              messageMatchResults.forEach(({ conversationLogId, savedMessageLogRecord }) => {
-                if (!!savedMessageLogRecord && !isObjectEmpty(savedMessageLogRecord)) {
-                  localMessageLogs[conversationLogId] = [{ id: 'dummyId' }];
-                }
-              });
+              for (const c of data.body.conversations) {
+                localMessageLogs[c.conversationLogId] = [{ id: 'dummyId' }];
+              }
+              // const messageMatchPromises = data.body.conversationLogIds.map(async (conversationLogId) => {
+              //   const savedMessageLogRecord = await chrome.storage.local.get(conversationLogId);
+              //   return { conversationLogId, savedMessageLogRecord };
+              // });
+              // const messageMatchResults = await Promise.all(messageMatchPromises);
+              // messageMatchResults.forEach(({ conversationLogId, savedMessageLogRecord }) => {
+              //   if (!!savedMessageLogRecord && !isObjectEmpty(savedMessageLogRecord)) {
+              //     localMessageLogs[conversationLogId] = [{ id: 'dummyId' }];
+              //   }
+              // });
               responseMessage(
                 data.requestId,
                 {
@@ -1931,7 +1934,7 @@ async function getServiceManifest({ serviceName, customSettings }) {
           {
             id: 'toggleAutoOpenWithCRM',
             type: 'boolean',
-            name: 'Auto open extesion',
+            name: 'Auto open extension',
             value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleAutoOpenWithCRM")?.value ?? false)
           },
         ]
