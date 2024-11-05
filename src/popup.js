@@ -1931,7 +1931,7 @@ async function getServiceManifest({ serviceName, customSettings }) {
           {
             id: 'toggleAutoOpenWithCRM',
             type: 'boolean',
-            name: 'Auto open extesion',
+            name: 'Auto open extension',
             value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleAutoOpenWithCRM")?.value ?? false)
           },
         ]
