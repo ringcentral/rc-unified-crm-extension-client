@@ -1657,15 +1657,18 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
           }
           const fieldDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType, logType });
           let allMatched = true;
-          for (const fieldDefaultValue of fieldDefaultValues) {
+          const fieldDefaultValue = fieldDefaultValues.find(f => f.field === key);
+          if (!!fieldDefaultValue) {
             const fieldMappedOption = contactInfo[0].additionalInfo[key]?.find(o => rawTextCompare(o.const, fieldDefaultValue.value))?.const;
             if (!!fieldMappedOption) {
               autoSelectAdditionalSubmission[key] = fieldMappedOption;
+              continue;
             }
             else {
               const allowCustomValue = !!platform?.page[logType]?.additionalFields.find(f => f.const == key)?.allowCustomValue;
               if (allowCustomValue) {
                 autoSelectAdditionalSubmission[key] = fieldDefaultValue.value;
+                continue;
               }
               else {
                 allMatched = false;
