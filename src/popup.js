@@ -292,7 +292,7 @@ window.addEventListener('message', async (e) => {
             document.getElementById('rc-widget').style.zIndex = 0;
             let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
             // TEMP - migrate bullhorn user ID
-            if (platformName === 'bullhorn') {
+            if (platformName === 'bullhorn' && !!rcUnifiedCrmExtJwt) {
               const { crm_extension_bullhorn_user_id_migrated } = await chrome.storage.local.get({ crm_extension_bullhorn_user_id_migrated: false });
               if (!!!crm_extension_bullhorn_user_id_migrated) {
                 const migratedJWT = await axios.get(`${manifest.serverUrl}/temp-bullhorn-migrate-userId?jwtToken=${rcUnifiedCrmExtJwt}`);
