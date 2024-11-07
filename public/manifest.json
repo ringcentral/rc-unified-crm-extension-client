@@ -20,7 +20,8 @@
         "https://*.redtailtechnology.com/*",
         "https://*.bullhornstaffing.com/*",
         "https://*.app.netsuite.com/*",
-        "https://*.service-now.com/*"
+        "https://*.service-now.com/*",
+        "https://*.servicenowservices.com/*"
       ],
       "js": [
         "./c2d/index.js",
@@ -46,7 +47,8 @@
         "https://*.redtailtechnology.com/*",
         "https://*.bullhornstaffing.com/*",
         "https://*.app.netsuite.com/*",
-        "https://*.service-now.com/*"
+        "https://*.service-now.com/*",
+        "https://*.servicenowservices.com/*"
       ]
     }
   ],
