@@ -1,5 +1,5 @@
 const auth = require('./core/auth');
-const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, cacheUnresolvedLog, getLogCache, getAllUnresolvedLogs, resolveCachedLog, getConflictContentFromUnresolvedLog } = require('./core/log');
+const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } = require('./core/log');
 const { getContact, createContact, openContactPage } = require('./core/contact');
 const { responseMessage, isObjectEmpty, showNotification, dismissNotification } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
@@ -13,7 +13,6 @@ const supportPage = require('./components/supportPage');
 const aboutPage = require('./components/aboutPage');
 const developerSettingsPage = require('./components/developerSettingsPage');
 const crmSetupErrorPage = require('./components/crmSetupErrorPage');
-const moment = require('moment');
 const {
   setAuthor,
   identify,
@@ -45,7 +44,6 @@ let platformName = '';
 let platformHostname = '';
 let rcUserInfo = {};
 let extensionUserSettings = null;
-let trailingSMSLogInfo = [];
 let firstTimeLogoutAbsorbed = false;
 let autoPopupMainConverastionId = null;
 let currentNotificationId = null;
@@ -176,23 +174,6 @@ async function retroAutoCallLog() {
   }
 }
 
-async function showUnresolvedTabPage(path) {
-  // TEMP: hide it for now
-  return;
-  const unresolvedLogs = await getAllUnresolvedLogs();
-  const unresolvedLogsPage = logPage.getUnresolvedLogsPageRender({ unresolvedLogs });
-  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-    type: 'rc-adapter-register-customized-page',
-    page: unresolvedLogsPage,
-  }, '*');
-  if (unresolvedLogsPage.hidden && !!path && (path == '/customizedTabs/unresolve' || path == '/messageLogger' || path == '/callLogger')) {
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-      type: 'rc-adapter-navigate-to',
-      path: 'goBack',
-    }, '*');
-  }
-}
-
 let errorLogs = [];
 window.onerror = (event, source, lineno, colno, error) => {
   errorLogs.push({ event, source, lineno, colno, error })
@@ -291,18 +272,6 @@ window.addEventListener('message', async (e) => {
           if (data.loggedIn) {
             document.getElementById('rc-widget').style.zIndex = 0;
             let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-            // TEMP - migrate bullhorn user ID
-            if (platformName === 'bullhorn' && !!rcUnifiedCrmExtJwt) {
-              const { crm_extension_bullhorn_user_id_migrated } = await chrome.storage.local.get({ crm_extension_bullhorn_user_id_migrated: false });
-              if (!!!crm_extension_bullhorn_user_id_migrated) {
-                const migratedJWT = await axios.get(`${manifest.serverUrl}/temp-bullhorn-migrate-userId?jwtToken=${rcUnifiedCrmExtJwt}`);
-                if (!!migratedJWT?.data?.jwtToken) {
-                  rcUnifiedCrmExtJwt = migratedJWT.data.jwtToken;
-                  await chrome.storage.local.set({ rcUnifiedCrmExtJwt });
-                }
-                await chrome.storage.local.set({ crm_extension_bullhorn_user_id_migrated: true });
-              }
-            }
             crmAuthed = !!rcUnifiedCrmExtJwt;
             // Unique: Pipedrive
             if (platformName === 'pipedrive' && !(await auth.checkAuth())) {
@@ -338,7 +307,6 @@ window.addEventListener('message', async (e) => {
               axios.defaults.headers.common['rc-extension-id'] = rcUserInfo?.rcExtensionId;
               axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId;
               axios.defaults.headers.common['developer-author-name'] = manifest?.author?.name ?? "";
-              await showUnresolvedTabPage();
             }
             catch (e) {
               reset();
@@ -562,9 +530,6 @@ window.addEventListener('message', async (e) => {
           }
           if (data.path !== '/') {
             trackPage(data.path);
-            if (data.path === '/customizedTabs/unresolve') {
-              await showUnresolvedTabPage(data.path);
-            }
           }
           if (!!data.path) {
             if (data.path.startsWith('/conversations/') || data.path.startsWith('/composeText')) {
@@ -655,49 +620,6 @@ window.addEventListener('message', async (e) => {
               );
               break;
             case '/customizedPage/inputChanged':
-              if (data.body.page.id === 'unresolve') {
-                const unresolvedRecordId = data.body.formData.record;
-                const unresolvedLog = await getLogCache({ cacheId: unresolvedRecordId });
-                const pageId = unresolvedRecordId.split('-')[1];
-                const logPageRender = logPage.getLogPageRender({
-                  id: pageId,
-                  manifest,
-                  logType: unresolvedLog.type,
-                  triggerType: 'createLog',
-                  platformName,
-                  direction: unresolvedLog.direction ?? '',
-                  contactInfo: unresolvedLog.contactInfo,
-                  subject: unresolvedLog.subject ?? '',
-                  note: unresolvedLog.note ?? '',
-                  isUnresolved: true
-                });
-
-
-                if (unresolvedLog.type === 'Call') {
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-update-call-log-page',
-                    page: logPageRender,
-                  }, '*');
-
-                  // navigate to call log page
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: `/log/call/${pageId}`,
-                  }, '*');
-                }
-                else {
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-update-messages-log-page',
-                    page: logPageRender,
-                  }, '*');
-
-                  // navigate to messages log page
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: `/log/messages/${pageId}`,
-                  }, '*');
-                }
-              }
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-post-message-response',
                 responseId: data.requestId,
@@ -897,12 +819,9 @@ window.addEventListener('message', async (e) => {
                         subject: data.body.formData.activityTitle ?? "",
                         additionalSubmission,
                         contactId: newContactInfo?.id ?? data.body.formData.contact,
-                        contactType: data.body.formData.newContactName === '' ? data.body.formData.contactType : data.body.formData.newContactType,
+                        contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                         contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
                       });
-                    if (!!data.body.formData.isUnresolved) {
-                      await showUnresolvedTabPage(data.path);
-                    }
                     break;
                   case 'editLog':
                     await updateLog({
@@ -955,17 +874,6 @@ window.addEventListener('message', async (e) => {
                       // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
                       if (hasConflict) {
                         window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                        const conflictLog = await cacheUnresolvedLog({
-                          type: 'Call',
-                          id: data.body.call.sessionId,
-                          phoneNumber: contactPhoneNumber,
-                          direction: data.body.call.direction,
-                          contactInfo: callMatchedContact ?? [],
-                          subject: callLogSubject,
-                          note,
-                          date: moment(data.body.call.startTime).format('MM/DD/YYYY')
-                        });
-                        await showUnresolvedTabPage();
                         const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
                         showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Please log it manually on call history page`, ttl: 5000 });
                       }
@@ -1125,7 +1033,6 @@ window.addEventListener('message', async (e) => {
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
               let getContactMatchResult = null;
-              window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
               // Case: auto log
               if (messageAutoLogOn && data.body.triggerType === 'auto' && !messageAutoPopup) {
                 // Sub-case: has existing pref setup, log directly
@@ -1149,16 +1056,8 @@ window.addEventListener('message', async (e) => {
                     platformName
                   })).contactInfo;
                   const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult, logType: 'messageLog', isVoicemail: data.body.conversation.type === 'VoiceMail' });
-                  // Sub-case: has conflict, cache unresolved log
+                  // Sub-case: has conflict
                   if (hasConflict) {
-                    const conflictLog = await cacheUnresolvedLog({
-                      type: 'Message',
-                      id: data.body.conversation.conversationId,
-                      direction: '',
-                      contactInfo: getContactMatchResult ?? [],
-                      date: moment(data.body.conversation.messages[0].creationTime).format('MM/DD/YYYY')
-                    });
-                    await showUnresolvedTabPage();
                     const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
                     showNotification({ level: 'warning', message: `Message not logged. ${conflictContent.description}. Review all conflict on the "Unlogged" tab.`, ttl: 5000 });
                   }
@@ -1177,7 +1076,6 @@ window.addEventListener('message', async (e) => {
                     });
                   }
                 }
-                window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
               // Case: manual log, submit
               else if (data.body.triggerType === 'logForm') {
@@ -1210,115 +1108,68 @@ window.addEventListener('message', async (e) => {
                     note: '',
                     additionalSubmission,
                     contactId: newContactInfo?.id ?? data.body.formData.contact,
-                    contactType: data.body.formData.newContactName === '' ? data.body.formData.contactType : data.body.formData.newContactType,
+                    contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                     contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
                   });
-                  for (const trailingConversations of trailingSMSLogInfo) {
-                    await addLog({
-                      serverUrl: manifest.serverUrl,
-                      logType: 'Message',
-                      logInfo: trailingConversations,
-                      isMain: false,
-                      note: '',
-                      additionalSubmission,
-                      contactId: newContactInfo?.id ?? data.body.formData.contact,
-                      contactType: data.body.formData.newContactName === '' ? data.body.formData.contactType : data.body.formData.newContactType,
-                      contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
-                    });
-                  }
-                  if (!!data.body.formData.isUnresolved) {
-                    await showUnresolvedTabPage(data.path);
-                  }
-                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                 }
               }
-              // Case: manual log, open page OR auto log with auto pop up log page ON
+              // Case: Open page OR auto pop up log page
               else {
-                if ((!messageAutoLogOn && data.body.triggerType === 'auto') || (data.body.redirect != undefined && data.body.prefill != undefined && !data.body.redirect && !data.body.prefill)) {
-                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                  responseMessage(data.requestId, { data: 'ok' });
-                  break;
-                }
-                const isTrailing = !data.body.redirect && data.body.triggerType !== 'auto';
-                if (isTrailing) {
-                  trailingSMSLogInfo.push(data.body.conversation);
-                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                  // response to widget
-                  responseMessage(
-                    data.requestId,
-                    {
-                      data: 'ok'
-                    }
-                  );
-                  break;
-                }
-                else {
-                  trailingSMSLogInfo = [];
-                }
-                if (!isTrailing) {
+                if (data.body.redirect) {
                   getContactMatchResult = await getContact({
                     serverUrl: manifest.serverUrl,
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
                     platformName
                   });
-                }
-                // add your codes here to log call to your service
-                const messagePage = logPage.getLogPageRender({
-                  id: data.body.conversation.conversationId,
-                  manifest,
-                  logType: 'Message',
-                  triggerType: data.body.triggerType,
-                  platformName,
-                  direction: '',
-                  contactInfo: getContactMatchResult.contactInfo ?? []
-                });
-                // default form value from user settings
-                if (data.body.conversation.type === 'VoiceMail') {
-                  const voicemailDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'voicemail', logType: 'messageLog' });
-                  for (const voicemailDefaultValue of voicemailDefaultValues) {
-                    const voicemailMappedOption = messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, voicemailDefaultValue.value))?.const;
-                    if (!!voicemailMappedOption) {
-                      messagePage.formData[voicemailDefaultValue.field] = voicemailMappedOption;
-                    }
-                    else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == voicemailDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf) {
-                      messagePage.schema.properties[voicemailDefaultValue.field].oneOf.push({ const: voicemailDefaultValue.value, title: voicemailDefaultValue.value });
-                      messagePage.formData[voicemailDefaultValue.field] = voicemailDefaultValue.value;
-                    }
-                  }
-                }
-                else {
-                  const smsDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'message', logType: 'messageLog' });
-                  for (const smsDefaultValue of smsDefaultValues) {
-                    const smsMappedOption = messagePage.schema.properties[smsDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, smsDefaultValue.value))?.const;
-                    if (!!smsMappedOption) {
-                      messagePage.formData[smsDefaultValue.field] = smsMappedOption;
-                    }
-                    else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == smsDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[smsDefaultValue.field]?.oneOf) {
-                      messagePage.schema.properties[smsDefaultValue.field].oneOf.push({ const: smsDefaultValue.value, title: smsDefaultValue.value });
-                      messagePage.formData[smsDefaultValue.field] = smsDefaultValue.value;
+                  // add your codes here to log call to your service
+                  const messagePage = logPage.getLogPageRender({
+                    id: data.body.conversation.conversationId,
+                    manifest,
+                    logType: 'Message',
+                    triggerType: data.body.triggerType,
+                    platformName,
+                    direction: '',
+                    contactInfo: getContactMatchResult.contactInfo ?? []
+                  });
+                  // default form value from user settings
+                  if (data.body.conversation.type === 'VoiceMail') {
+                    const voicemailDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'voicemail', logType: 'messageLog' });
+                    for (const voicemailDefaultValue of voicemailDefaultValues) {
+                      const voicemailMappedOption = messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, voicemailDefaultValue.value))?.const;
+                      if (!!voicemailMappedOption) {
+                        messagePage.formData[voicemailDefaultValue.field] = voicemailMappedOption;
+                      }
+                      else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == voicemailDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf) {
+                        messagePage.schema.properties[voicemailDefaultValue.field].oneOf.push({ const: voicemailDefaultValue.value, title: voicemailDefaultValue.value });
+                        messagePage.formData[voicemailDefaultValue.field] = voicemailDefaultValue.value;
+                      }
                     }
                   }
+                  else {
+                    const smsDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'message', logType: 'messageLog' });
+                    for (const smsDefaultValue of smsDefaultValues) {
+                      const smsMappedOption = messagePage.schema.properties[smsDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, smsDefaultValue.value))?.const;
+                      if (!!smsMappedOption) {
+                        messagePage.formData[smsDefaultValue.field] = smsMappedOption;
+                      }
+                      else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == smsDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[smsDefaultValue.field]?.oneOf) {
+                        messagePage.schema.properties[smsDefaultValue.field].oneOf.push({ const: smsDefaultValue.value, title: smsDefaultValue.value });
+                        messagePage.formData[smsDefaultValue.field] = smsDefaultValue.value;
+                      }
+                    }
+                  }
+
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-update-messages-log-page',
+                    page: messagePage
+                  }, '*');
+
+                  // navigate to message log page
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/log/messages/${data.body.conversation.conversationId}`, // conversation id that you received from message logger event
+                  }, '*');
                 }
-
-                // to stop following unlogged message events override current message log page
-                if (messageAutoLogOn && data.body.triggerType === 'auto' && messageAutoPopup && data.body.conversation.conversationId != autoPopupMainConverastionId) {
-                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                  responseMessage(data.requestId, { data: 'ok' });
-                  break;
-                }
-
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                  type: 'rc-adapter-update-messages-log-page',
-                  page: messagePage
-                }, '*');
-
-                // navigate to message log page
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                  type: 'rc-adapter-navigate-to',
-                  path: `/log/messages/${data.body.conversation.conversationId}`, // conversation id that you received from message logger event
-                }, '*');
-
-                window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
               // response to widget
               responseMessage(
@@ -1447,10 +1298,6 @@ window.addEventListener('message', async (e) => {
                     path: '/customized/developerSettingsPage', // page id
                   }, '*');
                   break;
-                case 'clearLogConflictsButton':
-                  await chrome.storage.local.remove('unresolvedLogs');
-                  showNotification({ level: 'success', message: 'All unresolved logs cleared', ttl: 3000 });
-                  break;
                 case 'factoryResetButton':
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
@@ -1465,7 +1312,6 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-logout'
                   }, '*');
-                  await chrome.storage.local.remove('unresolvedLogs');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   trackFactoryReset();
                   break;
