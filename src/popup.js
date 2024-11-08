@@ -1110,12 +1110,14 @@ window.addEventListener('message', async (e) => {
                 });
               break;
             case '/messageLogger':
+              console.log('message log request for', data.body.conversation.conversationLogId, data.body.triggerType);
               // Case: when auto log and auto pop turned ON, we need to know which event is for the conversation that user is looking at
               if (!!!autoPopupMainConverastionId) {
                 autoPopupMainConverastionId = data.body.conversation.conversationId;
               }
               if (!!data?.body?.conversation?.correspondents[0]?.extensionNumber) {
                 showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
+                responseMessage(data.requestId, { data: 'ok' });
                 break;
               }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
@@ -1234,6 +1236,7 @@ window.addEventListener('message', async (e) => {
               else {
                 if ((!messageAutoLogOn && data.body.triggerType === 'auto') || (data.body.redirect != undefined && data.body.prefill != undefined && !data.body.redirect && !data.body.prefill)) {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  responseMessage(data.requestId, { data: 'ok' });
                   break;
                 }
                 const isTrailing = !data.body.redirect && data.body.triggerType !== 'auto';
@@ -1300,6 +1303,7 @@ window.addEventListener('message', async (e) => {
                 // to stop following unlogged message events override current message log page
                 if (messageAutoLogOn && data.body.triggerType === 'auto' && messageAutoPopup && data.body.conversation.conversationId != autoPopupMainConverastionId) {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  responseMessage(data.requestId, { data: 'ok' });
                   break;
                 }
 
@@ -1339,19 +1343,17 @@ window.addEventListener('message', async (e) => {
               break;
             case '/messageLogger/match':
               let localMessageLogs = {};
-              for (const c of data.body.conversations) {
-                localMessageLogs[c.conversationLogId] = [{ id: 'dummyId' }];
-              }
-              // const messageMatchPromises = data.body.conversationLogIds.map(async (conversationLogId) => {
-              //   const savedMessageLogRecord = await chrome.storage.local.get(conversationLogId);
-              //   return { conversationLogId, savedMessageLogRecord };
-              // });
-              // const messageMatchResults = await Promise.all(messageMatchPromises);
-              // messageMatchResults.forEach(({ conversationLogId, savedMessageLogRecord }) => {
-              //   if (!!savedMessageLogRecord && !isObjectEmpty(savedMessageLogRecord)) {
-              //     localMessageLogs[conversationLogId] = [{ id: 'dummyId' }];
-              //   }
-              // });
+              const savedMessageLogRecords = await chrome.storage.local.get(
+                data.body.conversationLogIds.map(conversationLogId => `rc-crm-conversation-log-${conversationLogId}`)
+              );
+              const messageMatchResults = data.body.conversationLogIds.map((conversationLogId) => {
+                return { conversationLogId, savedMessageLogRecord: savedMessageLogRecords[`rc-crm-conversation-log-${conversationLogId}`] };
+              });
+              messageMatchResults.forEach(({ conversationLogId, savedMessageLogRecord }) => {
+                if (!!savedMessageLogRecord && !isObjectEmpty(savedMessageLogRecord)) {
+                  localMessageLogs[conversationLogId] = [{ id: 'dummyId' }];
+                }
+              });
               responseMessage(
                 data.requestId,
                 {
