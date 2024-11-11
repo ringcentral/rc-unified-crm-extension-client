@@ -782,6 +782,15 @@ window.addEventListener('message', async (e) => {
                     });
                   trackUpdateCallRecordingLink({ processState: 'finish' });
                 }
+                else {
+                  await updateLog({
+                    serverUrl: manifest.serverUrl,
+                    logType: 'Call',
+                    sessionId: data.body.call.sessionId,
+                    duration: data.body.call.duration,
+                    result: data.body.call.result
+                  });
+                }
                 responseMessage(
                   data.requestId,
                   {
