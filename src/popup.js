@@ -1,10 +1,11 @@
 const auth = require('./core/auth');
-const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, cacheUnresolvedLog, getLogCache, getAllUnresolvedLogs, resolveCachedLog, getConflictContentFromUnresolvedLog } = require('./core/log');
+const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } = require('./core/log');
 const { getContact, createContact, openContactPage } = require('./core/contact');
 const { responseMessage, isObjectEmpty, showNotification, dismissNotification } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
 const { apiKeyLogin } = require('./core/auth');
 const { openDB } = require('idb');
+const moment = require('moment');
 const logPage = require('./components/logPage');
 const authPage = require('./components/authPage');
 const feedbackPage = require('./components/feedbackPage');
@@ -13,7 +14,6 @@ const supportPage = require('./components/supportPage');
 const aboutPage = require('./components/aboutPage');
 const developerSettingsPage = require('./components/developerSettingsPage');
 const crmSetupErrorPage = require('./components/crmSetupErrorPage');
-const moment = require('moment');
 const {
   setAuthor,
   identify,
@@ -64,13 +64,23 @@ function getUserSettingSubmission() {
   }
   return result;
 }
-let trailingSMSLogInfo = [];
 let firstTimeLogoutAbsorbed = false;
 let autoPopupMainConverastionId = null;
 let currentNotificationId = null;
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
+
+// Hack: bullhorn specific logic to check if allow custom note action value
+function allowBullhornCustomNoteAction() {
+  if (platformName === 'bullhorn') {
+    const allowedFromUserSetting = extensionUserSettings.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(e => e.id === 'allowBullhornCustomNoteAction')?.value;
+    return allowedFromUserSetting;
+  }
+  else {
+    return true;
+  }
+}
 
 async function checkC2DCollision() {
   try {
@@ -195,23 +205,6 @@ async function retroAutoCallLog() {
   }
 }
 
-async function showUnresolvedTabPage(path) {
-  // TEMP: hide it for now
-  return;
-  const unresolvedLogs = await getAllUnresolvedLogs();
-  const unresolvedLogsPage = logPage.getUnresolvedLogsPageRender({ unresolvedLogs });
-  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-    type: 'rc-adapter-register-customized-page',
-    page: unresolvedLogsPage,
-  }, '*');
-  if (unresolvedLogsPage.hidden && !!path && (path == '/customizedTabs/unresolve' || path == '/messageLogger' || path == '/callLogger')) {
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-      type: 'rc-adapter-navigate-to',
-      path: 'goBack',
-    }, '*');
-  }
-}
-
 let errorLogs = [];
 window.onerror = (event, source, lineno, colno, error) => {
   errorLogs.push({ event, source, lineno, colno, error })
@@ -310,18 +303,6 @@ window.addEventListener('message', async (e) => {
           if (data.loggedIn) {
             document.getElementById('rc-widget').style.zIndex = 0;
             let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-            // TEMP - migrate bullhorn user ID
-            if (platformName === 'bullhorn') {
-              const { crm_extension_bullhorn_user_id_migrated } = await chrome.storage.local.get({ crm_extension_bullhorn_user_id_migrated: false });
-              if (!!!crm_extension_bullhorn_user_id_migrated) {
-                const migratedJWT = await axios.get(`${manifest.serverUrl}/temp-bullhorn-migrate-userId?jwtToken=${rcUnifiedCrmExtJwt}`);
-                if (!!migratedJWT?.data?.jwtToken) {
-                  rcUnifiedCrmExtJwt = migratedJWT.data.jwtToken;
-                  await chrome.storage.local.set({ rcUnifiedCrmExtJwt });
-                }
-                await chrome.storage.local.set({ crm_extension_bullhorn_user_id_migrated: true });
-              }
-            }
             crmAuthed = !!rcUnifiedCrmExtJwt;
             // Unique: Pipedrive
             if (platformName === 'pipedrive' && !(await auth.checkAuth())) {
@@ -357,7 +338,6 @@ window.addEventListener('message', async (e) => {
               axios.defaults.headers.common['rc-extension-id'] = rcUserInfo?.rcExtensionId;
               axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId;
               axios.defaults.headers.common['developer-author-name'] = manifest?.author?.name ?? "";
-              await showUnresolvedTabPage();
             }
             catch (e) {
               reset();
@@ -408,6 +388,7 @@ window.addEventListener('message', async (e) => {
                 type: 'rc-adapter-navigate-to',
                 path: `/customized/${releaseNotesPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
               }, '*');
+              showNotification({ level: 'success', message: 'New version released. Please check release notes and reload the extension.', ttl: 60000 });
             }
           }
           await chrome.storage.local.set({
@@ -486,26 +467,26 @@ window.addEventListener('message', async (e) => {
                   const callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId: null });
                   // default form value from user settings
                   if (data.call.direction === 'Inbound') {
-                    const inboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'inboundCall', logType: 'callLog' });
-                    if (!!inboundCallDefaultValue) {
+                    const inboundCallDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'inboundCall', logType: 'callLog' });
+                    for (const inboundCallDefaultValue of inboundCallDefaultValues) {
                       const inboundCallMappedOption = callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, inboundCallDefaultValue.value))?.const;
                       if (!!inboundCallMappedOption) {
                         callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
                       }
-                      else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue) {
+                      else if (allowBullhornCustomNoteAction() && !!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[inboundCallDefaultValue.field]?.oneOff) {
                         callPage.schema.properties[inboundCallDefaultValue.field].oneOf.push({ const: inboundCallDefaultValue.value, title: inboundCallDefaultValue.value });
                         callPage.formData[inboundCallDefaultValue.field] = inboundCallDefaultValue.value;
                       }
                     }
                   }
                   if (data.call.direction === 'Outbound') {
-                    const outboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'outboundCall', logType: 'callLog' });
-                    if (!!outboundCallDefaultValue) {
+                    const outboundCallDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'outboundCall', logType: 'callLog' });
+                    for (const outboundCallDefaultValue of outboundCallDefaultValues) {
                       const outboundCallMappedOption = callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, outboundCallDefaultValue.value))?.const;
                       if (!!outboundCallMappedOption) {
                         callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
                       }
-                      else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue) {
+                      else if (allowBullhornCustomNoteAction() && !!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf) {
                         callPage.schema.properties[outboundCallDefaultValue.field].oneOf.push({ const: outboundCallDefaultValue.value, title: outboundCallDefaultValue.value });
                         callPage.formData[outboundCallDefaultValue.field] = outboundCallDefaultValue.value;
                       }
@@ -581,9 +562,6 @@ window.addEventListener('message', async (e) => {
           }
           if (data.path !== '/') {
             trackPage(data.path);
-            if (data.path === '/customizedTabs/unresolve') {
-              await showUnresolvedTabPage(data.path);
-            }
           }
           if (!!data.path) {
             if (data.path.startsWith('/conversations/') || data.path.startsWith('/composeText')) {
@@ -674,49 +652,6 @@ window.addEventListener('message', async (e) => {
               );
               break;
             case '/customizedPage/inputChanged':
-              if (data.body.page.id === 'unresolve') {
-                const unresolvedRecordId = data.body.formData.record;
-                const unresolvedLog = await getLogCache({ cacheId: unresolvedRecordId });
-                const pageId = unresolvedRecordId.split('-')[1];
-                const logPageRender = logPage.getLogPageRender({
-                  id: pageId,
-                  manifest,
-                  logType: unresolvedLog.type,
-                  triggerType: 'createLog',
-                  platformName,
-                  direction: unresolvedLog.direction ?? '',
-                  contactInfo: unresolvedLog.contactInfo,
-                  subject: unresolvedLog.subject ?? '',
-                  note: unresolvedLog.note ?? '',
-                  isUnresolved: true
-                });
-
-
-                if (unresolvedLog.type === 'Call') {
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-update-call-log-page',
-                    page: logPageRender,
-                  }, '*');
-
-                  // navigate to call log page
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: `/log/call/${pageId}`,
-                  }, '*');
-                }
-                else {
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-update-messages-log-page',
-                    page: logPageRender,
-                  }, '*');
-
-                  // navigate to messages log page
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: `/log/messages/${pageId}`,
-                  }, '*');
-                }
-              }
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-post-message-response',
                 responseId: data.requestId,
@@ -918,12 +853,9 @@ window.addEventListener('message', async (e) => {
                         subject: data.body.formData.activityTitle ?? "",
                         additionalSubmission,
                         contactId: newContactInfo?.id ?? data.body.formData.contact,
-                        contactType: data.body.formData.newContactName === '' ? data.body.formData.contactType : data.body.formData.newContactType,
+                        contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                         contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
                       });
-                    if (!!data.body.formData.isUnresolved) {
-                      await showUnresolvedTabPage(data.path);
-                    }
                     break;
                   case 'editLog':
                     await updateLog({
@@ -976,7 +908,7 @@ window.addEventListener('message', async (e) => {
                       // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
                       if (hasConflict) {
                         window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                        const conflictLog = await cacheUnresolvedLog({
+                        const conflictLog = {
                           type: 'Call',
                           id: data.body.call.sessionId,
                           phoneNumber: contactPhoneNumber,
@@ -985,8 +917,7 @@ window.addEventListener('message', async (e) => {
                           subject: callLogSubject,
                           note,
                           date: moment(data.body.call.startTime).format('MM/DD/YYYY')
-                        });
-                        await showUnresolvedTabPage();
+                        };
                         const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
                         showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Please log it manually on call history page`, ttl: 5000 });
                       }
@@ -1021,26 +952,26 @@ window.addEventListener('message', async (e) => {
                       const callPage = logPage.getLogPageRender({ id: data.body.call.sessionId, manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId });
                       // default form value from user settings
                       if (data.body.call.direction === 'Inbound') {
-                        const inboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'inboundCall', logType: 'callLog' });
-                        if (!!inboundCallDefaultValue) {
+                        const inboundCallDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'inboundCall', logType: 'callLog' });
+                        for (const inboundCallDefaultValue of inboundCallDefaultValues) {
                           const inboundCallMappedOption = callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, inboundCallDefaultValue.value))?.const;
                           if (!!inboundCallMappedOption) {
                             callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
                           }
-                          else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue) {
+                          else if (allowBullhornCustomNoteAction() && !!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf) {
                             callPage.schema.properties[inboundCallDefaultValue.field].oneOf.push({ const: inboundCallDefaultValue.value, title: inboundCallDefaultValue.value });
                             callPage.formData[inboundCallDefaultValue.field] = inboundCallDefaultValue.value;
                           }
                         }
                       }
                       if (data.body.call.direction === 'Outbound') {
-                        const outboundCallDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'outboundCall', logType: 'callLog' });
-                        if (!!outboundCallDefaultValue) {
+                        const outboundCallDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'outboundCall', logType: 'callLog' });
+                        for (const outboundCallDefaultValue of outboundCallDefaultValues) {
                           const outboundCallMappedOption = callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, outboundCallDefaultValue.value))?.const;
                           if (!!outboundCallMappedOption) {
                             callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
                           }
-                          else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue) {
+                          else if (allowBullhornCustomNoteAction() && !!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf) {
                             callPage.schema.properties[outboundCallDefaultValue.field].oneOf.push({ const: outboundCallDefaultValue.value, title: outboundCallDefaultValue.value });
                             callPage.formData[outboundCallDefaultValue.field] = outboundCallDefaultValue.value;
                           }
@@ -1131,12 +1062,14 @@ window.addEventListener('message', async (e) => {
                 });
               break;
             case '/messageLogger':
+              console.log('message log request for', data.body.conversation.conversationLogId, data.body.triggerType);
               // Case: when auto log and auto pop turned ON, we need to know which event is for the conversation that user is looking at
               if (!!!autoPopupMainConverastionId) {
                 autoPopupMainConverastionId = data.body.conversation.conversationId;
               }
               if (!!data?.body?.conversation?.correspondents[0]?.extensionNumber) {
                 showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
+                responseMessage(data.requestId, { data: 'ok' });
                 break;
               }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
@@ -1144,7 +1077,6 @@ window.addEventListener('message', async (e) => {
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
               let getContactMatchResult = null;
-              window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
               // Case: auto log
               if (messageAutoLogOn && data.body.triggerType === 'auto' && !messageAutoPopup) {
                 // Sub-case: has existing pref setup, log directly
@@ -1168,16 +1100,15 @@ window.addEventListener('message', async (e) => {
                     platformName
                   })).contactInfo;
                   const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult, logType: 'messageLog', isVoicemail: data.body.conversation.type === 'VoiceMail' });
-                  // Sub-case: has conflict, cache unresolved log
+                  // Sub-case: has conflict
                   if (hasConflict) {
-                    const conflictLog = await cacheUnresolvedLog({
+                    const conflictLog = {
                       type: 'Message',
                       id: data.body.conversation.conversationId,
                       direction: '',
                       contactInfo: getContactMatchResult ?? [],
                       date: moment(data.body.conversation.messages[0].creationTime).format('MM/DD/YYYY')
-                    });
-                    await showUnresolvedTabPage();
+                    };
                     const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
                     showNotification({ level: 'warning', message: `Message not logged. ${conflictContent.description}. Review all conflict on the "Unlogged" tab.`, ttl: 5000 });
                   }
@@ -1196,7 +1127,6 @@ window.addEventListener('message', async (e) => {
                     });
                   }
                 }
-                window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
               // Case: manual log, submit
               else if (data.body.triggerType === 'logForm') {
@@ -1231,113 +1161,68 @@ window.addEventListener('message', async (e) => {
                     note: '',
                     additionalSubmission,
                     contactId: newContactInfo?.id ?? data.body.formData.contact,
-                    contactType: data.body.formData.newContactName === '' ? data.body.formData.contactType : data.body.formData.newContactType,
+                    contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                     contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
                   });
-                  for (const trailingConversations of trailingSMSLogInfo) {
-                    await addLog({
-                      serverUrl: manifest.serverUrl,
-                      logType: 'Message',
-                      logInfo: trailingConversations,
-                      isMain: false,
-                      note: '',
-                      additionalSubmission,
-                      contactId: newContactInfo?.id ?? data.body.formData.contact,
-                      contactType: data.body.formData.newContactName === '' ? data.body.formData.contactType : data.body.formData.newContactType,
-                      contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
-                    });
-                  }
-                  if (!!data.body.formData.isUnresolved) {
-                    await showUnresolvedTabPage(data.path);
-                  }
-                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                 }
               }
-              // Case: manual log, open page OR auto log with auto pop up log page ON
+              // Case: Open page OR auto pop up log page
               else {
-                if ((!messageAutoLogOn && data.body.triggerType === 'auto') || (data.body.redirect != undefined && data.body.prefill != undefined && !data.body.redirect && !data.body.prefill)) {
-                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                  break;
-                }
-                const isTrailing = !data.body.redirect && data.body.triggerType !== 'auto';
-                if (isTrailing) {
-                  trailingSMSLogInfo.push(data.body.conversation);
-                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                  // response to widget
-                  responseMessage(
-                    data.requestId,
-                    {
-                      data: 'ok'
-                    }
-                  );
-                  break;
-                }
-                else {
-                  trailingSMSLogInfo = [];
-                }
-                if (!isTrailing) {
+                if (data.body.redirect) {
                   getContactMatchResult = await getContact({
                     serverUrl: manifest.serverUrl,
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
                     platformName
                   });
-                }
-                // add your codes here to log call to your service
-                const messagePage = logPage.getLogPageRender({
-                  id: data.body.conversation.conversationId,
-                  manifest,
-                  logType: 'Message',
-                  triggerType: data.body.triggerType,
-                  platformName,
-                  direction: '',
-                  contactInfo: getContactMatchResult.contactInfo ?? []
-                });
-                // default form value from user settings
-                if (data.body.conversation.type === 'VoiceMail') {
-                  const voicemailDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'voicemail', logType: 'messageLog' });
-                  if (!!voicemailDefaultValue) {
-                    const voicemailMappedOption = messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, voicemailDefaultValue.value))?.const;
-                    if (!!voicemailMappedOption) {
-                      messagePage.formData[voicemailDefaultValue.field] = voicemailMappedOption;
-                    }
-                    else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == voicemailDefaultValue.field)?.allowCustomValue) {
-                      messagePage.schema.properties[voicemailDefaultValue.field].oneOf.push({ const: voicemailDefaultValue.value, title: voicemailDefaultValue.value });
-                      messagePage.formData[voicemailDefaultValue.field] = voicemailDefaultValue.value;
-                    }
-                  }
-                }
-                else {
-                  const smsDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'message', logType: 'messageLog' });
-                  if (!!smsDefaultValue) {
-                    const smsMappedOption = messagePage.schema.properties[smsDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, smsDefaultValue.value))?.const;
-                    if (!!smsMappedOption) {
-                      messagePage.formData[smsDefaultValue.field] = smsMappedOption;
-                    }
-                    else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == smsDefaultValue.field)?.allowCustomValue) {
-                      messagePage.schema.properties[smsDefaultValue.field].oneOf.push({ const: smsDefaultValue.value, title: smsDefaultValue.value });
-                      messagePage.formData[smsDefaultValue.field] = smsDefaultValue.value;
+                  // add your codes here to log call to your service
+                  const messagePage = logPage.getLogPageRender({
+                    id: data.body.conversation.conversationId,
+                    manifest,
+                    logType: 'Message',
+                    triggerType: data.body.triggerType,
+                    platformName,
+                    direction: '',
+                    contactInfo: getContactMatchResult.contactInfo ?? []
+                  });
+                  // default form value from user settings
+                  if (data.body.conversation.type === 'VoiceMail') {
+                    const voicemailDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'voicemail', logType: 'messageLog' });
+                    for (const voicemailDefaultValue of voicemailDefaultValues) {
+                      const voicemailMappedOption = messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, voicemailDefaultValue.value))?.const;
+                      if (!!voicemailMappedOption) {
+                        messagePage.formData[voicemailDefaultValue.field] = voicemailMappedOption;
+                      }
+                      else if (allowBullhornCustomNoteAction() && !!platform?.page['messageLog']?.additionalFields.find(f => f.const == voicemailDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf) {
+                        messagePage.schema.properties[voicemailDefaultValue.field].oneOf.push({ const: voicemailDefaultValue.value, title: voicemailDefaultValue.value });
+                        messagePage.formData[voicemailDefaultValue.field] = voicemailDefaultValue.value;
+                      }
                     }
                   }
+                  else {
+                    const smsDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'message', logType: 'messageLog' });
+                    for (const smsDefaultValue of smsDefaultValues) {
+                      const smsMappedOption = messagePage.schema.properties[smsDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, smsDefaultValue.value))?.const;
+                      if (!!smsMappedOption) {
+                        messagePage.formData[smsDefaultValue.field] = smsMappedOption;
+                      }
+                      else if (allowBullhornCustomNoteAction() && !!platform?.page['messageLog']?.additionalFields.find(f => f.const == smsDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[smsDefaultValue.field]?.oneOf) {
+                        messagePage.schema.properties[smsDefaultValue.field].oneOf.push({ const: smsDefaultValue.value, title: smsDefaultValue.value });
+                        messagePage.formData[smsDefaultValue.field] = smsDefaultValue.value;
+                      }
+                    }
+                  }
+
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-update-messages-log-page',
+                    page: messagePage
+                  }, '*');
+
+                  // navigate to message log page
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/log/messages/${data.body.conversation.conversationId}`, // conversation id that you received from message logger event
+                  }, '*');
                 }
-
-                // to stop following unlogged message events override current message log page
-                if (messageAutoLogOn && data.body.triggerType === 'auto' && messageAutoPopup && data.body.conversation.conversationId != autoPopupMainConverastionId) {
-                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                  break;
-                }
-
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                  type: 'rc-adapter-update-messages-log-page',
-                  page: messagePage
-                }, '*');
-
-                // navigate to message log page
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                  type: 'rc-adapter-navigate-to',
-                  path: `/log/messages/${data.body.conversation.conversationId}`, // conversation id that you received from message logger event
-                }, '*');
-
-                window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
               // response to widget
               responseMessage(
@@ -1362,11 +1247,12 @@ window.addEventListener('message', async (e) => {
               break;
             case '/messageLogger/match':
               let localMessageLogs = {};
-              const messageMatchPromises = data.body.conversationLogIds.map(async (conversationLogId) => {
-                const savedMessageLogRecord = await chrome.storage.local.get(conversationLogId);
-                return { conversationLogId, savedMessageLogRecord };
+              const savedMessageLogRecords = await chrome.storage.local.get(
+                data.body.conversationLogIds.map(conversationLogId => `rc-crm-conversation-log-${conversationLogId}`)
+              );
+              const messageMatchResults = data.body.conversationLogIds.map((conversationLogId) => {
+                return { conversationLogId, savedMessageLogRecord: savedMessageLogRecords[`rc-crm-conversation-log-${conversationLogId}`] };
               });
-              const messageMatchResults = await Promise.all(messageMatchPromises);
               messageMatchResults.forEach(({ conversationLogId, savedMessageLogRecord }) => {
                 if (!!savedMessageLogRecord && !isObjectEmpty(savedMessageLogRecord)) {
                   localMessageLogs[conversationLogId] = [{ id: 'dummyId' }];
@@ -1465,10 +1351,6 @@ window.addEventListener('message', async (e) => {
                     path: '/customized/developerSettingsPage', // page id
                   }, '*');
                   break;
-                case 'clearLogConflictsButton':
-                  await chrome.storage.local.remove('unresolvedLogs');
-                  showNotification({ level: 'success', message: 'All unresolved logs cleared', ttl: 3000 });
-                  break;
                 case 'factoryResetButton':
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
@@ -1483,7 +1365,6 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-logout'
                   }, '*');
-                  await chrome.storage.local.remove('unresolvedLogs');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   trackFactoryReset();
                   break;
@@ -1615,18 +1496,19 @@ function DownloadTextFile({ filename, text }) {
 
 function getAdditionalFieldDefaultValuesFromSetting({ caseType, logType }) {
   const additionalFields = platform?.page[logType]?.additionalFields;
+  const result = [];
   if (!!additionalFields && !!platform.settings && platform.settings.length > 0) {
     for (const field of additionalFields) {
       const defaultValueSetting = platform.settings.find(s => s.id == field.defaultSettingId);
       if (!!defaultValueSetting) {
         const valueItem = defaultValueSetting.items.find(i => i.id === field.defaultSettingValues[caseType].settingId)
         if (!!valueItem && extensionUserSettings?.find(e => e.id === defaultValueSetting.id)?.items?.find(i => i.id === valueItem.id)?.value != '') {
-          return { field: field.const, value: extensionUserSettings?.find(e => e.id === defaultValueSetting.id)?.items?.find(i => i.id === valueItem.id)?.value };
+          result.push({ field: field.const, value: extensionUserSettings?.find(e => e.id === defaultValueSetting.id)?.items?.find(i => i.id === valueItem.id)?.value });
         }
       }
     }
   }
-  return null;
+  return result;
 }
 
 // A fuzzy string compare that ignores cases and spaces
@@ -1679,20 +1561,27 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
               caseType = 'message';
             }
           }
-          const fieldDefaultValue = getAdditionalFieldDefaultValuesFromSetting({ caseType, logType });
+          const fieldDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType, logType });
+          let allMatched = true;
+          const fieldDefaultValue = fieldDefaultValues.find(f => f.field === key);
           if (!!fieldDefaultValue) {
             const fieldMappedOption = contactInfo[0].additionalInfo[key]?.find(o => rawTextCompare(o.const, fieldDefaultValue.value))?.const;
             if (!!fieldMappedOption) {
               autoSelectAdditionalSubmission[key] = fieldMappedOption;
               continue;
             }
-            const allowCustomValue = !!platform?.page[logType]?.additionalFields.find(f => f.const == key)?.allowCustomValue;
-            if (allowCustomValue) {
-              autoSelectAdditionalSubmission[key] = fieldDefaultValue.value;
-              continue;
+            else {
+              const allowCustomValue = !!platform?.page[logType]?.additionalFields.find(f => f.const == key)?.allowCustomValue;
+              if (allowBullhornCustomNoteAction() && allowCustomValue) {
+                autoSelectAdditionalSubmission[key] = fieldDefaultValue.value;
+                continue;
+              }
+              else {
+                allMatched = false;
+              }
             }
           }
-          return { hasConflict: true, autoSelectAdditionalSubmission: {} };
+          return { hasConflict: !allMatched, autoSelectAdditionalSubmission };
         }
         else if (fieldOptions.length === 1) {
           autoSelectAdditionalSubmission[key] = fieldOptions[0].const;
@@ -1956,7 +1845,7 @@ async function getServiceManifest({ serviceName, customSettings }) {
           {
             id: 'toggleAutoOpenWithCRM',
             type: 'boolean',
-            name: 'Auto open extesion',
+            name: 'Auto open extension',
             value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleAutoOpenWithCRM")?.value ?? false)
           },
         ]
@@ -1979,7 +1868,7 @@ async function getServiceManifest({ serviceName, customSettings }) {
               value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(i => i.id === item.id)?.value ?? (item.defaultValue ?? "")
             });
             break;
-          case 'bool':
+          case 'boolean':
             items.push({
               id: item.id,
               type: item.type,

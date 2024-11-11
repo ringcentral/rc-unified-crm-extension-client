@@ -166,15 +166,35 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     "from a content script:" + sender.tab.url :
     "from the extension");
   if (request.type === "openPopupWindow") {
+    sendResponse({ result: 'ok' });
     registerPlatform(sender.tab.url);
-    openPopupWindow();
+
+    const platformInfo = await chrome.storage.local.get('platform-info');
+    if (isObjectEmpty(platformInfo)) {
+      await fetchManifest();
+      const registered = await registerPlatform(sender.tab.url);
+      if (registered) {
+        await openPopupWindow();
+      }
+      else {
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: '/images/logo32.png',
+          title: `Please open the extension from a CRM page`,
+          message: "For first time setup, please open it from a CRM page. RingCentral CRM Extension requires initial setup and match to your CRM platform.",
+          priority: 1
+        });
+      }
+    }
+    else {
+      openPopupWindow();
+    }
     if (request.navigationPath) {
       chrome.runtime.sendMessage({
         type: 'navigate',
         path: request.navigationPath
       })
     }
-    sendResponse({ result: 'ok' });
     return true;
   }
   // Unique: Pipedrive

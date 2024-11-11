@@ -4,6 +4,7 @@ import { PlayCircleBorder, Close } from '@ringcentral/juno-icon';
 import rcLogo from '../../images/logo.png';
 import { isObjectEmpty } from '../../lib/util';
 import { trackFirstTimeSetup } from '../../lib/analytics';
+import baseManifest from '../../manifest.json';
 
 const backgroundStyle = {
     height: '100%',
@@ -40,6 +41,14 @@ export default () => {
         checkFirstTime();
         async function checkFirstTime() {
             manifest = (await chrome.storage.local.get('customCrmManifest')).customCrmManifest;
+            if (!!!manifest) {
+                let { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: null });
+                if (!!!customCrmManifestUrl || customCrmManifestUrl === '') {
+                    customCrmManifestUrl = baseManifest.defaultCrmManifestUrl;
+                    await chrome.storage.local.set({ customCrmManifestUrl });
+                }
+                manifest = await (await fetch(customCrmManifestUrl)).json();
+            }
             let platformName = '';
             const hostname = window.location.hostname;
             const platforms = Object.keys(manifest.platforms);
