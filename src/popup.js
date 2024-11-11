@@ -5,6 +5,7 @@ const { responseMessage, isObjectEmpty, showNotification, dismissNotification } 
 const { getUserInfo } = require('./lib/rcAPI');
 const { apiKeyLogin } = require('./core/auth');
 const { openDB } = require('idb');
+const moment = require('moment');
 const logPage = require('./components/logPage');
 const authPage = require('./components/authPage');
 const feedbackPage = require('./components/feedbackPage');
@@ -50,6 +51,17 @@ let currentNotificationId = null;
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
+
+// Hack: bullhorn specific logic to check if allow custom note action value
+function allowBullhornCustomNoteAction() {
+  if (platformName === 'bullhorn') {
+    const allowedFromUserSetting = extensionUserSettings.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(e => e.id === 'allowBullhornCustomNoteAction')?.value;
+    return allowedFromUserSetting;
+  }
+  else {
+    return true;
+  }
+}
 
 async function checkC2DCollision() {
   try {
@@ -357,6 +369,7 @@ window.addEventListener('message', async (e) => {
                 type: 'rc-adapter-navigate-to',
                 path: `/customized/${releaseNotesPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
               }, '*');
+              showNotification({ level: 'success', message: 'New version released. Please check release notes and reload the extension.', ttl: 60000 });
             }
           }
           await chrome.storage.local.set({
@@ -441,7 +454,7 @@ window.addEventListener('message', async (e) => {
                       if (!!inboundCallMappedOption) {
                         callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
                       }
-                      else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[inboundCallDefaultValue.field]?.oneOff) {
+                      else if (allowBullhornCustomNoteAction() && !!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[inboundCallDefaultValue.field]?.oneOff) {
                         callPage.schema.properties[inboundCallDefaultValue.field].oneOf.push({ const: inboundCallDefaultValue.value, title: inboundCallDefaultValue.value });
                         callPage.formData[inboundCallDefaultValue.field] = inboundCallDefaultValue.value;
                       }
@@ -454,7 +467,7 @@ window.addEventListener('message', async (e) => {
                       if (!!outboundCallMappedOption) {
                         callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
                       }
-                      else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf) {
+                      else if (allowBullhornCustomNoteAction() && !!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf) {
                         callPage.schema.properties[outboundCallDefaultValue.field].oneOf.push({ const: outboundCallDefaultValue.value, title: outboundCallDefaultValue.value });
                         callPage.formData[outboundCallDefaultValue.field] = outboundCallDefaultValue.value;
                       }
@@ -874,6 +887,16 @@ window.addEventListener('message', async (e) => {
                       // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
                       if (hasConflict) {
                         window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                        const conflictLog = {
+                          type: 'Call',
+                          id: data.body.call.sessionId,
+                          phoneNumber: contactPhoneNumber,
+                          direction: data.body.call.direction,
+                          contactInfo: callMatchedContact ?? [],
+                          subject: callLogSubject,
+                          note,
+                          date: moment(data.body.call.startTime).format('MM/DD/YYYY')
+                        };
                         const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
                         showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Please log it manually on call history page`, ttl: 5000 });
                       }
@@ -914,7 +937,7 @@ window.addEventListener('message', async (e) => {
                           if (!!inboundCallMappedOption) {
                             callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
                           }
-                          else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf) {
+                          else if (allowBullhornCustomNoteAction() && !!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf) {
                             callPage.schema.properties[inboundCallDefaultValue.field].oneOf.push({ const: inboundCallDefaultValue.value, title: inboundCallDefaultValue.value });
                             callPage.formData[inboundCallDefaultValue.field] = inboundCallDefaultValue.value;
                           }
@@ -927,7 +950,7 @@ window.addEventListener('message', async (e) => {
                           if (!!outboundCallMappedOption) {
                             callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
                           }
-                          else if (!!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf) {
+                          else if (allowBullhornCustomNoteAction() && !!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf) {
                             callPage.schema.properties[outboundCallDefaultValue.field].oneOf.push({ const: outboundCallDefaultValue.value, title: outboundCallDefaultValue.value });
                             callPage.formData[outboundCallDefaultValue.field] = outboundCallDefaultValue.value;
                           }
@@ -1058,6 +1081,13 @@ window.addEventListener('message', async (e) => {
                   const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog: messageAutoLogOn, contactInfo: getContactMatchResult, logType: 'messageLog', isVoicemail: data.body.conversation.type === 'VoiceMail' });
                   // Sub-case: has conflict
                   if (hasConflict) {
+                    const conflictLog = {
+                      type: 'Message',
+                      id: data.body.conversation.conversationId,
+                      direction: '',
+                      contactInfo: getContactMatchResult ?? [],
+                      date: moment(data.body.conversation.messages[0].creationTime).format('MM/DD/YYYY')
+                    };
                     const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
                     showNotification({ level: 'warning', message: `Message not logged. ${conflictContent.description}. Review all conflict on the "Unlogged" tab.`, ttl: 5000 });
                   }
@@ -1139,7 +1169,7 @@ window.addEventListener('message', async (e) => {
                       if (!!voicemailMappedOption) {
                         messagePage.formData[voicemailDefaultValue.field] = voicemailMappedOption;
                       }
-                      else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == voicemailDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf) {
+                      else if (allowBullhornCustomNoteAction() && !!platform?.page['messageLog']?.additionalFields.find(f => f.const == voicemailDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf) {
                         messagePage.schema.properties[voicemailDefaultValue.field].oneOf.push({ const: voicemailDefaultValue.value, title: voicemailDefaultValue.value });
                         messagePage.formData[voicemailDefaultValue.field] = voicemailDefaultValue.value;
                       }
@@ -1152,7 +1182,7 @@ window.addEventListener('message', async (e) => {
                       if (!!smsMappedOption) {
                         messagePage.formData[smsDefaultValue.field] = smsMappedOption;
                       }
-                      else if (!!platform?.page['messageLog']?.additionalFields.find(f => f.const == smsDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[smsDefaultValue.field]?.oneOf) {
+                      else if (allowBullhornCustomNoteAction() && !!platform?.page['messageLog']?.additionalFields.find(f => f.const == smsDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[smsDefaultValue.field]?.oneOf) {
                         messagePage.schema.properties[smsDefaultValue.field].oneOf.push({ const: smsDefaultValue.value, title: smsDefaultValue.value });
                         messagePage.formData[smsDefaultValue.field] = smsDefaultValue.value;
                       }
@@ -1517,7 +1547,7 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
             }
             else {
               const allowCustomValue = !!platform?.page[logType]?.additionalFields.find(f => f.const == key)?.allowCustomValue;
-              if (allowCustomValue) {
+              if (allowBullhornCustomNoteAction() && allowCustomValue) {
                 autoSelectAdditionalSubmission[key] = fieldDefaultValue.value;
                 continue;
               }
@@ -1813,7 +1843,7 @@ async function getServiceManifest({ serviceName, customSettings }) {
               value: extensionUserSettings?.find(e => e.id === cs.id)?.items.find(i => i.id === item.id)?.value ?? ""
             });
             break;
-          case 'bool':
+          case 'boolean':
             items.push({
               id: item.id,
               type: item.type,
