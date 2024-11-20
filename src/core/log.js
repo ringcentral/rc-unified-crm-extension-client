@@ -4,9 +4,10 @@ import { isObjectEmpty, showNotification } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 
 // Input {id} = sessionId from RC
-async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, additionalSubmission, contactId, contactType, contactName, isShowNotification = true }) {
+async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, additionalSubmission, rcAdditionalSubmission, contactId, contactType, contactName, isShowNotification = true }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { extensionUserSettings } = await chrome.storage.local.get('extensionUserSettings');
+    additionalSubmission = { ...additionalSubmission, ...rcAdditionalSubmission };
     const overridingPhoneNumberFormat = (!!extensionUserSettings && !isObjectEmpty(extensionUserSettings)) ? (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat')?.value ?? '') : "";
     if (!!subject) {
         logInfo['customSubject'] = subject;
@@ -102,8 +103,9 @@ function openLog({ manifest, platformName, hostname, logId, contactType }) {
     window.open(logPageUrl);
 }
 
-async function updateLog({ serverUrl, logType, sessionId, recordingLink, subject, note }) {
+async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, subject, note }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    additionalSubmission = { ...additionalSubmission, ...rcAdditionalSubmission };
     if (!!rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
@@ -127,6 +129,9 @@ async function updateLog({ serverUrl, logType, sessionId, recordingLink, subject
                     else {
                         showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'success', message: callLogRes.data.returnMessage?.message ?? 'Call log updated', ttl: callLogRes.data.returnMessage?.ttl ?? 3000 });
                     }
+                }
+                else {
+                    showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'warning', message: callLogRes.data.returnMessage?.message ?? 'Call log update failed', ttl: callLogRes.data.returnMessage?.ttl ?? 3000 });
                 }
         }
     }

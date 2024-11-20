@@ -1,10 +1,9 @@
 const auth = require('./core/auth');
 const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } = require('./core/log');
 const { getContact, createContact, openContactPage } = require('./core/contact');
-const { responseMessage, isObjectEmpty, showNotification, dismissNotification } = require('./lib/util');
+const { responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
 const { apiKeyLogin } = require('./core/auth');
-const { openDB } = require('idb');
 const moment = require('moment');
 const logPage = require('./components/logPage');
 const authPage = require('./components/authPage');
@@ -48,6 +47,7 @@ let extensionUserSettings = null;
 let firstTimeLogoutAbsorbed = false;
 let autoPopupMainConverastionId = null;
 let currentNotificationId = null;
+let rcAdditionalSubmission = {};
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
@@ -155,6 +155,7 @@ async function retroAutoCallLog() {
                 note,
                 subject: callLogSubject,
                 additionalSubmission: autoSelectAdditionalSubmission,
+                rcAdditionalSubmission,
                 contactId: callMatchedContact[0]?.id,
                 contactType: callMatchedContact[0]?.type,
                 contactName: callMatchedContact[0]?.name,
@@ -297,9 +298,28 @@ window.addEventListener('message', async (e) => {
               currentNotificationId = await showNotification({ level: 'warning', message: 'Please go to Settings and connect to CRM platform', ttl: 60000 });
             }
             try {
-              const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;
-              const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
-              const rcInfo = await indexDB.get('keyvaluepairs', 'dataFetcherV2-storageData');
+              const rcInfo = await getRcInfo();
+              if (!!platform.rcAdditionalSubmission) {
+                for (const ras of platform.rcAdditionalSubmission) {
+                  const pathSegments = ras.path.split('.');
+                  let rcInfoSubmissionValue = null;
+                  for (const ps of pathSegments) {
+                    if (rcAdditionalSubmission === undefined) {
+                      break;
+                    }
+                    if (rcInfoSubmissionValue === null) {
+                      rcInfoSubmissionValue = rcInfo.value[ps];
+                    }
+                    else {
+                      rcInfoSubmissionValue = rcInfoSubmissionValue[ps];
+                    }
+                  }
+
+                  if (!!rcInfoSubmissionValue) {
+                    rcAdditionalSubmission[ras.id] = rcInfoSubmissionValue;
+                  }
+                }
+              }
               const userInfoResponse = await getUserInfo({
                 serverUrl: manifest.serverUrl,
                 extensionId: rcInfo.value.cachedData.extensionInfo.id,
@@ -758,6 +778,7 @@ window.addEventListener('message', async (e) => {
                     {
                       serverUrl: manifest.serverUrl,
                       logType: 'Call',
+                      rcAdditionalSubmission,
                       sessionId: data.body.call.sessionId,
                       recordingLink: data.body.call.recording.link
                     });
@@ -831,6 +852,7 @@ window.addEventListener('message', async (e) => {
                         note: data.body.formData.note ?? "",
                         subject: data.body.formData.activityTitle ?? "",
                         additionalSubmission,
+                        rcAdditionalSubmission,
                         contactId: newContactInfo?.id ?? data.body.formData.contact,
                         contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                         contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
@@ -841,6 +863,7 @@ window.addEventListener('message', async (e) => {
                       serverUrl: manifest.serverUrl,
                       logType: 'Call',
                       sessionId: data.body.call.sessionId,
+                      rcAdditionalSubmission,
                       subject: data.body.formData.activityTitle ?? "",
                       note: data.body.formData.note ?? "",
                     });
@@ -914,6 +937,7 @@ window.addEventListener('message', async (e) => {
                             note,
                             subject: callLogSubject,
                             additionalSubmission: autoSelectAdditionalSubmission,
+                            rcAdditionalSubmission,
                             contactId: callMatchedContact[0]?.id,
                             contactType: callMatchedContact[0]?.type,
                             contactName: callMatchedContact[0]?.name
@@ -1067,6 +1091,7 @@ window.addEventListener('message', async (e) => {
                     isMain: true,
                     note: '',
                     additionalSubmission: existingConversationLogPref[messageLogPrefId].additionalSubmission,
+                    rcAdditionalSubmission,
                     contactId: existingConversationLogPref[messageLogPrefId].contact.id,
                     contactType: existingConversationLogPref[messageLogPrefId].contact.type,
                     contactName: existingConversationLogPref[messageLogPrefId].contact.name
@@ -1100,6 +1125,7 @@ window.addEventListener('message', async (e) => {
                       isMain: true,
                       note: '',
                       additionalSubmission: autoSelectAdditionalSubmission,
+                      rcAdditionalSubmission,
                       contactId: getContactMatchResult[0]?.id,
                       contactType: getContactMatchResult[0]?.type,
                       contactName: getContactMatchResult[0]?.name
@@ -1137,6 +1163,7 @@ window.addEventListener('message', async (e) => {
                     isMain: true,
                     note: '',
                     additionalSubmission,
+                    rcAdditionalSubmission,
                     contactId: newContactInfo?.id ?? data.body.formData.contact,
                     contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                     contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
