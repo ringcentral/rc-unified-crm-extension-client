@@ -139,13 +139,15 @@ async function Initialize() {
     await RenderQuickAccessButton();
   }
   // Case: C2D renders extra elements inside Bullhorn note section
-  if (!window.location.href.startsWith('https://app.bullhornstaffing.com/content/record/JobOrder')) {
+  if (!window.location.href.startsWith('https://app.bullhornstaffing.com/content/record/JobOrder')
+    && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/fast-add/JobSubmission')
+    && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/tools/template')
+  ) {
     await initializeC2D();
   }
 
   const { extensionUserSettings } = await chrome.storage.local.get('extensionUserSettings');
-  if(!!extensionUserSettings && !!extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleAutoOpenWithCRM")?.value)
-  {
+  if (!!extensionUserSettings && !!extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleAutoOpenWithCRM")?.value) {
     chrome.runtime.sendMessage({
       type: 'openPopupWindow'
     });
