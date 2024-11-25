@@ -1,6 +1,8 @@
 const auth = require('./core/auth');
 const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } = require('./core/log');
 const { getContact, createContact, openContactPage } = require('./core/contact');
+const { getUserSettings, uploadUserSettings } = require('./core/user');
+const { } = require('./core/admin');
 const { responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
 const { apiKeyLogin } = require('./core/auth');
@@ -13,6 +15,10 @@ const supportPage = require('./components/supportPage');
 const aboutPage = require('./components/aboutPage');
 const developerSettingsPage = require('./components/developerSettingsPage');
 const crmSetupErrorPage = require('./components/crmSetupErrorPage');
+const adminPage = require('./components/admin/adminPage');
+const managedSettingsPage = require('./components/admin/managedSettingsPage');
+const callAndSMSLoggingSettingPage = require('./components/admin/managedSettings/callAndSMSLoggingSettingPage');
+const customAdapterPage = require('./components/admin/customAdapterPage');
 const {
   setAuthor,
   identify,
@@ -47,6 +53,7 @@ let extensionUserSettings = null;
 let firstTimeLogoutAbsorbed = false;
 let autoPopupMainConverastionId = null;
 let currentNotificationId = null;
+let rcInfo = null;
 let rcAdditionalSubmission = {};
 
 import axios from 'axios';
@@ -298,7 +305,7 @@ window.addEventListener('message', async (e) => {
               currentNotificationId = await showNotification({ level: 'warning', message: 'Please go to Settings and connect to CRM platform', ttl: 60000 });
             }
             try {
-              const rcInfo = await getRcInfo();
+              rcInfo = await getRcInfo();
               if (!!platform.rcAdditionalSubmission) {
                 for (const ras of platform.rcAdditionalSubmission) {
                   const pathSegments = ras.path.split('.');
@@ -395,6 +402,18 @@ window.addEventListener('message', async (e) => {
           await chrome.storage.local.set({
             ['rc-crm-extension-version']: manifest.version
           });
+
+          // Admin tab render
+          const isAdmin = rcInfo?.value?.cachedData?.extensionInfo?.permissions?.admin?.enabled;
+          if (!isAdmin) {
+            const adminPageRender = adminPage.getAdminPageRender();
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+              type: 'rc-adapter-register-customized-page',
+              page: adminPageRender,
+            }, '*');
+          }
+          const storedUserSettings = await getUserSettings({ serverUrl: manifest.serverUrl });
+          console.log(storedUserSettings);
           break;
         case 'rc-login-popup-notify':
           handleRCOAuthWindow(data.oAuthUri);
@@ -658,6 +677,45 @@ window.addEventListener('message', async (e) => {
                 responseId: data.requestId,
                 response: { data: 'ok' },
               }, '*');
+              switch (data.body?.formData?.section) {
+                case 'managedSettings':
+                  const managedSettingsPageRender = managedSettingsPage.getManagedSettingsPageRender();
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: managedSettingsPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${managedSettingsPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'callAndSMSLogging':
+                  const callAndSMSLoggingSettingPageRender = callAndSMSLoggingSettingPage.getCallAndSMSLoggingSettingPageRender();
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: callAndSMSLoggingSettingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${callAndSMSLoggingSettingPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'contacts':
+                  break;
+                case 'customAdapter':
+                  const customAdapterPageRender = customAdapterPage.getCustomAdapterPageRender();
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: customAdapterPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${customAdapterPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                default:
+                  break;
+              }
               break;
             case '/contacts/match':
               noShowNotification = true;
@@ -1114,7 +1172,7 @@ window.addEventListener('message', async (e) => {
                       date: moment(data.body.conversation.messages[0].creationTime).format('MM/DD/YYYY')
                     };
                     const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
-                    showNotification({ level: 'warning', message: `Message not logged. ${conflictContent.description}. Review all conflict on the "Unlogged" tab.`, ttl: 5000 });
+                    showNotification({ level: 'warning', message: `Message not logged. ${conflictContent.description}.`, ttl: 5000 });
                   }
                   // Sub-case: no conflict, log directly
                   else {
@@ -1271,6 +1329,10 @@ window.addEventListener('message', async (e) => {
               break;
             case '/settings':
               extensionUserSettings = data.body.settings;
+              await uploadUserSettings({
+                serverUrl: manifest.serverUrl,
+                userSettings: extensionUserSettings
+              });
               await chrome.storage.local.set({ extensionUserSettings });
               if (data.body.setting.id === "toggleDeveloperMode") {
                 showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
@@ -1344,7 +1406,6 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'openDeveloperSettingsPage':
                   const { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: '' });
-
                   const developerSettingsPageRender = developerSettingsPage.getDeveloperSettingsPageRender({ customUrl: customCrmManifestUrl });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
@@ -1431,6 +1492,7 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
                 case 'developerSettingsPage':
+                case 'saveAdapterButton':
                   try {
                     const customManifestUrl = data.body.button.formData.customManifestUrl;
                     if (customManifestUrl === '') {
@@ -1443,6 +1505,10 @@ window.addEventListener('message', async (e) => {
                     if (customCrmManifestJson) {
                       await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
                       showNotification({ level: 'success', message: 'Custom manifest file updated. Please reload the extension.', ttl: 5000 });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-navigate-to',
+                        path: 'goBack',
+                      }, '*');
                     }
                   }
                   catch (e) {
