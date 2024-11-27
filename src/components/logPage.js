@@ -204,7 +204,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 formData: {
                     id,
                     contact: contactList[0].const,
-                    newContactType: manifest.platforms[platformName].contactTypes ? manifest.platforms[platformName].contactTypes[0].value : '',
+                    newContactType: '',
                     newContactName: '',
                     contactType: contactList[0]?.type ?? '',
                     contactName: contactList[0]?.title ?? '',
@@ -295,6 +295,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                         'Inbound call from ' :
                         'Outbound call to ';
                 }
+                page.formData.newContactType = manifest.platforms[platformName].contactTypes ? manifest.platforms[platformName].contactTypes[0].value : '';
             }
             else {
                 page.formData.newContactName = '';
