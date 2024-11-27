@@ -1,4 +1,4 @@
-function getCallAndSMSLoggingSettingPageRender() {
+function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
     return {
         id: 'callAndSMSLoggingSettingPage',
         title: 'Call and SMS logging',
@@ -11,13 +11,13 @@ function getCallAndSMSLoggingSettingPageRender() {
                     type: 'object',
                     title: 'Log phone calls automatically',
                     properties: {
-                        autoLogCallCustomizable: {
+                        customizable: {
                             type: 'boolean',
                             title: 'Customizable by user'
                         },
-                        autoLogCallValue: {
+                        value: {
                             type: 'boolean',
-                            title: 'Value (or default value)'
+                            title: 'Value'
                         }
                     }
                 },
@@ -25,13 +25,13 @@ function getCallAndSMSLoggingSettingPageRender() {
                     type: 'object',
                     title: 'Log SMS conversations automatically',
                     properties: {
-                        autoLogSMSCustomizable: {
+                        customizable: {
                             type: 'boolean',
                             title: 'Customizable by user'
                         },
-                        autoLogSMSValue: {
+                        value: {
                             type: 'boolean',
-                            title: 'Value (or default value)'
+                            title: 'Value'
                         }
                     }
                 },
@@ -39,13 +39,13 @@ function getCallAndSMSLoggingSettingPageRender() {
                     type: 'object',
                     title: 'Open call logging page after call',
                     properties: {
-                        autoOpenCallLogPageCustomizable: {
+                        customizable: {
                             type: 'boolean',
                             title: 'Customizable by user'
                         },
-                        autoOpenCallLogPageValue: {
+                        value: {
                             type: 'boolean',
-                            title: 'Value (or default value)'
+                            title: 'Value'
                         }
                     }
                 },
@@ -53,13 +53,13 @@ function getCallAndSMSLoggingSettingPageRender() {
                     type: 'object',
                     title: 'Open SMS logging page after message',
                     properties: {
-                        autoOpenSMSLogPageCustomizable: {
+                        customizable: {
                             type: 'boolean',
                             title: 'Customizable by user'
                         },
-                        autoOpenSMSLogPageValue: {
+                        value: {
                             type: 'boolean',
-                            title: 'Value (or default value)'
+                            title: 'Value'
                         }
                     }
                 }
@@ -77,6 +77,28 @@ function getCallAndSMSLoggingSettingPageRender() {
             },
             autoOpenSMSLogPage: {
                 "ui:collapsible": true,
+            }
+        },
+        formData: {
+            autoLogCall:
+            {
+                customizable: adminUserSettings?.autoLogCall?.customizable ?? true,
+                value: adminUserSettings?.autoLogCall?.value ?? false
+            },
+            autoLogSMS:
+            {
+                customizable: adminUserSettings?.autoLogSMS?.customizable ?? true,
+                value: adminUserSettings?.autoLogSMS?.value ?? false
+            },
+            autoOpenCallLogPage:
+            {
+                customizable: adminUserSettings?.autoOpenCallLogPage?.customizable ?? true,
+                value: adminUserSettings?.autoOpenCallLogPage?.value ?? false
+            },
+            autoOpenSMSLogPage:
+            {
+                customizable: adminUserSettings?.autoOpenSMSLogPage?.customizable ?? true,
+                value: adminUserSettings?.autoOpenSMSLogPage?.value ?? false
             }
         }
     }

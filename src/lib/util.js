@@ -40,9 +40,14 @@ async function getRcInfo() {
     return rcInfo;
 }
 
+function getRcAccessToken(){
+    return JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).access_token;
+}
+
 exports.secondsToHourMinuteSecondString = secondsToHourMinuteSecondString;
 exports.showNotification = showNotification;
 exports.dismissNotification = dismissNotification;
 exports.responseMessage = responseMessage;
 exports.isObjectEmpty = isObjectEmpty;
 exports.getRcInfo = getRcInfo;
+exports.getRcAccessToken = getRcAccessToken;

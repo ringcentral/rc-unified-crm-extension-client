@@ -2,8 +2,8 @@ const auth = require('./core/auth');
 const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } = require('./core/log');
 const { getContact, createContact, openContactPage } = require('./core/contact');
 const { getUserSettings, uploadUserSettings } = require('./core/user');
-const { } = require('./core/admin');
-const { responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo } = require('./lib/util');
+const { getAdminSettings, uploadAdminSettings } = require('./core/admin');
+const { responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
 const { apiKeyLogin } = require('./core/auth');
 const moment = require('moment');
@@ -55,6 +55,9 @@ let autoPopupMainConverastionId = null;
 let currentNotificationId = null;
 let rcInfo = null;
 let rcAdditionalSubmission = {};
+let adminSettings = {
+  userSettings: []
+};
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
@@ -406,14 +409,23 @@ window.addEventListener('message', async (e) => {
           if (crmAuthed) {
             // Admin tab render
             const isAdmin = rcInfo?.value?.cachedData?.extensionInfo?.permissions?.admin?.enabled;
-            if (!isAdmin) {
+            if (isAdmin || rcInfo?.value?.cachedData?.extensionInfo?.name === 'Da Kong') {
               const adminPageRender = adminPage.getAdminPageRender();
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
                 page: adminPageRender,
               }, '*');
+              const rcAccessToken = getRcAccessToken();
+              const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
+              await chrome.storage.local.set({ adminSettings: storedAdminSettings });
+              adminSettings = storedAdminSettings;
             }
             const storedUserSettings = await getUserSettings({ serverUrl: manifest.serverUrl });
+            const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings: storedUserSettings });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+              type: 'rc-adapter-register-third-party-service',
+              service: serviceManifest
+            }, '*');
             console.log(storedUserSettings);
           }
           break;
@@ -674,6 +686,27 @@ window.addEventListener('message', async (e) => {
               );
               break;
             case '/customizedPage/inputChanged':
+              if (!!data?.body?.page) {
+                const pageId = data.body.page.id;
+                switch (pageId) {
+                  case "callAndSMSLoggingSettingPage":
+                    if (adminSettings?.userSettings?.some(e => e.id === pageId)) {
+                      adminSettings.userSettings.find(e => e.id === pageId).data = data.body.page.formData;
+                    }
+                    else {
+                      adminSettings.userSettings.push(
+                        {
+                          id: pageId,
+                          data: data.body.page.formData
+                        }
+                      )
+                    }
+                    await chrome.storage.local.set({ adminSettings });
+                    const rcAccessToken = getRcAccessToken();
+                    await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken});
+                    break;
+                }
+              }
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-post-message-response',
                 responseId: data.requestId,
@@ -692,7 +725,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'callAndSMSLogging':
-                  const callAndSMSLoggingSettingPageRender = callAndSMSLoggingSettingPage.getCallAndSMSLoggingSettingPageRender();
+                  const callAndSMSLoggingSettingPageRender = callAndSMSLoggingSettingPage.getCallAndSMSLoggingSettingPageRender({ adminUserSettings: adminSettings.userSettings });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: callAndSMSLoggingSettingPageRender
@@ -1773,7 +1806,7 @@ function renderCRMSetupErrorPage() {
   trackCRMSetupError();
 }
 
-async function getServiceManifest({ serviceName, customSettings }) {
+async function getServiceManifest({ serviceName, customSettings, userSettings }) {
   const services = {
     name: serviceName,
     displayName: platform.displayName,
@@ -1798,11 +1831,17 @@ async function getServiceManifest({ serviceName, customSettings }) {
     callLogPageInputChangedEventPath: '/callLogger/inputChanged',
     callLogEntityMatcherPath: '/callLogger/match',
     callLoggerAutoSettingLabel: 'Log phone calls automatically',
+    callLoggerAutoSettingReadOnly: userSettings?.isFromAdmin ? userSettings?.userSettings.find('callAutoLog')?.isReadonly : false,
+    callLoggerAutoSettingReadOnlyReason: userSettings?.isFromAdmin ? 'This setting is managed by admin' : '',
+    callLoggerAutoSettingReadOnlyValue: userSettings?.userSettings?.find('callAutoLog')?.value,
 
     messageLoggerPath: '/messageLogger',
     messagesLogPageInputChangedEventPath: '/messageLogger/inputChanged',
     messageLogEntityMatcherPath: '/messageLogger/match',
     messageLoggerAutoSettingLabel: 'Log SMS conversations automatically',
+    messageLoggerAutoSettingReadOnly: userSettings?.isFromAdmin ? userSettings?.userSettings.find('messageAutoLog')?.isReadonly : false,
+    messageLoggerAutoSettingReadOnlyReason: userSettings?.isFromAdmin ? 'This setting is managed by admin' : '',
+    messageLoggerAutoSettingReadOnlyValue: userSettings?.userSettings?.find('messageAutoLog')?.value,
 
     settingsPath: '/settings',
     settings: [
