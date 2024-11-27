@@ -403,17 +403,19 @@ window.addEventListener('message', async (e) => {
             ['rc-crm-extension-version']: manifest.version
           });
 
-          // Admin tab render
-          const isAdmin = rcInfo?.value?.cachedData?.extensionInfo?.permissions?.admin?.enabled;
-          if (!isAdmin) {
-            const adminPageRender = adminPage.getAdminPageRender();
-            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-              type: 'rc-adapter-register-customized-page',
-              page: adminPageRender,
-            }, '*');
+          if (crmAuthed) {
+            // Admin tab render
+            const isAdmin = rcInfo?.value?.cachedData?.extensionInfo?.permissions?.admin?.enabled;
+            if (!isAdmin) {
+              const adminPageRender = adminPage.getAdminPageRender();
+              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-customized-page',
+                page: adminPageRender,
+              }, '*');
+            }
+            const storedUserSettings = await getUserSettings({ serverUrl: manifest.serverUrl });
+            console.log(storedUserSettings);
           }
-          const storedUserSettings = await getUserSettings({ serverUrl: manifest.serverUrl });
-          console.log(storedUserSettings);
           break;
         case 'rc-login-popup-notify':
           handleRCOAuthWindow(data.oAuthUri);
