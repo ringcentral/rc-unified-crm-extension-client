@@ -573,6 +573,12 @@ window.addEventListener('message', async (e) => {
         case 'rc-post-message-request':
           if (!crmAuthed && (data.path === '/callLogger' || data.path === '/messageLogger')) {
             showNotification({ level: 'warning', message: 'Please go to Settings and connect to CRM platform', ttl: 60000 });
+            responseMessage(
+              data.requestId,
+              {
+                data: 'ok'
+              }
+            );
             break;
           }
           switch (data.path) {
@@ -653,11 +659,12 @@ window.addEventListener('message', async (e) => {
               );
               break;
             case '/customizedPage/inputChanged':
-              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                type: 'rc-post-message-response',
-                responseId: data.requestId,
-                response: { data: 'ok' },
-              }, '*');
+              responseMessage(
+                data.requestId,
+                {
+                  data: 'ok'
+                }
+              );
               break;
             case '/contacts/match':
               noShowNotification = true;
@@ -1072,7 +1079,10 @@ window.addEventListener('message', async (e) => {
               }
               if (!!data?.body?.conversation?.correspondents[0]?.extensionNumber) {
                 showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
-                responseMessage(data.requestId, { data: 'ok' });
+                responseMessage(
+                  data.requestId,
+                  { data: 'ok' }
+                );
                 break;
               }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
@@ -1135,44 +1145,42 @@ window.addEventListener('message', async (e) => {
               }
               // Case: manual log, submit
               else if (data.body.triggerType === 'logForm') {
-                if (data.body.redirect) {
-                  let additionalSubmission = {};
-                  const additionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
-                  for (const f of additionalFields) {
-                    if (data.body.formData[f.const] != "none") {
-                      additionalSubmission[f.const] = data.body.formData[f.const];
-                    }
+                let additionalSubmission = {};
+                const additionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
+                for (const f of additionalFields) {
+                  if (data.body.formData[f.const] != "none") {
+                    additionalSubmission[f.const] = data.body.formData[f.const];
                   }
-                  let newContactInfo = {};
-                  if (data.body.formData.contact === 'createNewContact') {
-                    const newContactResp = await createContact({
-                      serverUrl: manifest.serverUrl,
-                      phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
-                      newContactName: data.body.formData.newContactName,
-                      newContactType: data.body.formData.newContactType
-                    });
-                    newContactInfo = newContactResp.contactInfo;
-                    if (!!extensionUserSettings && extensionUserSettings.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageAfterCreation')?.value) {
-                      await openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
-                    }
-                  }
-                  await addLog({
-                    serverUrl: manifest.serverUrl,
-                    logType: 'Message',
-                    logInfo: data.body.conversation,
-                    isMain: true,
-                    note: '',
-                    additionalSubmission,
-                    rcAdditionalSubmission,
-                    contactId: newContactInfo?.id ?? data.body.formData.contact,
-                    contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
-                    contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
-                  });
                 }
+                let newContactInfo = {};
+                if (data.body.formData.contact === 'createNewContact' && data.body.redirect) {
+                  const newContactResp = await createContact({
+                    serverUrl: manifest.serverUrl,
+                    phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
+                    newContactName: data.body.formData.newContactName,
+                    newContactType: data.body.formData.newContactType
+                  });
+                  newContactInfo = newContactResp.contactInfo;
+                  if (!!extensionUserSettings && extensionUserSettings.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageAfterCreation')?.value) {
+                    await openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
+                  }
+                }
+                await addLog({
+                  serverUrl: manifest.serverUrl,
+                  logType: 'Message',
+                  logInfo: data.body.conversation,
+                  isMain: true,
+                  note: '',
+                  additionalSubmission,
+                  rcAdditionalSubmission,
+                  contactId: newContactInfo?.id ?? data.body.formData.contact,
+                  contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
+                  contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
+                });
               }
               // Case: Open page OR auto pop up log page
               else {
-                if (data.body.redirect) {
+                if (data.body.redirect || messageAutoPopup) {
                   getContactMatchResult = await getContact({
                     serverUrl: manifest.serverUrl,
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
@@ -1281,6 +1289,12 @@ window.addEventListener('message', async (e) => {
               else {
                 showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
               }
+              responseMessage(
+                data.requestId,
+                {
+                  data: 'ok'
+                }
+              );
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
@@ -1454,13 +1468,20 @@ window.addEventListener('message', async (e) => {
                   showNotification({ level: 'success', message: 'Platform info cleared. Please close the extension and open from CRM page.', ttl: 5000 });
                   break;
               }
-              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                type: 'rc-post-message-response',
-                responseId: data.requestId,
-                response: { data: 'ok' },
-              }, '*');
+              responseMessage(
+                data.requestId,
+                {
+                  data: 'ok'
+                }
+              );
               break;
             default:
+              responseMessage(
+                data.requestId,
+                {
+                  data: 'ok'
+                }
+              );
               break;
           }
           break;
