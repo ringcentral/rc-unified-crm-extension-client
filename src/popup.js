@@ -1,7 +1,7 @@
 const auth = require('./core/auth');
 const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } = require('./core/log');
 const { getContact, createContact, openContactPage } = require('./core/contact');
-const { getUserSettings, uploadUserSettings } = require('./core/user');
+const { getUserSettings, uploadUserSettings, preloadUserSettingsFromAdmin } = require('./core/user');
 const { getAdminSettings, uploadAdminSettings } = require('./core/admin');
 const { responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
@@ -357,12 +357,18 @@ window.addEventListener('message', async (e) => {
           }
 
           let { rcLoginStatus } = await chrome.storage.local.get('rcLoginStatus');
+          const rcAccessToken = getRcAccessToken();
+          const userSettingsByAdmin = await preloadUserSettingsFromAdmin({ serverUrl: manifest.serverUrl, rcAccessToken });
+          console.log(userSettingsByAdmin);
           // case 1: fresh login
-          if (rcLoginStatus === null) {
+          if (rcLoginStatus === undefined) {
             if (data.loggedIn) {
               trackRcLogin();
               rcLoginStatus = true;
               await chrome.storage.local.set({ ['rcLoginStatus']: rcLoginStatus });
+              const rcAccessToken = getRcAccessToken();
+              const userSettingsByAdmin = await preloadUserSettingsFromAdmin({ serverUrl: manifest.serverUrl, rcAccessToken });
+              console.log(userSettingsByAdmin);
             }
           }
           // case 2: login status changed
@@ -703,7 +709,7 @@ window.addEventListener('message', async (e) => {
                     }
                     await chrome.storage.local.set({ adminSettings });
                     const rcAccessToken = getRcAccessToken();
-                    await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken});
+                    await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
                     break;
                 }
               }

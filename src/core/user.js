@@ -1,5 +1,16 @@
 import axios from 'axios';
 
+async function preloadUserSettingsFromAdmin({ serverUrl, rcAccessToken }) {
+    try {
+        const preloadUserSettingsResponse = await axios.get(`${serverUrl}/user/preloadSettings?rcAccessToken=${rcAccessToken}`);
+        return preloadUserSettingsResponse.data;
+    }
+    catch (e) {
+        console.log(e)
+        return null;
+    }
+}
+
 async function getUserSettings({ serverUrl }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const getUserSettingsResponse = await axios.get(
@@ -31,5 +42,6 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
         });
 }
 
+exports.preloadUserSettingsFromAdmin = preloadUserSettingsFromAdmin;
 exports.getUserSettings = getUserSettings;
 exports.uploadUserSettings = uploadUserSettings;
