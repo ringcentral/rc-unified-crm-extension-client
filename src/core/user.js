@@ -11,10 +11,10 @@ async function preloadUserSettingsFromAdmin({ serverUrl, rcAccessToken }) {
     }
 }
 
-async function getUserSettings({ serverUrl }) {
+async function getUserSettings({ serverUrl, rcAccessToken }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const getUserSettingsResponse = await axios.get(
-        `${serverUrl}/user/settings?jwtToken=${rcUnifiedCrmExtJwt}`);
+        `${serverUrl}/user/settings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`);
     return getUserSettingsResponse.data;
 }
 

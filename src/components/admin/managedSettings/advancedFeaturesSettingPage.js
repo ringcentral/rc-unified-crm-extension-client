@@ -21,11 +21,28 @@ function getAdvancedFeaturesSettingPageRender({ adminUserSettings }) {
                             title: 'Value'
                         }
                     }
+                },
+                developerMode: {
+                    type: 'object',
+                    title: 'Developer mode',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
                 }
             }
         },
         uiSchema: {
             autoOpenExtension: {
+                "ui:collapsible": true,
+            },
+            developerMode: {
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
@@ -37,6 +54,11 @@ function getAdvancedFeaturesSettingPageRender({ adminUserSettings }) {
             {
                 customizable: adminUserSettings?.autoOpenExtension?.customizable ?? true,
                 value: adminUserSettings?.autoOpenExtension?.value ?? false
+            },
+            developerMode:
+            {
+                customizable: adminUserSettings?.developerMode?.customizable ?? true,
+                value: adminUserSettings?.developerMode?.value ?? false
             }
         }
     }
