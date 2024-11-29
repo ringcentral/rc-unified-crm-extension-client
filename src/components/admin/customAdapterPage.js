@@ -1,4 +1,4 @@
-function getCustomAdapterPageRender() {
+function getCustomAdapterPageRender({ customManifestUrl }) {
     return {
         id: 'customAdapter',
         title: 'Custom adapter',
@@ -15,7 +15,7 @@ function getCustomAdapterPageRender() {
                     type: 'string',
                     title: 'Custom manifest URL'
                 },
-                saveAdapterButton: {
+                saveAdminAdapterButton: {
                     type: 'string',
                     title: 'Save'
                 }
@@ -28,11 +28,14 @@ function getCustomAdapterPageRender() {
             customManifestUrl: {
                 "ui:placeholder": 'enter url and save...',
             },
-            saveAdapterButton: {
+            saveAdminAdapterButton: {
                 "ui:field": "button",
                 "ui:variant": "contained", // "text", "outlined", "contained", "plain"
                 "ui:fullWidth": true
             }
+        },
+        formData: {
+            customManifestUrl
         }
     }
 }

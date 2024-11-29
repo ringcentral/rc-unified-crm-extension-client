@@ -1,5 +1,5 @@
-function getManagedSettingsPageRender() {
-    return {
+function getManagedSettingsPageRender({ crmManifest }) {
+    let page = {
         id: 'managedSettings',
         title: 'Managed settings',
         type: 'page',
@@ -7,15 +7,22 @@ function getManagedSettingsPageRender() {
             type: 'object',
             reuiqred: [],
             properties: {
-                section:{
+                section: {
                     type: "string",
-                    oneOf: [{
-                        const: "callAndSMSLogging",
-                        title: "Call and SMS logging",
-                    }, {
-                        const: "contacts",
-                        title: "Contacts",
-                    }]
+                    oneOf: [
+                        {
+                            const: "callAndSMSLogging",
+                            title: "Call and SMS logging",
+                        },
+                        {
+                            const: "contactSetting",
+                            title: "Contacts",
+                        },
+                        {
+                            const: "advancedFeaturesSetting",
+                            title: "Advanced features"
+                        }
+                    ]
                 }
             }
         },
@@ -26,6 +33,14 @@ function getManagedSettingsPageRender() {
             }
         }
     }
+    if(!!crmManifest?.settings)
+    {
+        page.schema.properties.section.oneOf.push({
+            const: "customSettings",
+            title: "Custom settings"
+        });
+    }
+    return page;
 }
 
 exports.getManagedSettingsPageRender = getManagedSettingsPageRender;

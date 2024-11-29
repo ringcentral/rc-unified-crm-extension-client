@@ -19,6 +19,9 @@ const adminPage = require('./components/admin/adminPage');
 const managedSettingsPage = require('./components/admin/managedSettingsPage');
 const callAndSMSLoggingSettingPage = require('./components/admin/managedSettings/callAndSMSLoggingSettingPage');
 const customAdapterPage = require('./components/admin/customAdapterPage');
+const contactSettingPage = require('./components/admin/managedSettings/contactSettingPage');
+const advancedFeaturesSettingPage = require('./components/admin/managedSettings/advancedFeaturesSettingPage');
+const customSettingsPage = require('./components/admin/managedSettings/customSettingsPage');
 const {
   setAuthor,
   identify,
@@ -357,9 +360,6 @@ window.addEventListener('message', async (e) => {
           }
 
           let { rcLoginStatus } = await chrome.storage.local.get('rcLoginStatus');
-          const rcAccessToken = getRcAccessToken();
-          const userSettingsByAdmin = await preloadUserSettingsFromAdmin({ serverUrl: manifest.serverUrl, rcAccessToken });
-          console.log(userSettingsByAdmin);
           // case 1: fresh login
           if (rcLoginStatus === undefined) {
             if (data.loggedIn) {
@@ -692,27 +692,6 @@ window.addEventListener('message', async (e) => {
               );
               break;
             case '/customizedPage/inputChanged':
-              if (!!data?.body?.page) {
-                const pageId = data.body.page.id;
-                switch (pageId) {
-                  case "callAndSMSLoggingSettingPage":
-                    if (adminSettings?.userSettings?.some(e => e.id === pageId)) {
-                      adminSettings.userSettings.find(e => e.id === pageId).data = data.body.page.formData;
-                    }
-                    else {
-                      adminSettings.userSettings.push(
-                        {
-                          id: pageId,
-                          data: data.body.page.formData
-                        }
-                      )
-                    }
-                    await chrome.storage.local.set({ adminSettings });
-                    const rcAccessToken = getRcAccessToken();
-                    await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
-                    break;
-                }
-              }
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-post-message-response',
                 responseId: data.requestId,
@@ -720,7 +699,7 @@ window.addEventListener('message', async (e) => {
               }, '*');
               switch (data.body?.formData?.section) {
                 case 'managedSettings':
-                  const managedSettingsPageRender = managedSettingsPage.getManagedSettingsPageRender();
+                  const managedSettingsPageRender = managedSettingsPage.getManagedSettingsPageRender({ crmManifest: platform });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: managedSettingsPageRender
@@ -731,7 +710,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'callAndSMSLogging':
-                  const callAndSMSLoggingSettingPageRender = callAndSMSLoggingSettingPage.getCallAndSMSLoggingSettingPageRender({ adminUserSettings: adminSettings.userSettings });
+                  const callAndSMSLoggingSettingPageRender = callAndSMSLoggingSettingPage.getCallAndSMSLoggingSettingPageRender({ adminUserSettings: adminSettings.userSettings.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: callAndSMSLoggingSettingPageRender
@@ -741,10 +720,42 @@ window.addEventListener('message', async (e) => {
                     path: `/customized/${callAndSMSLoggingSettingPageRender.id}`, // page id
                   }, '*');
                   break;
-                case 'contacts':
+                case 'contactSetting':
+                  const contactSettingPageRender = contactSettingPage.getContactSettingPageRender({ adminUserSettings: adminSettings.userSettings.find(s => s.id === 'contactSettingPage')?.data, renderOverridingNumberFormat: platform.name == 'clio' || platform.name == 'insightly' });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: contactSettingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${contactSettingPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'advancedFeaturesSetting':
+                  const advancedFeaturesSettingPageRender = advancedFeaturesSettingPage.getAdvancedFeaturesSettingPageRender({ adminUserSettings: adminSettings.userSettings.find(s => s.id === 'advancedFeaturesSettingPage')?.data })
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: advancedFeaturesSettingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${advancedFeaturesSettingPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'customSettings':
+                  const customSettingsPageRender = customSettingsPage.getCustomSettingsPageRender({ crmManifest: platform, adminUserSettings: adminSettings.userSettings.find(s => s.id === 'customSettingsPage')?.data });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: customSettingsPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${customSettingsPageRender.id}`, // page id
+                  }, '*');
                   break;
                 case 'customAdapter':
-                  const customAdapterPageRender = customAdapterPage.getCustomAdapterPageRender();
+                  const customManifestUrl = adminSettings.customAdapter?.url ?? '';
+                  const customAdapterPageRender = customAdapterPage.getCustomAdapterPageRender({ customManifestUrl });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: customAdapterPageRender
@@ -1387,6 +1398,27 @@ window.addEventListener('message', async (e) => {
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
+                case 'callAndSMSLoggingSettingPage':
+                case 'contactSettingPage':
+                case 'advancedFeaturesSettingPage':
+                case 'customSettingsPage':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const pageId = data.body.button.id;
+                  if (adminSettings?.userSettings?.some(e => e.id === pageId)) {
+                    adminSettings.userSettings = adminSettings.userSettings.filter(e => e.id !== pageId);
+                  }
+                  adminSettings.userSettings.push(
+                    {
+                      id: pageId,
+                      data: data.body.button.formData
+                    }
+                  )
+                  await chrome.storage.local.set({ adminSettings });
+                  const rcAccessToken = getRcAccessToken();
+                  await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
+                  showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
                 case 'insightlyGetApiKey':
                   const platformInfo = await chrome.storage.local.get('platform-info');
                   const hostname = platformInfo['platform-info'].hostname;
@@ -1532,8 +1564,19 @@ window.addEventListener('message', async (e) => {
                     showNotification({ level: 'warning', message: 'Write review URL is not set', ttl: 3000 });
                   }
                   break;
+                case 'saveAdminAdapterButton':
+                  const customCrmManifestJson = await (await fetch(data.body.button.formData.customManifestUrl)).json();
+                  if (customCrmManifestJson) {
+                    adminSettings.customAdapter = {
+                      url: data.body.button.formData.customManifestUrl,
+                    }
+                    await chrome.storage.local.set({ adminSettings });
+                    const rcAccessToken = getRcAccessToken();
+                    await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
+                    showNotification({ level: 'success', message: 'Custom manifest file uploaded.', ttl: 5000 });
+                  }
+                  break;
                 case 'developerSettingsPage':
-                case 'saveAdapterButton':
                   try {
                     const customManifestUrl = data.body.button.formData.customManifestUrl;
                     if (customManifestUrl === '') {

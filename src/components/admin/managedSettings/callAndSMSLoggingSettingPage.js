@@ -77,7 +77,10 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             },
             autoOpenSMSLogPage: {
                 "ui:collapsible": true,
-            }
+            },
+            submitButtonOptions: {
+                submitText: 'Save',
+            },
         },
         formData: {
             autoLogCall:
