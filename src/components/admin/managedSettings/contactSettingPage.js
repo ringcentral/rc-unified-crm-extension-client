@@ -130,15 +130,15 @@ function getContactSettingPageRender({ adminUserSettings, renderOverridingNumber
                     type: 'boolean',
                     title: 'Customizable by user'
                 },
-                value1: {
+                numberFormatter1: {
                     type: 'string',
                     title: 'Format 1'
                 },
-                value2: {
+                numberFormatter2: {
                     type: 'string',
                     title: 'Format 2'
                 },
-                value3: {
+                numberFormatter3: {
                     type: 'string',
                     title: 'Format 3'
                 }
@@ -153,9 +153,9 @@ function getContactSettingPageRender({ adminUserSettings, renderOverridingNumber
         }
         page.formData.overridingNumberFormat = {
             customizable: adminUserSettings?.overridingNumberFormat?.customizable ?? true,
-            value1: adminUserSettings?.overridingNumberFormat?.value1 ?? '',
-            value2: adminUserSettings?.overridingNumberFormat?.value2 ?? '',
-            value3: adminUserSettings?.overridingNumberFormat?.value3 ?? ''
+            numberFormatter1: adminUserSettings?.overridingNumberFormat?.numberFormatter1 ?? '',
+            numberFormatter2: adminUserSettings?.overridingNumberFormat?.numberFormatter2 ?? '',
+            numberFormatter3: adminUserSettings?.overridingNumberFormat?.numberFormatter3 ?? ''
         }
     }
     return page;

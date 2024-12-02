@@ -1,7 +1,7 @@
 const auth = require('./core/auth');
 const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } = require('./core/log');
 const { getContact, createContact, openContactPage } = require('./core/contact');
-const { getUserSettings, uploadUserSettings, preloadUserSettingsFromAdmin } = require('./core/user');
+const userCore = require('./core/user');
 const { getAdminSettings, uploadAdminSettings } = require('./core/admin');
 const { responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
@@ -52,28 +52,46 @@ let platform = null;
 let platformName = '';
 let platformHostname = '';
 let rcUserInfo = {};
-let extensionUserSettings = null;
 let firstTimeLogoutAbsorbed = false;
 let autoPopupMainConverastionId = null;
 let currentNotificationId = null;
 let rcInfo = null;
 let rcAdditionalSubmission = {};
 let adminSettings = {
-  userSettings: []
+  userSettings: {}
 };
+let userSettings = {};
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
 
 // TEMP
-function tempConvertExtensionUserSettingsToUserSettings() {
-
+async function tempConvertExtensionUserSettingsToUserSettings() {
+  const extensionUserSettings = (await chrome.storage.local.get('extensionUserSettings'))?.extensionUserSettings;
+  let formattedUserSettings = {};
+  if (!!extensionUserSettings) {
+    for (const s of extensionUserSettings) {
+      if (s.items !== undefined) {
+        for (const i of s.items) {
+          formattedUserSettings[i.id] = { value: i.value };
+        }
+      }
+      else if (s.value !== undefined) {
+        formattedUserSettings[s.id] = { value: s.value };
+      }
+    }
+  }
+  userSettings = await userCore.uploadUserSettings({
+    serverUrl: manifest.serverUrl,
+    userSettings: formattedUserSettings
+  });
+  await chrome.storage.local.set({ userSettings });
 }
 
 // Hack: bullhorn specific logic to check if allow custom note action value
 function allowBullhornCustomNoteAction() {
   if (platformName === 'bullhorn') {
-    const allowedFromUserSetting = extensionUserSettings.find(e => e.id === 'bullhornDefaultNoteAction')?.items.find(e => e.id === 'allowBullhornCustomNoteAction')?.value;
+    const allowedFromUserSetting = userSettings?.allowBullhornCustomNoteAction?.value ?? false;
     return allowedFromUserSetting;
   }
   else {
@@ -271,7 +289,7 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-adapter-pushAdapterState':
-          extensionUserSettings = (await chrome.storage.local.get('extensionUserSettings')).extensionUserSettings;
+          await tempConvertExtensionUserSettingsToUserSettings();
           if (!registered) {
             const platformInfo = await chrome.storage.local.get('platform-info');
             if (isObjectEmpty(platformInfo)) {
@@ -372,8 +390,18 @@ window.addEventListener('message', async (e) => {
               rcLoginStatus = true;
               await chrome.storage.local.set({ ['rcLoginStatus']: rcLoginStatus });
               const rcAccessToken = getRcAccessToken();
-              const userSettingsByAdmin = await preloadUserSettingsFromAdmin({ serverUrl: manifest.serverUrl, rcAccessToken });
-              console.log(userSettingsByAdmin);
+              const userSettingsByAdmin = await userCore.preloadUserSettingsFromAdmin({ serverUrl: manifest.serverUrl, rcAccessToken });
+              const customManifestUrl = userSettingsByAdmin?.customManifestUrl?.url;
+              if (customManifestUrl) {
+                console.log('Custom manifest url:', customManifestUrl);
+                await chrome.storage.local.set({ customCrmManifestUrl: customManifestUrl });
+                await chrome.storage.local.remove('customCrmManifest');
+                const customCrmManifestJson = await (await fetch(customManifestUrl)).json();
+                if (customCrmManifestJson) {
+                  await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
+                  console.log('Custom manifest loaded:', customCrmManifestJson);
+                }
+              }
             }
           }
           // case 2: login status changed
@@ -430,9 +458,8 @@ window.addEventListener('message', async (e) => {
               await chrome.storage.local.set({ adminSettings: storedAdminSettings });
               adminSettings = storedAdminSettings;
             }
-            const storedUserSettings = await getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
-            // TEMP: convert extensionUserSettings to storedUserSettings
-            const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings: storedUserSettings });
+            userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
+            const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-register-third-party-service',
               service: serviceManifest
@@ -442,7 +469,7 @@ window.addEventListener('message', async (e) => {
               authorized: crmAuthed,
               authorizedAccount: 'test@email.com', // optional, authorized account email or id
             }, '*');
-            console.log(storedUserSettings);
+            console.log(userSettings);
           }
           break;
         case 'rc-login-popup-notify':
@@ -472,12 +499,12 @@ window.addEventListener('message', async (e) => {
                   chrome.runtime.sendMessage({
                     type: 'openPopupWindow'
                   });
-                  if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromIncomingCall')?.value === 'onAnswer') {
+                  if (userSettings?.find(s => s.id === 'contactSettingPage')?.data?.openContactPageFromIncomingCall?.value === 'onAnswer') {
                     await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber });
                   }
                   break;
                 case 'Outbound':
-                  if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromOutgoingCall')?.value === 'onAnswer') {
+                  if (userSettings?.find(s => s.id === 'contactSettingPage')?.data?.openContactPageFromOutgoingCall?.value === 'onAnswer') {
                     await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber });
                   }
                   break;
@@ -486,15 +513,13 @@ window.addEventListener('message', async (e) => {
             case 'NoCall':
               if (data.call.terminationType === 'final') {
                 window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
-                const callAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.id === "popupLogPageAfterCall")?.value;
+                const callAutoPopup = userCore.getCallPopSetting(userSettings).value;
                 if (callAutoPopup) {
-
                   const isExtensionNumber = data.call.direction === 'Inbound' ?
                     !!data.call.from.extensionNumber :
                     !!data.call.to.extensionNumber;
 
-                  const allowExtensionNumberLogging = !!extensionUserSettings && extensionUserSettings.find(e => e.id === 'contacts')?.items.find(e => e.id === "allowExtensionNumberLogging")?.value;
-
+                  const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
                   if (isExtensionNumber && !!!allowExtensionNumberLogging) {
                     responseMessage(
                       data.requestId,
@@ -561,12 +586,12 @@ window.addEventListener('message', async (e) => {
                   chrome.runtime.sendMessage({
                     type: 'openPopupWindow'
                   });
-                  if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromIncomingCall')?.value === 'onFirstRing') {
+                  if (userCore.getIncomingCallPop(userSettings).value === 'onFirstRing') {
                     await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber });
                   }
                   break;
                 case 'Outbound':
-                  if (!!extensionUserSettings && extensionUserSettings?.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageFromOutgoingCall')?.value === 'onFirstRing') {
+                  if (userCore.getOutgoingCallPop(userSettings).value === 'onFirstRing') {
                     await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber });
                   }
                   break;
@@ -596,6 +621,10 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-callLogger-auto-log-notify':
           await chrome.storage.local.set({ rc_callLogger_auto_log_notify: data.autoLog });
+          await userCore.uploadUserSettings({
+            serverUrl: manifest.serverUrl,
+            userSettings
+          });
           trackEditSettings({ changedItem: 'auto-call-log', status: data.autoLog });
           if (!!data.autoLog && !!crmAuthed) {
             retroAutoCallLogMaxAttempt = 10;
@@ -604,6 +633,10 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-messageLogger-auto-log-notify':
           await chrome.storage.local.set({ rc_messageLogger_auto_log_notify: data.autoLog });
+          await userCore.uploadUserSettings({
+            serverUrl: manifest.serverUrl,
+            userSettings
+          });
           trackEditSettings({ changedItem: 'auto-message-log', status: data.autoLog });
           break;
         case 'rc-route-changed-notify':
@@ -720,7 +753,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'callAndSMSLogging':
-                  const callAndSMSLoggingSettingPageRender = callAndSMSLoggingSettingPage.getCallAndSMSLoggingSettingPageRender({ adminUserSettings: adminSettings.userSettings.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data });
+                  const callAndSMSLoggingSettingPageRender = callAndSMSLoggingSettingPage.getCallAndSMSLoggingSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: callAndSMSLoggingSettingPageRender
@@ -731,7 +764,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'contactSetting':
-                  const contactSettingPageRender = contactSettingPage.getContactSettingPageRender({ adminUserSettings: adminSettings.userSettings.find(s => s.id === 'contactSettingPage')?.data, renderOverridingNumberFormat: platform.name == 'clio' || platform.name == 'insightly' });
+                  const contactSettingPageRender = contactSettingPage.getContactSettingPageRender({ adminUserSettings: adminSettings?.userSettings, renderOverridingNumberFormat: platform.name == 'clio' || platform.name == 'insightly' });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: contactSettingPageRender
@@ -742,7 +775,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'advancedFeaturesSetting':
-                  const advancedFeaturesSettingPageRender = advancedFeaturesSettingPage.getAdvancedFeaturesSettingPageRender({ adminUserSettings: adminSettings.userSettings.find(s => s.id === 'advancedFeaturesSettingPage')?.data })
+                  const advancedFeaturesSettingPageRender = advancedFeaturesSettingPage.getAdvancedFeaturesSettingPageRender({ adminUserSettings: adminSettings?.userSettings })
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: advancedFeaturesSettingPageRender
@@ -753,7 +786,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'customSettings':
-                  const customSettingsPageRender = customSettingsPage.getCustomSettingsPageRender({ crmManifest: platform, adminUserSettings: adminSettings.userSettings.find(s => s.id === 'customSettingsPage')?.data });
+                  const customSettingsPageRender = customSettingsPage.getCustomSettingsPageRender({ crmManifest: platform, adminUserSettings: adminSettings?.userSettings });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: customSettingsPageRender
@@ -858,9 +891,9 @@ window.addEventListener('message', async (e) => {
               break;
             case '/callLogger':
               let isAutoLog = false;
-              const callAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.id === "popupLogPageAfterCall")?.value;
-              // extensions numers should NOT be logged
-              const allowExtensionNumberLogging = !!extensionUserSettings && extensionUserSettings.find(e => e.id === 'contacts')?.items.find(e => e.id === "allowExtensionNumberLogging")?.value;
+              const callAutoPopup = userCore.getCallPopSetting(userSettings).value;
+              // extensions numers should NOT be logged unless explicitly allowed
+              const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
               if (!!!allowExtensionNumberLogging) {
                 if (data.body.call.direction === 'Inbound') {
                   if (!!data?.body?.call?.from?.extensionNumber) {
@@ -959,7 +992,7 @@ window.addEventListener('message', async (e) => {
                       newContactInfo = createContactResult.contactInfo;
                       const newContactReturnMessage = createContactResult.returnMessage;
                       showNotification({ level: newContactReturnMessage?.messageType, message: newContactReturnMessage?.message, ttl: newContactReturnMessage?.ttl });
-                      if (!!extensionUserSettings && extensionUserSettings.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageAfterCreation')?.value) {
+                      if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
                         await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                       }
                     }
@@ -1196,7 +1229,7 @@ window.addEventListener('message', async (e) => {
                 break;
               }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
-              const messageAutoPopup = !!extensionUserSettings && extensionUserSettings?.find(e => e.id === "popupLogPageAfterSMS")?.value;
+              const messageAutoPopup = usercore.getSMSPopSetting(userSettings).value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
               let getContactMatchResult = null;
@@ -1272,7 +1305,7 @@ window.addEventListener('message', async (e) => {
                       newContactType: data.body.formData.newContactType
                     });
                     newContactInfo = newContactResp.contactInfo;
-                    if (!!extensionUserSettings && extensionUserSettings.find(e => e.id === 'contacts')?.items?.find(e => e.id === 'openContactPageAfterCreation')?.value) {
+                    if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
                       await openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                     }
                   }
@@ -1390,12 +1423,22 @@ window.addEventListener('message', async (e) => {
               );
               break;
             case '/settings':
-              extensionUserSettings = data.body.settings;
-              await uploadUserSettings({
+              let formattedUserSettings = {};
+              for (const s of data.body.userSettings) {
+                if (s.items !== undefined) {
+                  for (const i of s.items) {
+                    formattedUserSettings[i.id] = { value: i.value };
+                  }
+                }
+                else if (s.value !== undefined) {
+                  formattedUserSettings[s.id] = { value: s.value };
+                }
+              }
+              userSettings = await userCore.uploadUserSettings({
                 serverUrl: manifest.serverUrl,
-                userSettings: extensionUserSettings
+                userSettings: formattedUserSettings
               });
-              await chrome.storage.local.set({ extensionUserSettings });
+              await chrome.storage.local.set({ userSettings });
               if (data.body.setting.id === "toggleDeveloperMode") {
                 showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
               }
@@ -1413,16 +1456,10 @@ window.addEventListener('message', async (e) => {
                 case 'advancedFeaturesSettingPage':
                 case 'customSettingsPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  const pageId = data.body.button.id;
-                  if (adminSettings?.userSettings?.some(e => e.id === pageId)) {
-                    adminSettings.userSettings = adminSettings.userSettings.filter(e => e.id !== pageId);
+                  const settingDataKeys = Object.keys(data.body.button.formData);
+                  for (const k of settingDataKeys) {
+                    adminSettings.userSettings[k] = data.body.button.formData[k];
                   }
-                  adminSettings.userSettings.push(
-                    {
-                      id: pageId,
-                      data: data.body.button.formData
-                    }
-                  )
                   await chrome.storage.local.set({ adminSettings });
                   const rcAccessToken = getRcAccessToken();
                   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
@@ -1667,7 +1704,7 @@ function getAdditionalFieldDefaultValuesFromSetting({ caseType, logType }) {
       if (!!defaultValueSetting) {
         const valueItem = defaultValueSetting.items.find(i => i.id === field.defaultSettingValues[caseType].settingId)
         if (!!valueItem) {
-          result.push({ field: field.const, value: extensionUserSettings?.find(e => e.id === defaultValueSetting.id)?.items?.find(i => i.id === valueItem.id)?.value });
+          result.push({ field: field.const, value: userCore.getCustomSetting(userSettings, valueItem.id, valueItem.defaultValue).value });
         }
       }
     }
@@ -1890,17 +1927,17 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
     callLogPageInputChangedEventPath: '/callLogger/inputChanged',
     callLogEntityMatcherPath: '/callLogger/match',
     callLoggerAutoSettingLabel: 'Log phone calls automatically',
-    callLoggerAutoSettingReadOnly: !!!userSettings?.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data?.autoLogCall?.customizable,
-    callLoggerAutoSettingReadOnlyReason: !userSettings?.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data?.autoLogCall?.customizable ? 'This setting is managed by admin' : '',
-    callLoggerAutoSettingReadOnlyValue: userSettings?.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data?.autoLogCall?.value ?? false,
+    callLoggerAutoSettingReadOnly: userCore.getAutoLogCallSetting(userSettings).readOnly,
+    callLoggerAutoSettingReadOnlyReason: userCore.getAutoLogCallSetting(userSettings).readOnlyReason,
+    callLoggerAutoSettingReadOnlyValue: userCore.getAutoLogCallSetting(userSettings).value,
 
     messageLoggerPath: '/messageLogger',
     messagesLogPageInputChangedEventPath: '/messageLogger/inputChanged',
     messageLogEntityMatcherPath: '/messageLogger/match',
     messageLoggerAutoSettingLabel: 'Log SMS conversations automatically',
-    messageLoggerAutoSettingReadOnly: !!!userSettings?.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data?.autoLogSMS?.customizable,
-    messageLoggerAutoSettingReadOnlyReason: !userSettings?.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data?.autoLogSMS?.customizable ? 'This setting is managed by admin' : '',
-    messageLoggerAutoSettingReadOnlyValue: userSettings?.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data?.autoLogSMS?.value ?? false,
+    messageLoggerAutoSettingReadOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
+    messageLoggerAutoSettingReadOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
+    messageLoggerAutoSettingReadOnlyValue: userCore.getAutoLogSMSSetting(userSettings).value,
 
     settingsPath: '/settings',
     settings: [
@@ -1909,18 +1946,18 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
         type: "boolean",
         groupId: "logging",
         name: 'Open call logging page after call',
-        readOnly: !!!userSettings?.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data?.autoOpenCallLogPage?.customizable,
-        readOnlyReason: !!!userSettings?.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data?.autoOpenCallLogPage?.customizable ? 'This setting is managed by admin' : '',
-        value: userSettings?.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data?.autoOpenCallLogPage?.value ?? false
+        readOnly: userCore.getCallPopSetting(userSettings).readOnly,
+        readOnlyReason: userCore.getCallPopSetting(userSettings).readOnlyReason,
+        value: userCore.getCallPopSetting(userSettings).value
       },
       {
         id: "popupLogPageAfterSMS",
         type: "boolean",
         groupId: "logging",
         name: 'Open SMS logging page after message',
-        readOnly: !!!userSettings?.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data?.autoOpenSMSLogPage?.customizable,
-        readOnlyReason: !!!userSettings?.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data?.autoOpenSMSLogPage?.customizable ? 'This setting is managed by admin' : '',
-        value: userSettings?.find(s => s.id === 'callAndSMSLoggingSettingPage')?.data?.autoOpenSMSLogPage?.value ?? false
+        readOnly: userCore.getSMSPopSetting(userSettings).readOnly,
+        readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason,
+        value: userCore.getSMSPopSetting(userSettings).value
       },
       {
         id: 'contacts',
@@ -1952,9 +1989,9 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
                 name: 'On answer'
               }
             ],
-            value: userSettings?.find(s => s.id === 'contactSettingPage')?.data?.openContactPageFromIncomingCall?.value ?? 'disabled',
-            readOnly: !!!userSettings?.find(s => s.id === 'contactSettingPage')?.data?.openContactPageFromIncomingCall?.customizable,
-            readOnlyReason: !!!userSettings?.find(s => s.id === 'contactSettingPage')?.data?.openContactPageFromIncomingCall?.customizable ? 'This setting is managed by admin' : '',
+            value: userCore.getIncomingCallPop(userSettings).value,
+            readOnly: userCore.getIncomingCallPop(userSettings).readOnly,
+            readOnlyReason: userCore.getIncomingCallPop(userSettings).readOnlyReason,
           },
           {
             id: 'openContactPageFromOutgoingCall',
@@ -1974,24 +2011,24 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
                 name: 'On answer'
               }
             ],
-            value: userSettings?.find(s => s.id === 'contactSettingPage')?.data?.openContactPageFromOutgoingCall?.value ?? 'disabled',
-            readOnly: !!!userSettings?.find(s => s.id === 'contactSettingPage')?.data?.openContactPageFromOutgoingCall?.customizable,
-            readOnlyReason: !!!userSettings?.find(s => s.id === 'contactSettingPage')?.data?.openContactPageFromOutgoingCall?.customizable ? 'This setting is managed by admin' : '',
+            value: userCore.getOutgoingCallPop(userSettings).value,
+            readOnly: userCore.getOutgoingCallPop(userSettings).readOnly,
+            readOnlyReason: userCore.getOutgoingCallPop(userSettings).readOnlyReason
           },
           (platform.enableExtensionNumberLoggingSetting ?
             {
               id: 'allowExtensionNumberLogging',
               type: 'boolean',
               name: 'Allow extension number logging',
-              value: !!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'contacts')?.items.find(e => e.id === "allowExtensionNumberLogging")?.value ?? false)
+              value: userSettings?.allowExtensionNumberLogging?.value ?? false
             } : {}),
           {
             id: 'openContactPageAfterCreation',
             type: 'boolean',
             name: 'Open contact after creating it',
-            value: userSettings?.find(s => s.id === 'contactSettingPage')?.data?.openContactAfterCreatingIt?.value ?? false,
-            readOnly: !!!userSettings?.find(s => s.id === 'contactSettingPage')?.data?.openContactAfterCreatingIt?.customizable,
-            readOnlyReason: !!!userSettings?.find(s => s.id === 'contactSettingPage')?.data?.openContactAfterCreatingIt?.customizable ? 'This setting is managed by admin' : '',
+            value: userCore.getOpenContactAfterCreationSetting(userSettings).value,
+            readOnly: userCore.getOpenContactAfterCreationSetting(userSettings).readOnly,
+            readOnlyReason: userCore.getOpenContactAfterCreationSetting(userSettings).readOnlyReason
           }
         ]
       },
@@ -2018,22 +2055,21 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
             id: 'toggleDeveloperMode',
             type: 'boolean',
             name: 'Developer mode',
-            value: userSettings?.find(s => s.id === 'advancedFeaturesSettingPage')?.data?.developerMode?.value ?? false,
-            readOnly: !!!userSettings?.find(s => s.id === 'advancedFeaturesSettingPage')?.data?.developerMode?.customizable,
-            readOnlyReason: !!!userSettings?.find(s => s.id === 'advancedFeaturesSettingPage')?.data?.developerMode?.customizable ? 'This setting is managed by admin' : '',
+            value: userCore.getDeveloperModeSetting(userSettings).value,
+            readOnly: userCore.getDeveloperModeSetting(userSettings).readOnly,
+            readOnlyReason: userCore.getDeveloperModeSetting(userSettings).readOnlyReason
           },
           {
             id: 'toggleAutoOpenWithCRM',
             type: 'boolean',
             name: 'Auto open extension',
-            value: userSettings?.find(s => s.id === 'advancedFeaturesSettingPage')?.data?.autoOpenExtension?.value ?? false,
-            readOnly: !!!userSettings?.find(s => s.id === 'advancedFeaturesSettingPage')?.data?.autoOpenExtension?.customizable,
-            readOnlyReason: !!!userSettings?.find(s => s.id === 'advancedFeaturesSettingPage')?.data?.autoOpenExtension?.customizable ? 'This setting is managed by admin' : '',
+            value: userCore.getAutoOpenSetting(userSettings).value,
+            readOnly: userCore.getAutoOpenSetting(userSettings).readOnly,
+            readOnlyReason: userCore.getAutoOpenSetting(userSettings).readOnlyReason
           },
         ]
       }
     ],
-
     buttonEventPath: '/custom-button-click'
   }
   if (!!customSettings) {
@@ -2047,9 +2083,9 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
               type: 'string',
               name: item.name,
               placeHolder: item.placeHolder ?? "",
-              value: userSettings?.find(e => e.id === 'customSettingsPage')?.data[item.id]?.value ?? "",
-              readOnly: !!!userSettings?.find(e => e.id === 'customSettingsPage')?.data[item.id]?.customizable,
-              readOnlyReason: !!!userSettings?.find(e => e.id === 'customSettingsPage')?.data[item.id]?.customizable ? 'This setting is managed by admin' : '',
+              value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
+              readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
+              readOnlyReason: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnlyReason
             });
             break;
           case 'boolean':
@@ -2057,9 +2093,9 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
               id: item.id,
               type: item.type,
               name: item.name,
-              value: userSettings?.find(e => e.id === 'customSettingsPage')?.data[item.id]?.value ?? item.defaultValue,
-              readOnly: !!!userSettings?.find(e => e.id === 'customSettingsPage')?.data[item.id]?.customizable,
-              readOnlyReason: !!!userSettings?.find(e => e.id === 'customSettingsPage')?.data[item.id]?.customizable ? 'This setting is managed by admin' : '',
+              value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
+              readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
+              readOnlyReason: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnlyReason
             });
             break;
           case 'warning':
@@ -2080,9 +2116,9 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
                 type: "option",
                 name: item.name,
                 options: item.options,
-                value: userSettings?.find(e => e.id === 'customSettingsPage')?.data[item.id]?.value ?? "",
-                readOnly: !!!userSettings?.find(e => e.id === 'customSettingsPage')?.data[item.id]?.customizable,
-                readOnlyReason: !!!userSettings?.find(e => e.id === 'customSettingsPage')?.data[item.id]?.customizable ? 'This setting is managed by admin' : ''
+                value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
+                readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
+                readOnlyReason: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnlyReason
               }
             )
             break;
@@ -2111,25 +2147,25 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
         id: "overridingPhoneNumberFormat",
         name: "Format 1",
         type: "string",
-        value: userSettings?.find(e => e.id === 'contactSettingPage')?.data?.value1 ?? "",
-        readOnly: !!!userSettings?.find(e => e.id === 'contactSettingPage')?.data?.customizable,
-        readOnlyReason: !!!userSettings?.find(e => e.id === 'contactSettingPage')?.data?.customizable ? 'This setting is managed by admin' : '',
+        value: userSettings?.numberFormatter1?.value ?? "",
+        readOnly: userSettings?.numberFormatter1?.customizable ?? true,
+        readOnlyReason: !!!userSettings?.numberFormatter1?.customizable ? 'This setting is managed by admin' : ''
       },
       {
         id: "overridingPhoneNumberFormat2",
         name: "Format 2",
         type: "string",
-        value: userSettings?.find(e => e.id === 'contactSettingPage')?.data?.value2 ?? "",
-        readOnly: !!!userSettings?.find(e => e.id === 'contactSettingPage')?.data?.customizable,
-        readOnlyReason: !!!userSettings?.find(e => e.id === 'contactSettingPage')?.data?.customizable ? 'This setting is managed by admin' : '',
+        value: userSettings?.numberFormatter2?.value ?? "",
+        readOnly: userSettings?.numberFormatter2?.customizable ?? true,
+        readOnlyReason: !!!userSettings?.numberFormatter2?.customizable ? 'This setting is managed by admin' : ''
       },
       {
         id: "overridingPhoneNumberFormat3",
         name: "Format 3",
         type: "string",
-        value: userSettings?.find(e => e.id === 'contactSettingPage')?.data?.value3 ?? "",
-        readOnly: !!!userSettings?.find(e => e.id === 'contactSettingPage')?.data?.customizable,
-        readOnlyReason: !!!userSettings?.find(e => e.id === 'contactSettingPage')?.data?.customizable ? 'This setting is managed by admin' : '',
+        value: userSettings?.numberFormatter3?.value ?? "",
+        readOnly: userSettings?.numberFormatter3?.customizable ?? true,
+        readOnlyReason: !!!userSettings?.numberFormatter3?.customizable ? 'This setting is managed by admin' : ''
       }
     ]
     services.settings.find(s => s.id === 'contacts').items.push(
@@ -2143,7 +2179,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
     services.settings.find(s => s.id === 'contacts').items.push(...numberFormatterComponent);
   }
 
-  if (!!extensionUserSettings && (extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleDeveloperMode")?.value)) {
+  if (userCore.getDeveloperModeSetting(userSettings).value) {
     services.settings.push(
       {
         id: 'openDeveloperSettingsPage',
