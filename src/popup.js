@@ -67,25 +67,42 @@ axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be ove
 
 // TEMP
 async function tempConvertExtensionUserSettingsToUserSettings() {
-  const extensionUserSettings = (await chrome.storage.local.get('extensionUserSettings'))?.extensionUserSettings;
-  let formattedUserSettings = {};
-  if (!!extensionUserSettings) {
-    for (const s of extensionUserSettings) {
-      if (s.items !== undefined) {
-        for (const i of s.items) {
-          formattedUserSettings[i.id] = { value: i.value };
+  if (crmAuthed) {
+    const extensionUserSettings = (await chrome.storage.local.get('extensionUserSettings'))?.extensionUserSettings;
+    let formattedUserSettings = {};
+    if (!!extensionUserSettings) {
+      for (const s of extensionUserSettings) {
+        if (s.items !== undefined) {
+          for (const i of s.items) {
+            // special: overriding number format
+            if (!!!formattedUserSettings.overridingNumberFormat) {
+              formattedUserSettings.overridingNumberFormat = {};
+            }
+            if (i.id === "overridingPhoneNumberFormat") {
+              formattedUserSettings.overridingNumberFormat.numberFormatter1 = i.value;
+            }
+            if (i.id === "overridingPhoneNumberFormat2") {
+              formattedUserSettings.overridingNumberFormat.numberFormatter2 = i.value;
+            }
+            if (i.id === "overridingPhoneNumberFormat3") {
+
+              formattedUserSettings.overridingNumberFormat.numberFormatter3 = i.value;
+            }
+            formattedUserSettings[i.id] = { value: i.value };
+          }
+        }
+        else if (s.value !== undefined) {
+          formattedUserSettings[s.id] = { value: s.value };
         }
       }
-      else if (s.value !== undefined) {
-        formattedUserSettings[s.id] = { value: s.value };
-      }
     }
+    userSettings = await userCore.uploadUserSettings({
+      serverUrl: manifest.serverUrl,
+      userSettings: formattedUserSettings
+    });
+    await chrome.storage.local.set({ userSettings });
+    await chrome.storage.local.remove('extensionUserSettings');
   }
-  userSettings = await userCore.uploadUserSettings({
-    serverUrl: manifest.serverUrl,
-    userSettings: formattedUserSettings
-  });
-  await chrome.storage.local.set({ userSettings });
 }
 
 // Hack: bullhorn specific logic to check if allow custom note action value
@@ -289,7 +306,6 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-adapter-pushAdapterState':
-          await tempConvertExtensionUserSettingsToUserSettings();
           if (!registered) {
             const platformInfo = await chrome.storage.local.get('platform-info');
             if (isObjectEmpty(platformInfo)) {
@@ -302,7 +318,7 @@ window.addEventListener('message', async (e) => {
               axios.defaults.timeout = platform.requestConfig.timeout * 1000;
             }
             registered = true;
-            const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings });
+            const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-register-third-party-service',
               service: serviceManifest
@@ -322,6 +338,7 @@ window.addEventListener('message', async (e) => {
             document.getElementById('rc-widget').style.zIndex = 0;
             let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
             crmAuthed = !!rcUnifiedCrmExtJwt;
+            await tempConvertExtensionUserSettingsToUserSettings();
             // Unique: Pipedrive
             if (platformName === 'pipedrive' && !(await auth.checkAuth())) {
               chrome.runtime.sendMessage(
@@ -448,17 +465,22 @@ window.addEventListener('message', async (e) => {
           if (crmAuthed) {
             // Admin tab render
             const isAdmin = rcInfo?.value?.cachedData?.extensionInfo?.permissions?.admin?.enabled;
-            if (isAdmin || rcInfo?.value?.cachedData?.extensionInfo?.name === 'Da Kong') {
-              const adminPageRender = adminPage.getAdminPageRender();
-              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                type: 'rc-adapter-register-customized-page',
-                page: adminPageRender,
-              }, '*');
-              const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
-              await chrome.storage.local.set({ adminSettings: storedAdminSettings });
-              adminSettings = storedAdminSettings;
+            if (isAdmin || rcInfo?.value?.cachedData?.extensionInfo?.name === 'Da Kong' || rcInfo?.value?.cachedData?.extensionInfo?.name === 'Embbnux Ji') {
+              try {
+                const adminPageRender = adminPage.getAdminPageRender();
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-register-customized-page',
+                  page: adminPageRender,
+                }, '*');
+                const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
+                await chrome.storage.local.set({ adminSettings: storedAdminSettings });
+                adminSettings = storedAdminSettings;
+              } catch (e) {
+                console.log('Cannot find admin settings', e);
+              }
             }
             userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
+            await chrome.storage.local.set({ userSettings });
             const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-register-third-party-service',
@@ -621,10 +643,12 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-callLogger-auto-log-notify':
           await chrome.storage.local.set({ rc_callLogger_auto_log_notify: data.autoLog });
-          await userCore.uploadUserSettings({
-            serverUrl: manifest.serverUrl,
-            userSettings
-          });
+          if (crmAuthed) {
+            await userCore.uploadUserSettings({
+              serverUrl: manifest.serverUrl,
+              userSettings
+            });
+          }
           trackEditSettings({ changedItem: 'auto-call-log', status: data.autoLog });
           if (!!data.autoLog && !!crmAuthed) {
             retroAutoCallLogMaxAttempt = 10;
@@ -633,10 +657,12 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-messageLogger-auto-log-notify':
           await chrome.storage.local.set({ rc_messageLogger_auto_log_notify: data.autoLog });
-          await userCore.uploadUserSettings({
-            serverUrl: manifest.serverUrl,
-            userSettings
-          });
+          if (crmAuthed) {
+            await userCore.uploadUserSettings({
+              serverUrl: manifest.serverUrl,
+              userSettings
+            });
+          }
           trackEditSettings({ changedItem: 'auto-message-log', status: data.autoLog });
           break;
         case 'rc-route-changed-notify':
@@ -1313,7 +1339,7 @@ window.addEventListener('message', async (e) => {
                     newContactType: data.body.formData.newContactType
                   });
                   newContactInfo = newContactResp.contactInfo;
-                    if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
+                  if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
                     await openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                   }
                 }
@@ -1441,10 +1467,13 @@ window.addEventListener('message', async (e) => {
                   formattedUserSettings[s.id] = { value: s.value };
                 }
               }
-              userSettings = await userCore.uploadUserSettings({
-                serverUrl: manifest.serverUrl,
-                userSettings: formattedUserSettings
-              });
+
+              if (crmAuthed) {
+                userSettings = await userCore.uploadUserSettings({
+                  serverUrl: manifest.serverUrl,
+                  userSettings: formattedUserSettings
+                });
+              }
               await chrome.storage.local.set({ userSettings });
               if (data.body.setting.id === "toggleDeveloperMode") {
                 showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
@@ -1476,6 +1505,14 @@ window.addEventListener('message', async (e) => {
                   await chrome.storage.local.set({ adminSettings });
                   const rcAccessToken = getRcAccessToken();
                   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
+                  userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
+                  await chrome.storage.local.set({ userSettings });
+                  const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-third-party-service',
+                    service: serviceManifest
+                  }, '*');
+                  RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
                   showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
@@ -1488,6 +1525,14 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: data.body.button.formData.apiKey, apiUrl: data.body.button.formData.apiUrl, username: data.body.button.formData.username, password: data.body.button.formData.password });
                   crmAuthed = !!returnedToken;
+                  if (crmAuthed) {
+                    userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
+                    const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-third-party-service',
+                      service: serviceManifest
+                    }, '*');
+                  }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 case 'feedbackPage':
@@ -1633,6 +1678,13 @@ window.addEventListener('message', async (e) => {
                     await chrome.storage.local.set({ adminSettings });
                     const rcAccessToken = getRcAccessToken();
                     await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
+                    userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
+                    await chrome.storage.local.set({ userSettings });
+                    const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-third-party-service',
+                      service: serviceManifest
+                    }, '*');
                     showNotification({ level: 'success', message: 'Custom manifest file uploaded.', ttl: 5000 });
                   }
                   break;
@@ -1825,7 +1877,13 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       const returnedToken = await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri });
       crmAuthed = !!returnedToken;
       if (crmAuthed) {
+        userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
         await dismissNotification({ notificationId: currentNotificationId });
+        const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+          type: 'rc-adapter-register-third-party-service',
+          service: serviceManifest
+        }, '*');
       }
     }
     sendResponse({ result: 'ok' });
@@ -1834,6 +1892,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   else if (request.type === 'pipedriveCallbackUri' && !(await auth.checkAuth())) {
     await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive` });
     crmAuthed = true;
+    userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
+    const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+      type: 'rc-adapter-register-third-party-service',
+      service: serviceManifest
+    }, '*');
     await dismissNotification({ notificationId: currentNotificationId });
     console.log('pipedriveAltAuthDone')
     chrome.runtime.sendMessage(
@@ -1886,7 +1950,13 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     });
     crmAuthed = !!returnedToken;
     if (crmAuthed) {
+      userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
       await dismissNotification({ notificationId: currentNotificationId });
+      const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-third-party-service',
+        service: serviceManifest
+      }, '*');
     }
     window.postMessage({ type: 'rc-apiKey-input-modal-close', platform: platform.name }, '*');
     chrome.runtime.sendMessage({
@@ -1938,7 +2008,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
     unauthorizedTitle: 'Connect',
     authorizationLogo: platform?.logoUrl ?? '',
     showAuthRedDot: true,
-    authorized: false,
+    authorized: crmAuthed,
     authorizedAccount: '',
     info: `Developed by ${manifest?.author?.name ?? 'Unknown'}`,
 
@@ -2167,25 +2237,25 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
         id: "overridingPhoneNumberFormat",
         name: "Format 1",
         type: "string",
-        value: userSettings?.numberFormatter1?.value ?? "",
-        readOnly: userSettings?.numberFormatter1?.customizable ?? true,
-        readOnlyReason: !!!userSettings?.numberFormatter1?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.overridingNumberFormat?.numberFormatter1 ?? "",
+        readOnly: userSettings?.overridingNumberFormat?.customizable === undefined ? false : !!!userSettings?.overridingNumberFormat?.customizable,
+        readOnlyReason: !!!userSettings?.overridingNumberFormat?.customizable ? 'This setting is managed by admin' : ''
       },
       {
         id: "overridingPhoneNumberFormat2",
         name: "Format 2",
         type: "string",
-        value: userSettings?.numberFormatter2?.value ?? "",
-        readOnly: userSettings?.numberFormatter2?.customizable ?? true,
-        readOnlyReason: !!!userSettings?.numberFormatter2?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.overridingNumberFormat?.numberFormatter2 ?? "",
+        readOnly: userSettings?.overridingNumberFormat?.customizable === undefined ? false : !!!userSettings?.overridingNumberFormat?.customizable,
+        readOnlyReason: !!!userSettings?.overridingNumberFormat?.customizable ? 'This setting is managed by admin' : ''
       },
       {
         id: "overridingPhoneNumberFormat3",
         name: "Format 3",
         type: "string",
-        value: userSettings?.numberFormatter3?.value ?? "",
-        readOnly: userSettings?.numberFormatter3?.customizable ?? true,
-        readOnlyReason: !!!userSettings?.numberFormatter3?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.overridingNumberFormat?.numberFormatter3 ?? "",
+        readOnly: userSettings?.overridingNumberFormat?.customizable === undefined ? false : !!!userSettings?.overridingNumberFormat?.customizable,
+        readOnlyReason: !!!userSettings?.overridingNumberFormat?.customizable ? 'This setting is managed by admin' : ''
       }
     ]
     services.settings.find(s => s.id === 'contacts').items.push(

@@ -146,8 +146,8 @@ async function Initialize() {
     await initializeC2D();
   }
 
-  const { extensionUserSettings } = await chrome.storage.local.get('extensionUserSettings');
-  if (!!extensionUserSettings && !!extensionUserSettings.find(e => e.id === 'advancedFeatures')?.items.find(e => e.id === "toggleAutoOpenWithCRM")?.value) {
+  const { userSettings } = await chrome.storage.local.get('userSettings');
+  if (userSettings?.autoOpenExtension?.value ?? false) {
     chrome.runtime.sendMessage({
       type: 'openPopupWindow'
     });

@@ -44,14 +44,16 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
     }
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const overridingFormats = [];
-    const { extensionUserSettings } = await chrome.storage.local.get('extensionUserSettings');
-    if (!!extensionUserSettings && !isObjectEmpty(extensionUserSettings)) {
-        const overridingPhoneNumberFormat = extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat')?.value ?? null;
-        const overridingPhoneNumberFormat2 = extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat2')?.value ?? null;
-        const overridingPhoneNumberFormat3 = extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat3')?.value ?? null;
-        if (overridingPhoneNumberFormat) { overridingFormats.push('+1**********'); overridingFormats.push(overridingPhoneNumberFormat); }
-        if (overridingPhoneNumberFormat2) overridingFormats.push(overridingPhoneNumberFormat2);
-        if (overridingPhoneNumberFormat3) overridingFormats.push(overridingPhoneNumberFormat3);
+    const { userSettings } = await chrome.storage.local.get('userSettings');
+    const overridingPhoneNumberFormatObj = userSettings?.overridingNumberFormat;
+    if (!!overridingPhoneNumberFormatObj.numberFormatter1) {
+        overridingFormats.push(overridingPhoneNumberFormatObj.numberFormatter1);
+    }
+    if (!!overridingPhoneNumberFormatObj.numberFormatter2) {
+        overridingFormats.push(overridingPhoneNumberFormatObj.numberFormatter2);
+    }
+    if (!!overridingPhoneNumberFormatObj.numberFormatter3) {
+        overridingFormats.push(overridingPhoneNumberFormatObj.numberFormatter3);
     }
     if (!!rcUnifiedCrmExtJwt) {
         const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${overridingFormats.toString()}&isExtension=${isExtensionNumber}`);

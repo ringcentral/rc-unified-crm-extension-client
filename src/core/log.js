@@ -1,14 +1,24 @@
 import axios from 'axios';
-import moment from 'moment';
 import { isObjectEmpty, showNotification } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 
 // Input {id} = sessionId from RC
 async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, additionalSubmission, rcAdditionalSubmission, contactId, contactType, contactName, isShowNotification = true }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const { extensionUserSettings } = await chrome.storage.local.get('extensionUserSettings');
+    const { userSettings } = await chrome.storage.local.get('userSettings');
     additionalSubmission = { ...additionalSubmission, ...rcAdditionalSubmission };
-    const overridingPhoneNumberFormat = (!!extensionUserSettings && !isObjectEmpty(extensionUserSettings)) ? (extensionUserSettings.find(e => e.name === 'Contacts')?.items.find(e => e.id === 'overridingPhoneNumberFormat')?.value ?? '') : "";
+    const overridingPhoneNumberFormatObj = userSettings?.overridingNumberFormat;
+    const overridingPhoneNumberFormat = [];
+    if (!!overridingPhoneNumberFormatObj.numberFormatter1) {
+        overridingPhoneNumberFormat.push(overridingPhoneNumberFormatObj.numberFormatter1);
+    }
+    if (!!overridingPhoneNumberFormatObj.numberFormatter2) {
+        overridingPhoneNumberFormat.push(overridingPhoneNumberFormatObj.numberFormatter2);
+    }
+    if (!!overridingPhoneNumberFormatObj.numberFormatter3) {
+        overridingPhoneNumberFormat.push(overridingPhoneNumberFormatObj.numberFormatter3);
+    }
+
     if (!!subject) {
         logInfo['customSubject'] = subject;
     }
