@@ -741,11 +741,11 @@ window.addEventListener('message', async (e) => {
               );
               break;
             case '/customizedPage/inputChanged':
-              responseMessage(
-                data.requestId,
-                {
-                  data: 'ok'
-                }
+              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-post-message-response',
+                responseId: data.requestId,
+                response: { data: 'ok' },
+              }, '*');
               switch (data.body?.formData?.section) {
                 case 'managedSettings':
                   const managedSettingsPageRender = managedSettingsPage.getManagedSettingsPageRender({ crmManifest: platform });
