@@ -2052,19 +2052,13 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
       {
         id: 'contacts',
         type: 'section',
-        name: 'Contacts',
+        name: 'Call pop',
         items: [
-          {
-            id: "numberFormatterTitle",
-            name: "Contact page",
-            type: "typography",
-            variant: "title2",
-            value: "Open contact page",
-          },
           {
             id: 'openContactPageFromIncomingCall',
             type: 'option',
-            name: 'Open contact from incoming call',
+            name: 'Incoming call pop',
+            description: 'Select when to trigger call pop for incoming calls.',
             options: [
               {
                 id: 'disabled',
@@ -2086,7 +2080,8 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
           {
             id: 'openContactPageFromOutgoingCall',
             type: 'option',
-            name: 'Open contact from outgoing call',
+            name: 'Outgoing call pop',
+            description: 'Select when to trigger call pop for outgoing calls.',
             options: [
               {
                 id: 'disabled',
@@ -2105,6 +2100,29 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
             readOnly: userCore.getOutgoingCallPop(userSettings).readOnly,
             readOnlyReason: userCore.getOutgoingCallPop(userSettings).readOnlyReason
           },
+          {
+            id: 'multiContactMatchBehavior',
+            type: 'option',
+            name: 'Multi-contact match behavior',
+            description: 'Select what to do when multiple contacts match a phone number.',
+            options: [
+              {
+                id: 'disabled',
+                name: 'Disabled'
+              },
+              {
+                id: 'openAllMatches',
+                name: 'Open all matches'
+              },
+              {
+                id: 'promptToSelect',
+                name: 'Prompt to select'
+              }
+            ],
+            value: userCore.getIncomingCallPop(userSettings).value,
+            readOnly: userCore.getIncomingCallPop(userSettings).readOnly,
+            readOnlyReason: userCore.getIncomingCallPop(userSettings).readOnlyReason,
+          },
           (platform.enableExtensionNumberLoggingSetting ?
             {
               id: 'allowExtensionNumberLogging',
@@ -2115,7 +2133,8 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
           {
             id: 'openContactPageAfterCreation',
             type: 'boolean',
-            name: 'Open contact after creating it',
+            name: 'Contact created call pop',
+            description: 'Open contact immediately after creating it',
             value: userCore.getOpenContactAfterCreationSetting(userSettings).value,
             readOnly: userCore.getOpenContactAfterCreationSetting(userSettings).readOnly,
             readOnlyReason: userCore.getOpenContactAfterCreationSetting(userSettings).readOnlyReason
