@@ -1181,7 +1181,7 @@ window.addEventListener('message', async (e) => {
                     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                     const matchedEntity = data.body.call.direction === 'Inbound' ? data.body.fromEntity : data.body.toEntity;
                     if (manifest.platforms[platformName].canOpenLogPage) {
-                      openLog({ manifest, platformName, hostname: platformHostname, logId: fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: matchedEntity.contactType });
+                      openLog({ manifest, platformName, hostname: platformHostname, logId: fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: matchedEntity.contactType, contactId: matchedEntity.id });
                     }
                     else {
                       await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: matchedEntity.id, contactType: matchedEntity.contactType });

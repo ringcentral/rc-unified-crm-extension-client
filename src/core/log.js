@@ -105,10 +105,11 @@ async function getLog({ serverUrl, logType, sessionIds, requireDetails }) {
     }
 }
 
-function openLog({ manifest, platformName, hostname, logId, contactType }) {
+function openLog({ manifest, platformName, hostname, logId, contactType, contactId }) {
     const logPageUrl = manifest.platforms[platformName].logPageUrl
         .replace('{hostname}', hostname)
         .replaceAll('{logId}', logId)
+        .replaceAll('{contactId}', contactId)
         .replaceAll('{contactType}', contactType);
     window.open(logPageUrl);
 }
