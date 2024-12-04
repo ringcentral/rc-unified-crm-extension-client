@@ -82,6 +82,14 @@ function getOutgoingCallPop(userSettings) {
     }
 }
 
+function getCallPopMultiMatchBehavior(userSettings){
+    return{
+        value: userSettings?.multiContactMatchBehavior?.value ?? 'disabled',
+        readOnly: userSettings?.multiContactMatchBehavior?.customizable === undefined ? false : !!!userSettings?.callLogMultiMatchBehavior?.customizable,
+        readOnlyReason: !!!userSettings?.multiContactMatchBehavior?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getOpenContactAfterCreationSetting(userSettings) {
     return {
         value: userSettings?.openContactAfterCreatingIt?.value ?? false,
@@ -131,6 +139,7 @@ exports.getCallPopSetting = getCallPopSetting;
 exports.getSMSPopSetting = getSMSPopSetting;
 exports.getIncomingCallPop = getIncomingCallPop;
 exports.getOutgoingCallPop = getOutgoingCallPop;
+exports.getCallPopMultiMatchBehavior = getCallPopMultiMatchBehavior;
 exports.getOpenContactAfterCreationSetting = getOpenContactAfterCreationSetting;
 exports.getDeveloperModeSetting = getDeveloperModeSetting;
 exports.getAutoOpenSetting = getAutoOpenSetting;

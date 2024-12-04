@@ -64,6 +64,34 @@ function getContactSettingPageRender({ adminUserSettings, renderOverridingNumber
                         }
                     }
                 },
+                multiContactMatchBehavior: {
+                    type: 'object',
+                    title: 'Multi-contact match behavior',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'string',
+                            name: 'OMulti-contact match behavior',
+                            oneOf: [
+                                {
+                                    const: 'disabled',
+                                    title: 'Disabled'
+                                },
+                                {
+                                    const: 'openAllMatches',
+                                    title: 'Open all matches'
+                                },
+                                {
+                                    const: 'promptToSelect',
+                                    title: 'Prompt to select'
+                                }
+                            ]
+                        }
+                    }
+                },
                 openContactAfterCreatingIt: {
                     type: 'object',
                     title: 'Open contact after creating it',
@@ -85,6 +113,9 @@ function getContactSettingPageRender({ adminUserSettings, renderOverridingNumber
                 "ui:collapsible": true,
             },
             openContactPageFromOutgoingCall: {
+                "ui:collapsible": true,
+            },
+            multiContactMatchBehavior: {
                 "ui:collapsible": true,
             },
             openContactAfterCreatingIt: {
@@ -109,6 +140,11 @@ function getContactSettingPageRender({ adminUserSettings, renderOverridingNumber
             {
                 customizable: adminUserSettings?.openContactPageFromOutgoingCall?.customizable ?? true,
                 value: adminUserSettings?.openContactPageFromOutgoingCall?.value ?? 'disabled'
+            },
+            multiContactMatchBehavior:
+            {
+                customizable: adminUserSettings?.multiContactMatchBehavior?.customizable ?? true,
+                value: adminUserSettings?.multiContactMatchBehavior?.value ?? 'disabled'
             },
             openContactAfterCreatingIt:
             {

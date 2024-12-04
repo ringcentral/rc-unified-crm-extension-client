@@ -2119,9 +2119,9 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
                 name: 'Prompt to select'
               }
             ],
-            value: userCore.getIncomingCallPop(userSettings).value,
-            readOnly: userCore.getIncomingCallPop(userSettings).readOnly,
-            readOnlyReason: userCore.getIncomingCallPop(userSettings).readOnlyReason,
+            value: userCore.getCallPopMultiMatchBehavior(userSettings).value,
+            readOnly: userCore.getCallPopMultiMatchBehavior(userSettings).readOnly,
+            readOnlyReason: userCore.getCallPopMultiMatchBehavior(userSettings).readOnlyReason,
           },
           (platform.enableExtensionNumberLoggingSetting ?
             {
