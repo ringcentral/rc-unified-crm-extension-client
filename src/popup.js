@@ -521,12 +521,12 @@ window.addEventListener('message', async (e) => {
                   chrome.runtime.sendMessage({
                     type: 'openPopupWindow'
                   });
-                  if (userSettings?.find(s => s.id === 'contactSettingPage')?.data?.openContactPageFromIncomingCall?.value === 'onAnswer') {
+                  if (userCore.getIncomingCallPop(userSettings).value === 'onAnswer') {
                     await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber });
                   }
                   break;
                 case 'Outbound':
-                  if (userSettings?.find(s => s.id === 'contactSettingPage')?.data?.openContactPageFromOutgoingCall?.value === 'onAnswer') {
+                  if (userCore.getOutgoingCallPop(userSettings).value === 'onAnswer') {
                     await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber });
                   }
                   break;
