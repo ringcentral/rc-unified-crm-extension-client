@@ -1457,7 +1457,7 @@ window.addEventListener('message', async (e) => {
               break;
             case '/settings':
               let formattedUserSettings = {};
-              for (const s of data.body.userSettings) {
+              for (const s of data.body.settings) {
                 if (s.items !== undefined) {
                   for (const i of s.items) {
                     formattedUserSettings[i.id] = { value: i.value };
