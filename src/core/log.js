@@ -9,13 +9,13 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
     additionalSubmission = { ...additionalSubmission, ...rcAdditionalSubmission };
     const overridingPhoneNumberFormatObj = userSettings?.overridingNumberFormat;
     const overridingPhoneNumberFormat = [];
-    if (!!overridingPhoneNumberFormatObj.numberFormatter1) {
+    if (!!overridingPhoneNumberFormatObj?.numberFormatter1) {
         overridingPhoneNumberFormat.push(overridingPhoneNumberFormatObj.numberFormatter1);
     }
-    if (!!overridingPhoneNumberFormatObj.numberFormatter2) {
+    if (!!overridingPhoneNumberFormatObj?.numberFormatter2) {
         overridingPhoneNumberFormat.push(overridingPhoneNumberFormatObj.numberFormatter2);
     }
-    if (!!overridingPhoneNumberFormatObj.numberFormatter3) {
+    if (!!overridingPhoneNumberFormatObj?.numberFormatter3) {
         overridingPhoneNumberFormat.push(overridingPhoneNumberFormatObj.numberFormatter3);
     }
 
