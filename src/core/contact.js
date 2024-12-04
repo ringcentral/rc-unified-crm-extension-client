@@ -46,13 +46,13 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
     const overridingFormats = [];
     const { userSettings } = await chrome.storage.local.get('userSettings');
     const overridingPhoneNumberFormatObj = userSettings?.overridingNumberFormat;
-    if (!!overridingPhoneNumberFormatObj.numberFormatter1) {
+    if (!!overridingPhoneNumberFormatObj?.numberFormatter1) {
         overridingFormats.push(overridingPhoneNumberFormatObj.numberFormatter1);
     }
-    if (!!overridingPhoneNumberFormatObj.numberFormatter2) {
+    if (!!overridingPhoneNumberFormatObj?.numberFormatter2) {
         overridingFormats.push(overridingPhoneNumberFormatObj.numberFormatter2);
     }
-    if (!!overridingPhoneNumberFormatObj.numberFormatter3) {
+    if (!!overridingPhoneNumberFormatObj?.numberFormatter3) {
         overridingFormats.push(overridingPhoneNumberFormatObj.numberFormatter3);
     }
     if (!!rcUnifiedCrmExtJwt) {
