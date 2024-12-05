@@ -105,17 +105,17 @@ async function getLog({ serverUrl, logType, sessionIds, requireDetails }) {
     }
 }
 
-function openLog({ manifest, platformName, hostname, logId, contactType }) {
+function openLog({ manifest, platformName, hostname, logId, contactType, contactId }) {
     const logPageUrl = manifest.platforms[platformName].logPageUrl
         .replace('{hostname}', hostname)
         .replaceAll('{logId}', logId)
+        .replaceAll('{contactId}', contactId)
         .replaceAll('{contactType}', contactType);
     window.open(logPageUrl);
 }
 
 async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, subject, note }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    additionalSubmission = { ...additionalSubmission, ...rcAdditionalSubmission };
     if (!!rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
