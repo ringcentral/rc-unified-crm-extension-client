@@ -116,7 +116,6 @@ function openLog({ manifest, platformName, hostname, logId, contactType, contact
 
 async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, subject, note }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    additionalSubmission = { ...additionalSubmission, ...rcAdditionalSubmission };
     if (!!rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
