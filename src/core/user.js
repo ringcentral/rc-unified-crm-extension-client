@@ -84,8 +84,8 @@ function getOutgoingCallPop(userSettings) {
 
 function getCallPopMultiMatchBehavior(userSettings){
     return{
-        value: userSettings?.multiContactMatchBehavior?.value ?? 'disabled',
-        readOnly: userSettings?.multiContactMatchBehavior?.customizable === undefined ? false : !!!userSettings?.callLogMultiMatchBehavior?.customizable,
+        value: userSettings?.multiContactMatchBehavior?.value ?? 'openAllMatches',
+        readOnly: userSettings?.multiContactMatchBehavior?.customizable === undefined ? false : !!!userSettings?.multiContactMatchBehavior?.customizable,
         readOnlyReason: !!!userSettings?.multiContactMatchBehavior?.customizable ? 'This setting is managed by admin' : ''
     }
 }

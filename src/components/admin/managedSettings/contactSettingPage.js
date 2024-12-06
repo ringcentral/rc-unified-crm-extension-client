@@ -144,7 +144,7 @@ function getContactSettingPageRender({ adminUserSettings, renderOverridingNumber
             multiContactMatchBehavior:
             {
                 customizable: adminUserSettings?.multiContactMatchBehavior?.customizable ?? true,
-                value: adminUserSettings?.multiContactMatchBehavior?.value ?? 'disabled'
+                value: adminUserSettings?.multiContactMatchBehavior?.value ?? 'openAllMatches'
             },
             openContactAfterCreatingIt:
             {
