@@ -114,7 +114,7 @@ function openLog({ manifest, platformName, hostname, logId, contactType, contact
     window.open(logPageUrl);
 }
 
-async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, subject, note }) {
+async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, subject, note, startTime, duration, result, isShowNotification }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     if (!!rcUnifiedCrmExtJwt) {
         switch (logType) {
@@ -123,7 +123,10 @@ async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission
                     sessionId,
                     recordingLink,
                     subject,
-                    note
+                    note,
+                    startTime,
+                    duration,
+                    result
                 }
                 const callLogRes = await axios.patch(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, patchBody);
                 if (callLogRes.data.successful) {
@@ -137,7 +140,9 @@ async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission
                         console.log('call recording update done');
                     }
                     else {
-                        showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'success', message: callLogRes.data.returnMessage?.message ?? 'Call log updated', ttl: callLogRes.data.returnMessage?.ttl ?? 3000 });
+                        if (!!isShowNotification) {
+                            showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'success', message: callLogRes.data.returnMessage?.message ?? 'Call log updated', ttl: callLogRes.data.returnMessage?.ttl ?? 3000 });
+                        }
                     }
                 }
                 else {

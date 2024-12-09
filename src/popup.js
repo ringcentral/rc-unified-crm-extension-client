@@ -959,14 +959,19 @@ window.addEventListener('message', async (e) => {
                   console.log('call recording updating...');
                   trackUpdateCallRecordingLink({ processState: 'start' });
                   await chrome.storage.local.set({ ['rec-link-' + data.body.call.sessionId]: { recordingLink: data.body.call.recording.link } });
-                  await updateLog(
-                    {
-                      serverUrl: manifest.serverUrl,
-                      logType: 'Call',
-                      rcAdditionalSubmission,
-                      sessionId: data.body.call.sessionId,
-                      recordingLink: data.body.call.recording.link
-                    });
+                }
+                await updateLog(
+                  {
+                    serverUrl: manifest.serverUrl,
+                    logType: 'Call',
+                    rcAdditionalSubmission,
+                    sessionId: data.body.call.sessionId,
+                    recordingLink: data.body.call.recording?.link,
+                    startTime: data.body.call.startTime,
+                    duration: data.body.call.duration,
+                    result: data.body.call.result
+                  });
+                if (!!data.body.call?.recording?.link) {
                   trackUpdateCallRecordingLink({ processState: 'finish' });
                 }
                 responseMessage(
@@ -1051,6 +1056,10 @@ window.addEventListener('message', async (e) => {
                       rcAdditionalSubmission,
                       subject: data.body.formData.activityTitle ?? "",
                       note: data.body.formData.note ?? "",
+                      startTime: data.body.call.startTime,
+                      duration: data.body.call.duration,
+                      result: data.body.call.result,
+                      isShowNotification: true
                     });
                     break;
                 }
