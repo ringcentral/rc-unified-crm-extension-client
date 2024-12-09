@@ -148,9 +148,13 @@ async function Initialize() {
 
   const { userSettings } = await chrome.storage.local.get('userSettings');
   if (userSettings?.autoOpenExtension?.value ?? false) {
-    chrome.runtime.sendMessage({
-      type: 'openPopupWindow'
-    });
+    const platformInfo = await chrome.storage.local.get('platform-info');
+    const registeredHostname = platformInfo['platform-info'].hostname;
+    if (window.location.hostname === registeredHostname) {
+      chrome.runtime.sendMessage({
+        type: 'openPopupWindow'
+      });
+    }
   }
 }
 
