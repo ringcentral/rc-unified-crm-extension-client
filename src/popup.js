@@ -2142,7 +2142,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
         name: "Advanced features",
         items: [
           {
-            id: 'toggleDeveloperMode',
+            id: 'developerMode',
             type: 'boolean',
             name: 'Developer mode',
             value: userCore.getDeveloperModeSetting(userSettings).value,
@@ -2150,7 +2150,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
             readOnlyReason: userCore.getDeveloperModeSetting(userSettings).readOnlyReason
           },
           {
-            id: 'toggleAutoOpenWithCRM',
+            id: 'autoOpenExtension',
             type: 'boolean',
             name: 'Auto open extension',
             value: userCore.getAutoOpenSetting(userSettings).value,
