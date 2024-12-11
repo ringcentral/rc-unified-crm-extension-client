@@ -28,7 +28,7 @@ function getAboutPageRender({ manifest }) {
                 },
                 adapterInfoTitle: {
                     type: "string",
-                    description: "Adaptor"
+                    description: "Adapter"
                 },
                 adapterAuthorInfo: {
                     type: "string",

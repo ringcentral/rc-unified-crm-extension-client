@@ -1,6 +1,6 @@
 const auth = require('./core/auth');
 const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } = require('./core/log');
-const { getContact, createContact, openContactPage } = require('./core/contact');
+const { getContact, createContact, openContactPage, refreshContactPromptPage } = require('./core/contact');
 const userCore = require('./core/user');
 const { getAdminSettings, uploadAdminSettings } = require('./core/admin');
 const { responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken } = require('./lib/util');
@@ -61,6 +61,7 @@ let adminSettings = {
   userSettings: {}
 };
 let userSettings = {};
+let hasOngoingCall = false;
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
@@ -522,12 +523,12 @@ window.addEventListener('message', async (e) => {
                     type: 'openPopupWindow'
                   });
                   if (userCore.getIncomingCallPop(userSettings).value === 'onAnswer') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber });
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
                   }
                   break;
                 case 'Outbound':
                   if (userCore.getOutgoingCallPop(userSettings).value === 'onAnswer') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber });
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
                   }
                   break;
               }
@@ -603,18 +604,19 @@ window.addEventListener('message', async (e) => {
               }
               break;
             case 'Ringing':
+              hasOngoingCall = true;
               switch (data.call.direction) {
                 case 'Inbound':
                   chrome.runtime.sendMessage({
                     type: 'openPopupWindow'
                   });
                   if (userCore.getIncomingCallPop(userSettings).value === 'onFirstRing') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber });
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
                   }
                   break;
                 case 'Outbound':
                   if (userCore.getOutgoingCallPop(userSettings).value === 'onFirstRing') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber });
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
                   }
                   break;
               }
@@ -631,6 +633,7 @@ window.addEventListener('message', async (e) => {
               break;
             case 'WebRTC Call Ended':
               const { callWith, callingMode } = await chrome.storage.local.get({ callWith: null, callingMode: null });
+              hasOngoingCall = false;
               trackCallEnd({
                 direction: data.properties.direction,
                 durationInSeconds: data.properties.duration,
@@ -772,6 +775,21 @@ window.addEventListener('message', async (e) => {
                 responseId: data.requestId,
                 response: { data: 'ok' },
               }, '*');
+              // refresh multi match prompt
+              if (data.body.page.id === "getMultiContactPopPromptPage") {
+                if (data.body.keys.some(k => k === 'search')) {
+                  const searchWord = data.body.formData.search;
+                  refreshContactPromptPage({ contactInfo: data.body.page.formData.contactInfo, searchWord });
+                }
+                else if (data.body.keys.some(k => k === 'contactList')) {
+                  const contactToOpen = data.body.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
+                  openContactPage({ manifest, platformName, contactType: contactToOpen.type, contactId: contactToOpen.id });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack',
+                  }, '*');
+                }
+              }
               switch (data.body?.formData?.section) {
                 case 'managedSettings':
                   const managedSettingsPageRender = managedSettingsPage.getManagedSettingsPageRender({ crmManifest: platform });
@@ -913,7 +931,12 @@ window.addEventListener('message', async (e) => {
               break;
             case '/contacts/view':
               window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-              await openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber, contactId: data.body.id, contactType: data.body.contactType });
+              if (hasOngoingCall) {
+                await openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber, contactType: data.body.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
+              }
+              else {
+                await openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber, contactId: data.body.id, contactType: data.body.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
+              }
               window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               responseMessage(
                 data.requestId,
@@ -1184,7 +1207,7 @@ window.addEventListener('message', async (e) => {
                       openLog({ manifest, platformName, hostname: platformHostname, logId: fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: matchedEntity.contactType, contactId: matchedEntity.id });
                     }
                     else {
-                      await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: matchedEntity.id, contactType: matchedEntity.contactType });
+                      await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: matchedEntity.id, contactType: matchedEntity.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
                     }
                     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                     break;
@@ -2052,19 +2075,13 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
       {
         id: 'contacts',
         type: 'section',
-        name: 'Contacts',
+        name: 'Call pop',
         items: [
-          {
-            id: "numberFormatterTitle",
-            name: "Contact page",
-            type: "typography",
-            variant: "title2",
-            value: "Open contact page",
-          },
           {
             id: 'openContactPageFromIncomingCall',
             type: 'option',
-            name: 'Open contact from incoming call',
+            name: 'Incoming call pop',
+            description: 'Select when to trigger call pop for incoming calls.',
             options: [
               {
                 id: 'disabled',
@@ -2086,7 +2103,8 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
           {
             id: 'openContactPageFromOutgoingCall',
             type: 'option',
-            name: 'Open contact from outgoing call',
+            name: 'Outgoing call pop',
+            description: 'Select when to trigger call pop for outgoing calls.',
             options: [
               {
                 id: 'disabled',
@@ -2105,6 +2123,29 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
             readOnly: userCore.getOutgoingCallPop(userSettings).readOnly,
             readOnlyReason: userCore.getOutgoingCallPop(userSettings).readOnlyReason
           },
+          {
+            id: 'multiContactMatchBehavior',
+            type: 'option',
+            name: 'Multi-contact match behavior',
+            description: 'Select what to do when multiple contacts match a phone number.',
+            options: [
+              {
+                id: 'disabled',
+                name: 'Disabled'
+              },
+              {
+                id: 'openAllMatches',
+                name: 'Open all matches'
+              },
+              {
+                id: 'promptToSelect',
+                name: 'Prompt to select'
+              }
+            ],
+            value: userCore.getCallPopMultiMatchBehavior(userSettings).value,
+            readOnly: userCore.getCallPopMultiMatchBehavior(userSettings).readOnly,
+            readOnlyReason: userCore.getCallPopMultiMatchBehavior(userSettings).readOnlyReason,
+          },
           (platform.enableExtensionNumberLoggingSetting ?
             {
               id: 'allowExtensionNumberLogging',
@@ -2115,7 +2156,8 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
           {
             id: 'openContactPageAfterCreation',
             type: 'boolean',
-            name: 'Open contact after creating it',
+            name: 'Contact created call pop',
+            description: 'Open contact immediately after creating it',
             value: userCore.getOpenContactAfterCreationSetting(userSettings).value,
             readOnly: userCore.getOpenContactAfterCreationSetting(userSettings).readOnly,
             readOnlyReason: userCore.getOpenContactAfterCreationSetting(userSettings).readOnlyReason
