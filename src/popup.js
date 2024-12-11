@@ -1264,7 +1264,7 @@ window.addEventListener('message', async (e) => {
                 break;
               }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
-              const messageAutoPopup = usercore.getSMSPopSetting(userSettings).value;
+              const messageAutoPopup = userCore.getSMSPopSetting(userSettings).value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
               let getContactMatchResult = null;
