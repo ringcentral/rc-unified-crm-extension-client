@@ -1227,7 +1227,7 @@ window.addEventListener('message', async (e) => {
                 sessionId: data.body.call.sessionId,
                 note: data.body.formData.note ?? ''
               });
-              const page = logPage.getUpdatedLogPageRender({ manifest, platformName, updateData: data.body });
+              const page = logPage.getUpdatedLogPageRender({ manifest, platformName, logType: 'Call', updateData: data.body });
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-update-call-log-page',
                 page
