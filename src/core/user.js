@@ -52,17 +52,17 @@ function getAutoLogSMSSetting(userSettings) {
 
 function getCallPopSetting(userSettings) {
     return {
-        value: userSettings?.autoOpenCallLogPage?.value ?? false,
-        readOnly: userSettings?.autoOpenCallLogPage?.customizable === undefined ? false : !!!userSettings?.autoOpenCallLogPage?.customizable,
-        readOnlyReason: !!!userSettings?.autoOpenCallLogPage?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.popupLogPageAfterCall?.value ?? false,
+        readOnly: userSettings?.popupLogPageAfterCall?.customizable === undefined ? false : !!!userSettings?.popupLogPageAfterCall?.customizable,
+        readOnlyReason: !!!userSettings?.popupLogPageAfterCall?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getSMSPopSetting(userSettings) {
     return {
-        value: userSettings?.autoOpenSMSLogPage?.value ?? false,
-        readOnly: userSettings?.autoOpenSMSLogPage?.customizable === undefined ? false : !!!userSettings?.autoOpenSMSLogPage?.customizable,
-        readOnlyReason: !!!userSettings?.autoOpenSMSLogPage?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.popupLogPageAfterSMS?.value ?? false,
+        readOnly: userSettings?.popupLogPageAfterSMS?.customizable === undefined ? false : !!!userSettings?.popupLogPageAfterSMS?.customizable,
+        readOnlyReason: !!!userSettings?.popupLogPageAfterSMS?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
