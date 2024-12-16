@@ -2043,6 +2043,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
     callLoggerAutoSettingReadOnly: userCore.getAutoLogCallSetting(userSettings).readOnly,
     callLoggerAutoSettingReadOnlyReason: userCore.getAutoLogCallSetting(userSettings).readOnlyReason,
     callLoggerAutoSettingReadOnlyValue: userCore.getAutoLogCallSetting(userSettings).value,
+    callLoggerHideEditLogButton: manifest.platforms[platformName].hideEditLogButton ?? false,
 
     messageLoggerPath: '/messageLogger',
     messagesLogPageInputChangedEventPath: '/messageLogger/inputChanged',
