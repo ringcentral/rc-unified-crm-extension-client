@@ -44,16 +44,16 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const overridingFormats = [];
     const { userSettings } = await chrome.storage.local.get('userSettings');
-    const overridingPhoneNumberFormatObj = userSettings?.overridingNumberFormat;
-    if (!!overridingPhoneNumberFormatObj?.numberFormatter1) {
-        overridingFormats.push(overridingPhoneNumberFormatObj.numberFormatter1);
+    if (!!userSettings?.overridingPhoneNumberFormat?.value) {
+        overridingFormats.push(userSettings.overridingPhoneNumberFormat.value);
     }
-    if (!!overridingPhoneNumberFormatObj?.numberFormatter2) {
-        overridingFormats.push(overridingPhoneNumberFormatObj.numberFormatter2);
+    if (!!userSettings?.overridingPhoneNumberFormat2?.value) {
+        overridingFormats.push(userSettings.overridingPhoneNumberFormat2.value);
     }
-    if (!!overridingPhoneNumberFormatObj?.numberFormatter3) {
-        overridingFormats.push(overridingPhoneNumberFormatObj.numberFormatter3);
+    if (!!userSettings?.overridingPhoneNumberFormat3?.value) {
+        overridingFormats.push(userSettings.overridingPhoneNumberFormat3.value);
     }
+    
     if (!!rcUnifiedCrmExtJwt) {
         const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${overridingFormats.toString()}&isExtension=${isExtensionNumber}`);
         return {

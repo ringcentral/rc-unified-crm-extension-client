@@ -2279,25 +2279,25 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
         id: "overridingPhoneNumberFormat",
         name: "Format 1",
         type: "string",
-        value: userSettings?.overridingNumberFormat?.numberFormatter1 ?? "",
-        readOnly: userSettings?.overridingNumberFormat?.customizable === undefined ? false : !!!userSettings?.overridingNumberFormat?.customizable,
-        readOnlyReason: !!!userSettings?.overridingNumberFormat?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.overridingPhoneNumberFormat?.value ?? "",
+        readOnly: userSettings?.overridingPhoneNumberFormat?.customizable === undefined ? false : !!!userSettings?.overridingPhoneNumberFormat?.customizable,
+        readOnlyReason: !!!userSettings?.overridingPhoneNumberFormat?.customizable ? 'This setting is managed by admin' : ''
       },
       {
         id: "overridingPhoneNumberFormat2",
         name: "Format 2",
         type: "string",
-        value: userSettings?.overridingNumberFormat?.numberFormatter2 ?? "",
-        readOnly: userSettings?.overridingNumberFormat?.customizable === undefined ? false : !!!userSettings?.overridingNumberFormat?.customizable,
-        readOnlyReason: !!!userSettings?.overridingNumberFormat?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.overridingPhoneNumberFormat2?.value ?? "",
+        readOnly: userSettings?.overridingPhoneNumberFormat2?.customizable === undefined ? false : !!!userSettings?.overridingPhoneNumberFormat2?.customizable,
+        readOnlyReason: !!!userSettings?.overridingPhoneNumberFormat2?.customizable ? 'This setting is managed by admin' : ''
       },
       {
         id: "overridingPhoneNumberFormat3",
         name: "Format 3",
         type: "string",
-        value: userSettings?.overridingNumberFormat?.numberFormatter3 ?? "",
-        readOnly: userSettings?.overridingNumberFormat?.customizable === undefined ? false : !!!userSettings?.overridingNumberFormat?.customizable,
-        readOnlyReason: !!!userSettings?.overridingNumberFormat?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.overridingPhoneNumberFormat3?.value ?? "",
+        readOnly: userSettings?.overridingPhoneNumberFormat3?.customizable === undefined ? false : !!!userSettings?.overridingPhoneNumberFormat3?.customizable,
+        readOnlyReason: !!!userSettings?.overridingPhoneNumberFormat3?.customizable ? 'This setting is managed by admin' : ''
       }
     ]
     services.settings.find(s => s.id === 'contacts').items.push(

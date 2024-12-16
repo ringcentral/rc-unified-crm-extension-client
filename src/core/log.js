@@ -7,16 +7,15 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { userSettings } = await chrome.storage.local.get('userSettings');
     additionalSubmission = { ...additionalSubmission, ...rcAdditionalSubmission };
-    const overridingPhoneNumberFormatObj = userSettings?.overridingNumberFormat;
     const overridingPhoneNumberFormat = [];
-    if (!!overridingPhoneNumberFormatObj?.numberFormatter1) {
-        overridingPhoneNumberFormat.push(overridingPhoneNumberFormatObj.numberFormatter1);
+    if (!!userSettings?.overridingPhoneNumberFormat?.value) {
+        overridingPhoneNumberFormat.push(userSettings.overridingPhoneNumberFormat.value);
     }
-    if (!!overridingPhoneNumberFormatObj?.numberFormatter2) {
-        overridingPhoneNumberFormat.push(overridingPhoneNumberFormatObj.numberFormatter2);
+    if (!!userSettings?.overridingPhoneNumberFormat2?.value) {
+        overridingPhoneNumberFormat.push(userSettings.overridingPhoneNumberFormat2.value);
     }
-    if (!!overridingPhoneNumberFormatObj?.numberFormatter3) {
-        overridingPhoneNumberFormat.push(overridingPhoneNumberFormatObj.numberFormatter3);
+    if (!!userSettings?.overridingPhoneNumberFormat3?.value) {
+        overridingPhoneNumberFormat.push(userSettings.overridingPhoneNumberFormat3.value);
     }
 
     if (!!subject) {
