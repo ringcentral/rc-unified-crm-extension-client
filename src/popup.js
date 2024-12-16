@@ -489,8 +489,7 @@ window.addEventListener('message', async (e) => {
             }, '*');
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-update-authorization-status',
-              authorized: crmAuthed,
-              authorizedAccount: 'test@email.com', // optional, authorized account email or id
+              authorized: crmAuthed
             }, '*');
             console.log(userSettings);
           }
@@ -1635,7 +1634,7 @@ window.addEventListener('message', async (e) => {
                   trackFactoryReset();
                   break;
                 case 'generateErrorLogButton':
-                  const errorLogFileName = "[RingCentral CRM Extension]ErrorLogs.txt";
+                  const errorLogFileName = "[RingCentral App Connect]ErrorLogs.txt";
                   const errorLogFileContent = JSON.stringify(errorLogs);
                   DownloadTextFile({ filename: errorLogFileName, text: errorLogFileContent });
                   break;

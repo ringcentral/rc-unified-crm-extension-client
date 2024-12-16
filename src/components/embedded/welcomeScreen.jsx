@@ -88,7 +88,7 @@ export default () => {
                             <RcTypography
                                 variant='headline2'
                             >
-                                Unified CRM Extension
+                                App Connect
                             </RcTypography>
                             <br />
                             <br />
@@ -101,7 +101,7 @@ export default () => {
                             <RcTypography
                                 variant='body1'
                             >
-                                To begin using the Unified CRM extension for RingCentral, you need  to connect to your CRM provider.
+                                To begin using the App Connect for RingCentral, you need  to connect to your CRM provider.
                             </RcTypography>
                             <br />
                             <RcTypography

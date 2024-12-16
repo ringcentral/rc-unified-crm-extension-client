@@ -7,7 +7,7 @@ export function sendMessageToExtension(message, callback) {
     console.error(e);
     trackChromeAPIError(e && e.message);
     if (e.message && e.message.includes('Extension context invalidated')) {
-      alert('RingCentral CRM Extension has been upgraded. Please refresh current page to continue.');
+      alert('RingCentral App Connect has been upgraded. Please refresh current page to continue.');
     }
   }
 }
