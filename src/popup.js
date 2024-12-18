@@ -265,6 +265,12 @@ window.addEventListener('message', async (e) => {
             )
           }
           break;
+        case 'rc-adapter-side-drawer-open-notify':
+          chrome.runtime.sendMessage({
+            type: 'sideWidgetOpen',
+            opened: data.open
+          });
+          break;
         case 'rc-dialer-status-notify':
           if (data.ready) {
             // check for Click-To-Dial or Click-To-SMS cached action
