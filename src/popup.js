@@ -465,8 +465,8 @@ window.addEventListener('message', async (e) => {
 
           if (crmAuthed) {
             // Admin tab render
-            const isAdmin = rcInfo?.value?.cachedData?.extensionInfo?.permissions?.admin?.enabled;
-            if (isAdmin || rcInfo?.value?.cachedData?.extensionInfo?.name === 'Da Kong' || rcInfo?.value?.cachedData?.extensionInfo?.name === 'Embbnux Ji') {
+            const isAdmin =   value?.cachedData?.extensionInfo?.permissions?.admin?.enabled;
+            if (isAdmin || rcInfo?.value?.cachedData?.extensionInfo?.id === 4024345020) {
               try {
                 const adminPageRender = adminPage.getAdminPageRender();
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
