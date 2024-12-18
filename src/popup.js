@@ -465,15 +465,14 @@ window.addEventListener('message', async (e) => {
 
           if (crmAuthed) {
             // Admin tab render
-            const isAdmin =   value?.cachedData?.extensionInfo?.permissions?.admin?.enabled;
-            if (isAdmin || rcInfo?.value?.cachedData?.extensionInfo?.id === 4024345020) {
+            const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
+            if (!!storedAdminSettings) {
               try {
                 const adminPageRender = adminPage.getAdminPageRender();
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-register-customized-page',
                   page: adminPageRender,
                 }, '*');
-                const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
                 await chrome.storage.local.set({ adminSettings: storedAdminSettings });
                 adminSettings = storedAdminSettings;
               } catch (e) {
