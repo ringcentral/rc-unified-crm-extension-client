@@ -5,9 +5,9 @@ const adminIconDark = require('../../images/adminIcon_dark.png');
 function getAdminPageRender() {
     return {
         id: 'adminPage',
-        title: 'Admin Settings',
+        title: 'Admin',
         type: 'tab',
-        priority: 5,
+        priority: 105,
         iconUri: adminIcon, // icon for tab, 24x24
         activeIconUri: adminIconActive, // icon for tab in active status, 24x24,
         darkIconUri: adminIconDark,
@@ -17,13 +17,16 @@ function getAdminPageRender() {
             properties: {
                 section: {
                     type: "string",
-                    oneOf: [{
-                        const: "customAdapter",
-                        title: "Custom adapter",
-                    }, {
-                        const: "managedSettings",
-                        title: "Managed settings",
-                    }]
+                    oneOf: [
+                        {
+                            const: "managedSettings",
+                            title: "Managed settings",
+                        },
+                        {
+                            const: "customAdapter",
+                            title: "Custom adapter",
+                        }
+                    ]
                 }
             }
         },
