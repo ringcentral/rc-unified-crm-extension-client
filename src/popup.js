@@ -339,6 +339,11 @@ window.addEventListener('message', async (e) => {
             document.getElementById('rc-widget').style.zIndex = 0;
             let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
             crmAuthed = !!rcUnifiedCrmExtJwt;
+            // Manifest case: use RC login to login CRM as well
+            if (!crmAuthed && !!platform.autoLoginCRMWithRingCentralLogin) {
+              const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken() });
+              crmAuthed = !!returnedToken;
+            }
             await tempConvertExtensionUserSettingsToUserSettings();
             // Unique: Pipedrive
             if (platformName === 'pipedrive' && !(await auth.checkAuth())) {
@@ -348,7 +353,7 @@ window.addEventListener('message', async (e) => {
                 }
               );
             }
-            else if (!rcUnifiedCrmExtJwt) {
+            else if (!rcUnifiedCrmExtJwt && !crmAuthed) {
               currentNotificationId = await showNotification({ level: 'warning', message: 'Please go to Settings and connect to CRM platform', ttl: 60000 });
             }
             try {
