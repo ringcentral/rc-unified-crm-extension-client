@@ -43,15 +43,29 @@ async function openPopupWindow() {
     });
   }
   else {
-    popup = await chrome.windows.create({
-      url: popupUri,
-      type: 'popup',
-      focused: true,
-      width: extensionWindowStatus?.width ?? 315,
-      height: extensionWindowStatus?.height ?? 566,
-      left: extensionWindowStatus?.left ?? 50,
-      top: extensionWindowStatus?.top ?? 50
-    });
+    try {
+      popup = await chrome.windows.create({
+        url: popupUri,
+        type: 'popup',
+        focused: true,
+        width: extensionWindowStatus?.width ?? 315,
+        height: extensionWindowStatus?.height ?? 566,
+        left: extensionWindowStatus?.left ?? 50,
+        top: extensionWindowStatus?.top ?? 50
+      });
+    }
+    // Case: position not reachable
+    catch (e) {
+      popup = await chrome.windows.create({
+        url: popupUri,
+        type: 'popup',
+        focused: true,
+        width: 315,
+        height: 566,
+        left: 50,
+        top: 50
+      });
+    }
   }
   await chrome.storage.local.set({
     popupWindowId: popup.id,
