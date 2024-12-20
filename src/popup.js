@@ -793,8 +793,8 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   // bring back inbound call modal if in Ringing state if exist
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-control-call',
-                      callAction: 'toggleRingingDialog',
+                    type: 'rc-adapter-control-call',
+                    callAction: 'toggleRingingDialog',
                   }, '*');
                 }
               }
@@ -822,7 +822,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'contactSetting':
-                  const contactSettingPageRender = contactSettingPage.getContactSettingPageRender({ adminUserSettings: adminSettings?.userSettings, renderOverridingNumberFormat: platform.name == 'clio' || platform.name == 'insightly' });
+                  const contactSettingPageRender = contactSettingPage.getContactSettingPageRender({ adminUserSettings: adminSettings?.userSettings, renderOverridingNumberFormat: platform.name == 'clio' || platform.name == 'insightly', renderAllowExtensionNumberLogging: !!platform.enableExtensionNumberLoggingSetting });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: contactSettingPageRender
@@ -2160,7 +2160,9 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
               id: 'allowExtensionNumberLogging',
               type: 'boolean',
               name: 'Allow extension number logging',
-              value: userSettings?.allowExtensionNumberLogging?.value ?? false
+              value: userSettings?.allowExtensionNumberLogging?.value ?? false,
+              readOnly: userSettings?.allowExtensionNumberLogging?.customizable === undefined ? false : !!!userSettings?.allowExtensionNumberLogging?.customizable,
+              readOnlyReason: 'This setting is managed by admin'
             } : {}),
           {
             id: 'openContactPageAfterCreation',

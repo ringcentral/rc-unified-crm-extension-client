@@ -1,8 +1,8 @@
-function getContactSettingPageRender({ adminUserSettings, renderOverridingNumberFormat }) {
+function getContactSettingPageRender({ adminUserSettings, renderOverridingNumberFormat, renderAllowExtensionNumberLogging }) {
     const page =
     {
         id: 'contactSettingPage',
-        title: 'Contacts',
+        title: 'Call pop',
         type: 'page',
         schema: {
             type: 'object',
@@ -192,6 +192,30 @@ function getContactSettingPageRender({ adminUserSettings, renderOverridingNumber
             numberFormatter1: adminUserSettings?.overridingNumberFormat?.numberFormatter1 ?? '',
             numberFormatter2: adminUserSettings?.overridingNumberFormat?.numberFormatter2 ?? '',
             numberFormatter3: adminUserSettings?.overridingNumberFormat?.numberFormatter3 ?? ''
+        }
+    }
+    if(renderAllowExtensionNumberLogging)
+    {
+        page.schema.properties.allowExtensionNumberLogging = {
+            type: 'object',
+            title: 'Allow extension number logging',
+            properties: {
+                customizable: {
+                    type: 'boolean',
+                    title: 'Customizable by user'
+                },
+                value: {
+                    type: 'boolean',
+                    title: 'Value'
+                }
+            }
+        }
+        page.uiSchema.allowExtensionNumberLogging = {
+            "ui:collapsible": true,
+        }
+        page.formData.allowExtensionNumberLogging = {
+            customizable: adminUserSettings?.allowExtensionNumberLogging?.customizable ?? true,
+            value: adminUserSettings?.allowExtensionNumberLogging?.value ?? false
         }
     }
     return page;
