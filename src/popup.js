@@ -791,6 +791,11 @@ window.addEventListener('message', async (e) => {
                     type: 'rc-adapter-navigate-to',
                     path: 'goBack',
                   }, '*');
+                  // bring back inbound call modal if in Ringing state if exist
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-control-call',
+                      callAction: 'toggleRingingDialog',
+                  }, '*');
                 }
               }
               switch (data.body?.formData?.section) {

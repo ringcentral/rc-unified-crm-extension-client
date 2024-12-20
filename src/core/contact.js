@@ -53,7 +53,7 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
     if (!!userSettings?.overridingPhoneNumberFormat3?.value) {
         overridingFormats.push(userSettings.overridingPhoneNumberFormat3.value);
     }
-    
+
     if (!!rcUnifiedCrmExtJwt) {
         const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${overridingFormats.toString()}&isExtension=${isExtensionNumber}`);
         return {
@@ -170,6 +170,11 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                         type: 'rc-adapter-navigate-to',
                         path: `/customized/${multiContactPopPromptPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
+                    }, '*');
+                    // minimize inbound call modal if in Ringing state if exist
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-control-call',
+                        callAction: 'toggleRingingDialog',
                     }, '*');
                     return;
             }
