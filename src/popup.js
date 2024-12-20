@@ -1506,11 +1506,16 @@ window.addEventListener('message', async (e) => {
                 });
               }
               await chrome.storage.local.set({ userSettings });
-              if (data.body.setting.id === "toggleDeveloperMode") {
-                showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
+              if (data.body.setting.id === "developerMode") {
+                showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
+                const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-register-third-party-service',
+                  service: serviceManifest
+                }, '*');
               }
-              else if (data.body.setting.id === "toggleAutoOpenWithCRM") {
-                showNotification({ level: 'success', message: `Auto open is turned ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
+              else if (data.body.setting.id === "autoOpenWithCRM") {
+                showNotification({ level: 'success', message: `Auto open is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
               }
               else {
                 showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
@@ -2084,7 +2089,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
       {
         id: 'contacts',
         type: 'section',
-        name: 'Call pop',
+        name: 'Call-pop',
         items: [
           {
             id: 'openContactPageFromIncomingCall',
@@ -2205,7 +2210,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
           {
             id: 'autoOpenExtension',
             type: 'boolean',
-            name: 'Auto open extension',
+            name: 'Auto-open extension',
             value: userCore.getAutoOpenSetting(userSettings).value,
             readOnly: userCore.getAutoOpenSetting(userSettings).readOnly,
             readOnlyReason: userCore.getAutoOpenSetting(userSettings).readOnlyReason

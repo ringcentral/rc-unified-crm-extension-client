@@ -16,7 +16,7 @@ function getManagedSettingsPageRender({ crmManifest }) {
                         },
                         {
                             const: "contactSetting",
-                            title: "Call pop",
+                            title: "Call-pop",
                         },
                         {
                             const: "advancedFeaturesSetting",

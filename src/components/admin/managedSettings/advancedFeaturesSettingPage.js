@@ -10,7 +10,7 @@ function getAdvancedFeaturesSettingPageRender({ adminUserSettings }) {
             properties: {
                 autoOpenExtension: {
                     type: 'object',
-                    title: 'Auto open extension',
+                    title: 'Auto-open extension',
                     properties: {
                         customizable: {
                             type: 'boolean',
