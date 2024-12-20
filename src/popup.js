@@ -1,6 +1,6 @@
 const auth = require('./core/auth');
 const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } = require('./core/log');
-const { getContact, createContact, openContactPage } = require('./core/contact');
+const { getContact, createContact, openContactPage, refreshContactPromptPage } = require('./core/contact');
 const userCore = require('./core/user');
 const { getAdminSettings, uploadAdminSettings } = require('./core/admin');
 const { responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken } = require('./lib/util');
@@ -61,6 +61,7 @@ let adminSettings = {
   userSettings: {}
 };
 let userSettings = {};
+let hasOngoingCall = false;
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
@@ -338,6 +339,11 @@ window.addEventListener('message', async (e) => {
             document.getElementById('rc-widget').style.zIndex = 0;
             let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
             crmAuthed = !!rcUnifiedCrmExtJwt;
+            // Manifest case: use RC login to login CRM as well
+            if (!crmAuthed && !!platform.autoLoginCRMWithRingCentralLogin) {
+              const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken() });
+              crmAuthed = !!returnedToken;
+            }
             await tempConvertExtensionUserSettingsToUserSettings();
             // Unique: Pipedrive
             if (platformName === 'pipedrive' && !(await auth.checkAuth())) {
@@ -347,7 +353,7 @@ window.addEventListener('message', async (e) => {
                 }
               );
             }
-            else if (!rcUnifiedCrmExtJwt) {
+            else if (!rcUnifiedCrmExtJwt && !crmAuthed) {
               currentNotificationId = await showNotification({ level: 'warning', message: 'Please go to Settings and connect to CRM platform', ttl: 60000 });
             }
             try {
@@ -464,15 +470,14 @@ window.addEventListener('message', async (e) => {
 
           if (crmAuthed) {
             // Admin tab render
-            const isAdmin = rcInfo?.value?.cachedData?.extensionInfo?.permissions?.admin?.enabled;
-            if (isAdmin || rcInfo?.value?.cachedData?.extensionInfo?.name === 'Da Kong' || rcInfo?.value?.cachedData?.extensionInfo?.name === 'Embbnux Ji') {
+            const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
+            if (!!storedAdminSettings) {
               try {
                 const adminPageRender = adminPage.getAdminPageRender();
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-register-customized-page',
                   page: adminPageRender,
                 }, '*');
-                const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
                 await chrome.storage.local.set({ adminSettings: storedAdminSettings });
                 adminSettings = storedAdminSettings;
               } catch (e) {
@@ -488,8 +493,7 @@ window.addEventListener('message', async (e) => {
             }, '*');
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-update-authorization-status',
-              authorized: crmAuthed,
-              authorizedAccount: 'test@email.com', // optional, authorized account email or id
+              authorized: crmAuthed
             }, '*');
             console.log(userSettings);
           }
@@ -522,12 +526,12 @@ window.addEventListener('message', async (e) => {
                     type: 'openPopupWindow'
                   });
                   if (userCore.getIncomingCallPop(userSettings).value === 'onAnswer') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber });
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
                   }
                   break;
                 case 'Outbound':
                   if (userCore.getOutgoingCallPop(userSettings).value === 'onAnswer') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber });
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
                   }
                   break;
               }
@@ -603,18 +607,19 @@ window.addEventListener('message', async (e) => {
               }
               break;
             case 'Ringing':
+              hasOngoingCall = true;
               switch (data.call.direction) {
                 case 'Inbound':
                   chrome.runtime.sendMessage({
                     type: 'openPopupWindow'
                   });
                   if (userCore.getIncomingCallPop(userSettings).value === 'onFirstRing') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber });
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
                   }
                   break;
                 case 'Outbound':
                   if (userCore.getOutgoingCallPop(userSettings).value === 'onFirstRing') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber });
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
                   }
                   break;
               }
@@ -631,6 +636,7 @@ window.addEventListener('message', async (e) => {
               break;
             case 'WebRTC Call Ended':
               const { callWith, callingMode } = await chrome.storage.local.get({ callWith: null, callingMode: null });
+              hasOngoingCall = false;
               trackCallEnd({
                 direction: data.properties.direction,
                 durationInSeconds: data.properties.duration,
@@ -772,6 +778,26 @@ window.addEventListener('message', async (e) => {
                 responseId: data.requestId,
                 response: { data: 'ok' },
               }, '*');
+              // refresh multi match prompt
+              if (data.body.page.id === "getMultiContactPopPromptPage") {
+                if (data.body.keys.some(k => k === 'search')) {
+                  const searchWord = data.body.formData.search;
+                  refreshContactPromptPage({ contactInfo: data.body.page.formData.contactInfo, searchWord });
+                }
+                else if (data.body.keys.some(k => k === 'contactList')) {
+                  const contactToOpen = data.body.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
+                  openContactPage({ manifest, platformName, contactType: contactToOpen.type, contactId: contactToOpen.id });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack',
+                  }, '*');
+                  // bring back inbound call modal if in Ringing state if exist
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-control-call',
+                    callAction: 'toggleRingingDialog',
+                  }, '*');
+                }
+              }
               switch (data.body?.formData?.section) {
                 case 'managedSettings':
                   const managedSettingsPageRender = managedSettingsPage.getManagedSettingsPageRender({ crmManifest: platform });
@@ -796,7 +822,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'contactSetting':
-                  const contactSettingPageRender = contactSettingPage.getContactSettingPageRender({ adminUserSettings: adminSettings?.userSettings, renderOverridingNumberFormat: platform.name == 'clio' || platform.name == 'insightly' });
+                  const contactSettingPageRender = contactSettingPage.getContactSettingPageRender({ adminUserSettings: adminSettings?.userSettings, renderOverridingNumberFormat: platform.name == 'clio' || platform.name == 'insightly', renderAllowExtensionNumberLogging: !!platform.enableExtensionNumberLoggingSetting });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: contactSettingPageRender
@@ -913,7 +939,12 @@ window.addEventListener('message', async (e) => {
               break;
             case '/contacts/view':
               window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-              await openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber, contactId: data.body.id, contactType: data.body.contactType });
+              if (hasOngoingCall) {
+                await openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber, contactType: data.body.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
+              }
+              else {
+                await openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber, contactId: data.body.id, contactType: data.body.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
+              }
               window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               responseMessage(
                 data.requestId,
@@ -1193,7 +1224,7 @@ window.addEventListener('message', async (e) => {
                       openLog({ manifest, platformName, hostname: platformHostname, logId: fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: matchedEntity.contactType, contactId: matchedEntity.id });
                     }
                     else {
-                      await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: matchedEntity.id, contactType: matchedEntity.contactType });
+                      await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: matchedEntity.id, contactType: matchedEntity.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
                     }
                     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                     break;
@@ -1213,7 +1244,7 @@ window.addEventListener('message', async (e) => {
                 sessionId: data.body.call.sessionId,
                 note: data.body.formData.note ?? ''
               });
-              const page = logPage.getUpdatedLogPageRender({ manifest, platformName, updateData: data.body });
+              const page = logPage.getUpdatedLogPageRender({ manifest, platformName, logType: 'Call', updateData: data.body });
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-update-call-log-page',
                 page
@@ -1273,7 +1304,7 @@ window.addEventListener('message', async (e) => {
                 break;
               }
               const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
-              const messageAutoPopup = usercore.getSMSPopSetting(userSettings).value;
+              const messageAutoPopup = userCore.getSMSPopSetting(userSettings).value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
               let getContactMatchResult = null;
@@ -1484,11 +1515,16 @@ window.addEventListener('message', async (e) => {
                 });
               }
               await chrome.storage.local.set({ userSettings });
-              if (data.body.setting.id === "toggleDeveloperMode") {
-                showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
+              if (data.body.setting.id === "developerMode") {
+                showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
+                const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-register-third-party-service',
+                  service: serviceManifest
+                }, '*');
               }
-              else if (data.body.setting.id === "toggleAutoOpenWithCRM") {
-                showNotification({ level: 'success', message: `Auto open is turned ${data.body.setting.value ? 'ON' : 'OFF'}. Please reload the extension.`, ttl: 5000 });
+              else if (data.body.setting.id === "autoOpenWithCRM") {
+                showNotification({ level: 'success', message: `Auto open is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
               }
               else {
                 showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
@@ -1621,7 +1657,7 @@ window.addEventListener('message', async (e) => {
                   trackFactoryReset();
                   break;
                 case 'generateErrorLogButton':
-                  const errorLogFileName = "[RingCentral CRM Extension]ErrorLogs.txt";
+                  const errorLogFileName = "[RingCentral App Connect]ErrorLogs.txt";
                   const errorLogFileContent = JSON.stringify(errorLogs);
                   DownloadTextFile({ filename: errorLogFileName, text: errorLogFileContent });
                   break;
@@ -2029,6 +2065,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
     callLoggerAutoSettingReadOnly: userCore.getAutoLogCallSetting(userSettings).readOnly,
     callLoggerAutoSettingReadOnlyReason: userCore.getAutoLogCallSetting(userSettings).readOnlyReason,
     callLoggerAutoSettingReadOnlyValue: userCore.getAutoLogCallSetting(userSettings).value,
+    callLoggerHideEditLogButton: manifest.platforms[platformName].hideEditLogButton ?? false,
 
     messageLoggerPath: '/messageLogger',
     messagesLogPageInputChangedEventPath: '/messageLogger/inputChanged',
@@ -2061,19 +2098,13 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
       {
         id: 'contacts',
         type: 'section',
-        name: 'Contacts',
+        name: 'Call-pop',
         items: [
-          {
-            id: "numberFormatterTitle",
-            name: "Contact page",
-            type: "typography",
-            variant: "title2",
-            value: "Open contact page",
-          },
           {
             id: 'openContactPageFromIncomingCall',
             type: 'option',
-            name: 'Open contact from incoming call',
+            name: 'Incoming call pop',
+            description: 'Select when to trigger call pop for incoming calls.',
             options: [
               {
                 id: 'disabled',
@@ -2095,7 +2126,8 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
           {
             id: 'openContactPageFromOutgoingCall',
             type: 'option',
-            name: 'Open contact from outgoing call',
+            name: 'Outgoing call pop',
+            description: 'Select when to trigger call pop for outgoing calls.',
             options: [
               {
                 id: 'disabled',
@@ -2114,17 +2146,43 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
             readOnly: userCore.getOutgoingCallPop(userSettings).readOnly,
             readOnlyReason: userCore.getOutgoingCallPop(userSettings).readOnlyReason
           },
+          {
+            id: 'multiContactMatchBehavior',
+            type: 'option',
+            name: 'Multi-contact match behavior',
+            description: 'Select what to do when multiple contacts match a phone number.',
+            options: [
+              {
+                id: 'disabled',
+                name: 'Disabled'
+              },
+              {
+                id: 'openAllMatches',
+                name: 'Open all matches'
+              },
+              {
+                id: 'promptToSelect',
+                name: 'Prompt to select'
+              }
+            ],
+            value: userCore.getCallPopMultiMatchBehavior(userSettings).value,
+            readOnly: userCore.getCallPopMultiMatchBehavior(userSettings).readOnly,
+            readOnlyReason: userCore.getCallPopMultiMatchBehavior(userSettings).readOnlyReason,
+          },
           (platform.enableExtensionNumberLoggingSetting ?
             {
               id: 'allowExtensionNumberLogging',
               type: 'boolean',
               name: 'Allow extension number logging',
-              value: userSettings?.allowExtensionNumberLogging?.value ?? false
+              value: userSettings?.allowExtensionNumberLogging?.value ?? false,
+              readOnly: userSettings?.allowExtensionNumberLogging?.customizable === undefined ? false : !!!userSettings?.allowExtensionNumberLogging?.customizable,
+              readOnlyReason: 'This setting is managed by admin'
             } : {}),
           {
             id: 'openContactPageAfterCreation',
             type: 'boolean',
-            name: 'Open contact after creating it',
+            name: 'Contact created call pop',
+            description: 'Open contact immediately after creating it',
             value: userCore.getOpenContactAfterCreationSetting(userSettings).value,
             readOnly: userCore.getOpenContactAfterCreationSetting(userSettings).readOnly,
             readOnlyReason: userCore.getOpenContactAfterCreationSetting(userSettings).readOnlyReason
@@ -2161,7 +2219,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
           {
             id: 'autoOpenExtension',
             type: 'boolean',
-            name: 'Auto open extension',
+            name: 'Auto-open extension',
             value: userCore.getAutoOpenSetting(userSettings).value,
             readOnly: userCore.getAutoOpenSetting(userSettings).readOnly,
             readOnlyReason: userCore.getAutoOpenSetting(userSettings).readOnlyReason
@@ -2246,25 +2304,25 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
         id: "overridingPhoneNumberFormat",
         name: "Format 1",
         type: "string",
-        value: userSettings?.overridingNumberFormat?.numberFormatter1 ?? "",
-        readOnly: userSettings?.overridingNumberFormat?.customizable === undefined ? false : !!!userSettings?.overridingNumberFormat?.customizable,
-        readOnlyReason: !!!userSettings?.overridingNumberFormat?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.overridingPhoneNumberFormat?.value ?? "",
+        readOnly: userSettings?.overridingPhoneNumberFormat?.customizable === undefined ? false : !!!userSettings?.overridingPhoneNumberFormat?.customizable,
+        readOnlyReason: !!!userSettings?.overridingPhoneNumberFormat?.customizable ? 'This setting is managed by admin' : ''
       },
       {
         id: "overridingPhoneNumberFormat2",
         name: "Format 2",
         type: "string",
-        value: userSettings?.overridingNumberFormat?.numberFormatter2 ?? "",
-        readOnly: userSettings?.overridingNumberFormat?.customizable === undefined ? false : !!!userSettings?.overridingNumberFormat?.customizable,
-        readOnlyReason: !!!userSettings?.overridingNumberFormat?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.overridingPhoneNumberFormat2?.value ?? "",
+        readOnly: userSettings?.overridingPhoneNumberFormat2?.customizable === undefined ? false : !!!userSettings?.overridingPhoneNumberFormat2?.customizable,
+        readOnlyReason: !!!userSettings?.overridingPhoneNumberFormat2?.customizable ? 'This setting is managed by admin' : ''
       },
       {
         id: "overridingPhoneNumberFormat3",
         name: "Format 3",
         type: "string",
-        value: userSettings?.overridingNumberFormat?.numberFormatter3 ?? "",
-        readOnly: userSettings?.overridingNumberFormat?.customizable === undefined ? false : !!!userSettings?.overridingNumberFormat?.customizable,
-        readOnlyReason: !!!userSettings?.overridingNumberFormat?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.overridingPhoneNumberFormat3?.value ?? "",
+        readOnly: userSettings?.overridingPhoneNumberFormat3?.customizable === undefined ? false : !!!userSettings?.overridingPhoneNumberFormat3?.customizable,
+        readOnlyReason: !!!userSettings?.overridingPhoneNumberFormat3?.customizable ? 'This setting is managed by admin' : ''
       }
     ]
     services.settings.find(s => s.id === 'contacts').items.push(

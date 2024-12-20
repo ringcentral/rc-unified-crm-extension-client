@@ -17,7 +17,7 @@ function getCRMSetupErrorPageRender() {
                 },
                 step1:{
                     type: 'string',
-                    description: 'Close the Unified CRM extension window.'
+                    description: 'Close the Unified App Connect window.'
                 },
                 step2:{
                     type: 'string',
@@ -25,7 +25,7 @@ function getCRMSetupErrorPageRender() {
                 },
                 step3:{
                     type: 'string',
-                    description: 'Open the Unified CRM extension.'
+                    description: 'Open the Unified App Connect.'
                 },
                 helperMessage:{
                     type: 'string',

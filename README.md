@@ -1,4 +1,4 @@
-# RingCentral CRM Extension Client
+# RingCentral App Connect Client
 
 It is to work with the server code: https://github.com/ringcentral/rc-unified-crm-extension
 

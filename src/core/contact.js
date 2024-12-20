@@ -1,7 +1,7 @@
 import axios from 'axios';
 import analytics from '../lib/analytics';
-import { isObjectEmpty } from '../lib/util';
 import { showNotification } from '../lib/util';
+import multiContactPopPromptPage from '../components/multiContactPopPromptPage';
 
 function getLocalCachedContact({ phoneNumber, platformName }) {
     const allCachedContacts = document.querySelector("#rc-widget-adapter-frame").contentWindow.phone.contactMatcher.data;
@@ -14,8 +14,7 @@ function getLocalCachedContact({ phoneNumber, platformName }) {
         return result;
     }
     const contactUnderCRM = contact[platformName]?.data;
-    if(!!!contactUnderCRM)
-    {
+    if (!!!contactUnderCRM) {
         return result;
     }
     for (const c of contactUnderCRM) {
@@ -45,16 +44,16 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const overridingFormats = [];
     const { userSettings } = await chrome.storage.local.get('userSettings');
-    const overridingPhoneNumberFormatObj = userSettings?.overridingNumberFormat;
-    if (!!overridingPhoneNumberFormatObj?.numberFormatter1) {
-        overridingFormats.push(overridingPhoneNumberFormatObj.numberFormatter1);
+    if (!!userSettings?.overridingPhoneNumberFormat?.value) {
+        overridingFormats.push(userSettings.overridingPhoneNumberFormat.value);
     }
-    if (!!overridingPhoneNumberFormatObj?.numberFormatter2) {
-        overridingFormats.push(overridingPhoneNumberFormatObj.numberFormatter2);
+    if (!!userSettings?.overridingPhoneNumberFormat2?.value) {
+        overridingFormats.push(userSettings.overridingPhoneNumberFormat2.value);
     }
-    if (!!overridingPhoneNumberFormatObj?.numberFormatter3) {
-        overridingFormats.push(overridingPhoneNumberFormatObj.numberFormatter3);
+    if (!!userSettings?.overridingPhoneNumberFormat3?.value) {
+        overridingFormats.push(userSettings.overridingPhoneNumberFormat3.value);
     }
+
     if (!!rcUnifiedCrmExtJwt) {
         const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${overridingFormats.toString()}&isExtension=${isExtensionNumber}`);
         return {
@@ -114,8 +113,7 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
     }
 }
 
-async function openContactPage({ manifest, platformName, phoneNumber, contactId, contactType }) {
-    showNotification({ level: 'success', message: 'Trying to find and open contact page...', ttl: 5000 });
+async function openContactPage({ manifest, platformName, phoneNumber, contactId, contactType, multiContactMatchBehavior }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     let platformInfo = await chrome.storage.local.get('platform-info');
     if (platformInfo['platform-info'].hostname === 'temp') {
@@ -125,6 +123,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
     }
     const hostname = platformInfo['platform-info'].hostname;
     if (!!contactId) {
+        showNotification({ level: 'success', message: 'Trying to find and open contact page...', ttl: 5000 });
         // Unique: Bullhorn 
         if (platformName === 'bullhorn') {
             const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
@@ -141,6 +140,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                 .replaceAll('{contactId}', contactId)
                 .replaceAll('{contactType}', contactType);
             window.open(contactPageUrl);
+            return;
         }
     }
     else {
@@ -148,6 +148,38 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
         if (!contactMatched) {
             return;
         }
+        const isMultipleContact = contactInfo.filter(c => !c.isNewContact).length > 1;
+        if (isMultipleContact) {
+            if (!!!multiContactMatchBehavior) {
+                return;
+            }
+            switch (multiContactMatchBehavior) {
+                case 'disabled':
+                    // do nothing
+                    return;
+                case 'openAllMatches':
+                    // proceed and open all matches
+                    break;
+                case 'promptToSelect':
+                    // open prompt page
+                    const multiContactPopPromptPageRender = multiContactPopPromptPage.getMultiContactPopPromptPageRender({ contactInfo: contactInfo.filter(c => !c.isNewContact) });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: multiContactPopPromptPageRender
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-navigate-to',
+                        path: `/customized/${multiContactPopPromptPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
+                    }, '*');
+                    // minimize inbound call modal if in Ringing state if exist
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-control-call',
+                        callAction: 'toggleRingingDialog',
+                    }, '*');
+                    return;
+            }
+        }
+        showNotification({ level: 'success', message: 'Trying to find and open contact page...', ttl: 5000 });
         // Unique: Bullhorn
         if (platformName === 'bullhorn') {
             const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
@@ -177,6 +209,20 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
     }
 }
 
+function refreshContactPromptPage({ contactInfo, searchWord }) {
+    // refresh prompt page
+    const multiContactPopPromptPageRender = multiContactPopPromptPage.getMultiContactPopPromptPageRender({ contactInfo, searchWord });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: multiContactPopPromptPageRender
+    });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-navigate-to',
+        path: `/customized/${multiContactPopPromptPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
+    }, '*');
+}
+
 exports.getContact = getContact;
 exports.createContact = createContact;
 exports.openContactPage = openContactPage;
+exports.refreshContactPromptPage = refreshContactPromptPage;

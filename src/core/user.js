@@ -52,17 +52,17 @@ function getAutoLogSMSSetting(userSettings) {
 
 function getCallPopSetting(userSettings) {
     return {
-        value: userSettings?.autoOpenCallLogPage?.value ?? false,
-        readOnly: userSettings?.autoOpenCallLogPage?.customizable === undefined ? false : !!!userSettings?.autoOpenCallLogPage?.customizable,
-        readOnlyReason: !!!userSettings?.autoOpenCallLogPage?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.popupLogPageAfterCall?.value ?? false,
+        readOnly: userSettings?.popupLogPageAfterCall?.customizable === undefined ? false : !!!userSettings?.popupLogPageAfterCall?.customizable,
+        readOnlyReason: !!!userSettings?.popupLogPageAfterCall?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getSMSPopSetting(userSettings) {
     return {
-        value: userSettings?.autoOpenSMSLogPage?.value ?? false,
-        readOnly: userSettings?.autoOpenSMSLogPage?.customizable === undefined ? false : !!!userSettings?.autoOpenSMSLogPage?.customizable,
-        readOnlyReason: !!!userSettings?.autoOpenSMSLogPage?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.popupLogPageAfterSMS?.value ?? false,
+        readOnly: userSettings?.popupLogPageAfterSMS?.customizable === undefined ? false : !!!userSettings?.popupLogPageAfterSMS?.customizable,
+        readOnlyReason: !!!userSettings?.popupLogPageAfterSMS?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -79,6 +79,14 @@ function getOutgoingCallPop(userSettings) {
         value: userSettings?.openContactPageFromOutgoingCall?.value ?? 'disabled',
         readOnly: userSettings?.openContactPageFromOutgoingCall?.customizable === undefined ? false : !!!userSettings?.openContactPageFromOutgoingCall?.customizable,
         readOnlyReason: !!!userSettings?.openContactPageFromOutgoingCall?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getCallPopMultiMatchBehavior(userSettings){
+    return{
+        value: userSettings?.multiContactMatchBehavior?.value ?? 'openAllMatches',
+        readOnly: userSettings?.multiContactMatchBehavior?.customizable === undefined ? false : !!!userSettings?.multiContactMatchBehavior?.customizable,
+        readOnlyReason: !!!userSettings?.multiContactMatchBehavior?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -131,6 +139,7 @@ exports.getCallPopSetting = getCallPopSetting;
 exports.getSMSPopSetting = getSMSPopSetting;
 exports.getIncomingCallPop = getIncomingCallPop;
 exports.getOutgoingCallPop = getOutgoingCallPop;
+exports.getCallPopMultiMatchBehavior = getCallPopMultiMatchBehavior;
 exports.getOpenContactAfterCreationSetting = getOpenContactAfterCreationSetting;
 exports.getDeveloperModeSetting = getDeveloperModeSetting;
 exports.getAutoOpenSetting = getAutoOpenSetting;

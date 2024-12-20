@@ -8,7 +8,7 @@ function getAboutPageRender({ manifest }) {
             properties: {
                 introduction: {
                     type: "string",
-                    description: "The RingCentral CRM extension embeds a fully-functional web phone into a set of supported CRM platforms.",
+                    description: "The RingCentral App Connect embeds a fully-functional web phone into a set of supported CRM platforms.",
                 },
                 extensionInfoTitle: {
                     type: "string",
@@ -28,7 +28,7 @@ function getAboutPageRender({ manifest }) {
                 },
                 adapterInfoTitle: {
                     type: "string",
-                    description: "Adaptor"
+                    description: "Adapter"
                 },
                 adapterAuthorInfo: {
                     type: "string",

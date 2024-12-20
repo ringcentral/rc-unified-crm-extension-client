@@ -1,10 +1,15 @@
 import axios from 'axios';
 
 async function getAdminSettings({ serverUrl, rcAccessToken }) {
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const getAdminSettingsResponse = await axios.get(
-        `${serverUrl}/admin/settings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`);
-    return getAdminSettingsResponse.data;
+    try {
+        const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+        const getAdminSettingsResponse = await axios.get(
+            `${serverUrl}/admin/settings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`);
+        return getAdminSettingsResponse.data;
+    }
+    catch (e) {
+        return null;
+    }
 }
 
 async function uploadAdminSettings({ serverUrl, adminSettings, rcAccessToken }) {

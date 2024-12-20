@@ -35,7 +35,7 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
-                autoOpenCallLogPage: {
+                popupLogPageAfterCall: {
                     type: 'object',
                     title: 'Open call logging page after call',
                     properties: {
@@ -49,7 +49,7 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
-                autoOpenSMSLogPage: {
+                popupLogPageAfterSMS: {
                     type: 'object',
                     title: 'Open SMS logging page after message',
                     properties: {
@@ -72,10 +72,10 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             autoLogSMS: {
                 "ui:collapsible": true,
             },
-            autoOpenCallLogPage: {
+            popupLogPageAfterCall: {
                 "ui:collapsible": true,
             },
-            autoOpenSMSLogPage: {
+            popupLogPageAfterSMS: {
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
@@ -93,15 +93,15 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                 customizable: adminUserSettings?.autoLogSMS?.customizable ?? true,
                 value: adminUserSettings?.autoLogSMS?.value ?? false
             },
-            autoOpenCallLogPage:
+            popupLogPageAfterCall:
             {
-                customizable: adminUserSettings?.autoOpenCallLogPage?.customizable ?? true,
-                value: adminUserSettings?.autoOpenCallLogPage?.value ?? false
+                customizable: adminUserSettings?.popupLogPageAfterCall?.customizable ?? true,
+                value: adminUserSettings?.popupLogPageAfterCall?.value ?? false
             },
-            autoOpenSMSLogPage:
+            popupLogPageAfterSMS:
             {
-                customizable: adminUserSettings?.autoOpenSMSLogPage?.customizable ?? true,
-                value: adminUserSettings?.autoOpenSMSLogPage?.value ?? false
+                customizable: adminUserSettings?.popupLogPageAfterSMS?.customizable ?? true,
+                value: adminUserSettings?.popupLogPageAfterSMS?.value ?? false
             }
         }
     }
