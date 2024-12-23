@@ -24,6 +24,12 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
     if (!!rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
+                const hasRecording = await chrome.storage.local.get(`rec-link-${logInfo.sessionId}`);
+                if (!!hasRecording && !!!logInfo.recording) {
+                    logInfo.recording = {
+                        link: null
+                    };
+                }
                 const addCallLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addCallLogRes.data.successful) {
                     await chrome.storage.local.set({
@@ -40,16 +46,6 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, addi
                 }, '*');
                 if (addCallLogRes.data.successful) {
                     trackSyncCallLog({ hasNote: note !== '' });
-                    // check for remaining recording link
-                    const recordingSessionId = `rec-link-${logInfo.sessionId}`;
-                    const existingCallRecording = await chrome.storage.local.get(recordingSessionId);
-                    if (!!existingCallRecording[recordingSessionId]) {
-                        if (!logInfo.recording) {
-                            await updateLog({ serverUrl, logType: 'Call', sessionId: logInfo.sessionId, recordingLink: existingCallRecording[recordingSessionId].recordingLink });
-                        } else {
-                            await chrome.storage.local.remove(recordingSessionId);
-                        }
-                    }
                     if (isShowNotification) {
                         showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'success', message: addCallLogRes.data.returnMessage?.message ?? 'Call log added', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000 });
                     }
@@ -128,21 +124,8 @@ async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission
                     result
                 }
                 const callLogRes = await axios.patch(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, patchBody);
-                if (callLogRes.data.successful) {
-                    if (!!recordingLink) {
-                        const recordingSessionId = `rec-link-${sessionId}`;
-                        const existingCallRecording = await chrome.storage.local.get(recordingSessionId);
-                        if (!!existingCallRecording[recordingSessionId]) {
-                            await chrome.storage.local.remove(recordingSessionId);
-                        }
-                        showNotification({ level: 'success', message: 'Call recording link uploaded.', ttl: 3000 });
-                        console.log('call recording update done');
-                    }
-                    else {
-                        if (!!isShowNotification) {
-                            showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'success', message: callLogRes.data.returnMessage?.message ?? 'Call log updated', ttl: callLogRes.data.returnMessage?.ttl ?? 3000 });
-                        }
-                    }
+                if (callLogRes.data.successful && isShowNotification) {
+                    showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'success', message: callLogRes.data.returnMessage?.message ?? 'Call log updated', ttl: callLogRes.data.returnMessage?.ttl ?? 3000 });
                 }
                 else {
                     showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'warning', message: callLogRes.data.returnMessage?.message ?? 'Call log update failed', ttl: callLogRes.data.returnMessage?.ttl ?? 3000 });

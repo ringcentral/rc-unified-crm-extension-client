@@ -66,46 +66,6 @@ let hasOngoingCall = false;
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
 
-// TEMP
-async function tempConvertExtensionUserSettingsToUserSettings() {
-  if (crmAuthed) {
-    const extensionUserSettings = (await chrome.storage.local.get('extensionUserSettings'))?.extensionUserSettings;
-    let formattedUserSettings = {};
-    if (!!extensionUserSettings) {
-      for (const s of extensionUserSettings) {
-        if (s.items !== undefined) {
-          for (const i of s.items) {
-            // special: overriding number format
-            if (!!!formattedUserSettings.overridingNumberFormat) {
-              formattedUserSettings.overridingNumberFormat = {};
-            }
-            if (i.id === "overridingPhoneNumberFormat") {
-              formattedUserSettings.overridingNumberFormat.numberFormatter1 = i.value;
-            }
-            if (i.id === "overridingPhoneNumberFormat2") {
-              formattedUserSettings.overridingNumberFormat.numberFormatter2 = i.value;
-            }
-            if (i.id === "overridingPhoneNumberFormat3") {
-
-              formattedUserSettings.overridingNumberFormat.numberFormatter3 = i.value;
-            }
-            formattedUserSettings[i.id] = { value: i.value };
-          }
-        }
-        else if (s.value !== undefined) {
-          formattedUserSettings[s.id] = { value: s.value };
-        }
-      }
-    }
-    userSettings = await userCore.uploadUserSettings({
-      serverUrl: manifest.serverUrl,
-      userSettings: formattedUserSettings
-    });
-    await chrome.storage.local.set({ userSettings });
-    await chrome.storage.local.remove('extensionUserSettings');
-  }
-}
-
 // Hack: bullhorn specific logic to check if allow custom note action value
 function allowBullhornCustomNoteAction() {
   if (platformName === 'bullhorn') {
@@ -253,6 +213,12 @@ window.addEventListener('message', async (e) => {
   try {
     if (data) {
       switch (data.type) {
+        case 'rc-telephony-session-notify':
+          const hasRecording = data.telephonySession.parties.some(p => !!p.recordings);
+          if (hasRecording) {
+            await chrome.storage.local.set({ ['rec-link-' + data.telephonySession.sessionId]: {} });
+          }
+          break;
         case 'rc-calling-settings-notify':
           await chrome.storage.local.set({ callWith: data.callWith, callingMode: data.callingMode });
           break;
@@ -344,7 +310,6 @@ window.addEventListener('message', async (e) => {
               const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken() });
               crmAuthed = !!returnedToken;
             }
-            await tempConvertExtensionUserSettingsToUserSettings();
             // Unique: Pipedrive
             if (platformName === 'pipedrive' && !(await auth.checkAuth())) {
               chrome.runtime.sendMessage(
@@ -486,6 +451,7 @@ window.addEventListener('message', async (e) => {
             }
             userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
             await chrome.storage.local.set({ userSettings });
+            await userCore.uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
             const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-register-third-party-service',
@@ -649,7 +615,7 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-callLogger-auto-log-notify':
           await chrome.storage.local.set({ rc_callLogger_auto_log_notify: data.autoLog });
-          if (crmAuthed) {
+          if (crmAuthed && !isObjectEmpty(userSettings)) {
             await userCore.uploadUserSettings({
               serverUrl: manifest.serverUrl,
               userSettings
@@ -986,22 +952,38 @@ window.addEventListener('message', async (e) => {
 
               // Sync events - update log
               if (data.body.triggerType === 'callLogSync') {
+                // case: is recorded, recording link ready
                 if (!!data.body.call?.recording?.link) {
                   console.log('call recording updating...');
                   trackUpdateCallRecordingLink({ processState: 'start' });
-                  await chrome.storage.local.set({ ['rec-link-' + data.body.call.sessionId]: { recordingLink: data.body.call.recording.link } });
+                  await updateLog(
+                    {
+                      serverUrl: manifest.serverUrl,
+                      logType: 'Call',
+                      rcAdditionalSubmission,
+                      sessionId: data.body.call.sessionId,
+                      recordingLink: data.body.call.recording?.link,
+                      startTime: data.body.call.startTime,
+                      duration: data.body.call.duration,
+                      result: data.body.call.result
+                    });
                 }
-                await updateLog(
-                  {
-                    serverUrl: manifest.serverUrl,
-                    logType: 'Call',
-                    rcAdditionalSubmission,
-                    sessionId: data.body.call.sessionId,
-                    recordingLink: data.body.call.recording?.link,
-                    startTime: data.body.call.startTime,
-                    duration: data.body.call.duration,
-                    result: data.body.call.result
-                  });
+                // case: is not recorded
+                else {
+                  const hasRecording = await chrome.storage.local.get(`rec-link-${data.body.call.sessionId}`);
+                  if (!!!hasRecording) {
+                    await updateLog(
+                      {
+                        serverUrl: manifest.serverUrl,
+                        logType: 'Call',
+                        rcAdditionalSubmission,
+                        sessionId: data.body.call.sessionId,
+                        startTime: data.body.call.startTime,
+                        duration: data.body.call.duration,
+                        result: data.body.call.result
+                      });
+                  }
+                }
                 if (!!data.body.call?.recording?.link) {
                   trackUpdateCallRecordingLink({ processState: 'finish' });
                 }
