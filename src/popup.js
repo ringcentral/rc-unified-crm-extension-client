@@ -1009,7 +1009,8 @@ window.addEventListener('message', async (e) => {
                       logType: 'Call',
                       rcAdditionalSubmission,
                       sessionId: data.body.call.sessionId,
-                      recordingLink: data.body.call.recording.link
+                      recordingLink: data.body.call.recording.link,
+                      aiNote: data.body.aiNote,
                     });
                   trackUpdateCallRecordingLink({ processState: 'finish' });
                 }
@@ -1079,6 +1080,7 @@ window.addEventListener('message', async (e) => {
                         logInfo: data.body.call,
                         isMain: true,
                         note: data.body.formData.note ?? "",
+                        aiNote: data.body.aiNote,
                         subject: data.body.formData.activityTitle ?? "",
                         additionalSubmission,
                         rcAdditionalSubmission,
@@ -1095,6 +1097,7 @@ window.addEventListener('message', async (e) => {
                       rcAdditionalSubmission,
                       subject: data.body.formData.activityTitle ?? "",
                       note: data.body.formData.note ?? "",
+                      aiNote: data.body.aiNote,
                     });
                     break;
                 }
@@ -1164,6 +1167,7 @@ window.addEventListener('message', async (e) => {
                             logInfo: data.body.call,
                             isMain: true,
                             note,
+                            aiNote: data.body.aiNote,
                             subject: callLogSubject,
                             additionalSubmission: autoSelectAdditionalSubmission,
                             rcAdditionalSubmission,
