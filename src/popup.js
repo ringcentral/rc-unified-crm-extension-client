@@ -216,7 +216,11 @@ window.addEventListener('message', async (e) => {
         case 'rc-telephony-session-notify':
           const hasRecording = data.telephonySession.parties.some(p => !!p.recordings);
           if (hasRecording) {
-            await chrome.storage.local.set({ ['rec-link-' + data.telephonySession.sessionId]: {} });
+            await chrome.storage.local.set({
+              ['rec-link-' + data.telephonySession.sessionId]: {
+                link: "(pending...)"
+              }
+            });
           }
           break;
         case 'rc-calling-settings-notify':
