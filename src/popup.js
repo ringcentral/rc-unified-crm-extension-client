@@ -315,6 +315,10 @@ window.addEventListener('message', async (e) => {
             platformName = platformInfo['platform-info'].platformName;
             platformHostname = platformInfo['platform-info'].hostname;
             platform = manifest.platforms[platformName];
+            // setup C2D match all numbers
+            if (!!platform.clickToDialMatchAllNumbers) {
+              await chrome.storage.local.set({ matchAllNumbers: true });
+            }
             if (!!platform.requestConfig?.timeout) {
               axios.defaults.timeout = platform.requestConfig.timeout * 1000;
             }
