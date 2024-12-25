@@ -3,7 +3,7 @@ import { isObjectEmpty, showNotification } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 
 // Input {id} = sessionId from RC
-async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNote, additionalSubmission, rcAdditionalSubmission, contactId, contactType, contactName, isShowNotification = true }) {
+async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNote, transcript, additionalSubmission, rcAdditionalSubmission, contactId, contactType, contactName, isShowNotification = true }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { userSettings } = await chrome.storage.local.get('userSettings');
     additionalSubmission = { ...additionalSubmission, ...rcAdditionalSubmission };
@@ -24,7 +24,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNo
     if (!!rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
-                const addCallLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+                const addCallLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addCallLogRes.data.successful) {
                     await chrome.storage.local.set({
                         [`rc-crm-call-log-${logInfo.sessionId}`]: {
@@ -113,7 +113,7 @@ function openLog({ manifest, platformName, hostname, logId, contactType, contact
     window.open(logPageUrl);
 }
 
-async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, subject, note, aiNote }) {
+async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, subject, note, aiNote, transcript }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     if (!!rcUnifiedCrmExtJwt) {
         switch (logType) {
@@ -124,6 +124,7 @@ async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission
                     subject,
                     note,
                     aiNote,
+                    transcript,
                 }
                 const callLogRes = await axios.patch(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, patchBody);
                 if (callLogRes.data.successful) {

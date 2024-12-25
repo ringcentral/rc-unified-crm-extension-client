@@ -62,6 +62,7 @@ let adminSettings = {
 };
 let userSettings = {};
 let hasOngoingCall = false;
+let userPermissions = {};
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
@@ -341,6 +342,7 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-login-status-notify':
           // get login status from widget
+          userPermissions.aiNote = data.features && data.features.smartNote;
           console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
           const platformInfo = await chrome.storage.local.get('platform-info');
           if (isObjectEmpty(platformInfo)) {
@@ -1011,6 +1013,7 @@ window.addEventListener('message', async (e) => {
                       sessionId: data.body.call.sessionId,
                       recordingLink: data.body.call.recording.link,
                       aiNote: data.body.aiNote,
+                      transcript: data.body.transcript,
                     });
                   trackUpdateCallRecordingLink({ processState: 'finish' });
                 }
@@ -1081,6 +1084,7 @@ window.addEventListener('message', async (e) => {
                         isMain: true,
                         note: data.body.formData.note ?? "",
                         aiNote: data.body.aiNote,
+                        transcript: data.body.transcript,
                         subject: data.body.formData.activityTitle ?? "",
                         additionalSubmission,
                         rcAdditionalSubmission,
@@ -1098,6 +1102,7 @@ window.addEventListener('message', async (e) => {
                       subject: data.body.formData.activityTitle ?? "",
                       note: data.body.formData.note ?? "",
                       aiNote: data.body.aiNote,
+                      transcript: data.body.transcript,
                     });
                     break;
                 }
@@ -1168,6 +1173,7 @@ window.addEventListener('message', async (e) => {
                             isMain: true,
                             note,
                             aiNote: data.body.aiNote,
+                            transcript: data.body.transcript,
                             subject: callLogSubject,
                             additionalSubmission: autoSelectAdditionalSubmission,
                             rcAdditionalSubmission,
@@ -2241,6 +2247,9 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
     for (const cs of customSettings) {
       const items = [];
       for (const item of cs.items) {
+        if (item.requiredPermission && !userPermissions[item.requiredPermission]) {
+          continue;
+        }
         switch (item.type) {
           case 'inputField':
             items.push({
