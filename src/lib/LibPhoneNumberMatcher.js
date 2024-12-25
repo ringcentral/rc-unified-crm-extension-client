@@ -17961,6 +17961,7 @@ function acceptNode(node) {
             (0, processNode_1.isC2dNumberNode)(node.parentElement)));
 }
 exports.acceptNode = acceptNode;
+const allNumbersRegExp = /\d+/g;
 class LibPhoneNumberMatcher extends BaseMatcher_1.BaseMatcher {
     constructor(_props = {}) {
         super(_props);
@@ -17971,6 +17972,16 @@ class LibPhoneNumberMatcher extends BaseMatcher_1.BaseMatcher {
                 countryCode: this._props.countryCode,
                 areaCode: this._props.areaCode,
             });
+            if ((!phones || phones.length === 0) && this._props.matchAllNumbers && allNumbersRegExp.test(value)) {
+                const matches = value.match(allNumbersRegExp);
+                if (matches) {
+                    return matches.map((phoneNumber) => ({
+                        phoneNumber,
+                        startsAt: value.indexOf(phoneNumber),
+                        endsAt: value.indexOf(phoneNumber) + phoneNumber.length,
+                    }));
+                }
+            }
             return phones;
         };
     }

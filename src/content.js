@@ -16,7 +16,8 @@ async function initializeC2D() {
   window.clickToDialInject = new window.RingCentralC2D({
     observer: new RangeObserver({
       matcher: new LibPhoneNumberMatcher({
-        countryCode: countryCode.selectedRegion
+        countryCode: countryCode.selectedRegion,
+        matchAllNumbers: true,
       })
     })
   });
