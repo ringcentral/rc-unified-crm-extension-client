@@ -1003,6 +1003,7 @@ window.addEventListener('message', async (e) => {
                       duration: data.body.call.duration,
                       result: data.body.call.result,
                       aiNote: data.body.aiNote,
+                      transcript: data.body.transcript,
                     });
                 }
                 else {
@@ -1117,6 +1118,7 @@ window.addEventListener('message', async (e) => {
                       result: data.body.call.result,
                       isShowNotification: true,
                       aiNote: data.body.aiNote,
+                      transcript: data.body.transcript,
                     });
                     break;
                 }
