@@ -9,15 +9,14 @@ import { sendMessageToExtension } from './lib/sendMessage';
 console.log('import content js to web page');
 
 async function initializeC2D() {
-  const countryCode = await chrome.storage.local.get(
-    { selectedRegion: 'US' }
-  );
+  const countryCode = await chrome.storage.local.get({ selectedRegion: 'US' });
+  const matchAllNumbers = await chrome.storage.local.get({ matchAllNumbers: false });
 
   window.clickToDialInject = new window.RingCentralC2D({
     observer: new RangeObserver({
       matcher: new LibPhoneNumberMatcher({
         countryCode: countryCode.selectedRegion,
-        matchAllNumbers: true,
+        matchAllNumbers,
       })
     })
   });
