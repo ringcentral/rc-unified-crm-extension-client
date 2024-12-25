@@ -2,7 +2,7 @@ const auth = require('./core/auth');
 const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } = require('./core/log');
 const { getContact, createContact, openContactPage, refreshContactPromptPage } = require('./core/contact');
 const userCore = require('./core/user');
-const { getAdminSettings, uploadAdminSettings } = require('./core/admin');
+const { getAdminSettings, uploadAdminSettings, enableServerSideLogging, disableServerSideLogging } = require('./core/admin');
 const { responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
 const { apiKeyLogin } = require('./core/auth');
@@ -19,6 +19,7 @@ const adminPage = require('./components/admin/adminPage');
 const managedSettingsPage = require('./components/admin/managedSettingsPage');
 const callAndSMSLoggingSettingPage = require('./components/admin/managedSettings/callAndSMSLoggingSettingPage');
 const customAdapterPage = require('./components/admin/customAdapterPage');
+const serverSideLoggingPage = require('./components/admin/serverSideLoggingPage');
 const contactSettingPage = require('./components/admin/managedSettings/contactSettingPage');
 const advancedFeaturesSettingPage = require('./components/admin/managedSettings/advancedFeaturesSettingPage');
 const customSettingsPage = require('./components/admin/managedSettings/customSettingsPage');
@@ -446,7 +447,7 @@ window.addEventListener('message', async (e) => {
             const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
             if (!!storedAdminSettings) {
               try {
-                const adminPageRender = adminPage.getAdminPageRender();
+                const adminPageRender = adminPage.getAdminPageRender({ platform });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-register-customized-page',
                   page: adminPageRender,
@@ -793,6 +794,17 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${callAndSMSLoggingSettingPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'serverSideLoggingSetting':
+                  const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: serverSideLoggingSettingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${serverSideLoggingSettingPageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'contactSetting':
@@ -1711,8 +1723,7 @@ window.addEventListener('message', async (e) => {
                       url: data.body.button.formData.customManifestUrl,
                     }
                     await chrome.storage.local.set({ adminSettings });
-                    const rcAccessToken = getRcAccessToken();
-                    await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
+                    await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken: getRcAccessToken() });
                     userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
                     await chrome.storage.local.set({ userSettings });
                     const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
@@ -1722,6 +1733,28 @@ window.addEventListener('message', async (e) => {
                     }, '*');
                     showNotification({ level: 'success', message: 'Custom manifest file uploaded.', ttl: 5000 });
                   }
+                  break;
+                case 'saveServerSideLoggingButton':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  adminSettings.serverSideLogging = {
+                    enable: data.body.button.formData.enableServerSideLogging,
+                    doNotLogNumbers: data.body.button.formData.doNotLogNumbers
+                  };
+                  await chrome.storage.local.set({ adminSettings });
+                  await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken: getRcAccessToken() });
+                  if (data.body.button.formData.enableServerSideLogging) {
+                    // await enableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
+                    showNotification({ level: 'success', message: 'Server side logging enabled.', ttl: 5000 });
+                  }
+                  else {
+                    // await disableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
+                    showNotification({ level: 'success', message: 'Server side logging disabled.', ttl: 5000 });
+                  }
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack',
+                  }, '*');
                   break;
                 case 'developerSettingsPage':
                   try {

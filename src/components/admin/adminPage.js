@@ -2,8 +2,8 @@ const adminIcon = require('../../images/adminIcon.png');
 const adminIconActive = require('../../images/adminIcon_active.png');
 const adminIconDark = require('../../images/adminIcon_dark.png');
 
-function getAdminPageRender() {
-    return {
+function getAdminPageRender({ platform }) {
+    const page = {
         id: 'adminPage',
         title: 'Admin',
         type: 'tab',
@@ -37,6 +37,13 @@ function getAdminPageRender() {
             }
         }
     }
+    if (!!platform.serverSideLogging) {
+        page.schema.properties.section.oneOf.push({
+            const: "serverSideLoggingSetting",
+            title: "Server side logging",
+        })
+    };
+    return page;
 }
 
 exports.getAdminPageRender = getAdminPageRender;
