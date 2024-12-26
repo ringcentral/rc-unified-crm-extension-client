@@ -12,7 +12,7 @@ async function getAdminSettings({ serverUrl, rcAccessToken }) {
     }
 }
 
-async function uploadAdminSettings({ serverUrl, adminSettings, rcAccessToken, doNotLogNumbers }) {
+async function uploadAdminSettings({ serverUrl, adminSettings, rcAccessToken }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const uploadAdminSettingsResponse = await axios.post(
         `${serverUrl}/admin/settings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`,
@@ -49,6 +49,7 @@ async function disableServerSideLogging({ platform, rcAccessToken }) {
         return;
     }
     const serverDomainUrl = platform.serverSideLogging.url;
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { serverSideLoggingToken } = await chrome.storage.local.get('serverSideLoggingToken');
     if (!!serverSideLoggingToken) {
         try {

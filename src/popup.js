@@ -797,7 +797,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'serverSideLoggingSetting':
-                  const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({ adminUserSettings: adminSettings });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: serverSideLoggingSettingPageRender
@@ -1743,11 +1743,11 @@ window.addEventListener('message', async (e) => {
                   await chrome.storage.local.set({ adminSettings });
                   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken: getRcAccessToken() });
                   if (data.body.button.formData.enableServerSideLogging) {
-                    // await enableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
+                    await enableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
                     showNotification({ level: 'success', message: 'Server side logging enabled.', ttl: 5000 });
                   }
                   else {
-                    // await disableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
+                    await disableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
                     showNotification({ level: 'success', message: 'Server side logging disabled.', ttl: 5000 });
                   }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');

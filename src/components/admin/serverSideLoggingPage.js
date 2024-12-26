@@ -33,8 +33,8 @@ function getServerSideLoggingSettingPageRender({ adminUserSettings }) {
             }
         },
         formData: {
-            enableServerSideLogging: adminUserSettings?.serverSideLogging?.enableServerSideLogging?.value ?? false,
-            doNotLogNumbers: adminUserSettings?.serverSideLogging?.doNotLogNumbers?.value ?? '',
+            enableServerSideLogging: adminUserSettings?.serverSideLogging?.enable ?? false,
+            doNotLogNumbers: adminUserSettings?.serverSideLogging?.doNotLogNumbers ?? '',
         }
     }
 }
