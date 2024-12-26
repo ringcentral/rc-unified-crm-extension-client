@@ -10,7 +10,7 @@ console.log('import content js to web page');
 
 async function initializeC2D() {
   const countryCode = await chrome.storage.local.get({ selectedRegion: 'US' });
-  const matchAllNumbers = await chrome.storage.local.get({ matchAllNumbers: false });
+  const { matchAllNumbers } = await chrome.storage.local.get({ matchAllNumbers: false });
 
   window.clickToDialInject = new window.RingCentralC2D({
     observer: new RangeObserver({
