@@ -1,4 +1,4 @@
-function getServerSideLoggingSettingPageRender({ adminUserSettings }) {
+function getServerSideLoggingSettingPageRender({ enabled, doNotLogNumbers }) {
     return {
         id: 'serverSideLoggingSetting',
         title: 'Server side logging (Experimental)',
@@ -15,6 +15,10 @@ function getServerSideLoggingSettingPageRender({ adminUserSettings }) {
                     type: 'string',
                     title: 'Do not log numbers (separated by comma)'
                 },
+                doNotLogNumbersWarning: {
+                    type: 'string',
+                    description: 'All numbers will be auto-formatted as E.164 standard. Eg. (123) 456-7890 -> +11234567890'
+                },
                 saveServerSideLoggingButton: {
                     type: 'string',
                     title: 'Save'
@@ -26,6 +30,10 @@ function getServerSideLoggingSettingPageRender({ adminUserSettings }) {
                 "ui:placeholder": 'Enter do not log numbers, separated by comma',
                 "ui:widget": "textarea", // show note input as textarea
             },
+            doNotLogNumbersWarning: {
+                "ui:field": "admonition",
+                "ui:severity": "warning",  // "warning", "info", "error", "success"
+            },
             saveServerSideLoggingButton: {
                 "ui:field": "button",
                 "ui:variant": "contained", // "text", "outlined", "contained", "plain"
@@ -33,8 +41,8 @@ function getServerSideLoggingSettingPageRender({ adminUserSettings }) {
             }
         },
         formData: {
-            enableServerSideLogging: adminUserSettings?.serverSideLogging?.enable ?? false,
-            doNotLogNumbers: adminUserSettings?.serverSideLogging?.doNotLogNumbers ?? '',
+            enableServerSideLogging: enabled,
+            doNotLogNumbers: doNotLogNumbers,
         }
     }
 }

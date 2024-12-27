@@ -2,7 +2,7 @@ const auth = require('./core/auth');
 const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } = require('./core/log');
 const { getContact, createContact, openContactPage, refreshContactPromptPage } = require('./core/contact');
 const userCore = require('./core/user');
-const { getAdminSettings, uploadAdminSettings, enableServerSideLogging, disableServerSideLogging } = require('./core/admin');
+const { getAdminSettings, uploadAdminSettings, getServerSideLogging, enableServerSideLogging, disableServerSideLogging, updateServerSideDoNotLogNumbers } = require('./core/admin');
 const { responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
 const { apiKeyLogin } = require('./core/auth');
@@ -800,7 +800,9 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'serverSideLoggingSetting':
-                  const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({ adminUserSettings: adminSettings });
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const serverSideLoggingSubscription = await getServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
+                  const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({ enabled: serverSideLoggingSubscription.subscribed, doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: serverSideLoggingSettingPageRender
@@ -809,6 +811,7 @@ window.addEventListener('message', async (e) => {
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${serverSideLoggingSettingPageRender.id}`, // page id
                   }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 case 'contactSetting':
                   const contactSettingPageRender = contactSettingPage.getContactSettingPageRender({ adminUserSettings: adminSettings?.userSettings, renderOverridingNumberFormat: platform.name == 'clio' || platform.name == 'insightly', renderAllowExtensionNumberLogging: !!platform.enableExtensionNumberLoggingSetting });
@@ -1102,12 +1105,22 @@ window.addEventListener('message', async (e) => {
               }
               // Cases: open form when 1.create 2.edit 3.view on CRM page
               else {
-                const { callLogs: fetchedCallLogs } = await getLog({
+                let { callLogs: fetchedCallLogs } = await getLog({
                   serverUrl: manifest.serverUrl,
                   logType: 'Call',
                   sessionIds: data.body.call.sessionId,
                   requireDetails: data.body.triggerType === 'editLog'
                 });
+                // Case: if create, but found existing log, then edit
+                if (!!fetchedCallLogs && fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)) {
+                  data.body.triggerType = 'editLog';
+                  fetchedCallLogs = (await getLog({
+                    serverUrl: manifest.serverUrl,
+                    logType: 'Call',
+                    sessionIds: data.body.call.sessionId,
+                    requireDetails: data.body.triggerType === 'editLog'
+                  })).callLogs;
+                }
                 const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
                 showNotification({ level: callLogContactMatchMessage?.messageType, message: callLogContactMatchMessage?.message, ttl: callLogContactMatchMessage?.ttl });
                 if (!callContactMatched) {
@@ -1747,12 +1760,14 @@ window.addEventListener('message', async (e) => {
                   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken: getRcAccessToken() });
                   if (data.body.button.formData.enableServerSideLogging) {
                     await enableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
-                    showNotification({ level: 'success', message: 'Server side logging enabled.', ttl: 5000 });
                   }
                   else {
                     await disableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
-                    showNotification({ level: 'success', message: 'Server side logging disabled.', ttl: 5000 });
                   }
+                  if (data.body.button.formData.doNotLogNumbers) {
+                    await updateServerSideDoNotLogNumbers({ platform, rcAccessToken: getRcAccessToken(), doNotLogNumbers: data.body.button.formData.doNotLogNumbers });
+                  }
+                  showNotification({ level: 'success', message: 'Server side logging saved.', ttl: 5000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
