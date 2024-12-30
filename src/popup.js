@@ -994,10 +994,10 @@ window.addEventListener('message', async (e) => {
                       result: data.body.call.result
                     });
                 }
-                // case: is not recorded
                 else {
+                  // case: is not recorded
                   const hasRecording = await chrome.storage.local.get(`rec-link-${data.body.call.sessionId}`);
-                  if (!!!hasRecording) {
+                  if (!!!hasRecording[`rec-link-${data.body.call.sessionId}`]) {
                     await updateLog(
                       {
                         serverUrl: manifest.serverUrl,
