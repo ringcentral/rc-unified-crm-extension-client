@@ -20,6 +20,7 @@
     "@ringcentral/juno": "^2.35.0",
     "@ringcentral/juno-icon": "^1.15.0",
     "@segment/analytics-next": "^1.49.1",
+    "awesome-phonenumber": "^7.2.0",
     "axios": "^1.1.2",
     "crypto-js": "^4.1.1",
     "idb": "^8.0.0",

@@ -24,7 +24,10 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNo
     if (!!rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
-                const addCallLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+                const hasRecording = await chrome.storage.local.get(`rec-link-${logInfo.sessionId}`);
+                if (!!hasRecording[`rec-link-${logInfo.sessionId}`]) {
+                    logInfo.recording = hasRecording[`rec-link-${logInfo.sessionId}`];
+                }
                 if (addCallLogRes.data.successful) {
                     await chrome.storage.local.set({
                         [`rc-crm-call-log-${logInfo.sessionId}`]: {
@@ -40,16 +43,6 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNo
                 }, '*');
                 if (addCallLogRes.data.successful) {
                     trackSyncCallLog({ hasNote: note !== '' });
-                    // check for remaining recording link
-                    const recordingSessionId = `rec-link-${logInfo.sessionId}`;
-                    const existingCallRecording = await chrome.storage.local.get(recordingSessionId);
-                    if (!!existingCallRecording[recordingSessionId]) {
-                        if (!logInfo.recording) {
-                            await updateLog({ serverUrl, logType: 'Call', sessionId: logInfo.sessionId, recordingLink: existingCallRecording[recordingSessionId].recordingLink });
-                        } else {
-                            await chrome.storage.local.remove(recordingSessionId);
-                        }
-                    }
                     if (isShowNotification) {
                         showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'success', message: addCallLogRes.data.returnMessage?.message ?? 'Call log added', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000 });
                     }
@@ -113,7 +106,7 @@ function openLog({ manifest, platformName, hostname, logId, contactType, contact
     window.open(logPageUrl);
 }
 
-async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, subject, note, aiNote, transcript }) {
+async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, subject, note, startTime, duration, result, isShowNotification }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     if (!!rcUnifiedCrmExtJwt) {
         switch (logType) {
@@ -123,23 +116,15 @@ async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission
                     recordingLink,
                     subject,
                     note,
+                    startTime,
+                    duration,
                     aiNote,
                     transcript,
+                    result
                 }
                 const callLogRes = await axios.patch(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, patchBody);
-                if (callLogRes.data.successful) {
-                    if (!!recordingLink) {
-                        const recordingSessionId = `rec-link-${sessionId}`;
-                        const existingCallRecording = await chrome.storage.local.get(recordingSessionId);
-                        if (!!existingCallRecording[recordingSessionId]) {
-                            await chrome.storage.local.remove(recordingSessionId);
-                        }
-                        showNotification({ level: 'success', message: 'Call recording link uploaded.', ttl: 3000 });
-                        console.log('call recording update done');
-                    }
-                    else {
-                        showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'success', message: callLogRes.data.returnMessage?.message ?? 'Call log updated', ttl: callLogRes.data.returnMessage?.ttl ?? 3000 });
-                    }
+                if (callLogRes.data.successful && isShowNotification) {
+                    showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'success', message: callLogRes.data.returnMessage?.message ?? 'Call log updated', ttl: callLogRes.data.returnMessage?.ttl ?? 3000 });
                 }
                 else {
                     showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'warning', message: callLogRes.data.returnMessage?.message ?? 'Call log update failed', ttl: callLogRes.data.returnMessage?.ttl ?? 3000 });

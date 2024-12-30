@@ -2,7 +2,7 @@ const auth = require('./core/auth');
 const { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } = require('./core/log');
 const { getContact, createContact, openContactPage, refreshContactPromptPage } = require('./core/contact');
 const userCore = require('./core/user');
-const { getAdminSettings, uploadAdminSettings } = require('./core/admin');
+const { getAdminSettings, uploadAdminSettings, getServerSideLogging, enableServerSideLogging, disableServerSideLogging, updateServerSideDoNotLogNumbers } = require('./core/admin');
 const { responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken } = require('./lib/util');
 const { getUserInfo } = require('./lib/rcAPI');
 const { apiKeyLogin } = require('./core/auth');
@@ -19,6 +19,7 @@ const adminPage = require('./components/admin/adminPage');
 const managedSettingsPage = require('./components/admin/managedSettingsPage');
 const callAndSMSLoggingSettingPage = require('./components/admin/managedSettings/callAndSMSLoggingSettingPage');
 const customAdapterPage = require('./components/admin/customAdapterPage');
+const serverSideLoggingPage = require('./components/admin/serverSideLoggingPage');
 const contactSettingPage = require('./components/admin/managedSettings/contactSettingPage');
 const advancedFeaturesSettingPage = require('./components/admin/managedSettings/advancedFeaturesSettingPage');
 const customSettingsPage = require('./components/admin/managedSettings/customSettingsPage');
@@ -66,46 +67,6 @@ let userPermissions = {};
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
-
-// TEMP
-async function tempConvertExtensionUserSettingsToUserSettings() {
-  if (crmAuthed) {
-    const extensionUserSettings = (await chrome.storage.local.get('extensionUserSettings'))?.extensionUserSettings;
-    let formattedUserSettings = {};
-    if (!!extensionUserSettings) {
-      for (const s of extensionUserSettings) {
-        if (s.items !== undefined) {
-          for (const i of s.items) {
-            // special: overriding number format
-            if (!!!formattedUserSettings.overridingNumberFormat) {
-              formattedUserSettings.overridingNumberFormat = {};
-            }
-            if (i.id === "overridingPhoneNumberFormat") {
-              formattedUserSettings.overridingNumberFormat.numberFormatter1 = i.value;
-            }
-            if (i.id === "overridingPhoneNumberFormat2") {
-              formattedUserSettings.overridingNumberFormat.numberFormatter2 = i.value;
-            }
-            if (i.id === "overridingPhoneNumberFormat3") {
-
-              formattedUserSettings.overridingNumberFormat.numberFormatter3 = i.value;
-            }
-            formattedUserSettings[i.id] = { value: i.value };
-          }
-        }
-        else if (s.value !== undefined) {
-          formattedUserSettings[s.id] = { value: s.value };
-        }
-      }
-    }
-    userSettings = await userCore.uploadUserSettings({
-      serverUrl: manifest.serverUrl,
-      userSettings: formattedUserSettings
-    });
-    await chrome.storage.local.set({ userSettings });
-    await chrome.storage.local.remove('extensionUserSettings');
-  }
-}
 
 // Hack: bullhorn specific logic to check if allow custom note action value
 function allowBullhornCustomNoteAction() {
@@ -254,6 +215,16 @@ window.addEventListener('message', async (e) => {
   try {
     if (data) {
       switch (data.type) {
+        case 'rc-telephony-session-notify':
+          const hasRecording = data.telephonySession.parties.some(p => !!p.recordings);
+          if (hasRecording) {
+            await chrome.storage.local.set({
+              ['rec-link-' + data.telephonySession.sessionId]: {
+                link: "(pending...)"
+              }
+            });
+          }
+          break;
         case 'rc-calling-settings-notify':
           await chrome.storage.local.set({ callWith: data.callWith, callingMode: data.callingMode });
           break;
@@ -359,7 +330,6 @@ window.addEventListener('message', async (e) => {
               const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken() });
               crmAuthed = !!returnedToken;
             }
-            await tempConvertExtensionUserSettingsToUserSettings();
             // Unique: Pipedrive
             if (platformName === 'pipedrive' && !(await auth.checkAuth())) {
               chrome.runtime.sendMessage(
@@ -488,7 +458,7 @@ window.addEventListener('message', async (e) => {
             const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
             if (!!storedAdminSettings) {
               try {
-                const adminPageRender = adminPage.getAdminPageRender();
+                const adminPageRender = adminPage.getAdminPageRender({ platform });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-register-customized-page',
                   page: adminPageRender,
@@ -501,6 +471,7 @@ window.addEventListener('message', async (e) => {
             }
             userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
             await chrome.storage.local.set({ userSettings });
+            await userCore.uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
             const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-register-third-party-service',
@@ -664,7 +635,7 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-callLogger-auto-log-notify':
           await chrome.storage.local.set({ rc_callLogger_auto_log_notify: data.autoLog });
-          if (crmAuthed) {
+          if (crmAuthed && !isObjectEmpty(userSettings)) {
             await userCore.uploadUserSettings({
               serverUrl: manifest.serverUrl,
               userSettings
@@ -836,6 +807,20 @@ window.addEventListener('message', async (e) => {
                     path: `/customized/${callAndSMSLoggingSettingPageRender.id}`, // page id
                   }, '*');
                   break;
+                case 'serverSideLoggingSetting':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const serverSideLoggingSubscription = await getServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
+                  const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({ enabled: serverSideLoggingSubscription.subscribed, doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: serverSideLoggingSettingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${serverSideLoggingSettingPageRender.id}`, // page id
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
                 case 'contactSetting':
                   const contactSettingPageRender = contactSettingPage.getContactSettingPageRender({ adminUserSettings: adminSettings?.userSettings, renderOverridingNumberFormat: platform.name == 'clio' || platform.name == 'insightly', renderAllowExtensionNumberLogging: !!platform.enableExtensionNumberLoggingSetting });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -1001,10 +986,10 @@ window.addEventListener('message', async (e) => {
 
               // Sync events - update log
               if (data.body.triggerType === 'callLogSync') {
+                // case: is recorded, recording link ready
                 if (!!data.body.call?.recording?.link) {
                   console.log('call recording updating...');
                   trackUpdateCallRecordingLink({ processState: 'start' });
-                  await chrome.storage.local.set({ ['rec-link-' + data.body.call.sessionId]: { recordingLink: data.body.call.recording.link } });
                   await updateLog(
                     {
                       serverUrl: manifest.serverUrl,
@@ -1014,7 +999,29 @@ window.addEventListener('message', async (e) => {
                       recordingLink: data.body.call.recording.link,
                       aiNote: data.body.aiNote,
                       transcript: data.body.transcript,
+                      recordingLink: data.body.call.recording?.link,
+                      startTime: data.body.call.startTime,
+                      duration: data.body.call.duration,
+                      result: data.body.call.result
                     });
+                }
+                else {
+                  // case: is not recorded
+                  const hasRecording = await chrome.storage.local.get(`rec-link-${data.body.call.sessionId}`);
+                  if (!!!hasRecording[`rec-link-${data.body.call.sessionId}`]) {
+                    await updateLog(
+                      {
+                        serverUrl: manifest.serverUrl,
+                        logType: 'Call',
+                        rcAdditionalSubmission,
+                        sessionId: data.body.call.sessionId,
+                        startTime: data.body.call.startTime,
+                        duration: data.body.call.duration,
+                        result: data.body.call.result
+                      });
+                  }
+                }
+                if (!!data.body.call?.recording?.link) {
                   trackUpdateCallRecordingLink({ processState: 'finish' });
                 }
                 responseMessage(
@@ -1103,18 +1110,32 @@ window.addEventListener('message', async (e) => {
                       note: data.body.formData.note ?? "",
                       aiNote: data.body.aiNote,
                       transcript: data.body.transcript,
+                      startTime: data.body.call.startTime,
+                      duration: data.body.call.duration,
+                      result: data.body.call.result,
+                      isShowNotification: true
                     });
                     break;
                 }
               }
               // Cases: open form when 1.create 2.edit 3.view on CRM page
               else {
-                const { callLogs: fetchedCallLogs } = await getLog({
+                let { callLogs: fetchedCallLogs } = await getLog({
                   serverUrl: manifest.serverUrl,
                   logType: 'Call',
                   sessionIds: data.body.call.sessionId,
                   requireDetails: data.body.triggerType === 'editLog'
                 });
+                // Case: if create, but found existing log, then edit
+                if (!!fetchedCallLogs && fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)) {
+                  data.body.triggerType = 'editLog';
+                  fetchedCallLogs = (await getLog({
+                    serverUrl: manifest.serverUrl,
+                    logType: 'Call',
+                    sessionIds: data.body.call.sessionId,
+                    requireDetails: data.body.triggerType === 'editLog'
+                  })).callLogs;
+                }
                 const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
                 showNotification({ level: callLogContactMatchMessage?.messageType, message: callLogContactMatchMessage?.message, ttl: callLogContactMatchMessage?.ttl });
                 if (!callContactMatched) {
@@ -1735,8 +1756,7 @@ window.addEventListener('message', async (e) => {
                       url: data.body.button.formData.customManifestUrl,
                     }
                     await chrome.storage.local.set({ adminSettings });
-                    const rcAccessToken = getRcAccessToken();
-                    await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
+                    await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken: getRcAccessToken() });
                     userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
                     await chrome.storage.local.set({ userSettings });
                     const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
@@ -1746,6 +1766,30 @@ window.addEventListener('message', async (e) => {
                     }, '*');
                     showNotification({ level: 'success', message: 'Custom manifest file uploaded.', ttl: 5000 });
                   }
+                  break;
+                case 'saveServerSideLoggingButton':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  adminSettings.serverSideLogging = {
+                    enable: data.body.button.formData.enableServerSideLogging,
+                    doNotLogNumbers: data.body.button.formData.doNotLogNumbers
+                  };
+                  await chrome.storage.local.set({ adminSettings });
+                  await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken: getRcAccessToken() });
+                  if (data.body.button.formData.enableServerSideLogging) {
+                    await enableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
+                  }
+                  else {
+                    await disableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
+                  }
+                  if (data.body.button.formData.doNotLogNumbers) {
+                    await updateServerSideDoNotLogNumbers({ platform, rcAccessToken: getRcAccessToken(), doNotLogNumbers: data.body.button.formData.doNotLogNumbers });
+                  }
+                  showNotification({ level: 'success', message: 'Server side logging saved.', ttl: 5000 });
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack',
+                  }, '*');
                   break;
                 case 'developerSettingsPage':
                   try {

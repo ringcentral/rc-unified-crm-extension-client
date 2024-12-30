@@ -35,6 +35,14 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
     return userSettingsToUpload;
 }
 function getAutoLogCallSetting(userSettings) {
+    const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
+    if (serverSideLoggingEnabled) {
+        return {
+            value: false,
+            readOnly: true,
+            readOnlyReason: 'This cannot be turn ON becauase server side logging is enabled by admin'
+        }
+    }
     return {
         value: userSettings?.autoLogCall?.value ?? false,
         readOnly: userSettings?.autoLogCall?.customizable === undefined ? false : !!!userSettings?.autoLogCall?.customizable,
@@ -82,8 +90,8 @@ function getOutgoingCallPop(userSettings) {
     }
 }
 
-function getCallPopMultiMatchBehavior(userSettings){
-    return{
+function getCallPopMultiMatchBehavior(userSettings) {
+    return {
         value: userSettings?.multiContactMatchBehavior?.value ?? 'openAllMatches',
         readOnly: userSettings?.multiContactMatchBehavior?.customizable === undefined ? false : !!!userSettings?.multiContactMatchBehavior?.customizable,
         readOnlyReason: !!!userSettings?.multiContactMatchBehavior?.customizable ? 'This setting is managed by admin' : ''
