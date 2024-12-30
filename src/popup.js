@@ -999,7 +999,6 @@ window.addEventListener('message', async (e) => {
                       recordingLink: data.body.call.recording.link,
                       aiNote: data.body.aiNote,
                       transcript: data.body.transcript,
-                      recordingLink: data.body.call.recording?.link,
                       startTime: data.body.call.startTime,
                       duration: data.body.call.duration,
                       result: data.body.call.result
@@ -1015,6 +1014,8 @@ window.addEventListener('message', async (e) => {
                         logType: 'Call',
                         rcAdditionalSubmission,
                         sessionId: data.body.call.sessionId,
+                        aiNote: data.body.aiNote,
+                        transcript: data.body.transcript,
                         startTime: data.body.call.startTime,
                         duration: data.body.call.duration,
                         result: data.body.call.result

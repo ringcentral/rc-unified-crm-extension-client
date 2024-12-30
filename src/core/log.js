@@ -28,7 +28,12 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNo
                 if (!!hasRecording[`rec-link-${logInfo.sessionId}`]) {
                     logInfo.recording = hasRecording[`rec-link-${logInfo.sessionId}`];
                 }
+                const addCallLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addCallLogRes.data.successful) {
+                    trackSyncCallLog({ hasNote: note !== '' });
+                    if (isShowNotification) {
+                        showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'success', message: addCallLogRes.data.returnMessage?.message ?? 'Call log added', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000 });
+                    }
                     await chrome.storage.local.set({
                         [`rc-crm-call-log-${logInfo.sessionId}`]: {
                             contact: { id: contactId },
@@ -36,22 +41,16 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNo
                         }
                     });
                 }
-                // force call log matcher check
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-trigger-call-logger-match',
-                    sessionIds: [logInfo.sessionId]
-                }, '*');
-                if (addCallLogRes.data.successful) {
-                    trackSyncCallLog({ hasNote: note !== '' });
-                    if (isShowNotification) {
-                        showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'success', message: addCallLogRes.data.returnMessage?.message ?? 'Call log added', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000 });
-                    }
-                }
                 else {
                     if (isShowNotification) {
                         showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'warning', message: addCallLogRes.data.returnMessage?.message ?? 'Failed to save call log', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000 });
                     }
                 }
+                // force call log matcher check
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-trigger-call-logger-match',
+                    sessionIds: [logInfo.sessionId]
+                }, '*');
                 break;
             case 'Message':
                 const messageLogRes = await axios.post(`${serverUrl}/messageLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
@@ -106,7 +105,7 @@ function openLog({ manifest, platformName, hostname, logId, contactType, contact
     window.open(logPageUrl);
 }
 
-async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, subject, note, startTime, duration, result, isShowNotification }) {
+async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, subject, note, startTime, duration, aiNote, transcript, result, isShowNotification }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     if (!!rcUnifiedCrmExtJwt) {
         switch (logType) {
