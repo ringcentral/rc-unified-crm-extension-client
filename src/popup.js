@@ -79,6 +79,22 @@ function allowBullhornCustomNoteAction() {
   }
 }
 
+async function bullhornHeartbeat({ token }) {
+  console.log('checking bullhorn heartbeat...')
+  try {
+    const response = await axios.get(`${manifest.serverUrl}/authValidation?jwtToken=${token}`);
+    if (response.data.successful) {
+      console.log('bullhorn heartbeat successful');
+    }
+    else {
+      showNotification({ level: 'warning', message: 'Bullhorn token expired. Please go to Settings and reconnect to Bullhorn', ttl: 10000 });
+    }
+  }
+  catch (e) {
+    showNotification({ level: 'warning', message: 'Bullhorn token expired. Please go to Settings and reconnect to Bullhorn', ttl: 10000 });
+  }
+}
+
 async function checkC2DCollision() {
   try {
     const { rcForGoogleCollisionChecked } = await chrome.storage.local.get({ rcForGoogleCollisionChecked: false });
@@ -330,6 +346,12 @@ window.addEventListener('message', async (e) => {
               const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken() });
               crmAuthed = !!returnedToken;
             }
+            // Unique: Bullhorn
+            if (platformName === 'bullhorn' && crmAuthed) {
+              // every 30 min, 
+              setInterval(bullhornHeartbeat, 1800000, { token: rcUnifiedCrmExtJwt });
+            }
+
             // Unique: Pipedrive
             if (platformName === 'pipedrive' && !(await auth.checkAuth())) {
               chrome.runtime.sendMessage(
