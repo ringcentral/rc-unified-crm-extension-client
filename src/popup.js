@@ -1001,9 +1001,7 @@ window.addEventListener('message', async (e) => {
                       transcript: data.body.transcript,
                       startTime: data.body.call.startTime,
                       duration: data.body.call.duration,
-                      result: data.body.call.result,
-                      aiNote: data.body.aiNote,
-                      transcript: data.body.transcript,
+                      result: data.body.call.result
                     });
                 }
                 else {
@@ -1116,9 +1114,7 @@ window.addEventListener('message', async (e) => {
                       startTime: data.body.call.startTime,
                       duration: data.body.call.duration,
                       result: data.body.call.result,
-                      isShowNotification: true,
-                      aiNote: data.body.aiNote,
-                      transcript: data.body.transcript,
+                      isShowNotification: true
                     });
                     break;
                 }
