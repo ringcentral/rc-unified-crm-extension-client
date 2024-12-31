@@ -1,7 +1,7 @@
 function getServerSideLoggingSettingPageRender({ enabled, doNotLogNumbers }) {
     return {
         id: 'serverSideLoggingSetting',
-        title: 'Server side logging (Experimental)',
+        title: 'Server side logging (Beta)',
         type: 'page',
         schema: {
             type: 'object',
