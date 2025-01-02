@@ -1635,6 +1635,11 @@ window.addEventListener('message', async (e) => {
                       type: 'rc-adapter-register-third-party-service',
                       service: serviceManifest
                     }, '*');
+                    const adminPageRender = adminPage.getAdminPageRender({ platform });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: adminPageRender,
+                    }, '*');
                   }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
@@ -2010,6 +2015,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           type: 'rc-adapter-register-third-party-service',
           service: serviceManifest
         }, '*');
+        const adminPageRender = adminPage.getAdminPageRender({ platform });
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+          type: 'rc-adapter-register-customized-page',
+          page: adminPageRender,
+        }, '*');
       }
     }
     sendResponse({ result: 'ok' });
@@ -2023,6 +2033,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
       type: 'rc-adapter-register-third-party-service',
       service: serviceManifest
+    }, '*');
+    const adminPageRender = adminPage.getAdminPageRender({ platform });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+      type: 'rc-adapter-register-customized-page',
+      page: adminPageRender,
     }, '*');
     await dismissNotification({ notificationId: currentNotificationId });
     console.log('pipedriveAltAuthDone')
@@ -2082,6 +2097,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',
         service: serviceManifest
+      }, '*');
+      const adminPageRender = adminPage.getAdminPageRender({ platform });
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: adminPageRender,
       }, '*');
     }
     window.postMessage({ type: 'rc-apiKey-input-modal-close', platform: platform.name }, '*');
