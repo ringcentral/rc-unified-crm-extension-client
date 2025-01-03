@@ -64,6 +64,7 @@ let adminSettings = {
 let userSettings = {};
 let hasOngoingCall = false;
 let userPermissions = {};
+let serverSideLoggingSubscription = {};
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
@@ -831,7 +832,7 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'serverSideLoggingSetting':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  const serverSideLoggingSubscription = await getServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
+                  serverSideLoggingSubscription = await getServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
                   const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({ enabled: serverSideLoggingSubscription.subscribed, doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
@@ -1797,7 +1798,8 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'saveServerSideLoggingButton':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  adminSettings.serverSideLogging = {
+                  adminSettings.userSettings.serverSideLogging =
+                  {
                     enable: data.body.button.formData.enableServerSideLogging,
                     doNotLogNumbers: data.body.button.formData.doNotLogNumbers
                   };
@@ -1805,14 +1807,16 @@ window.addEventListener('message', async (e) => {
                   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken: getRcAccessToken() });
                   if (data.body.button.formData.enableServerSideLogging) {
                     await enableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
+                    showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
                   }
                   else {
                     await disableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
+                    showNotification({ level: 'success', message: 'Server side logging turned OFF.', ttl: 5000 });
                   }
                   if (data.body.button.formData.doNotLogNumbers) {
                     await updateServerSideDoNotLogNumbers({ platform, rcAccessToken: getRcAccessToken(), doNotLogNumbers: data.body.button.formData.doNotLogNumbers });
+                    showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
                   }
-                  showNotification({ level: 'success', message: 'Server side logging saved.', ttl: 5000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
