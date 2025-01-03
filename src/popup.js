@@ -1813,10 +1813,8 @@ window.addEventListener('message', async (e) => {
                     await disableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
                     showNotification({ level: 'success', message: 'Server side logging turned OFF.', ttl: 5000 });
                   }
-                  if (data.body.button.formData.doNotLogNumbers) {
-                    await updateServerSideDoNotLogNumbers({ platform, rcAccessToken: getRcAccessToken(), doNotLogNumbers: data.body.button.formData.doNotLogNumbers });
-                    showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
-                  }
+                  await updateServerSideDoNotLogNumbers({ platform, rcAccessToken: getRcAccessToken(), doNotLogNumbers: data.body.button.formData.doNotLogNumbers ?? "" });
+                  showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
