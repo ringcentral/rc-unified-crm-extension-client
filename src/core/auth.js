@@ -93,6 +93,7 @@ async function unAuthorize({ serverUrl, platformName, rcUnifiedCrmExtJwt }) {
         console.log(e);
     }
     await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
+    await chrome.storage.local.remove('serverSideLoggingToken');
     setAuth(false);
 }
 
