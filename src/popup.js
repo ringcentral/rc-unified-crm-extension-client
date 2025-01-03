@@ -1148,7 +1148,7 @@ window.addEventListener('message', async (e) => {
                   serverUrl: manifest.serverUrl,
                   logType: 'Call',
                   sessionIds: data.body.call.sessionId,
-                  requireDetails: data.body.triggerType === 'editLog'
+                  requireDetails: false
                 });
                 // Case: if create, but found existing log, then edit
                 if (!!fetchedCallLogs && fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)) {
