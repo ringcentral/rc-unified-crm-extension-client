@@ -1151,7 +1151,7 @@ window.addEventListener('message', async (e) => {
                   requireDetails: false
                 });
                 // Case: if create, but found existing log, then edit
-                if (!!fetchedCallLogs && fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)) {
+                if (data.body.triggerType === 'createLog' && !!fetchedCallLogs && fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)) {
                   data.body.triggerType = 'editLog';
                   fetchedCallLogs = (await getLog({
                     serverUrl: manifest.serverUrl,
