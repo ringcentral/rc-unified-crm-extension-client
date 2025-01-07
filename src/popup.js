@@ -1199,13 +1199,13 @@ window.addEventListener('message', async (e) => {
                   requireDetails: false
                 });
                 // Case: if create, but found existing log, then edit
-                if (data.body.triggerType === 'createLog' && !!fetchedCallLogs && fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)) {
+                if (data.body.triggerType = 'editLog' || data.body.triggerType === 'createLog' && !!fetchedCallLogs && fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)) {
                   data.body.triggerType = 'editLog';
                   fetchedCallLogs = (await getLog({
                     serverUrl: manifest.serverUrl,
                     logType: 'Call',
                     sessionIds: data.body.call.sessionId,
-                    requireDetails: data.body.triggerType === 'editLog'
+                    requireDetails: true
                   })).callLogs;
                 }
                 const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
