@@ -48,8 +48,8 @@ async function openPopupWindow() {
         url: popupUri,
         type: 'popup',
         focused: true,
-        width: extensionWindowStatus?.width ?? 315,
-        height: extensionWindowStatus?.height ?? 566,
+        width: extensionWindowStatus?.width ?? 300,
+        height: extensionWindowStatus?.height ?? 565,
         left: extensionWindowStatus?.left ?? 50,
         top: extensionWindowStatus?.top ?? 50
       });
@@ -60,8 +60,8 @@ async function openPopupWindow() {
         url: popupUri,
         type: 'popup',
         focused: true,
-        width: 315,
-        height: 566,
+        width: 300,
+        height: 565,
         left: 50,
         top: 50
       });
