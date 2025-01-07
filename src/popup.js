@@ -1851,6 +1851,11 @@ window.addEventListener('message', async (e) => {
                     enable: data.body.button.formData.enableServerSideLogging,
                     doNotLogNumbers: data.body.button.formData.doNotLogNumbers
                   };
+                  userSettings.serverSideLogging =
+                  {
+                    enable: data.body.button.formData.enableServerSideLogging,
+                    doNotLogNumbers: data.body.button.formData.doNotLogNumbers
+                  };
                   await chrome.storage.local.set({ adminSettings });
                   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken: getRcAccessToken() });
                   if (data.body.button.formData.enableServerSideLogging) {
@@ -1861,6 +1866,10 @@ window.addEventListener('message', async (e) => {
                     await disableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
                     showNotification({ level: 'success', message: 'Server side logging turned OFF.', ttl: 5000 });
                   }
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-third-party-service',
+                    service: (await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings }))
+                  }, '*');
                   await updateServerSideDoNotLogNumbers({ platform, rcAccessToken: getRcAccessToken(), doNotLogNumbers: data.body.button.formData.doNotLogNumbers ?? "" });
                   showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
