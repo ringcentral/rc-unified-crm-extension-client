@@ -88,11 +88,59 @@ async function bullhornHeartbeat({ token }) {
       console.log('bullhorn heartbeat successful');
     }
     else {
-      showNotification({ level: 'warning', message: 'Bullhorn token expired. Please go to Settings and reconnect to Bullhorn', ttl: 10000 });
+      showNotification({
+        level: 'warning',
+        message: 'Bullhorn token expired, please reconnect.',
+        details: [{
+          title: 'Steps to reconnect',
+          items: [
+            {
+              id: '1',
+              type: 'text',
+              text: '1. In user settings, click Logout.'
+            },
+            {
+              id: '2',
+              type: 'text',
+              text: '2. Refresh Bullhorn page.'
+            },
+            {
+              id: '3',
+              type: 'text',
+              text: '3. Reload the extension and Connect to Bullhorn again.'
+            }
+          ]
+        }],
+        ttl: 10000
+      });
     }
   }
   catch (e) {
-    showNotification({ level: 'warning', message: 'Bullhorn token expired. Please go to Settings and reconnect to Bullhorn', ttl: 10000 });
+    showNotification({
+      level: 'warning',
+      message: 'Bullhorn token expired, please reconnect.',
+      details: [{
+        title: 'Steps to reconnect',
+        items: [
+          {
+            id: '1',
+            type: 'text',
+            text: '1. In user settings, click Logout.'
+          },
+          {
+            id: '2',
+            type: 'text',
+            text: '2. Refresh Bullhorn page.'
+          },
+          {
+            id: '3',
+            type: 'text',
+            text: '3. Reload the extension and Connect to Bullhorn again.'
+          }
+        ]
+      }],
+      ttl: 10000
+    });
   }
 }
 
