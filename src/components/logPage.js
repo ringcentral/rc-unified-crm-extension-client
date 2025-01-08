@@ -49,6 +49,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
         }
     }
     let page = {};
+    let requiredFieldNames = [];
     switch (triggerType) {
         case 'createLog':
         case 'manual':
@@ -66,6 +67,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     associationField: !!f.contactDependent
                 }
                 additionalFieldsValue[f.const] = contactList[0].additionalInfo[f.const][0].const;
+                if (!!f.required) {
+                    requiredFieldNames.push(f.const);
+                }
             }
             for (const f of additionalCheckBoxFields) {
                 if (!contactList[0]?.additionalInfo?.hasOwnProperty(f.const)) {
@@ -77,6 +81,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     associationField: !!f.contactDependent
                 }
                 additionalFieldsValue[f.const] = f.defaultValue ?? false;
+                if (!!f.required) {
+                    requiredFieldNames.push(f.const);
+                }
             }
             for (const f of additionalInputFields) {
                 if (!contactList[0]?.additionalInfo?.hasOwnProperty(f.const)) {
@@ -88,6 +95,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     associationField: !!f.contactDependent
                 }
                 additionalFieldsValue[f.const] = f.defaultValue ?? '';
+                if (!!f.required) {
+                    requiredFieldNames.push(f.const);
+                }
             }
             let warningField = {};
             if (contactList.length > 2) {
@@ -106,8 +116,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     }
                 };
             }
-            let requiredFieldNames = [];
-            if (contactList.length === 1 && contactList.some(c => c.isNewContact)) { requiredFieldNames = ['newContactName'] };
+            if (contactList.length === 1 && contactList.some(c => c.isNewContact)) { requiredFieldNames.push('newContactName') };
             let newContactWidget = {
                 newContactName: {
                     "ui:widget": "hidden",
@@ -278,6 +287,9 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
     const additionalCheckBoxFields = logType === 'Call' ?
         manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [] :
         manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [];
+    const additionalInputFields = logType === 'Call' ?
+        manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [] :
+        manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [];
     switch (updatedFieldKey) {
         case 'contact':
             const contact = page.schema.properties.contact.oneOf.find(c => c.const === page.formData.contact);
@@ -289,7 +301,9 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                 page.uiSchema.newContactName = {
                     "ui:placeholder": 'Enter name...',
                 };
-                page.schema.required = ['newContactName'];
+                if (!page.schema.required.includes('newContactName')) {
+                    page.schema.required.push('newContactName');
+                }
                 if (!!page.schema.properties.activityTitle && !page.schema.properties.activityTitle?.manuallyEdited) {
                     page.formData.activityTitle = page.formData.activityTitle.startsWith('Inbound') ?
                         'Inbound call from ' :
@@ -339,6 +353,9 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                 additionalFieldsValue[f.const] = f.contactDependent ?
                     contact.additionalInfo[f.const][0].const :
                     page.formData[f.const];
+                if (f.required) {
+                    page.schema.required.push(f.const);
+                }
             }
             for (const f of additionalCheckBoxFields) {
                 if (f.contactDependent && !contact?.additionalInfo?.hasOwnProperty(f.const)) {
@@ -352,6 +369,25 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                 additionalFieldsValue[f.const] = f.contactDependent ?
                     f.defaultValue :
                     page.formData[f.const];
+                if (f.required) {
+                    page.schema.required.push(f.const);
+                }
+            }
+            for (const f of additionalInputFields) {
+                if (f.contactDependent && !contact?.additionalInfo?.hasOwnProperty(f.const)) {
+                    continue;
+                }
+                additionalFields[f.const] = {
+                    title: f.title,
+                    type: 'string',
+                    associationField: f.contactDependent
+                }
+                additionalFieldsValue[f.const] = f.contactDependent ?
+                    f.defaultValue :
+                    page.formData[f.const];
+                if (f.required) {
+                    page.schema.required.push(f.const);
+                }
             }
             page.schema.properties = {
                 ...page.schema.properties,
