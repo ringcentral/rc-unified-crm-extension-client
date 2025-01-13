@@ -968,8 +968,9 @@ window.addEventListener('message', async (e) => {
               }
               else {
                 for (const contactPhoneNumber of data.body.phoneNumbers) {
+                  const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
                   // skip contact with just extension number
-                  if (!contactPhoneNumber.startsWith('+')) {
+                  if (!allowExtensionNumberLogging && !contactPhoneNumber.startsWith('+')) {
                     continue;
                   }
                   // query on 3rd party API to get the matched contact info and return
