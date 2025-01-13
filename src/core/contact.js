@@ -113,7 +113,7 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
     }
 }
 
-async function openContactPage({ manifest, platformName, phoneNumber, contactId, contactType, multiContactMatchBehavior }) {
+async function openContactPage({ manifest, platformName, phoneNumber, contactId, contactType, multiContactMatchBehavior, fromCallPop = false }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     let platformInfo = await chrome.storage.local.get('platform-info');
     if (platformInfo['platform-info'].hostname === 'temp') {
@@ -135,7 +135,11 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
             return;
         }
         else {
-            const contactPageUrl = manifest.platforms[platformName].contactPageUrl
+            let targetUrlTemplate = manifest.platforms[platformName].contactPageUrl;
+            if (fromCallPop && !!manifest.platforms[platformName].callPopUrl) {
+                targetUrlTemplate = manifest.platforms[platformName].callPopUrl;
+            }
+            const contactPageUrl = targetUrlTemplate
                 .replace('{hostname}', hostname)
                 .replaceAll('{contactId}', contactId)
                 .replaceAll('{contactType}', contactType);

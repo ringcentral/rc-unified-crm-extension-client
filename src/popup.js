@@ -583,12 +583,12 @@ window.addEventListener('message', async (e) => {
                     type: 'openPopupWindow'
                   });
                   if (userCore.getIncomingCallPop(userSettings).value === 'onAnswer') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
                   }
                   break;
                 case 'Outbound':
                   if (userCore.getOutgoingCallPop(userSettings).value === 'onAnswer') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
                   }
                   break;
               }
@@ -671,12 +671,12 @@ window.addEventListener('message', async (e) => {
                     type: 'openPopupWindow'
                   });
                   if (userCore.getIncomingCallPop(userSettings).value === 'onFirstRing') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
                   }
                   break;
                 case 'Outbound':
                   if (userCore.getOutgoingCallPop(userSettings).value === 'onFirstRing') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
+                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
                   }
                   break;
               }
