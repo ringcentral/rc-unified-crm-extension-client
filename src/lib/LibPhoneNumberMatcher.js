@@ -17962,6 +17962,7 @@ function acceptNode(node) {
 }
 exports.acceptNode = acceptNode;
 const allNumbersRegExp = /\d+/g;
+const hasLetterRegExp = /[a-zA-Z]/;
 class LibPhoneNumberMatcher extends BaseMatcher_1.BaseMatcher {
     constructor(_props = {}) {
         super(_props);
@@ -17972,7 +17973,15 @@ class LibPhoneNumberMatcher extends BaseMatcher_1.BaseMatcher {
                 countryCode: this._props.countryCode,
                 areaCode: this._props.areaCode,
             });
-            if ((!phones || phones.length === 0) && this._props.matchAllNumbers && allNumbersRegExp.test(value)) {
+            if ((!phones || phones.length === 0) &&
+                this._props.matchAllNumbers &&
+                allNumbersRegExp.test(value) &&
+                (!hasLetterRegExp.test(value) ||
+                    value.indexOf('tel:') === 0 ||
+                    value.indexOf('callto:') === 0 ||
+                    value.indexOf('sip:') === 0 ||
+                    value.indexOf('sms:') === 0 ||
+                    value.indexOf('fax:') === 0)) {
                 const matches = value.match(allNumbersRegExp);
                 if (matches) {
                     return matches.map((phoneNumber) => ({
