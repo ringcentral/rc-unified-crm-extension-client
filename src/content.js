@@ -151,7 +151,7 @@ async function Initialize() {
   if (userSettings?.autoOpenExtension?.value ?? false) {
     const platformInfo = await chrome.storage.local.get('platform-info');
     const registeredHostname = platformInfo['platform-info'].hostname;
-    if (window.location.pathname === '/' && window.location.hostname === registeredHostname) {
+    if (window === window.top && window.location.hostname === registeredHostname) {
       chrome.runtime.sendMessage({
         type: 'openPopupWindow'
       });
