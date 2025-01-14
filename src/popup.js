@@ -625,30 +625,10 @@ window.addEventListener('message', async (e) => {
                   const callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId: null });
                   // default form value from user settings
                   if (data.call.direction === 'Inbound') {
-                    const inboundCallDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'inboundCall', logType: 'callLog' });
-                    for (const inboundCallDefaultValue of inboundCallDefaultValues) {
-                      const inboundCallMappedOption = callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, inboundCallDefaultValue.value))?.const;
-                      if (!!inboundCallMappedOption) {
-                        callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
-                      }
-                      else if (allowBullhornCustomNoteAction() && !!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[inboundCallDefaultValue.field]?.oneOff) {
-                        callPage.schema.properties[inboundCallDefaultValue.field].oneOf.push({ const: inboundCallDefaultValue.value, title: inboundCallDefaultValue.value });
-                        callPage.formData[inboundCallDefaultValue.field] = inboundCallDefaultValue.value;
-                      }
-                    }
+                    logPageFormDataDefaulting({ targetPage: callPage, caseType: 'inboundCall', logType: 'callLog' });
                   }
                   if (data.call.direction === 'Outbound') {
-                    const outboundCallDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'outboundCall', logType: 'callLog' });
-                    for (const outboundCallDefaultValue of outboundCallDefaultValues) {
-                      const outboundCallMappedOption = callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, outboundCallDefaultValue.value))?.const;
-                      if (!!outboundCallMappedOption) {
-                        callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
-                      }
-                      else if (allowBullhornCustomNoteAction() && !!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf) {
-                        callPage.schema.properties[outboundCallDefaultValue.field].oneOf.push({ const: outboundCallDefaultValue.value, title: outboundCallDefaultValue.value });
-                        callPage.formData[outboundCallDefaultValue.field] = outboundCallDefaultValue.value;
-                      }
-                    }
+                    logPageFormDataDefaulting({ targetPage: callPage, caseType: 'outboundCall', logType: 'callLog' });
                   }
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-update-call-log-page',
@@ -1237,6 +1217,7 @@ window.addEventListener('message', async (e) => {
                       }
                     }
                     const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({ isAutoLog, contactInfo: callMatchedContact, logType: 'callLog', direction: data.body.call.direction, isVoicemail: false });
+
                     if (isAutoLog && !callAutoPopup) {
                       // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
                       if (hasConflict) {
@@ -1288,30 +1269,10 @@ window.addEventListener('message', async (e) => {
                       const callPage = logPage.getLogPageRender({ id: data.body.call.sessionId, manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId });
                       // default form value from user settings
                       if (data.body.call.direction === 'Inbound') {
-                        const inboundCallDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'inboundCall', logType: 'callLog' });
-                        for (const inboundCallDefaultValue of inboundCallDefaultValues) {
-                          const inboundCallMappedOption = callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, inboundCallDefaultValue.value))?.const;
-                          if (!!inboundCallMappedOption) {
-                            callPage.formData[inboundCallDefaultValue.field] = inboundCallMappedOption;
-                          }
-                          else if (allowBullhornCustomNoteAction() && !!platform?.page['callLog']?.additionalFields.find(f => f.const == inboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[inboundCallDefaultValue.field]?.oneOf) {
-                            callPage.schema.properties[inboundCallDefaultValue.field].oneOf.push({ const: inboundCallDefaultValue.value, title: inboundCallDefaultValue.value });
-                            callPage.formData[inboundCallDefaultValue.field] = inboundCallDefaultValue.value;
-                          }
-                        }
+                        logPageFormDataDefaulting({ targetPage: callPage, caseType: 'inboundCall', logType: 'callLog' });
                       }
                       if (data.body.call.direction === 'Outbound') {
-                        const outboundCallDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'outboundCall', logType: 'callLog' });
-                        for (const outboundCallDefaultValue of outboundCallDefaultValues) {
-                          const outboundCallMappedOption = callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, outboundCallDefaultValue.value))?.const;
-                          if (!!outboundCallMappedOption) {
-                            callPage.formData[outboundCallDefaultValue.field] = outboundCallMappedOption;
-                          }
-                          else if (allowBullhornCustomNoteAction() && !!platform?.page['callLog']?.additionalFields.find(f => f.const == outboundCallDefaultValue.field)?.allowCustomValue && !!callPage.schema.properties[outboundCallDefaultValue.field]?.oneOf) {
-                            callPage.schema.properties[outboundCallDefaultValue.field].oneOf.push({ const: outboundCallDefaultValue.value, title: outboundCallDefaultValue.value });
-                            callPage.formData[outboundCallDefaultValue.field] = outboundCallDefaultValue.value;
-                          }
-                        }
+                        logPageFormDataDefaulting({ targetPage: callPage, caseType: 'outboundCall', logType: 'callLog' });
                       }
                       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                         type: 'rc-adapter-update-call-log-page',
@@ -1524,30 +1485,10 @@ window.addEventListener('message', async (e) => {
                   });
                   // default form value from user settings
                   if (data.body.conversation.type === 'VoiceMail') {
-                    const voicemailDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'voicemail', logType: 'messageLog' });
-                    for (const voicemailDefaultValue of voicemailDefaultValues) {
-                      const voicemailMappedOption = messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, voicemailDefaultValue.value))?.const;
-                      if (!!voicemailMappedOption) {
-                        messagePage.formData[voicemailDefaultValue.field] = voicemailMappedOption;
-                      }
-                      else if (allowBullhornCustomNoteAction() && !!platform?.page['messageLog']?.additionalFields.find(f => f.const == voicemailDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[voicemailDefaultValue.field]?.oneOf) {
-                        messagePage.schema.properties[voicemailDefaultValue.field].oneOf.push({ const: voicemailDefaultValue.value, title: voicemailDefaultValue.value });
-                        messagePage.formData[voicemailDefaultValue.field] = voicemailDefaultValue.value;
-                      }
-                    }
+                    logPageFormDataDefaulting({ targetPage: messagePage, caseType: 'voicemail', logType: 'messageLog' });
                   }
                   else {
-                    const smsDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType: 'message', logType: 'messageLog' });
-                    for (const smsDefaultValue of smsDefaultValues) {
-                      const smsMappedOption = messagePage.schema.properties[smsDefaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, smsDefaultValue.value))?.const;
-                      if (!!smsMappedOption) {
-                        messagePage.formData[smsDefaultValue.field] = smsMappedOption;
-                      }
-                      else if (allowBullhornCustomNoteAction() && !!platform?.page['messageLog']?.additionalFields.find(f => f.const == smsDefaultValue.field)?.allowCustomValue && !!messagePage.schema.properties[smsDefaultValue.field]?.oneOf) {
-                        messagePage.schema.properties[smsDefaultValue.field].oneOf.push({ const: smsDefaultValue.value, title: smsDefaultValue.value });
-                        messagePage.formData[smsDefaultValue.field] = smsDefaultValue.value;
-                      }
-                    }
+                    logPageFormDataDefaulting({ targetPage: messagePage, caseType: 'message', logType: 'messageLog' });
                   }
 
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -1975,6 +1916,30 @@ function getAdditionalFieldDefaultValuesFromSetting({ caseType, logType }) {
   return result;
 }
 
+function logPageFormDataDefaulting({ targetPage, caseType, logType }) {
+  const defaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType, logType });
+  for (const defaultValue of defaultValues) {
+    let fieldType = !!targetPage.schema.properties[defaultValue.field]?.oneOf ? 'options' : 'boolean';
+    switch (fieldType) {
+      case 'options':
+        const mappedOption = targetPage.schema.properties[defaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, defaultValue.value))?.const;
+        if (!!mappedOption) {
+          targetPage.formData[defaultValue.field] = mappedOption;
+        }
+        else if (allowBullhornCustomNoteAction() && !!platform?.page['callLog']?.additionalFields.find(f => f.const == defaultValue.field)?.allowCustomValue && !!targetPage.schema.properties[defaultValue.field]?.oneOf) {
+          targetPage.schema.properties[defaultValue.field].oneOf.push({ const: defaultValue.value, title: defaultValue.value });
+          targetPage.formData[defaultValue.field] = defaultValue.value;
+        }
+        break;
+      case 'boolean':
+        if (!!defaultValue?.value) {
+          targetPage.formData[defaultValue.field] = defaultValue.value;
+        }
+        break;
+    }
+  }
+}
+
 // A fuzzy string compare that ignores cases and spaces
 function rawTextCompare(str1 = '', str2 = '') {
   return str1.toLowerCase().replace(/\s/g, '') === str2.toLowerCase().replace(/\s/g, '');
@@ -1998,6 +1963,23 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
     // go through all additional fields
     for (const key of additionalFieldsKeys) {
       const fieldOptions = contactInfo[0].additionalInfo[key];
+      let caseType = '';
+      if (logType === 'callLog') {
+        if (direction === 'Inbound') {
+          caseType = 'inboundCall';
+        }
+        else {
+          caseType = 'outboundCall';
+        }
+      }
+      else if (logType === 'messageLog') {
+        if (isVoicemail) {
+          caseType = 'voicemail';
+        }
+        else {
+          caseType = 'message';
+        }
+      }
       // check if this contact's field options exist and
       // 1. Only 1 option -> directly choose it
       // 2. More than 1 option -> Check default value setup
@@ -2006,23 +1988,6 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
       // 3. zero option ->  
       if (Array.isArray(fieldOptions)) {
         if (fieldOptions.length > 1) {
-          let caseType = '';
-          if (logType === 'callLog') {
-            if (direction === 'Inbound') {
-              caseType = 'inboundCall';
-            }
-            else {
-              caseType = 'outboundCall';
-            }
-          }
-          else if (logType === 'messageLog') {
-            if (isVoicemail) {
-              caseType = 'voicemail';
-            }
-            else {
-              caseType = 'message';
-            }
-          }
           const fieldDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType, logType });
           let allMatched = true;
           const fieldDefaultValue = fieldDefaultValues.find(f => f.field === key);
@@ -2047,6 +2012,14 @@ function getLogConflictInfo({ isAutoLog, contactInfo, logType, direction, isVoic
         }
         else if (fieldOptions.length === 1) {
           autoSelectAdditionalSubmission[key] = fieldOptions[0].const;
+        }
+      }
+      // if non array field, go with the value directly
+      else {
+        const fieldDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType, logType });
+        const fieldDefaultValue = fieldDefaultValues.find(f => f.field === key);
+        if (!!fieldDefaultValue) {
+          autoSelectAdditionalSubmission[key] = fieldDefaultValue.value;
         }
       }
     }
