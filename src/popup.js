@@ -2215,7 +2215,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
         id: "popupLogPageAfterCall",
         type: "boolean",
         groupId: "logging",
-        name: 'Open call logging page after call',
+        name: '(Manual log) Open call logging page after call',
         readOnly: userCore.getCallPopSetting(userSettings).readOnly,
         readOnlyReason: userCore.getCallPopSetting(userSettings).readOnlyReason,
         value: userCore.getCallPopSetting(userSettings).value
@@ -2224,7 +2224,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
         id: "popupLogPageAfterSMS",
         type: "boolean",
         groupId: "logging",
-        name: 'Open SMS logging page after message',
+        name: '(Manual log) Open SMS logging page after message',
         readOnly: userCore.getSMSPopSetting(userSettings).readOnly,
         readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason,
         value: userCore.getSMSPopSetting(userSettings).value
