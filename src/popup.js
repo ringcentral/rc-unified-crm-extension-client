@@ -978,11 +978,11 @@ window.addEventListener('message', async (e) => {
                         additionalInfo: contactInfoItem.additionalInfo
                       });
                     }
-                    if (contactInfo.filter(c => !c.isNewContact).length === 0) {
+                    if (contactInfo.filter(c => !c.isNewContact).length === 0 && data.body.phoneNumbers.length === 1) {
                       showNotification({ level: contactMatchReturnMessage?.messageType, message: contactMatchReturnMessage?.message, ttl: contactMatchReturnMessage?.ttl, details: contactMatchReturnMessage?.details });
                     }
                   }
-                  else {
+                  else if (data.body.phoneNumbers.length === 1) {
                     showNotification({ level: contactMatchReturnMessage?.messageType, message: contactMatchReturnMessage?.message, ttl: contactMatchReturnMessage?.ttl, details: contactMatchReturnMessage?.details });
                   }
                 }
