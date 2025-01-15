@@ -32,7 +32,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNo
                 if (addCallLogRes.data.successful) {
                     trackSyncCallLog({ hasNote: note !== '' });
                     if (isShowNotification) {
-                        showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'success', message: addCallLogRes.data.returnMessage?.message ?? 'Call log added', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000 });
+                        showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'success', message: addCallLogRes.data.returnMessage?.message ?? 'Call log added', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000, details: addCallLogRes.data.returnMessage?.details });
                     }
                     await chrome.storage.local.set({
                         [`rc-crm-call-log-${logInfo.sessionId}`]: {
@@ -43,7 +43,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNo
                 }
                 else {
                     if (isShowNotification) {
-                        showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'warning', message: addCallLogRes.data.returnMessage?.message ?? 'Failed to save call log', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000 });
+                        showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'warning', message: addCallLogRes.data.returnMessage?.message ?? 'Failed to save call log', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000, details: addCallLogRes.data.returnMessage?.details });
                     }
                 }
                 // force call log matcher check
@@ -69,7 +69,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNo
                         await chrome.storage.local.set(messageLogPrefCache);
                     }
                     if (messageLogRes.data.logIds?.length > 0 && isShowNotification) {
-                        showNotification({ level: messageLogRes.data.returnMessage?.messageType ?? 'success', message: messageLogRes.data.returnMessage?.message ?? 'Message log added', ttl: messageLogRes.data.returnMessage?.ttl ?? 3000 });
+                        showNotification({ level: messageLogRes.data.returnMessage?.messageType ?? 'success', message: messageLogRes.data.returnMessage?.message ?? 'Message log added', ttl: messageLogRes.data.returnMessage?.ttl ?? 3000, details: messageLogRes.data.returnMessage?.details });
                     }
                     await chrome.storage.local.set({ [`rc-crm-conversation-log-${logInfo.conversationLogId}`]: { logged: true } });
                 }
@@ -87,7 +87,7 @@ async function getLog({ serverUrl, logType, sessionIds, requireDetails }) {
         switch (logType) {
             case 'Call':
                 const callLogRes = await axios.get(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}&sessionIds=${sessionIds}&requireDetails=${requireDetails}`);
-                showNotification({ level: callLogRes.data.returnMessage?.messageType, message: callLogRes.data.returnMessage?.message, ttl: callLogRes.data.returnMessage?.ttl })
+                showNotification({ level: callLogRes.data.returnMessage?.messageType, message: callLogRes.data.returnMessage?.message, ttl: callLogRes.data.returnMessage?.ttl, details: callLogRes.data.returnMessage?.details });
                 return { successful: callLogRes.data.successful, callLogs: callLogRes.data.logs };
         }
     }
@@ -123,10 +123,10 @@ async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission
                 }
                 const callLogRes = await axios.patch(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, patchBody);
                 if (callLogRes.data.successful && isShowNotification) {
-                    showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'success', message: callLogRes.data.returnMessage?.message ?? 'Call log updated', ttl: callLogRes.data.returnMessage?.ttl ?? 3000 });
+                    showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'success', message: callLogRes.data.returnMessage?.message ?? 'Call log updated', ttl: callLogRes.data.returnMessage?.ttl ?? 3000, details: callLogRes.data.returnMessage?.details });
                 }
                 else {
-                    showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'warning', message: callLogRes.data.returnMessage?.message ?? 'Call log update failed', ttl: callLogRes.data.returnMessage?.ttl ?? 3000 });
+                    showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'warning', message: callLogRes.data.returnMessage?.message ?? 'Call log update failed', ttl: callLogRes.data.returnMessage?.ttl ?? 3000, details: callLogRes.data.returnMessage?.details });
                 }
         }
     }

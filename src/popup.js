@@ -954,7 +954,7 @@ window.addEventListener('message', async (e) => {
                     continue;
                   }
                   // query on 3rd party API to get the matched contact info and return
-                  const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isForceRefresh: true });
+                  const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isForceRefresh: true });
                   if (contactMatched) {
                     if (!!!matchedContacts[contactPhoneNumber]) {
                       matchedContacts[contactPhoneNumber] = [];
@@ -978,6 +978,12 @@ window.addEventListener('message', async (e) => {
                         additionalInfo: contactInfoItem.additionalInfo
                       });
                     }
+                    if (contactInfo.filter(c => !c.isNewContact).length === 0) {
+                      showNotification({ level: contactMatchReturnMessage?.messageType, message: contactMatchReturnMessage?.message, ttl: contactMatchReturnMessage?.ttl, details: contactMatchReturnMessage?.details });
+                    }
+                  }
+                  else {
+                    showNotification({ level: contactMatchReturnMessage?.messageType, message: contactMatchReturnMessage?.message, ttl: contactMatchReturnMessage?.ttl, details: contactMatchReturnMessage?.details });
                   }
                 }
               }
@@ -1131,7 +1137,7 @@ window.addEventListener('message', async (e) => {
                       });
                       newContactInfo = createContactResult.contactInfo;
                       const newContactReturnMessage = createContactResult.returnMessage;
-                      showNotification({ level: newContactReturnMessage?.messageType, message: newContactReturnMessage?.message, ttl: newContactReturnMessage?.ttl });
+                      showNotification({ level: newContactReturnMessage?.messageType, message: newContactReturnMessage?.message, ttl: newContactReturnMessage?.ttl, details: newContactReturnMessage?.details });
                       if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
                         await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                       }
@@ -1190,7 +1196,7 @@ window.addEventListener('message', async (e) => {
                   })).callLogs;
                 }
                 const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
-                showNotification({ level: callLogContactMatchMessage?.messageType, message: callLogContactMatchMessage?.message, ttl: callLogContactMatchMessage?.ttl });
+                showNotification({ level: callLogContactMatchMessage?.messageType, message: callLogContactMatchMessage?.message, ttl: callLogContactMatchMessage?.ttl, details: callLogContactMatchMessage?.details });
                 if (!callContactMatched) {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   responseMessage(
