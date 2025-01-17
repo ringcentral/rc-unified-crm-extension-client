@@ -268,6 +268,19 @@ async function retroAutoCallLog() {
   }
 }
 
+async function forceCallLogMatcherCheck() {
+  // check if time is o'clock.
+  if (moment().minute() === 0 && crmAuthed) {
+    // To help with performance, we only check the first 20 calls
+    const { calls, hasMore } = await RCAdapter.getUnloggedCalls(20, 1)
+    const sessionIds = calls.map(c => c.sessionId);
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+      type: 'rc-adapter-trigger-call-logger-match',
+      sessionIds: sessionIds
+    }, '*');
+  }
+}
+
 let errorLogs = [];
 window.onerror = (event, source, lineno, colno, error) => {
   errorLogs.push({ event, source, lineno, colno, error })
@@ -552,6 +565,7 @@ window.addEventListener('message', async (e) => {
               type: 'rc-adapter-update-authorization-status',
               authorized: crmAuthed
             }, '*');
+            setInterval(forceCallLogMatcherCheck, 60000)
             console.log(userSettings);
           }
           break;
