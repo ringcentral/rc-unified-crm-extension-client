@@ -16,10 +16,16 @@ const version = manifest.version;
 let author = '';
 
 exports.setAuthor = function setAuthor(authorName) {
+    if (!useAnalytics) {
+        return;
+    }
     author = authorName;
 }
 
 exports.reset = function reset() {
+    if (!useAnalytics) {
+        return;
+    }
     mixpanel.reset();
 }
 
