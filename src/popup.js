@@ -2396,6 +2396,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
               id: item.id,
               type: 'string',
               name: item.name,
+              description: item.description,
               placeHolder: item.placeHolder ?? "",
               value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
               readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
@@ -2407,6 +2408,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
               id: item.id,
               type: item.type,
               name: item.name,
+              description: item.description,
               value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
               readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
               readOnlyReason: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnlyReason
@@ -2429,6 +2431,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
                 id: item.id,
                 type: "option",
                 name: item.name,
+                description: item.description,
                 options: item.options,
                 value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
                 readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
@@ -2438,14 +2441,16 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
             break;
         }
       }
-      services.settings.unshift(
-        {
-          id: cs.id,
-          type: cs.type,
-          name: cs.name,
-          items
-        }
-      );
+      const group = {
+        id: cs.id,
+        type: cs.type,
+        name: cs.name,
+        items
+      };
+      if (cs.group) {
+        group.groupId = cs.group;
+      }
+      services.settings.unshift(group);
     }
   };
   if (serviceName === 'clio' || serviceName === 'insightly') {
