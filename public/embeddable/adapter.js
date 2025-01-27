@@ -1,22 +1,15 @@
 /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 8741:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ 64540:
+/***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-/* harmony import */ var _node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(84816);
-/* harmony import */ var _node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(57457);
-/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1__);
-// Imports
-
-
-var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_noSourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
+exports = module.exports = __webpack_require__(57457)(false);
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, ".Adapter_centerStyle, .Adapter_button, .Adapter_presence, .Adapter_logo {\n  top: 50%;\n  position: absolute;\n}\n\n.Adapter_root {\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  user-drag: none;\n  box-sizing: border-box;\n  padding: 0;\n  border-radius: 3px;\n  position: fixed;\n  display: block;\n  visibility: visible;\n  bottom: 0;\n  background-color: #fff;\n  transition: visibility 0.2s 0s linear, opacity 0.2s 0s linear, transform 0.1s 0s ease-in-out;\n  z-index: 99999;\n  box-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 0.18);\n  overflow: hidden;\n}\n\n.Adapter_root.Adapter_left {\n  left: 0;\n}\n\n.Adapter_root.Adapter_right {\n  right: 0;\n}\n\n.Adapter_root.Adapter_left {\n  left: 0;\n}\n\n.Adapter_root.Adapter_right {\n  right: 0;\n}\n\n.Adapter_root.Adapter_left {\n  left: 0;\n}\n\n.Adapter_root.Adapter_right {\n  right: 0;\n}\n\n.Adapter_root.Adapter_dragging {\n  transition: opacity 0.1s 0s linear;\n}\n\n.Adapter_root.Adapter_closed {\n  visibility: hidden;\n  opacity: 0;\n}\n\n.Adapter_root.Adapter_loading {\n  display: none;\n}\n\n.Adapter_header {\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  user-drag: none;\n  position: relative;\n  height: 36px;\n  line-height: 36px;\n  min-width: 134px;\n  text-align: center;\n  cursor: move;\n  z-index: 11;\n  overflow: hidden;\n  font-family: Helvetica;\n  font-weight: normal;\n  border-bottom: 1px solid #e8e9ed;\n  box-sizing: border-box;\n}\n\n.Adapter_minimized.Adapter_header {\n  border-bottom: none;\n  cursor: ew-resize;\n}\n\n.Adapter_logo {\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  user-drag: none;\n  left: 50%;\n  height: 18px;\n  width: 84px;\n  margin-top: -7px;\n  margin-left: -46px;\n  display: none;\n}\n\n.Adapter_logo.Adapter_visible {\n  display: inline-block;\n}\n\n.Adapter_presence {\n  left: 20px;\n  height: 14px;\n  width: 14px;\n  border-radius: 8px;\n  margin-top: -7px;\n  display: none;\n  cursor: pointer;\n}\n\n.Adapter_dropdownPresence {\n  display: none;\n  position: absolute;\n  width: 100%;\n  height: 100vh;\n}\n\n.Adapter_showDropdown {\n  display: block;\n}\n\n.Adapter_presenceItem {\n  padding: 10px 15px;\n  display: block;\n  cursor: pointer;\n  -webkit-text-decoration: none;\n  text-decoration: none;\n  text-align: left;\n}\n.Adapter_presenceItem:hover {\n  background-color: #f5f5f5;\n}\n\n.Adapter_selected {\n  color: #066fac;\n}\n\n.Adapter_line {\n  position: relative;\n  width: 160px;\n  min-width: 134px;\n  left: 5px;\n  padding: 0;\n  min-height: 30px;\n  box-sizing: border-box;\n  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.2);\n  background-color: #ffffff;\n  border-style: solid;\n  border-width: 0;\n  border-top-width: 1px;\n  border-bottom-width: 0px;\n  border-color: #eeeeee;\n  border-radius: 4px;\n  font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #2f2f2f;\n}\n.Adapter_line .Adapter_horizontal {\n  display: inline-flex;\n}\n.Adapter_line .Adapter_clickable {\n  cursor: pointer;\n}\n.Adapter_line .Adapter_noborder {\n  border: none;\n}\n\n.Adapter_minimized .Adapter_presence {\n  left: 10px;\n}\n\n.Adapter_Offline {\n  display: block;\n  background: #cdcdcd;\n}\n\n.Adapter_Busy {\n  display: block;\n  background: #f95b5c;\n}\n\n.Adapter_Available {\n  display: block;\n  background-color: #32ae31;\n}\n\n.Adapter_presenceBar {\n  display: none;\n  position: absolute;\n  width: 8px;\n  height: 2px;\n  border-radius: 1.5px;\n  background-color: #ffffff;\n  transform-origin: 50% 50%;\n  transform: translate(3px, 6px);\n}\n\n.Adapter_DoNotAcceptAnyCalls {\n  display: block;\n  background: #f95b5c;\n}\n.Adapter_DoNotAcceptAnyCalls .Adapter_presenceBar {\n  display: block;\n}\n\n.Adapter_statusIcon {\n  display: inline-block;\n  position: relative;\n  margin-right: 5px;\n  top: 2px;\n  left: 0;\n  margin-top: 0;\n}\n\n.Adapter_button {\n  box-sizing: border-box;\n  height: 20px;\n  width: 20px;\n  margin-top: -10px;\n  border-radius: 3px;\n  cursor: pointer;\n  border-style: solid;\n  border-width: 1px;\n  border-color: transparent;\n}\n\n.Adapter_toggle {\n  right: 44px;\n}\n\n.Adapter_minimized .Adapter_toggle {\n  right: -18px;\n}\n\n.Adapter_minimizeIcon {\n  position: absolute;\n  box-sizing: border-box;\n  left: 3px;\n  bottom: 7px;\n  width: 12px;\n  height: 2px;\n  border: 1px solid #888888;\n}\n\n.Adapter_minimized .Adapter_minimizeIcon {\n  height: 12px;\n  bottom: 3px;\n}\n\n.Adapter_minimizeIconBar {\n  width: 100%;\n  height: 1px;\n  background-color: #888888;\n}\n\n.Adapter_close {\n  right: 16px;\n}\n\n.Adapter_minimized .Adapter_close {\n  display: none;\n}\n\n.Adapter_closeIcon {\n  position: relative;\n  overflow: hidden;\n  margin: 2px;\n  width: 14px;\n  height: 14px;\n}\n.Adapter_closeIcon :first-child,\n.Adapter_closeIcon :last-child {\n  position: absolute;\n  height: 2px;\n  width: 100%;\n  top: 6px;\n  left: 0;\n  background: #888888;\n  border-radius: 1px;\n}\n.Adapter_closeIcon :first-child {\n  transform: rotate(45deg);\n}\n.Adapter_closeIcon :last-child {\n  transform: rotate(-45deg);\n}\n\n.Adapter_contentFrame {\n  display: block;\n  border: none;\n  width: 0;\n  height: 0;\n}\n\n.Adapter_frameContainer {\n  overflow: hidden;\n  transition: width 0.1s 0s ease-in-out, height 0.1s 0s ease-in-out;\n}\n\n@keyframes Adapter_glow {\n  0% {\n    box-shadow: inset 0 0 7px -10px #2559E4;\n  }\n  40%, 50% {\n    box-shadow: inset 0 0 7px 0px #2559E4;\n  }\n  100% {\n    box-shadow: inset 0 0 7px -10px #2559E4;\n  }\n}\n.Adapter_minimized.Adapter_ringing {\n  animation-name: Adapter_glow;\n  animation-duration: 2s;\n  animation-timing-function: ease-in-out;\n  animation-iteration-count: infinite;\n}\n\n@keyframes Adapter_moveIn {\n  0% {\n    display: none;\n    top: -50%;\n  }\n  100% {\n    display: inline-block;\n    top: 50%;\n  }\n}\n@keyframes Adapter_moveOut {\n  0% {\n    display: inline-block;\n    top: 50%;\n  }\n  100% {\n    top: 150%;\n    display: none;\n  }\n}\n.Adapter_moveIn {\n  animation-name: Adapter_moveIn;\n  animation-duration: 1s;\n  animation-timing-function: ease-in-out;\n  animation-iteration-count: 1;\n  animation-fill-mode: forwards;\n}\n\n.Adapter_moveOut {\n  animation-name: Adapter_moveOut;\n  animation-duration: 1s;\n  animation-timing-function: ease-in-out;\n  animation-iteration-count: 1;\n  animation-fill-mode: forwards;\n}\n\n.Adapter_duration.Adapter_visible,\n.Adapter_ringingCalls.Adapter_visible,\n.Adapter_onHoldCalls.Adapter_visible,\n.Adapter_otherDeviceCalls.Adapter_visible {\n  top: 50%;\n}\n\n.Adapter_duration {\n  position: absolute;\n  top: -50%;\n  left: 50%;\n  height: 16px;\n  line-height: 16px;\n  margin-top: -8px;\n  color: #666666;\n  font-size: 12px;\n  white-space: nowrap;\n  width: 33px;\n  margin-left: -60px;\n  cursor: pointer;\n}\n\n.Adapter_duration.Adapter_center {\n  margin-left: -16px;\n}\n\n.Adapter_ringingCalls,\n.Adapter_onHoldCalls,\n.Adapter_otherDeviceCalls {\n  position: absolute;\n  top: -50%;\n  left: 50%;\n  height: 16px;\n  line-height: 16px;\n  margin-top: -8px;\n  color: #666666;\n  font-size: 12px;\n  white-space: nowrap;\n  width: 100px;\n  margin-left: -100px;\n  text-overflow: ellipsis;\n  overflow: hidden;\n  text-align: center;\n}\n\n.Adapter_ringingCalls.Adapter_center,\n.Adapter_onHoldCalls.Adapter_center,\n.Adapter_otherDeviceCalls.Adapter_center {\n  margin-left: -50px;\n}\n\n.Adapter_currentCallBtn {\n  position: absolute;\n  top: -50%;\n  left: 50%;\n  padding: 0 5px;\n  height: 18px;\n  line-height: 18px;\n  border-radius: 10.5px;\n  font-size: 11px;\n  margin-top: -10px;\n  margin-left: -13px;\n  overflow: hidden;\n  white-space: nowrap;\n  min-width: 66px;\n  max-width: 110px;\n  cursor: pointer;\n  border: solid 1px #5fb95c;\n  color: #5fb95c;\n}\n\n.Adapter_currentCallBtn.Adapter_visible {\n  display: inline-block;\n  margin-top: -10px;\n  top: 50%;\n}\n\n.Adapter_currentCallBtn:hover {\n  color: #5fb95c;\n}\n\n.Adapter_currentCallBtn.Adapter_left {\n  margin-left: -80px;\n}\n\n.Adapter_viewCallsBtn {\n  position: absolute;\n  top: -50%;\n  left: 50%;\n  padding: 0 5px;\n  height: 18px;\n  line-height: 18px;\n  border-radius: 10.5px;\n  font-size: 11px;\n  margin-top: -10px;\n  margin-left: -13px;\n  overflow: hidden;\n  white-space: nowrap;\n  min-width: 66px;\n  max-width: 110px;\n  cursor: pointer;\n  border: solid 1px #ff8800;\n  color: #ff8800;\n  margin-left: 0;\n}\n\n.Adapter_viewCallsBtn:hover {\n  color: #ff8800;\n}\n\n.Adapter_viewCallsBtn.Adapter_visible {\n  display: inline-block;\n  margin-top: -10px;\n  top: 50%;\n}\n\n.Adapter_hack {\n  background: url(\"https://{{rc-styles}}\");\n}\n\n.Adapter_root {\n  transition: visibility 0.2s 0s linear, opacity 0.2s 0s linear, transform 0.2s 0s ease-in-out, width 0.2s ease-in-out;\n  background-color: #fff;\n  box-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 0.18);\n}\n\n.Adapter_dark.Adapter_root {\n  background-color: #282A32;\n}\n\n.Adapter_root.Adapter_dock {\n  top: auto !important;\n  top: initial !important;\n  border-radius: 0 !important;\n  width: 300px;\n  border-top-right-radius: 0;\n  border-bottom-right-radius: 0;\n}\n\n.Adapter_root.Adapter_dock.Adapter_minimized {\n  width: 60px;\n}\n\n.Adapter_root.Adapter_dock.Adapter_minimized.Adapter_noPresence {\n  width: 35px;\n}\n\n.Adapter_root .Adapter_logo {\n  width: 92px;\n  height: 14px;\n  margin-top: -7px;\n  margin-left: -46px;\n}\n\n.Adapter_root .Adapter_header {\n  border-bottom: 1px solid #e8e9ed;\n  min-width: 165px;\n}\n\n.Adapter_dark .Adapter_header {\n  border-bottom: 1px solid #30323A;\n}\n\n.Adapter_root .Adapter_button {\n  margin-top: -10px;\n}\n\n.Adapter_iconTrans .Adapter_presence {\n  opacity: 1 !important;\n}\n.Adapter_iconTrans .Adapter_iconContainer {\n  opacity: 0 !important;\n}\n.Adapter_iconTrans .Adapter_logo {\n  opacity: 1 !important;\n}\n\n.Adapter_iconContainer {\n  display: none;\n}\n\n.Adapter_close {\n  display: none;\n}\n\n.Adapter_root.Adapter_dock.Adapter_minimized .Adapter_toggle {\n  right: -10px;\n}\n\n.Adapter_dock.Adapter_minimized.Adapter_expandable {\n  width: 140px !important;\n}\n\n.Adapter_dock .Adapter_minimized.Adapter_header {\n  line-height: normal;\n  line-height: initial;\n  cursor: pointer;\n}\n.Adapter_dock .Adapter_minimized .Adapter_presence {\n  width: 12px;\n  height: 12px;\n  margin-top: -6px;\n  z-index: 2;\n  transition: 0.2s;\n}\n.Adapter_dock .Adapter_minimized .Adapter_presenceBar {\n  transform: translate(2px, 5px);\n}\n.Adapter_dock .Adapter_minimized .Adapter_logo {\n  opacity: 0;\n  transition: opacity 0.2s;\n}\n.Adapter_dock .Adapter_minimized .Adapter_iconContainer {\n  z-index: 2147483648;\n  top: 7px;\n  position: absolute;\n  left: 30px;\n  height: 22px;\n  width: 22px;\n  display: block;\n  cursor: pointer;\n  opacity: 1;\n  transition: 0.2s;\n  display: flex;\n}\n.Adapter_dock .Adapter_minimized .Adapter_iconContainer .Adapter_icon {\n  width: 22px;\n  height: 22px;\n  display: inline-block;\n}\n.Adapter_dock .Adapter_minimized .Adapter_noPresence {\n  left: 7px !important;\n}\n\n.Adapter_iconContainer.Adapter_hidden {\n  display: none;\n}\n\n.Adapter_viewCallsBtn.Adapter_visible {\n  margin-left: 20px;\n}\n.Adapter_viewCallsBtn.Adapter_moveIn {\n  margin-left: 20px;\n}\n.Adapter_viewCallsBtn.Adapter_moveOut {\n  margin-left: 20px;\n}\n\n.Adapter_ringingCalls.Adapter_visible, .Adapter_onHoldCalls.Adapter_visible {\n  margin-left: -80px;\n}\n.Adapter_ringingCalls.Adapter_moveIn, .Adapter_onHoldCalls.Adapter_moveIn {\n  margin-left: -80px;\n}\n.Adapter_ringingCalls.Adapter_moveOut, .Adapter_onHoldCalls.Adapter_moveOut {\n  margin-left: -80px;\n}\n\n.Adapter_popup {\n  right: 33px;\n  display: none;\n}\n\n.Adapter_showPopup .Adapter_popup {\n  display: block;\n}\n\n.Adapter_minimized .Adapter_popup {\n  display: none;\n}\n\n.Adapter_popupIcon img {\n  position: absolute;\n  top: 4px;\n  left: 1px;\n  width: 14px;\n}\n\n.Adapter_hideToggleButton .Adapter_toggle {\n  display: none;\n}\n.Adapter_hideToggleButton .Adapter_popup {\n  right: 10px;\n}\n\n.Adapter_feedback {\n  width: 22px;\n  height: 22px;\n  display: none;\n}\n\n.Adapter_feedbackIcon {\n  width: 22px;\n  height: 22px;\n}\n\n.Adapter_showFeedback .Adapter_feedback {\n  display: block;\n}\n\n.Adapter_minimized .Adapter_feedback {\n  display: none;\n}\n\n.Adapter_buttons {\n  display: flex;\n  flex-direction: row;\n  justify-content: center;\n  align-items: center;\n  position: absolute;\n  top: 0;\n  right: 10px;\n  height: 100%;\n}\n\n.Adapter_root .Adapter_button {\n  margin-left: 3px;\n  position: relative;\n  top: auto;\n  left: auto;\n  right: auto;\n  margin-top: 0;\n}\n\n.Adapter_dark .Adapter_line {\n  background-color: #282A32;\n  border-color: #30323A;\n  color: #ffffff;\n}\n\n.Adapter_dark .Adapter_presenceItem:hover {\n  background-color: #30323A;\n}", ""]);
+exports.push([module.id, ".Adapter_centerStyle, .Adapter_button, .Adapter_presence, .Adapter_logo {\n  top: 50%;\n  position: absolute;\n}\n\n.Adapter_root {\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  user-drag: none;\n  box-sizing: border-box;\n  padding: 0;\n  border-radius: 3px;\n  position: fixed;\n  display: block;\n  visibility: visible;\n  bottom: 0;\n  background-color: #fff;\n  transition: visibility 0.2s 0s linear, opacity 0.2s 0s linear, transform 0.1s 0s ease-in-out;\n  z-index: 99999;\n  box-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 0.18);\n  overflow: hidden;\n}\n\n.Adapter_root.Adapter_left {\n  left: 0;\n}\n\n.Adapter_root.Adapter_right {\n  right: 0;\n}\n\n.Adapter_root.Adapter_left {\n  left: 0;\n}\n\n.Adapter_root.Adapter_right {\n  right: 0;\n}\n\n.Adapter_root.Adapter_left {\n  left: 0;\n}\n\n.Adapter_root.Adapter_right {\n  right: 0;\n}\n\n.Adapter_root.Adapter_dragging {\n  transition: opacity 0.1s 0s linear;\n}\n\n.Adapter_root.Adapter_closed {\n  visibility: hidden;\n  opacity: 0;\n}\n\n.Adapter_root.Adapter_loading {\n  display: none;\n}\n\n.Adapter_header {\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  user-drag: none;\n  position: relative;\n  height: 36px;\n  line-height: 36px;\n  min-width: 134px;\n  text-align: center;\n  cursor: move;\n  z-index: 11;\n  overflow: hidden;\n  font-family: Helvetica;\n  font-weight: normal;\n  border-bottom: 1px solid #e8e9ed;\n  box-sizing: border-box;\n}\n\n.Adapter_minimized.Adapter_header {\n  border-bottom: none;\n  cursor: ew-resize;\n}\n\n.Adapter_logo {\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  user-drag: none;\n  left: 50%;\n  height: 18px;\n  width: 84px;\n  margin-top: -7px;\n  margin-left: -46px;\n  display: none;\n}\n\n.Adapter_logo.Adapter_visible {\n  display: inline-block;\n}\n\n.Adapter_presence {\n  left: 20px;\n  height: 14px;\n  width: 14px;\n  border-radius: 8px;\n  margin-top: -7px;\n  display: none;\n  cursor: pointer;\n}\n\n.Adapter_dropdownPresence {\n  display: none;\n  position: absolute;\n  width: 100%;\n  height: 100vh;\n}\n\n.Adapter_showDropdown {\n  display: block;\n}\n\n.Adapter_presenceItem {\n  padding: 10px 15px;\n  display: block;\n  cursor: pointer;\n  text-decoration: none;\n  text-align: left;\n}\n.Adapter_presenceItem:hover {\n  background-color: #f5f5f5;\n}\n\n.Adapter_selected {\n  color: #066fac;\n}\n\n.Adapter_line {\n  position: relative;\n  width: 160px;\n  min-width: 134px;\n  left: 5px;\n  padding: 0;\n  min-height: 30px;\n  box-sizing: border-box;\n  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.2);\n  background-color: #ffffff;\n  border-style: solid;\n  border-width: 0;\n  border-top-width: 1px;\n  border-bottom-width: 0px;\n  border-color: #eeeeee;\n  border-radius: 4px;\n  font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n  font-size: 14px;\n  color: #2f2f2f;\n}\n.Adapter_line .Adapter_horizontal {\n  display: inline-flex;\n}\n.Adapter_line .Adapter_clickable {\n  cursor: pointer;\n}\n.Adapter_line .Adapter_noborder {\n  border: none;\n}\n\n.Adapter_minimized .Adapter_presence {\n  left: 10px;\n}\n\n.Adapter_Offline {\n  display: block;\n  background: #cdcdcd;\n}\n\n.Adapter_Busy {\n  display: block;\n  background: #f95b5c;\n}\n\n.Adapter_Available {\n  display: block;\n  background-color: #32ae31;\n}\n\n.Adapter_presenceBar {\n  display: none;\n  position: absolute;\n  width: 8px;\n  height: 2px;\n  border-radius: 1.5px;\n  background-color: #ffffff;\n  transform-origin: 50% 50%;\n  transform: translate(3px, 6px);\n}\n\n.Adapter_DoNotAcceptAnyCalls {\n  display: block;\n  background: #f95b5c;\n}\n.Adapter_DoNotAcceptAnyCalls .Adapter_presenceBar {\n  display: block;\n}\n\n.Adapter_statusIcon {\n  display: inline-block;\n  position: relative;\n  margin-right: 5px;\n  top: 2px;\n  left: 0;\n  margin-top: 0;\n}\n\n.Adapter_button {\n  box-sizing: border-box;\n  height: 20px;\n  width: 20px;\n  margin-top: -10px;\n  border-radius: 3px;\n  cursor: pointer;\n  border-style: solid;\n  border-width: 1px;\n  border-color: transparent;\n}\n\n.Adapter_toggle {\n  right: 44px;\n}\n\n.Adapter_minimized .Adapter_toggle {\n  right: -18px;\n}\n\n.Adapter_minimizeIcon {\n  position: absolute;\n  box-sizing: border-box;\n  left: 3px;\n  bottom: 7px;\n  width: 12px;\n  height: 2px;\n  border: 1px solid #888888;\n}\n\n.Adapter_minimized .Adapter_minimizeIcon {\n  height: 12px;\n  bottom: 3px;\n}\n\n.Adapter_minimizeIconBar {\n  width: 100%;\n  height: 1px;\n  background-color: #888888;\n}\n\n.Adapter_close {\n  right: 16px;\n}\n\n.Adapter_minimized .Adapter_close {\n  display: none;\n}\n\n.Adapter_closeIcon {\n  position: relative;\n  overflow: hidden;\n  margin: 2px;\n  width: 14px;\n  height: 14px;\n}\n.Adapter_closeIcon :first-child,\n.Adapter_closeIcon :last-child {\n  position: absolute;\n  height: 2px;\n  width: 100%;\n  top: 6px;\n  left: 0;\n  background: #888888;\n  border-radius: 1px;\n}\n.Adapter_closeIcon :first-child {\n  transform: rotate(45deg);\n}\n.Adapter_closeIcon :last-child {\n  transform: rotate(-45deg);\n}\n\n.Adapter_contentFrame {\n  display: block;\n  border: none;\n  width: 0;\n  height: 0;\n}\n\n.Adapter_frameContainer {\n  overflow: hidden;\n  transition: width 0.1s 0s ease-in-out, height 0.1s 0s ease-in-out;\n}\n\n@keyframes Adapter_glow {\n  0% {\n    box-shadow: inset 0 0 7px -10px #2559E4;\n  }\n  40%, 50% {\n    box-shadow: inset 0 0 7px 0px #2559E4;\n  }\n  100% {\n    box-shadow: inset 0 0 7px -10px #2559E4;\n  }\n}\n.Adapter_minimized.Adapter_ringing {\n  animation-name: Adapter_glow;\n  animation-duration: 2s;\n  animation-timing-function: ease-in-out;\n  animation-iteration-count: infinite;\n}\n\n@keyframes Adapter_moveIn {\n  0% {\n    display: none;\n    top: -50%;\n  }\n  100% {\n    display: inline-block;\n    top: 50%;\n  }\n}\n@keyframes Adapter_moveOut {\n  0% {\n    display: inline-block;\n    top: 50%;\n  }\n  100% {\n    top: 150%;\n    display: none;\n  }\n}\n.Adapter_moveIn {\n  animation-name: Adapter_moveIn;\n  animation-duration: 1s;\n  animation-timing-function: ease-in-out;\n  animation-iteration-count: 1;\n  animation-fill-mode: forwards;\n}\n\n.Adapter_moveOut {\n  animation-name: Adapter_moveOut;\n  animation-duration: 1s;\n  animation-timing-function: ease-in-out;\n  animation-iteration-count: 1;\n  animation-fill-mode: forwards;\n}\n\n.Adapter_duration.Adapter_visible,\n.Adapter_ringingCalls.Adapter_visible,\n.Adapter_onHoldCalls.Adapter_visible,\n.Adapter_otherDeviceCalls.Adapter_visible {\n  top: 50%;\n}\n\n.Adapter_duration {\n  position: absolute;\n  top: -50%;\n  left: 50%;\n  height: 16px;\n  line-height: 16px;\n  margin-top: -8px;\n  color: #666666;\n  font-size: 12px;\n  white-space: nowrap;\n  width: 33px;\n  margin-left: -60px;\n  cursor: pointer;\n}\n\n.Adapter_duration.Adapter_center {\n  margin-left: -16px;\n}\n\n.Adapter_ringingCalls,\n.Adapter_onHoldCalls,\n.Adapter_otherDeviceCalls {\n  position: absolute;\n  top: -50%;\n  left: 50%;\n  height: 16px;\n  line-height: 16px;\n  margin-top: -8px;\n  color: #666666;\n  font-size: 12px;\n  white-space: nowrap;\n  width: 100px;\n  margin-left: -100px;\n  text-overflow: ellipsis;\n  overflow: hidden;\n  text-align: center;\n}\n\n.Adapter_ringingCalls.Adapter_center,\n.Adapter_onHoldCalls.Adapter_center,\n.Adapter_otherDeviceCalls.Adapter_center {\n  margin-left: -50px;\n}\n\n.Adapter_currentCallBtn {\n  position: absolute;\n  top: -50%;\n  left: 50%;\n  padding: 0 5px;\n  height: 18px;\n  line-height: 18px;\n  border-radius: 10.5px;\n  font-size: 11px;\n  margin-top: -10px;\n  margin-left: -13px;\n  overflow: hidden;\n  white-space: nowrap;\n  min-width: 66px;\n  max-width: 110px;\n  cursor: pointer;\n  border: solid 1px #5fb95c;\n  color: #5fb95c;\n}\n\n.Adapter_currentCallBtn.Adapter_visible {\n  display: inline-block;\n  margin-top: -10px;\n  top: 50%;\n}\n\n.Adapter_currentCallBtn:hover {\n  color: #5fb95c;\n}\n\n.Adapter_currentCallBtn.Adapter_left {\n  margin-left: -80px;\n}\n\n.Adapter_viewCallsBtn {\n  position: absolute;\n  top: -50%;\n  left: 50%;\n  padding: 0 5px;\n  height: 18px;\n  line-height: 18px;\n  border-radius: 10.5px;\n  font-size: 11px;\n  margin-top: -10px;\n  margin-left: -13px;\n  overflow: hidden;\n  white-space: nowrap;\n  min-width: 66px;\n  max-width: 110px;\n  cursor: pointer;\n  border: solid 1px #ff8800;\n  color: #ff8800;\n  margin-left: 0;\n}\n\n.Adapter_viewCallsBtn:hover {\n  color: #ff8800;\n}\n\n.Adapter_viewCallsBtn.Adapter_visible {\n  display: inline-block;\n  margin-top: -10px;\n  top: 50%;\n}\n\n.Adapter_hack {\n  background: url(\"https://{{rc-styles}}\");\n}\n\n.Adapter_root {\n  transition: visibility 0.2s 0s linear, opacity 0.2s 0s linear, transform 0.2s 0s ease-in-out, width 0.2s ease-in-out;\n  background-color: #fff;\n  box-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 0.18);\n}\n\n.Adapter_root.Adapter_dock {\n  top: initial !important;\n  border-radius: 0 !important;\n  width: 300px;\n  border-top-right-radius: 0;\n  border-bottom-right-radius: 0;\n}\n\n.Adapter_root.Adapter_dock.Adapter_minimized {\n  width: 60px;\n}\n\n.Adapter_root.Adapter_dock.Adapter_minimized.Adapter_noPresence {\n  width: 35px;\n}\n\n.Adapter_root .Adapter_logo {\n  width: 92px;\n  height: 14px;\n  margin-top: -7px;\n  margin-left: -46px;\n}\n\n.Adapter_root .Adapter_header {\n  border-bottom: 1px solid #e8e9ed;\n  min-width: 165px;\n}\n\n.Adapter_root .Adapter_button {\n  margin-top: -10px;\n}\n\n.Adapter_iconTrans .Adapter_presence {\n  opacity: 1 !important;\n}\n.Adapter_iconTrans .Adapter_iconContainer {\n  opacity: 0 !important;\n}\n.Adapter_iconTrans .Adapter_logo {\n  opacity: 1 !important;\n}\n\n.Adapter_iconContainer {\n  display: none;\n}\n\n.Adapter_close {\n  display: none;\n}\n\n.Adapter_root.Adapter_dock.Adapter_minimized .Adapter_toggle {\n  right: -10px;\n}\n\n.Adapter_dock.Adapter_minimized.Adapter_expandable {\n  width: 140px !important;\n}\n\n.Adapter_dock .Adapter_minimized.Adapter_header {\n  line-height: initial;\n  cursor: pointer;\n}\n.Adapter_dock .Adapter_minimized .Adapter_presence {\n  width: 12px;\n  height: 12px;\n  margin-top: -6px;\n  z-index: 2;\n  transition: 0.2s;\n}\n.Adapter_dock .Adapter_minimized .Adapter_presenceBar {\n  transform: translate(2px, 5px);\n}\n.Adapter_dock .Adapter_minimized .Adapter_logo {\n  opacity: 0;\n  transition: opacity 0.2s;\n}\n.Adapter_dock .Adapter_minimized .Adapter_iconContainer {\n  z-index: 2147483648;\n  top: 7px;\n  position: absolute;\n  left: 30px;\n  height: 22px;\n  width: 22px;\n  display: block;\n  cursor: pointer;\n  opacity: 1;\n  transition: 0.2s;\n  display: flex;\n}\n.Adapter_dock .Adapter_minimized .Adapter_iconContainer .Adapter_icon {\n  width: 22px;\n  height: 22px;\n  display: inline-block;\n}\n.Adapter_dock .Adapter_minimized .Adapter_noPresence {\n  left: 7px !important;\n}\n\n.Adapter_iconContainer.Adapter_hidden {\n  display: none;\n}\n\n.Adapter_viewCallsBtn.Adapter_visible {\n  margin-left: 20px;\n}\n.Adapter_viewCallsBtn.Adapter_moveIn {\n  margin-left: 20px;\n}\n.Adapter_viewCallsBtn.Adapter_moveOut {\n  margin-left: 20px;\n}\n\n.Adapter_ringingCalls.Adapter_visible, .Adapter_onHoldCalls.Adapter_visible {\n  margin-left: -80px;\n}\n.Adapter_ringingCalls.Adapter_moveIn, .Adapter_onHoldCalls.Adapter_moveIn {\n  margin-left: -80px;\n}\n.Adapter_ringingCalls.Adapter_moveOut, .Adapter_onHoldCalls.Adapter_moveOut {\n  margin-left: -80px;\n}\n\n.Adapter_popup {\n  right: 33px;\n  display: none;\n}\n\n.Adapter_showPopup .Adapter_popup {\n  display: block;\n}\n\n.Adapter_minimized .Adapter_popup {\n  display: none;\n}\n\n.Adapter_popupIcon img {\n  position: absolute;\n  top: 4px;\n  left: 1px;\n  width: 14px;\n}\n\n.Adapter_hideToggleButton .Adapter_toggle {\n  display: none;\n}\n.Adapter_hideToggleButton .Adapter_popup {\n  right: 10px;\n}\n\n.Adapter_feedback {\n  width: 22px;\n  height: 22px;\n  display: none;\n}\n\n.Adapter_feedbackIcon {\n  width: 22px;\n  height: 22px;\n}\n\n.Adapter_showFeedback .Adapter_feedback {\n  display: block;\n}\n\n.Adapter_minimized .Adapter_feedback {\n  display: none;\n}\n\n.Adapter_buttons {\n  display: flex;\n  flex-direction: row;\n  justify-content: center;\n  align-items: center;\n  position: absolute;\n  top: 0;\n  right: 10px;\n  height: 100%;\n}\n\n.Adapter_root .Adapter_button {\n  margin-left: 3px;\n  position: relative;\n  top: auto;\n  left: auto;\n  right: auto;\n  margin-top: 0;\n}", ""]);
+
 // Exports
-___CSS_LOADER_EXPORT___.locals = {
+exports.locals = {
 	"centerStyle": "Adapter_centerStyle",
 	"button": "Adapter_button",
 	"presence": "Adapter_presence",
@@ -63,7 +56,6 @@ ___CSS_LOADER_EXPORT___.locals = {
 	"currentCallBtn": "Adapter_currentCallBtn",
 	"viewCallsBtn": "Adapter_viewCallsBtn",
 	"hack": "Adapter_hack",
-	"dark": "Adapter_dark",
 	"dock": "Adapter_dock",
 	"noPresence": "Adapter_noPresence",
 	"iconTrans": "Adapter_iconTrans",
@@ -80,8 +72,6 @@ ___CSS_LOADER_EXPORT___.locals = {
 	"showFeedback": "Adapter_showFeedback",
 	"buttons": "Adapter_buttons"
 };
-/* harmony default export */ __webpack_exports__.A = (___CSS_LOADER_EXPORT___);
-
 
 /***/ }),
 
@@ -1287,7 +1277,7 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.Injector = void 0;
-var _redux = __webpack_require__(75612);
+var _redux = __webpack_require__(7533);
 var _core = __webpack_require__(70541);
 var _container = _interopRequireDefault(__webpack_require__(67494));
 var _provider2 = __webpack_require__(13640);
@@ -4728,7 +4718,7 @@ Object.defineProperty(exports, "watch", ({
   }
 }));
 __webpack_require__(58919);
-var _redux = __webpack_require__(75612);
+var _redux = __webpack_require__(7533);
 var _usmRedux = __webpack_require__(85885);
 var _class, _descriptor;
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
@@ -4748,8 +4738,8 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) { var desc = {}; Object.keys(descriptor).forEach(function (key) { desc[key] = descriptor[key]; }); desc.enumerable = !!desc.enumerable; desc.configurable = !!desc.configurable; if ('value' in desc || desc.initializer) { desc.writable = true; } desc = decorators.slice().reverse().reduce(function (desc, decorator) { return decorator(target, property, desc) || desc; }, desc); if (context && desc.initializer !== void 0) { desc.value = desc.initializer ? desc.initializer.call(context) : void 0; desc.initializer = undefined; } if (desc.initializer === void 0) { Object.defineProperty(target, property, desc); desc = null; } return desc; }
 function _initializerWarningHelper(descriptor, context) { throw new Error('Decorating class property failed. Please ensure that ' + 'transform-class-properties is enabled and runs after the decorators transform.'); }
 (0, _usmRedux.setAutoFreeze)(false);
-(0, _usmRedux.setPatchesToggle)(!({"NODE_ENV":"production","API_CONFIG":{"appKey":"SlwZwfZ_STmpq2W_qOaC5A","server":"https://platform.ringcentral.com"},"APP_VERSION":"2.2.1","HOSTING_URL":null,"REDIRECT_URI":undefined,"PROXY_URI":undefined,"PREFIX":"rc-widget","BRAND":"rc","BRAND_CONFIGS":{"atos":{"id":"2020","code":"atos","name":"Unify Office","shortName":"Unify Office","appName":"Unify Office Embeddable","fullName":"Unify Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.unifyoffice.com/","protocol":"unifyoffice://","name":"Unify Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Unify Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.unifyoffice.com/teleconference","rcvProductName":"Unify Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","eulaLink":"https://www.ringcentral.com/de/de/legal/privacy-notice","assets":{"logo":"/assets/atos/logo.svg","icon":"/assets/atos/icon.png"},"showFeedback":false,"enableEDP":true},"att":{"id":"3420","code":"att","name":"Office@Hand","appName":"Office@Hand Embeddable","fullName":"Office@Hand","application":"Office@Hand Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.officeathand.att.com/","protocol":"officeathand://","name":"Office@Hand App"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"callWithSoftphone":{"protocol":"attvr20://","name":"Office@Hand Phone","appDownloadUrl":{"mac":"https://www.ringcentral.com/apps/officeathand-mac","windows":"https://www.ringcentral.com/apps/officeathand-windows"}},"rcmProductName":"AT&T Office@Hand Meeting","rcvProductName":"AT&T Office@Hand Meetings","rcvMeetingTopic":"{extensionName}'s {brandName} Meetings","rcvSettingsTitle":"{brandName} Meetings settings","rcvTeleconference":"https://meetings.officeathand.att.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings-officeathand.att.com/teleconference","eulaLink":"http://www.att.com/officeathandpolicy","assets":{"logo":"/assets/att/logo.svg","icon":"/assets/att/icon.svg"},"showFeedback":false,"subBrands":[{"id":"3460","code":"attub"}],"enableEDP":true},"avaya":{"id":"6010","code":"avaya","name":"Avaya Cloud Office","shortName":"Avaya Cloud Office","appName":"Avaya Cloud Office Embeddable","fullName":"Avaya Cloud Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.cloudoffice.avaya.com/","protocol":"rcapp://","name":"Avaya Cloud App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Avaya Cloud Office Phone"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"allowRegionSettings":true,"signupUrl":"https://www.avaya.com/en/products/ucaas/cloud-office-pricing/","rcvTeleconference":"https://video.cloudoffice.avaya.com/teleconference","rcvProductName":"Avaya Cloud Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","assets":{"logo":"/assets/avaya/logo.svg","icon":"/assets/avaya/icon.svg"},"showFeedback":false,"enableEDP":true},"bt":{"id":"7710","code":"bt","name":"BT Cloud Work","appName":"BT Cloud Work Embeddable","fullName":"BT Cloud Work","application":"BT Cloud Work Embeddable","callWithJupiter":{"link":"https://app.cloudwork.bt.com/","protocol":"com.bt.cloudwork.app://","name":"BT Cloud Work App"},"callWithSoftphone":{"protocol":"rcbtmobile://","name":"BT Cloud Work Phone"},"defaultLocale":"en-GB","supportedLocales":["en-GB","en-US","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcmProductName":"BT Cloud Work Meetings","rcvProductName":"BT Cloud Work Video","rcvTeleconference":"https://video.cloudwork.bt.com/teleconference","rcvMeetingTopic":"{extensionName}'s {shortName} Video meeting","rcvSettingsTitle":"{shortName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.btcloudphone.bt.com/teleconference","eulaLink":"https://www.bt.com/products/static/terms/terms-of-use.html","assets":{"logo":"/assets/bt/logo.svg","icon":"/assets/bt/icon.svg"},"showFeedback":false,"enableEDP":true},"rainbow":{"id":"2110","code":"rainbow","name":"Rainbow Office","shortName":"Rainbow Office","appName":"Rainbow Office Embeddable","fullName":"Rainbow Office","defaultLocale":"fr-FR","supportedLocales":["fr-FR","en-US","en-GB","en-AU","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"eulaLink":"https://www.ringcentral.fr/legal/privacy-notice.html","callWithJupiter":{"link":"https://app.rainbowoffice.com/","protocol":"com.rainbowoffice.app://","name":"Rainbow Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Rainbow Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.rainbowoffice.com/teleconference","rcvProductName":"Rainbow Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} vous a invité à une réunion {rcvProductName}.\n\nVeuillez rejoindre la réunion à l’aide de ce lien :\n    {joinUri}{passwordTpl}","assets":{"logo":"/assets/rainbow/logo.svg","icon":"/assets/rainbow/icon.png"},"showFeedback":false,"enableEDP":true},"rc":{"id":"1210","code":"rc","name":"RingCentral","appName":"RingCentral Embeddable","fullName":"RingCentral","application":"RingCentral Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"signupUrl":"https://www.ringcentral.com/office/plansandpricing.html","eulaLink":"https://www.ringcentral.com/legal/eulatos.html","callWithJupiter":{"link":"https://app.ringcentral.com/","protocol":"rcapp://","name":"RingCentral App"},"isDisableSpartan":true,"allowJupiterUniversalLink":false,"callWithSoftphone":{"protocol":"rcmobile://","name":"RingCentral Phone"},"rcmProductName":"RingCentral Meetings","rcvProductName":"RingCentral Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","rcvTeleconference":"https://v.ringcentral.com/teleconference/","assets":{"logo":"/assets/rc/logo.svg","icon":"/assets/rc/icon.svg"},"subBrands":[{"id":"5010","code":"rcau"},{"id":"3610","code":"rcca"},{"id":"2010","code":"rceu"},{"id":"3710","code":"rcuk"}],"showFeedback":false,"enableEDP":true},"telus":{"id":"7310","code":"telus","name":"TELUS Business Connect","appName":"TELUS Business Connect Embeddable","fullName":"TELUS Business Connect","application":"TELUS Business Connect Embeddable","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.businessconnect.telus.com/","protocol":"rctelus://","name":"TELUS Business Connect App"},"callWithSoftphone":{"protocol":"rctelus://","name":"TELUS Business Connect Phone"},"allowRegionSettings":true,"isDisableSpartan":true,"allowJupiterUniversalLink":true,"rcmProductName":"TELUS Business Connect Meetings","rcvProductName":"Business Connect Video Meeting","rcvMeetingTopic":"{extensionName}'s Business Connect Video meeting","rcvSettingsTitle":"Business Connect Video meeting settings","rcvTeleconference":"https://video.businessconnect.telus.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a TELUS Business Connect Video meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.businessconnect.telus.com/teleconference","eulaLink":"http://telus.com/BusinessConnect/ServiceTerms","assets":{"logo":"/assets/telus/logo.svg","icon":"/assets/telus/icon.svg"},"showFeedback":false,"enableEDP":true}},"ERROR_REPORT_KEY":undefined,"RECORDING_LINK":"https://ringcentral.github.io/ringcentral-media-reader/","MIXPANEL_KEY":"04acd7cb2e1867dcf98b6e8cf5ee1e1c","ANALYTICS_SECRET_KEY":"adasdawqsadaaasa...","NOISE_REDUCTION_SDK_URL":"/noise-reduction","ADAPTER_NAME":"adapter.js"}).DISABLE_PATCHES);
-if (!({"NODE_ENV":"production","API_CONFIG":{"appKey":"SlwZwfZ_STmpq2W_qOaC5A","server":"https://platform.ringcentral.com"},"APP_VERSION":"2.2.1","HOSTING_URL":null,"REDIRECT_URI":undefined,"PROXY_URI":undefined,"PREFIX":"rc-widget","BRAND":"rc","BRAND_CONFIGS":{"atos":{"id":"2020","code":"atos","name":"Unify Office","shortName":"Unify Office","appName":"Unify Office Embeddable","fullName":"Unify Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.unifyoffice.com/","protocol":"unifyoffice://","name":"Unify Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Unify Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.unifyoffice.com/teleconference","rcvProductName":"Unify Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","eulaLink":"https://www.ringcentral.com/de/de/legal/privacy-notice","assets":{"logo":"/assets/atos/logo.svg","icon":"/assets/atos/icon.png"},"showFeedback":false,"enableEDP":true},"att":{"id":"3420","code":"att","name":"Office@Hand","appName":"Office@Hand Embeddable","fullName":"Office@Hand","application":"Office@Hand Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.officeathand.att.com/","protocol":"officeathand://","name":"Office@Hand App"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"callWithSoftphone":{"protocol":"attvr20://","name":"Office@Hand Phone","appDownloadUrl":{"mac":"https://www.ringcentral.com/apps/officeathand-mac","windows":"https://www.ringcentral.com/apps/officeathand-windows"}},"rcmProductName":"AT&T Office@Hand Meeting","rcvProductName":"AT&T Office@Hand Meetings","rcvMeetingTopic":"{extensionName}'s {brandName} Meetings","rcvSettingsTitle":"{brandName} Meetings settings","rcvTeleconference":"https://meetings.officeathand.att.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings-officeathand.att.com/teleconference","eulaLink":"http://www.att.com/officeathandpolicy","assets":{"logo":"/assets/att/logo.svg","icon":"/assets/att/icon.svg"},"showFeedback":false,"subBrands":[{"id":"3460","code":"attub"}],"enableEDP":true},"avaya":{"id":"6010","code":"avaya","name":"Avaya Cloud Office","shortName":"Avaya Cloud Office","appName":"Avaya Cloud Office Embeddable","fullName":"Avaya Cloud Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.cloudoffice.avaya.com/","protocol":"rcapp://","name":"Avaya Cloud App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Avaya Cloud Office Phone"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"allowRegionSettings":true,"signupUrl":"https://www.avaya.com/en/products/ucaas/cloud-office-pricing/","rcvTeleconference":"https://video.cloudoffice.avaya.com/teleconference","rcvProductName":"Avaya Cloud Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","assets":{"logo":"/assets/avaya/logo.svg","icon":"/assets/avaya/icon.svg"},"showFeedback":false,"enableEDP":true},"bt":{"id":"7710","code":"bt","name":"BT Cloud Work","appName":"BT Cloud Work Embeddable","fullName":"BT Cloud Work","application":"BT Cloud Work Embeddable","callWithJupiter":{"link":"https://app.cloudwork.bt.com/","protocol":"com.bt.cloudwork.app://","name":"BT Cloud Work App"},"callWithSoftphone":{"protocol":"rcbtmobile://","name":"BT Cloud Work Phone"},"defaultLocale":"en-GB","supportedLocales":["en-GB","en-US","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcmProductName":"BT Cloud Work Meetings","rcvProductName":"BT Cloud Work Video","rcvTeleconference":"https://video.cloudwork.bt.com/teleconference","rcvMeetingTopic":"{extensionName}'s {shortName} Video meeting","rcvSettingsTitle":"{shortName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.btcloudphone.bt.com/teleconference","eulaLink":"https://www.bt.com/products/static/terms/terms-of-use.html","assets":{"logo":"/assets/bt/logo.svg","icon":"/assets/bt/icon.svg"},"showFeedback":false,"enableEDP":true},"rainbow":{"id":"2110","code":"rainbow","name":"Rainbow Office","shortName":"Rainbow Office","appName":"Rainbow Office Embeddable","fullName":"Rainbow Office","defaultLocale":"fr-FR","supportedLocales":["fr-FR","en-US","en-GB","en-AU","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"eulaLink":"https://www.ringcentral.fr/legal/privacy-notice.html","callWithJupiter":{"link":"https://app.rainbowoffice.com/","protocol":"com.rainbowoffice.app://","name":"Rainbow Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Rainbow Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.rainbowoffice.com/teleconference","rcvProductName":"Rainbow Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} vous a invité à une réunion {rcvProductName}.\n\nVeuillez rejoindre la réunion à l’aide de ce lien :\n    {joinUri}{passwordTpl}","assets":{"logo":"/assets/rainbow/logo.svg","icon":"/assets/rainbow/icon.png"},"showFeedback":false,"enableEDP":true},"rc":{"id":"1210","code":"rc","name":"RingCentral","appName":"RingCentral Embeddable","fullName":"RingCentral","application":"RingCentral Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"signupUrl":"https://www.ringcentral.com/office/plansandpricing.html","eulaLink":"https://www.ringcentral.com/legal/eulatos.html","callWithJupiter":{"link":"https://app.ringcentral.com/","protocol":"rcapp://","name":"RingCentral App"},"isDisableSpartan":true,"allowJupiterUniversalLink":false,"callWithSoftphone":{"protocol":"rcmobile://","name":"RingCentral Phone"},"rcmProductName":"RingCentral Meetings","rcvProductName":"RingCentral Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","rcvTeleconference":"https://v.ringcentral.com/teleconference/","assets":{"logo":"/assets/rc/logo.svg","icon":"/assets/rc/icon.svg"},"subBrands":[{"id":"5010","code":"rcau"},{"id":"3610","code":"rcca"},{"id":"2010","code":"rceu"},{"id":"3710","code":"rcuk"}],"showFeedback":false,"enableEDP":true},"telus":{"id":"7310","code":"telus","name":"TELUS Business Connect","appName":"TELUS Business Connect Embeddable","fullName":"TELUS Business Connect","application":"TELUS Business Connect Embeddable","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.businessconnect.telus.com/","protocol":"rctelus://","name":"TELUS Business Connect App"},"callWithSoftphone":{"protocol":"rctelus://","name":"TELUS Business Connect Phone"},"allowRegionSettings":true,"isDisableSpartan":true,"allowJupiterUniversalLink":true,"rcmProductName":"TELUS Business Connect Meetings","rcvProductName":"Business Connect Video Meeting","rcvMeetingTopic":"{extensionName}'s Business Connect Video meeting","rcvSettingsTitle":"Business Connect Video meeting settings","rcvTeleconference":"https://video.businessconnect.telus.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a TELUS Business Connect Video meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.businessconnect.telus.com/teleconference","eulaLink":"http://telus.com/BusinessConnect/ServiceTerms","assets":{"logo":"/assets/telus/logo.svg","icon":"/assets/telus/icon.svg"},"showFeedback":false,"enableEDP":true}},"ERROR_REPORT_KEY":undefined,"RECORDING_LINK":"https://ringcentral.github.io/ringcentral-media-reader/","MIXPANEL_KEY":"04acd7cb2e1867dcf98b6e8cf5ee1e1c","ANALYTICS_SECRET_KEY":"adasdawqsadaaasa...","NOISE_REDUCTION_SDK_URL":"/noise-reduction","ADAPTER_NAME":"adapter.js"}).DISABLE_PATCHES) {
+(0, _usmRedux.setPatchesToggle)(!({"NODE_ENV":"production","API_CONFIG":{"appKey":"SlwZwfZ_STmpq2W_qOaC5A","server":"https://platform.ringcentral.com"},"APP_VERSION":"2.1.1","HOSTING_URL":null,"REDIRECT_URI":undefined,"PROXY_URI":undefined,"PREFIX":"rc-widget","BRAND":"rc","BRAND_CONFIGS":{"atos":{"id":"2020","code":"atos","name":"Unify Office","shortName":"Unify Office","appName":"Unify Office Embeddable","fullName":"Unify Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.unifyoffice.com/","protocol":"unifyoffice://","name":"Unify Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Unify Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.unifyoffice.com/teleconference","rcvProductName":"Unify Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","eulaLink":"https://www.ringcentral.com/de/de/legal/privacy-notice","assets":{"logo":"/assets/atos/logo.svg","icon":"/assets/atos/icon.png"},"showFeedback":false,"enableEDP":true},"att":{"id":"3420","code":"att","name":"Office@Hand","appName":"Office@Hand Embeddable","fullName":"Office@Hand","application":"Office@Hand Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.officeathand.att.com/","protocol":"officeathand://","name":"Office@Hand App"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"callWithSoftphone":{"protocol":"attvr20://","name":"Office@Hand Phone","appDownloadUrl":{"mac":"https://www.ringcentral.com/apps/officeathand-mac","windows":"https://www.ringcentral.com/apps/officeathand-windows"}},"rcmProductName":"AT&T Office@Hand Meeting","rcvProductName":"AT&T Office@Hand Meetings","rcvMeetingTopic":"{extensionName}'s {brandName} Meetings","rcvSettingsTitle":"{brandName} Meetings settings","rcvTeleconference":"https://meetings.officeathand.att.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings-officeathand.att.com/teleconference","eulaLink":"http://www.att.com/officeathandpolicy","assets":{"logo":"/assets/att/logo.svg","icon":"/assets/att/icon.svg"},"showFeedback":false,"subBrands":[{"id":"3460","code":"attub"}],"enableEDP":true},"avaya":{"id":"6010","code":"avaya","name":"Avaya Cloud Office","shortName":"Avaya Cloud Office","appName":"Avaya Cloud Office Embeddable","fullName":"Avaya Cloud Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.cloudoffice.avaya.com/","protocol":"rcapp://","name":"Avaya Cloud App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Avaya Cloud Office Phone"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"allowRegionSettings":true,"signupUrl":"https://www.avaya.com/en/products/ucaas/cloud-office-pricing/","rcvTeleconference":"https://video.cloudoffice.avaya.com/teleconference","rcvProductName":"Avaya Cloud Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","assets":{"logo":"/assets/avaya/logo.svg","icon":"/assets/avaya/icon.svg"},"showFeedback":false,"enableEDP":true},"bt":{"id":"7710","code":"bt","name":"BT Cloud Work","appName":"BT Cloud Work Embeddable","fullName":"BT Cloud Work","application":"BT Cloud Work Embeddable","callWithJupiter":{"link":"https://app.cloudwork.bt.com/","protocol":"com.bt.cloudwork.app://","name":"BT Cloud Work App"},"callWithSoftphone":{"protocol":"rcbtmobile://","name":"BT Cloud Work Phone"},"defaultLocale":"en-GB","supportedLocales":["en-GB","en-US","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcmProductName":"BT Cloud Work Meetings","rcvProductName":"BT Cloud Work Video","rcvTeleconference":"https://video.cloudwork.bt.com/teleconference","rcvMeetingTopic":"{extensionName}'s {shortName} Video meeting","rcvSettingsTitle":"{shortName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.btcloudphone.bt.com/teleconference","eulaLink":"https://www.bt.com/products/static/terms/terms-of-use.html","assets":{"logo":"/assets/bt/logo.svg","icon":"/assets/bt/icon.svg"},"showFeedback":false,"enableEDP":true},"rainbow":{"id":"2110","code":"rainbow","name":"Rainbow Office","shortName":"Rainbow Office","appName":"Rainbow Office Embeddable","fullName":"Rainbow Office","defaultLocale":"fr-FR","supportedLocales":["fr-FR","en-US","en-GB","en-AU","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"eulaLink":"https://www.ringcentral.fr/legal/privacy-notice.html","callWithJupiter":{"link":"https://app.rainbowoffice.com/","protocol":"com.rainbowoffice.app://","name":"Rainbow Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Rainbow Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.rainbowoffice.com/teleconference","rcvProductName":"Rainbow Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} vous a invité à une réunion {rcvProductName}.\n\nVeuillez rejoindre la réunion à l’aide de ce lien :\n    {joinUri}{passwordTpl}","assets":{"logo":"/assets/rainbow/logo.svg","icon":"/assets/rainbow/icon.png"},"showFeedback":false,"enableEDP":true},"rc":{"id":"1210","code":"rc","name":"RingCentral","appName":"RingCentral Embeddable","fullName":"RingCentral","application":"RingCentral Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"signupUrl":"https://www.ringcentral.com/office/plansandpricing.html","eulaLink":"https://www.ringcentral.com/legal/eulatos.html","callWithJupiter":{"link":"https://app.ringcentral.com/","protocol":"rcapp://","name":"RingCentral App"},"isDisableSpartan":true,"allowJupiterUniversalLink":false,"callWithSoftphone":{"protocol":"rcmobile://","name":"RingCentral Phone"},"rcmProductName":"RingCentral Meetings","rcvProductName":"RingCentral Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","rcvTeleconference":"https://v.ringcentral.com/teleconference/","assets":{"logo":"/assets/rc/logo.svg","icon":"/assets/rc/icon.svg"},"subBrands":[{"id":"5010","code":"rcau"},{"id":"3610","code":"rcca"},{"id":"2010","code":"rceu"},{"id":"3710","code":"rcuk"}],"showFeedback":false,"enableEDP":true},"telus":{"id":"7310","code":"telus","name":"TELUS Business Connect","appName":"TELUS Business Connect Embeddable","fullName":"TELUS Business Connect","application":"TELUS Business Connect Embeddable","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.businessconnect.telus.com/","protocol":"rctelus://","name":"TELUS Business Connect App"},"callWithSoftphone":{"protocol":"rctelus://","name":"TELUS Business Connect Phone"},"allowRegionSettings":true,"isDisableSpartan":true,"allowJupiterUniversalLink":true,"rcmProductName":"TELUS Business Connect Meetings","rcvProductName":"Business Connect Video Meeting","rcvMeetingTopic":"{extensionName}'s Business Connect Video meeting","rcvSettingsTitle":"Business Connect Video meeting settings","rcvTeleconference":"https://video.businessconnect.telus.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a TELUS Business Connect Video meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.businessconnect.telus.com/teleconference","eulaLink":"http://telus.com/BusinessConnect/ServiceTerms","assets":{"logo":"/assets/telus/logo.svg","icon":"/assets/telus/icon.svg"},"showFeedback":false,"enableEDP":true}},"ERROR_REPORT_KEY":undefined,"RECORDING_LINK":"https://ringcentral.github.io/ringcentral-media-reader/","MIXPANEL_KEY":"04acd7cb2e1867dcf98b6e8cf5ee1e1c","ANALYTICS_SECRET_KEY":"adasdawqsadaaasa...","NOISE_REDUCTION_SDK_URL":"/noise-reduction","ADAPTER_NAME":"adapter.js"}).DISABLE_PATCHES);
+if (!({"NODE_ENV":"production","API_CONFIG":{"appKey":"SlwZwfZ_STmpq2W_qOaC5A","server":"https://platform.ringcentral.com"},"APP_VERSION":"2.1.1","HOSTING_URL":null,"REDIRECT_URI":undefined,"PROXY_URI":undefined,"PREFIX":"rc-widget","BRAND":"rc","BRAND_CONFIGS":{"atos":{"id":"2020","code":"atos","name":"Unify Office","shortName":"Unify Office","appName":"Unify Office Embeddable","fullName":"Unify Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.unifyoffice.com/","protocol":"unifyoffice://","name":"Unify Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Unify Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.unifyoffice.com/teleconference","rcvProductName":"Unify Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","eulaLink":"https://www.ringcentral.com/de/de/legal/privacy-notice","assets":{"logo":"/assets/atos/logo.svg","icon":"/assets/atos/icon.png"},"showFeedback":false,"enableEDP":true},"att":{"id":"3420","code":"att","name":"Office@Hand","appName":"Office@Hand Embeddable","fullName":"Office@Hand","application":"Office@Hand Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.officeathand.att.com/","protocol":"officeathand://","name":"Office@Hand App"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"callWithSoftphone":{"protocol":"attvr20://","name":"Office@Hand Phone","appDownloadUrl":{"mac":"https://www.ringcentral.com/apps/officeathand-mac","windows":"https://www.ringcentral.com/apps/officeathand-windows"}},"rcmProductName":"AT&T Office@Hand Meeting","rcvProductName":"AT&T Office@Hand Meetings","rcvMeetingTopic":"{extensionName}'s {brandName} Meetings","rcvSettingsTitle":"{brandName} Meetings settings","rcvTeleconference":"https://meetings.officeathand.att.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings-officeathand.att.com/teleconference","eulaLink":"http://www.att.com/officeathandpolicy","assets":{"logo":"/assets/att/logo.svg","icon":"/assets/att/icon.svg"},"showFeedback":false,"subBrands":[{"id":"3460","code":"attub"}],"enableEDP":true},"avaya":{"id":"6010","code":"avaya","name":"Avaya Cloud Office","shortName":"Avaya Cloud Office","appName":"Avaya Cloud Office Embeddable","fullName":"Avaya Cloud Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.cloudoffice.avaya.com/","protocol":"rcapp://","name":"Avaya Cloud App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Avaya Cloud Office Phone"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"allowRegionSettings":true,"signupUrl":"https://www.avaya.com/en/products/ucaas/cloud-office-pricing/","rcvTeleconference":"https://video.cloudoffice.avaya.com/teleconference","rcvProductName":"Avaya Cloud Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","assets":{"logo":"/assets/avaya/logo.svg","icon":"/assets/avaya/icon.svg"},"showFeedback":false,"enableEDP":true},"bt":{"id":"7710","code":"bt","name":"BT Cloud Work","appName":"BT Cloud Work Embeddable","fullName":"BT Cloud Work","application":"BT Cloud Work Embeddable","callWithJupiter":{"link":"https://app.cloudwork.bt.com/","protocol":"com.bt.cloudwork.app://","name":"BT Cloud Work App"},"callWithSoftphone":{"protocol":"rcbtmobile://","name":"BT Cloud Work Phone"},"defaultLocale":"en-GB","supportedLocales":["en-GB","en-US","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcmProductName":"BT Cloud Work Meetings","rcvProductName":"BT Cloud Work Video","rcvTeleconference":"https://video.cloudwork.bt.com/teleconference","rcvMeetingTopic":"{extensionName}'s {shortName} Video meeting","rcvSettingsTitle":"{shortName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.btcloudphone.bt.com/teleconference","eulaLink":"https://www.bt.com/products/static/terms/terms-of-use.html","assets":{"logo":"/assets/bt/logo.svg","icon":"/assets/bt/icon.svg"},"showFeedback":false,"enableEDP":true},"rainbow":{"id":"2110","code":"rainbow","name":"Rainbow Office","shortName":"Rainbow Office","appName":"Rainbow Office Embeddable","fullName":"Rainbow Office","defaultLocale":"fr-FR","supportedLocales":["fr-FR","en-US","en-GB","en-AU","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"eulaLink":"https://www.ringcentral.fr/legal/privacy-notice.html","callWithJupiter":{"link":"https://app.rainbowoffice.com/","protocol":"com.rainbowoffice.app://","name":"Rainbow Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Rainbow Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.rainbowoffice.com/teleconference","rcvProductName":"Rainbow Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} vous a invité à une réunion {rcvProductName}.\n\nVeuillez rejoindre la réunion à l’aide de ce lien :\n    {joinUri}{passwordTpl}","assets":{"logo":"/assets/rainbow/logo.svg","icon":"/assets/rainbow/icon.png"},"showFeedback":false,"enableEDP":true},"rc":{"id":"1210","code":"rc","name":"RingCentral","appName":"RingCentral Embeddable","fullName":"RingCentral","application":"RingCentral Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"signupUrl":"https://www.ringcentral.com/office/plansandpricing.html","eulaLink":"https://www.ringcentral.com/legal/eulatos.html","callWithJupiter":{"link":"https://app.ringcentral.com/","protocol":"rcapp://","name":"RingCentral App"},"isDisableSpartan":true,"allowJupiterUniversalLink":false,"callWithSoftphone":{"protocol":"rcmobile://","name":"RingCentral Phone"},"rcmProductName":"RingCentral Meetings","rcvProductName":"RingCentral Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","rcvTeleconference":"https://v.ringcentral.com/teleconference/","assets":{"logo":"/assets/rc/logo.svg","icon":"/assets/rc/icon.svg"},"subBrands":[{"id":"5010","code":"rcau"},{"id":"3610","code":"rcca"},{"id":"2010","code":"rceu"},{"id":"3710","code":"rcuk"}],"showFeedback":false,"enableEDP":true},"telus":{"id":"7310","code":"telus","name":"TELUS Business Connect","appName":"TELUS Business Connect Embeddable","fullName":"TELUS Business Connect","application":"TELUS Business Connect Embeddable","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.businessconnect.telus.com/","protocol":"rctelus://","name":"TELUS Business Connect App"},"callWithSoftphone":{"protocol":"rctelus://","name":"TELUS Business Connect Phone"},"allowRegionSettings":true,"isDisableSpartan":true,"allowJupiterUniversalLink":true,"rcmProductName":"TELUS Business Connect Meetings","rcvProductName":"Business Connect Video Meeting","rcvMeetingTopic":"{extensionName}'s Business Connect Video meeting","rcvSettingsTitle":"Business Connect Video meeting settings","rcvTeleconference":"https://video.businessconnect.telus.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a TELUS Business Connect Video meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.businessconnect.telus.com/teleconference","eulaLink":"http://telus.com/BusinessConnect/ServiceTerms","assets":{"logo":"/assets/telus/logo.svg","icon":"/assets/telus/icon.svg"},"showFeedback":false,"enableEDP":true}},"ERROR_REPORT_KEY":undefined,"RECORDING_LINK":"https://ringcentral.github.io/ringcentral-media-reader/","MIXPANEL_KEY":"04acd7cb2e1867dcf98b6e8cf5ee1e1c","ANALYTICS_SECRET_KEY":"adasdawqsadaaasa...","NOISE_REDUCTION_SDK_URL":"/noise-reduction","ADAPTER_NAME":"adapter.js"}).DISABLE_PATCHES) {
   (0, _usmRedux.enablePatches)();
 }
 var ModuleStatus = /*#__PURE__*/function (ModuleStatus) {
@@ -5341,7 +5331,7 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.createApp = void 0;
-var _redux = __webpack_require__(75612);
+var _redux = __webpack_require__(7533);
 var _RcModule = __webpack_require__(83669);
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -5857,7 +5847,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.setPatchesToggle = exports.getPatchesToggle = exports.createStore = void 0;
 var _immer = _interopRequireWildcard(__webpack_require__(97531));
-var _redux = __webpack_require__(75612);
+var _redux = __webpack_require__(7533);
 var _constant = __webpack_require__(65249);
 var _index = __webpack_require__(19039);
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
@@ -10752,13 +10742,51 @@ exports.A = AdapterCore;
 
 /***/ }),
 
+/***/ 33734:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+var __webpack_unused_export__;
+
+
+__webpack_require__(36000);
+__webpack_unused_export__ = ({
+  value: true
+});
+exports.Ay = void 0;
+__webpack_unused_export__ = popWindow;
+function popWindow(url, id, w, h) {
+  // Fixes dual-screen position                         Most browsers      Firefox
+  var dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screen.left;
+  var dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screen.top;
+  var width = window.screen.width || window.outerWidth;
+  var height = window.screen.height || window.innerHeight;
+  var left = width / 2 - w / 2 + dualScreenLeft;
+  var top = height / 2 - h / 2 + dualScreenTop;
+  var newWindow = window.open(url, id, "scrollbars=yes, width=".concat(w, ", height=").concat(h, ", top=").concat(top, ", left=").concat(left));
+
+  // Puts focus on the newWindow
+  try {
+    newWindow === null || newWindow === void 0 ? void 0 : newWindow.focus();
+  } catch (error) {
+    /* ignore error */
+  }
+  return newWindow;
+}
+var _default = popWindow;
+exports.Ay = _default;
+//# sourceMappingURL=index.js.map
+
+
+/***/ }),
+
 /***/ 45480:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
 "use strict";
 
 
-var GetIntrinsic = __webpack_require__(20550);
+var GetIntrinsic = __webpack_require__(27898);
 
 var callBind = __webpack_require__(45636);
 
@@ -10782,27 +10810,39 @@ module.exports = function callBoundIntrinsic(name, allowMissing) {
 
 
 var bind = __webpack_require__(93836);
-var GetIntrinsic = __webpack_require__(20550);
-var setFunctionLength = __webpack_require__(77042);
+var GetIntrinsic = __webpack_require__(27898);
 
-var $TypeError = __webpack_require__(7410);
 var $apply = GetIntrinsic('%Function.prototype.apply%');
 var $call = GetIntrinsic('%Function.prototype.call%');
 var $reflectApply = GetIntrinsic('%Reflect.apply%', true) || bind.call($call, $apply);
 
-var $defineProperty = __webpack_require__(37126);
+var $gOPD = GetIntrinsic('%Object.getOwnPropertyDescriptor%', true);
+var $defineProperty = GetIntrinsic('%Object.defineProperty%', true);
 var $max = GetIntrinsic('%Math.max%');
 
-module.exports = function callBind(originalFunction) {
-	if (typeof originalFunction !== 'function') {
-		throw new $TypeError('a function is required');
+if ($defineProperty) {
+	try {
+		$defineProperty({}, 'a', { value: 1 });
+	} catch (e) {
+		// IE 8 has a broken defineProperty
+		$defineProperty = null;
 	}
+}
+
+module.exports = function callBind(originalFunction) {
 	var func = $reflectApply(bind, $call, arguments);
-	return setFunctionLength(
-		func,
-		1 + $max(0, originalFunction.length - (arguments.length - 1)),
-		true
-	);
+	if ($gOPD && $defineProperty) {
+		var desc = $gOPD(func, 'length');
+		if (desc.configurable) {
+			// original length, plus the receiver, minus any additional arguments (after the receiver)
+			$defineProperty(
+				func,
+				'length',
+				{ value: 1 + $max(0, originalFunction.length - (arguments.length - 1)) }
+			);
+		}
+	}
+	return func;
 };
 
 var applyBind = function applyBind() {
@@ -10814,6 +10854,344 @@ if ($defineProperty) {
 } else {
 	module.exports.apply = applyBind;
 }
+
+
+/***/ }),
+
+/***/ 27898:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var undefined;
+
+var $SyntaxError = SyntaxError;
+var $Function = Function;
+var $TypeError = TypeError;
+
+// eslint-disable-next-line consistent-return
+var getEvalledConstructor = function (expressionSyntax) {
+	try {
+		return $Function('"use strict"; return (' + expressionSyntax + ').constructor;')();
+	} catch (e) {}
+};
+
+var $gOPD = Object.getOwnPropertyDescriptor;
+if ($gOPD) {
+	try {
+		$gOPD({}, '');
+	} catch (e) {
+		$gOPD = null; // this is IE 8, which has a broken gOPD
+	}
+}
+
+var throwTypeError = function () {
+	throw new $TypeError();
+};
+var ThrowTypeError = $gOPD
+	? (function () {
+		try {
+			// eslint-disable-next-line no-unused-expressions, no-caller, no-restricted-properties
+			arguments.callee; // IE 8 does not throw here
+			return throwTypeError;
+		} catch (calleeThrows) {
+			try {
+				// IE 8 throws on Object.getOwnPropertyDescriptor(arguments, '')
+				return $gOPD(arguments, 'callee').get;
+			} catch (gOPDthrows) {
+				return throwTypeError;
+			}
+		}
+	}())
+	: throwTypeError;
+
+var hasSymbols = __webpack_require__(32856)();
+
+var getProto = Object.getPrototypeOf || function (x) { return x.__proto__; }; // eslint-disable-line no-proto
+
+var needsEval = {};
+
+var TypedArray = typeof Uint8Array === 'undefined' ? undefined : getProto(Uint8Array);
+
+var INTRINSICS = {
+	'%AggregateError%': typeof AggregateError === 'undefined' ? undefined : AggregateError,
+	'%Array%': Array,
+	'%ArrayBuffer%': typeof ArrayBuffer === 'undefined' ? undefined : ArrayBuffer,
+	'%ArrayIteratorPrototype%': hasSymbols ? getProto([][Symbol.iterator]()) : undefined,
+	'%AsyncFromSyncIteratorPrototype%': undefined,
+	'%AsyncFunction%': needsEval,
+	'%AsyncGenerator%': needsEval,
+	'%AsyncGeneratorFunction%': needsEval,
+	'%AsyncIteratorPrototype%': needsEval,
+	'%Atomics%': typeof Atomics === 'undefined' ? undefined : Atomics,
+	'%BigInt%': typeof BigInt === 'undefined' ? undefined : BigInt,
+	'%Boolean%': Boolean,
+	'%DataView%': typeof DataView === 'undefined' ? undefined : DataView,
+	'%Date%': Date,
+	'%decodeURI%': decodeURI,
+	'%decodeURIComponent%': decodeURIComponent,
+	'%encodeURI%': encodeURI,
+	'%encodeURIComponent%': encodeURIComponent,
+	'%Error%': Error,
+	'%eval%': eval, // eslint-disable-line no-eval
+	'%EvalError%': EvalError,
+	'%Float32Array%': typeof Float32Array === 'undefined' ? undefined : Float32Array,
+	'%Float64Array%': typeof Float64Array === 'undefined' ? undefined : Float64Array,
+	'%FinalizationRegistry%': typeof FinalizationRegistry === 'undefined' ? undefined : FinalizationRegistry,
+	'%Function%': $Function,
+	'%GeneratorFunction%': needsEval,
+	'%Int8Array%': typeof Int8Array === 'undefined' ? undefined : Int8Array,
+	'%Int16Array%': typeof Int16Array === 'undefined' ? undefined : Int16Array,
+	'%Int32Array%': typeof Int32Array === 'undefined' ? undefined : Int32Array,
+	'%isFinite%': isFinite,
+	'%isNaN%': isNaN,
+	'%IteratorPrototype%': hasSymbols ? getProto(getProto([][Symbol.iterator]())) : undefined,
+	'%JSON%': typeof JSON === 'object' ? JSON : undefined,
+	'%Map%': typeof Map === 'undefined' ? undefined : Map,
+	'%MapIteratorPrototype%': typeof Map === 'undefined' || !hasSymbols ? undefined : getProto(new Map()[Symbol.iterator]()),
+	'%Math%': Math,
+	'%Number%': Number,
+	'%Object%': Object,
+	'%parseFloat%': parseFloat,
+	'%parseInt%': parseInt,
+	'%Promise%': typeof Promise === 'undefined' ? undefined : Promise,
+	'%Proxy%': typeof Proxy === 'undefined' ? undefined : Proxy,
+	'%RangeError%': RangeError,
+	'%ReferenceError%': ReferenceError,
+	'%Reflect%': typeof Reflect === 'undefined' ? undefined : Reflect,
+	'%RegExp%': RegExp,
+	'%Set%': typeof Set === 'undefined' ? undefined : Set,
+	'%SetIteratorPrototype%': typeof Set === 'undefined' || !hasSymbols ? undefined : getProto(new Set()[Symbol.iterator]()),
+	'%SharedArrayBuffer%': typeof SharedArrayBuffer === 'undefined' ? undefined : SharedArrayBuffer,
+	'%String%': String,
+	'%StringIteratorPrototype%': hasSymbols ? getProto(''[Symbol.iterator]()) : undefined,
+	'%Symbol%': hasSymbols ? Symbol : undefined,
+	'%SyntaxError%': $SyntaxError,
+	'%ThrowTypeError%': ThrowTypeError,
+	'%TypedArray%': TypedArray,
+	'%TypeError%': $TypeError,
+	'%Uint8Array%': typeof Uint8Array === 'undefined' ? undefined : Uint8Array,
+	'%Uint8ClampedArray%': typeof Uint8ClampedArray === 'undefined' ? undefined : Uint8ClampedArray,
+	'%Uint16Array%': typeof Uint16Array === 'undefined' ? undefined : Uint16Array,
+	'%Uint32Array%': typeof Uint32Array === 'undefined' ? undefined : Uint32Array,
+	'%URIError%': URIError,
+	'%WeakMap%': typeof WeakMap === 'undefined' ? undefined : WeakMap,
+	'%WeakRef%': typeof WeakRef === 'undefined' ? undefined : WeakRef,
+	'%WeakSet%': typeof WeakSet === 'undefined' ? undefined : WeakSet
+};
+
+var doEval = function doEval(name) {
+	var value;
+	if (name === '%AsyncFunction%') {
+		value = getEvalledConstructor('async function () {}');
+	} else if (name === '%GeneratorFunction%') {
+		value = getEvalledConstructor('function* () {}');
+	} else if (name === '%AsyncGeneratorFunction%') {
+		value = getEvalledConstructor('async function* () {}');
+	} else if (name === '%AsyncGenerator%') {
+		var fn = doEval('%AsyncGeneratorFunction%');
+		if (fn) {
+			value = fn.prototype;
+		}
+	} else if (name === '%AsyncIteratorPrototype%') {
+		var gen = doEval('%AsyncGenerator%');
+		if (gen) {
+			value = getProto(gen.prototype);
+		}
+	}
+
+	INTRINSICS[name] = value;
+
+	return value;
+};
+
+var LEGACY_ALIASES = {
+	'%ArrayBufferPrototype%': ['ArrayBuffer', 'prototype'],
+	'%ArrayPrototype%': ['Array', 'prototype'],
+	'%ArrayProto_entries%': ['Array', 'prototype', 'entries'],
+	'%ArrayProto_forEach%': ['Array', 'prototype', 'forEach'],
+	'%ArrayProto_keys%': ['Array', 'prototype', 'keys'],
+	'%ArrayProto_values%': ['Array', 'prototype', 'values'],
+	'%AsyncFunctionPrototype%': ['AsyncFunction', 'prototype'],
+	'%AsyncGenerator%': ['AsyncGeneratorFunction', 'prototype'],
+	'%AsyncGeneratorPrototype%': ['AsyncGeneratorFunction', 'prototype', 'prototype'],
+	'%BooleanPrototype%': ['Boolean', 'prototype'],
+	'%DataViewPrototype%': ['DataView', 'prototype'],
+	'%DatePrototype%': ['Date', 'prototype'],
+	'%ErrorPrototype%': ['Error', 'prototype'],
+	'%EvalErrorPrototype%': ['EvalError', 'prototype'],
+	'%Float32ArrayPrototype%': ['Float32Array', 'prototype'],
+	'%Float64ArrayPrototype%': ['Float64Array', 'prototype'],
+	'%FunctionPrototype%': ['Function', 'prototype'],
+	'%Generator%': ['GeneratorFunction', 'prototype'],
+	'%GeneratorPrototype%': ['GeneratorFunction', 'prototype', 'prototype'],
+	'%Int8ArrayPrototype%': ['Int8Array', 'prototype'],
+	'%Int16ArrayPrototype%': ['Int16Array', 'prototype'],
+	'%Int32ArrayPrototype%': ['Int32Array', 'prototype'],
+	'%JSONParse%': ['JSON', 'parse'],
+	'%JSONStringify%': ['JSON', 'stringify'],
+	'%MapPrototype%': ['Map', 'prototype'],
+	'%NumberPrototype%': ['Number', 'prototype'],
+	'%ObjectPrototype%': ['Object', 'prototype'],
+	'%ObjProto_toString%': ['Object', 'prototype', 'toString'],
+	'%ObjProto_valueOf%': ['Object', 'prototype', 'valueOf'],
+	'%PromisePrototype%': ['Promise', 'prototype'],
+	'%PromiseProto_then%': ['Promise', 'prototype', 'then'],
+	'%Promise_all%': ['Promise', 'all'],
+	'%Promise_reject%': ['Promise', 'reject'],
+	'%Promise_resolve%': ['Promise', 'resolve'],
+	'%RangeErrorPrototype%': ['RangeError', 'prototype'],
+	'%ReferenceErrorPrototype%': ['ReferenceError', 'prototype'],
+	'%RegExpPrototype%': ['RegExp', 'prototype'],
+	'%SetPrototype%': ['Set', 'prototype'],
+	'%SharedArrayBufferPrototype%': ['SharedArrayBuffer', 'prototype'],
+	'%StringPrototype%': ['String', 'prototype'],
+	'%SymbolPrototype%': ['Symbol', 'prototype'],
+	'%SyntaxErrorPrototype%': ['SyntaxError', 'prototype'],
+	'%TypedArrayPrototype%': ['TypedArray', 'prototype'],
+	'%TypeErrorPrototype%': ['TypeError', 'prototype'],
+	'%Uint8ArrayPrototype%': ['Uint8Array', 'prototype'],
+	'%Uint8ClampedArrayPrototype%': ['Uint8ClampedArray', 'prototype'],
+	'%Uint16ArrayPrototype%': ['Uint16Array', 'prototype'],
+	'%Uint32ArrayPrototype%': ['Uint32Array', 'prototype'],
+	'%URIErrorPrototype%': ['URIError', 'prototype'],
+	'%WeakMapPrototype%': ['WeakMap', 'prototype'],
+	'%WeakSetPrototype%': ['WeakSet', 'prototype']
+};
+
+var bind = __webpack_require__(93836);
+var hasOwn = __webpack_require__(82685);
+var $concat = bind.call(Function.call, Array.prototype.concat);
+var $spliceApply = bind.call(Function.apply, Array.prototype.splice);
+var $replace = bind.call(Function.call, String.prototype.replace);
+var $strSlice = bind.call(Function.call, String.prototype.slice);
+
+/* adapted from https://github.com/lodash/lodash/blob/4.17.15/dist/lodash.js#L6735-L6744 */
+var rePropName = /[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g;
+var reEscapeChar = /\\(\\)?/g; /** Used to match backslashes in property paths. */
+var stringToPath = function stringToPath(string) {
+	var first = $strSlice(string, 0, 1);
+	var last = $strSlice(string, -1);
+	if (first === '%' && last !== '%') {
+		throw new $SyntaxError('invalid intrinsic syntax, expected closing `%`');
+	} else if (last === '%' && first !== '%') {
+		throw new $SyntaxError('invalid intrinsic syntax, expected opening `%`');
+	}
+	var result = [];
+	$replace(string, rePropName, function (match, number, quote, subString) {
+		result[result.length] = quote ? $replace(subString, reEscapeChar, '$1') : number || match;
+	});
+	return result;
+};
+/* end adaptation */
+
+var getBaseIntrinsic = function getBaseIntrinsic(name, allowMissing) {
+	var intrinsicName = name;
+	var alias;
+	if (hasOwn(LEGACY_ALIASES, intrinsicName)) {
+		alias = LEGACY_ALIASES[intrinsicName];
+		intrinsicName = '%' + alias[0] + '%';
+	}
+
+	if (hasOwn(INTRINSICS, intrinsicName)) {
+		var value = INTRINSICS[intrinsicName];
+		if (value === needsEval) {
+			value = doEval(intrinsicName);
+		}
+		if (typeof value === 'undefined' && !allowMissing) {
+			throw new $TypeError('intrinsic ' + name + ' exists, but is not available. Please file an issue!');
+		}
+
+		return {
+			alias: alias,
+			name: intrinsicName,
+			value: value
+		};
+	}
+
+	throw new $SyntaxError('intrinsic ' + name + ' does not exist!');
+};
+
+module.exports = function GetIntrinsic(name, allowMissing) {
+	if (typeof name !== 'string' || name.length === 0) {
+		throw new $TypeError('intrinsic name must be a non-empty string');
+	}
+	if (arguments.length > 1 && typeof allowMissing !== 'boolean') {
+		throw new $TypeError('"allowMissing" argument must be a boolean');
+	}
+
+	var parts = stringToPath(name);
+	var intrinsicBaseName = parts.length > 0 ? parts[0] : '';
+
+	var intrinsic = getBaseIntrinsic('%' + intrinsicBaseName + '%', allowMissing);
+	var intrinsicRealName = intrinsic.name;
+	var value = intrinsic.value;
+	var skipFurtherCaching = false;
+
+	var alias = intrinsic.alias;
+	if (alias) {
+		intrinsicBaseName = alias[0];
+		$spliceApply(parts, $concat([0, 1], alias));
+	}
+
+	for (var i = 1, isOwn = true; i < parts.length; i += 1) {
+		var part = parts[i];
+		var first = $strSlice(part, 0, 1);
+		var last = $strSlice(part, -1);
+		if (
+			(
+				(first === '"' || first === "'" || first === '`')
+				|| (last === '"' || last === "'" || last === '`')
+			)
+			&& first !== last
+		) {
+			throw new $SyntaxError('property names with quotes must have matching quotes');
+		}
+		if (part === 'constructor' || !isOwn) {
+			skipFurtherCaching = true;
+		}
+
+		intrinsicBaseName += '.' + part;
+		intrinsicRealName = '%' + intrinsicBaseName + '%';
+
+		if (hasOwn(INTRINSICS, intrinsicRealName)) {
+			value = INTRINSICS[intrinsicRealName];
+		} else if (value != null) {
+			if (!(part in value)) {
+				if (!allowMissing) {
+					throw new $TypeError('base intrinsic for ' + name + ' exists, but the property is not available.');
+				}
+				return void undefined;
+			}
+			if ($gOPD && (i + 1) >= parts.length) {
+				var desc = $gOPD(value, part);
+				isOwn = !!desc;
+
+				// By convention, when a data property is converted to an accessor
+				// property to emulate a data property that does not suffer from
+				// the override mistake, that accessor's getter is marked with
+				// an `originalValue` property. Here, when we detect this, we
+				// uphold the illusion by pretending to see that original data
+				// property, i.e., returning the value rather than the getter
+				// itself.
+				if (isOwn && 'get' in desc && !('originalValue' in desc.get)) {
+					value = desc.get;
+				} else {
+					value = value[part];
+				}
+			} else {
+				isOwn = hasOwn(value, part);
+				value = value[part];
+			}
+
+			if (isOwn && !skipFurtherCaching) {
+				INTRINSICS[intrinsicRealName] = value;
+			}
+		}
+	}
+	return value;
+};
 
 
 /***/ }),
@@ -22811,97 +23189,85 @@ __webpack_require__(78836);
   MIT License http://www.opensource.org/licenses/mit-license.php
   Author Tobias Koppers @sokra
 */
-module.exports = function (cssWithMappingToString) {
-  var list = [];
+// css base code, injected by the css-loader
+module.exports = function (useSourceMap) {
+  var list = []; // return the list of modules as css string
 
-  // return the list of modules as css string
   list.toString = function toString() {
     return this.map(function (item) {
-      var content = "";
-      var needLayer = typeof item[5] !== "undefined";
-      if (item[4]) {
-        content += "@supports (".concat(item[4], ") {");
-      }
+      var content = cssWithMappingToString(item, useSourceMap);
+
       if (item[2]) {
-        content += "@media ".concat(item[2], " {");
+        return '@media ' + item[2] + '{' + content + '}';
+      } else {
+        return content;
       }
-      if (needLayer) {
-        content += "@layer".concat(item[5].length > 0 ? " ".concat(item[5]) : "", " {");
+    }).join('');
+  }; // import a list of modules into the list
+
+
+  list.i = function (modules, mediaQuery) {
+    if (typeof modules === 'string') {
+      modules = [[null, modules, '']];
+    }
+
+    var alreadyImportedModules = {};
+
+    for (var i = 0; i < this.length; i++) {
+      var id = this[i][0];
+
+      if (id != null) {
+        alreadyImportedModules[id] = true;
       }
-      content += cssWithMappingToString(item);
-      if (needLayer) {
-        content += "}";
+    }
+
+    for (i = 0; i < modules.length; i++) {
+      var item = modules[i]; // skip already imported module
+      // this implementation is not 100% perfect for weird media query combinations
+      // when a module is imported multiple times with different media queries.
+      // I hope this will never occur (Hey this way we have smaller bundles)
+
+      if (item[0] == null || !alreadyImportedModules[item[0]]) {
+        if (mediaQuery && !item[2]) {
+          item[2] = mediaQuery;
+        } else if (mediaQuery) {
+          item[2] = '(' + item[2] + ') and (' + mediaQuery + ')';
+        }
+
+        list.push(item);
       }
-      if (item[2]) {
-        content += "}";
-      }
-      if (item[4]) {
-        content += "}";
-      }
-      return content;
-    }).join("");
+    }
   };
 
-  // import a list of modules into the list
-  list.i = function i(modules, media, dedupe, supports, layer) {
-    if (typeof modules === "string") {
-      modules = [[null, modules, undefined]];
-    }
-    var alreadyImportedModules = {};
-    if (dedupe) {
-      for (var k = 0; k < this.length; k++) {
-        var id = this[k][0];
-        if (id != null) {
-          alreadyImportedModules[id] = true;
-        }
-      }
-    }
-    for (var _k = 0; _k < modules.length; _k++) {
-      var item = [].concat(modules[_k]);
-      if (dedupe && alreadyImportedModules[item[0]]) {
-        continue;
-      }
-      if (typeof layer !== "undefined") {
-        if (typeof item[5] === "undefined") {
-          item[5] = layer;
-        } else {
-          item[1] = "@layer".concat(item[5].length > 0 ? " ".concat(item[5]) : "", " {").concat(item[1], "}");
-          item[5] = layer;
-        }
-      }
-      if (media) {
-        if (!item[2]) {
-          item[2] = media;
-        } else {
-          item[1] = "@media ".concat(item[2], " {").concat(item[1], "}");
-          item[2] = media;
-        }
-      }
-      if (supports) {
-        if (!item[4]) {
-          item[4] = "".concat(supports);
-        } else {
-          item[1] = "@supports (".concat(item[4], ") {").concat(item[1], "}");
-          item[4] = supports;
-        }
-      }
-      list.push(item);
-    }
-  };
   return list;
 };
 
-/***/ }),
+function cssWithMappingToString(item, useSourceMap) {
+  var content = item[1] || '';
+  var cssMapping = item[3];
 
-/***/ 84816:
-/***/ (function(module) {
+  if (!cssMapping) {
+    return content;
+  }
 
-"use strict";
+  if (useSourceMap && typeof btoa === 'function') {
+    var sourceMapping = toComment(cssMapping);
+    var sourceURLs = cssMapping.sources.map(function (source) {
+      return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */';
+    });
+    return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
+  }
+
+  return [content].join('\n');
+} // Adapted from convert-source-map (MIT)
 
 
-module.exports = function (i) {
-  return i[1];
-};
+function toComment(sourceMap) {
+  // eslint-disable-next-line no-undef
+  var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
+  var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
+  return '/*# ' + data + ' */';
+}
 
 /***/ }),
 
@@ -22909,178 +23275,6 @@ module.exports = function (i) {
 /***/ (function(module) {
 
 !function(t,e){ true?module.exports=e():0}(this,(function(){"use strict";var t=1e3,e=6e4,n=36e5,r="millisecond",i="second",s="minute",u="hour",a="day",o="week",c="month",f="quarter",h="year",d="date",l="Invalid Date",$=/^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/,y=/\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g,M={name:"en",weekdays:"Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"),months:"January_February_March_April_May_June_July_August_September_October_November_December".split("_"),ordinal:function(t){var e=["th","st","nd","rd"],n=t%100;return"["+t+(e[(n-20)%10]||e[n]||e[0])+"]"}},m=function(t,e,n){var r=String(t);return!r||r.length>=e?t:""+Array(e+1-r.length).join(n)+t},v={s:m,z:function(t){var e=-t.utcOffset(),n=Math.abs(e),r=Math.floor(n/60),i=n%60;return(e<=0?"+":"-")+m(r,2,"0")+":"+m(i,2,"0")},m:function t(e,n){if(e.date()<n.date())return-t(n,e);var r=12*(n.year()-e.year())+(n.month()-e.month()),i=e.clone().add(r,c),s=n-i<0,u=e.clone().add(r+(s?-1:1),c);return+(-(r+(n-i)/(s?i-u:u-i))||0)},a:function(t){return t<0?Math.ceil(t)||0:Math.floor(t)},p:function(t){return{M:c,y:h,w:o,d:a,D:d,h:u,m:s,s:i,ms:r,Q:f}[t]||String(t||"").toLowerCase().replace(/s$/,"")},u:function(t){return void 0===t}},g="en",D={};D[g]=M;var p=function(t){return t instanceof b},S=function t(e,n,r){var i;if(!e)return g;if("string"==typeof e){var s=e.toLowerCase();D[s]&&(i=s),n&&(D[s]=n,i=s);var u=e.split("-");if(!i&&u.length>1)return t(u[0])}else{var a=e.name;D[a]=e,i=a}return!r&&i&&(g=i),i||!r&&g},w=function(t,e){if(p(t))return t.clone();var n="object"==typeof e?e:{};return n.date=t,n.args=arguments,new b(n)},O=v;O.l=S,O.i=p,O.w=function(t,e){return w(t,{locale:e.$L,utc:e.$u,x:e.$x,$offset:e.$offset})};var b=function(){function M(t){this.$L=S(t.locale,null,!0),this.parse(t)}var m=M.prototype;return m.parse=function(t){this.$d=function(t){var e=t.date,n=t.utc;if(null===e)return new Date(NaN);if(O.u(e))return new Date;if(e instanceof Date)return new Date(e);if("string"==typeof e&&!/Z$/i.test(e)){var r=e.match($);if(r){var i=r[2]-1||0,s=(r[7]||"0").substring(0,3);return n?new Date(Date.UTC(r[1],i,r[3]||1,r[4]||0,r[5]||0,r[6]||0,s)):new Date(r[1],i,r[3]||1,r[4]||0,r[5]||0,r[6]||0,s)}}return new Date(e)}(t),this.$x=t.x||{},this.init()},m.init=function(){var t=this.$d;this.$y=t.getFullYear(),this.$M=t.getMonth(),this.$D=t.getDate(),this.$W=t.getDay(),this.$H=t.getHours(),this.$m=t.getMinutes(),this.$s=t.getSeconds(),this.$ms=t.getMilliseconds()},m.$utils=function(){return O},m.isValid=function(){return!(this.$d.toString()===l)},m.isSame=function(t,e){var n=w(t);return this.startOf(e)<=n&&n<=this.endOf(e)},m.isAfter=function(t,e){return w(t)<this.startOf(e)},m.isBefore=function(t,e){return this.endOf(e)<w(t)},m.$g=function(t,e,n){return O.u(t)?this[e]:this.set(n,t)},m.unix=function(){return Math.floor(this.valueOf()/1e3)},m.valueOf=function(){return this.$d.getTime()},m.startOf=function(t,e){var n=this,r=!!O.u(e)||e,f=O.p(t),l=function(t,e){var i=O.w(n.$u?Date.UTC(n.$y,e,t):new Date(n.$y,e,t),n);return r?i:i.endOf(a)},$=function(t,e){return O.w(n.toDate()[t].apply(n.toDate("s"),(r?[0,0,0,0]:[23,59,59,999]).slice(e)),n)},y=this.$W,M=this.$M,m=this.$D,v="set"+(this.$u?"UTC":"");switch(f){case h:return r?l(1,0):l(31,11);case c:return r?l(1,M):l(0,M+1);case o:var g=this.$locale().weekStart||0,D=(y<g?y+7:y)-g;return l(r?m-D:m+(6-D),M);case a:case d:return $(v+"Hours",0);case u:return $(v+"Minutes",1);case s:return $(v+"Seconds",2);case i:return $(v+"Milliseconds",3);default:return this.clone()}},m.endOf=function(t){return this.startOf(t,!1)},m.$set=function(t,e){var n,o=O.p(t),f="set"+(this.$u?"UTC":""),l=(n={},n[a]=f+"Date",n[d]=f+"Date",n[c]=f+"Month",n[h]=f+"FullYear",n[u]=f+"Hours",n[s]=f+"Minutes",n[i]=f+"Seconds",n[r]=f+"Milliseconds",n)[o],$=o===a?this.$D+(e-this.$W):e;if(o===c||o===h){var y=this.clone().set(d,1);y.$d[l]($),y.init(),this.$d=y.set(d,Math.min(this.$D,y.daysInMonth())).$d}else l&&this.$d[l]($);return this.init(),this},m.set=function(t,e){return this.clone().$set(t,e)},m.get=function(t){return this[O.p(t)]()},m.add=function(r,f){var d,l=this;r=Number(r);var $=O.p(f),y=function(t){var e=w(l);return O.w(e.date(e.date()+Math.round(t*r)),l)};if($===c)return this.set(c,this.$M+r);if($===h)return this.set(h,this.$y+r);if($===a)return y(1);if($===o)return y(7);var M=(d={},d[s]=e,d[u]=n,d[i]=t,d)[$]||1,m=this.$d.getTime()+r*M;return O.w(m,this)},m.subtract=function(t,e){return this.add(-1*t,e)},m.format=function(t){var e=this,n=this.$locale();if(!this.isValid())return n.invalidDate||l;var r=t||"YYYY-MM-DDTHH:mm:ssZ",i=O.z(this),s=this.$H,u=this.$m,a=this.$M,o=n.weekdays,c=n.months,f=n.meridiem,h=function(t,n,i,s){return t&&(t[n]||t(e,r))||i[n].slice(0,s)},d=function(t){return O.s(s%12||12,t,"0")},$=f||function(t,e,n){var r=t<12?"AM":"PM";return n?r.toLowerCase():r};return r.replace(y,(function(t,r){return r||function(t){switch(t){case"YY":return String(e.$y).slice(-2);case"YYYY":return O.s(e.$y,4,"0");case"M":return a+1;case"MM":return O.s(a+1,2,"0");case"MMM":return h(n.monthsShort,a,c,3);case"MMMM":return h(c,a);case"D":return e.$D;case"DD":return O.s(e.$D,2,"0");case"d":return String(e.$W);case"dd":return h(n.weekdaysMin,e.$W,o,2);case"ddd":return h(n.weekdaysShort,e.$W,o,3);case"dddd":return o[e.$W];case"H":return String(s);case"HH":return O.s(s,2,"0");case"h":return d(1);case"hh":return d(2);case"a":return $(s,u,!0);case"A":return $(s,u,!1);case"m":return String(u);case"mm":return O.s(u,2,"0");case"s":return String(e.$s);case"ss":return O.s(e.$s,2,"0");case"SSS":return O.s(e.$ms,3,"0");case"Z":return i}return null}(t)||i.replace(":","")}))},m.utcOffset=function(){return 15*-Math.round(this.$d.getTimezoneOffset()/15)},m.diff=function(r,d,l){var $,y=this,M=O.p(d),m=w(r),v=(m.utcOffset()-this.utcOffset())*e,g=this-m,D=function(){return O.m(y,m)};switch(M){case h:$=D()/12;break;case c:$=D();break;case f:$=D()/3;break;case o:$=(g-v)/6048e5;break;case a:$=(g-v)/864e5;break;case u:$=g/n;break;case s:$=g/e;break;case i:$=g/t;break;default:$=g}return l?$:O.a($)},m.daysInMonth=function(){return this.endOf(c).$D},m.$locale=function(){return D[this.$L]},m.locale=function(t,e){if(!t)return this.$L;var n=this.clone(),r=S(t,e,!0);return r&&(n.$L=r),n},m.clone=function(){return O.w(this.$d,this)},m.toDate=function(){return new Date(this.valueOf())},m.toJSON=function(){return this.isValid()?this.toISOString():null},m.toISOString=function(){return this.$d.toISOString()},m.toString=function(){return this.$d.toUTCString()},M}(),_=b.prototype;return w.prototype=_,[["$ms",r],["$s",i],["$m",s],["$H",u],["$W",a],["$M",c],["$y",h],["$D",d]].forEach((function(t){_[t[1]]=function(e){return this.$g(e,t[0],t[1])}})),w.extend=function(t,e){return t.$i||(t(e,b,w),t.$i=!0),w},w.locale=S,w.isDayjs=p,w.unix=function(t){return w(1e3*t)},w.en=D[g],w.Ls=D,w.p={},w}));
-
-/***/ }),
-
-/***/ 84548:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-var $defineProperty = __webpack_require__(37126);
-
-var $SyntaxError = __webpack_require__(96761);
-var $TypeError = __webpack_require__(7410);
-
-var gopd = __webpack_require__(24770);
-
-/** @type {import('.')} */
-module.exports = function defineDataProperty(
-	obj,
-	property,
-	value
-) {
-	if (!obj || (typeof obj !== 'object' && typeof obj !== 'function')) {
-		throw new $TypeError('`obj` must be an object or a function`');
-	}
-	if (typeof property !== 'string' && typeof property !== 'symbol') {
-		throw new $TypeError('`property` must be a string or a symbol`');
-	}
-	if (arguments.length > 3 && typeof arguments[3] !== 'boolean' && arguments[3] !== null) {
-		throw new $TypeError('`nonEnumerable`, if provided, must be a boolean or null');
-	}
-	if (arguments.length > 4 && typeof arguments[4] !== 'boolean' && arguments[4] !== null) {
-		throw new $TypeError('`nonWritable`, if provided, must be a boolean or null');
-	}
-	if (arguments.length > 5 && typeof arguments[5] !== 'boolean' && arguments[5] !== null) {
-		throw new $TypeError('`nonConfigurable`, if provided, must be a boolean or null');
-	}
-	if (arguments.length > 6 && typeof arguments[6] !== 'boolean') {
-		throw new $TypeError('`loose`, if provided, must be a boolean');
-	}
-
-	var nonEnumerable = arguments.length > 3 ? arguments[3] : null;
-	var nonWritable = arguments.length > 4 ? arguments[4] : null;
-	var nonConfigurable = arguments.length > 5 ? arguments[5] : null;
-	var loose = arguments.length > 6 ? arguments[6] : false;
-
-	/* @type {false | TypedPropertyDescriptor<unknown>} */
-	var desc = !!gopd && gopd(obj, property);
-
-	if ($defineProperty) {
-		$defineProperty(obj, property, {
-			configurable: nonConfigurable === null && desc ? desc.configurable : !nonConfigurable,
-			enumerable: nonEnumerable === null && desc ? desc.enumerable : !nonEnumerable,
-			value: value,
-			writable: nonWritable === null && desc ? desc.writable : !nonWritable
-		});
-	} else if (loose || (!nonEnumerable && !nonWritable && !nonConfigurable)) {
-		// must fall back to [[Set]], and was not explicitly asked to make non-enumerable, non-writable, or non-configurable
-		obj[property] = value; // eslint-disable-line no-param-reassign
-	} else {
-		throw new $SyntaxError('This environment does not support defining a property as non-configurable, non-writable, or non-enumerable.');
-	}
-};
-
-
-/***/ }),
-
-/***/ 37126:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-var GetIntrinsic = __webpack_require__(20550);
-
-/** @type {import('.')} */
-var $defineProperty = GetIntrinsic('%Object.defineProperty%', true) || false;
-if ($defineProperty) {
-	try {
-		$defineProperty({}, 'a', { value: 1 });
-	} catch (e) {
-		// IE 8 has a broken defineProperty
-		$defineProperty = false;
-	}
-}
-
-module.exports = $defineProperty;
-
-
-/***/ }),
-
-/***/ 54320:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('./eval')} */
-module.exports = EvalError;
-
-
-/***/ }),
-
-/***/ 33012:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('.')} */
-module.exports = Error;
-
-
-/***/ }),
-
-/***/ 1641:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('./range')} */
-module.exports = RangeError;
-
-
-/***/ }),
-
-/***/ 31753:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('./ref')} */
-module.exports = ReferenceError;
-
-
-/***/ }),
-
-/***/ 96761:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('./syntax')} */
-module.exports = SyntaxError;
-
-
-/***/ }),
-
-/***/ 7410:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('./type')} */
-module.exports = TypeError;
-
-
-/***/ }),
-
-/***/ 60754:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('./uri')} */
-module.exports = URIError;
-
 
 /***/ }),
 
@@ -23598,75 +23792,43 @@ function eventTargetAgnosticAddListener(emitter, name, listener, flags) {
 /* eslint no-invalid-this: 1 */
 
 var ERROR_MESSAGE = 'Function.prototype.bind called on incompatible ';
+var slice = Array.prototype.slice;
 var toStr = Object.prototype.toString;
-var max = Math.max;
 var funcType = '[object Function]';
-
-var concatty = function concatty(a, b) {
-    var arr = [];
-
-    for (var i = 0; i < a.length; i += 1) {
-        arr[i] = a[i];
-    }
-    for (var j = 0; j < b.length; j += 1) {
-        arr[j + a.length] = b[j];
-    }
-
-    return arr;
-};
-
-var slicy = function slicy(arrLike, offset) {
-    var arr = [];
-    for (var i = offset || 0, j = 0; i < arrLike.length; i += 1, j += 1) {
-        arr[j] = arrLike[i];
-    }
-    return arr;
-};
-
-var joiny = function (arr, joiner) {
-    var str = '';
-    for (var i = 0; i < arr.length; i += 1) {
-        str += arr[i];
-        if (i + 1 < arr.length) {
-            str += joiner;
-        }
-    }
-    return str;
-};
 
 module.exports = function bind(that) {
     var target = this;
-    if (typeof target !== 'function' || toStr.apply(target) !== funcType) {
+    if (typeof target !== 'function' || toStr.call(target) !== funcType) {
         throw new TypeError(ERROR_MESSAGE + target);
     }
-    var args = slicy(arguments, 1);
+    var args = slice.call(arguments, 1);
 
     var bound;
     var binder = function () {
         if (this instanceof bound) {
             var result = target.apply(
                 this,
-                concatty(args, arguments)
+                args.concat(slice.call(arguments))
             );
             if (Object(result) === result) {
                 return result;
             }
             return this;
+        } else {
+            return target.apply(
+                that,
+                args.concat(slice.call(arguments))
+            );
         }
-        return target.apply(
-            that,
-            concatty(args, arguments)
-        );
-
     };
 
-    var boundLength = max(0, target.length - args.length);
+    var boundLength = Math.max(0, target.length - args.length);
     var boundArgs = [];
     for (var i = 0; i < boundLength; i++) {
-        boundArgs[i] = '$' + i;
+        boundArgs.push('$' + i);
     }
 
-    bound = Function('binder', 'return function (' + joiny(boundArgs, ',') + '){ return binder.apply(this,arguments); }')(binder);
+    bound = Function('binder', 'return function (' + boundArgs.join(',') + '){ return binder.apply(this,arguments); }')(binder);
 
     if (target.prototype) {
         var Empty = function Empty() {};
@@ -23690,450 +23852,6 @@ module.exports = function bind(that) {
 var implementation = __webpack_require__(87344);
 
 module.exports = Function.prototype.bind || implementation;
-
-
-/***/ }),
-
-/***/ 20550:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-var undefined;
-
-var $Error = __webpack_require__(33012);
-var $EvalError = __webpack_require__(54320);
-var $RangeError = __webpack_require__(1641);
-var $ReferenceError = __webpack_require__(31753);
-var $SyntaxError = __webpack_require__(96761);
-var $TypeError = __webpack_require__(7410);
-var $URIError = __webpack_require__(60754);
-
-var $Function = Function;
-
-// eslint-disable-next-line consistent-return
-var getEvalledConstructor = function (expressionSyntax) {
-	try {
-		return $Function('"use strict"; return (' + expressionSyntax + ').constructor;')();
-	} catch (e) {}
-};
-
-var $gOPD = Object.getOwnPropertyDescriptor;
-if ($gOPD) {
-	try {
-		$gOPD({}, '');
-	} catch (e) {
-		$gOPD = null; // this is IE 8, which has a broken gOPD
-	}
-}
-
-var throwTypeError = function () {
-	throw new $TypeError();
-};
-var ThrowTypeError = $gOPD
-	? (function () {
-		try {
-			// eslint-disable-next-line no-unused-expressions, no-caller, no-restricted-properties
-			arguments.callee; // IE 8 does not throw here
-			return throwTypeError;
-		} catch (calleeThrows) {
-			try {
-				// IE 8 throws on Object.getOwnPropertyDescriptor(arguments, '')
-				return $gOPD(arguments, 'callee').get;
-			} catch (gOPDthrows) {
-				return throwTypeError;
-			}
-		}
-	}())
-	: throwTypeError;
-
-var hasSymbols = __webpack_require__(32856)();
-var hasProto = __webpack_require__(47459)();
-
-var getProto = Object.getPrototypeOf || (
-	hasProto
-		? function (x) { return x.__proto__; } // eslint-disable-line no-proto
-		: null
-);
-
-var needsEval = {};
-
-var TypedArray = typeof Uint8Array === 'undefined' || !getProto ? undefined : getProto(Uint8Array);
-
-var INTRINSICS = {
-	__proto__: null,
-	'%AggregateError%': typeof AggregateError === 'undefined' ? undefined : AggregateError,
-	'%Array%': Array,
-	'%ArrayBuffer%': typeof ArrayBuffer === 'undefined' ? undefined : ArrayBuffer,
-	'%ArrayIteratorPrototype%': hasSymbols && getProto ? getProto([][Symbol.iterator]()) : undefined,
-	'%AsyncFromSyncIteratorPrototype%': undefined,
-	'%AsyncFunction%': needsEval,
-	'%AsyncGenerator%': needsEval,
-	'%AsyncGeneratorFunction%': needsEval,
-	'%AsyncIteratorPrototype%': needsEval,
-	'%Atomics%': typeof Atomics === 'undefined' ? undefined : Atomics,
-	'%BigInt%': typeof BigInt === 'undefined' ? undefined : BigInt,
-	'%BigInt64Array%': typeof BigInt64Array === 'undefined' ? undefined : BigInt64Array,
-	'%BigUint64Array%': typeof BigUint64Array === 'undefined' ? undefined : BigUint64Array,
-	'%Boolean%': Boolean,
-	'%DataView%': typeof DataView === 'undefined' ? undefined : DataView,
-	'%Date%': Date,
-	'%decodeURI%': decodeURI,
-	'%decodeURIComponent%': decodeURIComponent,
-	'%encodeURI%': encodeURI,
-	'%encodeURIComponent%': encodeURIComponent,
-	'%Error%': $Error,
-	'%eval%': eval, // eslint-disable-line no-eval
-	'%EvalError%': $EvalError,
-	'%Float32Array%': typeof Float32Array === 'undefined' ? undefined : Float32Array,
-	'%Float64Array%': typeof Float64Array === 'undefined' ? undefined : Float64Array,
-	'%FinalizationRegistry%': typeof FinalizationRegistry === 'undefined' ? undefined : FinalizationRegistry,
-	'%Function%': $Function,
-	'%GeneratorFunction%': needsEval,
-	'%Int8Array%': typeof Int8Array === 'undefined' ? undefined : Int8Array,
-	'%Int16Array%': typeof Int16Array === 'undefined' ? undefined : Int16Array,
-	'%Int32Array%': typeof Int32Array === 'undefined' ? undefined : Int32Array,
-	'%isFinite%': isFinite,
-	'%isNaN%': isNaN,
-	'%IteratorPrototype%': hasSymbols && getProto ? getProto(getProto([][Symbol.iterator]())) : undefined,
-	'%JSON%': typeof JSON === 'object' ? JSON : undefined,
-	'%Map%': typeof Map === 'undefined' ? undefined : Map,
-	'%MapIteratorPrototype%': typeof Map === 'undefined' || !hasSymbols || !getProto ? undefined : getProto(new Map()[Symbol.iterator]()),
-	'%Math%': Math,
-	'%Number%': Number,
-	'%Object%': Object,
-	'%parseFloat%': parseFloat,
-	'%parseInt%': parseInt,
-	'%Promise%': typeof Promise === 'undefined' ? undefined : Promise,
-	'%Proxy%': typeof Proxy === 'undefined' ? undefined : Proxy,
-	'%RangeError%': $RangeError,
-	'%ReferenceError%': $ReferenceError,
-	'%Reflect%': typeof Reflect === 'undefined' ? undefined : Reflect,
-	'%RegExp%': RegExp,
-	'%Set%': typeof Set === 'undefined' ? undefined : Set,
-	'%SetIteratorPrototype%': typeof Set === 'undefined' || !hasSymbols || !getProto ? undefined : getProto(new Set()[Symbol.iterator]()),
-	'%SharedArrayBuffer%': typeof SharedArrayBuffer === 'undefined' ? undefined : SharedArrayBuffer,
-	'%String%': String,
-	'%StringIteratorPrototype%': hasSymbols && getProto ? getProto(''[Symbol.iterator]()) : undefined,
-	'%Symbol%': hasSymbols ? Symbol : undefined,
-	'%SyntaxError%': $SyntaxError,
-	'%ThrowTypeError%': ThrowTypeError,
-	'%TypedArray%': TypedArray,
-	'%TypeError%': $TypeError,
-	'%Uint8Array%': typeof Uint8Array === 'undefined' ? undefined : Uint8Array,
-	'%Uint8ClampedArray%': typeof Uint8ClampedArray === 'undefined' ? undefined : Uint8ClampedArray,
-	'%Uint16Array%': typeof Uint16Array === 'undefined' ? undefined : Uint16Array,
-	'%Uint32Array%': typeof Uint32Array === 'undefined' ? undefined : Uint32Array,
-	'%URIError%': $URIError,
-	'%WeakMap%': typeof WeakMap === 'undefined' ? undefined : WeakMap,
-	'%WeakRef%': typeof WeakRef === 'undefined' ? undefined : WeakRef,
-	'%WeakSet%': typeof WeakSet === 'undefined' ? undefined : WeakSet
-};
-
-if (getProto) {
-	try {
-		null.error; // eslint-disable-line no-unused-expressions
-	} catch (e) {
-		// https://github.com/tc39/proposal-shadowrealm/pull/384#issuecomment-1364264229
-		var errorProto = getProto(getProto(e));
-		INTRINSICS['%Error.prototype%'] = errorProto;
-	}
-}
-
-var doEval = function doEval(name) {
-	var value;
-	if (name === '%AsyncFunction%') {
-		value = getEvalledConstructor('async function () {}');
-	} else if (name === '%GeneratorFunction%') {
-		value = getEvalledConstructor('function* () {}');
-	} else if (name === '%AsyncGeneratorFunction%') {
-		value = getEvalledConstructor('async function* () {}');
-	} else if (name === '%AsyncGenerator%') {
-		var fn = doEval('%AsyncGeneratorFunction%');
-		if (fn) {
-			value = fn.prototype;
-		}
-	} else if (name === '%AsyncIteratorPrototype%') {
-		var gen = doEval('%AsyncGenerator%');
-		if (gen && getProto) {
-			value = getProto(gen.prototype);
-		}
-	}
-
-	INTRINSICS[name] = value;
-
-	return value;
-};
-
-var LEGACY_ALIASES = {
-	__proto__: null,
-	'%ArrayBufferPrototype%': ['ArrayBuffer', 'prototype'],
-	'%ArrayPrototype%': ['Array', 'prototype'],
-	'%ArrayProto_entries%': ['Array', 'prototype', 'entries'],
-	'%ArrayProto_forEach%': ['Array', 'prototype', 'forEach'],
-	'%ArrayProto_keys%': ['Array', 'prototype', 'keys'],
-	'%ArrayProto_values%': ['Array', 'prototype', 'values'],
-	'%AsyncFunctionPrototype%': ['AsyncFunction', 'prototype'],
-	'%AsyncGenerator%': ['AsyncGeneratorFunction', 'prototype'],
-	'%AsyncGeneratorPrototype%': ['AsyncGeneratorFunction', 'prototype', 'prototype'],
-	'%BooleanPrototype%': ['Boolean', 'prototype'],
-	'%DataViewPrototype%': ['DataView', 'prototype'],
-	'%DatePrototype%': ['Date', 'prototype'],
-	'%ErrorPrototype%': ['Error', 'prototype'],
-	'%EvalErrorPrototype%': ['EvalError', 'prototype'],
-	'%Float32ArrayPrototype%': ['Float32Array', 'prototype'],
-	'%Float64ArrayPrototype%': ['Float64Array', 'prototype'],
-	'%FunctionPrototype%': ['Function', 'prototype'],
-	'%Generator%': ['GeneratorFunction', 'prototype'],
-	'%GeneratorPrototype%': ['GeneratorFunction', 'prototype', 'prototype'],
-	'%Int8ArrayPrototype%': ['Int8Array', 'prototype'],
-	'%Int16ArrayPrototype%': ['Int16Array', 'prototype'],
-	'%Int32ArrayPrototype%': ['Int32Array', 'prototype'],
-	'%JSONParse%': ['JSON', 'parse'],
-	'%JSONStringify%': ['JSON', 'stringify'],
-	'%MapPrototype%': ['Map', 'prototype'],
-	'%NumberPrototype%': ['Number', 'prototype'],
-	'%ObjectPrototype%': ['Object', 'prototype'],
-	'%ObjProto_toString%': ['Object', 'prototype', 'toString'],
-	'%ObjProto_valueOf%': ['Object', 'prototype', 'valueOf'],
-	'%PromisePrototype%': ['Promise', 'prototype'],
-	'%PromiseProto_then%': ['Promise', 'prototype', 'then'],
-	'%Promise_all%': ['Promise', 'all'],
-	'%Promise_reject%': ['Promise', 'reject'],
-	'%Promise_resolve%': ['Promise', 'resolve'],
-	'%RangeErrorPrototype%': ['RangeError', 'prototype'],
-	'%ReferenceErrorPrototype%': ['ReferenceError', 'prototype'],
-	'%RegExpPrototype%': ['RegExp', 'prototype'],
-	'%SetPrototype%': ['Set', 'prototype'],
-	'%SharedArrayBufferPrototype%': ['SharedArrayBuffer', 'prototype'],
-	'%StringPrototype%': ['String', 'prototype'],
-	'%SymbolPrototype%': ['Symbol', 'prototype'],
-	'%SyntaxErrorPrototype%': ['SyntaxError', 'prototype'],
-	'%TypedArrayPrototype%': ['TypedArray', 'prototype'],
-	'%TypeErrorPrototype%': ['TypeError', 'prototype'],
-	'%Uint8ArrayPrototype%': ['Uint8Array', 'prototype'],
-	'%Uint8ClampedArrayPrototype%': ['Uint8ClampedArray', 'prototype'],
-	'%Uint16ArrayPrototype%': ['Uint16Array', 'prototype'],
-	'%Uint32ArrayPrototype%': ['Uint32Array', 'prototype'],
-	'%URIErrorPrototype%': ['URIError', 'prototype'],
-	'%WeakMapPrototype%': ['WeakMap', 'prototype'],
-	'%WeakSetPrototype%': ['WeakSet', 'prototype']
-};
-
-var bind = __webpack_require__(93836);
-var hasOwn = __webpack_require__(84748);
-var $concat = bind.call(Function.call, Array.prototype.concat);
-var $spliceApply = bind.call(Function.apply, Array.prototype.splice);
-var $replace = bind.call(Function.call, String.prototype.replace);
-var $strSlice = bind.call(Function.call, String.prototype.slice);
-var $exec = bind.call(Function.call, RegExp.prototype.exec);
-
-/* adapted from https://github.com/lodash/lodash/blob/4.17.15/dist/lodash.js#L6735-L6744 */
-var rePropName = /[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g;
-var reEscapeChar = /\\(\\)?/g; /** Used to match backslashes in property paths. */
-var stringToPath = function stringToPath(string) {
-	var first = $strSlice(string, 0, 1);
-	var last = $strSlice(string, -1);
-	if (first === '%' && last !== '%') {
-		throw new $SyntaxError('invalid intrinsic syntax, expected closing `%`');
-	} else if (last === '%' && first !== '%') {
-		throw new $SyntaxError('invalid intrinsic syntax, expected opening `%`');
-	}
-	var result = [];
-	$replace(string, rePropName, function (match, number, quote, subString) {
-		result[result.length] = quote ? $replace(subString, reEscapeChar, '$1') : number || match;
-	});
-	return result;
-};
-/* end adaptation */
-
-var getBaseIntrinsic = function getBaseIntrinsic(name, allowMissing) {
-	var intrinsicName = name;
-	var alias;
-	if (hasOwn(LEGACY_ALIASES, intrinsicName)) {
-		alias = LEGACY_ALIASES[intrinsicName];
-		intrinsicName = '%' + alias[0] + '%';
-	}
-
-	if (hasOwn(INTRINSICS, intrinsicName)) {
-		var value = INTRINSICS[intrinsicName];
-		if (value === needsEval) {
-			value = doEval(intrinsicName);
-		}
-		if (typeof value === 'undefined' && !allowMissing) {
-			throw new $TypeError('intrinsic ' + name + ' exists, but is not available. Please file an issue!');
-		}
-
-		return {
-			alias: alias,
-			name: intrinsicName,
-			value: value
-		};
-	}
-
-	throw new $SyntaxError('intrinsic ' + name + ' does not exist!');
-};
-
-module.exports = function GetIntrinsic(name, allowMissing) {
-	if (typeof name !== 'string' || name.length === 0) {
-		throw new $TypeError('intrinsic name must be a non-empty string');
-	}
-	if (arguments.length > 1 && typeof allowMissing !== 'boolean') {
-		throw new $TypeError('"allowMissing" argument must be a boolean');
-	}
-
-	if ($exec(/^%?[^%]*%?$/, name) === null) {
-		throw new $SyntaxError('`%` may not be present anywhere but at the beginning and end of the intrinsic name');
-	}
-	var parts = stringToPath(name);
-	var intrinsicBaseName = parts.length > 0 ? parts[0] : '';
-
-	var intrinsic = getBaseIntrinsic('%' + intrinsicBaseName + '%', allowMissing);
-	var intrinsicRealName = intrinsic.name;
-	var value = intrinsic.value;
-	var skipFurtherCaching = false;
-
-	var alias = intrinsic.alias;
-	if (alias) {
-		intrinsicBaseName = alias[0];
-		$spliceApply(parts, $concat([0, 1], alias));
-	}
-
-	for (var i = 1, isOwn = true; i < parts.length; i += 1) {
-		var part = parts[i];
-		var first = $strSlice(part, 0, 1);
-		var last = $strSlice(part, -1);
-		if (
-			(
-				(first === '"' || first === "'" || first === '`')
-				|| (last === '"' || last === "'" || last === '`')
-			)
-			&& first !== last
-		) {
-			throw new $SyntaxError('property names with quotes must have matching quotes');
-		}
-		if (part === 'constructor' || !isOwn) {
-			skipFurtherCaching = true;
-		}
-
-		intrinsicBaseName += '.' + part;
-		intrinsicRealName = '%' + intrinsicBaseName + '%';
-
-		if (hasOwn(INTRINSICS, intrinsicRealName)) {
-			value = INTRINSICS[intrinsicRealName];
-		} else if (value != null) {
-			if (!(part in value)) {
-				if (!allowMissing) {
-					throw new $TypeError('base intrinsic for ' + name + ' exists, but the property is not available.');
-				}
-				return void undefined;
-			}
-			if ($gOPD && (i + 1) >= parts.length) {
-				var desc = $gOPD(value, part);
-				isOwn = !!desc;
-
-				// By convention, when a data property is converted to an accessor
-				// property to emulate a data property that does not suffer from
-				// the override mistake, that accessor's getter is marked with
-				// an `originalValue` property. Here, when we detect this, we
-				// uphold the illusion by pretending to see that original data
-				// property, i.e., returning the value rather than the getter
-				// itself.
-				if (isOwn && 'get' in desc && !('originalValue' in desc.get)) {
-					value = desc.get;
-				} else {
-					value = value[part];
-				}
-			} else {
-				isOwn = hasOwn(value, part);
-				value = value[part];
-			}
-
-			if (isOwn && !skipFurtherCaching) {
-				INTRINSICS[intrinsicRealName] = value;
-			}
-		}
-	}
-	return value;
-};
-
-
-/***/ }),
-
-/***/ 24770:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-var GetIntrinsic = __webpack_require__(20550);
-
-var $gOPD = GetIntrinsic('%Object.getOwnPropertyDescriptor%', true);
-
-if ($gOPD) {
-	try {
-		$gOPD([], 'length');
-	} catch (e) {
-		// IE 8 has a broken gOPD
-		$gOPD = null;
-	}
-}
-
-module.exports = $gOPD;
-
-
-/***/ }),
-
-/***/ 91329:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-var $defineProperty = __webpack_require__(37126);
-
-var hasPropertyDescriptors = function hasPropertyDescriptors() {
-	return !!$defineProperty;
-};
-
-hasPropertyDescriptors.hasArrayLengthDefineBug = function hasArrayLengthDefineBug() {
-	// node v0.6 has a bug where array lengths can be Set but not Defined
-	if (!$defineProperty) {
-		return null;
-	}
-	try {
-		return $defineProperty([], 'length', { value: 1 }).length !== 1;
-	} catch (e) {
-		// In Firefox 4-22, defining length on an array throws an exception.
-		return true;
-	}
-};
-
-module.exports = hasPropertyDescriptors;
-
-
-/***/ }),
-
-/***/ 47459:
-/***/ (function(module) {
-
-"use strict";
-
-
-var test = {
-	__proto__: null,
-	foo: {}
-};
-
-// @ts-expect-error: TS errors on an inherited property for some reason
-var result = { __proto__: test }.foo === test.foo
-	&& !(test instanceof Object);
-
-/** @type {import('.')} */
-module.exports = function hasProto() {
-	return result;
-};
 
 
 /***/ }),
@@ -24209,18 +23927,15 @@ module.exports = function hasSymbols() {
 
 /***/ }),
 
-/***/ 84748:
+/***/ 82685:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
 "use strict";
 
 
-var call = Function.prototype.call;
-var $hasOwn = Object.prototype.hasOwnProperty;
 var bind = __webpack_require__(93836);
 
-/** @type {import('.')} */
-module.exports = bind.call(call, $hasOwn);
+module.exports = bind.call(Function.call, Object.prototype.hasOwnProperty);
 
 
 /***/ }),
@@ -24268,24 +23983,11 @@ var weakRefDeref = hasWeakRef ? WeakRef.prototype.deref : null;
 var booleanValueOf = Boolean.prototype.valueOf;
 var objectToString = Object.prototype.toString;
 var functionToString = Function.prototype.toString;
-var $match = String.prototype.match;
-var $slice = String.prototype.slice;
-var $replace = String.prototype.replace;
-var $toUpperCase = String.prototype.toUpperCase;
-var $toLowerCase = String.prototype.toLowerCase;
-var $test = RegExp.prototype.test;
-var $concat = Array.prototype.concat;
-var $join = Array.prototype.join;
-var $arrSlice = Array.prototype.slice;
-var $floor = Math.floor;
+var match = String.prototype.match;
 var bigIntValueOf = typeof BigInt === 'function' ? BigInt.prototype.valueOf : null;
 var gOPS = Object.getOwnPropertySymbols;
 var symToString = typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol' ? Symbol.prototype.toString : null;
 var hasShammedSymbols = typeof Symbol === 'function' && typeof Symbol.iterator === 'object';
-// ie, `has-tostringtag/shams
-var toStringTag = typeof Symbol === 'function' && Symbol.toStringTag && (typeof Symbol.toStringTag === hasShammedSymbols ? 'object' : 'symbol')
-    ? Symbol.toStringTag
-    : null;
 var isEnumerable = Object.prototype.propertyIsEnumerable;
 
 var gPO = (typeof Reflect === 'function' ? Reflect.getPrototypeOf : Object.getPrototypeOf) || (
@@ -24296,47 +23998,14 @@ var gPO = (typeof Reflect === 'function' ? Reflect.getPrototypeOf : Object.getPr
         : null
 );
 
-function addNumericSeparator(num, str) {
-    if (
-        num === Infinity
-        || num === -Infinity
-        || num !== num
-        || (num && num > -1000 && num < 1000)
-        || $test.call(/e/, str)
-    ) {
-        return str;
-    }
-    var sepRegex = /[0-9](?=(?:[0-9]{3})+(?![0-9]))/g;
-    if (typeof num === 'number') {
-        var int = num < 0 ? -$floor(-num) : $floor(num); // trunc(num)
-        if (int !== num) {
-            var intStr = String(int);
-            var dec = $slice.call(str, intStr.length + 1);
-            return $replace.call(intStr, sepRegex, '$&_') + '.' + $replace.call($replace.call(dec, /([0-9]{3})/g, '$&_'), /_$/, '');
-        }
-    }
-    return $replace.call(str, sepRegex, '$&_');
-}
-
-var utilInspect = __webpack_require__(42634);
-var inspectCustom = utilInspect.custom;
-var inspectSymbol = isSymbol(inspectCustom) ? inspectCustom : null;
-
-var quotes = {
-    __proto__: null,
-    'double': '"',
-    single: "'"
-};
-var quoteREs = {
-    __proto__: null,
-    'double': /(["\\])/g,
-    single: /(['\\])/g
-};
+var inspectCustom = (__webpack_require__(42634).custom);
+var inspectSymbol = inspectCustom && isSymbol(inspectCustom) ? inspectCustom : null;
+var toStringTag = typeof Symbol === 'function' && typeof Symbol.toStringTag !== 'undefined' ? Symbol.toStringTag : null;
 
 module.exports = function inspect_(obj, options, depth, seen) {
     var opts = options || {};
 
-    if (has(opts, 'quoteStyle') && !has(quotes, opts.quoteStyle)) {
+    if (has(opts, 'quoteStyle') && (opts.quoteStyle !== 'single' && opts.quoteStyle !== 'double')) {
         throw new TypeError('option "quoteStyle" must be "single" or "double"');
     }
     if (
@@ -24358,12 +24027,8 @@ module.exports = function inspect_(obj, options, depth, seen) {
         && opts.indent !== '\t'
         && !(parseInt(opts.indent, 10) === opts.indent && opts.indent > 0)
     ) {
-        throw new TypeError('option "indent" must be "\\t", an integer > 0, or `null`');
+        throw new TypeError('options "indent" must be "\\t", an integer > 0, or `null`');
     }
-    if (has(opts, 'numericSeparator') && typeof opts.numericSeparator !== 'boolean') {
-        throw new TypeError('option "numericSeparator", if provided, must be `true` or `false`');
-    }
-    var numericSeparator = opts.numericSeparator;
 
     if (typeof obj === 'undefined') {
         return 'undefined';
@@ -24382,12 +24047,10 @@ module.exports = function inspect_(obj, options, depth, seen) {
         if (obj === 0) {
             return Infinity / obj > 0 ? '0' : '-0';
         }
-        var str = String(obj);
-        return numericSeparator ? addNumericSeparator(obj, str) : str;
+        return String(obj);
     }
     if (typeof obj === 'bigint') {
-        var bigIntStr = String(obj) + 'n';
-        return numericSeparator ? addNumericSeparator(obj, bigIntStr) : bigIntStr;
+        return String(obj) + 'n';
     }
 
     var maxDepth = typeof opts.depth === 'undefined' ? 5 : opts.depth;
@@ -24406,7 +24069,7 @@ module.exports = function inspect_(obj, options, depth, seen) {
 
     function inspect(value, from, noIndent) {
         if (from) {
-            seen = $arrSlice.call(seen);
+            seen = seen.slice();
             seen.push(from);
         }
         if (noIndent) {
@@ -24421,24 +24084,24 @@ module.exports = function inspect_(obj, options, depth, seen) {
         return inspect_(value, opts, depth + 1, seen);
     }
 
-    if (typeof obj === 'function' && !isRegExp(obj)) { // in older engines, regexes are callable
+    if (typeof obj === 'function') {
         var name = nameOf(obj);
         var keys = arrObjKeys(obj, inspect);
-        return '[Function' + (name ? ': ' + name : ' (anonymous)') + ']' + (keys.length > 0 ? ' { ' + $join.call(keys, ', ') + ' }' : '');
+        return '[Function' + (name ? ': ' + name : ' (anonymous)') + ']' + (keys.length > 0 ? ' { ' + keys.join(', ') + ' }' : '');
     }
     if (isSymbol(obj)) {
-        var symString = hasShammedSymbols ? $replace.call(String(obj), /^(Symbol\(.*\))_[^)]*$/, '$1') : symToString.call(obj);
+        var symString = hasShammedSymbols ? String(obj).replace(/^(Symbol\(.*\))_[^)]*$/, '$1') : symToString.call(obj);
         return typeof obj === 'object' && !hasShammedSymbols ? markBoxed(symString) : symString;
     }
     if (isElement(obj)) {
-        var s = '<' + $toLowerCase.call(String(obj.nodeName));
+        var s = '<' + String(obj.nodeName).toLowerCase();
         var attrs = obj.attributes || [];
         for (var i = 0; i < attrs.length; i++) {
             s += ' ' + attrs[i].name + '=' + wrapQuotes(quote(attrs[i].value), 'double', opts);
         }
         s += '>';
         if (obj.childNodes && obj.childNodes.length) { s += '...'; }
-        s += '</' + $toLowerCase.call(String(obj.nodeName)) + '>';
+        s += '</' + String(obj.nodeName).toLowerCase() + '>';
         return s;
     }
     if (isArray(obj)) {
@@ -24447,39 +24110,32 @@ module.exports = function inspect_(obj, options, depth, seen) {
         if (indent && !singleLineValues(xs)) {
             return '[' + indentedJoin(xs, indent) + ']';
         }
-        return '[ ' + $join.call(xs, ', ') + ' ]';
+        return '[ ' + xs.join(', ') + ' ]';
     }
     if (isError(obj)) {
         var parts = arrObjKeys(obj, inspect);
-        if (!('cause' in Error.prototype) && 'cause' in obj && !isEnumerable.call(obj, 'cause')) {
-            return '{ [' + String(obj) + '] ' + $join.call($concat.call('[cause]: ' + inspect(obj.cause), parts), ', ') + ' }';
-        }
         if (parts.length === 0) { return '[' + String(obj) + ']'; }
-        return '{ [' + String(obj) + '] ' + $join.call(parts, ', ') + ' }';
+        return '{ [' + String(obj) + '] ' + parts.join(', ') + ' }';
     }
     if (typeof obj === 'object' && customInspect) {
-        if (inspectSymbol && typeof obj[inspectSymbol] === 'function' && utilInspect) {
-            return utilInspect(obj, { depth: maxDepth - depth });
+        if (inspectSymbol && typeof obj[inspectSymbol] === 'function') {
+            return obj[inspectSymbol]();
         } else if (customInspect !== 'symbol' && typeof obj.inspect === 'function') {
             return obj.inspect();
         }
     }
     if (isMap(obj)) {
         var mapParts = [];
-        if (mapForEach) {
-            mapForEach.call(obj, function (value, key) {
-                mapParts.push(inspect(key, obj, true) + ' => ' + inspect(value, obj));
-            });
-        }
+        mapForEach.call(obj, function (value, key) {
+            mapParts.push(inspect(key, obj, true) + ' => ' + inspect(value, obj));
+        });
         return collectionOf('Map', mapSize.call(obj), mapParts, indent);
     }
     if (isSet(obj)) {
         var setParts = [];
-        if (setForEach) {
-            setForEach.call(obj, function (value) {
-                setParts.push(inspect(value, obj));
-            });
-        }
+        setForEach.call(obj, function (value) {
+            setParts.push(inspect(value, obj));
+        });
         return collectionOf('Set', setSize.call(obj), setParts, indent);
     }
     if (isWeakMap(obj)) {
@@ -24503,41 +24159,29 @@ module.exports = function inspect_(obj, options, depth, seen) {
     if (isString(obj)) {
         return markBoxed(inspect(String(obj)));
     }
-    // note: in IE 8, sometimes `global !== window` but both are the prototypes of each other
-    /* eslint-env browser */
-    if (typeof window !== 'undefined' && obj === window) {
-        return '{ [object Window] }';
-    }
-    if (
-        (typeof globalThis !== 'undefined' && obj === globalThis)
-        || (typeof __webpack_require__.g !== 'undefined' && obj === __webpack_require__.g)
-    ) {
-        return '{ [object globalThis] }';
-    }
     if (!isDate(obj) && !isRegExp(obj)) {
         var ys = arrObjKeys(obj, inspect);
         var isPlainObject = gPO ? gPO(obj) === Object.prototype : obj instanceof Object || obj.constructor === Object;
         var protoTag = obj instanceof Object ? '' : 'null prototype';
-        var stringTag = !isPlainObject && toStringTag && Object(obj) === obj && toStringTag in obj ? $slice.call(toStr(obj), 8, -1) : protoTag ? 'Object' : '';
+        var stringTag = !isPlainObject && toStringTag && Object(obj) === obj && toStringTag in obj ? toStr(obj).slice(8, -1) : protoTag ? 'Object' : '';
         var constructorTag = isPlainObject || typeof obj.constructor !== 'function' ? '' : obj.constructor.name ? obj.constructor.name + ' ' : '';
-        var tag = constructorTag + (stringTag || protoTag ? '[' + $join.call($concat.call([], stringTag || [], protoTag || []), ': ') + '] ' : '');
+        var tag = constructorTag + (stringTag || protoTag ? '[' + [].concat(stringTag || [], protoTag || []).join(': ') + '] ' : '');
         if (ys.length === 0) { return tag + '{}'; }
         if (indent) {
             return tag + '{' + indentedJoin(ys, indent) + '}';
         }
-        return tag + '{ ' + $join.call(ys, ', ') + ' }';
+        return tag + '{ ' + ys.join(', ') + ' }';
     }
     return String(obj);
 };
 
 function wrapQuotes(s, defaultStyle, opts) {
-    var style = opts.quoteStyle || defaultStyle;
-    var quoteChar = quotes[style];
+    var quoteChar = (opts.quoteStyle || defaultStyle) === 'double' ? '"' : "'";
     return quoteChar + s + quoteChar;
 }
 
 function quote(s) {
-    return $replace.call(String(s), /"/g, '&quot;');
+    return String(s).replace(/"/g, '&quot;');
 }
 
 function isArray(obj) { return toStr(obj) === '[object Array]' && (!toStringTag || !(typeof obj === 'object' && toStringTag in obj)); }
@@ -24588,7 +24232,7 @@ function toStr(obj) {
 
 function nameOf(f) {
     if (f.name) { return f.name; }
-    var m = $match.call(functionToString.call(f), /^function\s*([\w$]+)/);
+    var m = match.call(functionToString.call(f), /^function\s*([\w$]+)/);
     if (m) { return m[1]; }
     return null;
 }
@@ -24688,12 +24332,10 @@ function inspectString(str, opts) {
     if (str.length > opts.maxStringLength) {
         var remaining = str.length - opts.maxStringLength;
         var trailer = '... ' + remaining + ' more character' + (remaining > 1 ? 's' : '');
-        return inspectString($slice.call(str, 0, opts.maxStringLength), opts) + trailer;
+        return inspectString(str.slice(0, opts.maxStringLength), opts) + trailer;
     }
-    var quoteRE = quoteREs[opts.quoteStyle || 'single'];
-    quoteRE.lastIndex = 0;
     // eslint-disable-next-line no-control-regex
-    var s = $replace.call($replace.call(str, quoteRE, '\\$1'), /[\x00-\x1f]/g, lowbyte);
+    var s = str.replace(/(['\\])/g, '\\$1').replace(/[\x00-\x1f]/g, lowbyte);
     return wrapQuotes(s, 'single', opts);
 }
 
@@ -24707,7 +24349,7 @@ function lowbyte(c) {
         13: 'r'
     }[n];
     if (x) { return '\\' + x; }
-    return '\\x' + (n < 0x10 ? '0' : '') + $toUpperCase.call(n.toString(16));
+    return '\\x' + (n < 0x10 ? '0' : '') + n.toString(16).toUpperCase();
 }
 
 function markBoxed(str) {
@@ -24719,7 +24361,7 @@ function weakCollectionOf(type) {
 }
 
 function collectionOf(type, size, entries, indent) {
-    var joinedEntries = indent ? indentedJoin(entries, indent) : $join.call(entries, ', ');
+    var joinedEntries = indent ? indentedJoin(entries, indent) : entries.join(', ');
     return type + ' (' + size + ') {' + joinedEntries + '}';
 }
 
@@ -24737,20 +24379,20 @@ function getIndent(opts, depth) {
     if (opts.indent === '\t') {
         baseIndent = '\t';
     } else if (typeof opts.indent === 'number' && opts.indent > 0) {
-        baseIndent = $join.call(Array(opts.indent + 1), ' ');
+        baseIndent = Array(opts.indent + 1).join(' ');
     } else {
         return null;
     }
     return {
         base: baseIndent,
-        prev: $join.call(Array(depth + 1), baseIndent)
+        prev: Array(depth + 1).join(baseIndent)
     };
 }
 
 function indentedJoin(xs, indent) {
     if (xs.length === 0) { return ''; }
     var lineJoiner = '\n' + indent.prev + indent.base;
-    return lineJoiner + $join.call(xs, ',' + lineJoiner) + '\n' + indent.prev;
+    return lineJoiner + xs.join(',' + lineJoiner) + '\n' + indent.prev;
 }
 
 function arrObjKeys(obj, inspect) {
@@ -24777,7 +24419,7 @@ function arrObjKeys(obj, inspect) {
         if (hasShammedSymbols && symMap['$' + key] instanceof Symbol) {
             // this is to prevent shammed Symbols, which are stored as strings, from being included in the string key section
             continue; // eslint-disable-line no-restricted-syntax, no-continue
-        } else if ($test.call(/[^\w$]/, key)) {
+        } else if ((/[^\w$]/).test(key)) {
             xs.push(inspect(key, obj) + ': ' + inspect(obj[key], obj));
         } else {
             xs.push(key + ': ' + inspect(obj[key], obj));
@@ -25577,24 +25219,20 @@ var isArray = Array.isArray;
 
 var defaults = {
     allowDots: false,
-    allowEmptyArrays: false,
     allowPrototypes: false,
     allowSparse: false,
     arrayLimit: 20,
     charset: 'utf-8',
     charsetSentinel: false,
     comma: false,
-    decodeDotInKeys: false,
     decoder: utils.decode,
     delimiter: '&',
     depth: 5,
-    duplicates: 'combine',
     ignoreQueryPrefix: false,
     interpretNumericEntities: false,
     parameterLimit: 1000,
     parseArrays: true,
     plainObjects: false,
-    strictDepth: false,
     strictNullHandling: false
 };
 
@@ -25623,10 +25261,8 @@ var isoSentinel = 'utf8=%26%2310003%3B'; // encodeURIComponent('&#10003;')
 var charsetSentinel = 'utf8=%E2%9C%93'; // encodeURIComponent('✓')
 
 var parseValues = function parseQueryStringValues(str, options) {
-    var obj = { __proto__: null };
-
+    var obj = {};
     var cleanStr = options.ignoreQueryPrefix ? str.replace(/^\?/, '') : str;
-    cleanStr = cleanStr.replace(/%5B/gi, '[').replace(/%5D/gi, ']');
     var limit = options.parameterLimit === Infinity ? undefined : options.parameterLimit;
     var parts = cleanStr.split(options.delimiter, limit);
     var skipIndex = -1; // Keep track of where the utf8 sentinel was found
@@ -25678,10 +25314,9 @@ var parseValues = function parseQueryStringValues(str, options) {
             val = isArray(val) ? [val] : val;
         }
 
-        var existing = has.call(obj, key);
-        if (existing && options.duplicates === 'combine') {
+        if (has.call(obj, key)) {
             obj[key] = utils.combine(obj[key], val);
-        } else if (!existing || options.duplicates === 'last') {
+        } else {
             obj[key] = val;
         }
     }
@@ -25697,27 +25332,24 @@ var parseObject = function (chain, val, options, valuesParsed) {
         var root = chain[i];
 
         if (root === '[]' && options.parseArrays) {
-            obj = options.allowEmptyArrays && (leaf === '' || (options.strictNullHandling && leaf === null))
-                ? []
-                : [].concat(leaf);
+            obj = [].concat(leaf);
         } else {
             obj = options.plainObjects ? Object.create(null) : {};
             var cleanRoot = root.charAt(0) === '[' && root.charAt(root.length - 1) === ']' ? root.slice(1, -1) : root;
-            var decodedRoot = options.decodeDotInKeys ? cleanRoot.replace(/%2E/g, '.') : cleanRoot;
-            var index = parseInt(decodedRoot, 10);
-            if (!options.parseArrays && decodedRoot === '') {
+            var index = parseInt(cleanRoot, 10);
+            if (!options.parseArrays && cleanRoot === '') {
                 obj = { 0: leaf };
             } else if (
                 !isNaN(index)
-                && root !== decodedRoot
-                && String(index) === decodedRoot
+                && root !== cleanRoot
+                && String(index) === cleanRoot
                 && index >= 0
                 && (options.parseArrays && index <= options.arrayLimit)
             ) {
                 obj = [];
                 obj[index] = leaf;
-            } else if (decodedRoot !== '__proto__') {
-                obj[decodedRoot] = leaf;
+            } else if (cleanRoot !== '__proto__') {
+                obj[cleanRoot] = leaf;
             }
         }
 
@@ -25772,12 +25404,9 @@ var parseKeys = function parseQueryStringKeys(givenKey, val, options, valuesPars
         keys.push(segment[1]);
     }
 
-    // If there's a remainder, check strictDepth option for throw, else just add whatever is left
+    // If there's a remainder, just add whatever is left
 
     if (segment) {
-        if (options.strictDepth === true) {
-            throw new RangeError('Input depth exceeded depth option of ' + options.depth + ' and strictDepth is true');
-        }
         keys.push('[' + key.slice(segment.index) + ']');
     }
 
@@ -25789,15 +25418,7 @@ var normalizeParseOptions = function normalizeParseOptions(opts) {
         return defaults;
     }
 
-    if (typeof opts.allowEmptyArrays !== 'undefined' && typeof opts.allowEmptyArrays !== 'boolean') {
-        throw new TypeError('`allowEmptyArrays` option can only be `true` or `false`, when provided');
-    }
-
-    if (typeof opts.decodeDotInKeys !== 'undefined' && typeof opts.decodeDotInKeys !== 'boolean') {
-        throw new TypeError('`decodeDotInKeys` option can only be `true` or `false`, when provided');
-    }
-
-    if (opts.decoder !== null && typeof opts.decoder !== 'undefined' && typeof opts.decoder !== 'function') {
+    if (opts.decoder !== null && opts.decoder !== undefined && typeof opts.decoder !== 'function') {
         throw new TypeError('Decoder has to be a function.');
     }
 
@@ -25806,35 +25427,23 @@ var normalizeParseOptions = function normalizeParseOptions(opts) {
     }
     var charset = typeof opts.charset === 'undefined' ? defaults.charset : opts.charset;
 
-    var duplicates = typeof opts.duplicates === 'undefined' ? defaults.duplicates : opts.duplicates;
-
-    if (duplicates !== 'combine' && duplicates !== 'first' && duplicates !== 'last') {
-        throw new TypeError('The duplicates option must be either combine, first, or last');
-    }
-
-    var allowDots = typeof opts.allowDots === 'undefined' ? opts.decodeDotInKeys === true ? true : defaults.allowDots : !!opts.allowDots;
-
     return {
-        allowDots: allowDots,
-        allowEmptyArrays: typeof opts.allowEmptyArrays === 'boolean' ? !!opts.allowEmptyArrays : defaults.allowEmptyArrays,
+        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
         allowPrototypes: typeof opts.allowPrototypes === 'boolean' ? opts.allowPrototypes : defaults.allowPrototypes,
         allowSparse: typeof opts.allowSparse === 'boolean' ? opts.allowSparse : defaults.allowSparse,
         arrayLimit: typeof opts.arrayLimit === 'number' ? opts.arrayLimit : defaults.arrayLimit,
         charset: charset,
         charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
         comma: typeof opts.comma === 'boolean' ? opts.comma : defaults.comma,
-        decodeDotInKeys: typeof opts.decodeDotInKeys === 'boolean' ? opts.decodeDotInKeys : defaults.decodeDotInKeys,
         decoder: typeof opts.decoder === 'function' ? opts.decoder : defaults.decoder,
         delimiter: typeof opts.delimiter === 'string' || utils.isRegExp(opts.delimiter) ? opts.delimiter : defaults.delimiter,
         // eslint-disable-next-line no-implicit-coercion, no-extra-parens
         depth: (typeof opts.depth === 'number' || opts.depth === false) ? +opts.depth : defaults.depth,
-        duplicates: duplicates,
         ignoreQueryPrefix: opts.ignoreQueryPrefix === true,
         interpretNumericEntities: typeof opts.interpretNumericEntities === 'boolean' ? opts.interpretNumericEntities : defaults.interpretNumericEntities,
         parameterLimit: typeof opts.parameterLimit === 'number' ? opts.parameterLimit : defaults.parameterLimit,
         parseArrays: opts.parseArrays !== false,
         plainObjects: typeof opts.plainObjects === 'boolean' ? opts.plainObjects : defaults.plainObjects,
-        strictDepth: typeof opts.strictDepth === 'boolean' ? !!opts.strictDepth : defaults.strictDepth,
         strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
     };
 };
@@ -25893,6 +25502,7 @@ var arrayPrefixGenerators = {
 };
 
 var isArray = Array.isArray;
+var split = String.prototype.split;
 var push = Array.prototype.push;
 var pushToArray = function (arr, valueOrArray) {
     push.apply(arr, isArray(valueOrArray) ? valueOrArray : [valueOrArray]);
@@ -25904,13 +25514,10 @@ var defaultFormat = formats['default'];
 var defaults = {
     addQueryPrefix: false,
     allowDots: false,
-    allowEmptyArrays: false,
-    arrayFormat: 'indices',
     charset: 'utf-8',
     charsetSentinel: false,
     delimiter: '&',
     encode: true,
-    encodeDotInKeys: false,
     encoder: utils.encode,
     encodeValuesOnly: false,
     format: defaultFormat,
@@ -25939,10 +25546,8 @@ var stringify = function stringify(
     prefix,
     generateArrayPrefix,
     commaRoundTrip,
-    allowEmptyArrays,
     strictNullHandling,
     skipNulls,
-    encodeDotInKeys,
     encoder,
     filter,
     sort,
@@ -25999,6 +25604,14 @@ var stringify = function stringify(
     if (isNonNullishPrimitive(obj) || utils.isBuffer(obj)) {
         if (encoder) {
             var keyValue = encodeValuesOnly ? prefix : encoder(prefix, defaults.encoder, charset, 'key', format);
+            if (generateArrayPrefix === 'comma' && encodeValuesOnly) {
+                var valuesArray = split.call(String(obj), ',');
+                var valuesJoined = '';
+                for (var i = 0; i < valuesArray.length; ++i) {
+                    valuesJoined += (i === 0 ? '' : ',') + formatter(encoder(valuesArray[i], defaults.encoder, charset, 'value', format));
+                }
+                return [formatter(keyValue) + (commaRoundTrip && isArray(obj) && valuesArray.length === 1 ? '[]' : '') + '=' + valuesJoined];
+            }
             return [formatter(keyValue) + '=' + formatter(encoder(obj, defaults.encoder, charset, 'value', format))];
         }
         return [formatter(prefix) + '=' + formatter(String(obj))];
@@ -26013,9 +25626,6 @@ var stringify = function stringify(
     var objKeys;
     if (generateArrayPrefix === 'comma' && isArray(obj)) {
         // we need to join elements in
-        if (encodeValuesOnly && encoder) {
-            obj = utils.maybeMap(obj, encoder);
-        }
         objKeys = [{ value: obj.length > 0 ? obj.join(',') || null : void undefined }];
     } else if (isArray(filter)) {
         objKeys = filter;
@@ -26024,13 +25634,7 @@ var stringify = function stringify(
         objKeys = sort ? keys.sort(sort) : keys;
     }
 
-    var encodedPrefix = encodeDotInKeys ? prefix.replace(/\./g, '%2E') : prefix;
-
-    var adjustedPrefix = commaRoundTrip && isArray(obj) && obj.length === 1 ? encodedPrefix + '[]' : encodedPrefix;
-
-    if (allowEmptyArrays && isArray(obj) && obj.length === 0) {
-        return adjustedPrefix + '[]';
-    }
+    var adjustedPrefix = commaRoundTrip && isArray(obj) && obj.length === 1 ? prefix + '[]' : prefix;
 
     for (var j = 0; j < objKeys.length; ++j) {
         var key = objKeys[j];
@@ -26040,10 +25644,9 @@ var stringify = function stringify(
             continue;
         }
 
-        var encodedKey = allowDots && encodeDotInKeys ? key.replace(/\./g, '%2E') : key;
         var keyPrefix = isArray(obj)
-            ? typeof generateArrayPrefix === 'function' ? generateArrayPrefix(adjustedPrefix, encodedKey) : adjustedPrefix
-            : adjustedPrefix + (allowDots ? '.' + encodedKey : '[' + encodedKey + ']');
+            ? typeof generateArrayPrefix === 'function' ? generateArrayPrefix(adjustedPrefix, key) : adjustedPrefix
+            : adjustedPrefix + (allowDots ? '.' + key : '[' + key + ']');
 
         sideChannel.set(object, step);
         var valueSideChannel = getSideChannel();
@@ -26053,11 +25656,9 @@ var stringify = function stringify(
             keyPrefix,
             generateArrayPrefix,
             commaRoundTrip,
-            allowEmptyArrays,
             strictNullHandling,
             skipNulls,
-            encodeDotInKeys,
-            generateArrayPrefix === 'comma' && encodeValuesOnly && isArray(obj) ? null : encoder,
+            encoder,
             filter,
             sort,
             allowDots,
@@ -26076,14 +25677,6 @@ var stringify = function stringify(
 var normalizeStringifyOptions = function normalizeStringifyOptions(opts) {
     if (!opts) {
         return defaults;
-    }
-
-    if (typeof opts.allowEmptyArrays !== 'undefined' && typeof opts.allowEmptyArrays !== 'boolean') {
-        throw new TypeError('`allowEmptyArrays` option can only be `true` or `false`, when provided');
-    }
-
-    if (typeof opts.encodeDotInKeys !== 'undefined' && typeof opts.encodeDotInKeys !== 'boolean') {
-        throw new TypeError('`encodeDotInKeys` option can only be `true` or `false`, when provided');
     }
 
     if (opts.encoder !== null && typeof opts.encoder !== 'undefined' && typeof opts.encoder !== 'function') {
@@ -26109,32 +25702,13 @@ var normalizeStringifyOptions = function normalizeStringifyOptions(opts) {
         filter = opts.filter;
     }
 
-    var arrayFormat;
-    if (opts.arrayFormat in arrayPrefixGenerators) {
-        arrayFormat = opts.arrayFormat;
-    } else if ('indices' in opts) {
-        arrayFormat = opts.indices ? 'indices' : 'repeat';
-    } else {
-        arrayFormat = defaults.arrayFormat;
-    }
-
-    if ('commaRoundTrip' in opts && typeof opts.commaRoundTrip !== 'boolean') {
-        throw new TypeError('`commaRoundTrip` must be a boolean, or absent');
-    }
-
-    var allowDots = typeof opts.allowDots === 'undefined' ? opts.encodeDotInKeys === true ? true : defaults.allowDots : !!opts.allowDots;
-
     return {
         addQueryPrefix: typeof opts.addQueryPrefix === 'boolean' ? opts.addQueryPrefix : defaults.addQueryPrefix,
-        allowDots: allowDots,
-        allowEmptyArrays: typeof opts.allowEmptyArrays === 'boolean' ? !!opts.allowEmptyArrays : defaults.allowEmptyArrays,
-        arrayFormat: arrayFormat,
+        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
         charset: charset,
         charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
-        commaRoundTrip: opts.commaRoundTrip,
         delimiter: typeof opts.delimiter === 'undefined' ? defaults.delimiter : opts.delimiter,
         encode: typeof opts.encode === 'boolean' ? opts.encode : defaults.encode,
-        encodeDotInKeys: typeof opts.encodeDotInKeys === 'boolean' ? opts.encodeDotInKeys : defaults.encodeDotInKeys,
         encoder: typeof opts.encoder === 'function' ? opts.encoder : defaults.encoder,
         encodeValuesOnly: typeof opts.encodeValuesOnly === 'boolean' ? opts.encodeValuesOnly : defaults.encodeValuesOnly,
         filter: filter,
@@ -26168,8 +25742,20 @@ module.exports = function (object, opts) {
         return '';
     }
 
-    var generateArrayPrefix = arrayPrefixGenerators[options.arrayFormat];
-    var commaRoundTrip = generateArrayPrefix === 'comma' && options.commaRoundTrip;
+    var arrayFormat;
+    if (opts && opts.arrayFormat in arrayPrefixGenerators) {
+        arrayFormat = opts.arrayFormat;
+    } else if (opts && 'indices' in opts) {
+        arrayFormat = opts.indices ? 'indices' : 'repeat';
+    } else {
+        arrayFormat = 'indices';
+    }
+
+    var generateArrayPrefix = arrayPrefixGenerators[arrayFormat];
+    if (opts && 'commaRoundTrip' in opts && typeof opts.commaRoundTrip !== 'boolean') {
+        throw new TypeError('`commaRoundTrip` must be a boolean, or absent');
+    }
+    var commaRoundTrip = generateArrayPrefix === 'comma' && opts && opts.commaRoundTrip;
 
     if (!objKeys) {
         objKeys = Object.keys(obj);
@@ -26191,10 +25777,8 @@ module.exports = function (object, opts) {
             key,
             generateArrayPrefix,
             commaRoundTrip,
-            options.allowEmptyArrays,
             options.strictNullHandling,
             options.skipNulls,
-            options.encodeDotInKeys,
             options.encode ? options.encoder : null,
             options.filter,
             options.sort,
@@ -26355,10 +25939,6 @@ var decode = function (str, decoder, charset) {
     }
 };
 
-var limit = 1024;
-
-/* eslint operator-linebreak: [2, "before"] */
-
 var encode = function encode(str, defaultEncoder, charset, kind, format) {
     // This code was originally written by Brian White (mscdex) for the io.js core querystring library.
     // It has been adapted here for stricter adherence to RFC 3986
@@ -26380,54 +25960,45 @@ var encode = function encode(str, defaultEncoder, charset, kind, format) {
     }
 
     var out = '';
-    for (var j = 0; j < string.length; j += limit) {
-        var segment = string.length >= limit ? string.slice(j, j + limit) : string;
-        var arr = [];
+    for (var i = 0; i < string.length; ++i) {
+        var c = string.charCodeAt(i);
 
-        for (var i = 0; i < segment.length; ++i) {
-            var c = segment.charCodeAt(i);
-            if (
-                c === 0x2D // -
-                || c === 0x2E // .
-                || c === 0x5F // _
-                || c === 0x7E // ~
-                || (c >= 0x30 && c <= 0x39) // 0-9
-                || (c >= 0x41 && c <= 0x5A) // a-z
-                || (c >= 0x61 && c <= 0x7A) // A-Z
-                || (format === formats.RFC1738 && (c === 0x28 || c === 0x29)) // ( )
-            ) {
-                arr[arr.length] = segment.charAt(i);
-                continue;
-            }
-
-            if (c < 0x80) {
-                arr[arr.length] = hexTable[c];
-                continue;
-            }
-
-            if (c < 0x800) {
-                arr[arr.length] = hexTable[0xC0 | (c >> 6)]
-                    + hexTable[0x80 | (c & 0x3F)];
-                continue;
-            }
-
-            if (c < 0xD800 || c >= 0xE000) {
-                arr[arr.length] = hexTable[0xE0 | (c >> 12)]
-                    + hexTable[0x80 | ((c >> 6) & 0x3F)]
-                    + hexTable[0x80 | (c & 0x3F)];
-                continue;
-            }
-
-            i += 1;
-            c = 0x10000 + (((c & 0x3FF) << 10) | (segment.charCodeAt(i) & 0x3FF));
-
-            arr[arr.length] = hexTable[0xF0 | (c >> 18)]
-                + hexTable[0x80 | ((c >> 12) & 0x3F)]
-                + hexTable[0x80 | ((c >> 6) & 0x3F)]
-                + hexTable[0x80 | (c & 0x3F)];
+        if (
+            c === 0x2D // -
+            || c === 0x2E // .
+            || c === 0x5F // _
+            || c === 0x7E // ~
+            || (c >= 0x30 && c <= 0x39) // 0-9
+            || (c >= 0x41 && c <= 0x5A) // a-z
+            || (c >= 0x61 && c <= 0x7A) // A-Z
+            || (format === formats.RFC1738 && (c === 0x28 || c === 0x29)) // ( )
+        ) {
+            out += string.charAt(i);
+            continue;
         }
 
-        out += arr.join('');
+        if (c < 0x80) {
+            out = out + hexTable[c];
+            continue;
+        }
+
+        if (c < 0x800) {
+            out = out + (hexTable[0xC0 | (c >> 6)] + hexTable[0x80 | (c & 0x3F)]);
+            continue;
+        }
+
+        if (c < 0xD800 || c >= 0xE000) {
+            out = out + (hexTable[0xE0 | (c >> 12)] + hexTable[0x80 | ((c >> 6) & 0x3F)] + hexTable[0x80 | (c & 0x3F)]);
+            continue;
+        }
+
+        i += 1;
+        c = 0x10000 + (((c & 0x3FF) << 10) | (string.charCodeAt(i) & 0x3FF));
+        /* eslint operator-linebreak: [2, "before"] */
+        out += hexTable[0xF0 | (c >> 18)]
+            + hexTable[0x80 | ((c >> 12) & 0x3F)]
+            + hexTable[0x80 | ((c >> 6) & 0x3F)]
+            + hexTable[0x80 | (c & 0x3F)];
     }
 
     return out;
@@ -43578,7 +43149,7 @@ module.exports = zipWith;
 
 /***/ }),
 
-/***/ 75612:
+/***/ 7533:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -43596,7 +43167,7 @@ __webpack_require__.d(__webpack_exports__, {
   legacy_createStore: function() { return /* binding */ legacy_createStore; }
 });
 
-;// ./node_modules/@babel/runtime/helpers/esm/typeof.js
+;// CONCATENATED MODULE: ./node_modules/redux/node_modules/@babel/runtime/helpers/esm/typeof.js
 function _typeof(obj) {
   "@babel/helpers - typeof";
 
@@ -43606,7 +43177,7 @@ function _typeof(obj) {
     return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
   }, _typeof(obj);
 }
-;// ./node_modules/@babel/runtime/helpers/esm/toPrimitive.js
+;// CONCATENATED MODULE: ./node_modules/redux/node_modules/@babel/runtime/helpers/esm/toPrimitive.js
 
 function _toPrimitive(input, hint) {
   if (_typeof(input) !== "object" || input === null) return input;
@@ -43618,14 +43189,14 @@ function _toPrimitive(input, hint) {
   }
   return (hint === "string" ? String : Number)(input);
 }
-;// ./node_modules/@babel/runtime/helpers/esm/toPropertyKey.js
+;// CONCATENATED MODULE: ./node_modules/redux/node_modules/@babel/runtime/helpers/esm/toPropertyKey.js
 
 
 function _toPropertyKey(arg) {
   var key = _toPrimitive(arg, "string");
   return _typeof(key) === "symbol" ? key : String(key);
 }
-;// ./node_modules/@babel/runtime/helpers/esm/defineProperty.js
+;// CONCATENATED MODULE: ./node_modules/redux/node_modules/@babel/runtime/helpers/esm/defineProperty.js
 
 function _defineProperty(obj, key, value) {
   key = _toPropertyKey(key);
@@ -43641,7 +43212,7 @@ function _defineProperty(obj, key, value) {
   }
   return obj;
 }
-;// ./node_modules/@babel/runtime/helpers/esm/objectSpread2.js
+;// CONCATENATED MODULE: ./node_modules/redux/node_modules/@babel/runtime/helpers/esm/objectSpread2.js
 
 function ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
@@ -43664,7 +43235,7 @@ function _objectSpread2(target) {
   }
   return target;
 }
-;// ./node_modules/redux/es/redux.js
+;// CONCATENATED MODULE: ./node_modules/redux/es/redux.js
 
 
 /**
@@ -45128,67 +44699,17 @@ try {
 
 /***/ }),
 
-/***/ 77042:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-var GetIntrinsic = __webpack_require__(20550);
-var define = __webpack_require__(84548);
-var hasDescriptors = __webpack_require__(91329)();
-var gOPD = __webpack_require__(24770);
-
-var $TypeError = __webpack_require__(7410);
-var $floor = GetIntrinsic('%Math.floor%');
-
-/** @type {import('.')} */
-module.exports = function setFunctionLength(fn, length) {
-	if (typeof fn !== 'function') {
-		throw new $TypeError('`fn` is not a function');
-	}
-	if (typeof length !== 'number' || length < 0 || length > 0xFFFFFFFF || $floor(length) !== length) {
-		throw new $TypeError('`length` must be a positive 32-bit integer');
-	}
-
-	var loose = arguments.length > 2 && !!arguments[2];
-
-	var functionLengthIsConfigurable = true;
-	var functionLengthIsWritable = true;
-	if ('length' in fn && gOPD) {
-		var desc = gOPD(fn, 'length');
-		if (desc && !desc.configurable) {
-			functionLengthIsConfigurable = false;
-		}
-		if (desc && !desc.writable) {
-			functionLengthIsWritable = false;
-		}
-	}
-
-	if (functionLengthIsConfigurable || functionLengthIsWritable || !loose) {
-		if (hasDescriptors) {
-			define(/** @type {Parameters<define>[0]} */ (fn), 'length', length, true, true);
-		} else {
-			define(/** @type {Parameters<define>[0]} */ (fn), 'length', length);
-		}
-	}
-	return fn;
-};
-
-
-/***/ }),
-
 /***/ 65457:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
 "use strict";
 
 
-var GetIntrinsic = __webpack_require__(20550);
+var GetIntrinsic = __webpack_require__(15337);
 var callBound = __webpack_require__(45480);
 var inspect = __webpack_require__(1642);
 
-var $TypeError = __webpack_require__(7410);
+var $TypeError = GetIntrinsic('%TypeError%');
 var $WeakMap = GetIntrinsic('%WeakMap%', true);
 var $Map = GetIntrinsic('%Map%', true);
 
@@ -45200,58 +44721,49 @@ var $mapSet = callBound('Map.prototype.set', true);
 var $mapHas = callBound('Map.prototype.has', true);
 
 /*
-* This function traverses the list returning the node corresponding to the given key.
-*
-* That node is also moved to the head of the list, so that if it's accessed again we don't need to traverse the whole list. By doing so, all the recently used nodes can be accessed relatively quickly.
-*/
-/** @type {import('.').listGetNode} */
+ * This function traverses the list returning the node corresponding to the
+ * given key.
+ *
+ * That node is also moved to the head of the list, so that if it's accessed
+ * again we don't need to traverse the whole list. By doing so, all the recently
+ * used nodes can be accessed relatively quickly.
+ */
 var listGetNode = function (list, key) { // eslint-disable-line consistent-return
-	/** @type {typeof list | NonNullable<(typeof list)['next']>} */
-	var prev = list;
-	/** @type {(typeof list)['next']} */
-	var curr;
-	for (; (curr = prev.next) !== null; prev = curr) {
+	for (var prev = list, curr; (curr = prev.next) !== null; prev = curr) {
 		if (curr.key === key) {
 			prev.next = curr.next;
-			// eslint-disable-next-line no-extra-parens
-			curr.next = /** @type {NonNullable<typeof list.next>} */ (list.next);
+			curr.next = list.next;
 			list.next = curr; // eslint-disable-line no-param-reassign
 			return curr;
 		}
 	}
 };
 
-/** @type {import('.').listGet} */
 var listGet = function (objects, key) {
 	var node = listGetNode(objects, key);
 	return node && node.value;
 };
-/** @type {import('.').listSet} */
 var listSet = function (objects, key, value) {
 	var node = listGetNode(objects, key);
 	if (node) {
 		node.value = value;
 	} else {
 		// Prepend the new node to the beginning of the list
-		objects.next = /** @type {import('.').ListNode<typeof value>} */ ({ // eslint-disable-line no-param-reassign, no-extra-parens
+		objects.next = { // eslint-disable-line no-param-reassign
 			key: key,
 			next: objects.next,
 			value: value
-		});
+		};
 	}
 };
-/** @type {import('.').listHas} */
 var listHas = function (objects, key) {
 	return !!listGetNode(objects, key);
 };
 
-/** @type {import('.')} */
 module.exports = function getSideChannel() {
-	/** @type {WeakMap<object, unknown>} */ var $wm;
-	/** @type {Map<object, unknown>} */ var $m;
-	/** @type {import('.').RootNode<unknown>} */ var $o;
-
-	/** @type {import('.').Channel} */
+	var $wm;
+	var $m;
+	var $o;
 	var channel = {
 		assert: function (key) {
 			if (!channel.has(key)) {
@@ -45302,7 +44814,11 @@ module.exports = function getSideChannel() {
 				$mapSet($m, key, value);
 			} else {
 				if (!$o) {
-					// Initialize the linked list as an empty node, so that we don't have to special-case handling of the first node: we can always refer to it as (previous node).next, instead of something like (list).head
+					/*
+					 * Initialize the linked list as an empty node, so that we don't have
+					 * to special-case handling of the first node: we can always refer to
+					 * it as (previous node).next, instead of something like (list).head
+					 */
 					$o = { key: {}, next: null };
 				}
 				listSet($o, key, value);
@@ -45310,6 +44826,344 @@ module.exports = function getSideChannel() {
 		}
 	};
 	return channel;
+};
+
+
+/***/ }),
+
+/***/ 15337:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var undefined;
+
+var $SyntaxError = SyntaxError;
+var $Function = Function;
+var $TypeError = TypeError;
+
+// eslint-disable-next-line consistent-return
+var getEvalledConstructor = function (expressionSyntax) {
+	try {
+		return $Function('"use strict"; return (' + expressionSyntax + ').constructor;')();
+	} catch (e) {}
+};
+
+var $gOPD = Object.getOwnPropertyDescriptor;
+if ($gOPD) {
+	try {
+		$gOPD({}, '');
+	} catch (e) {
+		$gOPD = null; // this is IE 8, which has a broken gOPD
+	}
+}
+
+var throwTypeError = function () {
+	throw new $TypeError();
+};
+var ThrowTypeError = $gOPD
+	? (function () {
+		try {
+			// eslint-disable-next-line no-unused-expressions, no-caller, no-restricted-properties
+			arguments.callee; // IE 8 does not throw here
+			return throwTypeError;
+		} catch (calleeThrows) {
+			try {
+				// IE 8 throws on Object.getOwnPropertyDescriptor(arguments, '')
+				return $gOPD(arguments, 'callee').get;
+			} catch (gOPDthrows) {
+				return throwTypeError;
+			}
+		}
+	}())
+	: throwTypeError;
+
+var hasSymbols = __webpack_require__(32856)();
+
+var getProto = Object.getPrototypeOf || function (x) { return x.__proto__; }; // eslint-disable-line no-proto
+
+var needsEval = {};
+
+var TypedArray = typeof Uint8Array === 'undefined' ? undefined : getProto(Uint8Array);
+
+var INTRINSICS = {
+	'%AggregateError%': typeof AggregateError === 'undefined' ? undefined : AggregateError,
+	'%Array%': Array,
+	'%ArrayBuffer%': typeof ArrayBuffer === 'undefined' ? undefined : ArrayBuffer,
+	'%ArrayIteratorPrototype%': hasSymbols ? getProto([][Symbol.iterator]()) : undefined,
+	'%AsyncFromSyncIteratorPrototype%': undefined,
+	'%AsyncFunction%': needsEval,
+	'%AsyncGenerator%': needsEval,
+	'%AsyncGeneratorFunction%': needsEval,
+	'%AsyncIteratorPrototype%': needsEval,
+	'%Atomics%': typeof Atomics === 'undefined' ? undefined : Atomics,
+	'%BigInt%': typeof BigInt === 'undefined' ? undefined : BigInt,
+	'%Boolean%': Boolean,
+	'%DataView%': typeof DataView === 'undefined' ? undefined : DataView,
+	'%Date%': Date,
+	'%decodeURI%': decodeURI,
+	'%decodeURIComponent%': decodeURIComponent,
+	'%encodeURI%': encodeURI,
+	'%encodeURIComponent%': encodeURIComponent,
+	'%Error%': Error,
+	'%eval%': eval, // eslint-disable-line no-eval
+	'%EvalError%': EvalError,
+	'%Float32Array%': typeof Float32Array === 'undefined' ? undefined : Float32Array,
+	'%Float64Array%': typeof Float64Array === 'undefined' ? undefined : Float64Array,
+	'%FinalizationRegistry%': typeof FinalizationRegistry === 'undefined' ? undefined : FinalizationRegistry,
+	'%Function%': $Function,
+	'%GeneratorFunction%': needsEval,
+	'%Int8Array%': typeof Int8Array === 'undefined' ? undefined : Int8Array,
+	'%Int16Array%': typeof Int16Array === 'undefined' ? undefined : Int16Array,
+	'%Int32Array%': typeof Int32Array === 'undefined' ? undefined : Int32Array,
+	'%isFinite%': isFinite,
+	'%isNaN%': isNaN,
+	'%IteratorPrototype%': hasSymbols ? getProto(getProto([][Symbol.iterator]())) : undefined,
+	'%JSON%': typeof JSON === 'object' ? JSON : undefined,
+	'%Map%': typeof Map === 'undefined' ? undefined : Map,
+	'%MapIteratorPrototype%': typeof Map === 'undefined' || !hasSymbols ? undefined : getProto(new Map()[Symbol.iterator]()),
+	'%Math%': Math,
+	'%Number%': Number,
+	'%Object%': Object,
+	'%parseFloat%': parseFloat,
+	'%parseInt%': parseInt,
+	'%Promise%': typeof Promise === 'undefined' ? undefined : Promise,
+	'%Proxy%': typeof Proxy === 'undefined' ? undefined : Proxy,
+	'%RangeError%': RangeError,
+	'%ReferenceError%': ReferenceError,
+	'%Reflect%': typeof Reflect === 'undefined' ? undefined : Reflect,
+	'%RegExp%': RegExp,
+	'%Set%': typeof Set === 'undefined' ? undefined : Set,
+	'%SetIteratorPrototype%': typeof Set === 'undefined' || !hasSymbols ? undefined : getProto(new Set()[Symbol.iterator]()),
+	'%SharedArrayBuffer%': typeof SharedArrayBuffer === 'undefined' ? undefined : SharedArrayBuffer,
+	'%String%': String,
+	'%StringIteratorPrototype%': hasSymbols ? getProto(''[Symbol.iterator]()) : undefined,
+	'%Symbol%': hasSymbols ? Symbol : undefined,
+	'%SyntaxError%': $SyntaxError,
+	'%ThrowTypeError%': ThrowTypeError,
+	'%TypedArray%': TypedArray,
+	'%TypeError%': $TypeError,
+	'%Uint8Array%': typeof Uint8Array === 'undefined' ? undefined : Uint8Array,
+	'%Uint8ClampedArray%': typeof Uint8ClampedArray === 'undefined' ? undefined : Uint8ClampedArray,
+	'%Uint16Array%': typeof Uint16Array === 'undefined' ? undefined : Uint16Array,
+	'%Uint32Array%': typeof Uint32Array === 'undefined' ? undefined : Uint32Array,
+	'%URIError%': URIError,
+	'%WeakMap%': typeof WeakMap === 'undefined' ? undefined : WeakMap,
+	'%WeakRef%': typeof WeakRef === 'undefined' ? undefined : WeakRef,
+	'%WeakSet%': typeof WeakSet === 'undefined' ? undefined : WeakSet
+};
+
+var doEval = function doEval(name) {
+	var value;
+	if (name === '%AsyncFunction%') {
+		value = getEvalledConstructor('async function () {}');
+	} else if (name === '%GeneratorFunction%') {
+		value = getEvalledConstructor('function* () {}');
+	} else if (name === '%AsyncGeneratorFunction%') {
+		value = getEvalledConstructor('async function* () {}');
+	} else if (name === '%AsyncGenerator%') {
+		var fn = doEval('%AsyncGeneratorFunction%');
+		if (fn) {
+			value = fn.prototype;
+		}
+	} else if (name === '%AsyncIteratorPrototype%') {
+		var gen = doEval('%AsyncGenerator%');
+		if (gen) {
+			value = getProto(gen.prototype);
+		}
+	}
+
+	INTRINSICS[name] = value;
+
+	return value;
+};
+
+var LEGACY_ALIASES = {
+	'%ArrayBufferPrototype%': ['ArrayBuffer', 'prototype'],
+	'%ArrayPrototype%': ['Array', 'prototype'],
+	'%ArrayProto_entries%': ['Array', 'prototype', 'entries'],
+	'%ArrayProto_forEach%': ['Array', 'prototype', 'forEach'],
+	'%ArrayProto_keys%': ['Array', 'prototype', 'keys'],
+	'%ArrayProto_values%': ['Array', 'prototype', 'values'],
+	'%AsyncFunctionPrototype%': ['AsyncFunction', 'prototype'],
+	'%AsyncGenerator%': ['AsyncGeneratorFunction', 'prototype'],
+	'%AsyncGeneratorPrototype%': ['AsyncGeneratorFunction', 'prototype', 'prototype'],
+	'%BooleanPrototype%': ['Boolean', 'prototype'],
+	'%DataViewPrototype%': ['DataView', 'prototype'],
+	'%DatePrototype%': ['Date', 'prototype'],
+	'%ErrorPrototype%': ['Error', 'prototype'],
+	'%EvalErrorPrototype%': ['EvalError', 'prototype'],
+	'%Float32ArrayPrototype%': ['Float32Array', 'prototype'],
+	'%Float64ArrayPrototype%': ['Float64Array', 'prototype'],
+	'%FunctionPrototype%': ['Function', 'prototype'],
+	'%Generator%': ['GeneratorFunction', 'prototype'],
+	'%GeneratorPrototype%': ['GeneratorFunction', 'prototype', 'prototype'],
+	'%Int8ArrayPrototype%': ['Int8Array', 'prototype'],
+	'%Int16ArrayPrototype%': ['Int16Array', 'prototype'],
+	'%Int32ArrayPrototype%': ['Int32Array', 'prototype'],
+	'%JSONParse%': ['JSON', 'parse'],
+	'%JSONStringify%': ['JSON', 'stringify'],
+	'%MapPrototype%': ['Map', 'prototype'],
+	'%NumberPrototype%': ['Number', 'prototype'],
+	'%ObjectPrototype%': ['Object', 'prototype'],
+	'%ObjProto_toString%': ['Object', 'prototype', 'toString'],
+	'%ObjProto_valueOf%': ['Object', 'prototype', 'valueOf'],
+	'%PromisePrototype%': ['Promise', 'prototype'],
+	'%PromiseProto_then%': ['Promise', 'prototype', 'then'],
+	'%Promise_all%': ['Promise', 'all'],
+	'%Promise_reject%': ['Promise', 'reject'],
+	'%Promise_resolve%': ['Promise', 'resolve'],
+	'%RangeErrorPrototype%': ['RangeError', 'prototype'],
+	'%ReferenceErrorPrototype%': ['ReferenceError', 'prototype'],
+	'%RegExpPrototype%': ['RegExp', 'prototype'],
+	'%SetPrototype%': ['Set', 'prototype'],
+	'%SharedArrayBufferPrototype%': ['SharedArrayBuffer', 'prototype'],
+	'%StringPrototype%': ['String', 'prototype'],
+	'%SymbolPrototype%': ['Symbol', 'prototype'],
+	'%SyntaxErrorPrototype%': ['SyntaxError', 'prototype'],
+	'%TypedArrayPrototype%': ['TypedArray', 'prototype'],
+	'%TypeErrorPrototype%': ['TypeError', 'prototype'],
+	'%Uint8ArrayPrototype%': ['Uint8Array', 'prototype'],
+	'%Uint8ClampedArrayPrototype%': ['Uint8ClampedArray', 'prototype'],
+	'%Uint16ArrayPrototype%': ['Uint16Array', 'prototype'],
+	'%Uint32ArrayPrototype%': ['Uint32Array', 'prototype'],
+	'%URIErrorPrototype%': ['URIError', 'prototype'],
+	'%WeakMapPrototype%': ['WeakMap', 'prototype'],
+	'%WeakSetPrototype%': ['WeakSet', 'prototype']
+};
+
+var bind = __webpack_require__(93836);
+var hasOwn = __webpack_require__(82685);
+var $concat = bind.call(Function.call, Array.prototype.concat);
+var $spliceApply = bind.call(Function.apply, Array.prototype.splice);
+var $replace = bind.call(Function.call, String.prototype.replace);
+var $strSlice = bind.call(Function.call, String.prototype.slice);
+
+/* adapted from https://github.com/lodash/lodash/blob/4.17.15/dist/lodash.js#L6735-L6744 */
+var rePropName = /[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g;
+var reEscapeChar = /\\(\\)?/g; /** Used to match backslashes in property paths. */
+var stringToPath = function stringToPath(string) {
+	var first = $strSlice(string, 0, 1);
+	var last = $strSlice(string, -1);
+	if (first === '%' && last !== '%') {
+		throw new $SyntaxError('invalid intrinsic syntax, expected closing `%`');
+	} else if (last === '%' && first !== '%') {
+		throw new $SyntaxError('invalid intrinsic syntax, expected opening `%`');
+	}
+	var result = [];
+	$replace(string, rePropName, function (match, number, quote, subString) {
+		result[result.length] = quote ? $replace(subString, reEscapeChar, '$1') : number || match;
+	});
+	return result;
+};
+/* end adaptation */
+
+var getBaseIntrinsic = function getBaseIntrinsic(name, allowMissing) {
+	var intrinsicName = name;
+	var alias;
+	if (hasOwn(LEGACY_ALIASES, intrinsicName)) {
+		alias = LEGACY_ALIASES[intrinsicName];
+		intrinsicName = '%' + alias[0] + '%';
+	}
+
+	if (hasOwn(INTRINSICS, intrinsicName)) {
+		var value = INTRINSICS[intrinsicName];
+		if (value === needsEval) {
+			value = doEval(intrinsicName);
+		}
+		if (typeof value === 'undefined' && !allowMissing) {
+			throw new $TypeError('intrinsic ' + name + ' exists, but is not available. Please file an issue!');
+		}
+
+		return {
+			alias: alias,
+			name: intrinsicName,
+			value: value
+		};
+	}
+
+	throw new $SyntaxError('intrinsic ' + name + ' does not exist!');
+};
+
+module.exports = function GetIntrinsic(name, allowMissing) {
+	if (typeof name !== 'string' || name.length === 0) {
+		throw new $TypeError('intrinsic name must be a non-empty string');
+	}
+	if (arguments.length > 1 && typeof allowMissing !== 'boolean') {
+		throw new $TypeError('"allowMissing" argument must be a boolean');
+	}
+
+	var parts = stringToPath(name);
+	var intrinsicBaseName = parts.length > 0 ? parts[0] : '';
+
+	var intrinsic = getBaseIntrinsic('%' + intrinsicBaseName + '%', allowMissing);
+	var intrinsicRealName = intrinsic.name;
+	var value = intrinsic.value;
+	var skipFurtherCaching = false;
+
+	var alias = intrinsic.alias;
+	if (alias) {
+		intrinsicBaseName = alias[0];
+		$spliceApply(parts, $concat([0, 1], alias));
+	}
+
+	for (var i = 1, isOwn = true; i < parts.length; i += 1) {
+		var part = parts[i];
+		var first = $strSlice(part, 0, 1);
+		var last = $strSlice(part, -1);
+		if (
+			(
+				(first === '"' || first === "'" || first === '`')
+				|| (last === '"' || last === "'" || last === '`')
+			)
+			&& first !== last
+		) {
+			throw new $SyntaxError('property names with quotes must have matching quotes');
+		}
+		if (part === 'constructor' || !isOwn) {
+			skipFurtherCaching = true;
+		}
+
+		intrinsicBaseName += '.' + part;
+		intrinsicRealName = '%' + intrinsicBaseName + '%';
+
+		if (hasOwn(INTRINSICS, intrinsicRealName)) {
+			value = INTRINSICS[intrinsicRealName];
+		} else if (value != null) {
+			if (!(part in value)) {
+				if (!allowMissing) {
+					throw new $TypeError('base intrinsic for ' + name + ' exists, but the property is not available.');
+				}
+				return void undefined;
+			}
+			if ($gOPD && (i + 1) >= parts.length) {
+				var desc = $gOPD(value, part);
+				isOwn = !!desc;
+
+				// By convention, when a data property is converted to an accessor
+				// property to emulate a data property that does not suffer from
+				// the override mistake, that accessor's getter is marked with
+				// an `originalValue` property. Here, when we detect this, we
+				// uphold the illusion by pretending to see that original data
+				// property, i.e., returning the value rather than the getter
+				// itself.
+				if (isOwn && 'get' in desc && !('originalValue' in desc.get)) {
+					value = desc.get;
+				} else {
+					value = value[part];
+				}
+			} else {
+				isOwn = hasOwn(value, part);
+				value = value[part];
+			}
+
+			if (isOwn && !skipFurtherCaching) {
+				INTRINSICS[intrinsicRealName] = value;
+			}
+		}
+	}
+	return value;
 };
 
 
@@ -45354,6 +45208,102 @@ function template(string) {
         }
     })
 }
+
+
+/***/ }),
+
+/***/ 22713:
+/***/ (function(module) {
+
+
+/**
+ * When source maps are enabled, `style-loader` uses a link element with a data-uri to
+ * embed the css on the page. This breaks all relative urls because now they are relative to a
+ * bundle instead of the current page.
+ *
+ * One solution is to only use full urls, but that may be impossible.
+ *
+ * Instead, this function "fixes" the relative urls to be absolute according to the current page location.
+ *
+ * A rudimentary test suite is located at `test/fixUrls.js` and can be run via the `npm test` command.
+ *
+ */
+
+module.exports = function (css) {
+  // get current location
+  var location = typeof window !== "undefined" && window.location;
+
+  if (!location) {
+    throw new Error("fixUrls requires window.location");
+  }
+
+	// blank or null?
+	if (!css || typeof css !== "string") {
+	  return css;
+  }
+
+  var baseUrl = location.protocol + "//" + location.host;
+  var currentDir = baseUrl + location.pathname.replace(/\/[^\/]*$/, "/");
+
+	// convert each url(...)
+	/*
+	This regular expression is just a way to recursively match brackets within
+	a string.
+
+	 /url\s*\(  = Match on the word "url" with any whitespace after it and then a parens
+	   (  = Start a capturing group
+	     (?:  = Start a non-capturing group
+	         [^)(]  = Match anything that isn't a parentheses
+	         |  = OR
+	         \(  = Match a start parentheses
+	             (?:  = Start another non-capturing groups
+	                 [^)(]+  = Match anything that isn't a parentheses
+	                 |  = OR
+	                 \(  = Match a start parentheses
+	                     [^)(]*  = Match anything that isn't a parentheses
+	                 \)  = Match a end parentheses
+	             )  = End Group
+              *\) = Match anything and then a close parens
+          )  = Close non-capturing group
+          *  = Match anything
+       )  = Close capturing group
+	 \)  = Match a close parens
+
+	 /gi  = Get all matches, not the first.  Be case insensitive.
+	 */
+	var fixedCss = css.replace(/url\s*\(((?:[^)(]|\((?:[^)(]+|\([^)(]*\))*\))*)\)/gi, function(fullMatch, origUrl) {
+		// strip quotes (if they exist)
+		var unquotedOrigUrl = origUrl
+			.trim()
+			.replace(/^"(.*)"$/, function(o, $1){ return $1; })
+			.replace(/^'(.*)'$/, function(o, $1){ return $1; });
+
+		// already a full url? no change
+		if (/^(#|data:|http:\/\/|https:\/\/|file:\/\/\/|\s*$)/i.test(unquotedOrigUrl)) {
+		  return fullMatch;
+		}
+
+		// convert the url to a full url
+		var newUrl;
+
+		if (unquotedOrigUrl.indexOf("//") === 0) {
+		  	//TODO: should we add protocol?
+			newUrl = unquotedOrigUrl;
+		} else if (unquotedOrigUrl.indexOf("/") === 0) {
+			// path should be relative to the base url
+			newUrl = baseUrl + unquotedOrigUrl; // already starts with '/'
+		} else {
+			// path should be relative to current directory
+			newUrl = currentDir + unquotedOrigUrl.replace(/^\.\//, ""); // Strip leading './'
+		}
+
+		// send back the fixed url(...)
+		return "url(" + JSON.stringify(newUrl) + ")";
+	});
+
+	// send back the fixed css
+	return fixedCss;
+};
 
 
 /***/ }),
@@ -46363,258 +46313,434 @@ module.exports = v4;
 
 /***/ }),
 
-/***/ 85072:
-/***/ (function(module) {
-
-"use strict";
-
-
-var stylesInDOM = [];
-function getIndexByIdentifier(identifier) {
-  var result = -1;
-  for (var i = 0; i < stylesInDOM.length; i++) {
-    if (stylesInDOM[i].identifier === identifier) {
-      result = i;
-      break;
-    }
-  }
-  return result;
-}
-function modulesToDom(list, options) {
-  var idCountMap = {};
-  var identifiers = [];
-  for (var i = 0; i < list.length; i++) {
-    var item = list[i];
-    var id = options.base ? item[0] + options.base : item[0];
-    var count = idCountMap[id] || 0;
-    var identifier = "".concat(id, " ").concat(count);
-    idCountMap[id] = count + 1;
-    var indexByIdentifier = getIndexByIdentifier(identifier);
-    var obj = {
-      css: item[1],
-      media: item[2],
-      sourceMap: item[3],
-      supports: item[4],
-      layer: item[5]
-    };
-    if (indexByIdentifier !== -1) {
-      stylesInDOM[indexByIdentifier].references++;
-      stylesInDOM[indexByIdentifier].updater(obj);
-    } else {
-      var updater = addElementStyle(obj, options);
-      options.byIndex = i;
-      stylesInDOM.splice(i, 0, {
-        identifier: identifier,
-        updater: updater,
-        references: 1
-      });
-    }
-    identifiers.push(identifier);
-  }
-  return identifiers;
-}
-function addElementStyle(obj, options) {
-  var api = options.domAPI(options);
-  api.update(obj);
-  var updater = function updater(newObj) {
-    if (newObj) {
-      if (newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap && newObj.supports === obj.supports && newObj.layer === obj.layer) {
-        return;
-      }
-      api.update(obj = newObj);
-    } else {
-      api.remove();
-    }
-  };
-  return updater;
-}
-module.exports = function (list, options) {
-  options = options || {};
-  list = list || [];
-  var lastIdentifiers = modulesToDom(list, options);
-  return function update(newList) {
-    newList = newList || [];
-    for (var i = 0; i < lastIdentifiers.length; i++) {
-      var identifier = lastIdentifiers[i];
-      var index = getIndexByIdentifier(identifier);
-      stylesInDOM[index].references--;
-    }
-    var newLastIdentifiers = modulesToDom(newList, options);
-    for (var _i = 0; _i < lastIdentifiers.length; _i++) {
-      var _identifier = lastIdentifiers[_i];
-      var _index = getIndexByIdentifier(_identifier);
-      if (stylesInDOM[_index].references === 0) {
-        stylesInDOM[_index].updater();
-        stylesInDOM.splice(_index, 1);
-      }
-    }
-    lastIdentifiers = newLastIdentifiers;
-  };
-};
-
-/***/ }),
-
-/***/ 77659:
-/***/ (function(module) {
-
-"use strict";
-
-
-var memo = {};
-
-/* istanbul ignore next  */
-function getTarget(target) {
-  if (typeof memo[target] === "undefined") {
-    var styleTarget = document.querySelector(target);
-
-    // Special case to return head of iframe instead of iframe itself
-    if (window.HTMLIFrameElement && styleTarget instanceof window.HTMLIFrameElement) {
-      try {
-        // This will throw an exception if access to iframe is blocked
-        // due to cross-origin restrictions
-        styleTarget = styleTarget.contentDocument.head;
-      } catch (e) {
-        // istanbul ignore next
-        styleTarget = null;
-      }
-    }
-    memo[target] = styleTarget;
-  }
-  return memo[target];
-}
-
-/* istanbul ignore next  */
-function insertBySelector(insert, style) {
-  var target = getTarget(insert);
-  if (!target) {
-    throw new Error("Couldn't find a style target. This probably means that the value for the 'insert' parameter is invalid.");
-  }
-  target.appendChild(style);
-}
-module.exports = insertBySelector;
-
-/***/ }),
-
-/***/ 10540:
-/***/ (function(module) {
-
-"use strict";
-
-
-/* istanbul ignore next  */
-function insertStyleElement(options) {
-  var element = document.createElement("style");
-  options.setAttributes(element, options.attributes);
-  options.insert(element, options.options);
-  return element;
-}
-module.exports = insertStyleElement;
-
-/***/ }),
-
-/***/ 55056:
+/***/ 28452:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-"use strict";
+
+var content = __webpack_require__(64540);
+
+if(typeof content === 'string') content = [[module.id, content, '']];
+
+var transform;
+var insertInto;
 
 
-/* istanbul ignore next  */
-function setAttributesWithoutAttributes(styleElement) {
-  var nonce =  true ? __webpack_require__.nc : 0;
-  if (nonce) {
-    styleElement.setAttribute("nonce", nonce);
-  }
-}
-module.exports = setAttributesWithoutAttributes;
 
-/***/ }),
+var options = {"hmr":true}
 
-/***/ 97825:
-/***/ (function(module) {
+options.transform = transform
+options.insertInto = undefined;
 
-"use strict";
+var update = __webpack_require__(53027)(content, options);
 
+if(content.locals) module.exports = content.locals;
 
-/* istanbul ignore next  */
-function apply(styleElement, options, obj) {
-  var css = "";
-  if (obj.supports) {
-    css += "@supports (".concat(obj.supports, ") {");
-  }
-  if (obj.media) {
-    css += "@media ".concat(obj.media, " {");
-  }
-  var needLayer = typeof obj.layer !== "undefined";
-  if (needLayer) {
-    css += "@layer".concat(obj.layer.length > 0 ? " ".concat(obj.layer) : "", " {");
-  }
-  css += obj.css;
-  if (needLayer) {
-    css += "}";
-  }
-  if (obj.media) {
-    css += "}";
-  }
-  if (obj.supports) {
-    css += "}";
-  }
-  var sourceMap = obj.sourceMap;
-  if (sourceMap && typeof btoa !== "undefined") {
-    css += "\n/*# sourceMappingURL=data:application/json;base64,".concat(btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))), " */");
-  }
-
-  // For old IE
-  /* istanbul ignore if  */
-  options.styleTagTransform(css, styleElement, options.options);
-}
-function removeStyleElement(styleElement) {
-  // istanbul ignore if
-  if (styleElement.parentNode === null) {
-    return false;
-  }
-  styleElement.parentNode.removeChild(styleElement);
-}
-
-/* istanbul ignore next  */
-function domAPI(options) {
-  if (typeof document === "undefined") {
-    return {
-      update: function update() {},
-      remove: function remove() {}
-    };
-  }
-  var styleElement = options.insertStyleElement(options);
-  return {
-    update: function update(obj) {
-      apply(styleElement, options, obj);
-    },
-    remove: function remove() {
-      removeStyleElement(styleElement);
-    }
-  };
-}
-module.exports = domAPI;
+if(false) {}
 
 /***/ }),
 
-/***/ 41113:
-/***/ (function(module) {
+/***/ 53027:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-"use strict";
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
 
+var stylesInDom = {};
 
-/* istanbul ignore next  */
-function styleTagTransform(css, styleElement) {
-  if (styleElement.styleSheet) {
-    styleElement.styleSheet.cssText = css;
-  } else {
-    while (styleElement.firstChild) {
-      styleElement.removeChild(styleElement.firstChild);
-    }
-    styleElement.appendChild(document.createTextNode(css));
+var	memoize = function (fn) {
+	var memo;
+
+	return function () {
+		if (typeof memo === "undefined") memo = fn.apply(this, arguments);
+		return memo;
+	};
+};
+
+var isOldIE = memoize(function () {
+	// Test for IE <= 9 as proposed by Browserhacks
+	// @see http://browserhacks.com/#hack-e71d8692f65334173fee715c222cb805
+	// Tests for existence of standard globals is to allow style-loader
+	// to operate correctly into non-standard environments
+	// @see https://github.com/webpack-contrib/style-loader/issues/177
+	return window && document && document.all && !window.atob;
+});
+
+var getTarget = function (target, parent) {
+  if (parent){
+    return parent.querySelector(target);
   }
+  return document.querySelector(target);
+};
+
+var getElement = (function (fn) {
+	var memo = {};
+
+	return function(target, parent) {
+                // If passing function in options, then use it for resolve "head" element.
+                // Useful for Shadow Root style i.e
+                // {
+                //   insertInto: function () { return document.querySelector("#foo").shadowRoot }
+                // }
+                if (typeof target === 'function') {
+                        return target();
+                }
+                if (typeof memo[target] === "undefined") {
+			var styleTarget = getTarget.call(this, target, parent);
+			// Special case to return head of iframe instead of iframe itself
+			if (window.HTMLIFrameElement && styleTarget instanceof window.HTMLIFrameElement) {
+				try {
+					// This will throw an exception if access to iframe is blocked
+					// due to cross-origin restrictions
+					styleTarget = styleTarget.contentDocument.head;
+				} catch(e) {
+					styleTarget = null;
+				}
+			}
+			memo[target] = styleTarget;
+		}
+		return memo[target]
+	};
+})();
+
+var singleton = null;
+var	singletonCounter = 0;
+var	stylesInsertedAtTop = [];
+
+var	fixUrls = __webpack_require__(22713);
+
+module.exports = function(list, options) {
+	if (typeof DEBUG !== "undefined" && DEBUG) {
+		if (typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
+	}
+
+	options = options || {};
+
+	options.attrs = typeof options.attrs === "object" ? options.attrs : {};
+
+	// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+	// tags it will allow on a page
+	if (!options.singleton && typeof options.singleton !== "boolean") options.singleton = isOldIE();
+
+	// By default, add <style> tags to the <head> element
+        if (!options.insertInto) options.insertInto = "head";
+
+	// By default, add <style> tags to the bottom of the target
+	if (!options.insertAt) options.insertAt = "bottom";
+
+	var styles = listToStyles(list, options);
+
+	addStylesToDom(styles, options);
+
+	return function update (newList) {
+		var mayRemove = [];
+
+		for (var i = 0; i < styles.length; i++) {
+			var item = styles[i];
+			var domStyle = stylesInDom[item.id];
+
+			domStyle.refs--;
+			mayRemove.push(domStyle);
+		}
+
+		if(newList) {
+			var newStyles = listToStyles(newList, options);
+			addStylesToDom(newStyles, options);
+		}
+
+		for (var i = 0; i < mayRemove.length; i++) {
+			var domStyle = mayRemove[i];
+
+			if(domStyle.refs === 0) {
+				for (var j = 0; j < domStyle.parts.length; j++) domStyle.parts[j]();
+
+				delete stylesInDom[domStyle.id];
+			}
+		}
+	};
+};
+
+function addStylesToDom (styles, options) {
+	for (var i = 0; i < styles.length; i++) {
+		var item = styles[i];
+		var domStyle = stylesInDom[item.id];
+
+		if(domStyle) {
+			domStyle.refs++;
+
+			for(var j = 0; j < domStyle.parts.length; j++) {
+				domStyle.parts[j](item.parts[j]);
+			}
+
+			for(; j < item.parts.length; j++) {
+				domStyle.parts.push(addStyle(item.parts[j], options));
+			}
+		} else {
+			var parts = [];
+
+			for(var j = 0; j < item.parts.length; j++) {
+				parts.push(addStyle(item.parts[j], options));
+			}
+
+			stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
+		}
+	}
 }
-module.exports = styleTagTransform;
+
+function listToStyles (list, options) {
+	var styles = [];
+	var newStyles = {};
+
+	for (var i = 0; i < list.length; i++) {
+		var item = list[i];
+		var id = options.base ? item[0] + options.base : item[0];
+		var css = item[1];
+		var media = item[2];
+		var sourceMap = item[3];
+		var part = {css: css, media: media, sourceMap: sourceMap};
+
+		if(!newStyles[id]) styles.push(newStyles[id] = {id: id, parts: [part]});
+		else newStyles[id].parts.push(part);
+	}
+
+	return styles;
+}
+
+function insertStyleElement (options, style) {
+	var target = getElement(options.insertInto)
+
+	if (!target) {
+		throw new Error("Couldn't find a style target. This probably means that the value for the 'insertInto' parameter is invalid.");
+	}
+
+	var lastStyleElementInsertedAtTop = stylesInsertedAtTop[stylesInsertedAtTop.length - 1];
+
+	if (options.insertAt === "top") {
+		if (!lastStyleElementInsertedAtTop) {
+			target.insertBefore(style, target.firstChild);
+		} else if (lastStyleElementInsertedAtTop.nextSibling) {
+			target.insertBefore(style, lastStyleElementInsertedAtTop.nextSibling);
+		} else {
+			target.appendChild(style);
+		}
+		stylesInsertedAtTop.push(style);
+	} else if (options.insertAt === "bottom") {
+		target.appendChild(style);
+	} else if (typeof options.insertAt === "object" && options.insertAt.before) {
+		var nextSibling = getElement(options.insertAt.before, target);
+		target.insertBefore(style, nextSibling);
+	} else {
+		throw new Error("[Style Loader]\n\n Invalid value for parameter 'insertAt' ('options.insertAt') found.\n Must be 'top', 'bottom', or Object.\n (https://github.com/webpack-contrib/style-loader#insertat)\n");
+	}
+}
+
+function removeStyleElement (style) {
+	if (style.parentNode === null) return false;
+	style.parentNode.removeChild(style);
+
+	var idx = stylesInsertedAtTop.indexOf(style);
+	if(idx >= 0) {
+		stylesInsertedAtTop.splice(idx, 1);
+	}
+}
+
+function createStyleElement (options) {
+	var style = document.createElement("style");
+
+	if(options.attrs.type === undefined) {
+		options.attrs.type = "text/css";
+	}
+
+	if(options.attrs.nonce === undefined) {
+		var nonce = getNonce();
+		if (nonce) {
+			options.attrs.nonce = nonce;
+		}
+	}
+
+	addAttrs(style, options.attrs);
+	insertStyleElement(options, style);
+
+	return style;
+}
+
+function createLinkElement (options) {
+	var link = document.createElement("link");
+
+	if(options.attrs.type === undefined) {
+		options.attrs.type = "text/css";
+	}
+	options.attrs.rel = "stylesheet";
+
+	addAttrs(link, options.attrs);
+	insertStyleElement(options, link);
+
+	return link;
+}
+
+function addAttrs (el, attrs) {
+	Object.keys(attrs).forEach(function (key) {
+		el.setAttribute(key, attrs[key]);
+	});
+}
+
+function getNonce() {
+	if (false) {}
+
+	return __webpack_require__.nc;
+}
+
+function addStyle (obj, options) {
+	var style, update, remove, result;
+
+	// If a transform function was defined, run it on the css
+	if (options.transform && obj.css) {
+	    result = typeof options.transform === 'function'
+		 ? options.transform(obj.css) 
+		 : options.transform.default(obj.css);
+
+	    if (result) {
+	    	// If transform returns a value, use that instead of the original css.
+	    	// This allows running runtime transformations on the css.
+	    	obj.css = result;
+	    } else {
+	    	// If the transform function returns a falsy value, don't add this css.
+	    	// This allows conditional loading of css
+	    	return function() {
+	    		// noop
+	    	};
+	    }
+	}
+
+	if (options.singleton) {
+		var styleIndex = singletonCounter++;
+
+		style = singleton || (singleton = createStyleElement(options));
+
+		update = applyToSingletonTag.bind(null, style, styleIndex, false);
+		remove = applyToSingletonTag.bind(null, style, styleIndex, true);
+
+	} else if (
+		obj.sourceMap &&
+		typeof URL === "function" &&
+		typeof URL.createObjectURL === "function" &&
+		typeof URL.revokeObjectURL === "function" &&
+		typeof Blob === "function" &&
+		typeof btoa === "function"
+	) {
+		style = createLinkElement(options);
+		update = updateLink.bind(null, style, options);
+		remove = function () {
+			removeStyleElement(style);
+
+			if(style.href) URL.revokeObjectURL(style.href);
+		};
+	} else {
+		style = createStyleElement(options);
+		update = applyToTag.bind(null, style);
+		remove = function () {
+			removeStyleElement(style);
+		};
+	}
+
+	update(obj);
+
+	return function updateStyle (newObj) {
+		if (newObj) {
+			if (
+				newObj.css === obj.css &&
+				newObj.media === obj.media &&
+				newObj.sourceMap === obj.sourceMap
+			) {
+				return;
+			}
+
+			update(obj = newObj);
+		} else {
+			remove();
+		}
+	};
+}
+
+var replaceText = (function () {
+	var textStore = [];
+
+	return function (index, replacement) {
+		textStore[index] = replacement;
+
+		return textStore.filter(Boolean).join('\n');
+	};
+})();
+
+function applyToSingletonTag (style, index, remove, obj) {
+	var css = remove ? "" : obj.css;
+
+	if (style.styleSheet) {
+		style.styleSheet.cssText = replaceText(index, css);
+	} else {
+		var cssNode = document.createTextNode(css);
+		var childNodes = style.childNodes;
+
+		if (childNodes[index]) style.removeChild(childNodes[index]);
+
+		if (childNodes.length) {
+			style.insertBefore(cssNode, childNodes[index]);
+		} else {
+			style.appendChild(cssNode);
+		}
+	}
+}
+
+function applyToTag (style, obj) {
+	var css = obj.css;
+	var media = obj.media;
+
+	if(media) {
+		style.setAttribute("media", media)
+	}
+
+	if(style.styleSheet) {
+		style.styleSheet.cssText = css;
+	} else {
+		while(style.firstChild) {
+			style.removeChild(style.firstChild);
+		}
+
+		style.appendChild(document.createTextNode(css));
+	}
+}
+
+function updateLink (link, options, obj) {
+	var css = obj.css;
+	var sourceMap = obj.sourceMap;
+
+	/*
+		If convertToAbsoluteUrls isn't defined, but sourcemaps are enabled
+		and there is no publicPath defined then lets turn convertToAbsoluteUrls
+		on by default.  Otherwise default to the convertToAbsoluteUrls option
+		directly
+	*/
+	var autoFixUrls = options.convertToAbsoluteUrls === undefined && sourceMap;
+
+	if (options.convertToAbsoluteUrls || autoFixUrls) {
+		css = fixUrls(css);
+	}
+
+	if (sourceMap) {
+		// http://stackoverflow.com/a/26603875
+		css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
+	}
+
+	var blob = new Blob([css], { type: "text/css" });
+
+	var oldSrc = link.href;
+
+	link.href = URL.createObjectURL(blob);
+
+	if(oldSrc) URL.revokeObjectURL(oldSrc);
+}
+
 
 /***/ }),
 
@@ -56464,7 +56590,7 @@ module.exports = /*#__PURE__*/JSON.parse('{"version":4,"country_calling_codes":{
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-// This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
 !function() {
 "use strict";
 
@@ -56473,37 +56599,16 @@ var url = __webpack_require__(48788);
 // EXTERNAL MODULE: ./node_modules/classnames/index.js
 var classnames = __webpack_require__(6860);
 var classnames_default = /*#__PURE__*/__webpack_require__.n(classnames);
+// EXTERNAL MODULE: ./node_modules/@ringcentral-integration/widgets/lib/popWindow/index.js
+var popWindow = __webpack_require__(33734);
 // EXTERNAL MODULE: ./node_modules/@ringcentral-integration/widgets/lib/AdapterCore/index.js
 var AdapterCore = __webpack_require__(27461);
 // EXTERNAL MODULE: ./node_modules/@ringcentral-integration/utils/index.js
 var utils = __webpack_require__(48042);
-;// ./src/lib/popWindow.ts
-function popWindow(url, id, w, h) {
-  if (url.indexOf('javascript') > 0) {
-    throw new Error('Invalid window open url');
-  }
-  // Fixes dual-screen position                         Most browsers      Firefox
-  const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screen.left;
-  const dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screen.top;
-  const width = window.screen.width || window.outerWidth;
-  const height = window.screen.height || window.innerHeight;
-  const left = width / 2 - w / 2 + dualScreenLeft;
-  const top = height / 2 - h / 2 + dualScreenTop;
-  const newWindow = window.open(url, id, `scrollbars=yes, width=${w}, height=${h}, top=${top}, left=${left}`);
-
-  // Puts focus on the newWindow
-  try {
-    newWindow === null || newWindow === void 0 || newWindow.focus();
-  } catch (error) {
-    /* ignore error */
-  }
-  return newWindow;
-}
-/* harmony default export */ var lib_popWindow = (popWindow);
 // EXTERNAL MODULE: ./node_modules/qs/lib/index.js
 var lib = __webpack_require__(47136);
 var lib_default = /*#__PURE__*/__webpack_require__.n(lib);
-;// ./src/lib/parseUri.js
+;// CONCATENATED MODULE: ./src/lib/parseUri.js
 
 
 function parseCallbackUri(callbackUri) {
@@ -56530,7 +56635,7 @@ function parseCallbackUri(callbackUri) {
 var ObjectMap = __webpack_require__(69742);
 // EXTERNAL MODULE: ./node_modules/@ringcentral-integration/widgets/lib/AdapterCore/baseMessageTypes.js
 var baseMessageTypes = __webpack_require__(13080);
-;// ./src/lib/Adapter/messageTypes.js
+;// CONCATENATED MODULE: ./src/lib/Adapter/messageTypes.js
 
 
 const messageTypes = ObjectMap.ObjectMap.prefixKeys([...ObjectMap.ObjectMap.keys(baseMessageTypes["default"]), 'syncPresence'], 'rc-adapter');
@@ -56538,7 +56643,7 @@ const messageTypes = ObjectMap.ObjectMap.prefixKeys([...ObjectMap.ObjectMap.keys
 // EXTERNAL MODULE: ./node_modules/uuid/index.js
 var uuid = __webpack_require__(62811);
 var uuid_default = /*#__PURE__*/__webpack_require__.n(uuid);
-;// ./src/lib/requestWithPostMessage.js
+;// CONCATENATED MODULE: ./src/lib/requestWithPostMessage.js
 
 function requestWithPostMessage(path, body) {
   let timeout = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 3000;
@@ -56568,54 +56673,10 @@ function requestWithPostMessage(path, body) {
     window.addEventListener('message', responseFunc);
   });
 }
-// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js
-var injectStylesIntoStyleTag = __webpack_require__(85072);
-var injectStylesIntoStyleTag_default = /*#__PURE__*/__webpack_require__.n(injectStylesIntoStyleTag);
-// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/styleDomAPI.js
-var styleDomAPI = __webpack_require__(97825);
-var styleDomAPI_default = /*#__PURE__*/__webpack_require__.n(styleDomAPI);
-// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/insertBySelector.js
-var insertBySelector = __webpack_require__(77659);
-var insertBySelector_default = /*#__PURE__*/__webpack_require__.n(insertBySelector);
-// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/setAttributesWithoutAttributes.js
-var setAttributesWithoutAttributes = __webpack_require__(55056);
-var setAttributesWithoutAttributes_default = /*#__PURE__*/__webpack_require__.n(setAttributesWithoutAttributes);
-// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/insertStyleElement.js
-var insertStyleElement = __webpack_require__(10540);
-var insertStyleElement_default = /*#__PURE__*/__webpack_require__.n(insertStyleElement);
-// EXTERNAL MODULE: ./node_modules/style-loader/dist/runtime/styleTagTransform.js
-var styleTagTransform = __webpack_require__(41113);
-var styleTagTransform_default = /*#__PURE__*/__webpack_require__.n(styleTagTransform);
-// EXTERNAL MODULE: ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[9].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[9].use[2]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[9].use[3]!./src/lib/Adapter/styles.scss
-var styles = __webpack_require__(8741);
-;// ./src/lib/Adapter/styles.scss
-
-      
-      
-      
-      
-      
-      
-      
-      
-      
-
-var options = {};
-
-options.styleTagTransform = (styleTagTransform_default());
-options.setAttributes = (setAttributesWithoutAttributes_default());
-options.insert = insertBySelector_default().bind(null, "head");
-options.domAPI = (styleDomAPI_default());
-options.insertStyleElement = (insertStyleElement_default());
-
-var update = injectStylesIntoStyleTag_default()(styles/* default */.A, options);
-
-
-
-
-       /* harmony default export */ var Adapter_styles = (styles/* default */.A && styles/* default */.A.locals ? styles/* default */.A.locals : undefined);
-
-;// ./src/lib/notification.js
+// EXTERNAL MODULE: ./src/lib/Adapter/styles.scss
+var styles = __webpack_require__(28452);
+var styles_default = /*#__PURE__*/__webpack_require__.n(styles);
+;// CONCATENATED MODULE: ./src/lib/notification.js
 class Notification {
   constructor() {
     this._enableNotification = false;
@@ -56662,11 +56723,11 @@ class Notification {
     return window.Notification;
   }
 }
-;// ./src/assets/images/popup.svg?urlLoader
-var popupurlLoader_namespaceObject = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iOXB4IiBoZWlnaHQ9IjhweCIgdmlld0JveD0iMCAwIDkgOCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4KICAgIDx0aXRsZT5Qb3BvdXQ8L3RpdGxlPgogICAgPGRlZnM+PC9kZWZzPgogICAgPGcgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICAgICAgICA8ZyBpZD0iR3JvdXAtOSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMS4wMDAwMDAsIC0wLjE0ODc3MCkiIHN0cm9rZT0iIzg4ODg4OCI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik03LjM1MSwwLjY0ODcgTDMuMDgsNC45MTk3IiBpZD0iU3Ryb2tlLTUiPjwvcGF0aD4KICAgICAgICAgICAgPHBhdGggZD0iTTIuNjk2NywwLjk3MTkgTDEuMTEyNywwLjk3MTkgQzAuNzc0NywwLjk3MTkgMC40OTk3LDEuMjQ1OSAwLjQ5OTcsMS41ODM5IEwwLjQ5OTcsNi44ODc5IEMwLjQ5OTcsNy4yMjU5IDAuNzc0Nyw3LjQ5OTkgMS4xMTI3LDcuNDk5OSBMNi40MTU3LDcuNDk5OSBDNi43NTQ3LDcuNDk5OSA3LjAyODcsNy4yMjU5IDcuMDI4Nyw2Ljg4NzkgTDcuMDI4Nyw1LjMwMjkiIGlkPSJTdHJva2UtNyI+PC9wYXRoPgogICAgICAgICAgICA8cG9seWxpbmUgaWQ9IlN0cm9rZS0yIiBwb2ludHM9IjQuNjg4OSAwLjY0ODcgNy4zNTA5IDAuNjQ4NyA3LjM1MDkgMy4zMTA3Ij48L3BvbHlsaW5lPgogICAgICAgIDwvZz4KICAgIDwvZz4KPC9zdmc+Cg==";
-;// ./src/assets/images/help.svg?urlLoader
-var helpurlLoader_namespaceObject = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB2aWV3Qm94PSIwIDAgMzIgMzIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgY2xhc3M9InNjLWVDSW1QYiBmVExzRUgiPgogIDxwYXRoIGZpbGw9IiMyNTU5RTQiIGQ9Ik0xNiAyYzcuNzMyIDAgMTQgNi4yNjggMTQgMTRzLTYuMjY4IDE0LTE0IDE0UzIgMjMuNzMyIDIgMTYgOC4yNjggMiAxNiAyem0tLjQyIDE4Ljc1Yy0uMjEzIDAtLjQxMy4wNC0uNi4xMnMtLjM0OC4xODctLjQ4NS4zMi0uMjQzLjI5My0uMzIuNDgtLjExNS4zODMtLjExNS41OWMwIC4yMTMuMDM4LjQxMi4xMTUuNTk1cy4xODMuMzQyLjMyLjQ3NWExLjU2IDEuNTYgMCAwIDAgMS4wODUuNDMgMS41MzIgMS41MzIgMCAwIDAgMS4wNy0uNDNjLjEzMy0uMTMzLjI0LS4yOTIuMzItLjQ3NXMuMTItLjM4Mi4xMi0uNTk1YzAtLjIwNy0uMDQtLjQwMy0uMTItLjU5cy0uMTg3LS4zNDctLjMyLS40OC0uMjkzLS4yNC0uNDgtLjMyLS4zODMtLjEyLS41OS0uMTJ6TTE2IDljLS40MjcgMC0uODIzLjAzOC0xLjE5LjExNXMtLjcwNy4xODItMS4wMi4zMTVjLS4zMTMuMTMzLS42MDUuMjktLjg3NS40N3MtLjUxOC4zNy0uNzQ1LjU3bC43IDEuMTFjLjEwOC4xNDcuMjY0LjIyLjQ3LjIyLjEgMCAuMjEzLS4wNDIuMzQtLjEyNXMuMjgyLS4xNzcuNDY1LS4yOGMuMTgzLS4xMDMuNDA3LS4xOTcuNjctLjI4cy41ODUtLjEyNS45NjUtLjEyNWMuMjYgMCAuNTAyLjAzNy43MjUuMTFzLjQxNS4xNzguNTc1LjMxNWMuMTYuMTM3LjI4NS4zLjM3NS40OXMuMTM1LjQwNS4xMzUuNjQ1YzAgLjM2LS4wNzMuNjczLS4yMi45NHMtLjMzLjUwNS0uNTUuNzE1Yy0uMjIuMjEtLjQ1Ny40MDUtLjcxLjU4NXMtLjQ5LjM2NS0uNzEuNTU1Yy0uMjIuMTktLjQwMy4zOTMtLjU1LjYxcy0uMjIuNDcyLS4yMi43NjVsLjAwMi4xMjQuMDA4LjA0Ni4xNyAxLjYzaDEuNjlsLjIzLTEuNDYuMDI4LS4xMjVjLjA0OS0uMTY0LjE0MS0uMzE0LjI3Ny0uNDUuMTctLjE3LjM3Mi0uMzQzLjYwNS0uNTJsLjc0LS41NjVjLjI2LS4yLjUwMi0uNDM3LjcyNS0uNzFzLjQwOC0uNTk1LjU1NS0uOTY1LjIyLS44MDguMjItMS4zMTVjMC0uNTItLjA5My0uOTktLjI4LTEuNDFzLS40NS0uNzc4LS43OS0xLjA3NWMtLjM0LS4yOTctLjc0OC0uNTI1LTEuMjI1LS42ODVTMTYuNTggOSAxNiA5eiI+PC9wYXRoPgo8L3N2Zz4K";
-;// ./src/lib/Adapter/index.js
+;// CONCATENATED MODULE: ./node_modules/url-loader/dist/cjs.js!./src/assets/images/popup.svg
+/* harmony default export */ var popup = ("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iOXB4IiBoZWlnaHQ9IjhweCIgdmlld0JveD0iMCAwIDkgOCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4KICAgIDx0aXRsZT5Qb3BvdXQ8L3RpdGxlPgogICAgPGRlZnM+PC9kZWZzPgogICAgPGcgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICAgICAgICA8ZyBpZD0iR3JvdXAtOSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMS4wMDAwMDAsIC0wLjE0ODc3MCkiIHN0cm9rZT0iIzg4ODg4OCI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik03LjM1MSwwLjY0ODcgTDMuMDgsNC45MTk3IiBpZD0iU3Ryb2tlLTUiPjwvcGF0aD4KICAgICAgICAgICAgPHBhdGggZD0iTTIuNjk2NywwLjk3MTkgTDEuMTEyNywwLjk3MTkgQzAuNzc0NywwLjk3MTkgMC40OTk3LDEuMjQ1OSAwLjQ5OTcsMS41ODM5IEwwLjQ5OTcsNi44ODc5IEMwLjQ5OTcsNy4yMjU5IDAuNzc0Nyw3LjQ5OTkgMS4xMTI3LDcuNDk5OSBMNi40MTU3LDcuNDk5OSBDNi43NTQ3LDcuNDk5OSA3LjAyODcsNy4yMjU5IDcuMDI4Nyw2Ljg4NzkgTDcuMDI4Nyw1LjMwMjkiIGlkPSJTdHJva2UtNyI+PC9wYXRoPgogICAgICAgICAgICA8cG9seWxpbmUgaWQ9IlN0cm9rZS0yIiBwb2ludHM9IjQuNjg4OSAwLjY0ODcgNy4zNTA5IDAuNjQ4NyA3LjM1MDkgMy4zMTA3Ij48L3BvbHlsaW5lPgogICAgICAgIDwvZz4KICAgIDwvZz4KPC9zdmc+Cg==");
+;// CONCATENATED MODULE: ./node_modules/url-loader/dist/cjs.js!./src/assets/images/help.svg
+/* harmony default export */ var help = ("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB2aWV3Qm94PSIwIDAgMzIgMzIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgY2xhc3M9InNjLWVDSW1QYiBmVExzRUgiPgogIDxwYXRoIGZpbGw9IiMyNTU5RTQiIGQ9Ik0xNiAyYzcuNzMyIDAgMTQgNi4yNjggMTQgMTRzLTYuMjY4IDE0LTE0IDE0UzIgMjMuNzMyIDIgMTYgOC4yNjggMiAxNiAyem0tLjQyIDE4Ljc1Yy0uMjEzIDAtLjQxMy4wNC0uNi4xMnMtLjM0OC4xODctLjQ4NS4zMi0uMjQzLjI5My0uMzIuNDgtLjExNS4zODMtLjExNS41OWMwIC4yMTMuMDM4LjQxMi4xMTUuNTk1cy4xODMuMzQyLjMyLjQ3NWExLjU2IDEuNTYgMCAwIDAgMS4wODUuNDMgMS41MzIgMS41MzIgMCAwIDAgMS4wNy0uNDNjLjEzMy0uMTMzLjI0LS4yOTIuMzItLjQ3NXMuMTItLjM4Mi4xMi0uNTk1YzAtLjIwNy0uMDQtLjQwMy0uMTItLjU5cy0uMTg3LS4zNDctLjMyLS40OC0uMjkzLS4yNC0uNDgtLjMyLS4zODMtLjEyLS41OS0uMTJ6TTE2IDljLS40MjcgMC0uODIzLjAzOC0xLjE5LjExNXMtLjcwNy4xODItMS4wMi4zMTVjLS4zMTMuMTMzLS42MDUuMjktLjg3NS40N3MtLjUxOC4zNy0uNzQ1LjU3bC43IDEuMTFjLjEwOC4xNDcuMjY0LjIyLjQ3LjIyLjEgMCAuMjEzLS4wNDIuMzQtLjEyNXMuMjgyLS4xNzcuNDY1LS4yOGMuMTgzLS4xMDMuNDA3LS4xOTcuNjctLjI4cy41ODUtLjEyNS45NjUtLjEyNWMuMjYgMCAuNTAyLjAzNy43MjUuMTFzLjQxNS4xNzguNTc1LjMxNWMuMTYuMTM3LjI4NS4zLjM3NS40OXMuMTM1LjQwNS4xMzUuNjQ1YzAgLjM2LS4wNzMuNjczLS4yMi45NHMtLjMzLjUwNS0uNTUuNzE1Yy0uMjIuMjEtLjQ1Ny40MDUtLjcxLjU4NXMtLjQ5LjM2NS0uNzEuNTU1Yy0uMjIuMTktLjQwMy4zOTMtLjU1LjYxcy0uMjIuNDcyLS4yMi43NjVsLjAwMi4xMjQuMDA4LjA0Ni4xNyAxLjYzaDEuNjlsLjIzLTEuNDYuMDI4LS4xMjVjLjA0OS0uMTY0LjE0MS0uMzE0LjI3Ny0uNDUuMTctLjE3LjM3Mi0uMzQzLjYwNS0uNTJsLjc0LS41NjVjLjI2LS4yLjUwMi0uNDM3LjcyNS0uNzFzLjQwOC0uNTk1LjU1NS0uOTY1LjIyLS44MDguMjItMS4zMTVjMC0uNTItLjA5My0uOTktLjI4LTEuNDFzLS40NS0uNzc4LS43OS0xLjA3NWMtLjM0LS4yOTctLjc0OC0uNTI1LTEuMjI1LS42ODVTMTYuNTggOSAxNiA5eiI+PC9wYXRoPgo8L3N2Zz4K");
+;// CONCATENATED MODULE: ./src/lib/Adapter/index.js
 
 
 
@@ -56705,12 +56766,12 @@ class Adapter extends AdapterCore/* default */.A {
     } = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     const container = document.createElement('div');
     container.id = prefix;
-    container.setAttribute('class', classnames_default()(Adapter_styles.root, Adapter_styles.loading));
+    container.setAttribute('class', classnames_default()((styles_default()).root, (styles_default()).loading));
     container.draggable = false;
     super({
       prefix,
       container,
-      styles: Adapter_styles,
+      styles: (styles_default()),
       messageTypes: Adapter_messageTypes,
       defaultDirection
     });
@@ -56724,7 +56785,6 @@ class Adapter extends AdapterCore/* default */.A {
     this._disableMinimize = disableMinimize;
     this._showFeedbackAtHead = false;
     this._strings = {};
-    this._theme = 'light';
     this._generateContentDOM();
     const styleList = document.querySelectorAll('style');
     for (let i = 0; i < styleList.length; ++i) {
@@ -56859,7 +56919,7 @@ class Adapter extends AdapterCore/* default */.A {
           console.log(data.calls);
           break;
         case 'rc-login-status-notify':
-          console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode, data.admin, data.features);
+          console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
           break;
         case 'rc-calling-settings-notify':
           console.log('rc-calling-settings-notify:', data.callWith, data.callingMode);
@@ -56905,9 +56965,6 @@ class Adapter extends AdapterCore/* default */.A {
             this._setIconUrl(data.iconUri);
           }
           break;
-        case 'rc-adapter-theme-notify':
-          this._setTheme(data.theme);
-          break;
         default:
           super._onMessage(data);
           break;
@@ -56932,12 +56989,12 @@ class Adapter extends AdapterCore/* default */.A {
         <div class="${this._styles.buttons}">
           <div class="${this._styles.button} ${this._styles.feedback}">
             <div class="${this._styles.feedbackIcon}" title="Help">
-              <img src="${helpurlLoader_namespaceObject}" draggable="false" />
+              <img src="${help}" draggable="false" />
             </div>
           </div>
           <div class="${this._styles.button} ${this._styles.popup}">
             <div class="${this._styles.popupIcon}">
-              <img src="${popupurlLoader_namespaceObject}" draggable="false" />
+              <img src="${popup}" draggable="false" />
             </div>
           </div>
           <div class="${this._styles.button} ${this._styles.toggle}" data-sign="adapterToggle">
@@ -56994,7 +57051,7 @@ class Adapter extends AdapterCore/* default */.A {
     });
   }
   _renderMainClass() {
-    this._container.setAttribute('class', classnames_default()(this._styles.root, this._styles[this._defaultDirection], this._closed && this._styles.closed, this._minimized && this._styles.minimized, this._dragging && this._styles.dragging, this._hover && this._styles.hover, this._loading && this._styles.loading, this._showDockUI && this._styles.dock, this._showDockUI && this._minimized && (this._hoverHeader || this._dragging) && this._styles.expandable, this._showDockUI && !(this._userStatus || this._dndStatus) && this._styles.noPresence, this._enablePopup && this._styles.showPopup, this._disableMinimize && this._styles.hideToggleButton, this._showFeedbackAtHead && this._styles.showFeedback, this._theme === 'dark' && this._styles.dark));
+    this._container.setAttribute('class', classnames_default()(this._styles.root, this._styles[this._defaultDirection], this._closed && this._styles.closed, this._minimized && this._styles.minimized, this._dragging && this._styles.dragging, this._hover && this._styles.hover, this._loading && this._styles.loading, this._showDockUI && this._styles.dock, this._showDockUI && this._minimized && (this._hoverHeader || this._dragging) && this._styles.expandable, this._showDockUI && !(this._userStatus || this._dndStatus) && this._styles.noPresence, this._enablePopup && this._styles.showPopup, this._disableMinimize && this._styles.hideToggleButton, this._showFeedbackAtHead && this._styles.showFeedback));
     this._headerEl.setAttribute('class', classnames_default()(this._styles.header, this._minimized && this._styles.minimized, this._ringing && this._styles.ringing, this._showDockUI && this._minimized && (this._hoverHeader || this._dragging) && this._styles.iconTrans));
     this._iconContainerEl.setAttribute('class', classnames_default()(this._styles.iconContainer, !(this._userStatus || this._dndStatus) && this._styles.noPresence, !this._showDockUI && this._styles.hidden));
   }
@@ -57056,10 +57113,6 @@ class Adapter extends AdapterCore/* default */.A {
     }
     super._setLogoUrl(logoUri);
   }
-  _setTheme(theme) {
-    this._theme = theme;
-    this._renderMainClass();
-  }
   async popupWindow() {
     if (!this._popupWindowPromise) {
       this._popupWindowPromise = this._popupWindow();
@@ -57085,7 +57138,7 @@ class Adapter extends AdapterCore/* default */.A {
     if (this._popupPageUri) {
       popupUri = `${this._popupPageUri}?${popupUri.split('?')[1]}`;
     }
-    this._popupedWindow = lib_popWindow(popupUri, 'RCPopupWindow', 300, 535);
+    this._popupedWindow = (0,popWindow/* default */.Ay)(popupUri, 'RCPopupWindow', 300, 535);
     this.setMinimized(true);
   }
   isWindowPoppedUp() {
@@ -57332,7 +57385,7 @@ class Adapter extends AdapterCore/* default */.A {
   }
 }
 /* harmony default export */ var lib_Adapter = (Adapter);
-;// ./src/adapter.js
+;// CONCATENATED MODULE: ./src/adapter.js
 
 
 
@@ -57341,7 +57394,7 @@ const defaultPrefix = "rc-widget";
 if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype.forEach) {
   NodeList.prototype.forEach = Array.prototype.forEach;
 }
-const version = "2.2.1";
+const version = "2.1.1";
 let currentScript = document.currentScript;
 const adapterName = "adapter.js";
 if (!currentScript) {
