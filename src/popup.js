@@ -1637,7 +1637,7 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'authPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: data.body.button.formData.apiKey, apiUrl: data.body.button.formData.apiUrl, username: data.body.button.formData.username, password: data.body.button.formData.password });
+                  const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: data.body.button.formData.apiKey, formData: data.body.button.formData });
                   crmAuthed = !!returnedToken;
                   if (crmAuthed) {
                     userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
@@ -2140,7 +2140,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     const returnedToken = await apiKeyLogin({
       serverUrl: manifest.serverUrl,
       apiKey: request.apiKey,
-      apiUrl: request.apiUrl
+      formData: {
+        apiUrl: request.apiUrl
+      }
     });
     crmAuthed = !!returnedToken;
     if (crmAuthed) {

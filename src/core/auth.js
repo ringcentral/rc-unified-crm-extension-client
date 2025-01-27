@@ -11,7 +11,7 @@ async function submitPlatformSelection(platform) {
 
 // apiUrl: Insightly
 // username, password: Redtail
-async function apiKeyLogin({ serverUrl, apiKey, apiUrl, username, password }) {
+async function apiKeyLogin({ serverUrl, apiKey, formData }) {
     try {
         const platformInfo = await chrome.storage.local.get('platform-info');
         const platformName = platformInfo['platform-info'].platformName;
@@ -21,9 +21,7 @@ async function apiKeyLogin({ serverUrl, apiKey, apiUrl, username, password }) {
             platform: platformName,
             hostname,
             additionalInfo: {
-                apiUrl,
-                username,
-                password
+                ...formData
             }
         });
         setAuth(true);
