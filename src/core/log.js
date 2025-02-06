@@ -25,7 +25,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNo
         switch (logType) {
             case 'Call':
                 const hasRecording = await chrome.storage.local.get(`rec-link-${logInfo.sessionId}`);
-                if (!!hasRecording[`rec-link-${logInfo.sessionId}`]) {
+                if (!!hasRecording[`rec-link-${logInfo.sessionId}`] && !logInfo.recording) {
                     logInfo.recording = hasRecording[`rec-link-${logInfo.sessionId}`];
                 }
                 const addCallLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
