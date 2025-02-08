@@ -1069,7 +1069,7 @@ window.addEventListener('message', async (e) => {
                       rcAdditionalSubmission,
                       sessionId: data.body.call.sessionId,
                       recordingLink: data.body.call.recording.link,
-                      recordingDownloadLink: `${data.body.call.recording.contentUri}?access_token=${getRcAccessToken()}`,
+                      recordingDownloadLink: `${data.body.call.recording.contentUri}?accessToken=${getRcAccessToken()}`,
                       aiNote: data.body.aiNote,
                       transcript: data.body.transcript,
                       startTime: data.body.call.startTime,
