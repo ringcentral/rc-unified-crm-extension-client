@@ -65,6 +65,7 @@ let userSettings = {};
 let hasOngoingCall = false;
 let userPermissions = {};
 let serverSideLoggingSubscription = {};
+let lastUserSettingSyncDate = new Date();
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
@@ -732,10 +733,14 @@ window.addEventListener('message', async (e) => {
             }
           }
           // user setting page needs a refresh mechanism to make sure user settings are up to date
-          if (data.path === '/settings') {
-            showNotification({ level: 'success', message: 'User settings syncing', ttl: 2000 });
-            await refreshUserSettings();
-            showNotification({ level: 'success', message: 'User settings synced', ttl: 2000 });
+          if (data.path === '/settings' && crmAuthed) {
+            const nowDate = new Date();
+            if (nowDate - lastUserSettingSyncDate > 60000) {
+              showNotification({ level: 'success', message: 'User settings syncing', ttl: 2000 });
+              await refreshUserSettings();
+              showNotification({ level: 'success', message: 'User settings synced', ttl: 2000 });
+              lastUserSettingSyncDate = new Date();
+            }
           }
           break;
         case 'rc-post-message-request':
