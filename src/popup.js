@@ -1069,6 +1069,7 @@ window.addEventListener('message', async (e) => {
                       rcAdditionalSubmission,
                       sessionId: data.body.call.sessionId,
                       recordingLink: data.body.call.recording.link,
+                      recordingDownloadLink: `${data.body.call.recording.contentUri}?access_token=${getRcAccessToken()}`,
                       aiNote: data.body.aiNote,
                       transcript: data.body.transcript,
                       startTime: data.body.call.startTime,
@@ -1200,7 +1201,7 @@ window.addEventListener('message', async (e) => {
                   requireDetails: false
                 });
                 // Case: if create, but found existing log, then edit
-                if (data.body.triggerType == 'editLog' || data.body.triggerType === 'createLog' && !!fetchedCallLogs && fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)) {
+                if (data.body.triggerType == 'editLog' || data.body.triggerType === 'createLog' && !!fetchedCallLogs && fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.matched) {
                   data.body.triggerType = 'editLog';
                   fetchedCallLogs = (await getLog({
                     serverUrl: manifest.serverUrl,

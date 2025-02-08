@@ -24,9 +24,17 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNo
     if (!!rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
-                const hasRecording = await chrome.storage.local.get(`rec-link-${logInfo.sessionId}`);
-                if (!!hasRecording[`rec-link-${logInfo.sessionId}`] && !logInfo.recording) {
-                    logInfo.recording = hasRecording[`rec-link-${logInfo.sessionId}`];
+                // case: if call is recorded and recording is ready
+                if (logInfo.recording) {
+                    const rcAccessToken = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).access_token;
+                    logInfo.recording.downloadUrl = `${logInfo.recording.contentUri}?accessToken=${rcAccessToken}`;
+                }
+                else {
+                    // case: if call is recorded but recording isn't ready, use '(pending...)' as temporary placeholder
+                    const hasRecording = await chrome.storage.local.get(`rec-link-${logInfo.sessionId}`);
+                    if (!!hasRecording[`rec-link-${logInfo.sessionId}`]) {
+                        logInfo.recording = hasRecording[`rec-link-${logInfo.sessionId}`];
+                    }
                 }
                 const addCallLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addCallLogRes.data.successful) {
@@ -105,7 +113,7 @@ function openLog({ manifest, platformName, hostname, logId, contactType, contact
     window.open(logPageUrl);
 }
 
-async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, subject, note, startTime, duration, aiNote, transcript, result, isShowNotification }) {
+async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, recordingDownloadLink, subject, note, startTime, duration, aiNote, transcript, result, isShowNotification }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     if (!!rcUnifiedCrmExtJwt) {
         switch (logType) {
@@ -113,6 +121,7 @@ async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission
                 const patchBody = {
                     sessionId,
                     recordingLink,
+                    recordingDownloadLink,
                     subject,
                     note,
                     startTime,
