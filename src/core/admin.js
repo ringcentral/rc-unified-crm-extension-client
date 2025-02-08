@@ -73,7 +73,7 @@ async function getServerSideLogging({ platform, rcAccessToken }) {
     }
 }
 
-async function enableServerSideLogging({ platform, rcAccessToken }) {
+async function enableServerSideLogging({ platform, rcAccessToken, subscriptionLevel }) {
     if (!!!platform.serverSideLogging) {
         return;
     }
@@ -92,15 +92,17 @@ async function enableServerSideLogging({ platform, rcAccessToken }) {
                     }
                 }
             );
+            // if subscribed, unsubscribe it first
             if (getSubscriptionResp.data.subscribed) {
-                return;
+                await disableServerSideLogging({ platform, rcAccessToken });
             }
             //  Subscribe
             const subscribeResp = await axios.post(
                 `${serverDomainUrl}/subscribe`,
                 {
                     crmToken: rcUnifiedCrmExtJwt,
-                    crmPlatform: platform.name
+                    crmPlatform: platform.name,
+                    subscriptionLevel
                 },
                 {
                     headers: {

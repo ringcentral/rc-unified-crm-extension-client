@@ -1,5 +1,6 @@
-function getServerSideLoggingSettingPageRender({ enabled, doNotLogNumbers }) {
-    return {
+function getServerSideLoggingSettingPageRender({ enabled, subscriptionLevel, doNotLogNumbers }) {
+    const pageRender =
+    {
         id: 'serverSideLoggingSetting',
         title: 'Server side logging (Beta)',
         type: 'page',
@@ -10,6 +11,10 @@ function getServerSideLoggingSettingPageRender({ enabled, doNotLogNumbers }) {
                 enableServerSideLogging: {
                     type: 'boolean',
                     title: 'Enable server side logging'
+                },
+                trialMode: {
+                    type: 'boolean',
+                    title: 'Trial mode (logging only applicable to your extension)'
                 },
                 doNotLogNumbers: {
                     type: 'string',
@@ -43,8 +48,10 @@ function getServerSideLoggingSettingPageRender({ enabled, doNotLogNumbers }) {
         formData: {
             enableServerSideLogging: enabled,
             doNotLogNumbers: doNotLogNumbers,
+            trialMode: subscriptionLevel != 'Account'
         }
-    }
+    };
+    return pageRender;
 }
 
 exports.getServerSideLoggingSettingPageRender = getServerSideLoggingSettingPageRender;

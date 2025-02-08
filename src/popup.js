@@ -875,7 +875,7 @@ window.addEventListener('message', async (e) => {
                 case 'serverSideLoggingSetting':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   serverSideLoggingSubscription = await getServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
-                  const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({ enabled: serverSideLoggingSubscription.subscribed, doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers });
+                  const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({ enabled: serverSideLoggingSubscription.subscribed, subscriptionLevel: serverSideLoggingSubscription.subscriptionLevel, doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: serverSideLoggingSettingPageRender
@@ -1822,7 +1822,7 @@ window.addEventListener('message', async (e) => {
                   await chrome.storage.local.set({ adminSettings });
                   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken: getRcAccessToken() });
                   if (data.body.button.formData.enableServerSideLogging) {
-                    await enableServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
+                    await enableServerSideLogging({ platform, rcAccessToken: getRcAccessToken(), subscriptionLevel: data.body.button.formData.trialMode ? 'User' : 'Account' });
                     showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
                   }
                   else {
