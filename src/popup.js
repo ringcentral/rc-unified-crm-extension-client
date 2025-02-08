@@ -226,7 +226,7 @@ async function retroAutoCallLog() {
             sessionIds: c.sessionId,
             requireDetails: false
           });
-          if (!!exsitingLog?.callLogs || !exsitingLog.callLogs[0].matched) {
+          if (!!exsitingLog?.callLogs[0] && !exsitingLog.callLogs[0].matched) {
             await addLog(
               {
                 serverUrl: manifest.serverUrl,
