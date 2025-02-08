@@ -140,7 +140,7 @@ async function Initialize() {
   }
   // Case: C2D renders extra elements inside Bullhorn note section
   if (!window.location.href.startsWith('https://app.bullhornstaffing.com/content/record/JobOrder')
-    && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/fast-add/JobSubmission')
+    && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/fast-add')
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/actions/compose-message')
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/tools/template')
   ) {
