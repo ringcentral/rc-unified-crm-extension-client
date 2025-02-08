@@ -408,6 +408,10 @@ window.addEventListener('message', async (e) => {
               const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken() });
               crmAuthed = !!returnedToken;
             }
+            // Set every 15min, user settings will refresh
+            if (crmAuthed) {
+              setInterval(refreshUserSettings, 900000);
+            }
             // Unique: Bullhorn
             if (platformName === 'bullhorn' && crmAuthed) {
               // every 30 min, 
@@ -553,14 +557,7 @@ window.addEventListener('message', async (e) => {
                 console.log('Cannot find admin settings', e);
               }
             }
-            userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
-            await chrome.storage.local.set({ userSettings });
-            await userCore.uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
-            const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
-            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-              type: 'rc-adapter-register-third-party-service',
-              service: serviceManifest
-            }, '*');
+            await refreshUserSettings();
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-update-authorization-status',
               authorized: crmAuthed
@@ -733,6 +730,12 @@ window.addEventListener('message', async (e) => {
             if (data.path.startsWith('/conversations/') || data.path.startsWith('/composeText')) {
               window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
             }
+          }
+          // user setting page needs a refresh mechanism to make sure user settings are up to date
+          if (data.path === '/settings') {
+            showNotification({ level: 'success', message: 'User settings syncing', ttl: 2000 });
+            await refreshUserSettings();
+            showNotification({ level: 'success', message: 'User settings synced', ttl: 2000 });
           }
           break;
         case 'rc-post-message-request':
@@ -1620,13 +1623,7 @@ window.addEventListener('message', async (e) => {
                   await chrome.storage.local.set({ adminSettings });
                   const rcAccessToken = getRcAccessToken();
                   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
-                  userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
-                  await chrome.storage.local.set({ userSettings });
-                  const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-register-third-party-service',
-                    service: serviceManifest
-                  }, '*');
+                  await refreshUserSettings();
                   RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
                   showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
@@ -1641,12 +1638,7 @@ window.addEventListener('message', async (e) => {
                   const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: data.body.button.formData.apiKey, formData: data.body.button.formData });
                   crmAuthed = !!returnedToken;
                   if (crmAuthed) {
-                    userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
-                    const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-register-third-party-service',
-                      service: serviceManifest
-                    }, '*');
+                    await refreshUserSettings();
                     const adminPageRender = adminPage.getAdminPageRender({ platform });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-register-customized-page',
@@ -1797,13 +1789,7 @@ window.addEventListener('message', async (e) => {
                     }
                     await chrome.storage.local.set({ adminSettings });
                     await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken: getRcAccessToken() });
-                    userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
-                    await chrome.storage.local.set({ userSettings });
-                    const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-register-third-party-service',
-                      service: serviceManifest
-                    }, '*');
+                    await refreshUserSettings();
                     showNotification({ level: 'success', message: 'Custom manifest file uploaded.', ttl: 5000 });
                   }
                   break;
@@ -2062,13 +2048,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       const returnedToken = await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri });
       crmAuthed = !!returnedToken;
       if (crmAuthed) {
-        userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
-        await dismissNotification({ notificationId: currentNotificationId });
-        const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
-        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-          type: 'rc-adapter-register-third-party-service',
-          service: serviceManifest
-        }, '*');
+        await refreshUserSettings();
         const adminPageRender = adminPage.getAdminPageRender({ platform });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
           type: 'rc-adapter-register-customized-page',
@@ -2082,12 +2062,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   else if (request.type === 'pipedriveCallbackUri' && !(await auth.checkAuth())) {
     await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive` });
     crmAuthed = true;
-    userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
-    const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-      type: 'rc-adapter-register-third-party-service',
-      service: serviceManifest
-    }, '*');
+    await refreshUserSettings();
     const adminPageRender = adminPage.getAdminPageRender({ platform });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
       type: 'rc-adapter-register-customized-page',
@@ -2147,13 +2122,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     });
     crmAuthed = !!returnedToken;
     if (crmAuthed) {
-      userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
-      await dismissNotification({ notificationId: currentNotificationId });
-      const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
-      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-        type: 'rc-adapter-register-third-party-service',
-        service: serviceManifest
-      }, '*');
+      await refreshUserSettings();
       const adminPageRender = adminPage.getAdminPageRender({ platform });
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
@@ -2192,6 +2161,17 @@ function renderCRMSetupErrorPage() {
     path: '/customized/crmSetupErrorPage', // page id
   }, '*');
   trackCRMSetupError();
+}
+
+async function refreshUserSettings() {
+  userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
+  await chrome.storage.local.set({ userSettings });
+  await userCore.uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+  const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
+  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+    type: 'rc-adapter-register-third-party-service',
+    service: serviceManifest
+  }, '*');
 }
 
 async function getServiceManifest({ serviceName, customSettings, userSettings }) {
