@@ -1628,7 +1628,7 @@ window.addEventListener('message', async (e) => {
                   await chrome.storage.local.set({ adminSettings });
                   const rcAccessToken = getRcAccessToken();
                   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
-                  await refreshUserSettings();
+                  const serviceManifest = await refreshUserSettings();
                   RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
                   showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
@@ -2177,6 +2177,7 @@ async function refreshUserSettings() {
     type: 'rc-adapter-register-third-party-service',
     service: serviceManifest
   }, '*');
+  return serviceManifest;
 }
 
 async function getServiceManifest({ serviceName, customSettings, userSettings }) {
