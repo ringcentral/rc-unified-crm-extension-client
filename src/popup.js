@@ -194,6 +194,9 @@ let retroAutoCallLogNotificationId;
 let retroLoggedCount = 0;
 
 async function retroAutoCallLog() {
+  if (userCore.getDisableRetroCallLogSync(userSettings).value) {
+    return;
+  }
   if (retroAutoCallLogMaxAttempt > 0) {
     retroAutoCallLogMaxAttempt--;
     const effectiveTotal = 10;
@@ -543,21 +546,7 @@ window.addEventListener('message', async (e) => {
           });
 
           if (crmAuthed) {
-            // Admin tab render
-            const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
-            if (!!storedAdminSettings) {
-              try {
-                const adminPageRender = adminPage.getAdminPageRender({ platform });
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                  type: 'rc-adapter-register-customized-page',
-                  page: adminPageRender,
-                }, '*');
-                await chrome.storage.local.set({ adminSettings: storedAdminSettings });
-                adminSettings = storedAdminSettings;
-              } catch (e) {
-                console.log('Cannot find admin settings', e);
-              }
-            }
+            await refreshAdminSettings();
             await refreshUserSettings();
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-update-authorization-status',
@@ -946,27 +935,28 @@ window.addEventListener('message', async (e) => {
             case '/contacts/match':
               noShowNotification = true;
               let matchedContacts = {};
-              const { tempContactMatchTask } = await chrome.storage.local.get({ tempContactMatchTask: null });
-              if (data.body.phoneNumbers.length === 1 && !!tempContactMatchTask && tempContactMatchTask.phoneNumber === data.body.phoneNumbers[0]) {
-                const cachedMatching = document.querySelector("#rc-widget-adapter-frame").contentWindow.phone.contactMatcher.data[tempContactMatchTask.phoneNumber];
+              const tempContactMatchTask = (await chrome.storage.local.get(`tempContactMatchTask-${data.body.phoneNumbers[0]}`))[`tempContactMatchTask-${data.body.phoneNumbers[0]}`];
+              if (data.body.phoneNumbers.length === 1 && tempContactMatchTask?.length > 0) {
+                const cachedMatching = document.querySelector("#rc-widget-adapter-frame").contentWindow.phone.contactMatcher.data[tempContactMatchTask.phone];
                 const platformContactMatching = !!cachedMatching ? cachedMatching[platformName]?.data : [];
-                matchedContacts[tempContactMatchTask.phoneNumber] = [
+                const formattedMactchContacts = tempContactMatchTask.map(c => ({
+                  id: c.id,
+                  type: platformName,
+                  name: c.name,
+                  phoneNumbers: [
+                    {
+                      phoneNumber: c.phone,
+                      phoneType: 'direct'
+                    }
+                  ],
+                  entityType: platformName,
+                  contactType: c.type
+                }));
+                matchedContacts[data.body.phoneNumbers[0]] = [
                   ...platformContactMatching,
-                  {
-                    id: tempContactMatchTask.contactId,
-                    type: platformName,
-                    name: tempContactMatchTask.contactName,
-                    phoneNumbers: [
-                      {
-                        phoneNumber: tempContactMatchTask.phoneNumber,
-                        phoneType: 'direct'
-                      }
-                    ],
-                    entityType: platformName,
-                    contactType: tempContactMatchTask.contactType
-                  }
+                  ...formattedMactchContacts
                 ];
-                await chrome.storage.local.remove('tempContactMatchTask');
+                await chrome.storage.local.remove(`tempContactMatchTask-${data.body.phoneNumbers[0]}`);
               }
               else {
                 for (const contactPhoneNumber of data.body.phoneNumbers) {
@@ -976,7 +966,7 @@ window.addEventListener('message', async (e) => {
                     continue;
                   }
                   // query on 3rd party API to get the matched contact info and return
-                  const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isForceRefresh: true });
+                  const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isForceRefresh: true, isForContactMatchEvent: true });
                   if (contactMatched) {
                     if (!!!matchedContacts[contactPhoneNumber]) {
                       matchedContacts[contactPhoneNumber] = [];
@@ -1643,6 +1633,7 @@ window.addEventListener('message', async (e) => {
                   const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: data.body.button.formData.apiKey, formData: data.body.button.formData });
                   crmAuthed = !!returnedToken;
                   if (crmAuthed) {
+                    await refreshAdminSettings();
                     await refreshUserSettings();
                     const adminPageRender = adminPage.getAdminPageRender({ platform });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2053,6 +2044,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       const returnedToken = await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri });
       crmAuthed = !!returnedToken;
       if (crmAuthed) {
+        await refreshAdminSettings();
         await refreshUserSettings();
         const adminPageRender = adminPage.getAdminPageRender({ platform });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2067,6 +2059,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   else if (request.type === 'pipedriveCallbackUri' && !(await auth.checkAuth())) {
     await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive` });
     crmAuthed = true;
+    await refreshAdminSettings();
     await refreshUserSettings();
     const adminPageRender = adminPage.getAdminPageRender({ platform });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2127,6 +2120,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     });
     crmAuthed = !!returnedToken;
     if (crmAuthed) {
+      await refreshAdminSettings();
       await refreshUserSettings();
       const adminPageRender = adminPage.getAdminPageRender({ platform });
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2180,6 +2174,24 @@ async function refreshUserSettings() {
   return serviceManifest;
 }
 
+async function refreshAdminSettings() {
+  // Admin tab render
+  const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
+  if (!!storedAdminSettings) {
+    try {
+      const adminPageRender = adminPage.getAdminPageRender({ platform });
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: adminPageRender,
+      }, '*');
+      await chrome.storage.local.set({ adminSettings: storedAdminSettings });
+      adminSettings = storedAdminSettings;
+    } catch (e) {
+      console.log('Cannot find admin settings', e);
+    }
+  }
+}
+
 async function getServiceManifest({ serviceName, customSettings, userSettings }) {
   const services = {
     name: serviceName,
@@ -2220,6 +2232,15 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
 
     settingsPath: '/settings',
     settings: [
+      {
+        id: "disableRetroCallLogSync",
+        type: "boolean",
+        groupId: "logging",
+        name: 'Disable retroactive call log sync',
+        readOnly: userCore.getDisableRetroCallLogSync(userSettings).readOnly,
+        readOnlyReason: userCore.getDisableRetroCallLogSync(userSettings).readOnlyReason,
+        value: userCore.getDisableRetroCallLogSync(userSettings).value
+      },
       {
         id: "popupLogPageAfterCall",
         type: "boolean",

@@ -30,7 +30,7 @@ function getLocalCachedContact({ phoneNumber, platformName }) {
     return result;
 }
 
-async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNumber = false, isForceRefresh = false }) {
+async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNumber = false, isForceRefresh = false, isForContactMatchEvent = false }) {
     if (!isForceRefresh) {
         const cachedContact = getLocalCachedContact({ phoneNumber, platformName });
         if (cachedContact.length > 0) {
@@ -56,6 +56,16 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
 
     if (!!rcUnifiedCrmExtJwt) {
         const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${overridingFormats.toString()}&isExtension=${isExtensionNumber}`);
+        if (!isForContactMatchEvent) {
+            let tempContactMatchTask = {};
+            tempContactMatchTask[`tempContactMatchTask-${phoneNumber}`] = [...contactRes.data.contact.filter(c => !c.isNewContact)];
+            await chrome.storage.local.set({ ...tempContactMatchTask });
+            // force trigger contact matcher
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-trigger-contact-match',
+                phoneNumbers: [phoneNumber],
+            }, '*');
+        }
         return {
             matched: contactRes.data.successful,
             returnMessage: contactRes.data.returnMessage,
@@ -87,12 +97,14 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
                 newContactType
             }
         );
+        let tempContactMatchTask = {};
+        tempContactMatchTask[`tempContactMatchTask-${phoneNumber}`] = [{ id: contactRes.data.contact.id, phone: phoneNumber, name: newContactName, type: newContactType }];
+        await chrome.storage.local.set({ ...tempContactMatchTask });
         // force trigger contact matcher
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-trigger-contact-match',
             phoneNumbers: [phoneNumber],
         }, '*');
-        await chrome.storage.local.set({ tempContactMatchTask: { contactId: contactRes.data.contact.id, phoneNumber, contactName: newContactName, contactType: newContactType } });
         analytics.createNewContact();
         return {
             matched: contactRes.data.successful,

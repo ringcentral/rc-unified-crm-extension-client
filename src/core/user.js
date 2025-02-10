@@ -58,6 +58,14 @@ function getAutoLogSMSSetting(userSettings) {
     }
 }
 
+function getDisableRetroCallLogSync(userSettings) {
+    return {
+        value: userSettings?.disableRetroCallLogSync?.value ?? false,
+        readOnly: userSettings?.disableRetroCallLogSync?.customizable === undefined ? false : !!!userSettings?.disableRetroCallLogSync?.customizable,
+        readOnlyReason: !!!userSettings?.disableRetroCallLogSync?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getCallPopSetting(userSettings) {
     return {
         value: userSettings?.popupLogPageAfterCall?.value ?? false,
@@ -143,6 +151,7 @@ exports.uploadUserSettings = uploadUserSettings;
 
 exports.getAutoLogCallSetting = getAutoLogCallSetting;
 exports.getAutoLogSMSSetting = getAutoLogSMSSetting;
+exports.getDisableRetroCallLogSync = getDisableRetroCallLogSync;
 exports.getCallPopSetting = getCallPopSetting;
 exports.getSMSPopSetting = getSMSPopSetting;
 exports.getIncomingCallPop = getIncomingCallPop;

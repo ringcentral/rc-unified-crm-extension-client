@@ -35,9 +35,23 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
+                disableRetroCallLogSync: {
+                    type: 'object',
+                    title: 'Disable retroactive call log sync',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
                 popupLogPageAfterCall: {
                     type: 'object',
-                    title: 'Open call logging page after call',
+                    title: '(Manual log) Open call logging page after call',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -51,7 +65,7 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                 },
                 popupLogPageAfterSMS: {
                     type: 'object',
-                    title: 'Open SMS logging page after message',
+                    title: '(Manual log) Open SMS logging page after message',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -70,6 +84,9 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                 "ui:collapsible": true,
             },
             autoLogSMS: {
+                "ui:collapsible": true,
+            },
+            disableRetroCallLogSync: {
                 "ui:collapsible": true,
             },
             popupLogPageAfterCall: {
@@ -92,6 +109,11 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             {
                 customizable: adminUserSettings?.autoLogSMS?.customizable ?? true,
                 value: adminUserSettings?.autoLogSMS?.value ?? false
+            },
+            disableRetroCallLogSync:
+            {
+                customizable: adminUserSettings?.disableRetroCallLogSync?.customizable ?? true,
+                value: adminUserSettings?.disableRetroCallLogSync?.value ?? false
             },
             popupLogPageAfterCall:
             {
