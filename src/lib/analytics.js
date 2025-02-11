@@ -11,7 +11,8 @@ if (useAnalytics) {
     }
 }
 
-const appName = 'RingCentral CRM Extension';
+const appName = 'App Connect';
+const via = 'client';
 const version = manifest.version;
 let author = '';
 
@@ -54,7 +55,7 @@ function track(event, properties = {}) {
     if (!useAnalytics) {
         return;
     }
-    mixpanel.track(event, { appName, version, collectedFrom: 'client', ...properties });
+    mixpanel.track(event, { appName, via, version, collectedFrom: 'client', ...properties });
 }
 
 exports.trackPage = function page(name, properties = {}) {
@@ -68,6 +69,7 @@ exports.trackPage = function page(name, properties = {}) {
         mixpanel.track_pageview(
             {
                 appName,
+                via,
                 version,
                 author,
                 path: window.location.pathname,
@@ -89,6 +91,7 @@ exports.trackPage = function page(name, properties = {}) {
 exports.trackFirstTimeSetup = function trackFirstTimeSetup() {
     track('First time setup', {
         appName,
+        via,
         version,
         author
     });
@@ -96,6 +99,7 @@ exports.trackFirstTimeSetup = function trackFirstTimeSetup() {
 exports.trackRcLogin = function trackRcLogin() {
     track('Login with RingCentral account', {
         appName,
+        via,
         version,
         author
     });
@@ -103,6 +107,7 @@ exports.trackRcLogin = function trackRcLogin() {
 exports.trackRcLogout = function trackRcLogout() {
     track('Logout with RingCentral account', {
         appName,
+        via,
         version,
         author
     });
@@ -110,6 +115,7 @@ exports.trackRcLogout = function trackRcLogout() {
 exports.trackCrmLogin = function trackCrmLogin() {
     track('Login with CRM account', {
         appName,
+        via,
         version,
         author
     });
@@ -117,6 +123,7 @@ exports.trackCrmLogin = function trackCrmLogin() {
 exports.trackCrmLogout = function trackCrmLogout() {
     track('Logout with CRM account', {
         appName,
+        via,
         version,
         author
     });
@@ -124,6 +131,7 @@ exports.trackCrmLogout = function trackCrmLogout() {
 exports.trackPlacedCall = function trackPlacedCall() {
     track('A new call placed', {
         appName,
+        via,
         version,
         author
     });
@@ -131,6 +139,7 @@ exports.trackPlacedCall = function trackPlacedCall() {
 exports.trackAnsweredCall = function trackAnsweredCall() {
     track('A new call answered', {
         appName,
+        via,
         version,
         author
     });
@@ -138,6 +147,7 @@ exports.trackAnsweredCall = function trackAnsweredCall() {
 exports.trackConnectedCall = function trackConnectedCall() {
     track('A new call connected', {
         appName,
+        via,
         version,
         author
     });
@@ -150,6 +160,7 @@ exports.trackCallEnd = function trackCallEnd({ durationInSeconds, direction, res
         callWith,
         callingMode,
         appName,
+        via,
         version,
         author
     });
@@ -157,6 +168,7 @@ exports.trackCallEnd = function trackCallEnd({ durationInSeconds, direction, res
 exports.trackSentSMS = function trackSentSMS() {
     track('A new SMS sent', {
         appName,
+        via,
         version,
         author
     });
@@ -165,6 +177,7 @@ exports.trackSyncCallLog = function trackSyncCallLog({ hasNote }) {
     track('Sync call log', {
         hasNote,
         appName,
+        via,
         version,
         author
     })
@@ -172,6 +185,7 @@ exports.trackSyncCallLog = function trackSyncCallLog({ hasNote }) {
 exports.trackSyncMessageLog = function trackSyncMessageLog() {
     track('Sync message log', {
         appName,
+        via,
         version,
         author
     })
@@ -181,6 +195,7 @@ exports.trackEditSettings = function trackEditSettings({ changedItem, status }) 
         changedItem,
         status,
         appName,
+        via,
         version,
         author
     })
@@ -189,6 +204,7 @@ exports.trackEditSettings = function trackEditSettings({ changedItem, status }) 
 exports.trackCreateMeeting = function trackCreateMeeting() {
     track('Create meeting', {
         appName,
+        via,
         version,
         author
     })
@@ -196,6 +212,7 @@ exports.trackCreateMeeting = function trackCreateMeeting() {
 exports.trackOpenFeedback = function trackOpenFeedback() {
     track('Open feedback', {
         appName,
+        via,
         version,
         author
     })
@@ -203,6 +220,7 @@ exports.trackOpenFeedback = function trackOpenFeedback() {
 exports.trackSubmitFeedback = function trackSubmitFeedback() {
     track('Submit feedback', {
         appName,
+        via,
         version,
         author
     })
@@ -210,6 +228,7 @@ exports.trackSubmitFeedback = function trackSubmitFeedback() {
 exports.createNewContact = function createNewContact() {
     track('Create a new contact', {
         appName,
+        via,
         version,
         author
     })
@@ -217,6 +236,7 @@ exports.createNewContact = function createNewContact() {
 exports.trackFactoryReset = function trackFactoryReset() {
     track('Factory reset', {
         appName,
+        via,
         version,
         author
     })
@@ -224,6 +244,7 @@ exports.trackFactoryReset = function trackFactoryReset() {
 exports.trackUpdateCallRecordingLink = function trackUpdateCallRecordingLink({ processState }) {
     track('Call recording update', {
         appName,
+        via,
         version,
         author,
         processState
@@ -239,6 +260,7 @@ exports.trackMissingServiceWorker = async function trackMissingServiceWorker() {
     track('Service worker missing', {
         crmPlatform: platformName,
         appName,
+        via,
         version,
         author,
         rcAccountId,
@@ -249,6 +271,7 @@ exports.trackMissingServiceWorker = async function trackMissingServiceWorker() {
 exports.trackChromeAPIError = async function trackChromeAPIError(errorMessage) {
     track('Chrome API error ', {
         appName,
+        via,
         version,
         author,
         errorMessage,
@@ -258,6 +281,7 @@ exports.trackChromeAPIError = async function trackChromeAPIError(errorMessage) {
 exports.trackCRMSetupError = async function trackCRMSetupError() {
     track('CRM setup error', {
         appName,
+        via,
         version,
         author
     })
