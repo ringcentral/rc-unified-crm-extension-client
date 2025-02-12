@@ -273,8 +273,7 @@ async function retroAutoCallLog() {
 }
 
 async function forceCallLogMatcherCheck() {
-  // check if time is o'clock.
-  if (crmAuthed) {
+  if (!!userSettings?.serverSideLogging?.enable && crmAuthed) {
     // To help with performance, we only check the first 10 calls
     const { calls, hasMore } = await RCAdapter.getUnloggedCalls(10, 1)
     const sessionIds = calls.map(c => c.sessionId);
