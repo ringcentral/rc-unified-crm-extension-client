@@ -932,6 +932,7 @@ window.addEventListener('message', async (e) => {
               }
               break;
             case '/contacts/match':
+              console.log(`start contact matching for ${data.body.phoneNumbers.length} numbers...`);
               noShowNotification = true;
               let matchedContacts = {};
               const tempContactMatchTask = (await chrome.storage.local.get(`tempContactMatchTask-${data.body.phoneNumbers[0]}`))[`tempContactMatchTask-${data.body.phoneNumbers[0]}`];
@@ -956,14 +957,16 @@ window.addEventListener('message', async (e) => {
                   ...formattedMactchContacts
                 ];
                 await chrome.storage.local.remove(`tempContactMatchTask-${data.body.phoneNumbers[0]}`);
+                console.log('contact match task done.')
               }
               else {
-                for (const contactPhoneNumber of data.body.phoneNumbers) {
-                  const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
-                  // skip contact with just extension number
-                  if (!allowExtensionNumberLogging && !contactPhoneNumber.startsWith('+')) {
-                    continue;
-                  }
+                // Segment an array of phone numbers into one at a time. 
+                // This is to prevent fetching too many contacts at once and causing timeout.
+                const contactPhoneNumber = data.body.phoneNumbers[0];
+                const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
+                // If it's direct number (starting with +), go ahead
+                // If not a direct number, but allow extension number logging, go ahead as well
+                if (contactPhoneNumber.startsWith('+') || allowExtensionNumberLogging) {
                   // query on 3rd party API to get the matched contact info and return
                   const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isForceRefresh: true, isForContactMatchEvent: true });
                   if (contactMatched) {
@@ -992,10 +995,63 @@ window.addEventListener('message', async (e) => {
                     if (contactInfo.filter(c => !c.isNewContact).length === 0 && data.body.phoneNumbers.length === 1) {
                       showNotification({ level: contactMatchReturnMessage?.messageType, message: contactMatchReturnMessage?.message, ttl: contactMatchReturnMessage?.ttl, details: contactMatchReturnMessage?.details });
                     }
+                    console.log(`contact matched for ${contactPhoneNumber}`);
                   }
-                  else if (data.body.phoneNumbers.length === 1) {
-                    showNotification({ level: contactMatchReturnMessage?.messageType, message: contactMatchReturnMessage?.message, ttl: contactMatchReturnMessage?.ttl, details: contactMatchReturnMessage?.details });
+                  else {
+                    if (data.body.phoneNumbers.length === 1) {
+                      showNotification({ level: contactMatchReturnMessage?.messageType, message: contactMatchReturnMessage?.message, ttl: contactMatchReturnMessage?.ttl, details: contactMatchReturnMessage?.details });
+                    }
+                    console.log(`contact not matched for ${contactPhoneNumber}`);
                   }
+                }
+                // TEMP Hack: to differentiate manaul match which is 1 number and auto match which is typically > 1 numbers, we match final 2 numbers at the same time from auto match case
+                if (data.body.phoneNumbers.length === 2) {
+                  // Segment an array of phone numbers into one at a time. 
+                  // This is to prevent fetching too many contacts at once and causing timeout.
+                  const contactPhoneNumber = data.body.phoneNumbers[1];
+                  const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
+                  // If it's direct number (starting with +), go ahead
+                  // If not a direct number, but allow extension number logging, go ahead as well
+                  if (contactPhoneNumber.startsWith('+') || allowExtensionNumberLogging) {
+                    // query on 3rd party API to get the matched contact info and return
+                    const { matched: lastContactMatched, contactInfo: lastContactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isForceRefresh: true, isForContactMatchEvent: true });
+                    if (lastContactMatched) {
+                      if (!!!matchedContacts[contactPhoneNumber]) {
+                        matchedContacts[contactPhoneNumber] = [];
+                      }
+                      for (var contactInfoItem of lastContactInfo) {
+                        if (contactInfoItem.isNewContact) {
+                          continue;
+                        }
+                        matchedContacts[contactPhoneNumber].push({
+                          id: contactInfoItem.id,
+                          type: platformName,
+                          name: contactInfoItem.name,
+                          phoneNumbers: [
+                            {
+                              phoneNumber: contactPhoneNumber,
+                              phoneType: 'direct'
+                            }
+                          ],
+                          entityType: platformName,
+                          contactType: contactInfoItem.type,
+                          additionalInfo: contactInfoItem.additionalInfo
+                        });
+                      }
+                      console.log(`contact matched for ${contactPhoneNumber}`);
+                    }
+                    else {
+                      console.log(`contact not matched for ${contactPhoneNumber}`);
+                    }
+                  }
+                }
+                else if (data.body.phoneNumbers.length > 2) {
+                  const remainingPhoneNumbers = data.body.phoneNumbers.slice(1);
+                  // Do another contact match with remaining phone numbers
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-trigger-contact-match',
+                    phoneNumbers: remainingPhoneNumbers,
+                  }, '*');
                 }
               }
               // return matched contact object with phone number as key
