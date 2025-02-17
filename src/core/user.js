@@ -34,9 +34,9 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
         });
     return userSettingsToUpload;
 }
-function getAutoLogCallSetting(userSettings) {
+function getAutoLogCallSetting(userSettings, isAdmin) {
     const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
-    if (serverSideLoggingEnabled) {
+    if (serverSideLoggingEnabled && (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
         return {
             value: false,
             readOnly: true,

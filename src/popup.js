@@ -66,6 +66,7 @@ let hasOngoingCall = false;
 let userPermissions = {};
 let serverSideLoggingSubscription = {};
 let lastUserSettingSyncDate = new Date();
+let isAdmin = false;
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
@@ -1850,12 +1851,14 @@ window.addEventListener('message', async (e) => {
                   adminSettings.userSettings.serverSideLogging =
                   {
                     enable: data.body.button.formData.serverSideLogging != 'Disable',
-                    doNotLogNumbers: data.body.button.formData.doNotLogNumbers
+                    doNotLogNumbers: data.body.button.formData.doNotLogNumbers,
+                    loggingLevel: data.body.button.formData.serverSideLogging
                   };
                   userSettings.serverSideLogging =
                   {
                     enable: data.body.button.formData.serverSideLogging != 'Disable',
-                    doNotLogNumbers: data.body.button.formData.doNotLogNumbers
+                    doNotLogNumbers: data.body.button.formData.doNotLogNumbers,
+                    loggingLevel: data.body.button.formData.serverSideLogging
                   };
                   await chrome.storage.local.set({ adminSettings });
                   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken: getRcAccessToken() });
@@ -2233,6 +2236,7 @@ async function refreshUserSettings() {
 async function refreshAdminSettings() {
   // Admin tab render
   const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
+  isAdmin = !!storedAdminSettings;
   if (!!storedAdminSettings) {
     try {
       const adminPageRender = adminPage.getAdminPageRender({ platform });
@@ -2273,9 +2277,9 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
     callLogPageInputChangedEventPath: '/callLogger/inputChanged',
     callLogEntityMatcherPath: '/callLogger/match',
     callLoggerAutoSettingLabel: 'Log phone calls automatically',
-    callLoggerAutoSettingReadOnly: userCore.getAutoLogCallSetting(userSettings).readOnly,
-    callLoggerAutoSettingReadOnlyReason: userCore.getAutoLogCallSetting(userSettings).readOnlyReason,
-    callLoggerAutoSettingReadOnlyValue: userCore.getAutoLogCallSetting(userSettings).value,
+    callLoggerAutoSettingReadOnly: userCore.getAutoLogCallSetting(userSettings, isAdmin).readOnly,
+    callLoggerAutoSettingReadOnlyReason: userCore.getAutoLogCallSetting(userSettings, isAdmin).readOnlyReason,
+    callLoggerAutoSettingReadOnlyValue: userCore.getAutoLogCallSetting(userSettings, isAdmin).value,
     callLoggerHideEditLogButton: manifest.platforms[platformName].hideEditLogButton ?? false,
 
     messageLoggerPath: '/messageLogger',
