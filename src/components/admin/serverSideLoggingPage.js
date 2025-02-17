@@ -1,4 +1,4 @@
-function getServerSideLoggingSettingPageRender({ enabled, subscriptionLevel, doNotLogNumbers }) {
+function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers }) {
     const pageRender =
     {
         id: 'serverSideLoggingSetting',
@@ -8,13 +8,23 @@ function getServerSideLoggingSettingPageRender({ enabled, subscriptionLevel, doN
             type: 'object',
             required: [],
             properties: {
-                enableServerSideLogging: {
-                    type: 'boolean',
-                    title: 'Enable server side logging'
-                },
-                trialMode: {
-                    type: 'boolean',
-                    title: 'Trial mode (logging only applicable to your extension)'
+                serverSideLogging: {
+                    type: 'string',
+                    title: 'Enable server side logging',
+                    oneOf:[
+                        {
+                            const: 'Account',
+                            title: 'Enable for account'
+                        },
+                        {
+                            const: 'User',
+                            title: 'Enable for admin only (trial mode)'
+                        },
+                        {
+                            const: 'Disable',
+                            title: 'Disable'
+                        }
+                    ]
                 },
                 doNotLogNumbers: {
                     type: 'string',
@@ -46,9 +56,8 @@ function getServerSideLoggingSettingPageRender({ enabled, subscriptionLevel, doN
             }
         },
         formData: {
-            enableServerSideLogging: enabled,
-            doNotLogNumbers: doNotLogNumbers,
-            trialMode: subscriptionLevel != 'Account'
+            serverSideLogging: subscriptionLevel,
+            doNotLogNumbers: doNotLogNumbers
         }
     };
     return pageRender;
