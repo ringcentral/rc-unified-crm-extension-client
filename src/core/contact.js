@@ -138,6 +138,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
         const cachedContacts = getLocalCachedContact({ phoneNumber, platformName });
         if (cachedContacts.length > 0) {
             contactId = cachedContacts[0].id;
+            contactType = cachedContacts[0].type;
         }
     }
     if (!!contactId) {

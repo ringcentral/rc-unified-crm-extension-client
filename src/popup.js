@@ -1266,7 +1266,6 @@ window.addEventListener('message', async (e) => {
                   })).callLogs;
                 }
                 const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
-                showNotification({ level: callLogContactMatchMessage?.messageType, message: callLogContactMatchMessage?.message, ttl: callLogContactMatchMessage?.ttl, details: callLogContactMatchMessage?.details });
                 if (!callContactMatched) {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   responseMessage(
