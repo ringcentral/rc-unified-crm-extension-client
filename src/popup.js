@@ -1690,8 +1690,7 @@ window.addEventListener('message', async (e) => {
                   await chrome.storage.local.set({ adminSettings });
                   const rcAccessToken = getRcAccessToken();
                   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
-                  const serviceManifest = await refreshUserSettings();
-                  RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
+                  await refreshUserSettings();
                   showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
@@ -2241,10 +2240,12 @@ async function refreshUserSettings() {
   await chrome.storage.local.set({ userSettings });
   await userCore.uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
   const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
+  RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
     type: 'rc-adapter-register-third-party-service',
     service: serviceManifest
   }, '*');
+  
   return serviceManifest;
 }
 
