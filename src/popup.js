@@ -41,7 +41,8 @@ const {
   trackOpenFeedback,
   trackFactoryReset,
   trackUpdateCallRecordingLink,
-  trackCRMSetupError
+  trackCRMSetupError,
+  trackCrmAuthFail
 } = require('./lib/analytics');
 
 window.__ON_RC_POPUP_WINDOW = 1;
@@ -90,6 +91,12 @@ async function bullhornHeartbeat({ token }) {
       console.log('bullhorn heartbeat successful');
     }
     else {
+      await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
+      const serviceManifest = getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-third-party-service',
+        service: serviceManifest
+      }, '*');
       showNotification({
         level: 'warning',
         message: 'Bullhorn token expired, please reconnect.',
@@ -113,11 +120,18 @@ async function bullhornHeartbeat({ token }) {
             }
           ]
         }],
-        ttl: 10000
+        ttl: 120000
       });
+      trackCrmAuthFail();
     }
   }
   catch (e) {
+    await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
+    const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+      type: 'rc-adapter-register-third-party-service',
+      service: serviceManifest
+    }, '*');
     showNotification({
       level: 'warning',
       message: 'Bullhorn token expired, please reconnect.',
@@ -141,8 +155,9 @@ async function bullhornHeartbeat({ token }) {
           }
         ]
       }],
-      ttl: 10000
+      ttl: 120000
     });
+    trackCrmAuthFail();
   }
 }
 
@@ -418,6 +433,7 @@ window.addEventListener('message', async (e) => {
             }
             // Unique: Bullhorn
             if (platformName === 'bullhorn' && crmAuthed) {
+              bullhornHeartbeat({ token: rcUnifiedCrmExtJwt });
               // every 30 min, 
               setInterval(bullhornHeartbeat, 1800000, { token: rcUnifiedCrmExtJwt });
             }

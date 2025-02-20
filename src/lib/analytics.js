@@ -286,3 +286,12 @@ exports.trackCRMSetupError = async function trackCRMSetupError() {
         author
     })
 }
+
+exports.trackCrmAuthFail = function trackCrmAuthFail() {
+    track('CRM Auth failed', {
+        appName,
+        via: eventAddedVia,
+        version,
+        author
+    });
+}
