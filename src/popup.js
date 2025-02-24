@@ -1017,7 +1017,8 @@ window.addEventListener('message', async (e) => {
                   }
                   else {
                     if (data.body.phoneNumbers.length === 1) {
-                      showNotification({ level: contactMatchReturnMessage?.messageType, message: contactMatchReturnMessage?.message, ttl: contactMatchReturnMessage?.ttl, details: contactMatchReturnMessage?.details });
+                      // TEMP commented until Embeddable supports differentiation
+                      // showNotification({ level: contactMatchReturnMessage?.messageType, message: contactMatchReturnMessage?.message, ttl: contactMatchReturnMessage?.ttl, details: contactMatchReturnMessage?.details });
                     }
                     console.log(`contact not matched for ${contactPhoneNumber}`);
                   }
