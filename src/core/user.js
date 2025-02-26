@@ -40,7 +40,8 @@ function getAutoLogCallSetting(userSettings, isAdmin) {
         return {
             value: false,
             readOnly: true,
-            readOnlyReason: 'This cannot be turn ON becauase server side logging is enabled by admin'
+            readOnlyReason: 'This cannot be turn ON becauase server side logging is enabled by admin',
+            warning: 'Unavailable while server side call logging enabled'
         }
     }
     return {
