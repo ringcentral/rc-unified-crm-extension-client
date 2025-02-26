@@ -134,14 +134,16 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
         await chrome.storage.local.set(platformInfo);
     }
     const hostname = platformInfo['platform-info'].hostname;
+    let cachedContacts = [];
     if (!!!contactId) {
-        const cachedContacts = getLocalCachedContact({ phoneNumber, platformName });
+        cachedContacts = getLocalCachedContact({ phoneNumber, platformName });
         if (cachedContacts.length > 0) {
             contactId = cachedContacts[0].id;
             contactType = cachedContacts[0].type;
         }
     }
-    if (!!contactId) {
+    // case: single contact with id
+    if (cachedContacts.length == 1 && !!contactId) {
         showNotification({ level: 'success', message: 'Trying to find and open contact page...', ttl: 5000 });
         // Unique: Bullhorn 
         if (platformName === 'bullhorn') {
@@ -166,6 +168,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
             return;
         }
     }
+    // case: multi contacts
     else {
         const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber });
         if (!contactMatched) {
@@ -182,6 +185,33 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                     return;
                 case 'openAllMatches':
                     // proceed and open all matches
+                    // Unique: Bullhorn
+                    if (platformName === 'bullhorn') {
+                        const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
+                        if (crm_extension_bullhorn_user_urls?.atsUrl) {
+                            for (const c of contactInfo) {
+                                if (c.isNewContact) {
+                                    continue;
+                                }
+                                const newTab = window.open(`${crm_extension_bullhorn_user_urls.atsUrl}/BullhornStaffing/OpenWindow.cfm?Entity=${c.type}&id=${c.id}&view=Overview`, '_blank', 'popup');
+                                newTab.blur();
+                                window.focus();
+                            }
+                        }
+                    }
+                    else {
+                        for (const c of contactInfo) {
+                            if (c.isNewContact) {
+                                continue;
+                            }
+                            const hostname = platformInfo['platform-info'].hostname;
+                            const contactPageUrl = manifest.platforms[platformName].contactPageUrl
+                                .replace('{hostname}', hostname)
+                                .replaceAll('{contactId}', c.id)
+                                .replaceAll('{contactType}', c.type);
+                            window.open(contactPageUrl);
+                        }
+                    }
                     break;
                 case 'promptToSelect':
                     // open prompt page
@@ -199,36 +229,10 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                         type: 'rc-adapter-control-call',
                         callAction: 'toggleRingingDialog',
                     }, '*');
-                    return;
+                    break;
             }
         }
         showNotification({ level: 'success', message: 'Trying to find and open contact page...', ttl: 5000 });
-        // Unique: Bullhorn
-        if (platformName === 'bullhorn') {
-            const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
-            if (crm_extension_bullhorn_user_urls?.atsUrl) {
-                for (const c of contactInfo) {
-                    if (c.isNewContact) {
-                        continue;
-                    }
-                    const newTab = window.open(`${crm_extension_bullhorn_user_urls.atsUrl}/BullhornStaffing/OpenWindow.cfm?Entity=${c.type}&id=${c.id}&view=Overview`, '_blank', 'popup');
-                    newTab.blur();
-                    window.focus();
-                }
-            }
-            return;
-        }
-        for (const c of contactInfo) {
-            if (c.isNewContact) {
-                continue;
-            }
-            const hostname = platformInfo['platform-info'].hostname;
-            const contactPageUrl = manifest.platforms[platformName].contactPageUrl
-                .replace('{hostname}', hostname)
-                .replaceAll('{contactId}', c.id)
-                .replaceAll('{contactType}', c.type);
-            window.open(contactPageUrl);
-        }
     }
 }
 
