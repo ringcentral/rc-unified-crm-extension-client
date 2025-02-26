@@ -1010,15 +1010,11 @@ window.addEventListener('message', async (e) => {
                         additionalInfo: contactInfoItem.additionalInfo
                       });
                     }
-                    if (contactInfo.filter(c => !c.isNewContact).length === 0 && data.body.phoneNumbers.length === 1) {
-                      showNotification({ level: contactMatchReturnMessage?.messageType, message: contactMatchReturnMessage?.message, ttl: contactMatchReturnMessage?.ttl, details: contactMatchReturnMessage?.details });
-                    }
                     console.log(`contact matched for ${contactPhoneNumber}`);
                   }
                   else {
-                    if (data.body.phoneNumbers.length === 1) {
-                      // TEMP commented until Embeddable supports differentiation
-                      // showNotification({ level: contactMatchReturnMessage?.messageType, message: contactMatchReturnMessage?.message, ttl: contactMatchReturnMessage?.ttl, details: contactMatchReturnMessage?.details });
+                    if (data.body.triggerFrom === 'manual') {
+                      showNotification({ level: contactMatchReturnMessage?.messageType, message: contactMatchReturnMessage?.message, ttl: contactMatchReturnMessage?.ttl, details: contactMatchReturnMessage?.details });
                     }
                     console.log(`contact not matched for ${contactPhoneNumber}`);
                   }
@@ -2246,7 +2242,7 @@ async function refreshUserSettings() {
     type: 'rc-adapter-register-third-party-service',
     service: serviceManifest
   }, '*');
-  
+
   return serviceManifest;
 }
 
