@@ -66,6 +66,33 @@ function getCustomSettingsPageRender({ crmManifest, adminUserSettings }) {
                         "ui:collapsible": true,
                     }
                     break;
+                case 'option':
+                    page.schema.properties[setting.id] = {
+                        type: 'object',
+                        title: setting.name,
+                        properties: {
+                            customizable: {
+                                type: 'boolean',
+                                title: 'Customizable by user'
+                            },
+                            value: {
+                                type: 'string',
+                                title: setting.name,
+                                oneOf: setting.options.map(option => ({
+                                    const: option.id,
+                                    title: option.name
+                                }))
+                            }
+                        }
+                    };
+                    page.formData[setting.id] = {
+                        customizable: adminUserSettings?.[setting.id]?.customizable ?? true,
+                        value: adminUserSettings?.[setting.id]?.value ?? setting?.defaultValue
+                    };
+                    page.uiSchema[setting.id] = {
+                        "ui:collapsible": true,
+                    }
+                    break;
             }
         }
     }
