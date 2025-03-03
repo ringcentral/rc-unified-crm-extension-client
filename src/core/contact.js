@@ -134,6 +134,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
         await chrome.storage.local.set(platformInfo);
     }
     const hostname = platformInfo['platform-info'].hostname;
+    const isKnownContact = !!contactId;
     let cachedContacts = [];
     if (!!!contactId) {
         cachedContacts = getLocalCachedContact({ phoneNumber, platformName });
@@ -143,7 +144,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
         }
     }
     // case: single contact with id
-    if (cachedContacts.length == 1 && !!contactId) {
+    if (isKnownContact || (cachedContacts.length == 1 && !!contactId)) {
         showNotification({ level: 'success', message: 'Trying to find and open contact page...', ttl: 5000 });
         // Unique: Bullhorn 
         if (platformName === 'bullhorn') {
