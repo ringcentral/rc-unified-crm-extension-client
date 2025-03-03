@@ -220,7 +220,7 @@ async function retroAutoCallLog() {
     const itemsPerPage = 50;
     const pageNumber = 1;
     const { calls, hasMore } = await RCAdapter.getUnloggedCalls(itemsPerPage, pageNumber)
-    const { rc_callLogger_auto_log_notify: isAutoLog } = await chrome.storage.local.get({ rc_callLogger_auto_log_notify: false })
+    const isAutoLog = userCore.getAutoLogCallSetting(userSettings, isAdmin).value;
     if (isAutoLog) {
       if (!!!retroAutoCallLogNotificationId) {
         retroAutoCallLogNotificationId = await showNotification({ level: 'success', message: 'Attempting to sync historical call logs in the background...', ttl: 5000 });
@@ -702,9 +702,14 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-callLogger-auto-log-notify':
-          await chrome.storage.local.set({ rc_callLogger_auto_log_notify: data.autoLog });
+          if (!!userSettings.callAutoLog) {
+            userSettings.autoLogCall.value = data.autoLog;
+          }
+          else {
+            userSettings.autoLogCall = { value: data.autoLog };
+          }
           if (crmAuthed && !isObjectEmpty(userSettings)) {
-            await userCore.uploadUserSettings({
+            userSettings = await userCore.uploadUserSettings({
               serverUrl: manifest.serverUrl,
               userSettings
             });
@@ -716,9 +721,14 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-messageLogger-auto-log-notify':
-          await chrome.storage.local.set({ rc_messageLogger_auto_log_notify: data.autoLog });
+          if (!!userSettings.autoLogSMS) {
+            userSettings.autoLogSMS.value = data.autoLog;
+          }
+          else {
+            userSettings.autoLogSMS = { value: data.autoLog };
+          }
           if (crmAuthed) {
-            await userCore.uploadUserSettings({
+            userSettings = await userCore.uploadUserSettings({
               serverUrl: manifest.serverUrl,
               userSettings
             });
@@ -746,6 +756,26 @@ window.addEventListener('message', async (e) => {
               showNotification({ level: 'success', message: 'User settings synced', ttl: 2000 });
               lastUserSettingSyncDate = new Date();
             }
+          }
+          break;
+        case 'rc-adapter-ai-assistant-settings-notify':
+          if (userSettings.showAiAssistantWidget) {
+            userSettings.showAiAssistantWidget.value = data.showAiAssistantWidget;
+          }
+          else {
+            userSettings.showAiAssistantWidget = { value: data.showAiAssistantWidget };
+          }
+          if (userSettings.autoStartAiAssistant) {
+            userSettings.autoStartAiAssistant.value = data.autoStartAiAssistant;
+          }
+          else {
+            userSettings.autoStartAiAssistant = { value: data.autoStartAiAssistant };
+          }
+          if (crmAuthed && !isObjectEmpty(userSettings)) {
+            userSettings = await userCore.uploadUserSettings({
+              serverUrl: manifest.serverUrl,
+              userSettings
+            });
           }
           break;
         case 'rc-post-message-request':
@@ -1687,7 +1717,7 @@ window.addEventListener('message', async (e) => {
                   await chrome.storage.local.set({ adminSettings });
                   const rcAccessToken = getRcAccessToken();
                   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
-                  await refreshUserSettings();
+                  userSettings = await refreshUserSettings();
                   showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
@@ -2235,12 +2265,23 @@ function renderCRMSetupErrorPage() {
 async function refreshUserSettings() {
   userSettings = await userCore.getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken: getRcAccessToken() });
   await chrome.storage.local.set({ userSettings });
-  await userCore.uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+  userSettings = await userCore.uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
   const serviceManifest = await getServiceManifest({ serviceName: platform.name, customSettings: platform.settings, userSettings });
   RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
     type: 'rc-adapter-register-third-party-service',
     service: serviceManifest
+  }, '*');
+  const showAiAssistantWidgetSetting = userCore.getShowAiAssistantWidgetSetting(userSettings);
+  const autoStartAiAssistantSetting = userCore.getAutoStartAiAssistantSetting(userSettings);
+  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+    type: 'rc-adapter-update-ai-assistant-settings',
+    showAiAssistantWidget: showAiAssistantWidgetSetting?.value ?? false,
+    showAiAssistantWidgetReadOnly: showAiAssistantWidgetSetting?.readOnly ?? false,
+    showAiAssistantWidgetReadOnlyReason: showAiAssistantWidgetSetting?.readOnlyReason ?? '',
+    autoStartAiAssistant: autoStartAiAssistantSetting?.value ?? false,
+    autoStartAiAssistantReadOnly: autoStartAiAssistantSetting?.readOnly ?? false,
+    autoStartAiAssistantReadOnlyReason: autoStartAiAssistantSetting?.readOnlyReason ?? '',
   }, '*');
 
   return serviceManifest;
@@ -2461,7 +2502,7 @@ async function getServiceManifest({ serviceName, customSettings, userSettings })
             value: userCore.getAutoOpenSetting(userSettings).value,
             readOnly: userCore.getAutoOpenSetting(userSettings).readOnly,
             readOnlyReason: userCore.getAutoOpenSetting(userSettings).readOnlyReason
-          },
+          }
         ]
       }
     ],

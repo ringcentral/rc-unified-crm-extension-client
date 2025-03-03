@@ -20,13 +20,14 @@ async function getUserSettings({ serverUrl, rcAccessToken }) {
 
 async function uploadUserSettings({ serverUrl, userSettings }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const { rc_callLogger_auto_log_notify: callAutoLog } = await chrome.storage.local.get({ rc_callLogger_auto_log_notify: false })
-    const { rc_messageLogger_auto_log_notify: messageAutoLog } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
     const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' });
     let userSettingsToUpload = userSettings;
-    userSettingsToUpload.callAutoLog = { value: callAutoLog };
-    userSettingsToUpload.messageAutoLog = { value: messageAutoLog };
-    userSettingsToUpload.selectedRegion = { value: selectedRegion };
+    if (!!userSettingsToUpload.selectedRegion) {
+        userSettingsToUpload.selectedRegion.value = selectedRegion;
+    }
+    else {
+        userSettingsToUpload.selectedRegion = { value: selectedRegion };
+    }
     const uploadUserSettingsResponse = await axios.post(
         `${serverUrl}/user/settings?jwtToken=${rcUnifiedCrmExtJwt}`,
         {
@@ -131,6 +132,22 @@ function getAutoOpenSetting(userSettings) {
     }
 }
 
+function getShowAiAssistantWidgetSetting(userSettings) {
+    return {
+        value: userSettings?.showAiAssistantWidget?.value ?? false,
+        readOnly: userSettings?.showAiAssistantWidget?.customizable === undefined ? false : !!!userSettings?.showAiAssistantWidget?.customizable,
+        readOnlyReason: !!!userSettings?.showAiAssistantWidget?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAutoStartAiAssistantSetting(userSettings) {
+    return {
+        value: userSettings?.autoStartAiAssistant?.value ?? false,
+        readOnly: userSettings?.autoStartAiAssistant?.customizable === undefined ? false : !!!userSettings?.autoStartAiAssistant?.customizable,
+        readOnlyReason: !!!userSettings?.autoStartAiAssistant?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getCustomSetting(userSettings, id, defaultValue) {
     if (userSettings === undefined) {
         return {
@@ -161,4 +178,6 @@ exports.getCallPopMultiMatchBehavior = getCallPopMultiMatchBehavior;
 exports.getOpenContactAfterCreationSetting = getOpenContactAfterCreationSetting;
 exports.getDeveloperModeSetting = getDeveloperModeSetting;
 exports.getAutoOpenSetting = getAutoOpenSetting;
+exports.getShowAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting;
+exports.getAutoStartAiAssistantSetting = getAutoStartAiAssistantSetting;
 exports.getCustomSetting = getCustomSetting;
