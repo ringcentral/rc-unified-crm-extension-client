@@ -98,7 +98,14 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
             }
         );
         let tempContactMatchTask = {};
-        tempContactMatchTask[`tempContactMatchTask-${phoneNumber}`] = [{ id: contactRes.data.contact.id, phone: phoneNumber, name: newContactName, type: newContactType }];
+        tempContactMatchTask[`tempContactMatchTask-${phoneNumber}`] = [
+            {
+                id: contactRes.data.contact.id,
+                phone: phoneNumber,
+                name: newContactName,
+                type: newContactType,
+                additionalInfo: contactRes.data.contact.additionalInfo ?? null
+            }];
         await chrome.storage.local.set({ ...tempContactMatchTask });
         // force trigger contact matcher
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

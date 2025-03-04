@@ -998,7 +998,8 @@ window.addEventListener('message', async (e) => {
                     }
                   ],
                   entityType: platformName,
-                  contactType: c.type
+                  contactType: c.type,
+                  additionalInfo: c.additionalInfo
                 }));
                 matchedContacts[data.body.phoneNumbers[0]] = [
                   ...platformContactMatching,
