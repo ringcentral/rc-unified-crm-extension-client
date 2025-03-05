@@ -1491,7 +1491,7 @@ window.addEventListener('message', async (e) => {
                 );
                 break;
               }
-              const { rc_messageLogger_auto_log_notify: messageAutoLogOn } = await chrome.storage.local.get({ rc_messageLogger_auto_log_notify: false });
+              messageAutoLogOn = userSettings.autoLogSMS?.value ?? false;
               const messageAutoPopup = userCore.getSMSPopSetting(userSettings).value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
@@ -1718,7 +1718,7 @@ window.addEventListener('message', async (e) => {
                   await chrome.storage.local.set({ adminSettings });
                   const rcAccessToken = getRcAccessToken();
                   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings, rcAccessToken });
-                  userSettings = await refreshUserSettings();
+                  await refreshUserSettings();
                   showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
@@ -2284,8 +2284,6 @@ async function refreshUserSettings() {
     autoStartAiAssistantReadOnly: autoStartAiAssistantSetting?.readOnly ?? false,
     autoStartAiAssistantReadOnlyReason: autoStartAiAssistantSetting?.readOnlyReason ?? '',
   }, '*');
-
-  return serviceManifest;
 }
 
 async function refreshAdminSettings() {
