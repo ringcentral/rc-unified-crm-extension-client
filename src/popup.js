@@ -702,7 +702,7 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-callLogger-auto-log-notify':
-          if (!!userSettings.callAutoLog) {
+          if (!!userSettings.autoLogCall) {
             userSettings.autoLogCall.value = data.autoLog;
           }
           else {
