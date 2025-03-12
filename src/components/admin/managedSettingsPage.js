@@ -33,7 +33,7 @@ function getManagedSettingsPageRender({ crmManifest }) {
             }
         }
     }
-    if(!!crmManifest?.settings)
+    if(crmManifest?.settings)
     {
         page.schema.properties.section.oneOf.push({
             const: "customSettings",

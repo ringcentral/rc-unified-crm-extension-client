@@ -10,11 +10,11 @@ function getLocalCachedContact({ phoneNumber, platformName }) {
         return result;
     }
     const contact = allCachedContacts[phoneNumber];
-    if (!!!contact) {
+    if (!contact) {
         return result;
     }
     const contactUnderCRM = contact[platformName]?.data;
-    if (!!!contactUnderCRM) {
+    if (!contactUnderCRM) {
         return result;
     }
     for (const c of contactUnderCRM) {
@@ -44,17 +44,17 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const overridingFormats = [];
     const { userSettings } = await chrome.storage.local.get('userSettings');
-    if (!!userSettings?.overridingPhoneNumberFormat?.value) {
+    if (userSettings?.overridingPhoneNumberFormat?.value) {
         overridingFormats.push(userSettings.overridingPhoneNumberFormat.value);
     }
-    if (!!userSettings?.overridingPhoneNumberFormat2?.value) {
+    if (userSettings?.overridingPhoneNumberFormat2?.value) {
         overridingFormats.push(userSettings.overridingPhoneNumberFormat2.value);
     }
-    if (!!userSettings?.overridingPhoneNumberFormat3?.value) {
+    if (userSettings?.overridingPhoneNumberFormat3?.value) {
         overridingFormats.push(userSettings.overridingPhoneNumberFormat3.value);
     }
 
-    if (!!rcUnifiedCrmExtJwt) {
+    if (rcUnifiedCrmExtJwt) {
         const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${overridingFormats.toString()}&isExtension=${isExtensionNumber}`);
         if (!isForContactMatchEvent) {
             let tempContactMatchTask = {};
@@ -88,7 +88,7 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
 
 async function createContact({ serverUrl, phoneNumber, newContactName, newContactType }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    if (!!rcUnifiedCrmExtJwt) {
+    if (rcUnifiedCrmExtJwt) {
         const contactRes = await axios.post(
             `${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}`,
             {
@@ -143,11 +143,13 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
     const hostname = platformInfo['platform-info'].hostname;
     const isKnownContact = !!contactId;
     let cachedContacts = [];
-    if (!!!contactId) {
+    let contactIdInUse = contactId;
+    let contactTypeInUse = contactType;
+    if (!contactId) {
         cachedContacts = getLocalCachedContact({ phoneNumber, platformName });
         if (cachedContacts.length > 0) {
-            contactId = cachedContacts[0].id;
-            contactType = cachedContacts[0].type;
+            contactIdInUse = cachedContacts[0].id;
+            contactTypeInUse = cachedContacts[0].type;
         }
     }
     // case: single contact with id
@@ -170,8 +172,8 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
             }
             const contactPageUrl = targetUrlTemplate
                 .replace('{hostname}', hostname)
-                .replaceAll('{contactId}', contactId)
-                .replaceAll('{contactType}', contactType);
+                .replaceAll('{contactId}', contactIdInUse)
+                .replaceAll('{contactType}', contactTypeInUse);
             window.open(contactPageUrl);
             return;
         }
@@ -184,7 +186,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
         }
         const isMultipleContact = contactInfo.filter(c => !c.isNewContact).length > 1;
         if (isMultipleContact) {
-            if (!!!multiContactMatchBehavior) {
+            if (!multiContactMatchBehavior) {
                 return;
             }
             switch (multiContactMatchBehavior) {

@@ -63,7 +63,7 @@ async function onAuthCallback({ serverUrl, callbackUri }) {
     }
     const res = await axios.get(oauthCallbackUrl);
     showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully authorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
-    if (!!!res.data.jwtToken) {
+    if (!res.data.jwtToken) {
         return;
     }
     const crmUserInfo = { name: res.data.name };

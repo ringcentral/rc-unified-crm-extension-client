@@ -1,6 +1,6 @@
-const { isObjectEmpty } = require('./lib/util');
-const baseManifest = require('./manifest.json');
-const packageJson = require('../package.json');
+import { isObjectEmpty } from './lib/util';
+import baseManifest from './manifest.json';
+import packageJson from '../package.json';
 
 let manifest;
 let pipedriveInstallationTabId;
@@ -9,7 +9,7 @@ let cachedClickToXRequest;
 
 async function fetchManifest() {
   let { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: null });
-  if (!!!customCrmManifestUrl || customCrmManifestUrl === '') {
+  if (!customCrmManifestUrl || customCrmManifestUrl === '') {
     customCrmManifestUrl = baseManifest.defaultCrmManifestUrl;
     await chrome.storage.local.set({ customCrmManifestUrl });
   }
@@ -79,7 +79,7 @@ async function registerPlatform(tabUrl) {
   const url = new URL(tabUrl);
   let hostname = url.hostname;
   const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
-  if (!!customCrmManifest) {
+  if (customCrmManifest) {
     manifest = customCrmManifest;
   }
   let platformName = '';
@@ -97,6 +97,7 @@ async function registerPlatform(tabUrl) {
     if ((hostname.includes('ngrok') || hostname.includes('labs.ringcentral')) && url.pathname === '/pipedrive-redirect') {
       platformName = 'pipedrive';
       hostname = 'temp';
+      // eslint-disable-next-line no-undef
       chrome.tabs.sendMessage(tab.id, { action: 'needCallbackUri' })
     }
     else {

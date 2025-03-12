@@ -1,4 +1,5 @@
 import axios from 'axios';
+import adminPage from '../components/admin/adminPage'
 import { parsePhoneNumber } from 'awesome-phonenumber';
 
 async function getAdminSettings({ serverUrl, rcAccessToken }) {
@@ -22,13 +23,34 @@ async function uploadAdminSettings({ serverUrl, adminSettings, rcAccessToken }) 
         });
 }
 
+async function refreshAdminSettings({ manifest, platform, rcAccessToken }) {
+    let adminSettings;
+    // Admin tab render
+    const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
+    const isAdmin = !!storedAdminSettings;
+    if (storedAdminSettings) {
+        try {
+            const adminPageRender = adminPage.getAdminPageRender({ platform });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-customized-page',
+                page: adminPageRender,
+            }, '*');
+            await chrome.storage.local.set({ adminSettings: storedAdminSettings });
+            adminSettings = storedAdminSettings;
+        } catch (e) {
+            console.log('Cannot find admin settings', e);
+        }
+    }
+    return { isAdmin, adminSettings }
+}
+
 async function getServerSideLogging({ platform, rcAccessToken }) {
-    if (!!!platform.serverSideLogging) {
+    if (!platform.serverSideLogging) {
         return;
     }
     const serverDomainUrl = platform.serverSideLogging.url;
     const { serverSideLoggingToken } = await chrome.storage.local.get('serverSideLoggingToken');
-    if (!!serverSideLoggingToken) {
+    if (serverSideLoggingToken) {
         try {
             const subscribeResp = await axios.get(
                 `${serverDomainUrl}/subscription`,
@@ -74,13 +96,13 @@ async function getServerSideLogging({ platform, rcAccessToken }) {
 }
 
 async function enableServerSideLogging({ platform, rcAccessToken, subscriptionLevel }) {
-    if (!!!platform.serverSideLogging) {
+    if (!platform.serverSideLogging) {
         return;
     }
     const serverDomainUrl = platform.serverSideLogging.url;
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { serverSideLoggingToken } = await chrome.storage.local.get('serverSideLoggingToken');
-    if (!!serverSideLoggingToken) {
+    if (serverSideLoggingToken) {
         try {
             // get subscription
             const getSubscriptionResp = await axios.get(
@@ -150,12 +172,12 @@ async function enableServerSideLogging({ platform, rcAccessToken, subscriptionLe
 }
 
 async function disableServerSideLogging({ platform, rcAccessToken }) {
-    if (!!!platform.serverSideLogging) {
+    if (!platform.serverSideLogging) {
         return;
     }
     const serverDomainUrl = platform.serverSideLogging.url;
     const { serverSideLoggingToken } = await chrome.storage.local.get('serverSideLoggingToken');
-    if (!!serverSideLoggingToken) {
+    if (serverSideLoggingToken) {
         try {
             // get subscription
             const getSubscriptionResp = await axios.get(
@@ -186,7 +208,7 @@ async function disableServerSideLogging({ platform, rcAccessToken }) {
             if (e.response.status === 401) {
                 // Token expired
                 const serverSideLoggingToken = await authServerSideLogging({ platform, rcAccessToken });
-                if (!getSubscriptionResp.data.subscribed) {
+                if (!serverSideLoggingToken) {
                     return;
                 }
                 // Unsubscribe
@@ -208,7 +230,7 @@ async function disableServerSideLogging({ platform, rcAccessToken }) {
 }
 
 async function updateServerSideDoNotLogNumbers({ platform, rcAccessToken, doNotLogNumbers }) {
-    if (!!!platform.serverSideLogging) {
+    if (!platform.serverSideLogging) {
         return;
     }
     const serverDomainUrl = platform.serverSideLogging.url;
@@ -227,7 +249,7 @@ async function updateServerSideDoNotLogNumbers({ platform, rcAccessToken, doNotL
             parsedNumbers.push(n);
         }
     }
-    if (!!serverSideLoggingToken) {
+    if (serverSideLoggingToken) {
         try {
             // update do not log numbers
             const updateNumbersResp = await axios.post(
@@ -266,7 +288,7 @@ async function updateServerSideDoNotLogNumbers({ platform, rcAccessToken, doNotL
 }
 
 async function authServerSideLogging({ platform, rcAccessToken }) {
-    if (!!!platform.serverSideLogging) {
+    if (!platform.serverSideLogging) {
         return;
     }
 

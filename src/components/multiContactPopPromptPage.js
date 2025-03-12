@@ -1,5 +1,5 @@
 function getMultiContactPopPromptPageRender({ contactInfo, searchWord }) {
-    const filteredContactInfo = !!searchWord ? contactInfo.filter(c => c.name.toLowerCase().includes(searchWord.toLowerCase()) || c.id.toString().toLowerCase().includes(searchWord.toLowerCase())) : contactInfo;
+    const filteredContactInfo = searchWord ? contactInfo.filter(c => c.name.toLowerCase().includes(searchWord.toLowerCase()) || c.id.toString().toLowerCase().includes(searchWord.toLowerCase())) : contactInfo;
     const filteredContactList = [];
     for (const c of filteredContactInfo) {
         filteredContactList.push({

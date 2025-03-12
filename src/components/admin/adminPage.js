@@ -1,6 +1,6 @@
-const adminIcon = require('../../images/adminIcon.png');
-const adminIconActive = require('../../images/adminIcon_active.png');
-const adminIconDark = require('../../images/adminIcon_dark.png');
+import adminIcon from '../../images/adminIcon.png';
+import adminIconActive from '../../images/adminIcon_active.png';
+import adminIconDark from '../../images/adminIcon_dark.png';
 
 function getAdminPageRender({ platform }) {
     const page = {
@@ -37,7 +37,7 @@ function getAdminPageRender({ platform }) {
             }
         }
     }
-    if (!!platform.serverSideLogging) {
+    if (platform.serverSideLogging) {
         page.schema.properties.section.oneOf.push({
             const: "serverSideLoggingSetting",
             title: "Server side logging (Beta)",

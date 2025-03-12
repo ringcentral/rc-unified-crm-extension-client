@@ -7,7 +7,7 @@ function getFeedbackPageRender({ pageConfig, version }) {
     };
     let required = [];
     for (const e of pageConfig.elements) {
-        if (!!e.required) {
+        if (e.required) {
             required.push(e.const);
         }
         switch (e.type) {

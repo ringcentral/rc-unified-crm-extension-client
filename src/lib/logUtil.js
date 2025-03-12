@@ -1,0 +1,181 @@
+import userCore from '../core/user';
+function getAdditionalFieldDefaultValuesFromSetting({
+    platform,
+    userSettings,
+    caseType,
+    logType
+}) {
+    const additionalFields = platform?.page[logType]?.additionalFields;
+    const result = [];
+    if (!!additionalFields && !!platform.settings && platform.settings.length > 0) {
+        for (const field of additionalFields) {
+            const defaultValueSetting = platform.settings.find(s => s.id == field.defaultSettingId);
+            if (defaultValueSetting) {
+                const valueItem = defaultValueSetting.items.find(i => i.id === field.defaultSettingValues[caseType].settingId)
+                if (valueItem) {
+                    result.push({ field: field.const, value: userCore.getCustomSetting(userSettings, valueItem.id, valueItem.defaultValue).value });
+                }
+            }
+        }
+    }
+    return result;
+}
+
+function logPageFormDataDefaulting({ platform, userSettings, targetPage, caseType, logType }) {
+    const platformName = platform.name;
+    const defaultValues = getAdditionalFieldDefaultValuesFromSetting({
+        platform,
+        userSettings,
+        caseType,
+        logType
+    });
+    let updatedTargetPage = targetPage;
+    for (const defaultValue of defaultValues) {
+        let fieldType = targetPage.schema.properties[defaultValue.field]?.oneOf ? 'options' : 'boolean';
+        switch (fieldType) {
+            case 'options':
+                const mappedOption = targetPage.schema.properties[defaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, defaultValue.value))?.const;
+                if (mappedOption) {
+                    updatedTargetPage.formData[defaultValue.field] = mappedOption;
+                }
+                else if (allowBullhornCustomNoteAction({ platformName, userSettings }) && !!platform?.page['callLog']?.additionalFields.find(f => f.const == defaultValue.field)?.allowCustomValue && !!targetPage.schema.properties[defaultValue.field]?.oneOf) {
+                    targetPage.schema.properties[defaultValue.field].oneOf.push({ const: defaultValue.value, title: defaultValue.value });
+                    updatedTargetPage.formData[defaultValue.field] = defaultValue.value;
+                }
+                break;
+            case 'boolean':
+                if (defaultValue?.value) {
+                    updatedTargetPage.formData[defaultValue.field] = defaultValue.value;
+                }
+                break;
+        }
+    }
+    return updatedTargetPage;
+}
+
+// Hack: bullhorn specific logic to check if allow custom note action value
+function allowBullhornCustomNoteAction({ platformName, userSettings }) {
+    if (platformName === 'bullhorn') {
+        const allowedFromUserSetting = userSettings?.allowBullhornCustomNoteAction?.value ?? false;
+        return allowedFromUserSetting;
+    }
+    else {
+        return true;
+    }
+}
+
+// A fuzzy string compare that ignores cases and spaces
+function rawTextCompare(str1 = '', str2 = '') {
+    return str1.toLowerCase().replace(/\s/g, '') === str2.toLowerCase().replace(/\s/g, '');
+}
+
+function getLogConflictInfo({
+    platform,
+    isAutoLog,
+    contactInfo,
+    logType,
+    direction,
+    isVoicemail
+}) {
+    if (!isAutoLog) {
+        return { hasConflict: false, autoSelectAdditionalSubmission: {} }
+    }
+    let hasConflict = false;
+    let autoSelectAdditionalSubmission = {};
+    const existingContactInfo = contactInfo.filter(c => !c.isNewContact);
+    if (existingContactInfo.length === 0) {
+        hasConflict = true;
+    }
+    else if (existingContactInfo.length > 1) {
+        hasConflict = true;
+    }
+    else if (existingContactInfo[0]?.additionalInfo) {
+        const additionalFieldsKeys = Object.keys(existingContactInfo[0].additionalInfo);
+        // go through all additional fields
+        for (const key of additionalFieldsKeys) {
+            const fieldOptions = existingContactInfo[0].additionalInfo[key];
+            let caseType = '';
+            if (logType === 'callLog') {
+                if (direction === 'Inbound') {
+                    caseType = 'inboundCall';
+                }
+                else {
+                    caseType = 'outboundCall';
+                }
+            }
+            else if (logType === 'messageLog') {
+                if (isVoicemail) {
+                    caseType = 'voicemail';
+                }
+                else {
+                    caseType = 'message';
+                }
+            }
+            // check if this contact's field options exist and
+            // 1. Only 1 option -> directly choose it
+            // 2. More than 1 option -> Check default value setup
+            //    2.1 If no default value -> Report conflict
+            //    2.2 If default value -> Apply it
+            // 3. zero option ->  
+            if (Array.isArray(fieldOptions)) {
+                if (fieldOptions.length > 1) {
+                    const fieldDefaultValues = getAdditionalFieldDefaultValuesFromSetting({
+                        platform,
+                        userSettings,
+                        caseType,
+                        logType
+                    });
+                    let allMatched = true;
+                    const fieldDefaultValue = fieldDefaultValues.find(f => f.field === key);
+                    if (fieldDefaultValue) {
+                        const fieldMappedOption = existingContactInfo[0].additionalInfo[key]?.find(o => rawTextCompare(o.const, fieldDefaultValue.value))?.const;
+                        if (fieldMappedOption) {
+                            autoSelectAdditionalSubmission[key] = fieldMappedOption;
+                            continue;
+                        }
+                        else {
+                            const allowCustomValue = !!platform?.page[logType]?.additionalFields.find(f => f.const == key)?.allowCustomValue;
+                            if (allowBullhornCustomNoteAction({ platformName: platform.name, userSettings }) && allowCustomValue) {
+                                autoSelectAdditionalSubmission[key] = fieldDefaultValue.value;
+                                continue;
+                            }
+                            else {
+                                allMatched = false;
+                            }
+                        }
+                    }
+                    return { hasConflict: !allMatched, autoSelectAdditionalSubmission };
+                }
+                else if (fieldOptions.length === 1) {
+                    autoSelectAdditionalSubmission[key] = fieldOptions[0].const;
+                }
+            }
+            // if non array field, go with the value directly
+            else {
+                const fieldDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType, logType });
+                const fieldDefaultValue = fieldDefaultValues.find(f => f.field === key);
+                if (fieldDefaultValue) {
+                    autoSelectAdditionalSubmission[key] = fieldDefaultValue.value;
+                }
+            }
+        }
+    }
+    return { hasConflict, autoSelectAdditionalSubmission }
+}
+
+async function forceCallLogMatcherCheck({ userSettings, crmAuthed }) {
+    if (!!userSettings?.serverSideLogging?.enable && crmAuthed) {
+        // To help with performance, we only check the first 10 calls
+        const { calls, hasMore } = await RCAdapter.getUnloggedCalls(10, 1)
+        const sessionIds = calls.map(c => c.sessionId);
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-trigger-call-logger-match',
+            sessionIds: sessionIds
+        }, '*');
+    }
+}
+
+
+exports.getLogConflictInfo = getLogConflictInfo;
+exports.logPageFormDataDefaulting = logPageFormDataDefaulting;
+exports.forceCallLogMatcherCheck = forceCallLogMatcherCheck;

@@ -26,13 +26,13 @@ function getAuthPageRender({ manifest, platformName }) {
         }
     };
     for (const c of authPage.content) {
-        if (!!c.uiSchema) {
+        if (c.uiSchema) {
             uiSchema[c.const] = c.uiSchema;
         }
     }
     let formData = {};
     for (const c of authPage.content) {
-        if (!!c.defaultValue) {
+        if (c.defaultValue) {
             formData[c.const] = c.defaultValue;
         }
     }

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getServiceManifest } from '../service/embeddableServices';
 
 async function preloadUserSettingsFromAdmin({ serverUrl, rcAccessToken }) {
     try {
@@ -22,7 +23,7 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' });
     let userSettingsToUpload = userSettings;
-    if (!!userSettingsToUpload.selectedRegion) {
+    if (userSettingsToUpload.selectedRegion) {
         userSettingsToUpload.selectedRegion.value = selectedRegion;
     }
     else {
@@ -35,6 +36,39 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
         });
     return userSettingsToUpload;
 }
+
+
+async function refreshUserSettings({ platform, crmAuthed, isAdmin, manifest, userPermissions, rcAccessToken }) {
+    let userSettings = await getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
+    await chrome.storage.local.set({ userSettings });
+    userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+    const serviceManifest = await getServiceManifest({
+        platform,
+        crmAuthed,
+        isAdmin,
+        manifest,
+        userSettings,
+        userPermissions
+    });
+    RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-third-party-service',
+        service: serviceManifest
+    }, '*');
+    const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
+    const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-update-ai-assistant-settings',
+        showAiAssistantWidget: showAiAssistantWidgetSetting?.value ?? false,
+        showAiAssistantWidgetReadOnly: showAiAssistantWidgetSetting?.readOnly ?? false,
+        showAiAssistantWidgetReadOnlyReason: showAiAssistantWidgetSetting?.readOnlyReason ?? '',
+        autoStartAiAssistant: autoStartAiAssistantSetting?.value ?? false,
+        autoStartAiAssistantReadOnly: autoStartAiAssistantSetting?.readOnly ?? false,
+        autoStartAiAssistantReadOnlyReason: autoStartAiAssistantSetting?.readOnlyReason ?? '',
+    }, '*');
+    return userSettings;
+}
+
 function getAutoLogCallSetting(userSettings, isAdmin) {
     const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
     if (serverSideLoggingEnabled && (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
@@ -47,7 +81,7 @@ function getAutoLogCallSetting(userSettings, isAdmin) {
     }
     return {
         value: userSettings?.autoLogCall?.value ?? false,
-        readOnly: userSettings?.autoLogCall?.customizable === undefined ? false : !!!userSettings?.autoLogCall?.customizable,
+        readOnly: userSettings?.autoLogCall?.customizable === undefined ? false : !userSettings?.autoLogCall?.customizable,
         readOnlyReason: !userSettings?.autoLogCall?.customizable ? 'This setting is managed by admin' : ''
     }
 }
@@ -55,7 +89,7 @@ function getAutoLogCallSetting(userSettings, isAdmin) {
 function getAutoLogSMSSetting(userSettings) {
     return {
         value: userSettings?.autoLogSMS?.value ?? false,
-        readOnly: userSettings?.autoLogSMS?.customizable === undefined ? false : !!!userSettings?.autoLogSMS?.customizable,
+        readOnly: userSettings?.autoLogSMS?.customizable === undefined ? false : !userSettings?.autoLogSMS?.customizable,
         readOnlyReason: !userSettings?.autoLogSMS?.customizable ? 'This setting is managed by admin' : ''
     }
 }
@@ -63,88 +97,88 @@ function getAutoLogSMSSetting(userSettings) {
 function getDisableRetroCallLogSync(userSettings) {
     return {
         value: userSettings?.disableRetroCallLogSync?.value ?? false,
-        readOnly: userSettings?.disableRetroCallLogSync?.customizable === undefined ? false : !!!userSettings?.disableRetroCallLogSync?.customizable,
-        readOnlyReason: !!!userSettings?.disableRetroCallLogSync?.customizable ? 'This setting is managed by admin' : ''
+        readOnly: userSettings?.disableRetroCallLogSync?.customizable === undefined ? false : !userSettings?.disableRetroCallLogSync?.customizable,
+        readOnlyReason: !userSettings?.disableRetroCallLogSync?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getCallPopSetting(userSettings) {
     return {
         value: userSettings?.popupLogPageAfterCall?.value ?? false,
-        readOnly: userSettings?.popupLogPageAfterCall?.customizable === undefined ? false : !!!userSettings?.popupLogPageAfterCall?.customizable,
-        readOnlyReason: !!!userSettings?.popupLogPageAfterCall?.customizable ? 'This setting is managed by admin' : ''
+        readOnly: userSettings?.popupLogPageAfterCall?.customizable === undefined ? false : !userSettings?.popupLogPageAfterCall?.customizable,
+        readOnlyReason: !userSettings?.popupLogPageAfterCall?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getSMSPopSetting(userSettings) {
     return {
         value: userSettings?.popupLogPageAfterSMS?.value ?? false,
-        readOnly: userSettings?.popupLogPageAfterSMS?.customizable === undefined ? false : !!!userSettings?.popupLogPageAfterSMS?.customizable,
-        readOnlyReason: !!!userSettings?.popupLogPageAfterSMS?.customizable ? 'This setting is managed by admin' : ''
+        readOnly: userSettings?.popupLogPageAfterSMS?.customizable === undefined ? false : !userSettings?.popupLogPageAfterSMS?.customizable,
+        readOnlyReason: !userSettings?.popupLogPageAfterSMS?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getIncomingCallPop(userSettings) {
     return {
         value: userSettings?.openContactPageFromIncomingCall?.value ?? 'disabled',
-        readOnly: userSettings?.openContactPageFromIncomingCall?.customizable === undefined ? false : !!!userSettings?.openContactPageFromIncomingCall?.customizable,
-        readOnlyReason: !!!userSettings?.openContactPageFromIncomingCall?.customizable ? 'This setting is managed by admin' : ''
+        readOnly: userSettings?.openContactPageFromIncomingCall?.customizable === undefined ? false : !userSettings?.openContactPageFromIncomingCall?.customizable,
+        readOnlyReason: !userSettings?.openContactPageFromIncomingCall?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getOutgoingCallPop(userSettings) {
     return {
         value: userSettings?.openContactPageFromOutgoingCall?.value ?? 'disabled',
-        readOnly: userSettings?.openContactPageFromOutgoingCall?.customizable === undefined ? false : !!!userSettings?.openContactPageFromOutgoingCall?.customizable,
-        readOnlyReason: !!!userSettings?.openContactPageFromOutgoingCall?.customizable ? 'This setting is managed by admin' : ''
+        readOnly: userSettings?.openContactPageFromOutgoingCall?.customizable === undefined ? false : !userSettings?.openContactPageFromOutgoingCall?.customizable,
+        readOnlyReason: !userSettings?.openContactPageFromOutgoingCall?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getCallPopMultiMatchBehavior(userSettings) {
     return {
         value: userSettings?.multiContactMatchBehavior?.value ?? 'openAllMatches',
-        readOnly: userSettings?.multiContactMatchBehavior?.customizable === undefined ? false : !!!userSettings?.multiContactMatchBehavior?.customizable,
-        readOnlyReason: !!!userSettings?.multiContactMatchBehavior?.customizable ? 'This setting is managed by admin' : ''
+        readOnly: userSettings?.multiContactMatchBehavior?.customizable === undefined ? false : !userSettings?.multiContactMatchBehavior?.customizable,
+        readOnlyReason: !userSettings?.multiContactMatchBehavior?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getOpenContactAfterCreationSetting(userSettings) {
     return {
         value: userSettings?.openContactAfterCreatingIt?.value ?? false,
-        readOnly: userSettings?.openContactAfterCreatingIt?.customizable === undefined ? false : !!!userSettings?.openContactAfterCreatingIt?.customizable,
-        readOnlyReason: !!!userSettings?.openContactAfterCreatingIt?.customizable ? 'This setting is managed by admin' : ''
+        readOnly: userSettings?.openContactAfterCreatingIt?.customizable === undefined ? false : !userSettings?.openContactAfterCreatingIt?.customizable,
+        readOnlyReason: !userSettings?.openContactAfterCreatingIt?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getDeveloperModeSetting(userSettings) {
     return {
         value: userSettings?.developerMode?.value ?? false,
-        readOnly: userSettings?.developerMode?.customizable === undefined ? false : !!!userSettings?.developerMode?.customizable,
-        readOnlyReason: !!!userSettings?.developerMode?.customizable ? 'This setting is managed by admin' : ''
+        readOnly: userSettings?.developerMode?.customizable === undefined ? false : !userSettings?.developerMode?.customizable,
+        readOnlyReason: !userSettings?.developerMode?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getAutoOpenSetting(userSettings) {
     return {
         value: userSettings?.autoOpenExtension?.value ?? false,
-        readOnly: userSettings?.autoOpenExtension?.customizable === undefined ? false : !!!userSettings?.autoOpenExtension?.customizable,
-        readOnlyReason: !!!userSettings?.autoOpenExtension?.customizable ? 'This setting is managed by admin' : ''
+        readOnly: userSettings?.autoOpenExtension?.customizable === undefined ? false : !userSettings?.autoOpenExtension?.customizable,
+        readOnlyReason: !userSettings?.autoOpenExtension?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getShowAiAssistantWidgetSetting(userSettings) {
     return {
         value: userSettings?.showAiAssistantWidget?.value ?? false,
-        readOnly: userSettings?.showAiAssistantWidget?.customizable === undefined ? false : !!!userSettings?.showAiAssistantWidget?.customizable,
-        readOnlyReason: !!!userSettings?.showAiAssistantWidget?.customizable ? 'This setting is managed by admin' : ''
+        readOnly: userSettings?.showAiAssistantWidget?.customizable === undefined ? false : !userSettings?.showAiAssistantWidget?.customizable,
+        readOnlyReason: !userSettings?.showAiAssistantWidget?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getAutoStartAiAssistantSetting(userSettings) {
     return {
         value: userSettings?.autoStartAiAssistant?.value ?? false,
-        readOnly: userSettings?.autoStartAiAssistant?.customizable === undefined ? false : !!!userSettings?.autoStartAiAssistant?.customizable,
-        readOnlyReason: !!!userSettings?.autoStartAiAssistant?.customizable ? 'This setting is managed by admin' : ''
+        readOnly: userSettings?.autoStartAiAssistant?.customizable === undefined ? false : !userSettings?.autoStartAiAssistant?.customizable,
+        readOnlyReason: !userSettings?.autoStartAiAssistant?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -158,14 +192,15 @@ function getCustomSetting(userSettings, id, defaultValue) {
     }
     return {
         value: userSettings[id]?.value ?? defaultValue,
-        readOnly: userSettings[id]?.customizable === undefined ? false : !!!userSettings[id]?.customizable,
-        readOnlyReason: !!!userSettings[id]?.customizable ? 'This setting is managed by admin' : ''
+        readOnly: userSettings[id]?.customizable === undefined ? false : !userSettings[id]?.customizable,
+        readOnlyReason: !userSettings[id]?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
 exports.preloadUserSettingsFromAdmin = preloadUserSettingsFromAdmin;
 exports.getUserSettings = getUserSettings;
 exports.uploadUserSettings = uploadUserSettings;
+exports.refreshUserSettings = refreshUserSettings;
 
 exports.getAutoLogCallSetting = getAutoLogCallSetting;
 exports.getAutoLogSMSSetting = getAutoLogSMSSetting;

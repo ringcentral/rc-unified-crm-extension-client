@@ -3,55 +3,74 @@ import { isObjectEmpty, showNotification } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 
 // Input {id} = sessionId from RC
-async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNote, transcript, additionalSubmission, rcAdditionalSubmission, contactId, contactType, contactName, isShowNotification = true }) {
+async function addLog({
+    serverUrl,
+    logType,
+    logInfo,
+    isMain,
+    subject,
+    note,
+    aiNote,
+    transcript,
+    additionalSubmission,
+    rcAdditionalSubmission,
+    contactId,
+    contactType,
+    contactName,
+    userSettings,
+    isShowNotification = true
+}) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const { userSettings } = await chrome.storage.local.get('userSettings');
-    additionalSubmission = { ...additionalSubmission, ...rcAdditionalSubmission };
+    const mergedAdditionalSubmission = { ...additionalSubmission, ...rcAdditionalSubmission };
     const overridingPhoneNumberFormat = [];
-    if (!!userSettings?.overridingPhoneNumberFormat?.value) {
+    if (userSettings?.overridingPhoneNumberFormat?.value) {
         overridingPhoneNumberFormat.push(userSettings.overridingPhoneNumberFormat.value);
     }
-    if (!!userSettings?.overridingPhoneNumberFormat2?.value) {
+    if (userSettings?.overridingPhoneNumberFormat2?.value) {
         overridingPhoneNumberFormat.push(userSettings.overridingPhoneNumberFormat2.value);
     }
-    if (!!userSettings?.overridingPhoneNumberFormat3?.value) {
+    if (userSettings?.overridingPhoneNumberFormat3?.value) {
         overridingPhoneNumberFormat.push(userSettings.overridingPhoneNumberFormat3.value);
     }
 
-    if (!!subject) {
+    if (subject) {
+        // eslint-disable-next-line no-param-reassign
         logInfo['customSubject'] = subject;
     }
-    if (!!rcUnifiedCrmExtJwt) {
+    let addLogRes;
+    if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
                 // case: if call is recorded and recording is ready
                 if (logInfo.recording) {
                     const rcAccessToken = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).access_token;
+                    // eslint-disable-next-line no-param-reassign
                     logInfo.recording.downloadUrl = `${logInfo.recording.contentUri}?accessToken=${rcAccessToken}`;
                 }
                 else {
                     // case: if call is recorded but recording isn't ready, use '(pending...)' as temporary placeholder
                     const hasRecording = await chrome.storage.local.get(`rec-link-${logInfo.sessionId}`);
-                    if (!!hasRecording[`rec-link-${logInfo.sessionId}`]) {
+                    if (hasRecording[`rec-link-${logInfo.sessionId}`]) {
+                        // eslint-disable-next-line no-param-reassign
                         logInfo.recording = hasRecording[`rec-link-${logInfo.sessionId}`];
                     }
                 }
-                const addCallLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
-                if (addCallLogRes.data.successful) {
+                addLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission: mergedAdditionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+                if (addLogRes.data.successful) {
                     trackSyncCallLog({ hasNote: note !== '' });
                     if (isShowNotification) {
-                        showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'success', message: addCallLogRes.data.returnMessage?.message ?? 'Call log added', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000, details: addCallLogRes.data.returnMessage?.details });
+                        showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'success', message: addLogRes.data.returnMessage?.message ?? 'Call log added', ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
                     }
                     await chrome.storage.local.set({
                         [`rc-crm-call-log-${logInfo.sessionId}`]: {
                             contact: { id: contactId },
-                            logId: addCallLogRes.data.logId,
+                            logId: addLogRes.data.logId,
                         }
                     });
                 }
                 else {
                     if (isShowNotification) {
-                        showNotification({ level: addCallLogRes.data.returnMessage?.messageType ?? 'warning', message: addCallLogRes.data.returnMessage?.message ?? 'Failed to save call log', ttl: addCallLogRes.data.returnMessage?.ttl ?? 3000, details: addCallLogRes.data.returnMessage?.details });
+                        showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'warning', message: addLogRes.data.returnMessage?.message ?? 'Failed to save call log', ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
                     }
                 }
                 // force call log matcher check
@@ -61,9 +80,9 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNo
                 }, '*');
                 break;
             case 'Message':
-                const messageLogRes = await axios.post(`${serverUrl}/messageLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
-                if (messageLogRes.data.successful) {
-                    if (isMain & messageLogRes.data.logIds.length > 0) {
+                addLogRes = await axios.post(`${serverUrl}/messageLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, additionalSubmission: mergedAdditionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+                if (addLogRes.data.successful) {
+                    if (isMain & addLogRes.data.logIds.length > 0) {
                         trackSyncMessageLog();
                         let messageLogPrefCache = {};
                         messageLogPrefCache[`rc-crm-conversation-pref-${logInfo.conversationLogId}`] = {
@@ -72,12 +91,12 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNo
                                 type: contactType,
                                 name: contactName
                             },
-                            additionalSubmission
+                            additionalSubmission: mergedAdditionalSubmission
                         };
                         await chrome.storage.local.set(messageLogPrefCache);
                     }
-                    if (messageLogRes.data.logIds?.length > 0 && isShowNotification) {
-                        showNotification({ level: messageLogRes.data.returnMessage?.messageType ?? 'success', message: messageLogRes.data.returnMessage?.message ?? 'Message log added', ttl: messageLogRes.data.returnMessage?.ttl ?? 3000, details: messageLogRes.data.returnMessage?.details });
+                    if (addLogRes.data.logIds?.length > 0 && isShowNotification) {
+                        showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'success', message: addLogRes.data.returnMessage?.message ?? 'Message log added', ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
                     }
                     await chrome.storage.local.set({ [`rc-crm-conversation-log-${logInfo.conversationLogId}`]: { logged: true } });
                 }
@@ -91,7 +110,7 @@ async function addLog({ serverUrl, logType, logInfo, isMain, subject, note, aiNo
 
 async function getLog({ serverUrl, logType, sessionIds, requireDetails }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    if (!!rcUnifiedCrmExtJwt) {
+    if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
                 const callLogRes = await axios.get(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}&sessionIds=${sessionIds}&requireDetails=${requireDetails}`);
@@ -115,7 +134,7 @@ function openLog({ manifest, platformName, hostname, logId, contactType, contact
 
 async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, recordingDownloadLink, subject, note, startTime, duration, aiNote, transcript, result, isShowNotification }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    if (!!rcUnifiedCrmExtJwt) {
+    if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
                 const patchBody = {

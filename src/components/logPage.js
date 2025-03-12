@@ -1,8 +1,8 @@
-const outboundCallIcon = require('../images/outboundCallIcon.png');
-const inboundCallIcon = require('../images/inboundCallIcon.png');
-const conflictLogIcon = require('../images/conflictLogIcon.png');
-const smsMessageIcon = require('../images/smsMessageIcon.png');
-const logCore = require('../core/log');
+import outboundCallIcon from '../images/outboundCallIcon.png';
+import inboundCallIcon from '../images/inboundCallIcon.png';
+import conflictLogIcon from '../images/conflictLogIcon.png';
+import smsMessageIcon from '../images/smsMessageIcon.png';
+import logCore from '../core/log';
 
 function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, subject, note, loggedContactId, isUnresolved }) {
     const additionalChoiceFields = logType === 'Call' ?
@@ -57,7 +57,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             let additionalFields = {};
             let additionalFieldsValue = {};
             for (const f of additionalChoiceFields) {
-                if (!contactList[0]?.additionalInfo?.hasOwnProperty(f.const)) {
+                if (contactList[0]?.additionalInfo?.[f.const] ?? false) {
                     continue;
                 }
                 additionalFields[f.const] = {
@@ -67,12 +67,12 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     associationField: !!f.contactDependent
                 }
                 additionalFieldsValue[f.const] = contactList[0].additionalInfo[f.const][0].const;
-                if (!!f.required) {
+                if (f.required) {
                     requiredFieldNames.push(f.const);
                 }
             }
             for (const f of additionalCheckBoxFields) {
-                if (!contactList[0]?.additionalInfo?.hasOwnProperty(f.const)) {
+                if (contactList[0]?.additionalInfo?.[f.const] ?? false) {
                     continue;
                 }
                 additionalFields[f.const] = {
@@ -81,12 +81,12 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     associationField: !!f.contactDependent
                 }
                 additionalFieldsValue[f.const] = f.defaultValue ?? false;
-                if (!!f.required) {
+                if (f.required) {
                     requiredFieldNames.push(f.const);
                 }
             }
             for (const f of additionalInputFields) {
-                if (!contactList[0]?.additionalInfo?.hasOwnProperty(f.const)) {
+                if (contactList[0]?.additionalInfo?.[f.const] ?? false) {
                     continue;
                 }
                 additionalFields[f.const] = {
@@ -95,7 +95,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     associationField: !!f.contactDependent
                 }
                 additionalFieldsValue[f.const] = f.defaultValue ?? '';
-                if (!!f.required) {
+                if (f.required) {
                     requiredFieldNames.push(f.const);
                 }
             }
@@ -126,7 +126,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 }
             }
             if (contactList[0].isNewContact) {
-                if (!!manifest.platforms[platformName].contactTypes) {
+                if (manifest.platforms[platformName].contactTypes) {
                     newContactWidget.newContactType = {};
                 }
                 newContactWidget.newContactName = {
@@ -295,7 +295,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             const contact = page.schema.properties.contact.oneOf.find(c => c.const === page.formData.contact);
             // New contact fields
             if (contact.isNewContact) {
-                if (!!manifest.platforms[platformName].contactTypes) {
+                if (manifest.platforms[platformName].contactTypes) {
                     page.uiSchema.newContactType = {};
                 }
                 page.uiSchema.newContactName = {
@@ -333,7 +333,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             // Additional fields
             const allAssociationFields = Object.keys(page.schema.properties);
             for (const af of allAssociationFields) {
-                if (!!page.schema.properties[af].associationField) {
+                if (page.schema.properties[af].associationField) {
                     delete page.schema.properties[af];
                     delete page.formData[af];
                 }
@@ -341,7 +341,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             let additionalFields = {};
             let additionalFieldsValue = {};
             for (const f of additionalChoiceFields) {
-                if (f.contactDependent && !contact?.additionalInfo?.hasOwnProperty(f.const)) {
+                if (f.contactDependent && (contact?.additionalInfo?.[f.const] ?? false)) {
                     continue;
                 }
                 additionalFields[f.const] = {
@@ -358,7 +358,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                 }
             }
             for (const f of additionalCheckBoxFields) {
-                if (f.contactDependent && !contact?.additionalInfo?.hasOwnProperty(f.const)) {
+                if (f.contactDependent && (contact?.additionalInfo?.[f.const] ?? false)) {
                     continue;
                 }
                 additionalFields[f.const] = {
@@ -374,7 +374,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                 }
             }
             for (const f of additionalInputFields) {
-                if (f.contactDependent && !contact?.additionalInfo?.hasOwnProperty(f.const)) {
+                if (f.contactDependent && (contact?.additionalInfo?.[f.const] ?? false)) {
                     continue;
                 }
                 additionalFields[f.const] = {

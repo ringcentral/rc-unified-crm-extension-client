@@ -1,5 +1,5 @@
 function getCustomSettingsPageRender({ crmManifest, adminUserSettings }) {
-    if (!!!crmManifest?.settings) {
+    if (!crmManifest?.settings) {
         return null;
     }
     let page =
