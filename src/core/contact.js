@@ -30,7 +30,7 @@ function getLocalCachedContact({ phoneNumber, platformName }) {
     return result;
 }
 
-async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNumber = false, isForceRefresh = false, isForContactMatchEvent = false }) {
+async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNumber = false, isForceRefresh = false, isToTriggerContactMatch = true }) {
     if (!isForceRefresh) {
         const cachedContact = getLocalCachedContact({ phoneNumber, platformName });
         if (cachedContact.length > 0) {
@@ -56,7 +56,7 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
 
     if (rcUnifiedCrmExtJwt) {
         const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${overridingFormats.toString()}&isExtension=${isExtensionNumber}`);
-        if (!isForContactMatchEvent) {
+        if (isToTriggerContactMatch) {
             let tempContactMatchTask = {};
             tempContactMatchTask[`tempContactMatchTask-${phoneNumber}`] = [...contactRes.data.contact.filter(c => !c.isNewContact)];
             await chrome.storage.local.set({ ...tempContactMatchTask });

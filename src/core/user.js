@@ -102,6 +102,14 @@ function getDisableRetroCallLogSync(userSettings) {
     }
 }
 
+function getOneTimeLogSetting(userSettings) {  
+    return {
+        value: userSettings?.oneTimeLog?.value ?? false,
+        readOnly: userSettings?.oneTimeLog?.customizable === undefined ? false : !userSettings?.oneTimeLog?.customizable,
+        readOnlyReason: !userSettings?.oneTimeLog?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getCallPopSetting(userSettings) {
     return {
         value: userSettings?.popupLogPageAfterCall?.value ?? false,
@@ -205,6 +213,7 @@ exports.refreshUserSettings = refreshUserSettings;
 exports.getAutoLogCallSetting = getAutoLogCallSetting;
 exports.getAutoLogSMSSetting = getAutoLogSMSSetting;
 exports.getDisableRetroCallLogSync = getDisableRetroCallLogSync;
+exports.getOneTimeLogSetting = getOneTimeLogSetting;
 exports.getCallPopSetting = getCallPopSetting;
 exports.getSMSPopSetting = getSMSPopSetting;
 exports.getIncomingCallPop = getIncomingCallPop;

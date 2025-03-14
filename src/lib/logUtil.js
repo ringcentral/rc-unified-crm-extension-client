@@ -75,7 +75,8 @@ function getLogConflictInfo({
     contactInfo,
     logType,
     direction,
-    isVoicemail
+    isVoicemail,
+    userSettings
 }) {
     if (!isAutoLog) {
         return { hasConflict: false, autoSelectAdditionalSubmission: {} }
@@ -163,19 +164,6 @@ function getLogConflictInfo({
     return { hasConflict, autoSelectAdditionalSubmission }
 }
 
-async function forceCallLogMatcherCheck({ userSettings, crmAuthed }) {
-    if (!!userSettings?.serverSideLogging?.enable && crmAuthed) {
-        // To help with performance, we only check the first 10 calls
-        const { calls, hasMore } = await RCAdapter.getUnloggedCalls(10, 1)
-        const sessionIds = calls.map(c => c.sessionId);
-        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-            type: 'rc-adapter-trigger-call-logger-match',
-            sessionIds: sessionIds
-        }, '*');
-    }
-}
-
 
 exports.getLogConflictInfo = getLogConflictInfo;
 exports.logPageFormDataDefaulting = logPageFormDataDefaulting;
-exports.forceCallLogMatcherCheck = forceCallLogMatcherCheck;

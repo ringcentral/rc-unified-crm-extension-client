@@ -1,7 +1,8 @@
-import { build } from 'esbuild';
-import copyStaticFiles from 'esbuild-copy-static-files';
-import svgr from 'esbuild-plugin-svgr';
-import fs from 'fs';
+/* eslint-disable no-undef */
+const { build } = require('esbuild');
+const copyStaticFiles = require('esbuild-copy-static-files');
+const svgr = require('esbuild-plugin-svgr');
+const fs = require('fs');
 
 
 async function runBuild() {

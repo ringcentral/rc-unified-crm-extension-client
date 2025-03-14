@@ -46,7 +46,8 @@ async function retroAutoCallLog({
                     contactInfo: callMatchedContact,
                     logType: 'callLog',
                     direction: c.direction,
-                    isVoicemail: false
+                    isVoicemail: false,
+                    userSettings
                 });
                 if (!hasConflict) {
                     const callLogSubject = c.direction === 'Inbound' ?
@@ -103,4 +104,60 @@ async function retroAutoCallLog({
     }
 }
 
+async function forceCallLogMatcherCheck({ userSettings, crmAuthed }) {
+    if (!!userSettings?.serverSideLogging?.enable && crmAuthed) {
+        // To help with performance, we only check the first 10 calls
+        const { calls, hasMore } = await RCAdapter.getUnloggedCalls(10, 1)
+        const sessionIds = calls.map(c => c.sessionId);
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-trigger-call-logger-match',
+            sessionIds: sessionIds
+        }, '*');
+    }
+}
+
+async function syncCallData({
+    manifest,
+    rcAdditionalSubmission,
+    dataBody,
+    rcAccessToken
+}) {
+    const recordingLink = dataBody?.call?.recording?.link;
+    // case: with recording link ready, definitely recorded, update with link
+    if (recordingLink) {
+        console.log('call recording updating...');
+        await logCore.updateLog(
+            {
+                serverUrl: manifest.serverUrl,
+                logType: 'Call',
+                rcAdditionalSubmission,
+                sessionId: dataBody.call.sessionId,
+                recordingLink: dataBody.call.recording.link,
+                recordingDownloadLink: `${dataBody.call.recording.contentUri}?accessToken=${rcAccessToken}`,
+                aiNote: dataBody.aiNote,
+                transcript: dataBody.transcript,
+                startTime: dataBody.call.startTime,
+                duration: dataBody.call.duration,
+                result: dataBody.call.result
+            });
+    }
+    // case: no recording link
+    else {
+        await logCore.updateLog(
+            {
+                serverUrl: manifest.serverUrl,
+                logType: 'Call',
+                rcAdditionalSubmission,
+                sessionId: dataBody.call.sessionId,
+                aiNote: dataBody.aiNote,
+                transcript: dataBody.transcript,
+                startTime: dataBody.call.startTime,
+                duration: dataBody.call.duration,
+                result: dataBody.call.result
+            });
+    }
+}
+
 exports.retroAutoCallLog = retroAutoCallLog;
+exports.forceCallLogMatcherCheck = forceCallLogMatcherCheck;
+exports.syncCallData = syncCallData;

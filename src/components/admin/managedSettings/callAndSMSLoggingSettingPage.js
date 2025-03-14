@@ -49,6 +49,20 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
+                oneTimeLog: {
+                    type: 'object',
+                    title: 'Enable one-time call logging',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
                 popupLogPageAfterCall: {
                     type: 'object',
                     title: '(Manual log) Open call logging page after call',
@@ -89,6 +103,9 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             disableRetroCallLogSync: {
                 "ui:collapsible": true,
             },
+            oneTimeLog: {
+                "ui:collapsible": true,
+            },
             popupLogPageAfterCall: {
                 "ui:collapsible": true,
             },
@@ -114,6 +131,11 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             {
                 customizable: adminUserSettings?.disableRetroCallLogSync?.customizable ?? true,
                 value: adminUserSettings?.disableRetroCallLogSync?.value ?? false
+            },
+            oneTimeLog:
+            {
+                customizable: adminUserSettings?.oneTimeLog?.customizable ?? true,
+                value: adminUserSettings?.oneTimeLog?.value ?? false
             },
             popupLogPageAfterCall:
             {

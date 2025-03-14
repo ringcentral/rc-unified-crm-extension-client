@@ -57,7 +57,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             let additionalFields = {};
             let additionalFieldsValue = {};
             for (const f of additionalChoiceFields) {
-                if (contactList[0]?.additionalInfo?.[f.const] ?? false) {
+                if (contactList[0]?.additionalInfo?.[f.const] === undefined) {
                     continue;
                 }
                 additionalFields[f.const] = {
@@ -72,7 +72,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 }
             }
             for (const f of additionalCheckBoxFields) {
-                if (contactList[0]?.additionalInfo?.[f.const] ?? false) {
+                if (contactList[0]?.additionalInfo?.[f.const] === undefined) {
                     continue;
                 }
                 additionalFields[f.const] = {
@@ -341,7 +341,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             let additionalFields = {};
             let additionalFieldsValue = {};
             for (const f of additionalChoiceFields) {
-                if (f.contactDependent && (contact?.additionalInfo?.[f.const] ?? false)) {
+                if (f.contactDependent && (contact?.additionalInfo?.[f.const] === undefined)) {
                     continue;
                 }
                 additionalFields[f.const] = {
@@ -358,7 +358,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                 }
             }
             for (const f of additionalCheckBoxFields) {
-                if (f.contactDependent && (contact?.additionalInfo?.[f.const] ?? false)) {
+                if (f.contactDependent && (contact?.additionalInfo?.[f.const] === undefined)) {
                     continue;
                 }
                 additionalFields[f.const] = {

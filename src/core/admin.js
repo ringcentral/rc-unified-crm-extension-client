@@ -322,6 +322,7 @@ async function authServerSideLogging({ platform, rcAccessToken }) {
 
 exports.getAdminSettings = getAdminSettings;
 exports.uploadAdminSettings = uploadAdminSettings;
+exports.refreshAdminSettings = refreshAdminSettings;
 exports.getServerSideLogging = getServerSideLogging;
 exports.enableServerSideLogging = enableServerSideLogging;
 exports.disableServerSideLogging = disableServerSideLogging;

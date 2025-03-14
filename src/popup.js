@@ -45,10 +45,13 @@ import {
   trackCrmAuthFail
 } from './lib/analytics';
 
-import { retroAutoCallLog, forceCallLogMatcherCheck } from './service/logService';
+import { retroAutoCallLog, forceCallLogMatcherCheck, syncCallData } from './service/logService';
 import { getServiceManifest } from './service/embeddableServices';
 import { logPageFormDataDefaulting } from './lib/logUtil';
 import { bullhornHeartbeat } from './misc/bullhorn';
+import { refreshUserSettings } from './core/user';
+import { refreshAdminSettings } from './core/admin';
+import { getLogConflictInfo } from './lib/logUtil';
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
@@ -226,7 +229,7 @@ window.addEventListener('message', async (e) => {
             }
             // Set every 15min, user settings will refresh
             if (crmAuthed) {
-              setInterval(function () {
+              setInterval(async function () {
                 userSettings = await refreshUserSettings({
                   platform,
                   crmAuthed,
@@ -448,7 +451,8 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
               }
-              if (userCore.getAutoLogCallSetting(userSettings, isAdmin).value) {
+              // Auto log upon connected call
+              if (userCore.getAutoLogCallSetting(userSettings, isAdmin).value && !userCore.getOneTimeLogSetting(userSettings).value) {
                 const contactPhoneNumber = data.call.direction === 'Inbound' ?
                   data.call.from.phoneNumber :
                   data.call.to.phoneNumber;
@@ -467,18 +471,30 @@ window.addEventListener('message', async (e) => {
                     isExtensionNumber
                   });
                 if (callContactMatched) {
-                  await addLog({
-                    serverUrl: manifest.serverUrl,
-                    logType: 'Call',
-                    logInfo: data.call,
-                    isMain: true,
-                    subject: data.call.direction === 'Inbound' ? `Inbound Call` : `Outbound Call`,
-                    rcAdditionalSubmission,
-                    contactId: callMatchedContact[0]?.id,
-                    contactType: callMatchedContact[0]?.type,
-                    contactName: callMatchedContact[0]?.name,
+                  const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({
+                    platform,
+                    isAutoLog: true,
+                    contactInfo: callMatchedContact,
+                    logType: 'callLog',
+                    direction: data.call.direction,
+                    isVoicemail: false,
                     userSettings
                   });
+                  if (!hasConflict) {
+                    await addLog({
+                      serverUrl: manifest.serverUrl,
+                      logType: 'Call',
+                      logInfo: data.call,
+                      isMain: true,
+                      subject: data.call.direction === 'Inbound' ? `Inbound Call` : `Outbound Call`,
+                      additionalSubmission: autoSelectAdditionalSubmission,
+                      rcAdditionalSubmission,
+                      contactId: callMatchedContact[0]?.id,
+                      contactType: callMatchedContact[0]?.type,
+                      contactName: callMatchedContact[0]?.name,
+                      userSettings
+                    });
+                  }
                 }
 
               }
@@ -494,12 +510,7 @@ window.addEventListener('message', async (e) => {
 
                   const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
                   if (isExtensionNumber && !allowExtensionNumberLogging) {
-                    responseMessage(
-                      data.requestId,
-                      {
-                        data: 'OK'
-                      }
-                    );
+                    responseMessage(data.requestId, { data: 'ok' });
                     return;
                   }
 
@@ -684,12 +695,7 @@ window.addEventListener('message', async (e) => {
         case 'rc-post-message-request':
           if (!crmAuthed && (data.path === '/callLogger' || data.path === '/messageLogger')) {
             showNotification({ level: 'warning', message: `Please go to Settings and connect to ${platformName}`, ttl: 60000 });
-            responseMessage(
-              data.requestId,
-              {
-                data: 'ok'
-              }
-            );
+            responseMessage(data.requestId, { data: 'ok' });
             break;
           }
           switch (data.path) {
@@ -762,12 +768,7 @@ window.addEventListener('message', async (e) => {
                 await auth.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
                 window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
-              responseMessage(
-                data.requestId,
-                {
-                  data: 'OK'
-                }
-              );
+              responseMessage(data.requestId, { data: 'ok' });
               break;
             case '/customizedPage/inputChanged':
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -886,6 +887,7 @@ window.addEventListener('message', async (e) => {
               console.log(`start contact matching for ${data.body.phoneNumbers.length} numbers...`);
               noShowNotification = true;
               let matchedContacts = {};
+              // Case: this is a follow-up contact match event triggered by other functions so to register the matched contacts
               const tempContactMatchTask = (await chrome.storage.local.get(`tempContactMatchTask-${data.body.phoneNumbers[0]}`))[`tempContactMatchTask-${data.body.phoneNumbers[0]}`];
               if (data.body.phoneNumbers.length === 1 && tempContactMatchTask?.length > 0) {
                 const cachedMatching = document.querySelector("#rc-widget-adapter-frame").contentWindow.phone.contactMatcher.data[tempContactMatchTask.phone];
@@ -911,6 +913,7 @@ window.addEventListener('message', async (e) => {
                 await chrome.storage.local.remove(`tempContactMatchTask-${data.body.phoneNumbers[0]}`);
                 console.log('contact match task done.')
               }
+              // Case: this is a contact match event triggered as contact match event itself
               else {
                 // Segment an array of phone numbers into one at a time. 
                 // This is to prevent fetching too many contacts at once and causing timeout.
@@ -920,7 +923,7 @@ window.addEventListener('message', async (e) => {
                 // If not a direct number, but allow extension number logging, go ahead as well
                 if (contactPhoneNumber.startsWith('+') || allowExtensionNumberLogging) {
                   // query on 3rd party API to get the matched contact info and return
-                  const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isForceRefresh: true, isForContactMatchEvent: true });
+                  const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: false });
                   if (contactMatched) {
                     if (!matchedContacts[contactPhoneNumber]) {
                       matchedContacts[contactPhoneNumber] = [];
@@ -953,48 +956,8 @@ window.addEventListener('message', async (e) => {
                     console.log(`contact not matched for ${contactPhoneNumber}`);
                   }
                 }
-                // TEMP Hack: to differentiate manaul match which is 1 number and auto match which is typically > 1 numbers, we match final 2 numbers at the same time from auto match case
-                if (data.body.phoneNumbers.length === 2) {
-                  // Segment an array of phone numbers into one at a time. 
-                  // This is to prevent fetching too many contacts at once and causing timeout.
-                  const contactPhoneNumber = data.body.phoneNumbers[1];
-                  const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
-                  // If it's direct number (starting with +), go ahead
-                  // If not a direct number, but allow extension number logging, go ahead as well
-                  if (contactPhoneNumber.startsWith('+') || allowExtensionNumberLogging) {
-                    // query on 3rd party API to get the matched contact info and return
-                    const { matched: lastContactMatched, contactInfo: lastContactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isForceRefresh: true, isForContactMatchEvent: true });
-                    if (lastContactMatched) {
-                      if (!matchedContacts[contactPhoneNumber]) {
-                        matchedContacts[contactPhoneNumber] = [];
-                      }
-                      for (const contactInfoItem of lastContactInfo) {
-                        if (contactInfoItem.isNewContact) {
-                          continue;
-                        }
-                        matchedContacts[contactPhoneNumber].push({
-                          id: contactInfoItem.id,
-                          type: platformName,
-                          name: contactInfoItem.name,
-                          phoneNumbers: [
-                            {
-                              phoneNumber: contactPhoneNumber,
-                              phoneType: 'direct'
-                            }
-                          ],
-                          entityType: platformName,
-                          contactType: contactInfoItem.type,
-                          additionalInfo: contactInfoItem.additionalInfo
-                        });
-                      }
-                      console.log(`contact matched for ${contactPhoneNumber}`);
-                    }
-                    else {
-                      console.log(`contact not matched for ${contactPhoneNumber}`);
-                    }
-                  }
-                }
-                else if (data.body.phoneNumbers.length > 2) {
+                // After match task done above, re-organize the request so to make it ready for next round
+                if (data.body.phoneNumbers.length > 1) {
                   const remainingPhoneNumbers = data.body.phoneNumbers.slice(1);
                   // Do another contact match with remaining phone numbers
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -1020,94 +983,69 @@ window.addEventListener('message', async (e) => {
                 await openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber, contactId: data.body.id, contactType: data.body.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
               }
               window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-              responseMessage(
-                data.requestId,
-                {
-                  data: 'ok'
-                });
+              responseMessage(data.requestId, { data: 'ok' });
               break;
             case '/callLogger':
+              const isFinalDataResult = data.body?.call?.action !== undefined;
+              const isRecorded = !isObjectEmpty((await chrome.storage.local.get(`rec-link-${data.body.call.sessionId}`)));
+              const hasRecording = !!data.body.call.recording?.link;
+              const isOneTimeLog = userCore.getOneTimeLogSetting(userSettings).value;
+              if (isOneTimeLog) {
+                if (!isFinalDataResult || (isRecorded && !hasRecording)) {
+                  if (data.body.redirect) {
+                    showNotification({ level: 'warning', message: 'Call data is not ready, please wait and retry...', ttl: 3000 });
+                  }
+                  responseMessage(data.requestId, { data: 'ok' });
+                  break;
+                }
+              }
               let isAutoLog = false;
               const callAutoPopup = userCore.getCallPopSetting(userSettings).value;
-              // extensions numers should NOT be logged unless explicitly allowed
+              // extensions numbers should NOT be logged unless explicitly allowed
               const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
               if (!allowExtensionNumberLogging) {
-                if (data.body.call.direction === 'Inbound') {
-                  if (data?.body?.call?.from?.extensionNumber) {
-                    showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
-                    responseMessage(
-                      data.requestId,
-                      {
-                        data: 'ok'
-                      }
-                    );
-                    break;
-                  }
-                }
-                else {
-                  if (data?.body?.call?.to?.extensionNumber) {
-                    showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
-                    responseMessage(
-                      data.requestId,
-                      {
-                        data: 'ok'
-                      }
-                    );
-                    break;
-                  }
+                const isExtensionNumber = data.body.call.direction === 'Inbound' ?
+                  !!data.body.call.from.extensionNumber :
+                  !!data.body.call.to.extensionNumber;
+                if (isExtensionNumber) {
+                  showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
+                  responseMessage(data.requestId, { data: 'ok' });
+                  break;
                 }
               }
 
-              // Sync events - update log
+              // Sync events - update log data
               if (data.body.triggerType === 'callLogSync') {
-                // case: is recorded, recording link ready
                 if (data.body.call?.recording?.link) {
-                  console.log('call recording updating...');
                   trackUpdateCallRecordingLink({ processState: 'start' });
-                  await updateLog(
-                    {
-                      serverUrl: manifest.serverUrl,
-                      logType: 'Call',
-                      rcAdditionalSubmission,
-                      sessionId: data.body.call.sessionId,
-                      recordingLink: data.body.call.recording.link,
-                      recordingDownloadLink: `${data.body.call.recording.contentUri}?accessToken=${getRcAccessToken()}`,
-                      aiNote: data.body.aiNote,
-                      transcript: data.body.transcript,
-                      startTime: data.body.call.startTime,
-                      duration: data.body.call.duration,
-                      result: data.body.call.result
-                    });
                 }
+                const { callLogs: existingCalls } = await getLog({
+                  serverUrl: manifest.serverUrl,
+                  logType: 'Call',
+                  sessionIds: data.body.call.sessionId,
+                  requireDetails: false
+                });
+                // If there is existing call log, update it
+                if (existingCalls?.length > 0 && existingCalls[0]?.matched) {
+                  await syncCallData({
+                    manifest,
+                    rcAdditionalSubmission,
+                    dataBody: data.body,
+                    rcAccessToken: getRcAccessToken()
+                  });
+                  if (data.body.call?.recording?.link) {
+                    trackUpdateCallRecordingLink({ processState: 'finish' });
+                  }
+                  responseMessage(data.requestId, { data: 'ok' });
+                  break;
+                }
+                // If no existing call log, create condition here to navigate to auto log
                 else {
-                  // case: is not recorded
-                  const hasRecording = await chrome.storage.local.get(`rec-link-${data.body.call.sessionId}`);
-                  if (!hasRecording[`rec-link-${data.body.call.sessionId}`]) {
-                    await updateLog(
-                      {
-                        serverUrl: manifest.serverUrl,
-                        logType: 'Call',
-                        rcAdditionalSubmission,
-                        sessionId: data.body.call.sessionId,
-                        aiNote: data.body.aiNote,
-                        transcript: data.body.transcript,
-                        startTime: data.body.call.startTime,
-                        duration: data.body.call.duration,
-                        result: data.body.call.result
-                      });
-                  }
+                  data.body.triggerType = 'createLog';
+                  isAutoLog = true;
                 }
-                if (data.body.call?.recording?.link) {
-                  trackUpdateCallRecordingLink({ processState: 'finish' });
-                }
-                responseMessage(
-                  data.requestId,
-                  {
-                    data: 'ok'
-                  }
-                );
-                break;
               }
+
               // Auto log: presence events, and Disconnect result
               if (data.body.triggerType === 'presenceUpdate') {
                 if (data.body.call.result === 'Disconnected') {
@@ -1115,12 +1053,7 @@ window.addEventListener('message', async (e) => {
                   isAutoLog = true;
                 }
                 else {
-                  responseMessage(
-                    data.requestId,
-                    {
-                      data: 'ok'
-                    }
-                  );
+                  responseMessage(data.requestId, { data: 'ok' });
                   break;
                 }
               }
@@ -1218,12 +1151,7 @@ window.addEventListener('message', async (e) => {
                 const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
                 if (!callContactMatched) {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                  responseMessage(
-                    data.requestId,
-                    {
-                      data: 'ok'
-                    }
-                  );
+                  responseMessage(data.requestId, { data: 'ok' });
                   break;
                 }
                 let note = '';
@@ -1246,12 +1174,13 @@ window.addEventListener('message', async (e) => {
                       }
                     }
                     const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({
-                      platofrm,
+                      platform,
                       isAutoLog,
                       contactInfo: callMatchedContact,
                       logType: 'callLog',
                       direction: data.body.call.direction,
-                      isVoicemail: false
+                      isVoicemail: false,
+                      userSettings
                     });
 
                     if (isAutoLog && !callAutoPopup) {
@@ -1276,7 +1205,23 @@ window.addEventListener('message', async (e) => {
                         callLogSubject = data.body.call.direction === 'Inbound' ?
                           `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
                           `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
-                        if (!fetchedCallLogs) {
+                        if (fetchedCallLogs?.length > 0 && fetchedCallLogs[0]?.matched) {
+                          await updateLog({
+                            serverUrl: manifest.serverUrl,
+                            logType: 'Call',
+                            sessionId: data.body.call.sessionId,
+                            rcAdditionalSubmission,
+                            subject: callLogSubject,
+                            note,
+                            aiNote: data.body.aiNote,
+                            transcript: data.body.transcript,
+                            startTime: data.body.call.startTime,
+                            duration: data.body.call.duration,
+                            result: data.body.call.result,
+                            isShowNotification: true
+                          });
+                        }
+                        else {
                           // auto log
                           await addLog(
                             {
@@ -1295,22 +1240,6 @@ window.addEventListener('message', async (e) => {
                               contactName: callMatchedContact[0]?.name,
                               userSettings
                             });
-                        }
-                        else {
-                          await updateLog({
-                            serverUrl: manifest.serverUrl,
-                            logType: 'Call',
-                            sessionId: data.body.call.sessionId,
-                            rcAdditionalSubmission,
-                            subject: callLogSubject,
-                            note,
-                            aiNote: data.body.aiNote,
-                            transcript: data.body.transcript,
-                            startTime: data.body.call.startTime,
-                            duration: data.body.call.duration,
-                            result: data.body.call.result,
-                            isShowNotification: true
-                          });
                         }
                       }
                     }
@@ -1368,12 +1297,7 @@ window.addEventListener('message', async (e) => {
                 }
               }
               // response to widget
-              responseMessage(
-                data.requestId,
-                {
-                  data: 'ok'
-                }
-              );
+              responseMessage(data.requestId, { data: 'ok' });
               window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               break;
             case '/callLogger/inputChanged':
@@ -1386,12 +1310,7 @@ window.addEventListener('message', async (e) => {
                 type: 'rc-adapter-update-call-log-page',
                 page
               }, '*');
-              responseMessage(
-                data.requestId,
-                {
-                  data: 'ok'
-                }
-              );
+              responseMessage(data.requestId, { data: 'ok' });
               break;
             case '/callLogger/match':
               let callLogMatchData = {};
@@ -1434,13 +1353,10 @@ window.addEventListener('message', async (e) => {
               }
               if (data?.body?.conversation?.correspondents[0]?.extensionNumber) {
                 showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
-                responseMessage(
-                  data.requestId,
-                  { data: 'ok' }
-                );
+                responseMessage(data.requestId, { data: 'ok' });
                 break;
               }
-              messageAutoLogOn = userSettings.autoLogSMS?.value ?? false;
+              const messageAutoLogOn = userSettings.autoLogSMS?.value ?? false;
               const messageAutoPopup = userCore.getSMSPopSetting(userSettings).value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
@@ -1476,7 +1392,8 @@ window.addEventListener('message', async (e) => {
                     contactInfo: getContactMatchResult,
                     logType: 'messageLog',
                     direction: '',
-                    isVoicemail: data.body.conversation.type === 'VoiceMail'
+                    isVoicemail: data.body.conversation.type === 'VoiceMail',
+                    userSettings
                   });
                   // Sub-case: has conflict
                   if (hasConflict) {
@@ -1597,12 +1514,7 @@ window.addEventListener('message', async (e) => {
                 }
               }
               // response to widget
-              responseMessage(
-                data.requestId,
-                {
-                  data: 'ok'
-                }
-              );
+              responseMessage(data.requestId, { data: 'ok' });
               break;
             case '/messageLogger/inputChanged':
               const updatedPage = logPage.getUpdatedLogPageRender({ manifest, logType: 'Message', platformName, updateData: data.body });
@@ -1610,12 +1522,7 @@ window.addEventListener('message', async (e) => {
                 type: 'rc-adapter-update-messages-log-page',
                 page: updatedPage
               }, '*');
-              responseMessage(
-                data.requestId,
-                {
-                  data: 'ok'
-                }
-              );
+              responseMessage(data.requestId, { data: 'ok' });
               break;
             case '/messageLogger/match':
               let localMessageLogs = {};
@@ -1678,12 +1585,7 @@ window.addEventListener('message', async (e) => {
               else {
                 showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
               }
-              responseMessage(
-                data.requestId,
-                {
-                  data: 'ok'
-                }
-              );
+              responseMessage(data.requestId, { data: 'ok' });
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
@@ -1967,20 +1869,10 @@ window.addEventListener('message', async (e) => {
                   showNotification({ level: 'success', message: 'Platform info cleared. Please close the extension and open from CRM page.', ttl: 5000 });
                   break;
               }
-              responseMessage(
-                data.requestId,
-                {
-                  data: 'ok'
-                }
-              );
+              responseMessage(data.requestId, { data: 'ok' });
               break;
             default:
-              responseMessage(
-                data.requestId,
-                {
-                  data: 'ok'
-                }
-              );
+              responseMessage(data.requestId, { data: 'ok' });
               break;
           }
           break;

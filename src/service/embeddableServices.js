@@ -60,6 +60,16 @@ async function getServiceManifest({
                 value: userCore.getDisableRetroCallLogSync(userSettings).value
             },
             {
+                id: "oneTimeLog",
+                type: "boolean",
+                groupId: "logging",
+                name: 'Enable one-time call logging',
+                description: 'Log calls when all data is ready. EDIT log permission is not required.',
+                readOnly: userCore.getDisableRetroCallLogSync(userSettings).readOnly,
+                readOnlyReason: userCore.getDisableRetroCallLogSync(userSettings).readOnlyReason,
+                value: userCore.getDisableRetroCallLogSync(userSettings).value
+            },
+            {
                 id: "popupLogPageAfterCall",
                 type: "boolean",
                 groupId: "logging",
