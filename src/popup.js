@@ -1057,8 +1057,9 @@ window.addEventListener('message', async (e) => {
                   break;
                 }
               }
-              // TEMP
-              // window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+              if (data.body.redirect) {
+                window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+              }
               const isExtensionNumber = data.body.call.direction === 'Inbound' ?
                 !!data.body.call.from.extensionNumber :
                 !!data.body.call.to.extensionNumber;
