@@ -999,7 +999,7 @@ window.addEventListener('message', async (e) => {
                   break;
                 }
               }
-              let isAutoLog = false;
+              let isAutoLog = userCore.getAutoLogCallSetting(userSettings, isAdmin).value;
               const callAutoPopup = userCore.getCallPopSetting(userSettings).value;
               // extensions numbers should NOT be logged unless explicitly allowed
               const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
@@ -1546,22 +1546,31 @@ window.addEventListener('message', async (e) => {
               );
               break;
             case '/settings':
-              let formattedUserSettings = {};
               for (const s of data.body.settings) {
                 if (s.items !== undefined) {
                   for (const i of s.items) {
-                    formattedUserSettings[i.id] = { value: i.value };
+                    if (userSettings[i.id] === undefined) {
+                      userSettings[i.id] = { value: i.value };
+                    }
+                    else {
+                      userSettings[i.id].value = i.value;
+                    }
                   }
                 }
                 else if (s.value !== undefined) {
-                  formattedUserSettings[s.id] = { value: s.value };
+                  if (userSettings[s.id] === undefined) {
+                    userSettings[s.id] = { value: s.value };
+                  }
+                  else {
+                    userSettings[s.id].value = s.value;
+                  }
                 }
               }
 
               if (crmAuthed) {
                 userSettings = await userCore.uploadUserSettings({
                   serverUrl: manifest.serverUrl,
-                  userSettings: formattedUserSettings
+                  userSettings
                 });
               }
               await chrome.storage.local.set({ userSettings });
