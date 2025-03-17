@@ -1,7 +1,8 @@
 import userCore from '../core/user';
 import logCore from '../core/log';
+import dispositionCore from '../core/disposition';
 import contactCore from '../core/contact';
-import { showNotification, dismissNotification } from '../lib/util';
+import { showNotification, dismissNotification, isObjectEmpty } from '../lib/util';
 import { getLogConflictInfo } from '../lib/logUtil';
 
 async function retroAutoCallLog({
@@ -69,7 +70,6 @@ async function retroAutoCallLog({
                                 isMain: true,
                                 note,
                                 subject: callLogSubject,
-                                additionalSubmission: autoSelectAdditionalSubmission,
                                 rcAdditionalSubmission,
                                 contactId: callMatchedContact[0]?.id,
                                 contactType: callMatchedContact[0]?.type,
@@ -77,6 +77,15 @@ async function retroAutoCallLog({
                                 userSettings,
                                 isShowNotification: false
                             });
+                        if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
+                            await dispositionCore.upsertDisposition({
+                                serverUrl: manifest.serverUrl,
+                                logType: 'Call',
+                                sessionId: c.sessionId,
+                                dispositions: autoSelectAdditionalSubmission,
+                                rcAdditionalSubmission
+                            });
+                        }
                         retroLoggedCount++;
                         effectiveCount++;
                     }

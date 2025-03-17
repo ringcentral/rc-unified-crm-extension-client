@@ -12,7 +12,6 @@ async function addLog({
     note,
     aiNote,
     transcript,
-    additionalSubmission,
     rcAdditionalSubmission,
     contactId,
     contactType,
@@ -21,7 +20,6 @@ async function addLog({
     isShowNotification = true
 }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const mergedAdditionalSubmission = { ...additionalSubmission, ...rcAdditionalSubmission };
     const overridingPhoneNumberFormat = [];
     if (userSettings?.overridingPhoneNumberFormat?.value) {
         overridingPhoneNumberFormat.push(userSettings.overridingPhoneNumberFormat.value);
@@ -55,7 +53,7 @@ async function addLog({
                         logInfo.recording = hasRecording[`rec-link-${logInfo.sessionId}`];
                     }
                 }
-                addLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission: mergedAdditionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+                addLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission: rcAdditionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addLogRes.data.successful) {
                     trackSyncCallLog({ hasNote: note !== '' });
                     if (isShowNotification) {
@@ -80,7 +78,7 @@ async function addLog({
                 }, '*');
                 break;
             case 'Message':
-                addLogRes = await axios.post(`${serverUrl}/messageLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, additionalSubmission: mergedAdditionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+                addLogRes = await axios.post(`${serverUrl}/messageLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, additionalSubmission: rcAdditionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addLogRes.data.successful) {
                     if (isMain & addLogRes.data.logIds.length > 0) {
                         trackSyncMessageLog();
@@ -91,7 +89,7 @@ async function addLog({
                                 type: contactType,
                                 name: contactName
                             },
-                            additionalSubmission: mergedAdditionalSubmission
+                            additionalSubmission: rcAdditionalSubmission
                         };
                         await chrome.storage.local.set(messageLogPrefCache);
                     }

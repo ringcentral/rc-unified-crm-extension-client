@@ -1,6 +1,7 @@
 import auth from './core/auth';
 import { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } from './core/log';
 import { getContact, createContact, openContactPage, refreshContactPromptPage } from './core/contact';
+import { upsertDisposition } from './core/disposition';
 import userCore from './core/user';
 import { getAdminSettings, uploadAdminSettings, getServerSideLogging, enableServerSideLogging, disableServerSideLogging, updateServerSideDoNotLogNumbers } from './core/admin';
 import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken } from './lib/util';
@@ -487,13 +488,21 @@ window.addEventListener('message', async (e) => {
                       logInfo: data.call,
                       isMain: true,
                       subject: data.call.direction === 'Inbound' ? `Inbound Call` : `Outbound Call`,
-                      additionalSubmission: autoSelectAdditionalSubmission,
                       rcAdditionalSubmission,
                       contactId: callMatchedContact[0]?.id,
                       contactType: callMatchedContact[0]?.type,
                       contactName: callMatchedContact[0]?.name,
                       userSettings
                     });
+                    if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
+                      await upsertDisposition({
+                        serverUrl: manifest.serverUrl,
+                        logType: 'Call',
+                        sessionId: data.body.call.sessionId,
+                        dispositions: autoSelectAdditionalSubmission,
+                        rcAdditionalSubmission
+                      });
+                    }
                   }
                 }
 
@@ -523,7 +532,11 @@ window.addEventListener('message', async (e) => {
                     `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
                     `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
                   const note = await getCachedNote({ sessionId: data.call.sessionId });
-                  let callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId: null });
+                  const logInfo = {
+                    note,
+                    subject: callLogSubject,
+                  }
+                  let callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId: null });
                   // default form value from user settings
                   if (data.call.direction === 'Inbound') {
                     callPage = logPageFormDataDefaulting({
@@ -999,7 +1012,7 @@ window.addEventListener('message', async (e) => {
                   break;
                 }
               }
-              let isAutoLog = userCore.getAutoLogCallSetting(userSettings, isAdmin).value;
+              let isAutoLog = false;
               const callAutoPopup = userCore.getCallPopSetting(userSettings).value;
               // extensions numbers should NOT be logged unless explicitly allowed
               const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
@@ -1105,13 +1118,21 @@ window.addEventListener('message', async (e) => {
                         aiNote: data.body.aiNote,
                         transcript: data.body.transcript,
                         subject: data.body.formData.activityTitle ?? "",
-                        additionalSubmission,
                         rcAdditionalSubmission,
                         contactId: newContactInfo?.id ?? data.body.formData.contact,
                         contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                         contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
                         userSettings
                       });
+                    if (isObjectEmpty(additionalSubmission)) {
+                      await upsertDisposition({
+                        serverUrl: manifest.serverUrl,
+                        logType: 'Call',
+                        sessionId: data.body.call.sessionId,
+                        dispositions: additionalSubmission,
+                        rcAdditionalSubmission
+                      });
+                    }
                     break;
                   case 'editLog':
                     await updateLog({
@@ -1127,6 +1148,13 @@ window.addEventListener('message', async (e) => {
                       duration: data.body.call.duration,
                       result: data.body.call.result,
                       isShowNotification: true
+                    });
+                    await upsertDisposition({
+                      serverUrl: manifest.serverUrl,
+                      logType: 'Call',
+                      sessionId: data.body.call.sessionId,
+                      dispositions: additionalSubmission,
+                      rcAdditionalSubmission
                     });
                     break;
                 }
@@ -1155,23 +1183,22 @@ window.addEventListener('message', async (e) => {
                   responseMessage(data.requestId, { data: 'ok' });
                   break;
                 }
-                let note = '';
-                let callLogSubject = ''
+                let logInfo = {
+                  note: '',
+                  subject: ''
+                }
                 switch (data.body.triggerType) {
                   // createLog and editLog share the same page
                   case 'createLog':
-                    note = await getCachedNote({ sessionId: data.body.call.sessionId });
+                    logInfo.note = await getCachedNote({ sessionId: data.body.call.sessionId });
                   // eslint-disable-next-line no-fallthrough
                   case 'editLog':
                     if (fetchedCallLogs) {
-                      if (fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logData?.note) {
-                        note = fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId).logData.note;
+                      if (fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logData) {
+                        logInfo = fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId).logData;
                       }
                       else {
-                        note = await getCachedNote({ sessionId: data.body.call.sessionId }) ?? "";
-                      }
-                      if (fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logData?.subject) {
-                        callLogSubject = fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId).logData.subject;
+                        logInfo.note = await getCachedNote({ sessionId: data.body.call.sessionId }) ?? "";
                       }
                     }
                     const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({
@@ -1194,8 +1221,8 @@ window.addEventListener('message', async (e) => {
                           phoneNumber: contactPhoneNumber,
                           direction: data.body.call.direction,
                           contactInfo: callMatchedContact ?? [],
-                          subject: callLogSubject,
-                          note,
+                          subject: logInfo.subject,
+                          note: logInfo.note,
                           date: moment(data.body.call.startTime).format('MM/DD/YYYY')
                         };
                         const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
@@ -1203,7 +1230,7 @@ window.addEventListener('message', async (e) => {
                       }
                       // Case: auto log and no conflict, log directly
                       else {
-                        callLogSubject = data.body.call.direction === 'Inbound' ?
+                        logInfo.subject = data.body.call.direction === 'Inbound' ?
                           `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
                           `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
                         if (fetchedCallLogs?.length > 0 && fetchedCallLogs[0]?.matched) {
@@ -1212,8 +1239,8 @@ window.addEventListener('message', async (e) => {
                             logType: 'Call',
                             sessionId: data.body.call.sessionId,
                             rcAdditionalSubmission,
-                            subject: callLogSubject,
-                            note,
+                            subject: logInfo.subject,
+                            note: logInfo.note,
                             aiNote: data.body.aiNote,
                             transcript: data.body.transcript,
                             startTime: data.body.call.startTime,
@@ -1230,10 +1257,10 @@ window.addEventListener('message', async (e) => {
                               logType: 'Call',
                               logInfo: data.body.call,
                               isMain: true,
-                              note,
+                              note: logInfo.note,
                               aiNote: data.body.aiNote,
                               transcript: data.body.transcript,
-                              subject: callLogSubject,
+                              subject: logInfo.subject,
                               additionalSubmission: autoSelectAdditionalSubmission,
                               rcAdditionalSubmission,
                               contactId: callMatchedContact[0]?.id,
@@ -1241,6 +1268,15 @@ window.addEventListener('message', async (e) => {
                               contactName: callMatchedContact[0]?.name,
                               userSettings
                             });
+                          if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
+                            await upsertDisposition({
+                              serverUrl: manifest.serverUrl,
+                              logType: 'Call',
+                              sessionId: data.body.call.sessionId,
+                              dispositions: autoSelectAdditionalSubmission,
+                              rcAdditionalSubmission
+                            });
+                          }
                         }
                       }
                     }
@@ -1252,25 +1288,29 @@ window.addEventListener('message', async (e) => {
                         loggedContactId = existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`].contact?.id ?? null;
                       }
                       // add your codes here to log call to your service
-                      let callPage = logPage.getLogPageRender({ id: data.body.call.sessionId, manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], subject: callLogSubject, note, loggedContactId });
-                      // default form value from user settings
-                      if (data.body.call.direction === 'Inbound') {
-                        callPage = logPageFormDataDefaulting({
-                          platform,
-                          userSettings,
-                          targetPage: callPage,
-                          caseType: 'inboundCall',
-                          logType: 'callLog'
-                        });
-                      }
-                      if (data.body.call.direction === 'Outbound') {
-                        callPage = logPageFormDataDefaulting({
-                          platform,
-                          userSettings,
-                          targetPage: callPage,
-                          caseType: 'outboundCall',
-                          logType: 'callLog'
-                        });
+                      let callPage = logPage.getLogPageRender({ id: data.body.call.sessionId, manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId });
+                      
+                      // create log page defaulting
+                      if (data.body.triggerType === 'createLog') {
+                        // default form value from user settings
+                        if (data.body.call.direction === 'Inbound') {
+                          callPage = logPageFormDataDefaulting({
+                            platform,
+                            userSettings,
+                            targetPage: callPage,
+                            caseType: 'inboundCall',
+                            logType: 'callLog'
+                          });
+                        }
+                        if (data.body.call.direction === 'Outbound') {
+                          callPage = logPageFormDataDefaulting({
+                            platform,
+                            userSettings,
+                            targetPage: callPage,
+                            caseType: 'outboundCall',
+                            logType: 'callLog'
+                          });
+                        }
                       }
                       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                         type: 'rc-adapter-update-call-log-page',

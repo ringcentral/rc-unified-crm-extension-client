@@ -4,7 +4,7 @@ import conflictLogIcon from '../images/conflictLogIcon.png';
 import smsMessageIcon from '../images/smsMessageIcon.png';
 import logCore from '../core/log';
 
-function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, subject, note, loggedContactId, isUnresolved }) {
+function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved }) {
     const additionalChoiceFields = logType === 'Call' ?
         manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'selection') ?? [] :
         manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'selection') ?? [];
@@ -44,61 +44,61 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             }
         }
         callFormData = {
-            activityTitle: (!!subject & subject !== '') ? subject : defaultActivityTitle,
-            note: note ?? '',
+            activityTitle: (!!logInfo?.subject & logInfo.subject !== '') ? logInfo.subject : defaultActivityTitle,
+            note: logInfo?.note ?? '',
         }
     }
     let page = {};
     let requiredFieldNames = [];
+    let additionalFields = {};
+    let additionalFieldsValue = {};
+    for (const f of additionalChoiceFields) {
+        if (contactList[0]?.additionalInfo?.[f.const] === undefined) {
+            continue;
+        }
+        additionalFields[f.const] = {
+            title: f.title,
+            type: 'string',
+            oneOf: [...contactList[0].additionalInfo[f.const], { const: 'none', title: 'None' }],
+            associationField: !!f.contactDependent
+        }
+        additionalFieldsValue[f.const] = logInfo?.dispositions[f.const] ?? contactList[0].additionalInfo[f.const][0].const;
+        if (f.required) {
+            requiredFieldNames.push(f.const);
+        }
+    }
+    for (const f of additionalCheckBoxFields) {
+        if (contactList[0]?.additionalInfo?.[f.const] === undefined) {
+            continue;
+        }
+        additionalFields[f.const] = {
+            title: f.title,
+            type: 'boolean',
+            associationField: !!f.contactDependent
+        }
+        additionalFieldsValue[f.const] = logInfo?.dispositions[f.const] ?? (f.defaultValue ?? false);
+        if (f.required) {
+            requiredFieldNames.push(f.const);
+        }
+    }
+    for (const f of additionalInputFields) {
+        if (contactList[0]?.additionalInfo?.[f.const] ?? false) {
+            continue;
+        }
+        additionalFields[f.const] = {
+            title: f.title,
+            type: 'string',
+            associationField: !!f.contactDependent
+        }
+        additionalFieldsValue[f.const] = logInfo?.dispositions[f.const] ?? (f.defaultValue ?? '');
+        if (f.required) {
+            requiredFieldNames.push(f.const);
+        }
+    }
     switch (triggerType) {
         case 'createLog':
         case 'manual':
         case 'auto':
-            let additionalFields = {};
-            let additionalFieldsValue = {};
-            for (const f of additionalChoiceFields) {
-                if (contactList[0]?.additionalInfo?.[f.const] === undefined) {
-                    continue;
-                }
-                additionalFields[f.const] = {
-                    title: f.title,
-                    type: 'string',
-                    oneOf: [...contactList[0].additionalInfo[f.const], { const: 'none', title: 'None' }],
-                    associationField: !!f.contactDependent
-                }
-                additionalFieldsValue[f.const] = contactList[0].additionalInfo[f.const][0].const;
-                if (f.required) {
-                    requiredFieldNames.push(f.const);
-                }
-            }
-            for (const f of additionalCheckBoxFields) {
-                if (contactList[0]?.additionalInfo?.[f.const] === undefined) {
-                    continue;
-                }
-                additionalFields[f.const] = {
-                    title: f.title,
-                    type: 'boolean',
-                    associationField: !!f.contactDependent
-                }
-                additionalFieldsValue[f.const] = f.defaultValue ?? false;
-                if (f.required) {
-                    requiredFieldNames.push(f.const);
-                }
-            }
-            for (const f of additionalInputFields) {
-                if (contactList[0]?.additionalInfo?.[f.const] ?? false) {
-                    continue;
-                }
-                additionalFields[f.const] = {
-                    title: f.title,
-                    type: 'string',
-                    associationField: !!f.contactDependent
-                }
-                additionalFieldsValue[f.const] = f.defaultValue ?? '';
-                if (f.required) {
-                    requiredFieldNames.push(f.const);
-                }
-            }
             let warningField = {};
             if (contactList.length > 2) {
                 warningField = {
@@ -248,7 +248,8 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         note: {
                             title: 'Note',
                             type: 'string'
-                        }
+                        },
+                        ...additionalFields
                     }
                 },
                 uiSchema: {
@@ -266,9 +267,10 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 formData: {
                     id,
                     contact: loggedContactId ?? contactList[0].const,
-                    activityTitle: subject ?? '',
+                    activityTitle: logInfo?.subject ?? '',
                     triggerType,
-                    note: note ?? ''
+                    note: logInfo?.note ?? '',
+                    ...additionalFieldsValue
                 }
             }
             break;
