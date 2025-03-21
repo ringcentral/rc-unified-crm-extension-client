@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { getServiceManifest } from '../service/embeddableServices';
+import { getRcAccessToken } from '../lib/util';
 
-async function preloadUserSettingsFromAdmin({ serverUrl, rcAccessToken }) {
+async function preloadUserSettingsFromAdmin({ serverUrl }) {
+    const rcAccessToken = getRcAccessToken();
     try {
         const preloadUserSettingsResponse = await axios.get(`${serverUrl}/user/preloadSettings?rcAccessToken=${rcAccessToken}`);
         return preloadUserSettingsResponse.data;
@@ -37,18 +39,22 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
 }
 
 
-async function refreshUserSettings({ manifest, rcAccessToken, changedSettings }) {
+async function refreshUserSettings({ changedSettings }) {
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
+    const rcAccessToken = getRcAccessToken();
+    const { customCrmManifest: manifest } = await chrome.storage.local.get({ customCrmManifest: null });
     if (!crmAuthed) {
         return;
     }
     let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
-    for (const k of Object.keys(changedSettings)) {
-        if (userSettings[k] === undefined) {
-            userSettings[k] = changedSettings[k];
-        }
-        else {
-            userSettings[k].value = changedSettings[k].value;
+    if (changedSettings) {
+        for (const k of Object.keys(changedSettings)) {
+            if (userSettings[k] === undefined) {
+                userSettings[k] = changedSettings[k];
+            }
+            else {
+                userSettings[k].value = changedSettings[k].value;
+            }
         }
     }
     await chrome.storage.local.set({ userSettings });

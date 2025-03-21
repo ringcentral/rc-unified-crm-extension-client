@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { isObjectEmpty, showNotification } from '../lib/util';
 
-async function upsertDisposition({ serverUrl, logType, sessionId, dispositions, rcAdditionalSubmission }) {
+async function upsertDisposition({ serverUrl, logType, sessionId, dispositions }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
     if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':

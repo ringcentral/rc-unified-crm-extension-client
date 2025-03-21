@@ -1,10 +1,14 @@
 import userCore from '../core/user';
+import { getPlatformInfo } from '../lib/util';
 
 async function getServiceManifest() {
     const { isAdmin } = await chrome.storage.local.get({ isAdmin: false });
     const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
     const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
+    const platformInfo = await getPlatformInfo();
+    const {customCrmManifest: manifest} = await chrome.storage.local.get({customCrmManifest: null});
+    const platform = manifest.platforms[platformInfo.platformName];
     const platformName = platform.name;
     const customSettings = platform.settings;
     const services = {

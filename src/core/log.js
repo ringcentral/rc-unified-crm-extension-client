@@ -12,7 +12,6 @@ async function addLog({
     note,
     aiNote,
     transcript,
-    rcAdditionalSubmission,
     contactId,
     contactType,
     contactName,
@@ -20,6 +19,7 @@ async function addLog({
 }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
+    const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
     const overridingPhoneNumberFormat = [];
     if (userSettings?.overridingPhoneNumberFormat?.value) {
         overridingPhoneNumberFormat.push(userSettings.overridingPhoneNumberFormat.value);
@@ -130,8 +130,9 @@ function openLog({ manifest, platformName, hostname, logId, contactType, contact
     window.open(logPageUrl);
 }
 
-async function updateLog({ serverUrl, logType, sessionId, rcAdditionalSubmission, recordingLink, recordingDownloadLink, subject, note, startTime, duration, aiNote, transcript, result, isShowNotification }) {
+async function updateLog({ serverUrl, logType, sessionId, recordingLink, recordingDownloadLink, subject, note, startTime, duration, aiNote, transcript, result, isShowNotification }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
     if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':

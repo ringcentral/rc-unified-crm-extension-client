@@ -2,17 +2,17 @@ import userCore from '../core/user';
 import logCore from '../core/log';
 import dispositionCore from '../core/disposition';
 import contactCore from '../core/contact';
-import { showNotification, dismissNotification, isObjectEmpty } from '../lib/util';
+import { showNotification, dismissNotification, isObjectEmpty, getRcAccessToken } from '../lib/util';
 import { getLogConflictInfo } from '../lib/logUtil';
 
 async function retroAutoCallLog({
-    rcAdditionalSubmission,
     manifest,
     platformName,
     platform
 }) {
     const { isAdmin } = await chrome.storage.local.get({ isAdmin: false });
     const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
+    const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
     if (userCore.getDisableRetroCallLogSync(userSettings).value) {
         return;
     }
@@ -127,10 +127,10 @@ async function forceCallLogMatcherCheck() {
 
 async function syncCallData({
     manifest,
-    rcAdditionalSubmission,
-    dataBody,
-    rcAccessToken
+    dataBody
 }) {
+    const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
+    const rcAccessToken = getRcAccessToken();
     const recordingLink = dataBody?.call?.recording?.link;
     // case: with recording link ready, definitely recorded, update with link
     if (recordingLink) {

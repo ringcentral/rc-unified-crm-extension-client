@@ -1,12 +1,12 @@
 import auth from './core/auth';
-import { getLog, openLog, addLog, updateLog, getCachedNote, cacheCallNote, getConflictContentFromUnresolvedLog } from './core/log';
-import { getContact, createContact, openContactPage, refreshContactPromptPage } from './core/contact';
-import { upsertDisposition } from './core/disposition';
+import logCore from './core/log';
+import contactCore from './core/contact';
+import dispositionCore from './core/disposition';
 import userCore from './core/user';
-import { getAdminSettings, uploadAdminSettings, getServerSideLogging, enableServerSideLogging, disableServerSideLogging, updateServerSideDoNotLogNumbers } from './core/admin';
+import adminCore from './core/admin';
+import authCore from './core/auth';
 import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getPlatformInfo } from './lib/util';
 import { getUserInfo } from './lib/rcAPI';
-import { apiKeyLogin } from './core/auth';
 import moment from 'moment';
 import logPage from './components/logPage';
 import authPage from './components/authPage';
@@ -39,19 +39,15 @@ import {
   trackEditSettings,
   trackConnectedCall,
   trackOpenFeedback,
-  trackFactoryReset,
   trackUpdateCallRecordingLink,
-  trackCrmAuthFail
+  trackFactoryReset
 } from './lib/analytics';
 
-import { retroAutoCallLog, forceCallLogMatcherCheck, syncCallData } from './service/logService';
-import { getServiceManifest } from './service/embeddableServices';
-import { onCustomPageButtonPress } from './service/pageCustomButtonClickService';
-import { logPageFormDataDefaulting } from './lib/logUtil';
+import logService from './service/logService';
+import embeddableServices from './service/embeddableServices';
+import pageCustomButtonClickService from './service/pageCustomButtonClickService';
+import { logPageFormDataDefaulting, getLogConflictInfo } from './lib/logUtil';
 import { bullhornHeartbeat } from './misc/bullhorn';
-import { refreshUserSettings } from './core/user';
-import { refreshAdminSettings } from './core/admin';
-import { getLogConflictInfo } from './lib/logUtil';
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
@@ -65,12 +61,14 @@ let rcUserInfo = {};
 let firstTimeLogoutAbsorbed = false;
 let autoPopupMainConverastionId = null;
 let currentNotificationId = null;
-let rcAdditionalSubmission = {};
 let adminSettings = {
   userSettings: {}
 };
+let userSettings = {};
+let crmAuthed = false;
+let manifest = {};
+let platform = null;
 let hasOngoingCall = false;
-let serverSideLoggingSubscription = {};
 let lastUserSettingSyncDate = new Date();
 
 checkC2DCollision();
@@ -79,6 +77,7 @@ getCustomManifest();
 async function getCustomManifest() {
   const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
   if (customCrmManifest) {
+    manifest = customCrmManifest;
     setAuthor(customCrmManifest.author?.name ?? "");
   }
 }
@@ -92,9 +91,6 @@ window.onerror = (event, source, lineno, colno, error) => {
 window.addEventListener('message', async (e) => {
   const data = e.data;
   let noShowNotification = false;
-  let userSettings = {};
-  let manifest = {};
-  let crmAuthed = false;
   try {
     if (data) {
       switch (data.type) {
@@ -175,8 +171,8 @@ window.addEventListener('message', async (e) => {
               console.error('Cannot find platform info');
               return;
             }
-            manifest = (await chrome.storage.local.get({ customCrmManifest: {} }))?.customManifest;
-            const platform = manifest.platforms[platformInfo.platformName]
+            manifest = (await chrome.storage.local.get({ customCrmManifest: {} }))?.customCrmManifest;
+            platform = manifest.platforms[platformInfo.platformName]
             platformName = platformInfo.platformName;
             platformHostname = platformInfo.hostname;
             // setup C2D match all numbers
@@ -190,7 +186,7 @@ window.addEventListener('message', async (e) => {
               axios.defaults.timeout = platform.requestConfig.timeout * 1000;
             }
             registered = true;
-            const serviceManifest = await getServiceManifest();
+            const serviceManifest = await embeddableServices.getServiceManifest();
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-register-third-party-service',
               service: serviceManifest
@@ -209,8 +205,8 @@ window.addEventListener('message', async (e) => {
             console.error('Cannot find platform info');
             return;
           }
-          manifest = (await chrome.storage.local.get({ customCrmManifest: {} }))?.customManifest;
-          const platform = manifest.platforms[platformInfo.platformName]
+          manifest = (await chrome.storage.local.get({ customCrmManifest: {} }))?.customCrmManifest;
+          platform = manifest.platforms[platformInfo.platformName]
           platformName = platformInfo.platformName;
           platformHostname = platformInfo.hostname;
           rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
@@ -221,14 +217,14 @@ window.addEventListener('message', async (e) => {
             await chrome.storage.local.set({ crmAuthed })
             // Manifest case: use RC login to login CRM as well
             if (!crmAuthed && !!platform.autoLoginCRMWithRingCentralLogin) {
-              const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken() });
+              const returnedToken = await auth.authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken() });
               crmAuthed = !!returnedToken;
               await chrome.storage.local.set({ crmAuthed })
             }
             // Set every 15min, user settings will refresh
             if (crmAuthed) {
               setInterval(async function () {
-                await refreshUserSettings();
+                await userCore.refreshUserSettings({});
               }, 900000);
             }
             // Unique: Bullhorn
@@ -253,6 +249,7 @@ window.addEventListener('message', async (e) => {
             }
             try {
               const rcInfo = await getRcInfo();
+              const rcAdditionalSubmission = {};
               if (platform.rcAdditionalSubmission) {
                 for (const ras of platform.rcAdditionalSubmission) {
                   const pathSegments = ras.path.split('.');
@@ -274,6 +271,7 @@ window.addEventListener('message', async (e) => {
                   }
                 }
               }
+              await chrome.storage.local.set({ rcAdditionalSubmission });
               const userInfoResponse = await getUserInfo({
                 serverUrl: manifest.serverUrl,
                 extensionId: rcInfo.value.cachedData.extensionInfo.id,
@@ -307,9 +305,8 @@ window.addEventListener('message', async (e) => {
               trackRcLogin();
               rcLoginStatus = true;
               await chrome.storage.local.set({ ['rcLoginStatus']: rcLoginStatus });
-              const rcAccessToken = getRcAccessToken();
-              const userSettingsByAdmin = await userCore.preloadUserSettingsFromAdmin({ serverUrl: manifest.serverUrl, rcAccessToken });
-              const customManifestUrl = userSettingsByAdmin?.customManifestUrl?.url;
+              const userSettingsByAdmin = await userCore.preloadUserSettingsFromAdmin({ serverUrl: manifest.serverUrl });
+              const customManifestUrl = userSettingsByAdmin?.customCrmManifestUrl?.url;
               if (customManifestUrl) {
                 console.log('Custom manifest url:', customManifestUrl);
                 await chrome.storage.local.set({ customCrmManifestUrl: customManifestUrl });
@@ -364,15 +361,15 @@ window.addEventListener('message', async (e) => {
           });
 
           if (crmAuthed) {
-            const adminSettingResults = await refreshAdminSettings();
+            const adminSettingResults = await adminCore.refreshAdminSettings();
             adminSettings = adminSettingResults.adminSettings;
-            await refreshUserSettings();
+            await userCore.refreshUserSettings({});
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-update-authorization-status',
               authorized: crmAuthed
             }, '*');
             setInterval(function () {
-              forceCallLogMatcherCheck();
+              logService.forceCallLogMatcherCheck();
             }, 600000)
           }
           break;
@@ -405,12 +402,12 @@ window.addEventListener('message', async (e) => {
                     type: 'openPopupWindow'
                   });
                   if (userCore.getIncomingCallPop(userSettings).value === 'onAnswer') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
+                    await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
                   }
                   break;
                 case 'Outbound':
                   if (userCore.getOutgoingCallPop(userSettings).value === 'onAnswer') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
+                    await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
                   }
                   break;
               }
@@ -427,7 +424,7 @@ window.addEventListener('message', async (e) => {
                   matched: callContactMatched,
                   returnMessage: callLogContactMatchMessage,
                   contactInfo: callMatchedContact
-                } = await getContact(
+                } = await contactCore.getContact(
                   {
                     serverUrl: manifest.serverUrl,
                     phoneNumber: contactPhoneNumber,
@@ -444,24 +441,22 @@ window.addEventListener('message', async (e) => {
                     isVoicemail: false
                   });
                   if (!hasConflict) {
-                    await addLog({
+                    await logCore.addLog({
                       serverUrl: manifest.serverUrl,
                       logType: 'Call',
                       logInfo: data.call,
                       isMain: true,
                       subject: data.call.direction === 'Inbound' ? `Inbound Call` : `Outbound Call`,
-                      rcAdditionalSubmission,
                       contactId: callMatchedContact[0]?.id,
                       contactType: callMatchedContact[0]?.type,
                       contactName: callMatchedContact[0]?.name
                     });
                     if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
-                      await upsertDisposition({
+                      await dispositionCore.upsertDisposition({
                         serverUrl: manifest.serverUrl,
                         logType: 'Call',
                         sessionId: data.body.call.sessionId,
-                        dispositions: autoSelectAdditionalSubmission,
-                        rcAdditionalSubmission
+                        dispositions: autoSelectAdditionalSubmission
                       });
                     }
                   }
@@ -488,11 +483,11 @@ window.addEventListener('message', async (e) => {
                     (data.call.from.phoneNumber ?? data.call.from.extensionNumber) :
                     (data.call.to.phoneNumber ?? data.call.to.extensionNumber);
 
-                  const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
+                  const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
                   const callLogSubject = data.call.direction === 'Inbound' ?
                     `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
                     `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
-                  const note = await getCachedNote({ sessionId: data.call.sessionId });
+                  const note = await logCore.getCachedNote({ sessionId: data.call.sessionId });
                   const logInfo = {
                     note,
                     subject: callLogSubject,
@@ -537,12 +532,12 @@ window.addEventListener('message', async (e) => {
                     type: 'openPopupWindow'
                   });
                   if (userCore.getIncomingCallPop(userSettings).value === 'onFirstRing') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
+                    await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
                   }
                   break;
                 case 'Outbound':
                   if (userCore.getOutgoingCallPop(userSettings).value === 'onFirstRing') {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
+                    await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
                   }
                   break;
               }
@@ -571,7 +566,7 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-callLogger-auto-log-notify':
-          await refreshUserSettings({
+          await userCore.refreshUserSettings({
             changedSettings: {
               autoLogCall: {
                 value: data.autoLog
@@ -583,8 +578,7 @@ window.addEventListener('message', async (e) => {
             await chrome.storage.local.set({ retroAutoCallLogMaxAttempt: 10 });
             const retroAutoCallLogIntervalId = setInterval(
               function () {
-                retroAutoCallLog({
-                  rcAdditionalSubmission,
+                logService.retroAutoCallLog({
                   manifest,
                   platformName
                 })
@@ -593,7 +587,7 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-messageLogger-auto-log-notify':
-          await refreshUserSettings({
+          await userCore.refreshUserSettings({
             changedSettings: {
               autoLogCall: {
                 value: data.autoLog
@@ -619,14 +613,14 @@ window.addEventListener('message', async (e) => {
             const nowDate = new Date();
             if (nowDate - lastUserSettingSyncDate > 60000) {
               showNotification({ level: 'success', message: 'User settings syncing', ttl: 2000 });
-              await refreshUserSettings();
+              await userCore.refreshUserSettings({});
               showNotification({ level: 'success', message: 'User settings synced', ttl: 2000 });
               lastUserSettingSyncDate = new Date();
             }
           }
           break;
         case 'rc-adapter-ai-assistant-settings-notify':
-          await refreshUserSettings({
+          await userCore.refreshUserSettings({
             changedSettings: {
               showAiAssistantWidget: {
                 value: data.showAiAssistantWidget
@@ -726,11 +720,11 @@ window.addEventListener('message', async (e) => {
               if (data.body.page.id === "getMultiContactPopPromptPage") {
                 if (data.body.keys.some(k => k === 'search')) {
                   const searchWord = data.body.formData.search;
-                  refreshContactPromptPage({ contactInfo: data.body.page.formData.contactInfo, searchWord });
+                  contactCore.refreshContactPromptPage({ contactInfo: data.body.page.formData.contactInfo, searchWord });
                 }
                 else if (data.body.keys.some(k => k === 'contactList')) {
                   const contactToOpen = data.body.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
-                  openContactPage({ manifest, platformName, contactType: contactToOpen.type, contactId: contactToOpen.id });
+                  contactCore.openContactPage({ manifest, platformName, contactType: contactToOpen.type, contactId: contactToOpen.id });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: 'goBack',
@@ -767,7 +761,7 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'serverSideLoggingSetting':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  serverSideLoggingSubscription = await getServerSideLogging({ platform, rcAccessToken: getRcAccessToken() });
+                  const serverSideLoggingSubscription = await adminCore.getServerSideLogging({ platform });
                   const subscriptionLevel = serverSideLoggingSubscription.subscribed ? serverSideLoggingSubscription.subscriptionLevel : 'Disable';
                   const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -869,7 +863,7 @@ window.addEventListener('message', async (e) => {
                 // If not a direct number, but allow extension number logging, go ahead as well
                 if (contactPhoneNumber.startsWith('+') || allowExtensionNumberLogging) {
                   // query on 3rd party API to get the matched contact info and return
-                  const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: false });
+                  const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: false });
                   if (contactMatched) {
                     if (!matchedContacts[contactPhoneNumber]) {
                       matchedContacts[contactPhoneNumber] = [];
@@ -923,10 +917,10 @@ window.addEventListener('message', async (e) => {
             case '/contacts/view':
               window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
               if (hasOngoingCall) {
-                await openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber, contactType: data.body.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
+                await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber, contactType: data.body.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
               }
               else {
-                await openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber, contactId: data.body.id, contactType: data.body.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
+                await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.body.phoneNumbers[0].phoneNumber, contactId: data.body.id, contactType: data.body.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
               }
               window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               responseMessage(data.requestId, { data: 'ok' });
@@ -965,7 +959,7 @@ window.addEventListener('message', async (e) => {
                 if (data.body.call?.recording?.link) {
                   trackUpdateCallRecordingLink({ processState: 'start' });
                 }
-                const { callLogs: existingCalls } = await getLog({
+                const { callLogs: existingCalls } = await logCore.getLog({
                   serverUrl: manifest.serverUrl,
                   logType: 'Call',
                   sessionIds: data.body.call.sessionId,
@@ -973,11 +967,9 @@ window.addEventListener('message', async (e) => {
                 });
                 // If there is existing call log, update it
                 if (existingCalls?.length > 0 && existingCalls[0]?.matched) {
-                  await syncCallData({
+                  await logService.syncCallData({
                     manifest,
-                    rcAdditionalSubmission,
-                    dataBody: data.body,
-                    rcAccessToken: getRcAccessToken()
+                    dataBody: data.body
                   });
                   if (data.body.call?.recording?.link) {
                     trackUpdateCallRecordingLink({ processState: 'finish' });
@@ -1027,7 +1019,7 @@ window.addEventListener('message', async (e) => {
                   case 'createLog':
                     let newContactInfo = {};
                     if (data.body.formData.contact === 'createNewContact') {
-                      const createContactResult = await createContact({
+                      const createContactResult = await contactCore.createContact({
                         serverUrl: manifest.serverUrl,
                         phoneNumber: contactPhoneNumber,
                         newContactName: data.body.formData.newContactName,
@@ -1037,11 +1029,11 @@ window.addEventListener('message', async (e) => {
                       const newContactReturnMessage = createContactResult.returnMessage;
                       showNotification({ level: newContactReturnMessage?.messageType, message: newContactReturnMessage?.message, ttl: newContactReturnMessage?.ttl, details: newContactReturnMessage?.details });
                       if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
-                        await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
+                        await contactCore.openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                       }
                     }
                     // user manaully submit call log form
-                    await addLog(
+                    await logCore.addLog(
                       {
                         serverUrl: manifest.serverUrl,
                         logType: 'Call',
@@ -1051,27 +1043,24 @@ window.addEventListener('message', async (e) => {
                         aiNote: data.body.aiNote,
                         transcript: data.body.transcript,
                         subject: data.body.formData.activityTitle ?? "",
-                        rcAdditionalSubmission,
                         contactId: newContactInfo?.id ?? data.body.formData.contact,
                         contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                         contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
                       });
                     if (isObjectEmpty(additionalSubmission)) {
-                      await upsertDisposition({
+                      await dispositionCore.upsertDisposition({
                         serverUrl: manifest.serverUrl,
                         logType: 'Call',
                         sessionId: data.body.call.sessionId,
-                        dispositions: additionalSubmission,
-                        rcAdditionalSubmission
+                        dispositions: additionalSubmission
                       });
                     }
                     break;
                   case 'editLog':
-                    await updateLog({
+                    await logCore.updateLog({
                       serverUrl: manifest.serverUrl,
                       logType: 'Call',
                       sessionId: data.body.call.sessionId,
-                      rcAdditionalSubmission,
                       subject: data.body.formData.activityTitle ?? "",
                       note: data.body.formData.note ?? "",
                       aiNote: data.body.aiNote,
@@ -1081,19 +1070,18 @@ window.addEventListener('message', async (e) => {
                       result: data.body.call.result,
                       isShowNotification: true
                     });
-                    await upsertDisposition({
+                    await dispositionCore.upsertDisposition({
                       serverUrl: manifest.serverUrl,
                       logType: 'Call',
                       sessionId: data.body.call.sessionId,
-                      dispositions: additionalSubmission,
-                      rcAdditionalSubmission
+                      dispositions: additionalSubmission
                     });
                     break;
                 }
               }
               // Cases: open form when 1.create 2.edit 3.view on CRM page
               else {
-                let { callLogs: fetchedCallLogs } = await getLog({
+                let { callLogs: fetchedCallLogs } = await logCore.getLog({
                   serverUrl: manifest.serverUrl,
                   logType: 'Call',
                   sessionIds: data.body.call.sessionId,
@@ -1102,14 +1090,14 @@ window.addEventListener('message', async (e) => {
                 // Case: if create, but found existing log, then edit
                 if (data.body.triggerType == 'editLog' || data.body.triggerType === 'createLog' && !!fetchedCallLogs && fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.matched) {
                   data.body.triggerType = 'editLog';
-                  fetchedCallLogs = (await getLog({
+                  fetchedCallLogs = (await logCore.getLog({
                     serverUrl: manifest.serverUrl,
                     logType: 'Call',
                     sessionIds: data.body.call.sessionId,
                     requireDetails: true
                   })).callLogs;
                 }
-                const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
+                const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
                 if (!callContactMatched) {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   responseMessage(data.requestId, { data: 'ok' });
@@ -1122,7 +1110,7 @@ window.addEventListener('message', async (e) => {
                 switch (data.body.triggerType) {
                   // createLog and editLog share the same page
                   case 'createLog':
-                    logInfo.note = await getCachedNote({ sessionId: data.body.call.sessionId });
+                    logInfo.note = await logCore.getCachedNote({ sessionId: data.body.call.sessionId });
                   // eslint-disable-next-line no-fallthrough
                   case 'editLog':
                     if (fetchedCallLogs) {
@@ -1130,7 +1118,7 @@ window.addEventListener('message', async (e) => {
                         logInfo = fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId).logData;
                       }
                       else {
-                        logInfo.note = await getCachedNote({ sessionId: data.body.call.sessionId }) ?? "";
+                        logInfo.note = await logCore.getCachedNote({ sessionId: data.body.call.sessionId }) ?? "";
                       }
                     }
                     const { hasConflict, autoSelectAdditionalSubmission } = await getLogConflictInfo({
@@ -1156,7 +1144,7 @@ window.addEventListener('message', async (e) => {
                           note: logInfo.note,
                           date: moment(data.body.call.startTime).format('MM/DD/YYYY')
                         };
-                        const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
+                        const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
                         showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Please log it manually on call history page`, ttl: 5000 });
                       }
                       // Case: auto log and no conflict, log directly
@@ -1165,11 +1153,10 @@ window.addEventListener('message', async (e) => {
                           `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
                           `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
                         if (fetchedCallLogs?.length > 0 && fetchedCallLogs[0]?.matched) {
-                          await updateLog({
+                          await logCore.updateLog({
                             serverUrl: manifest.serverUrl,
                             logType: 'Call',
                             sessionId: data.body.call.sessionId,
-                            rcAdditionalSubmission,
                             subject: logInfo.subject,
                             note: logInfo.note,
                             aiNote: data.body.aiNote,
@@ -1182,7 +1169,7 @@ window.addEventListener('message', async (e) => {
                         }
                         else {
                           // auto log
-                          await addLog(
+                          await logCore.addLog(
                             {
                               serverUrl: manifest.serverUrl,
                               logType: 'Call',
@@ -1193,18 +1180,16 @@ window.addEventListener('message', async (e) => {
                               transcript: data.body.transcript,
                               subject: logInfo.subject,
                               additionalSubmission: autoSelectAdditionalSubmission,
-                              rcAdditionalSubmission,
                               contactId: callMatchedContact[0]?.id,
                               contactType: callMatchedContact[0]?.type,
                               contactName: callMatchedContact[0]?.name
                             });
                           if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
-                            await upsertDisposition({
+                            await dispositionCore.upsertDisposition({
                               serverUrl: manifest.serverUrl,
                               logType: 'Call',
                               sessionId: data.body.call.sessionId,
-                              dispositions: autoSelectAdditionalSubmission,
-                              rcAdditionalSubmission
+                              dispositions: autoSelectAdditionalSubmission
                             });
                           }
                         }
@@ -1256,10 +1241,10 @@ window.addEventListener('message', async (e) => {
                     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                     const matchedEntity = data.body.call.direction === 'Inbound' ? data.body.fromEntity : data.body.toEntity;
                     if (manifest.platforms[platformName].canOpenLogPage) {
-                      openLog({ manifest, platformName, hostname: platformHostname, logId: fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: matchedEntity.contactType, contactId: matchedEntity.id });
+                      logCore.openLog({ manifest, platformName, hostname: platformHostname, logId: fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: matchedEntity.contactType, contactId: matchedEntity.id });
                     }
                     else {
-                      await openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: matchedEntity.id, contactType: matchedEntity.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
+                      await contactCore.openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: matchedEntity.id, contactType: matchedEntity.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
                     }
                     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                     break;
@@ -1270,7 +1255,7 @@ window.addEventListener('message', async (e) => {
               window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               break;
             case '/callLogger/inputChanged':
-              await cacheCallNote({
+              await logCore.cacheCallNote({
                 sessionId: data.body.call.sessionId,
                 note: data.body.formData.note ?? ''
               });
@@ -1295,7 +1280,7 @@ window.addEventListener('message', async (e) => {
                 }
               }
               if (noLocalMatchedSessionIds.length > 0) {
-                const { successful, callLogs } = await getLog({ serverUrl: manifest.serverUrl, logType: 'Call', sessionIds: noLocalMatchedSessionIds.toString(), requireDetails: false });
+                const { successful, callLogs } = await logCore.getLog({ serverUrl: manifest.serverUrl, logType: 'Call', sessionIds: noLocalMatchedSessionIds.toString(), requireDetails: false });
                 if (successful) {
                   const newLocalMatchedCallLogRecords = {};
                   for (const sessionId of noLocalMatchedSessionIds) {
@@ -1335,21 +1320,20 @@ window.addEventListener('message', async (e) => {
                 // Sub-case: has existing pref setup, log directly
                 if (existingConversationLogPref[messageLogPrefId]) {
                   // auto log - has existing pref
-                  await addLog({
+                  await logCore.addLog({
                     serverUrl: manifest.serverUrl,
                     logType: 'Message',
                     logInfo: data.body.conversation,
                     isMain: true,
                     note: '',
                     additionalSubmission: existingConversationLogPref[messageLogPrefId].additionalSubmission,
-                    rcAdditionalSubmission,
                     contactId: existingConversationLogPref[messageLogPrefId].contact.id,
                     contactType: existingConversationLogPref[messageLogPrefId].contact.type,
                     contactName: existingConversationLogPref[messageLogPrefId].contact.name
                   });
                 }
                 else {
-                  getContactMatchResult = (await getContact({
+                  getContactMatchResult = (await contactCore.getContact({
                     serverUrl: manifest.serverUrl,
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
                     platformName
@@ -1371,20 +1355,19 @@ window.addEventListener('message', async (e) => {
                       contactInfo: getContactMatchResult ?? [],
                       date: moment(data.body.conversation.messages[0].creationTime).format('MM/DD/YYYY')
                     };
-                    const conflictContent = getConflictContentFromUnresolvedLog(conflictLog);
+                    const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
                     showNotification({ level: 'warning', message: `Message not logged. ${conflictContent.description}.`, ttl: 5000 });
                   }
                   // Sub-case: no conflict, log directly
                   else {
                     // auto log, no pref, no conflict
-                    await addLog({
+                    await logCore.addLog({
                       serverUrl: manifest.serverUrl,
                       logType: 'Message',
                       logInfo: data.body.conversation,
                       isMain: true,
                       note: '',
                       additionalSubmission: autoSelectAdditionalSubmission,
-                      rcAdditionalSubmission,
                       contactId: getContactMatchResult[0]?.id,
                       contactType: getContactMatchResult[0]?.type,
                       contactName: getContactMatchResult[0]?.name
@@ -1403,7 +1386,7 @@ window.addEventListener('message', async (e) => {
                 }
                 let newContactInfo = {};
                 if (data.body.formData.contact === 'createNewContact' && data.body.redirect) {
-                  const newContactResp = await createContact({
+                  const newContactResp = await contactCore.createContact({
                     serverUrl: manifest.serverUrl,
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
                     newContactName: data.body.formData.newContactName,
@@ -1411,18 +1394,17 @@ window.addEventListener('message', async (e) => {
                   });
                   newContactInfo = newContactResp.contactInfo;
                   if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
-                    await openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
+                    await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                   }
                 }
                 // user manaully submit message log form
-                await addLog({
+                await logCore.addLog({
                   serverUrl: manifest.serverUrl,
                   logType: 'Message',
                   logInfo: data.body.conversation,
                   isMain: true,
                   note: '',
                   additionalSubmission,
-                  rcAdditionalSubmission,
                   contactId: newContactInfo?.id ?? data.body.formData.contact,
                   contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                   contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
@@ -1431,7 +1413,7 @@ window.addEventListener('message', async (e) => {
               // Case: Open page OR auto pop up log page
               else {
                 if (data.body.redirect || messageAutoPopup) {
-                  getContactMatchResult = await getContact({
+                  getContactMatchResult = await contactCore.getContact({
                     serverUrl: manifest.serverUrl,
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
                     platformName
@@ -1520,12 +1502,12 @@ window.addEventListener('message', async (e) => {
                 }
               }
 
-              await refreshUserSettings({
+              await userCore.refreshUserSettings({
                 changedSettings
               });
               if (data.body.setting.id === "developerMode") {
                 showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
-                const serviceManifest = await getServiceManifest();
+                const serviceManifest = await embeddableServices.getServiceManifest();
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-register-third-party-service',
                   service: serviceManifest
@@ -1540,9 +1522,258 @@ window.addEventListener('message', async (e) => {
               responseMessage(data.requestId, { data: 'ok' });
               break;
             case '/custom-button-click':
-              await onCustomPageButtonPress({
-                data
-              });
+
+              switch (data.body.button.id) {
+                case 'callAndSMSLoggingSettingPage':
+                case 'contactSettingPage':
+                case 'advancedFeaturesSettingPage':
+                case 'customSettingsPage':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const settingDataKeys = Object.keys(data.body.button.formData);
+                  for (const k of settingDataKeys) {
+                    adminSettings.userSettings[k] = data.body.button.formData[k];
+                  }
+                  await chrome.storage.local.set({ adminSettings });
+                  await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
+                  await userCore.refreshUserSettings({});
+                  showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
+                case 'insightlyGetApiKey':
+                  const platformInfo = await chrome.storage.local.get('platform-info');
+                  const hostname = platformInfo['platform-info'].hostname;
+                  window.open(`https://${hostname}/Users/UserSettings`);
+                  break;
+                case 'authPage':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: data.body.button.formData.apiKey, formData: data.body.button.formData });
+                  const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
+                  if (crmAuthed) {
+                    const adminSettingResults = await adminCore.refreshAdminSettings();
+                    adminSettings = adminSettingResults.adminSettings;
+                    await userCore.refreshUserSettings({});
+                    const adminPageRender = adminPage.getAdminPageRender({ platform });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: adminPageRender,
+                    }, '*');
+                  }
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
+                case 'feedbackPage':
+                  // const platformNameInUrl = platformName.charAt(0).toUpperCase() + platformName.slice(1)
+                  let formUrl = manifest.platforms[platformName].page.feedback.url
+                  for (const formKey of Object.keys(data.body.button.formData)) {
+                    formUrl = formUrl.replace(`{${formKey}}`, encodeURIComponent(data.body.button.formData[formKey]));
+                  }
+                  formUrl = formUrl
+                    .replace('{crmName}', manifest.platforms[platformName].displayName)
+                    .replace('{userName}', rcUserInfo.rcUserName)
+                    .replace('{userEmail}', rcUserInfo.rcUserEmail)
+                    .replace('{version}', manifest.version)
+                  window.open(formUrl, '_blank');
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack',
+                  }, '*');
+                  break;
+                case 'openSupportPage':
+                  let isOnline = false;
+                  try {
+                    const isServiceOnlineResponse = await axios.get(`${manifest.serverUrl}/is-alive`);
+                    isOnline = isServiceOnlineResponse.status === 200;
+                  }
+                  catch (e) {
+                    isOnline = false;
+                  }
+                  const supportPageRender = supportPage.getSupportPageRender({ manifest, isOnline });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: supportPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: '/customized/supportPage', // page id
+                  }, '*');
+                  break;
+                case 'openAboutPage':
+                  const aboutPageRender = aboutPage.getAboutPageRender({ manifest });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: aboutPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: '/customized/aboutPage', // page id
+                  }, '*');
+                  break;
+                case 'openDeveloperSettingsPage':
+                  const { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: '' });
+                  const developerSettingsPageRender = developerSettingsPage.getDeveloperSettingsPageRender({ customUrl: customCrmManifestUrl });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: developerSettingsPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: '/customized/developerSettingsPage', // page id
+                  }, '*');
+                  break;
+                case 'factoryResetButton':
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack',
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                  if (rcUnifiedCrmExtJwt) {
+                    await auth.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
+                  }
+                  await chrome.storage.local.remove('platform-info');
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-logout'
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  trackFactoryReset();
+                  break;
+                case 'generateErrorLogButton':
+                  const errorLogFileName = "[RingCentral App Connect]ErrorLogs.txt";
+                  const errorLogFileContent = JSON.stringify(errorLogs);
+                  downloadTextFile({ filename: errorLogFileName, text: errorLogFileContent });
+                  break;
+                case 'checkForUpdateButton':
+                  const registeredVersionInfo = await chrome.storage.local.get('rc-crm-extension-version');
+                  const localVersion = registeredVersionInfo['rc-crm-extension-version'];
+                  const onlineVerison = manifest.version;
+                  if (localVersion === onlineVerison) {
+                    showNotification({ level: 'success', message: `You are using the latest version (${localVersion})`, ttl: 5000 });
+                  }
+                  else {
+                    showNotification({ level: 'warning', message: `New version (${onlineVerison}) is available, please go to chrome://extensions and press "Update"`, ttl: 5000 });
+                  }
+                  break;
+                case 'openFeedbackPageButton':
+                  chrome.runtime.sendMessage({
+                    type: "openPopupWindow",
+                    navigationPath: "/feedback"
+                  });
+                  break;
+                case 'documentation':
+                  if (platform?.documentationUrl) {
+                    window.open(platform.documentationUrl);
+                    trackPage('/documentation');
+                  }
+                  else {
+                    showNotification({ level: 'warning', message: 'Documentation URL is not set', ttl: 3000 });
+                  }
+                  break;
+                case 'releaseNotes':
+                  if (platform?.releaseNotesUrl) {
+                    window.open(platform.releaseNotesUrl);
+                    trackPage('/releaseNotes');
+                  }
+                  else {
+                    showNotification({ level: 'warning', message: 'Release notes URL is not set', ttl: 3000 });
+                  }
+                  break;
+                case 'getSupport':
+                  if (platform?.getSupportUrl) {
+                    window.open(platform.getSupportUrl);
+                    trackPage('/getSupport');
+                  }
+                  else {
+                    showNotification({ level: 'warning', message: 'Get support URL is not set', ttl: 3000 });
+                  }
+                  break;
+                case 'writeReview':
+                  if (platform?.writeReviewUrl) {
+                    window.open(platform.writeReviewUrl);
+                    trackPage('/writeReview');
+                  }
+                  else {
+                    showNotification({ level: 'warning', message: 'Write review URL is not set', ttl: 3000 });
+                  }
+                  break;
+                case 'saveAdminAdapterButton':
+                  const customCrmManifestJson = await (await fetch(data.body.button.formData.customCrmManifestUrl)).json();
+                  if (customCrmManifestJson) {
+                    adminSettings.customAdapter = {
+                      url: data.body.button.formData.customCrmManifestUrl,
+                    }
+                    await chrome.storage.local.set({ adminSettings });
+                    await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
+                    await userCore.refreshUserSettings({});
+                    showNotification({ level: 'success', message: 'Custom manifest file uploaded.', ttl: 5000 });
+                  }
+                  break;
+                case 'saveServerSideLoggingButton':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  adminSettings.userSettings.serverSideLogging =
+                  {
+                    enable: data.body.button.formData.serverSideLogging != 'Disable',
+                    doNotLogNumbers: data.body.button.formData.doNotLogNumbers,
+                    loggingLevel: data.body.button.formData.serverSideLogging
+                  };
+                  await userCore.refreshUserSettings({
+                    changedSettings: {
+                      serverSideLogging:
+                      {
+                        enable: data.body.button.formData.serverSideLogging != 'Disable',
+                        doNotLogNumbers: data.body.button.formData.doNotLogNumbers,
+                        loggingLevel: data.body.button.formData.serverSideLogging
+                      }
+                    }
+                  });
+                  await chrome.storage.local.set({ adminSettings });
+                  await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
+                  if (data.body.button.formData.serverSideLogging != 'Disable') {
+                    await adminCore.enableServerSideLogging({ platform, subscriptionLevel: data.body.button.formData.serverSideLogging });
+                    showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
+                  }
+                  else {
+                    await adminCore.disableServerSideLogging({ platform });
+                    showNotification({ level: 'success', message: 'Server side logging turned OFF.', ttl: 5000 });
+                  }
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-third-party-service',
+                    service: (await embeddableServices.getServiceManifest())
+                  }, '*');
+                  await adminCore.updateServerSideDoNotLogNumbers({ platform, doNotLogNumbers: data.body.button.formData.doNotLogNumbers ?? "" });
+                  showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack',
+                  }, '*');
+                  break;
+                case 'developerSettingsPage':
+                  try {
+                    const customManifestUrl = data.body.button.formData.customCrmManifestUrl;
+                    if (customManifestUrl === '') {
+                      return;
+                    }
+                    await chrome.storage.local.set({ customCrmManifestUrl: customManifestUrl });
+
+                    await chrome.storage.local.remove('customCrmManifest');
+                    const customCrmManifestJson = await (await fetch(customManifestUrl)).json();
+                    if (customCrmManifestJson) {
+                      await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
+                      showNotification({ level: 'success', message: 'Custom manifest file updated. Please reload the extension.', ttl: 5000 });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-navigate-to',
+                        path: 'goBack',
+                      }, '*');
+                    }
+                  }
+                  catch (e) {
+                    showNotification({ level: 'warning', message: 'Failed to get custom manifest file', ttl: 5000 });
+                  }
+                  break;
+                case 'clearPlatformInfoButton':
+                  await chrome.storage.local.remove('platform-info');
+                  showNotification({ level: 'success', message: 'Platform info cleared. Please close the extension and open from CRM page.', ttl: 5000 });
+                  break;
+              }
               responseMessage(data.requestId, { data: 'ok' });
               break;
             default:
@@ -1572,6 +1803,7 @@ window.addEventListener('message', async (e) => {
 });
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+  platform = manifest.platforms[platformName];
   if (request.type === 'oauthCallBack') {
     if (request.platform === 'rc') {
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -1586,9 +1818,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       const crmAuthed = !!returnedToken;
       await chrome.storage.local.set({ crmAuthed });
       if (crmAuthed) {
-        const adminSettingResults = await refreshAdminSettings();
+        const adminSettingResults = await adminCore.refreshAdminSettings();
         adminSettings = adminSettingResults.adminSettings;
-        await refreshUserSettings();
+        await userCore.refreshUserSettings({});
         const adminPageRender = adminPage.getAdminPageRender({ platform });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
           type: 'rc-adapter-register-customized-page',
@@ -1602,9 +1834,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   else if (request.type === 'pipedriveCallbackUri' && !(await auth.checkAuth())) {
     await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive` });
     await chrome.storage.local.set({ crmAuthed: true });
-    const adminSettingResults = await refreshAdminSettings();
+    const adminSettingResults = await adminCore.refreshAdminSettings();
     adminSettings = adminSettingResults.adminSettings;
-    await refreshUserSettings();
+    await userCore.refreshUserSettings({});
     const adminPageRender = adminPage.getAdminPageRender({ platform });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
       type: 'rc-adapter-register-customized-page',
@@ -1655,7 +1887,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     sendResponse({ result: 'ok' });
   }
   else if (request.type === 'insightlyAuth') {
-    const returnedToken = await apiKeyLogin({
+    const returnedToken = await authCore.apiKeyLogin({
       serverUrl: manifest.serverUrl,
       apiKey: request.apiKey,
       formData: {
@@ -1665,9 +1897,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     const crmAuthed = !!returnedToken;
     await chrome.storage.local.set({ crmAuthed });
     if (crmAuthed) {
-      const adminSettingResults = await refreshAdminSettings();
+      const adminSettingResults = await adminCore.refreshAdminSettings();
       adminSettings = adminSettingResults.adminSettings;
-      await refreshUserSettings();
+      await userCore.refreshUserSettings({});
       const adminPageRender = adminPage.getAdminPageRender({ platform });
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',

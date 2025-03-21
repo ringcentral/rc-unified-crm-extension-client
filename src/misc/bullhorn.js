@@ -5,6 +5,7 @@ import { getServiceManifest } from '../service/embeddableServices';
 
 async function bullhornHeartbeat() {
     console.log('checking bullhorn heartbeat...')
+    const { customCrmManifest: manifest } = await chrome.storage.local.get({ customCrmManifest: {} });
     const { rcUnifiedCrmExtJwt: token } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     try {
         const response = await axios.get(`${manifest.serverUrl}/authValidation?jwtToken=${token}`);
