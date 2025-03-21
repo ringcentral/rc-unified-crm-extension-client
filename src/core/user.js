@@ -39,7 +39,7 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
 }
 
 
-async function refreshUserSettings({ changedSettings, isAvoidForceChangeAutoLog = false }) {
+async function refreshUserSettings({ changedSettings, isAvoidForceChange = false }) {
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
     if (!crmAuthed) {
         return;
@@ -62,25 +62,25 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChangeAutoLog 
     }
     await chrome.storage.local.set({ userSettings });
     await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
-    if (!isAvoidForceChangeAutoLog) {
+    if (!isAvoidForceChange) {
         const serviceManifest = await getServiceManifest()
         RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-register-third-party-service',
             service: serviceManifest
         }, '*');
+        const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
+        const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-update-ai-assistant-settings',
+            showAiAssistantWidget: showAiAssistantWidgetSetting?.value ?? false,
+            showAiAssistantWidgetReadOnly: showAiAssistantWidgetSetting?.readOnly ?? false,
+            showAiAssistantWidgetReadOnlyReason: showAiAssistantWidgetSetting?.readOnlyReason ?? '',
+            autoStartAiAssistant: autoStartAiAssistantSetting?.value ?? false,
+            autoStartAiAssistantReadOnly: autoStartAiAssistantSetting?.readOnly ?? false,
+            autoStartAiAssistantReadOnlyReason: autoStartAiAssistantSetting?.readOnlyReason ?? '',
+        }, '*');
     }
-    const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
-    const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-        type: 'rc-adapter-update-ai-assistant-settings',
-        showAiAssistantWidget: showAiAssistantWidgetSetting?.value ?? false,
-        showAiAssistantWidgetReadOnly: showAiAssistantWidgetSetting?.readOnly ?? false,
-        showAiAssistantWidgetReadOnlyReason: showAiAssistantWidgetSetting?.readOnlyReason ?? '',
-        autoStartAiAssistant: autoStartAiAssistantSetting?.value ?? false,
-        autoStartAiAssistantReadOnly: autoStartAiAssistantSetting?.readOnly ?? false,
-        autoStartAiAssistantReadOnlyReason: autoStartAiAssistantSetting?.readOnlyReason ?? '',
-    }, '*');
     return userSettings;
 }
 

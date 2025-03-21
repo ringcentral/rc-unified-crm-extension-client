@@ -570,7 +570,7 @@ window.addEventListener('message', async (e) => {
                 value: data.autoLog
               }
             },
-            isAvoidForceChangeAutoLog: true
+            isAvoidForceChange: true
           });
           trackEditSettings({ changedItem: 'auto-call-log', status: data.autoLog });
           if (!!data.autoLog && !!crmAuthed) {
@@ -592,7 +592,7 @@ window.addEventListener('message', async (e) => {
                 value: data.autoLog
               }
             },
-            isAvoidForceChangeAutoLog: true
+            isAvoidForceChange: true
           });
           trackEditSettings({ changedItem: 'auto-message-log', status: data.autoLog });
           break;
@@ -628,7 +628,8 @@ window.addEventListener('message', async (e) => {
               autoStartAiAssistant: {
                 value: data.autoStartAiAssistant
               }
-            }
+            },
+            isAvoidForceChange: true
           });
           break;
         case 'rc-post-message-request':
@@ -886,7 +887,15 @@ window.addEventListener('message', async (e) => {
                         additionalInfo: contactInfoItem.additionalInfo
                       });
                     }
-                    console.log(`contact matched for ${contactPhoneNumber}`);
+                    if (matchedContacts[contactPhoneNumber].length > 0) {
+                      console.log(`contact matched for ${contactPhoneNumber}`);
+                    }
+                    else {
+                      if (data.body.triggerFrom === 'manual') {
+                        showNotification({ level: contactMatchReturnMessage?.messageType, message: contactMatchReturnMessage?.message, ttl: contactMatchReturnMessage?.ttl, details: contactMatchReturnMessage?.details });
+                      }
+                      console.log(`contact not matched for ${contactPhoneNumber}`);
+                    }
                   }
                   else {
                     if (data.body.triggerFrom === 'manual') {
@@ -1002,7 +1011,7 @@ window.addEventListener('message', async (e) => {
                   let additionalSubmission = {};
                   const additionalFields = manifest.platforms[platformName].page?.callLog?.additionalFields ?? [];
                   for (const f of additionalFields) {
-                    if (data.body.formData[f.const] != "none") {
+                    if (data.body.formData[f.const] && data.body.formData[f.const] != "none") {
                       additionalSubmission[f.const] = data.body.formData[f.const];
                     }
                   }
