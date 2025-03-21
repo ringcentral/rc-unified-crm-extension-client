@@ -39,32 +39,37 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
 }
 
 
-async function refreshUserSettings({ changedSettings }) {
+async function refreshUserSettings({ changedSettings, isAvoidForceChangeAutoLog = false }) {
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
-    const rcAccessToken = getRcAccessToken();
-    const { customCrmManifest: manifest } = await chrome.storage.local.get({ customCrmManifest: null });
     if (!crmAuthed) {
         return;
     }
+    const rcAccessToken = getRcAccessToken();
+    const { customCrmManifest: manifest } = await chrome.storage.local.get({ customCrmManifest: null });
     let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
-    if (changedSettings) {
-        for (const k of Object.keys(changedSettings)) {
-            if (userSettings[k] === undefined) {
-                userSettings[k] = changedSettings[k];
-            }
-            else {
-                userSettings[k].value = changedSettings[k].value;
-            }
+
+    if (!changedSettings) {
+        await chrome.storage.local.set({ userSettings });
+        return userSettings;
+    }
+    for (const k of Object.keys(changedSettings)) {
+        if (userSettings[k] === undefined) {
+            userSettings[k] = changedSettings[k];
+        }
+        else {
+            userSettings[k].value = changedSettings[k].value;
         }
     }
     await chrome.storage.local.set({ userSettings });
     await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
-    const serviceManifest = await getServiceManifest()
-    RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-        type: 'rc-adapter-register-third-party-service',
-        service: serviceManifest
-    }, '*');
+    if (!isAvoidForceChangeAutoLog) {
+        const serviceManifest = await getServiceManifest()
+        RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-register-third-party-service',
+            service: serviceManifest
+        }, '*');
+    }
     const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
     const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -76,6 +81,7 @@ async function refreshUserSettings({ changedSettings }) {
         autoStartAiAssistantReadOnly: autoStartAiAssistantSetting?.readOnly ?? false,
         autoStartAiAssistantReadOnlyReason: autoStartAiAssistantSetting?.readOnlyReason ?? '',
     }, '*');
+    return userSettings;
 }
 
 function getAutoLogCallSetting(userSettings, isAdmin) {

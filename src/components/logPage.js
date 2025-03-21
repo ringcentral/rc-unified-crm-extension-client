@@ -62,7 +62,10 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             oneOf: [...contactList[0].additionalInfo[f.const], { const: 'none', title: 'None' }],
             associationField: !!f.contactDependent
         }
-        additionalFieldsValue[f.const] = logInfo?.dispositions[f.const] ?? contactList[0].additionalInfo[f.const][0].const;
+        additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? contactList[0].additionalInfo[f.const][0].const;
+        if (!additionalFields[f.const].oneOf.some(af => af.const === additionalFieldsValue[f.const])) {
+            additionalFields[f.const].oneOf.push({ const: additionalFieldsValue[f.const], title: additionalFieldsValue[f.const] });
+        }
         if (f.required) {
             requiredFieldNames.push(f.const);
         }
@@ -76,7 +79,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             type: 'boolean',
             associationField: !!f.contactDependent
         }
-        additionalFieldsValue[f.const] = logInfo?.dispositions[f.const] ?? (f.defaultValue ?? false);
+        additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? (f.defaultValue ?? false);
         if (f.required) {
             requiredFieldNames.push(f.const);
         }
@@ -90,7 +93,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             type: 'string',
             associationField: !!f.contactDependent
         }
-        additionalFieldsValue[f.const] = logInfo?.dispositions[f.const] ?? (f.defaultValue ?? '');
+        additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? (f.defaultValue ?? '');
         if (f.required) {
             requiredFieldNames.push(f.const);
         }

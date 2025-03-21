@@ -45,7 +45,6 @@ import {
 
 import logService from './service/logService';
 import embeddableServices from './service/embeddableServices';
-import pageCustomButtonClickService from './service/pageCustomButtonClickService';
 import { logPageFormDataDefaulting, getLogConflictInfo } from './lib/logUtil';
 import { bullhornHeartbeat } from './misc/bullhorn';
 
@@ -224,7 +223,7 @@ window.addEventListener('message', async (e) => {
             // Set every 15min, user settings will refresh
             if (crmAuthed) {
               setInterval(async function () {
-                await userCore.refreshUserSettings({});
+                userSettings = await userCore.refreshUserSettings({});
               }, 900000);
             }
             // Unique: Bullhorn
@@ -363,7 +362,7 @@ window.addEventListener('message', async (e) => {
           if (crmAuthed) {
             const adminSettingResults = await adminCore.refreshAdminSettings();
             adminSettings = adminSettingResults.adminSettings;
-            await userCore.refreshUserSettings({});
+            userSettings = await userCore.refreshUserSettings({});
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-update-authorization-status',
               authorized: crmAuthed
@@ -392,7 +391,6 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case "rc-active-call-notify":
-          userSettings = (await chrome.storage.local.get({ userSettings: {} })).userSettings;
           switch (data.call.telephonyStatus) {
             case 'CallConnected':
               window.postMessage({ type: 'rc-expandable-call-note-open', sessionId: data.call.sessionId }, '*');
@@ -455,7 +453,7 @@ window.addEventListener('message', async (e) => {
                       await dispositionCore.upsertDisposition({
                         serverUrl: manifest.serverUrl,
                         logType: 'Call',
-                        sessionId: data.body.call.sessionId,
+                        sessionId: data.call.sessionId,
                         dispositions: autoSelectAdditionalSubmission
                       });
                     }
@@ -566,12 +564,13 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-callLogger-auto-log-notify':
-          await userCore.refreshUserSettings({
+          userSettings = await userCore.refreshUserSettings({
             changedSettings: {
               autoLogCall: {
                 value: data.autoLog
               }
-            }
+            },
+            isAvoidForceChangeAutoLog: true
           });
           trackEditSettings({ changedItem: 'auto-call-log', status: data.autoLog });
           if (!!data.autoLog && !!crmAuthed) {
@@ -587,12 +586,13 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-messageLogger-auto-log-notify':
-          await userCore.refreshUserSettings({
+          userSettings = await userCore.refreshUserSettings({
             changedSettings: {
               autoLogCall: {
                 value: data.autoLog
               }
-            }
+            },
+            isAvoidForceChangeAutoLog: true
           });
           trackEditSettings({ changedItem: 'auto-message-log', status: data.autoLog });
           break;
@@ -613,14 +613,14 @@ window.addEventListener('message', async (e) => {
             const nowDate = new Date();
             if (nowDate - lastUserSettingSyncDate > 60000) {
               showNotification({ level: 'success', message: 'User settings syncing', ttl: 2000 });
-              await userCore.refreshUserSettings({});
+              userSettings = await userCore.refreshUserSettings({});
               showNotification({ level: 'success', message: 'User settings synced', ttl: 2000 });
               lastUserSettingSyncDate = new Date();
             }
           }
           break;
         case 'rc-adapter-ai-assistant-settings-notify':
-          await userCore.refreshUserSettings({
+          userSettings = await userCore.refreshUserSettings({
             changedSettings: {
               showAiAssistantWidget: {
                 value: data.showAiAssistantWidget
@@ -637,7 +637,6 @@ window.addEventListener('message', async (e) => {
             responseMessage(data.requestId, { data: 'ok' });
             break;
           }
-          userSettings = (await chrome.storage.local.get({ userSettings: {} })).userSettings;
           switch (data.path) {
             case '/authorize':
               const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
@@ -940,13 +939,13 @@ window.addEventListener('message', async (e) => {
                 }
               }
               let isAutoLog = false;
-              const callAutoPopup = userCore.getCallPopSetting(userSettings).value;
+              const isCallAutoPopup = userCore.getCallPopSetting(userSettings).value;
               // extensions numbers should NOT be logged unless explicitly allowed
               const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
+              const isExtensionNumber = data.body.call.direction === 'Inbound' ?
+                !!data.body.call.from.extensionNumber :
+                !!data.body.call.to.extensionNumber;
               if (!allowExtensionNumberLogging) {
-                const isExtensionNumber = data.body.call.direction === 'Inbound' ?
-                  !!data.body.call.from.extensionNumber :
-                  !!data.body.call.to.extensionNumber;
                 if (isExtensionNumber) {
                   showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
                   responseMessage(data.requestId, { data: 'ok' });
@@ -954,37 +953,29 @@ window.addEventListener('message', async (e) => {
                 }
               }
 
-              // Sync events - update log data
-              if (data.body.triggerType === 'callLogSync') {
-                if (data.body.call?.recording?.link) {
-                  trackUpdateCallRecordingLink({ processState: 'start' });
-                }
-                const { callLogs: existingCalls } = await logCore.getLog({
-                  serverUrl: manifest.serverUrl,
-                  logType: 'Call',
-                  sessionIds: data.body.call.sessionId,
-                  requireDetails: false
-                });
-                // If there is existing call log, update it
-                if (existingCalls?.length > 0 && existingCalls[0]?.matched) {
-                  await logService.syncCallData({
-                    manifest,
-                    dataBody: data.body
-                  });
-                  if (data.body.call?.recording?.link) {
-                    trackUpdateCallRecordingLink({ processState: 'finish' });
-                  }
-                  responseMessage(data.requestId, { data: 'ok' });
-                  break;
-                }
-                // If no existing call log, create condition here to navigate to auto log
-                else {
-                  data.body.triggerType = 'createLog';
-                  isAutoLog = true;
-                }
+              const contactPhoneNumber = data.body.call.direction === 'Inbound' ?
+                (data.body.call.from.phoneNumber ?? data.body.call.from.extensionNumber) :
+                (data.body.call.to.phoneNumber ?? data.body.call.to.extensionNumber);
+
+              // If user click, show loading animation
+              if (data.body.redirect) {
+                window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
               }
 
-              // Auto log: presence events, and Disconnect result
+              let { callLogs: existingCalls } = await logCore.getLog({
+                serverUrl: manifest.serverUrl,
+                logType: 'Call',
+                sessionIds: data.body.call.sessionId,
+                requireDetails: false
+              });
+
+              // Translate: If no existing call log, create condition here to navigate to auto log
+              if (data.body.triggerType === 'callLogSync' && !(existingCalls?.length > 0 && existingCalls[0]?.matched)) {
+                data.body.triggerType = 'createLog';
+                isAutoLog = true;
+              }
+
+              // Translate: Right after call, once presence update to Disconnect, auto log the call
               if (data.body.triggerType === 'presenceUpdate') {
                 if (data.body.call.result === 'Disconnected') {
                   data.body.triggerType = 'createLog';
@@ -995,260 +986,269 @@ window.addEventListener('message', async (e) => {
                   break;
                 }
               }
-              if (data.body.redirect) {
-                window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+
+              // Translate: If want to create, but find log already exist, then change to edit
+              if (data.body.triggerType === 'createLog' && !!existingCalls && existingCalls.find(l => l.sessionId == data.body.call.sessionId)?.matched) {
+                data.body.triggerType = 'editLog';
               }
-              const isExtensionNumber = data.body.call.direction === 'Inbound' ?
-                !!data.body.call.from.extensionNumber :
-                !!data.body.call.to.extensionNumber;
-
-              const contactPhoneNumber = data.body.call.direction === 'Inbound' ?
-                (data.body.call.from.phoneNumber ?? data.body.call.from.extensionNumber) :
-                (data.body.call.to.phoneNumber ?? data.body.call.to.extensionNumber);
-
-              // Case: log form
-              if (data.body.triggerType === 'logForm') {
-                let additionalSubmission = {};
-                const additionalFields = manifest.platforms[platformName].page?.callLog?.additionalFields ?? [];
-                for (const f of additionalFields) {
-                  if (data.body.formData[f.const] != "none") {
-                    additionalSubmission[f.const] = data.body.formData[f.const];
-                  }
-                }
-                switch (data.body.formData.triggerType) {
-                  case 'createLog':
-                    let newContactInfo = {};
-                    if (data.body.formData.contact === 'createNewContact') {
-                      const createContactResult = await contactCore.createContact({
-                        serverUrl: manifest.serverUrl,
-                        phoneNumber: contactPhoneNumber,
-                        newContactName: data.body.formData.newContactName,
-                        newContactType: data.body.formData.newContactType
-                      });
-                      newContactInfo = createContactResult.contactInfo;
-                      const newContactReturnMessage = createContactResult.returnMessage;
-                      showNotification({ level: newContactReturnMessage?.messageType, message: newContactReturnMessage?.message, ttl: newContactReturnMessage?.ttl, details: newContactReturnMessage?.details });
-                      if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
-                        await contactCore.openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
-                      }
+              // Cases that don't need to get contact info
+              // Case 1: manual log
+              // Case 2: call log sync 
+              // Case 3: view log
+              // Case 4: open log form
+              switch (data.body.triggerType) {
+                // Case 1: User manual log via form
+                case 'logForm':
+                  let additionalSubmission = {};
+                  const additionalFields = manifest.platforms[platformName].page?.callLog?.additionalFields ?? [];
+                  for (const f of additionalFields) {
+                    if (data.body.formData[f.const] != "none") {
+                      additionalSubmission[f.const] = data.body.formData[f.const];
                     }
-                    // user manaully submit call log form
-                    await logCore.addLog(
-                      {
+                  }
+                  switch (data.body.formData.triggerType) {
+                    // Case 1.1: create log
+                    case 'createLog':
+                      let newContactInfo = {};
+                      if (data.body.formData.contact === 'createNewContact') {
+                        const createContactResult = await contactCore.createContact({
+                          serverUrl: manifest.serverUrl,
+                          phoneNumber: contactPhoneNumber,
+                          newContactName: data.body.formData.newContactName,
+                          newContactType: data.body.formData.newContactType
+                        });
+                        newContactInfo = createContactResult.contactInfo;
+                        const newContactReturnMessage = createContactResult.returnMessage;
+                        showNotification({ level: newContactReturnMessage?.messageType, message: newContactReturnMessage?.message, ttl: newContactReturnMessage?.ttl, details: newContactReturnMessage?.details });
+                        if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
+                          await contactCore.openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
+                        }
+                      }
+                      await logCore.addLog(
+                        {
+                          serverUrl: manifest.serverUrl,
+                          logType: 'Call',
+                          logInfo: data.body.call,
+                          isMain: true,
+                          note: data.body.formData.note ?? "",
+                          aiNote: data.body.aiNote,
+                          transcript: data.body.transcript,
+                          subject: data.body.formData.activityTitle ?? "",
+                          contactId: newContactInfo?.id ?? data.body.formData.contact,
+                          contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
+                          contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
+                        });
+                      if (!isObjectEmpty(additionalSubmission)) {
+                        await dispositionCore.upsertDisposition({
+                          serverUrl: manifest.serverUrl,
+                          logType: 'Call',
+                          sessionId: data.body.call.sessionId,
+                          dispositions: additionalSubmission
+                        });
+                      }
+                      break;
+                    // Case 1.2: update log
+                    case 'editLog':
+                      await logCore.updateLog({
                         serverUrl: manifest.serverUrl,
                         logType: 'Call',
-                        logInfo: data.body.call,
-                        isMain: true,
+                        sessionId: data.body.call.sessionId,
+                        subject: data.body.formData.activityTitle ?? "",
                         note: data.body.formData.note ?? "",
                         aiNote: data.body.aiNote,
                         transcript: data.body.transcript,
-                        subject: data.body.formData.activityTitle ?? "",
-                        contactId: newContactInfo?.id ?? data.body.formData.contact,
-                        contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
-                        contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
+                        startTime: data.body.call.startTime,
+                        duration: data.body.call.duration,
+                        result: data.body.call.result,
+                        isShowNotification: true
                       });
-                    if (isObjectEmpty(additionalSubmission)) {
                       await dispositionCore.upsertDisposition({
                         serverUrl: manifest.serverUrl,
                         logType: 'Call',
                         sessionId: data.body.call.sessionId,
                         dispositions: additionalSubmission
                       });
+                      break;
+                  }
+                  break;
+                // Case 2: call log sync
+                case 'callLogSync':
+                  if (data.body.call?.recording?.link) {
+                    trackUpdateCallRecordingLink({ processState: 'start' });
+                  }
+                  // If there is existing call log, update it
+                  if (existingCalls?.length > 0 && existingCalls[0]?.matched) {
+                    await logService.syncCallData({
+                      manifest,
+                      dataBody: data.body
+                    });
+                    if (data.body.call?.recording?.link) {
+                      trackUpdateCallRecordingLink({ processState: 'finish' });
                     }
-                    break;
-                  case 'editLog':
-                    await logCore.updateLog({
-                      serverUrl: manifest.serverUrl,
-                      logType: 'Call',
-                      sessionId: data.body.call.sessionId,
-                      subject: data.body.formData.activityTitle ?? "",
-                      note: data.body.formData.note ?? "",
-                      aiNote: data.body.aiNote,
-                      transcript: data.body.transcript,
-                      startTime: data.body.call.startTime,
-                      duration: data.body.call.duration,
-                      result: data.body.call.result,
-                      isShowNotification: true
-                    });
-                    await dispositionCore.upsertDisposition({
-                      serverUrl: manifest.serverUrl,
-                      logType: 'Call',
-                      sessionId: data.body.call.sessionId,
-                      dispositions: additionalSubmission
-                    });
-                    break;
-                }
-              }
-              // Cases: open form when 1.create 2.edit 3.view on CRM page
-              else {
-                let { callLogs: fetchedCallLogs } = await logCore.getLog({
-                  serverUrl: manifest.serverUrl,
-                  logType: 'Call',
-                  sessionIds: data.body.call.sessionId,
-                  requireDetails: false
-                });
-                // Case: if create, but found existing log, then edit
-                if (data.body.triggerType == 'editLog' || data.body.triggerType === 'createLog' && !!fetchedCallLogs && fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.matched) {
-                  data.body.triggerType = 'editLog';
-                  fetchedCallLogs = (await logCore.getLog({
+                  }
+                  break;
+                // Case 3: view log page
+                case 'viewLog':
+                  const matchedEntity = data.body.call.direction === 'Inbound' ? data.body.fromEntity : data.body.toEntity;
+                  if (manifest.platforms[platformName].canOpenLogPage) {
+                    logCore.openLog({ manifest, platformName, hostname: platformHostname, logId: existingCalls.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: matchedEntity.contactType, contactId: matchedEntity.id });
+                  }
+                  else {
+                    await contactCore.openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: matchedEntity.id, contactType: matchedEntity.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
+                  }
+                  break;
+                // Case 4&5: open create&edit form (both share the same form)
+                case 'editLog':
+                  existingCalls = (await logCore.getLog({
                     serverUrl: manifest.serverUrl,
                     logType: 'Call',
                     sessionIds: data.body.call.sessionId,
                     requireDetails: true
                   })).callLogs;
-                }
-                const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
-                if (!callContactMatched) {
-                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                  responseMessage(data.requestId, { data: 'ok' });
-                  break;
-                }
-                let logInfo = {
-                  note: '',
-                  subject: ''
-                }
-                switch (data.body.triggerType) {
-                  // createLog and editLog share the same page
-                  case 'createLog':
-                    logInfo.note = await logCore.getCachedNote({ sessionId: data.body.call.sessionId });
-                  // eslint-disable-next-line no-fallthrough
-                  case 'editLog':
-                    if (fetchedCallLogs) {
-                      if (fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logData) {
-                        logInfo = fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId).logData;
-                      }
-                      else {
-                        logInfo.note = await logCore.getCachedNote({ sessionId: data.body.call.sessionId }) ?? "";
-                      }
-                    }
-                    const { hasConflict, autoSelectAdditionalSubmission } = await getLogConflictInfo({
-                      platform,
-                      isAutoLog,
-                      contactInfo: callMatchedContact,
-                      logType: 'callLog',
-                      direction: data.body.call.direction,
-                      isVoicemail: false
-                    });
+                // eslint-disable-next-line no-fallthrough
+                case 'createLog':
+                  const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
+                  if (!callContactMatched) {
+                    window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                    responseMessage(data.requestId, { data: 'ok' });
+                    break;
+                  }
+                  let logInfo = {
+                    note: '',
+                    subject: ''
+                  }
+                  if (existingCalls && existingCalls.find(l => l.sessionId == data.body.call.sessionId)?.logData) {
+                    logInfo = existingCalls.find(l => l.sessionId == data.body.call.sessionId).logData;
+                  }
+                  else {
+                    logInfo.note = await logCore.getCachedNote({ sessionId: data.body.call.sessionId }) ?? "";
+                  }
+                  const { hasConflict, autoSelectAdditionalSubmission } = await getLogConflictInfo({
+                    platform,
+                    isAutoLog,
+                    contactInfo: callMatchedContact,
+                    logType: 'callLog',
+                    direction: data.body.call.direction,
+                    isVoicemail: false
+                  });
 
-                    if (isAutoLog && !callAutoPopup) {
-                      // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
-                      if (hasConflict) {
-                        window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                        const conflictLog = {
-                          type: 'Call',
-                          id: data.body.call.sessionId,
-                          phoneNumber: contactPhoneNumber,
-                          direction: data.body.call.direction,
-                          contactInfo: callMatchedContact ?? [],
+                  if (isAutoLog && !isCallAutoPopup) {
+                    // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
+                    if (hasConflict) {
+                      window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                      const conflictLog = {
+                        type: 'Call',
+                        id: data.body.call.sessionId,
+                        phoneNumber: contactPhoneNumber,
+                        direction: data.body.call.direction,
+                        contactInfo: callMatchedContact ?? [],
+                        subject: logInfo.subject,
+                        note: logInfo.note,
+                        date: moment(data.body.call.startTime).format('MM/DD/YYYY')
+                      };
+                      const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
+                      showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Please log it manually on call history page`, ttl: 5000 });
+                    }
+                    // Case: auto log and no conflict, log directly
+                    else {
+                      logInfo.subject = data.body.call.direction === 'Inbound' ?
+                        `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
+                        `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
+                      if (existingCalls?.length > 0 && existingCalls[0]?.matched) {
+                        await logCore.updateLog({
+                          serverUrl: manifest.serverUrl,
+                          logType: 'Call',
+                          sessionId: data.body.call.sessionId,
                           subject: logInfo.subject,
                           note: logInfo.note,
-                          date: moment(data.body.call.startTime).format('MM/DD/YYYY')
-                        };
-                        const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
-                        showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Please log it manually on call history page`, ttl: 5000 });
+                          aiNote: data.body.aiNote,
+                          transcript: data.body.transcript,
+                          startTime: data.body.call.startTime,
+                          duration: data.body.call.duration,
+                          result: data.body.call.result,
+                          isShowNotification: true
+                        });
                       }
-                      // Case: auto log and no conflict, log directly
                       else {
-                        logInfo.subject = data.body.call.direction === 'Inbound' ?
-                          `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
-                          `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
-                        if (fetchedCallLogs?.length > 0 && fetchedCallLogs[0]?.matched) {
-                          await logCore.updateLog({
+                        // auto log
+                        await logCore.addLog(
+                          {
                             serverUrl: manifest.serverUrl,
                             logType: 'Call',
-                            sessionId: data.body.call.sessionId,
-                            subject: logInfo.subject,
+                            logInfo: data.body.call,
+                            isMain: true,
                             note: logInfo.note,
                             aiNote: data.body.aiNote,
                             transcript: data.body.transcript,
-                            startTime: data.body.call.startTime,
-                            duration: data.body.call.duration,
-                            result: data.body.call.result,
-                            isShowNotification: true
+                            subject: logInfo.subject,
+                            additionalSubmission: autoSelectAdditionalSubmission,
+                            contactId: callMatchedContact[0]?.id,
+                            contactType: callMatchedContact[0]?.type,
+                            contactName: callMatchedContact[0]?.name
                           });
-                        }
-                        else {
-                          // auto log
-                          await logCore.addLog(
-                            {
-                              serverUrl: manifest.serverUrl,
-                              logType: 'Call',
-                              logInfo: data.body.call,
-                              isMain: true,
-                              note: logInfo.note,
-                              aiNote: data.body.aiNote,
-                              transcript: data.body.transcript,
-                              subject: logInfo.subject,
-                              additionalSubmission: autoSelectAdditionalSubmission,
-                              contactId: callMatchedContact[0]?.id,
-                              contactType: callMatchedContact[0]?.type,
-                              contactName: callMatchedContact[0]?.name
-                            });
-                          if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
-                            await dispositionCore.upsertDisposition({
-                              serverUrl: manifest.serverUrl,
-                              logType: 'Call',
-                              sessionId: data.body.call.sessionId,
-                              dispositions: autoSelectAdditionalSubmission
-                            });
-                          }
+                        if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
+                          await dispositionCore.upsertDisposition({
+                            serverUrl: manifest.serverUrl,
+                            logType: 'Call',
+                            sessionId: data.body.call.sessionId,
+                            dispositions: autoSelectAdditionalSubmission
+                          });
                         }
                       }
                     }
-                    // Case: auto log OFF, open log page
-                    else {
-                      let loggedContactId = null;
-                      const existingCallLogRecord = await chrome.storage.local.get(`rc-crm-call-log-${data.body.call.sessionId}`);
-                      if (existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`]) {
-                        loggedContactId = existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`].contact?.id ?? null;
-                      }
-                      // add your codes here to log call to your service
-                      let callPage = logPage.getLogPageRender({ id: data.body.call.sessionId, manifest, logType: 'Call', triggerType: data.body.triggerType, platformName, direction: data.body.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId });
+                  }
+                  // Case: auto log OFF, open log page
+                  else {
+                    let loggedContactId = null;
+                    const existingCallLogRecord = await chrome.storage.local.get(`rc-crm-call-log-${data.body.call.sessionId}`);
+                    if (existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`]) {
+                      loggedContactId = existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`].contact?.id ?? null;
+                    }
+                    // add your codes here to log call to your service
+                    let callPage = logPage.getLogPageRender({
+                      id: data.body.call.sessionId,
+                      manifest,
+                      logType: 'Call',
+                      triggerType: data.body.triggerType,
+                      platformName,
+                      direction: data.body.call.direction,
+                      contactInfo: callMatchedContact ?? [],
+                      logInfo,
+                      loggedContactId
+                    });
 
-                      // create log page defaulting
-                      if (data.body.triggerType === 'createLog') {
-                        // default form value from user settings
-                        if (data.body.call.direction === 'Inbound') {
-                          callPage = await logPageFormDataDefaulting({
-                            platform,
-                            targetPage: callPage,
-                            caseType: 'inboundCall',
-                            logType: 'callLog'
-                          });
-                        }
-                        if (data.body.call.direction === 'Outbound') {
-                          callPage = await logPageFormDataDefaulting({
-                            platform,
-                            targetPage: callPage,
-                            caseType: 'outboundCall',
-                            logType: 'callLog'
-                          });
-                        }
+                    // create log page defaulting
+                    if (data.body.triggerType === 'createLog') {
+                      // default form value from user settings
+                      if (data.body.call.direction === 'Inbound') {
+                        callPage = await logPageFormDataDefaulting({
+                          platform,
+                          targetPage: callPage,
+                          caseType: 'inboundCall',
+                          logType: 'callLog'
+                        });
                       }
-                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                        type: 'rc-adapter-update-call-log-page',
-                        page: callPage,
-                      }, '*');
+                      if (data.body.call.direction === 'Outbound') {
+                        callPage = await logPageFormDataDefaulting({
+                          platform,
+                          targetPage: callPage,
+                          caseType: 'outboundCall',
+                          logType: 'callLog'
+                        });
+                      }
+                    }
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-update-call-log-page',
+                      page: callPage,
+                    }, '*');
 
-                      // navigate to call log page
-                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                        type: 'rc-adapter-navigate-to',
-                        path: `/log/call/${data.body.call.sessionId}`,
-                      }, '*');
-                    }
+                    // navigate to call log page
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: `/log/call/${data.body.call.sessionId}`,
+                    }, '*');
                     break;
-                  case 'viewLog':
-                    window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                    const matchedEntity = data.body.call.direction === 'Inbound' ? data.body.fromEntity : data.body.toEntity;
-                    if (manifest.platforms[platformName].canOpenLogPage) {
-                      logCore.openLog({ manifest, platformName, hostname: platformHostname, logId: fetchedCallLogs.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: matchedEntity.contactType, contactId: matchedEntity.id });
-                    }
-                    else {
-                      await contactCore.openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: matchedEntity.id, contactType: matchedEntity.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
-                    }
-                    window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                    break;
-                }
+                  }
               }
               // response to widget
               responseMessage(data.requestId, { data: 'ok' });
@@ -1502,7 +1502,7 @@ window.addEventListener('message', async (e) => {
                 }
               }
 
-              await userCore.refreshUserSettings({
+              userSettings = await userCore.refreshUserSettings({
                 changedSettings
               });
               if (data.body.setting.id === "developerMode") {
@@ -1535,7 +1535,6 @@ window.addEventListener('message', async (e) => {
                   }
                   await chrome.storage.local.set({ adminSettings });
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
-                  await userCore.refreshUserSettings({});
                   showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
@@ -1551,7 +1550,6 @@ window.addEventListener('message', async (e) => {
                   if (crmAuthed) {
                     const adminSettingResults = await adminCore.refreshAdminSettings();
                     adminSettings = adminSettingResults.adminSettings;
-                    await userCore.refreshUserSettings({});
                     const adminPageRender = adminPage.getAdminPageRender({ platform });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-register-customized-page',
@@ -1702,7 +1700,6 @@ window.addEventListener('message', async (e) => {
                     }
                     await chrome.storage.local.set({ adminSettings });
                     await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
-                    await userCore.refreshUserSettings({});
                     showNotification({ level: 'success', message: 'Custom manifest file uploaded.', ttl: 5000 });
                   }
                   break;
@@ -1714,7 +1711,7 @@ window.addEventListener('message', async (e) => {
                     doNotLogNumbers: data.body.button.formData.doNotLogNumbers,
                     loggingLevel: data.body.button.formData.serverSideLogging
                   };
-                  await userCore.refreshUserSettings({
+                  userSettings = await userCore.refreshUserSettings({
                     changedSettings: {
                       serverSideLogging:
                       {
@@ -1820,7 +1817,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       if (crmAuthed) {
         const adminSettingResults = await adminCore.refreshAdminSettings();
         adminSettings = adminSettingResults.adminSettings;
-        await userCore.refreshUserSettings({});
         const adminPageRender = adminPage.getAdminPageRender({ platform });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
           type: 'rc-adapter-register-customized-page',
@@ -1836,7 +1832,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     await chrome.storage.local.set({ crmAuthed: true });
     const adminSettingResults = await adminCore.refreshAdminSettings();
     adminSettings = adminSettingResults.adminSettings;
-    await userCore.refreshUserSettings({});
     const adminPageRender = adminPage.getAdminPageRender({ platform });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
       type: 'rc-adapter-register-customized-page',
@@ -1899,7 +1894,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     if (crmAuthed) {
       const adminSettingResults = await adminCore.refreshAdminSettings();
       adminSettings = adminSettingResults.adminSettings;
-      await userCore.refreshUserSettings({});
       const adminPageRender = adminPage.getAdminPageRender({ platform });
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
