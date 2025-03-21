@@ -3,8 +3,9 @@ import { showNotification } from '../lib/util';
 import { trackCrmAuthFail } from '../lib/analytics';
 import { getServiceManifest } from '../service/embeddableServices';
 
-async function bullhornHeartbeat({ token, manifest, platform, userSettings, crmAuthed, isAdmin, userPermissions }) {
+async function bullhornHeartbeat() {
     console.log('checking bullhorn heartbeat...')
+    const { rcUnifiedCrmExtJwt: token } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     try {
         const response = await axios.get(`${manifest.serverUrl}/authValidation?jwtToken=${token}`);
         if (response.data.successful) {
@@ -12,14 +13,7 @@ async function bullhornHeartbeat({ token, manifest, platform, userSettings, crmA
         }
         else {
             await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
-            const serviceManifest = getServiceManifest({
-                platform,
-                crmAuthed,
-                isAdmin,
-                manifest,
-                userSettings,
-                userPermissions
-            });
+            const serviceManifest = getServiceManifest();
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-third-party-service',
                 service: serviceManifest
@@ -54,14 +48,7 @@ async function bullhornHeartbeat({ token, manifest, platform, userSettings, crmA
     }
     catch (e) {
         await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
-        const serviceManifest = getServiceManifest({
-            platform,
-            crmAuthed,
-            isAdmin,
-            manifest,
-            userSettings,
-            userPermissions
-        });
+        const serviceManifest = getServiceManifest();
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-register-third-party-service',
             service: serviceManifest

@@ -1,4 +1,6 @@
 import { openDB } from 'idb';
+import { trackCRMSetupError } from '../lib/analytics';
+import crmSetupErrorPage from '../components/crmSetupErrorPage';
 
 function secondsToHourMinuteSecondString(totalSeconds) {
   const hours = parseInt(totalSeconds / 3600);
@@ -42,6 +44,28 @@ async function getRcInfo() {
 
 function getRcAccessToken() {
   return JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).access_token;
+}
+
+async function getPlatformInfo() {
+  const platformInfo = await chrome.storage.local.get('platform-info');
+  if (isObjectEmpty(platformInfo)) {
+    renderCRMSetupErrorPage();
+    return null;
+  }
+  return platformInfo['platform-info'];
+}
+
+function renderCRMSetupErrorPage() {
+  const crmSetupErrorPageRender = crmSetupErrorPage.getCRMSetupErrorPageRender();
+  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+    type: 'rc-adapter-register-customized-page',
+    page: crmSetupErrorPageRender
+  });
+  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+    type: 'rc-adapter-navigate-to',
+    path: '/customized/crmSetupErrorPage', // page id
+  }, '*');
+  trackCRMSetupError();
 }
 
 async function checkC2DCollision() {
@@ -97,3 +121,4 @@ exports.getRcInfo = getRcInfo;
 exports.getRcAccessToken = getRcAccessToken;
 exports.checkC2DCollision = checkC2DCollision;
 exports.downloadTextFile = downloadTextFile;
+exports.getPlatformInfo = getPlatformInfo;

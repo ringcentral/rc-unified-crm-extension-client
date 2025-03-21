@@ -6,13 +6,13 @@ import { showNotification, dismissNotification, isObjectEmpty } from '../lib/uti
 import { getLogConflictInfo } from '../lib/logUtil';
 
 async function retroAutoCallLog({
-    userSettings,
-    isAdmin,
     rcAdditionalSubmission,
     manifest,
     platformName,
     platform
 }) {
+    const { isAdmin } = await chrome.storage.local.get({ isAdmin: false });
+    const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
     if (userCore.getDisableRetroCallLogSync(userSettings).value) {
         return;
     }
@@ -41,14 +41,13 @@ async function retroAutoCallLog({
                 if (!callContactMatched) {
                     continue;
                 }
-                const { hasConflict, autoSelectAdditionalSubmission } = getLogConflictInfo({
+                const { hasConflict, autoSelectAdditionalSubmission } = await getLogConflictInfo({
                     platform,
                     isAutoLog,
                     contactInfo: callMatchedContact,
                     logType: 'callLog',
                     direction: c.direction,
-                    isVoicemail: false,
-                    userSettings
+                    isVoicemail: false
                 });
                 if (!hasConflict) {
                     const callLogSubject = c.direction === 'Inbound' ?
@@ -74,7 +73,6 @@ async function retroAutoCallLog({
                                 contactId: callMatchedContact[0]?.id,
                                 contactType: callMatchedContact[0]?.type,
                                 contactName: callMatchedContact[0]?.name,
-                                userSettings,
                                 isShowNotification: false
                             });
                         if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
@@ -113,7 +111,9 @@ async function retroAutoCallLog({
     }
 }
 
-async function forceCallLogMatcherCheck({ userSettings, crmAuthed }) {
+async function forceCallLogMatcherCheck() {
+    const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
+    const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
     if (!!userSettings?.serverSideLogging?.enable && crmAuthed) {
         // To help with performance, we only check the first 10 calls
         const { calls, hasMore } = await RCAdapter.getUnloggedCalls(10, 1)

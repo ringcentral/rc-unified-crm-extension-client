@@ -21,7 +21,8 @@ function getAdditionalFieldDefaultValuesFromSetting({
     return result;
 }
 
-function logPageFormDataDefaulting({ platform, userSettings, targetPage, caseType, logType }) {
+async function logPageFormDataDefaulting({ platform, targetPage, caseType, logType }) {
+    const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
     const platformName = platform.name;
     const defaultValues = getAdditionalFieldDefaultValuesFromSetting({
         platform,
@@ -69,15 +70,15 @@ function rawTextCompare(str1 = '', str2 = '') {
     return str1.toLowerCase().replace(/\s/g, '') === str2.toLowerCase().replace(/\s/g, '');
 }
 
-function getLogConflictInfo({
+async function getLogConflictInfo({
     platform,
     isAutoLog,
     contactInfo,
     logType,
     direction,
-    isVoicemail,
-    userSettings
+    isVoicemail
 }) {
+    const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
     if (!isAutoLog) {
         return { hasConflict: false, autoSelectAdditionalSubmission: {} }
     }

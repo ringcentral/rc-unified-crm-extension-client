@@ -16,10 +16,10 @@ async function addLog({
     contactId,
     contactType,
     contactName,
-    userSettings,
     isShowNotification = true
 }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
     const overridingPhoneNumberFormat = [];
     if (userSettings?.overridingPhoneNumberFormat?.value) {
         overridingPhoneNumberFormat.push(userSettings.overridingPhoneNumberFormat.value);

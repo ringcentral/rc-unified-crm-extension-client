@@ -27,7 +27,7 @@ async function refreshAdminSettings({ manifest, platform, rcAccessToken }) {
     let adminSettings;
     // Admin tab render
     const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
-    const isAdmin = !!storedAdminSettings;
+    await chrome.storage.local.set({ isAdmin:!!storedAdminSettings });
     if (storedAdminSettings) {
         try {
             const adminPageRender = adminPage.getAdminPageRender({ platform });
@@ -41,7 +41,8 @@ async function refreshAdminSettings({ manifest, platform, rcAccessToken }) {
             console.log('Cannot find admin settings', e);
         }
     }
-    return { isAdmin, adminSettings }
+
+    return { adminSettings }
 }
 
 async function getServerSideLogging({ platform, rcAccessToken }) {

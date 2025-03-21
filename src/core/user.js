@@ -12,7 +12,7 @@ async function preloadUserSettingsFromAdmin({ serverUrl, rcAccessToken }) {
     }
 }
 
-async function getUserSettings({ serverUrl, rcAccessToken }) {
+async function getUserSettingsOnline({ serverUrl, rcAccessToken }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const getUserSettingsResponse = await axios.get(
         `${serverUrl}/user/settings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`);
@@ -34,22 +34,26 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
         {
             userSettings: userSettingsToUpload
         });
-    return userSettingsToUpload;
 }
 
 
-async function refreshUserSettings({ platform, crmAuthed, isAdmin, manifest, userPermissions, rcAccessToken }) {
-    let userSettings = await getUserSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
+async function refreshUserSettings({ manifest, rcAccessToken, changedSettings }) {
+    const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
+    if (!crmAuthed) {
+        return;
+    }
+    let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
+    for (const k of Object.keys(changedSettings)) {
+        if (userSettings[k] === undefined) {
+            userSettings[k] = changedSettings[k];
+        }
+        else {
+            userSettings[k].value = changedSettings[k].value;
+        }
+    }
     await chrome.storage.local.set({ userSettings });
-    userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
-    const serviceManifest = await getServiceManifest({
-        platform,
-        crmAuthed,
-        isAdmin,
-        manifest,
-        userSettings,
-        userPermissions
-    });
+    await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+    const serviceManifest = await getServiceManifest()
     RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',
@@ -66,7 +70,6 @@ async function refreshUserSettings({ platform, crmAuthed, isAdmin, manifest, use
         autoStartAiAssistantReadOnly: autoStartAiAssistantSetting?.readOnly ?? false,
         autoStartAiAssistantReadOnlyReason: autoStartAiAssistantSetting?.readOnlyReason ?? '',
     }, '*');
-    return userSettings;
 }
 
 function getAutoLogCallSetting(userSettings, isAdmin) {
@@ -102,7 +105,7 @@ function getDisableRetroCallLogSync(userSettings) {
     }
 }
 
-function getOneTimeLogSetting(userSettings) {  
+function getOneTimeLogSetting(userSettings) {
     return {
         value: userSettings?.oneTimeLog?.value ?? false,
         readOnly: userSettings?.oneTimeLog?.customizable === undefined ? false : !userSettings?.oneTimeLog?.customizable,
@@ -206,7 +209,7 @@ function getCustomSetting(userSettings, id, defaultValue) {
 }
 
 exports.preloadUserSettingsFromAdmin = preloadUserSettingsFromAdmin;
-exports.getUserSettings = getUserSettings;
+exports.getUserSettingsOnline = getUserSettingsOnline;
 exports.uploadUserSettings = uploadUserSettings;
 exports.refreshUserSettings = refreshUserSettings;
 
