@@ -1821,7 +1821,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     else if (request.platform === 'thirdParty') {
       const returnedToken = await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri });
-      const crmAuthed = !!returnedToken;
+      crmAuthed = !!returnedToken;
       await chrome.storage.local.set({ crmAuthed });
       if (crmAuthed) {
         const adminSettingResults = await adminCore.refreshAdminSettings();
@@ -1838,7 +1838,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   // Unique: Pipedrive
   else if (request.type === 'pipedriveCallbackUri' && !(await auth.checkAuth())) {
     await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive` });
-    await chrome.storage.local.set({ crmAuthed: true });
+    crmAuthed = true;
+    await chrome.storage.local.set({ crmAuthed });
     const adminSettingResults = await adminCore.refreshAdminSettings();
     adminSettings = adminSettingResults.adminSettings;
     const adminPageRender = adminPage.getAdminPageRender({ platform });
@@ -1898,7 +1899,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         apiUrl: request.apiUrl
       }
     });
-    const crmAuthed = !!returnedToken;
+    crmAuthed = !!returnedToken;
     await chrome.storage.local.set({ crmAuthed });
     if (crmAuthed) {
       const adminSettingResults = await adminCore.refreshAdminSettings();
