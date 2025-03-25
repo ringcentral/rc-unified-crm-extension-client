@@ -588,7 +588,7 @@ window.addEventListener('message', async (e) => {
         case 'rc-messageLogger-auto-log-notify':
           userSettings = await userCore.refreshUserSettings({
             changedSettings: {
-              autoLogCall: {
+              autoLogSMS: {
                 value: data.autoLog
               }
             },
