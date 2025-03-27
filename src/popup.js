@@ -1702,10 +1702,10 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
                 case 'saveAdminAdapterButton':
-                  const customCrmManifestJson = await (await fetch(data.body.button.formData.customCrmManifestUrl)).json();
+                  const customCrmManifestJson = await (await fetch(data.body.button.formData.customManifestUrl)).json();
                   if (customCrmManifestJson) {
                     adminSettings.customAdapter = {
-                      url: data.body.button.formData.customCrmManifestUrl,
+                      url: data.body.button.formData.customManifestUrl,
                     }
                     await chrome.storage.local.set({ adminSettings });
                     await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
@@ -1754,7 +1754,7 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'developerSettingsPage':
                   try {
-                    const customManifestUrl = data.body.button.formData.customCrmManifestUrl;
+                    const customManifestUrl = data.body.button.formData.customManifestUrl;
                     if (customManifestUrl === '') {
                       return;
                     }
