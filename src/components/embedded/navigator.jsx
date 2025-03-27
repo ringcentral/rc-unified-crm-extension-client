@@ -36,7 +36,7 @@ function Navigator() {
                 onClick={() => {
                     chrome.runtime.sendMessage({
                         type: "openPopupWindow",
-                        navigationPath: "/feedback"
+                        navigationPath: "/support"
                     });
                 }}
                 style={{

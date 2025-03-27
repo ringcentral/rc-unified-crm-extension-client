@@ -1585,23 +1585,10 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'openSupportPage':
-                  let isOnline = false;
-                  try {
-                    const isServiceOnlineResponse = await axios.get(`${manifest.serverUrl}/is-alive`);
-                    isOnline = isServiceOnlineResponse.status === 200;
-                  }
-                  catch (e) {
-                    isOnline = false;
-                  }
-                  const supportPageRender = supportPage.getSupportPageRender({ manifest, isOnline });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-register-customized-page',
-                    page: supportPageRender
+                  chrome.runtime.sendMessage({
+                    type: "openPopupWindow",
+                    navigationPath: "/support"
                   });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: '/customized/supportPage', // page id
-                  }, '*');
                   break;
                 case 'openAboutPage':
                   const aboutPageRender = aboutPage.getAboutPageRender({ manifest });
@@ -1882,6 +1869,25 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         path: `/customized/${feedbackPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
       }, '*');
       trackOpenFeedback();
+    }
+    else if (request.path === '/support') {
+      let isOnline = false;
+      try {
+        const isServiceOnlineResponse = await axios.get(`${manifest.serverUrl}/is-alive`);
+        isOnline = isServiceOnlineResponse.status === 200;
+      }
+      catch (e) {
+        isOnline = false;
+      }
+      const supportPageRender = supportPage.getSupportPageRender({ manifest, isOnline });
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: supportPageRender
+      });
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-navigate-to',
+        path: '/customized/supportPage', // page id
+      }, '*');
     }
     else {
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
