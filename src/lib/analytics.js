@@ -233,6 +233,15 @@ exports.createNewContact = function createNewContact() {
         author
     })
 }
+exports.contactPop = function contactPop() {
+    track('Contact pop', {
+        appName,
+        via: eventAddedVia,
+        version,
+        author
+    })
+}
+
 exports.trackFactoryReset = function trackFactoryReset() {
     track('Factory reset', {
         appName,

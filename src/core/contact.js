@@ -140,6 +140,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
         platformInfo['platform-info'].hostname = hostnameRes.data;
         await chrome.storage.local.set(platformInfo);
     }
+    analytics.contactPop();
     const hostname = platformInfo['platform-info'].hostname;
     const isKnownContact = !!contactId;
     let cachedContacts = [];
