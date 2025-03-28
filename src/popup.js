@@ -23,6 +23,7 @@ import serverSideLoggingPage from './components/admin/serverSideLoggingPage';
 import contactSettingPage from './components/admin/managedSettings/contactSettingPage';
 import advancedFeaturesSettingPage from './components/admin/managedSettings/advancedFeaturesSettingPage';
 import customSettingsPage from './components/admin/managedSettings/customSettingsPage';
+import tempLogNotePage from './components/tempLogNotePage';
 import {
   setAuthor,
   identify,
@@ -520,6 +521,12 @@ window.addEventListener('message', async (e) => {
                     path: `/log/call/${data.call.sessionId}`,
                   }, '*');
                 }
+
+                await chrome.storage.local.set({ [`call-log-data-ready-${data.call.sessionId}`]: false });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-trigger-call-logger-match',
+                  sessionIds: [data.call.sessionId]
+                }, '*');
               }
               break;
             case 'Ringing':
@@ -937,11 +944,22 @@ window.addEventListener('message', async (e) => {
               const isFinalDataResult = data.body?.call?.action !== undefined;
               const isRecorded = !isObjectEmpty((await chrome.storage.local.get(`rec-link-${data.body.call.sessionId}`)));
               const hasRecording = !!data.body.call.recording?.link;
-              const isOneTimeLog = userCore.getOneTimeLogSetting(userSettings).value;
-              if (isOneTimeLog) {
-                if (!isFinalDataResult || (isRecorded && !hasRecording)) {
+              const isCallLogDataReady = isFinalDataResult && (isRecorded || !hasRecording);
+              await chrome.storage.local.set({ [`call-log-data-ready-${data.body.call.sessionId}`]: isCallLogDataReady });
+              if (userCore.getOneTimeLogSetting(userSettings).value) {
+                if (!isCallLogDataReady) {
                   if (data.body.redirect) {
-                    showNotification({ level: 'warning', message: 'Call data is not ready, please wait and retry...', ttl: 3000 });
+                    showNotification({ level: 'warning', message: 'Call data is not yet ready. Please input your custom note while it is preparing data.', ttl: 3000 });
+                    const cachedNote = await logCore.getCachedNote({ sessionId: data.body.call.sessionId });
+                    const tempLogNotePageRender = tempLogNotePage.getTempLogNotePageRender({ sessionId: data.body.call.sessionId, cachedNote });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: tempLogNotePageRender
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: `/customized/${tempLogNotePageRender.id}`, // page id
+                    }, '*');
                   }
                   responseMessage(data.requestId, { data: 'ok' });
                   break;
@@ -979,7 +997,7 @@ window.addEventListener('message', async (e) => {
               });
 
               // Translate: If no existing call log, create condition here to navigate to auto log
-              if (data.body.triggerType === 'callLogSync' && !(existingCalls?.length > 0 && existingCalls[0]?.matched)) {
+              if (userCore.getAutoLogCallSetting(userSettings).value && data.body.triggerType === 'callLogSync' && !(existingCalls?.length > 0 && existingCalls[0]?.matched)) {
                 data.body.triggerType = 'createLog';
                 isAutoLog = true;
               }
@@ -1300,6 +1318,24 @@ window.addEventListener('message', async (e) => {
                     }
                   }
                   await chrome.storage.local.set(newLocalMatchedCallLogRecords);
+                }
+              }
+              if (userCore.getOneTimeLogSetting(userSettings).value) {
+                const loggedSessionIds = Object.keys(callLogMatchData);
+                for (const sessionId of data.body.sessionIds) {
+                  if (loggedSessionIds.includes(sessionId)) {
+                    continue;
+                  }
+                  const isCallLogDataReady = await chrome.storage.local.get(`call-log-data-ready-${sessionId}`);
+                  if (!isObjectEmpty(isCallLogDataReady) && !isCallLogDataReady[`call-log-data-ready-${sessionId}`]) {
+                    callLogMatchData[sessionId] = [
+                      {
+                        type: 'status',
+                        status: 'failed',
+                        message: 'preparring data...'
+                      }
+                    ]
+                  }
                 }
               }
               responseMessage(
@@ -1765,6 +1801,13 @@ window.addEventListener('message', async (e) => {
                 case 'clearPlatformInfoButton':
                   await chrome.storage.local.remove('platform-info');
                   showNotification({ level: 'success', message: 'Platform info cleared. Please close the extension and open from CRM page.', ttl: 5000 });
+                  break;
+                case 'saveTempNoteButton':
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack',
+                  }, '*');
+                  await logCore.cacheCallNote({ sessionId: data.body.button.formData.sessionId, note: data.body.button.formData.note });
                   break;
               }
               responseMessage(data.requestId, { data: 'ok' });
