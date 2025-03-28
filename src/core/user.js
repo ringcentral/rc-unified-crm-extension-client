@@ -62,6 +62,16 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     }
     await chrome.storage.local.set({ userSettings });
     await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-update-features-flags',
+        chat: getShowChatTabSetting(userSettings).value,
+        meetings: getShowMeetingsTabSetting(userSettings).value,
+        text: getShowTextTabSetting(userSettings).value,
+        fax: getShowFaxTabSetting(userSettings).value,
+        voicemail: getShowVoicemailTabSetting(userSettings).value,
+        recordings: getShowRecordingsTabSetting(userSettings).value,
+        contacts: getShowContactsTabSetting(userSettings).value
+      }, '*');
     if (!isAvoidForceChange) {
         const serviceManifest = await getServiceManifest()
         RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
@@ -205,6 +215,62 @@ function getAutoStartAiAssistantSetting(userSettings) {
     }
 }
 
+function getShowChatTabSetting(userSettings) {
+    return {
+        value: userSettings?.showChatTab?.value ?? false,
+        readOnly: userSettings?.showChatTab?.customizable === undefined ? false : !userSettings?.showChatTab?.customizable,
+        readOnlyReason: !userSettings?.showChatTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getShowMeetingsTabSetting(userSettings) {
+    return {    
+        value: userSettings?.showMeetingsTab?.value ?? false,
+        readOnly: userSettings?.showMeetingsTab?.customizable === undefined ? false : !userSettings?.showMeetingsTab?.customizable,
+        readOnlyReason: !userSettings?.showMeetingsTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getShowTextTabSetting(userSettings) {
+    return {
+        value: userSettings?.showTextTab?.value ?? false,
+        readOnly: userSettings?.showTextTab?.customizable === undefined ? false : !userSettings?.showTextTab?.customizable,
+        readOnlyReason: !userSettings?.showTextTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getShowFaxTabSetting(userSettings) {
+    return {
+        value: userSettings?.showFaxTab?.value ?? false,
+        readOnly: userSettings?.showFaxTab?.customizable === undefined ? false : !userSettings?.showFaxTab?.customizable,
+        readOnlyReason: !userSettings?.showFaxTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getShowVoicemailTabSetting(userSettings) {
+    return {
+        value: userSettings?.showVoicemailTab?.value ?? false,
+        readOnly: userSettings?.showVoicemailTab?.customizable === undefined ? false : !userSettings?.showVoicemailTab?.customizable,
+        readOnlyReason: !userSettings?.showVoicemailTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getShowRecordingsTabSetting(userSettings) {
+    return {
+        value: userSettings?.showRecordingsTab?.value ?? false,
+        readOnly: userSettings?.showRecordingsTab?.customizable === undefined ? false : !userSettings?.showRecordingsTab?.customizable,
+        readOnlyReason: !userSettings?.showRecordingsTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getShowContactsTabSetting(userSettings) {
+    return {
+        value: userSettings?.showContactsTab?.value ?? false,
+        readOnly: userSettings?.showContactsTab?.customizable === undefined ? false : !userSettings?.showContactsTab?.customizable,
+        readOnlyReason: !userSettings?.showContactsTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getCustomSetting(userSettings, id, defaultValue) {
     if (userSettings === undefined) {
         return {
@@ -239,4 +305,11 @@ exports.getDeveloperModeSetting = getDeveloperModeSetting;
 exports.getAutoOpenSetting = getAutoOpenSetting;
 exports.getShowAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting;
 exports.getAutoStartAiAssistantSetting = getAutoStartAiAssistantSetting;
+exports.getShowChatTabSetting = getShowChatTabSetting;
+exports.getShowMeetingsTabSetting = getShowMeetingsTabSetting;
+exports.getShowTextTabSetting = getShowTextTabSetting;
+exports.getShowFaxTabSetting = getShowFaxTabSetting;
+exports.getShowVoicemailTabSetting = getShowVoicemailTabSetting;
+exports.getShowRecordingsTabSetting = getShowRecordingsTabSetting;
+exports.getShowContactsTabSetting = getShowContactsTabSetting;
 exports.getCustomSetting = getCustomSetting;

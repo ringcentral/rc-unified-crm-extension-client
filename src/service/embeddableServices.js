@@ -89,6 +89,55 @@ async function getServiceManifest() {
                 value: userCore.getSMSPopSetting(userSettings).value
             },
             {
+                id: 'tabs',
+                type: 'section',
+                name: 'Tabs',
+                items:[
+                    {
+                        id: 'showChatTab',
+                        type: 'boolean',
+                        name: 'Show chat tab',
+                        value: userCore.getShowChatTabSetting(userSettings).value
+                    },
+                    {
+                        id: 'showMeetingsTab',
+                        type: 'boolean',
+                        name: 'Show meetings tab',
+                        value: userCore.getShowMeetingsTabSetting(userSettings).value
+                    },
+                    {
+                        id: 'showTextTab',
+                        type: 'boolean',
+                        name: 'Show text tab',
+                        value: userCore.getShowTextTabSetting(userSettings).value
+                    },
+                    {
+                        id: 'showFaxTab',
+                        type: 'boolean',
+                        name: 'Show fax tab',
+                        value: userCore.getShowFaxTabSetting(userSettings).value
+                    },
+                    {
+                        id: 'showVoicemailTab',
+                        type: 'boolean',
+                        name: 'Show voicemail tab',
+                        value: userCore.getShowVoicemailTabSetting(userSettings).value
+                    },
+                    {
+                        id: 'showRecordingsTab',
+                        type: 'boolean',
+                        name: 'Show recordings tab',
+                        value: userCore.getShowRecordingsTabSetting(userSettings).value
+                    },
+                    {
+                        id: 'showContactsTab',
+                        type: 'boolean',
+                        name: 'Show contacts tab',
+                        value: userCore.getShowContactsTabSetting(userSettings).value
+                    }
+                ]
+            },
+            {
                 id: 'contacts',
                 type: 'section',
                 name: 'Call-pop',
