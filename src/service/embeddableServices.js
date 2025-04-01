@@ -385,7 +385,7 @@ async function getServiceManifest() {
             });
         services.settings.find(s => s.id === 'contacts').items.push(...numberFormatterComponent);
     }
-    if (platformName === 'bullhorn') {
+    if (platformName === 'googleSheets') {
         services.settings.push(
             {
                 id: 'googleSheetsConfig',
