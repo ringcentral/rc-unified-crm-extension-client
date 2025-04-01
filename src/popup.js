@@ -24,6 +24,7 @@ import contactSettingPage from './components/admin/managedSettings/contactSettin
 import advancedFeaturesSettingPage from './components/admin/managedSettings/advancedFeaturesSettingPage';
 import customSettingsPage from './components/admin/managedSettings/customSettingsPage';
 import tempLogNotePage from './components/tempLogNotePage';
+import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
 import {
   setAuthor,
   identify,
@@ -1808,6 +1809,82 @@ window.addEventListener('message', async (e) => {
                     path: 'goBack',
                   }, '*');
                   await logCore.cacheCallNote({ sessionId: data.body.button.formData.sessionId, note: data.body.button.formData.note });
+                  break;
+                case 'googleSheetsConfig':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  userSettings = await userCore.refreshUserSettings({});
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: googleSheetsPage.renderGoogleSheetsPage({ manifest, userSettings })
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: '/customized/googleSheetsPage', // page id
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
+                case 'newSheetButton':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const { rcUnifiedCrmExtJwt: tokenForNewSheet } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                  const newSheetResponse = await axios.post(`${manifest.serverUrl}/googleSheets/sheet?jwtToken=${tokenForNewSheet}`);
+                  if (newSheetResponse.status === 200) {
+                    userSettings = await userCore.refreshUserSettings({
+                      changedSettings: {
+                        googleSheetsName: {
+                          value: newSheetResponse.data.name
+                        },
+                        googleSheetsUrl: {
+                          value: newSheetResponse.data.url
+                        }
+                      }
+                    });
+                    showNotification({ level: 'success', message: 'New sheet created successfully', ttl: 5000 });
+                  }
+                  else {
+                    showNotification({ level: 'warning', message: 'Failed to create new sheet', ttl: 5000 });
+                  }
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: googleSheetsPage.renderGoogleSheetsPage({ manifest, userSettings })
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: '/customized/googleSheetsPage', // page id
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
+                case 'selectExistingSheetButton':
+                  const { rcUnifiedCrmExtJwt: tokenForExistingSheet } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                  window.open(`${manifest.serverUrl}/googleSheets/filePicker?token=${tokenForExistingSheet}`, '_blank');
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack', // page id
+                  }, '*');
+                  break;
+                case 'sheetInfoButton':
+                  window.open(data.body.button.formData.sheetUrl, '_blank');
+                  break;
+                case 'removeSheetButton':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  userSettings = await userCore.refreshUserSettings({
+                    changedSettings: {
+                      googleSheetsName: {
+                        value: ''
+                      },
+                      googleSheetsUrl: {
+                        value: ''
+                      }
+                    }
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: googleSheetsPage.renderGoogleSheetsPage({ manifest, userSettings })
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: '/customized/googleSheetsPage', // page id
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
               }
               responseMessage(data.requestId, { data: 'ok' });

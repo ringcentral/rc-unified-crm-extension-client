@@ -36,6 +36,7 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
         {
             userSettings: userSettingsToUpload
         });
+    return uploadUserSettingsResponse?.data?.userSettings;
 }
 
 
@@ -61,7 +62,7 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         }
     }
     await chrome.storage.local.set({ userSettings });
-    await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+    userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-update-features-flags',
         chat: getShowChatTabSetting(userSettings).value,
@@ -71,7 +72,7 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         voicemail: getShowVoicemailTabSetting(userSettings).value,
         recordings: getShowRecordingsTabSetting(userSettings).value,
         contacts: getShowContactsTabSetting(userSettings).value
-      }, '*');
+    }, '*');
     if (!isAvoidForceChange) {
         const serviceManifest = await getServiceManifest()
         RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
@@ -224,7 +225,7 @@ function getShowChatTabSetting(userSettings) {
 }
 
 function getShowMeetingsTabSetting(userSettings) {
-    return {    
+    return {
         value: userSettings?.showMeetingsTab?.value ?? false,
         readOnly: userSettings?.showMeetingsTab?.customizable === undefined ? false : !userSettings?.showMeetingsTab?.customizable,
         readOnlyReason: !userSettings?.showMeetingsTab?.customizable ? 'This setting is managed by admin' : ''

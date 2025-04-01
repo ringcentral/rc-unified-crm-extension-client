@@ -7,7 +7,7 @@ async function getServiceManifest() {
     const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
     const platformInfo = await getPlatformInfo();
-    const {customCrmManifest: manifest} = await chrome.storage.local.get({customCrmManifest: null});
+    const { customCrmManifest: manifest } = await chrome.storage.local.get({ customCrmManifest: null });
     const platform = manifest.platforms[platformInfo.platformName];
     const platformName = platform.name;
     const customSettings = platform.settings;
@@ -92,7 +92,7 @@ async function getServiceManifest() {
                 id: 'tabs',
                 type: 'section',
                 name: 'Tabs',
-                items:[
+                items: [
                     {
                         id: 'showChatTab',
                         type: 'boolean',
@@ -384,6 +384,17 @@ async function getServiceManifest() {
                 value: "Phone number format alternatives",
             });
         services.settings.find(s => s.id === 'contacts').items.push(...numberFormatterComponent);
+    }
+    if (platformName === 'bullhorn') {
+        services.settings.push(
+            {
+                id: 'googleSheetsConfig',
+                type: 'button',
+                name: 'Google Sheets Config',
+                buttonLabel: 'Open',
+                buttonType: 'link',
+            }
+        )
     }
 
     if (userCore.getDeveloperModeSetting(userSettings).value) {
