@@ -218,7 +218,7 @@ function getAutoStartAiAssistantSetting(userSettings) {
 
 function getShowChatTabSetting(userSettings) {
     return {
-        value: userSettings?.showChatTab?.value ?? false,
+        value: userSettings?.showChatTab?.value ?? true,
         readOnly: userSettings?.showChatTab?.customizable === undefined ? false : !userSettings?.showChatTab?.customizable,
         readOnlyReason: !userSettings?.showChatTab?.customizable ? 'This setting is managed by admin' : ''
     }
@@ -226,7 +226,7 @@ function getShowChatTabSetting(userSettings) {
 
 function getShowMeetingsTabSetting(userSettings) {
     return {
-        value: userSettings?.showMeetingsTab?.value ?? false,
+        value: userSettings?.showMeetingsTab?.value ?? true,
         readOnly: userSettings?.showMeetingsTab?.customizable === undefined ? false : !userSettings?.showMeetingsTab?.customizable,
         readOnlyReason: !userSettings?.showMeetingsTab?.customizable ? 'This setting is managed by admin' : ''
     }
@@ -234,7 +234,7 @@ function getShowMeetingsTabSetting(userSettings) {
 
 function getShowTextTabSetting(userSettings) {
     return {
-        value: userSettings?.showTextTab?.value ?? false,
+        value: userSettings?.showTextTab?.value ?? true,
         readOnly: userSettings?.showTextTab?.customizable === undefined ? false : !userSettings?.showTextTab?.customizable,
         readOnlyReason: !userSettings?.showTextTab?.customizable ? 'This setting is managed by admin' : ''
     }
@@ -242,7 +242,7 @@ function getShowTextTabSetting(userSettings) {
 
 function getShowFaxTabSetting(userSettings) {
     return {
-        value: userSettings?.showFaxTab?.value ?? false,
+        value: userSettings?.showFaxTab?.value ?? true,
         readOnly: userSettings?.showFaxTab?.customizable === undefined ? false : !userSettings?.showFaxTab?.customizable,
         readOnlyReason: !userSettings?.showFaxTab?.customizable ? 'This setting is managed by admin' : ''
     }
@@ -250,7 +250,7 @@ function getShowFaxTabSetting(userSettings) {
 
 function getShowVoicemailTabSetting(userSettings) {
     return {
-        value: userSettings?.showVoicemailTab?.value ?? false,
+        value: userSettings?.showVoicemailTab?.value ?? true,
         readOnly: userSettings?.showVoicemailTab?.customizable === undefined ? false : !userSettings?.showVoicemailTab?.customizable,
         readOnlyReason: !userSettings?.showVoicemailTab?.customizable ? 'This setting is managed by admin' : ''
     }
@@ -258,7 +258,7 @@ function getShowVoicemailTabSetting(userSettings) {
 
 function getShowRecordingsTabSetting(userSettings) {
     return {
-        value: userSettings?.showRecordingsTab?.value ?? false,
+        value: userSettings?.showRecordingsTab?.value ?? true,
         readOnly: userSettings?.showRecordingsTab?.customizable === undefined ? false : !userSettings?.showRecordingsTab?.customizable,
         readOnlyReason: !userSettings?.showRecordingsTab?.customizable ? 'This setting is managed by admin' : ''
     }
@@ -266,7 +266,7 @@ function getShowRecordingsTabSetting(userSettings) {
 
 function getShowContactsTabSetting(userSettings) {
     return {
-        value: userSettings?.showContactsTab?.value ?? false,
+        value: userSettings?.showContactsTab?.value ?? true,
         readOnly: userSettings?.showContactsTab?.customizable === undefined ? false : !userSettings?.showContactsTab?.customizable,
         readOnlyReason: !userSettings?.showContactsTab?.customizable ? 'This setting is managed by admin' : ''
     }
