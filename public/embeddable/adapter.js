@@ -56863,6 +56863,9 @@ class Adapter extends AdapterCore/* default */.A {
         case 'rc-calling-settings-notify':
           console.log('rc-calling-settings-notify:', data.callWith, data.callingMode);
           break;
+        case 'rc-sms-settings-notify':
+          console.log('rc-sms-settings-notify:', data.senderNumber, data.senderNumbers);
+          break;
         case 'rc-region-settings-notify':
           console.log('rc-region-settings-notify:', data.countryCode, data.areaCode);
           break;
@@ -57162,10 +57165,12 @@ class Adapter extends AdapterCore/* default */.A {
     });
   }
   controlCall(action, id) {
+    let options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
     this._postMessage({
       type: 'rc-adapter-control-call',
       callAction: action,
-      callId: id
+      callId: id,
+      options
     });
   }
   logoutUser() {
@@ -57186,6 +57191,15 @@ class Adapter extends AdapterCore/* default */.A {
       myLocation,
       ringoutPrompt,
       fromNumber
+    });
+  }
+  updateSmsSetting(_ref2) {
+    let {
+      senderNumber
+    } = _ref2;
+    this._postMessage({
+      type: 'rc-sms-settings-update',
+      senderNumber
     });
   }
   navigateTo(path) {
@@ -57260,10 +57274,10 @@ class Adapter extends AdapterCore/* default */.A {
     }
     this._currentCallEl.setAttribute('class', classnames_default()(this._styles.currentCallBtn, this.showCurrentCallBtn && this._styles.visible, !this.centerDuration && this.moveOutCurrentCallBtn && this._styles.moveOut, !this.centerDuration && this.moveInCurrentCallBtn && this._styles.moveIn));
   }
-  showFeedback(_ref2) {
+  showFeedback(_ref3) {
     let {
       onFeedback
-    } = _ref2;
+    } = _ref3;
     if (typeof onFeedback !== 'function') {
       throw new Error('onFeedback function is required.');
     }
@@ -57281,12 +57295,12 @@ class Adapter extends AdapterCore/* default */.A {
       text
     });
   }
-  updateRingtone(_ref3) {
+  updateRingtone(_ref4) {
     let {
       name,
       uri,
       volume
-    } = _ref3;
+    } = _ref4;
     this._postMessage({
       type: 'rc-adapter-update-ringtone',
       name,
@@ -57306,13 +57320,13 @@ class Adapter extends AdapterCore/* default */.A {
   get centerCallInfo() {
     return this._widgetCurrentPath === '/history';
   }
-  alertMessage(_ref4) {
+  alertMessage(_ref5) {
     let {
       message,
       level,
       ttl,
       details
-    } = _ref4;
+    } = _ref5;
     return this._requestWithPostMessage('/custom-alert-message', {
       message,
       level,
@@ -57437,6 +57451,7 @@ function init() {
     defaultCallWith,
     enableFromNumberSetting,
     showMyLocationNumbers,
+    enableSmsSettingEvent,
     disconnectInactiveWebphone,
     multipleTabsSupport,
     disableInactiveTabCallEvent,
@@ -57495,6 +57510,7 @@ function init() {
     defaultCallWith,
     enableFromNumberSetting,
     showMyLocationNumbers,
+    enableSmsSettingEvent,
     disconnectInactiveWebphone,
     multipleTabsSupport,
     disableInactiveTabCallEvent,
