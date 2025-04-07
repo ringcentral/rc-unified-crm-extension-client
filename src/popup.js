@@ -1942,6 +1942,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         const adminSettingResults = await adminCore.refreshAdminSettings();
         adminSettings = adminSettingResults.adminSettings;
         const adminPageRender = adminPage.getAdminPageRender({ platform });
+        userSettings = await userCore.refreshUserSettings({});
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
           type: 'rc-adapter-register-customized-page',
           page: adminPageRender,
@@ -1958,6 +1959,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     const adminSettingResults = await adminCore.refreshAdminSettings();
     adminSettings = adminSettingResults.adminSettings;
     const adminPageRender = adminPage.getAdminPageRender({ platform });
+    userSettings = await userCore.refreshUserSettings({});
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
       type: 'rc-adapter-register-customized-page',
       page: adminPageRender,
@@ -2039,6 +2041,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       const adminSettingResults = await adminCore.refreshAdminSettings();
       adminSettings = adminSettingResults.adminSettings;
       const adminPageRender = adminPage.getAdminPageRender({ platform });
+      userSettings = await userCore.refreshUserSettings({});
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: adminPageRender,
