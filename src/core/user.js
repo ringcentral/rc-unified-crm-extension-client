@@ -54,7 +54,7 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         return userSettings;
     }
     for (const k of Object.keys(changedSettings)) {
-        if (userSettings[k] === undefined) {
+        if (userSettings[k] === undefined || !userSettings[k].value) {
             userSettings[k] = changedSettings[k];
         }
         else {
