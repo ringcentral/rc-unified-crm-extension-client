@@ -1136,6 +1136,14 @@ window.addEventListener('message', async (e) => {
                 // eslint-disable-next-line no-fallthrough
                 case 'createLog':
                   const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
+                  let defaultingContact = callMatchedContact?.legnth > 0 ? callMatchedContact[0] : null;
+                  if (data.body.call.toNumberEntity) {
+                    if (callMatchedContact.some(c => c.id == data.body.call.toNumberEntity)) {
+                      const toNumberEntityContact = callMatchedContact.find(c => c.id == data.body.call.toNumberEntity);
+                      toNumberEntityContact.toNumberEntity = true;
+                      defaultingContact = toNumberEntityContact;
+                    }
+                  }
                   if (!callContactMatched) {
                     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                     responseMessage(data.requestId, { data: 'ok' });
@@ -1180,8 +1188,8 @@ window.addEventListener('message', async (e) => {
                     // Case: auto log and no conflict, log directly
                     else {
                       logInfo.subject = data.body.call.direction === 'Inbound' ?
-                        `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
-                        `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
+                        `Inbound Call from ${defaultingContact?.name ?? ''}` :
+                        `Outbound Call to ${defaultingContact?.name ?? ''}`;
                       if (existingCalls?.length > 0 && existingCalls[0]?.matched) {
                         await logCore.updateLog({
                           serverUrl: manifest.serverUrl,
@@ -1210,9 +1218,9 @@ window.addEventListener('message', async (e) => {
                             transcript: data.body.transcript,
                             subject: logInfo.subject,
                             additionalSubmission: autoSelectAdditionalSubmission,
-                            contactId: callMatchedContact[0]?.id,
-                            contactType: callMatchedContact[0]?.type,
-                            contactName: callMatchedContact[0]?.name
+                            contactId: defaultingContact?.id,
+                            contactType: defaultingContact?.type,
+                            contactName: defaultingContact?.name
                           });
                         if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
                           await dispositionCore.upsertDisposition({

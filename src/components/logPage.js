@@ -15,10 +15,11 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
         manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [] :
         manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [];
     // format contact list
-    const contactList = contactInfo.map(c => { return { const: c.id, title: c.name, type: c.type, description: c.type ? `${c.type} - ${c.id}` : '', additionalInfo: c.additionalInfo, isNewContact: !!c.isNewContact } });
+    const contactList = contactInfo.map(c => { return { const: c.id, title: c.name, type: c.type, description: c.type ? `${c.type} - ${c.id}` : '', toNumberEntity: c.toNumberEntity ?? false, additionalInfo: c.additionalInfo, isNewContact: !!c.isNewContact } });
+    const defaultContact = contactList.some(c => c.toNumberEntity) ? contactList.find(c => c.toNumberEntity) : (contactList[0] ?? null);
     const defaultActivityTitle = direction === 'Inbound' ?
-        `Inbound ${logType} from ${contactList[0]?.title ?? ''}` :
-        `Outbound ${logType} to ${contactList[0]?.title ?? ''}`;
+        `Inbound ${logType} from ${defaultContact?.title ?? ''}` :
+        `Outbound ${logType} to ${defaultContact?.title ?? ''}`;
     let callSchemas = {};
     let callUISchemas = {};
     let callFormData = {};
@@ -53,13 +54,13 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
     let additionalFields = {};
     let additionalFieldsValue = {};
     for (const f of additionalChoiceFields) {
-        if (contactList[0]?.additionalInfo?.[f.const] === undefined) {
+        if (defaultContact?.additionalInfo?.[f.const] === undefined) {
             continue;
         }
         additionalFields[f.const] = {
             title: f.title,
             type: 'string',
-            oneOf: [...contactList[0].additionalInfo[f.const], { const: 'none', title: 'None' }],
+            oneOf: [...defaultContact.additionalInfo[f.const], { const: 'none', title: 'None' }],
             associationField: !!f.contactDependent
         }
         additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? contactList[0].additionalInfo[f.const][0].const;
@@ -71,7 +72,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
         }
     }
     for (const f of additionalCheckBoxFields) {
-        if (contactList[0]?.additionalInfo?.[f.const] === undefined) {
+        if (defaultContact?.additionalInfo?.[f.const] === undefined) {
             continue;
         }
         additionalFields[f.const] = {
@@ -85,7 +86,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
         }
     }
     for (const f of additionalInputFields) {
-        if (contactList[0]?.additionalInfo?.[f.const] ?? false) {
+        if (defaultContact?.additionalInfo?.[f.const] ?? false) {
             continue;
         }
         additionalFields[f.const] = {
@@ -111,7 +112,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     }
                 };
             }
-            else if (contactList.length === 1 && contactList[0].isNewContact) {
+            else if (contactList.length === 1 && defaultContact.isNewContact) {
                 warningField = {
                     warning: {
                         type: 'string',
@@ -128,7 +129,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     "ui:widget": "hidden",
                 }
             }
-            if (contactList[0].isNewContact) {
+            if (defaultContact.isNewContact) {
                 if (manifest.platforms[platformName].contactTypes) {
                     newContactWidget.newContactType = {};
                 }
@@ -215,11 +216,11 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 },
                 formData: {
                     id,
-                    contact: contactList[0].const,
+                    contact: defaultContact.const,
                     newContactType: '',
                     newContactName: '',
-                    contactType: contactList[0]?.type ?? '',
-                    contactName: contactList[0]?.title ?? '',
+                    contactType: defaultContact?.type ?? '',
+                    contactName: defaultContact?.title ?? '',
                     triggerType,
                     logType,
                     isUnresolved: !!isUnresolved,
@@ -269,7 +270,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 },
                 formData: {
                     id,
-                    contact: loggedContactId ?? contactList[0].const,
+                    contact: loggedContactId ?? defaultContact.const,
                     activityTitle: logInfo?.subject ?? '',
                     triggerType,
                     note: logInfo?.note ?? '',

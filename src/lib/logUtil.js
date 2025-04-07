@@ -85,17 +85,27 @@ async function getLogConflictInfo({
     let hasConflict = false;
     let autoSelectAdditionalSubmission = {};
     const existingContactInfo = contactInfo.filter(c => !c.isNewContact);
+    let defaultingContact = existingContactInfo.find(c => c.toNumberEntity);
     if (existingContactInfo.length === 0) {
         hasConflict = true;
     }
-    else if (existingContactInfo.length > 1) {
+    else if (existingContactInfo.length > 1 && !defaultingContact) {
         hasConflict = true;
+        return {
+            hasConflict,
+            autoSelectAdditionalSubmission
+        }
     }
-    else if (existingContactInfo[0]?.additionalInfo) {
-        const additionalFieldsKeys = Object.keys(existingContactInfo[0].additionalInfo);
+    
+    if(!defaultingContact)
+    {
+        defaultingContact = existingContactInfo[0];
+    }
+    if (defaultingContact?.additionalInfo) {
+        const additionalFieldsKeys = Object.keys(defaultingContact.additionalInfo);
         // go through all additional fields
         for (const key of additionalFieldsKeys) {
-            const fieldOptions = existingContactInfo[0].additionalInfo[key];
+            const fieldOptions = defaultingContact.additionalInfo[key];
             let caseType = '';
             if (logType === 'callLog') {
                 if (direction === 'Inbound') {
@@ -130,7 +140,7 @@ async function getLogConflictInfo({
                     let allMatched = true;
                     const fieldDefaultValue = fieldDefaultValues.find(f => f.field === key);
                     if (fieldDefaultValue) {
-                        const fieldMappedOption = existingContactInfo[0].additionalInfo[key]?.find(o => rawTextCompare(o.const, fieldDefaultValue.value))?.const;
+                        const fieldMappedOption = defaultingContact.additionalInfo[key]?.find(o => rawTextCompare(o.const, fieldDefaultValue.value))?.const;
                         if (fieldMappedOption) {
                             autoSelectAdditionalSubmission[key] = fieldMappedOption;
                             continue;
