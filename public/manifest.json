@@ -25,7 +25,8 @@
         "https://*.freshdesk.com/*",
         "https://*.freshservice.com/*",
         "https://*.freshsales.com/*",
-        "https://*.myfreshworks.com/*"
+        "https://*.myfreshworks.com/*",
+        "https://docs.google.com/*"
       ],
       "js": [
         "./c2d/index.js",
@@ -56,7 +57,8 @@
         "https://*.freshdesk.com/*",
         "https://*.freshservice.com/*",
         "https://*.freshsales.com/*",
-        "https://*.myfreshworks.com/*"
+        "https://*.myfreshworks.com/*",
+        "https://docs.google.com/*"
       ]
     }
   ],
