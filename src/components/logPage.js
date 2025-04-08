@@ -63,7 +63,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             oneOf: [...defaultContact.additionalInfo[f.const], { const: 'none', title: 'None' }],
             associationField: !!f.contactDependent
         }
-        additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? contactList[0].additionalInfo[f.const][0].const;
+        additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? defaultContact.additionalInfo[f.const][0].const;
         if (!additionalFields[f.const].oneOf.some(af => af.const === additionalFieldsValue[f.const])) {
             additionalFields[f.const].oneOf.push({ const: additionalFieldsValue[f.const], title: additionalFieldsValue[f.const] });
         }
