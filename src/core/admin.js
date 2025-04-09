@@ -234,8 +234,6 @@ async function disableServerSideLogging({ platform }) {
                 );
             }
         }
-        // unauth
-        await chrome.storage.local.remove('serverSideLoggingToken');
     }
 }
 
