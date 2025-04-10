@@ -51,6 +51,23 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
 
     if (!changedSettings) {
         await chrome.storage.local.set({ userSettings });
+        const serviceManifest = await getServiceManifest()
+        RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-register-third-party-service',
+            service: serviceManifest
+        }, '*');
+        const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
+        const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-update-ai-assistant-settings',
+            showAiAssistantWidget: showAiAssistantWidgetSetting?.value ?? false,
+            showAiAssistantWidgetReadOnly: showAiAssistantWidgetSetting?.readOnly ?? false,
+            showAiAssistantWidgetReadOnlyReason: showAiAssistantWidgetSetting?.readOnlyReason ?? '',
+            autoStartAiAssistant: autoStartAiAssistantSetting?.value ?? false,
+            autoStartAiAssistantReadOnly: autoStartAiAssistantSetting?.readOnly ?? false,
+            autoStartAiAssistantReadOnlyReason: autoStartAiAssistantSetting?.readOnlyReason ?? '',
+        }, '*');
         return userSettings;
     }
     for (const k of Object.keys(changedSettings)) {

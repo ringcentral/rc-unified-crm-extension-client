@@ -56,6 +56,18 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
 
     if (rcUnifiedCrmExtJwt) {
         const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${overridingFormats.toString()}&isExtension=${isExtensionNumber}`);
+        if(!contactRes.data.contact)
+        {
+            return {
+                matched: false,
+                returnMessage: {
+                    message: 'No contact found',
+                    messageType: 'warning',
+                    ttl: 3000
+                },
+                contactInfo: null
+            };
+        }
         if (isToTriggerContactMatch) {
             let tempContactMatchTask = {};
             tempContactMatchTask[`tempContactMatchTask-${phoneNumber}`] = [...contactRes.data.contact.filter(c => !c.isNewContact)];
