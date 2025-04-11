@@ -13,7 +13,20 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "https://*.labs.ringcentral.com/*",
+        "https://*.pipedrive.com/*",
+        "https://*.insightly.com/*",
+        "https://*.clio.com/*",
+        "https://*.redtailtechnology.com/*",
+        "https://*.bullhornstaffing.com/*",
+        "https://*.app.netsuite.com/*",
+        "https://*.service-now.com/*",
+        "https://*.servicenowservices.com/*",
+        "https://*.freshdesk.com/*",
+        "https://*.freshservice.com/*",
+        "https://*.freshsales.com/*",
+        "https://*.myfreshworks.com/*",
+        "https://docs.google.com/*"
       ],
       "js": [
         "./c2d/index.js",
@@ -32,7 +45,20 @@
         "/c2d/*"
       ],
       "matches": [
-        "<all_urls>"
+        "https://*.labs.ringcentral.com/*",
+        "https://*.pipedrive.com/*",
+        "https://*.insightly.com/*",
+        "https://*.clio.com/*",
+        "https://*.redtailtechnology.com/*",
+        "https://*.bullhornstaffing.com/*",
+        "https://*.app.netsuite.com/*",
+        "https://*.service-now.com/*",
+        "https://*.servicenowservices.com/*",
+        "https://*.freshdesk.com/*",
+        "https://*.freshservice.com/*",
+        "https://*.freshsales.com/*",
+        "https://*.myfreshworks.com/*",
+        "https://docs.google.com/*"
       ]
     }
   ],
