@@ -341,7 +341,7 @@ async function getServiceManifest() {
             services.settings.unshift(group);
         }
     };
-    if (platformName === 'clio' || platformName === 'insightly') {
+    if (platformName === 'clio' || platformName === 'insightly' || platformName === 'netsuite') {
         const numberFormatterComponent = [
             {
                 id: "info",
