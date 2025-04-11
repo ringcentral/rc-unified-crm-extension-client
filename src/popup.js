@@ -1146,6 +1146,10 @@ window.addEventListener('message', async (e) => {
                   }
                   if (!callContactMatched) {
                     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                    // Unique: Google Sheets
+                    if (platformName === 'googleSheets') {
+                      showNotification({ level: callLogContactMatchMessage?.messageType, message: callLogContactMatchMessage?.message, ttl: callLogContactMatchMessage?.ttl, details: callLogContactMatchMessage?.details });
+                    }
                     responseMessage(data.requestId, { data: 'ok' });
                     break;
                   }
@@ -1834,7 +1838,11 @@ window.addEventListener('message', async (e) => {
                 case 'newSheetButton':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const { rcUnifiedCrmExtJwt: tokenForNewSheet } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                  const newSheetResponse = await axios.post(`${manifest.serverUrl}/googleSheets/sheet?jwtToken=${tokenForNewSheet}`);
+                  const newSheetResponse = await axios.post(`${manifest.serverUrl}/googleSheets/sheet?jwtToken=${tokenForNewSheet}`,
+                    {
+                      name: data.body.button.formData.newSheetName
+                    }
+                  );
                   if (newSheetResponse.status === 200) {
                     userSettings = await userCore.refreshUserSettings({
                       changedSettings: {

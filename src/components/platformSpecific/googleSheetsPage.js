@@ -47,9 +47,16 @@ function renderGoogleSheetsPage({ manifest, userSettings }) {
         page.formData.sheetUrl = existingGoogleSheetsUrl;
     }
     else {
+        page.schema.properties.newSheetName ={
+            type: "string",
+            title: "New sheet name"
+        }
         page.schema.properties.newSheetButton = {
             type: "string",
             title: "Create new sheet"
+        }
+        page.uiSchema.newSheetName = {
+            "ui:placeholder": 'Enter name...',
         }
         page.uiSchema.newSheetButton = {
             "ui:field": "button",

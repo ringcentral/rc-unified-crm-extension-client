@@ -386,7 +386,7 @@ async function getServiceManifest() {
         services.settings.find(s => s.id === 'contacts').items.push(...numberFormatterComponent);
     }
     if (platformName === 'googleSheets') {
-        services.settings.push(
+        services.settings.unshift(
             {
                 id: 'googleSheetsConfig',
                 type: 'button',
