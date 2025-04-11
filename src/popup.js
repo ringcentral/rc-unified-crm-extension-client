@@ -725,24 +725,37 @@ window.addEventListener('message', async (e) => {
                 response: { data: 'ok' },
               }, '*');
               // refresh multi match prompt
-              if (data.body.page.id === "getMultiContactPopPromptPage") {
-                if (data.body.keys.some(k => k === 'search')) {
-                  const searchWord = data.body.formData.search;
-                  contactCore.refreshContactPromptPage({ contactInfo: data.body.page.formData.contactInfo, searchWord });
-                }
-                else if (data.body.keys.some(k => k === 'contactList')) {
-                  const contactToOpen = data.body.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
-                  contactCore.openContactPage({ manifest, platformName, contactType: contactToOpen.type, contactId: contactToOpen.id });
+              switch (data.body.page.id) {
+                case 'getMultiContactPopPromptPage':
+                  if (data.body.keys.some(k => k === 'search')) {
+                    const searchWord = data.body.formData.search;
+                    contactCore.refreshContactPromptPage({ contactInfo: data.body.page.formData.contactInfo, searchWord });
+                  }
+                  else if (data.body.keys.some(k => k === 'contactList')) {
+                    const contactToOpen = data.body.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
+                    contactCore.openContactPage({ manifest, platformName, contactType: contactToOpen.type, contactId: contactToOpen.id });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: 'goBack',
+                    }, '*');
+                    // bring back inbound call modal if in Ringing state if exist
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-control-call',
+                      callAction: 'toggleRingingDialog',
+                    }, '*');
+                  }
+                  break;
+                case 'googleSheetsPage':
+                  const updatedGoogleSheetsPage = googleSheetsPage.getUpdatedGoogleSheetsPage({ page:data.body.page, formData: data.body.formData, manifest, userSettings });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: updatedGoogleSheetsPage
+                  });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
-                    path: 'goBack',
+                    path: `/customized/${updatedGoogleSheetsPage.id}`, // page id
                   }, '*');
-                  // bring back inbound call modal if in Ringing state if exist
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-control-call',
-                    callAction: 'toggleRingingDialog',
-                  }, '*');
-                }
+                  break;
               }
               switch (data.body?.formData?.section) {
                 case 'managedSettings':

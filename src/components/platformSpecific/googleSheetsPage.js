@@ -20,7 +20,7 @@ function renderGoogleSheetsPage({ manifest, userSettings }) {
                 "ui:severity": "warning",  // "warning", "info", "error", "success"
             }
         },
-        formData:{
+        formData: {
 
         }
     }
@@ -47,10 +47,11 @@ function renderGoogleSheetsPage({ manifest, userSettings }) {
         page.formData.sheetUrl = existingGoogleSheetsUrl;
     }
     else {
-        page.schema.properties.newSheetName ={
+        page.schema.properties.newSheetName = {
             type: "string",
             title: "New sheet name"
         }
+        page.schema.required = ["newSheetName"];
         page.schema.properties.newSheetButton = {
             type: "string",
             title: "Create new sheet"
@@ -61,7 +62,8 @@ function renderGoogleSheetsPage({ manifest, userSettings }) {
         page.uiSchema.newSheetButton = {
             "ui:field": "button",
             "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-            "ui:fullWidth": true
+            "ui:fullWidth": true,
+            "ui:disabled": true
         }
         page.schema.properties.selectExistingSheetButton = {
             type: "string",
@@ -76,4 +78,18 @@ function renderGoogleSheetsPage({ manifest, userSettings }) {
     return page;
 }
 
+function getUpdatedGoogleSheetsPage({ page, formData }) {
+    const updatedPage = { ...page };
+    updatedPage.formData = formData;
+    if(formData.newSheetName){
+        delete updatedPage.uiSchema.newSheetButton["ui:disabled"];
+    }
+    else{
+        updatedPage.uiSchema.newSheetButton["ui:disabled"] = true;
+    }
+    return updatedPage;
+
+}
+
 exports.renderGoogleSheetsPage = renderGoogleSheetsPage;
+exports.getUpdatedGoogleSheetsPage = getUpdatedGoogleSheetsPage;
