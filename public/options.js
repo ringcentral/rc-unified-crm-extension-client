@@ -4,9 +4,10 @@ const saveOptions = () => {
     const c2dDelay = document.getElementById('c2dDelay').value;
     const renderQuickAccessButton = document.getElementById('renderQuickAccessButton').checked;
     const trustedParties = document.getElementById('trustedParties').value;
+    const allowEmbeddingForAllPages = document.getElementById('allowEmbeddingForAllPages').checked;
 
     chrome.storage.local.set(
-        { customCrmManifestUrl, c2dDelay, renderQuickAccessButton, trustedParties },
+        { customCrmManifestUrl, c2dDelay, renderQuickAccessButton, trustedParties, allowEmbeddingForAllPages },
         () => {
             if (customCrmManifestUrl != '') {
                 setupConfig({ customCrmManifestUrl });
@@ -18,15 +19,23 @@ const saveOptions = () => {
     );
 };
 
+const clearPlatformInfo = async () => {
+    await chrome.storage.local.remove('platform-info')
+    const status = document.getElementById('status');
+    status.style = 'color: green';
+    status.textContent = `Platform info cleared`;
+}
+
 // Restores select box and checkbox state using the preferences
 // stored in chrome.storage.
 const restoreOptions = () => {
     chrome.storage.local.get(
-        { customCrmManifestUrl: '', c2dDelay: '0', renderQuickAccessButton: true, trustedParties: 'ringcentral' },
+        { customCrmManifestUrl: '', c2dDelay: '0', renderQuickAccessButton: true, trustedParties: 'ringcentral', allowEmbeddingForAllPages: false },
         (items) => {
             document.getElementById('customCrmManifestUrl').value = items.customCrmManifestUrl;
             document.getElementById('c2dDelay').value = items.c2dDelay;
             document.getElementById('renderQuickAccessButton').checked = items.renderQuickAccessButton;
+            document.getElementById('allowEmbeddingForAllPages').checked = items.allowEmbeddingForAllPages;
             document.getElementById('trustedParties').value = items.trustedParties;
         }
     );
@@ -47,7 +56,6 @@ async function fetchManifest({ party }) {
                 break;
         }
         await chrome.storage.local.set({ customCrmManifest: manifest });
-        await chrome.storage.local.remove('platform-info')
         // Update status to let user know options were saved.
         const status = document.getElementById('status');
         status.style = 'color: green';
@@ -67,7 +75,6 @@ async function setupConfig({ customCrmManifestUrl }) {
         const customCrmConfigJson = await (await fetch(customCrmManifestUrl)).json();
         if (customCrmConfigJson) {
             await chrome.storage.local.set({ customCrmManifestUrl });
-            await chrome.storage.local.remove('platform-info')
         }
         // Update status to let user know options were saved.
         const status = document.getElementById('status');
@@ -75,7 +82,6 @@ async function setupConfig({ customCrmManifestUrl }) {
         status.textContent = 'Options saved.';
     }
     catch (e) {
-        clearTimeout(timerId);
         // Update status to let user know options were saved.
         const status = document.getElementById('status');
         status.textContent = 'Config file error';
@@ -86,3 +92,4 @@ async function setupConfig({ customCrmManifestUrl }) {
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.getElementById('save').addEventListener('click', saveOptions);
+document.getElementById('clearPlatformInfo').addEventListener('click', clearPlatformInfo);

@@ -6,9 +6,42 @@ import ReactDOM from 'react-dom';
 import { RcThemeProvider } from '@ringcentral/juno';
 import axios from 'axios';
 import { sendMessageToExtension } from './lib/sendMessage';
+import { isObjectEmpty } from './lib/util';
 console.log('import content js to web page');
 
+async function checkUrlMatch() {
+  try {
+    const { allowEmbeddingForAllPages } = await chrome.storage.local.get({ allowEmbeddingForAllPages: false });
+    if (allowEmbeddingForAllPages) {
+      return true;
+    }
+    const platformInfo = await chrome.storage.local.get('platform-info');
+    if (!isObjectEmpty(platformInfo)) {
+      const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
+      const embedUrls = customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.embedUrls;
+      if (embedUrls) {
+        const currentUrl = window.location.href;
+        const isUrlMatched = embedUrls.some((pattern) => {
+          const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+          return regex.test(currentUrl);
+        });
+        return isUrlMatched;
+      }
+    }
+    return true;
+  }
+  catch (e) {
+    console.error(e);
+    return true;
+  }
+}
+
 async function initializeC2D() {
+  const isUrlMatched = await checkUrlMatch();
+  if (!isUrlMatched) {
+    console.log('URL not matched, C2D not initialized');
+    return;
+  }
   const countryCode = await chrome.storage.local.get({ selectedRegion: 'US' });
   const { matchAllNumbers } = await chrome.storage.local.get({ matchAllNumbers: false });
 
@@ -94,12 +127,15 @@ function Root() {
 }
 
 async function RenderQuickAccessButton() {
-  if (window.location.hostname.includes('labs.ringcentral.com') || !window.location.hostname.includes('login.ringcentral')) {
-    const rootElement = window.document.createElement('root');
-    rootElement.id = 'rc-crm-extension-quick-access-button';
-    window.document.body.appendChild(rootElement);
-    ReactDOM.render(<Root />, rootElement);
+  const isUrlMatched = await checkUrlMatch();
+  if (!isUrlMatched) {
+    console.log('URL not matched, C2D not initialized');
+    return;
   }
+  const rootElement = window.document.createElement('root');
+  rootElement.id = 'rc-crm-extension-quick-access-button';
+  window.document.body.appendChild(rootElement);
+  ReactDOM.render(<Root />, rootElement);
 }
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
