@@ -746,7 +746,7 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
                 case 'googleSheetsPage':
-                  const updatedGoogleSheetsPage = googleSheetsPage.getUpdatedGoogleSheetsPage({ page:data.body.page, formData: data.body.formData, manifest, userSettings });
+                  const updatedGoogleSheetsPage = googleSheetsPage.getUpdatedGoogleSheetsPage({ page: data.body.page, formData: data.body.formData, manifest, userSettings });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: updatedGoogleSheetsPage
@@ -1176,7 +1176,7 @@ window.addEventListener('message', async (e) => {
                   else {
                     logInfo.note = await logCore.getCachedNote({ sessionId: data.body.call.sessionId }) ?? "";
                   }
-                  const { hasConflict, autoSelectAdditionalSubmission } = await getLogConflictInfo({
+                  const { hasConflict, autoSelectAdditionalSubmission, requireManualDisposition } = await getLogConflictInfo({
                     platform,
                     isAutoLog,
                     contactInfo: callMatchedContact,
@@ -1248,6 +1248,9 @@ window.addEventListener('message', async (e) => {
                           });
                         }
                       }
+                    }
+                    if (requireManualDisposition) {
+                      showNotification({ level: 'warning', message: 'Manual disposition needed. Please edit logged call to disposition.', ttl: 5000 });
                     }
                   }
                   // Case: auto log OFF, open log page
@@ -1409,7 +1412,7 @@ window.addEventListener('message', async (e) => {
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
                     platformName
                   })).contactInfo;
-                  const { hasConflict, autoSelectAdditionalSubmission } = await getLogConflictInfo({
+                  const { hasConflict, autoSelectAdditionalSubmission, requireManualDisposition } = await getLogConflictInfo({
                     platform,
                     isAutoLog: messageAutoLogOn,
                     contactInfo: getContactMatchResult,
@@ -1443,6 +1446,9 @@ window.addEventListener('message', async (e) => {
                       contactType: getContactMatchResult[0]?.type,
                       contactName: getContactMatchResult[0]?.name
                     });
+                  }
+                  if (requireManualDisposition) {
+                    showNotification({ level: 'warning', message: 'Manual disposition needed. Please edit logged message to disposition.', ttl: 5000 });
                   }
                 }
               }

@@ -96,9 +96,8 @@ async function getLogConflictInfo({
             autoSelectAdditionalSubmission
         }
     }
-    
-    if(!defaultingContact)
-    {
+
+    if (!defaultingContact) {
         defaultingContact = existingContactInfo[0];
     }
     if (defaultingContact?.additionalInfo) {
@@ -156,7 +155,10 @@ async function getLogConflictInfo({
                             }
                         }
                     }
-                    return { hasConflict: !allMatched, autoSelectAdditionalSubmission };
+                    else {
+                        allMatched = false;
+                    }
+                    return { hasConflict: false, autoSelectAdditionalSubmission, requireManualDisposition: !allMatched };
                 }
                 else if (fieldOptions.length === 1) {
                     autoSelectAdditionalSubmission[key] = fieldOptions[0].const;
