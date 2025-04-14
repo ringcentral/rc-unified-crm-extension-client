@@ -15,11 +15,14 @@ async function addLog({
     contactId,
     contactType,
     contactName,
+    additionalSubmission,
     isShowNotification = true
 }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
     const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
+    // eslint-disable-next-line no-param-reassign
+    additionalSubmission = { ...additionalSubmission, ...rcAdditionalSubmission };
     const overridingPhoneNumberFormat = [];
     if (userSettings?.overridingPhoneNumberFormat?.value) {
         overridingPhoneNumberFormat.push(userSettings.overridingPhoneNumberFormat.value);
@@ -53,7 +56,7 @@ async function addLog({
                         logInfo.recording = hasRecording[`rec-link-${logInfo.sessionId}`];
                     }
                 }
-                addLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission: rcAdditionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+                addLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addLogRes.data.successful) {
                     trackSyncCallLog({ hasNote: note !== '' });
                     if (isShowNotification) {
@@ -78,7 +81,7 @@ async function addLog({
                 }, '*');
                 break;
             case 'Message':
-                addLogRes = await axios.post(`${serverUrl}/messageLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, additionalSubmission: rcAdditionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+                addLogRes = await axios.post(`${serverUrl}/messageLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addLogRes.data.successful) {
                     if (isMain & addLogRes.data.logIds.length > 0) {
                         trackSyncMessageLog();

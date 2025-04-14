@@ -449,7 +449,8 @@ window.addEventListener('message', async (e) => {
                       subject: data.call.direction === 'Inbound' ? `Inbound Call` : `Outbound Call`,
                       contactId: callMatchedContact[0]?.id,
                       contactType: callMatchedContact[0]?.type,
-                      contactName: callMatchedContact[0]?.name
+                      contactName: callMatchedContact[0]?.name,
+                      additionalSubmission: autoSelectAdditionalSubmission
                     });
                     if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
                       await dispositionCore.upsertDisposition({
@@ -1077,7 +1078,8 @@ window.addEventListener('message', async (e) => {
                           subject: data.body.formData.activityTitle ?? "",
                           contactId: newContactInfo?.id ?? data.body.formData.contact,
                           contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
-                          contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
+                          contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
+                          additionalSubmission
                         });
                       if (!isObjectEmpty(additionalSubmission)) {
                         await dispositionCore.upsertDisposition({
