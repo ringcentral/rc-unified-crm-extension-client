@@ -1,0 +1,41 @@
+name: Build and Package
+
+on:
+  push:
+    tags:
+      - 'release/*'
+
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16' # Adjust the Node.js version as needed
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Run the build script
+      - name: Build project
+        run: npm run build
+
+      # Zip the 'dist' folder
+      - name: Zip dist folder
+        run: |
+          zip -r dist.zip dist
+
+      # Upload the zip file to GitHub Packages
+      - name: Upload to GitHub Packages
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-package
+          path: dist.zip
