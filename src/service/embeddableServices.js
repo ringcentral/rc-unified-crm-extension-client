@@ -91,7 +91,8 @@ async function getServiceManifest() {
             {
                 id: 'tabs',
                 type: 'section',
-                name: 'Tabs',
+                name: 'Customize tabs',
+                groupId: 'general',
                 items: [
                     {
                         id: 'showChatTab',
@@ -375,7 +376,8 @@ async function getServiceManifest() {
                 readOnlyReason: !userSettings?.overridingPhoneNumberFormat3?.customizable ? 'This setting is managed by admin' : ''
             }
         ]
-        services.settings.find(s => s.id === 'contacts').items.push(
+        const optionSectionName = platform.displayName + " options";
+        services.settings.find(s => s.name === optionSectionName).items.push(
             {
                 id: "numberFormatterTitle",
                 name: "Number formatter",
@@ -383,7 +385,7 @@ async function getServiceManifest() {
                 variant: "title2",
                 value: "Phone number format alternatives",
             });
-        services.settings.find(s => s.id === 'contacts').items.push(...numberFormatterComponent);
+        services.settings.find(s => s.name === optionSectionName).items.push(...numberFormatterComponent);
     }
     if (platformName === 'googleSheets') {
         services.settings.unshift(
