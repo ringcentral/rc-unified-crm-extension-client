@@ -322,7 +322,10 @@ async function getServiceManifest() {
                                 name: item.name,
                                 description: item.description,
                                 options: item.options,
-                                value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
+                                multiple: item.multiple ?? false,
+                                checkbox: item.checkbox ?? false,
+                                required: item.required ?? false,
+                                value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value ?? (item.multiple ? [] : ""),
                                 readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
                                 readOnlyReason: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnlyReason
                             }
