@@ -2,8 +2,10 @@ name: Build and Package
 
 on:
   push:
+    branches:
+      - release
     tags:
-      - 'release/*'
+      - '*'
 
 jobs:
   build-and-package:
@@ -13,6 +15,10 @@ jobs:
       # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v3
+    
+      # Checkout release branch
+      - name: Checkout release branch
+        run: git checkout release
 
       # Set up Node.js
       - name: Set up Node.js
