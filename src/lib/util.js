@@ -112,6 +112,29 @@ function downloadTextFile({ filename, text }) {
   document.body.removeChild(element);
 }
 
+function cleanUpExpiredStorage(){
+  chrome.storage.local.get(null, function(items) {
+    // 'items' is an object containing all key-value pairs
+    // stored in chrome.storage.local.
+    console.log("Start cleaning expired items");
+    const keysToBeDeleted = [];
+    // You can now process the 'items' object
+    for (let key in items) {
+      if (Object.prototype.hasOwnProperty.call(items, key)) {
+        if(items[key].expiry && items[key].expiry < Date.now()){
+          keysToBeDeleted.push(key);
+        }
+      }
+    }
+    // Now you can delete the keys that are expired
+    keysToBeDeleted.forEach(key => {
+      chrome.storage.local.remove(key, function() {
+        console.log(`Key ${key} removed`);
+      });
+    });
+  });
+}
+
 exports.secondsToHourMinuteSecondString = secondsToHourMinuteSecondString;
 exports.showNotification = showNotification;
 exports.dismissNotification = dismissNotification;
@@ -122,3 +145,4 @@ exports.getRcAccessToken = getRcAccessToken;
 exports.checkC2DCollision = checkC2DCollision;
 exports.downloadTextFile = downloadTextFile;
 exports.getPlatformInfo = getPlatformInfo;
+exports.cleanUpExpiredStorage = cleanUpExpiredStorage;

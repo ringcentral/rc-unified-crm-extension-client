@@ -100,7 +100,8 @@ window.addEventListener('message', async (e) => {
           if (hasRecording) {
             await chrome.storage.local.set({
               ['rec-link-' + data.telephonySession.sessionId]: {
-                link: "(pending...)"
+                link: "(pending...)",
+                expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days
               }
             });
           }
@@ -393,6 +394,14 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case "rc-active-call-notify":
+          if (data.call.queueCall) {
+            await chrome.storage.local.set({
+              [`is-call-queue-${data.call.sessionId}`]: {
+                isQueue: true,
+                expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
+              }
+            });
+          }
           switch (data.call.telephonyStatus) {
             case 'CallConnected':
               window.postMessage({ type: 'rc-expandable-call-note-open', sessionId: data.call.sessionId }, '*');
@@ -410,59 +419,6 @@ window.addEventListener('message', async (e) => {
                     await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
                   }
                   break;
-              }
-              const { isAdmin } = await chrome.storage.local.get({ isAdmin: false });
-              // Auto log upon connected call
-              if (userCore.getAutoLogCallSetting(userSettings, isAdmin).value && !userCore.getOneTimeLogSetting(userSettings).value) {
-                const contactPhoneNumber = data.call.direction === 'Inbound' ?
-                  data.call.from.phoneNumber :
-                  data.call.to.phoneNumber;
-                const isExtensionNumber = data.call.direction === 'Inbound' ?
-                  !data.call.from.phoneNumber.includes('+') :
-                  !data.call.to.phoneNumber.includes('+');
-                const {
-                  matched: callContactMatched,
-                  returnMessage: callLogContactMatchMessage,
-                  contactInfo: callMatchedContact
-                } = await contactCore.getContact(
-                  {
-                    serverUrl: manifest.serverUrl,
-                    phoneNumber: contactPhoneNumber,
-                    platformName,
-                    isExtensionNumber
-                  });
-                if (callContactMatched) {
-                  const { hasConflict, autoSelectAdditionalSubmission } = await getLogConflictInfo({
-                    platform,
-                    isAutoLog: true,
-                    contactInfo: callMatchedContact,
-                    logType: 'callLog',
-                    direction: data.call.direction,
-                    isVoicemail: false
-                  });
-                  if (!hasConflict) {
-                    await logCore.addLog({
-                      serverUrl: manifest.serverUrl,
-                      logType: 'Call',
-                      logInfo: data.call,
-                      isMain: true,
-                      subject: data.call.direction === 'Inbound' ? `Inbound Call` : `Outbound Call`,
-                      contactId: callMatchedContact[0]?.id,
-                      contactType: callMatchedContact[0]?.type,
-                      contactName: callMatchedContact[0]?.name,
-                      additionalSubmission: autoSelectAdditionalSubmission
-                    });
-                    if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
-                      await dispositionCore.upsertDisposition({
-                        serverUrl: manifest.serverUrl,
-                        logType: 'Call',
-                        sessionId: data.call.sessionId,
-                        dispositions: autoSelectAdditionalSubmission
-                      });
-                    }
-                  }
-                }
-
               }
               break;
             case 'NoCall':
@@ -524,7 +480,12 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                 }
 
-                await chrome.storage.local.set({ [`call-log-data-ready-${data.call.sessionId}`]: false });
+                await chrome.storage.local.set({
+                  [`call-log-data-ready-${data.call.sessionId}`]: {
+                    isReady: false,
+                    expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
+                  }
+                });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-trigger-call-logger-match',
                   sessionIds: [data.call.sessionId]
@@ -956,11 +917,68 @@ window.addEventListener('message', async (e) => {
               responseMessage(data.requestId, { data: 'ok' });
               break;
             case '/callLogger':
+              if (data.body?.call?.action) {
+                const isQueue = await chrome.storage.local.get(`is-call-queue-${data.body.call.sessionId}`);
+                if ((data.body.call.result === 'Missed' && isQueue[`is-call-queue-${data.body.call.sessionId}`].isQueue) || (data.body.call.delegationType === 'QueueForwarding' && data.body.call.result === 'Answered Elsewhere')) {
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-trigger-call-logger-match',
+                    sessionIds: [data.body.call.sessionId]
+                  }, '*');
+                  await chrome.storage.local.set({
+                    [`is-call-queue-${data.body.call.sessionId}`]: {
+                      isQueue: true,
+                      warning: 'Answered elsewhere in call queue',
+                      expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
+                    }
+                  });
+                  if (data.body.redirect) {
+                    showNotification({ level: 'warning', message: 'This call is answered elsewhere in call queue', ttl: 3000 });
+                  }
+                  responseMessage(data.requestId, { data: 'ok' });
+                  break;
+                }
+              }
+              if (data.body.call.queueCall) {
+                await chrome.storage.local.set({
+                  [`is-call-queue-${data.body.call.sessionId}`]: {
+                    isQueue: true,
+                    expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
+                  }
+                });
+                if (data.body?.call?.result === 'Ringing') {
+                  responseMessage(data.requestId, { data: 'ok' });
+                  break;
+                }
+                if (data.body?.call?.telephonyStatus === 'Ringing' && data.body?.call?.result === 'Disconnected') {
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-trigger-call-logger-match',
+                    sessionIds: [data.body.call.sessionId]
+                  }, '*');
+                  await chrome.storage.local.set({
+                    [`is-call-queue-${data.body.call.sessionId}`]: {
+                      isQueue: true,
+                      warning: 'Answered elsewhere in call queue',
+                      expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
+                    }
+                  });
+                  if (data.body.redirect) {
+                    showNotification({ level: 'warning', message: 'This call is answered elsewhere in call queue', ttl: 3000 });
+                  }
+                  responseMessage(data.requestId, { data: 'ok' });
+                  break;
+                }
+              }
               const isFinalDataResult = data.body?.call?.action !== undefined;
               const isRecorded = !isObjectEmpty((await chrome.storage.local.get(`rec-link-${data.body.call.sessionId}`)));
               const hasRecording = !!data.body.call.recording?.link;
               const isCallLogDataReady = isFinalDataResult && (isRecorded || !hasRecording);
-              await chrome.storage.local.set({ [`call-log-data-ready-${data.body.call.sessionId}`]: isCallLogDataReady });
+              await chrome.storage.local.set({
+                [`call-log-data-ready-${data.body.call.sessionId}`]:
+                {
+                  isReady: isCallLogDataReady,
+                  expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
+                }
+              });
               if (userCore.getOneTimeLogSetting(userSettings).value) {
                 if (!isCallLogDataReady) {
                   if (data.body.redirect) {
@@ -1019,7 +1037,7 @@ window.addEventListener('message', async (e) => {
 
               // Translate: Right after call, once presence update to Disconnect, auto log the call
               if (data.body.triggerType === 'presenceUpdate') {
-                if (data.body.call.result === 'Disconnected') {
+                if (data.body.call.result === 'Disconnected' || data.body.call.result === 'CallConnected') {
                   data.body.triggerType = 'createLog';
                   isAutoLog = true;
                 }
@@ -1336,6 +1354,18 @@ window.addEventListener('message', async (e) => {
                 } else {
                   noLocalMatchedSessionIds.push(sessionId);
                 }
+
+                const isCallQueue = await chrome.storage.local.get({ [`is-call-queue-${sessionId}`]: { isQueue: false } });
+                if (isCallQueue[`is-call-queue-${sessionId}`]?.isQueue && isCallQueue[`is-call-queue-${sessionId}`]?.warning) {
+                  callLogMatchData[sessionId] = [
+                    {
+                      type: 'status',
+                      status: 'failed',
+                      message: isCallQueue[`is-call-queue-${sessionId}`]?.warning
+                    }
+                  ];
+
+                }
               }
               if (noLocalMatchedSessionIds.length > 0) {
                 const { successful, callLogs } = await logCore.getLog({ serverUrl: manifest.serverUrl, logType: 'Call', sessionIds: noLocalMatchedSessionIds.toString(), requireDetails: false });
@@ -1358,7 +1388,7 @@ window.addEventListener('message', async (e) => {
                     continue;
                   }
                   const isCallLogDataReady = await chrome.storage.local.get(`call-log-data-ready-${sessionId}`);
-                  if (!isObjectEmpty(isCallLogDataReady) && !isCallLogDataReady[`call-log-data-ready-${sessionId}`]) {
+                  if (!isObjectEmpty(isCallLogDataReady) && !isCallLogDataReady[`call-log-data-ready-${sessionId}`]?.isReady) {
                     callLogMatchData[sessionId] = [
                       {
                         type: 'status',
