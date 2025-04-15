@@ -41,7 +41,7 @@ jobs:
 
       # Upload the zip file to GitHub Packages
       - name: Upload to GitHub Packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist-package
           path: dist.zip
