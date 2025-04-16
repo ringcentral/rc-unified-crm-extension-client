@@ -1,4 +1,0 @@
-{
-    "defaultCrmManifestUrl": "{serverUrl}/crmManifest?platformName={crmPlatformName}",
-    "version": ""
-  }
