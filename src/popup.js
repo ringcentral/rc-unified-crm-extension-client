@@ -1432,18 +1432,11 @@ window.addEventListener('message', async (e) => {
                     logInfo: data.body.conversation,
                     isMain: true,
                     note: '',
+                    additionalSubmission: existingConversationLogPref[messageLogPrefId].additionalSubmission,
                     contactId: existingConversationLogPref[messageLogPrefId].contact.id,
                     contactType: existingConversationLogPref[messageLogPrefId].contact.type,
                     contactName: existingConversationLogPref[messageLogPrefId].contact.name
                   });
-                  if (!isObjectEmpty(existingConversationLogPref[messageLogPrefId].additionalSubmission)) {
-                    await dispositionCore.upsertDisposition({
-                      serverUrl: manifest.serverUrl,
-                      logType: 'Call',
-                      sessionId: data.body.call.sessionId,
-                      dispositions: existingConversationLogPref[messageLogPrefId].additionalSubmission
-                    });
-                  }
                 }
                 else {
                   getContactMatchResult = (await contactCore.getContact({
@@ -1480,18 +1473,11 @@ window.addEventListener('message', async (e) => {
                       logInfo: data.body.conversation,
                       isMain: true,
                       note: '',
+                      additionalSubmission: autoSelectAdditionalSubmission,
                       contactId: getContactMatchResult[0]?.id,
                       contactType: getContactMatchResult[0]?.type,
                       contactName: getContactMatchResult[0]?.name
                     });
-                    if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
-                      await dispositionCore.upsertDisposition({
-                        serverUrl: manifest.serverUrl,
-                        logType: 'Call',
-                        sessionId: data.body.call.sessionId,
-                        dispositions: autoSelectAdditionalSubmission
-                      });
-                    }
                   }
                   if (requireManualDisposition) {
                     showNotification({ level: 'warning', message: 'Manual disposition needed. Please edit logged message to disposition.', ttl: 5000 });
@@ -1527,18 +1513,11 @@ window.addEventListener('message', async (e) => {
                   logInfo: data.body.conversation,
                   isMain: true,
                   note: '',
+                  additionalSubmission,
                   contactId: newContactInfo?.id ?? data.body.formData.contact,
                   contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                   contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
                 });
-                if (!isObjectEmpty(additionalSubmission)) {
-                  await dispositionCore.upsertDisposition({
-                    serverUrl: manifest.serverUrl,
-                    logType: 'Call',
-                    sessionId: data.body.call.sessionId,
-                    dispositions: additionalSubmission
-                  });
-                }
               }
               // Case: Open page OR auto pop up log page
               else {
