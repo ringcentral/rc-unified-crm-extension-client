@@ -212,9 +212,9 @@ window.addEventListener('message', async (e) => {
           platformName = platformInfo.platformName;
           platformHostname = platformInfo.hostname;
           rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
+          let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
           if (data.loggedIn) {
             document.getElementById('rc-widget').style.zIndex = 0;
-            let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
             crmAuthed = !!rcUnifiedCrmExtJwt;
             await chrome.storage.local.set({ crmAuthed })
             // Manifest case: use RC login to login CRM as well
@@ -223,11 +223,12 @@ window.addEventListener('message', async (e) => {
               crmAuthed = !!returnedToken;
               await chrome.storage.local.set({ crmAuthed })
             }
-            // Set every 15min, user settings will refresh
             if (crmAuthed) {
+              // Set every 15min, user settings will refresh
               setInterval(async function () {
                 userSettings = await userCore.refreshUserSettings({});
               }, 900000);
+              // Submit 
             }
             // Unique: Bullhorn
             if (platform.name === 'bullhorn' && crmAuthed) {
@@ -366,6 +367,24 @@ window.addEventListener('message', async (e) => {
             const adminSettingResults = await adminCore.refreshAdminSettings();
             adminSettings = adminSettingResults.adminSettings;
             userSettings = await userCore.refreshUserSettings({});
+            const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
+            if (serverSideLoggingEnabled) {
+              const serverSideLoggingToken = await adminCore.authServerSideLogging({ platform });
+              const serverDomainUrl = platform.serverSideLogging.url;
+              const updateSSCLTokenResponse = await axios.post(
+                `${serverDomainUrl}/update-crm-token`,
+                {
+                  crmToken: rcUnifiedCrmExtJwt,
+                  crmPlatform: platformName
+                },
+                {
+                  headers: {
+                    Accept: 'application/json',
+                    'X-Access-Token': serverSideLoggingToken
+                  }
+                }
+              );
+            }
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-update-authorization-status',
               authorized: crmAuthed

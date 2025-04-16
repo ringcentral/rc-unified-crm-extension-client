@@ -336,3 +336,4 @@ exports.getServerSideLogging = getServerSideLogging;
 exports.enableServerSideLogging = enableServerSideLogging;
 exports.disableServerSideLogging = disableServerSideLogging;
 exports.updateServerSideDoNotLogNumbers = updateServerSideDoNotLogNumbers;
+exports.authServerSideLogging = authServerSideLogging;
