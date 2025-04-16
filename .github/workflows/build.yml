@@ -1,52 +1,75 @@
-name: Build and Package
+name: Build, Package, and Release
 
 on:
   push:
+    # Keep running build steps on pushes to 'release' branch (optional, remove if not needed)
     branches:
       - release
+    # Trigger the release creation when a tag is pushed
     tags:
-      - '*'
+      - '*' # Matches any tag (e.g., v1.0.0, v2.3-alpha)
 
 jobs:
-  build-and-package:
+  build-and-release: # Renamed job for clarity
     runs-on: ubuntu-latest
+    # Required permissions for the softprops/action-gh-release action
+    permissions:
+      contents: write # Allows creating releases and uploading assets
 
     steps:
-      # Checkout the repository
+      # 1. Checkout the repository code corresponding to the tag/branch
       - name: Checkout code
         uses: actions/checkout@v4
+        # fetch-depth: 0 is not strictly needed for tag checkouts but doesn't hurt
+        # It ensures tags are available if needed for other steps.
         with:
-          fetch-depth: 0 # Add this line to fetch all history
-    
-      # Checkout release branch
-      - name: Checkout release branch
-        run: git checkout release
+          fetch-depth: 0
 
-      # Set up Node.js
+      # 2. Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20' # Adjust the Node.js version as needed
+          node-version: '20' # Adjust as needed
 
-      # Install dependencies
+      # 3. Install dependencies
       - name: Install dependencies
         run: npm install
 
-        
-      # Run the build script
+      # 4. Run the build script
       - name: Build project
         run: npm run build
         env:
           MIXPANEL_TOKEN: ${{ secrets.MIXPANEL_TOKEN }}
 
-      # Zip the 'dist' folder
+      # 5. Zip the 'dist' folder
       - name: Zip dist folder
         run: |
           zip -r dist.zip dist
 
-      # Upload the zip file to GitHub Packages
-      - name: Upload to GitHub Packages
+      # 6. (Optional) Upload the zip file as a workflow artifact for debugging/record
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist-package
+          name: dist-package-${{ github.sha }} # Unique name using commit SHA
           path: dist.zip
+
+      # 7. Create GitHub Release and Upload Asset (ONLY executes on tag push)
+      - name: Create Release and Upload Release Asset
+        # This step only runs if the trigger was a tag push
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2 # Popular action for creating releases
+        with:
+          # 'files' points to the asset(s) to upload.
+          # Supports globs, so 'dist.zip' works directly.
+          files: dist.zip
+          # You can customize the release name and body:
+          # name: Release ${{ github.ref_name }} # Use tag name for release title
+          # body: | # Example multi-line body
+          #   Automated release for tag ${{ github.ref_name }}
+          #   Includes build artifact.
+          # draft: false # Set to true to create a draft release
+          # prerelease: contains(github.ref, '-rc') || contains(github.ref, '-beta') # Example: mark as pre-release if tag contains -rc or -beta
+        env:
+          # The GITHUB_TOKEN is automatically provided by Actions
+          # and is required by softprops/action-gh-release for authentication
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
