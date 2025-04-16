@@ -1,10 +1,12 @@
 import manifest from '../manifest.json';
 import mixpanel from 'mixpanel-browser';
 
-let useAnalytics = !!manifest.mixpanelToken;
+// eslint-disable-next-line no-undef
+let useAnalytics = !!process.env.MIXPANEL_TOKEN;
 if (useAnalytics) {
     try {
-        mixpanel.init(manifest.mixpanelToken);
+        // eslint-disable-next-line no-undef
+        mixpanel.init(process.env.MIXPANEL_TOKEN);
     }
     catch (e) {
         useAnalytics = false;

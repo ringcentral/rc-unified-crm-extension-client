@@ -3,6 +3,7 @@ const { build } = require('esbuild');
 const copyStaticFiles = require('esbuild-copy-static-files');
 const svgr = require('esbuild-plugin-svgr');
 const fs = require('fs');
+require('dotenv').config();
 
 
 async function runBuild() {
@@ -26,6 +27,9 @@ async function runBuild() {
         jsx: 'automatic',
         write: true,
         outdir: 'dist',
+        define: {
+            'process.env.MIXPANEL_TOKEN': JSON.stringify(process.env.MIXPANEL_TOKEN)
+        },
         plugins: [
             copyStaticFiles({
                 src: './public',

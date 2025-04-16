@@ -24,15 +24,18 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16' # Adjust the Node.js version as needed
+          node-version: '20' # Adjust the Node.js version as needed
 
       # Install dependencies
       - name: Install dependencies
         run: npm install
 
+        
       # Run the build script
       - name: Build project
         run: npm run build
+        env:
+          MIXPANEL_TOKEN: ${{ secrets.MIXPANEL_TOKEN }}
 
       # Zip the 'dist' folder
       - name: Zip dist folder
