@@ -20,8 +20,6 @@ async function runBuild() {
         fs.writeFileSync('./node_modules/styled-components/dist/styled-components.browser.esm.js', dependencyFile);
     } catch (e) { console.log(e) }
 
-    console.log(`Env: ${JSON.stringify(process.env)}`);
-
     build({
         entryPoints: ['src/content.js', 'src/popup.js', 'src/sw.js', 'src/root.jsx'],
         loader: { '.js': 'jsx', '.png': 'dataurl' },
