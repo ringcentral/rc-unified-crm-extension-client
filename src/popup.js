@@ -765,7 +765,11 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const serverSideLoggingSubscription = await adminCore.getServerSideLogging({ platform });
                   const subscriptionLevel = serverSideLoggingSubscription.subscribed ? serverSideLoggingSubscription.subscriptionLevel : 'Disable';
-                  const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers });
+                  const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({ 
+                    subscriptionLevel, 
+                    doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers,
+                    loggingByAdmin: serverSideLoggingSubscription.loggingByAdmin,
+                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: serverSideLoggingSettingPageRender
@@ -1839,7 +1843,11 @@ window.addEventListener('message', async (e) => {
                   await chrome.storage.local.set({ adminSettings });
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
                   if (data.body.button.formData.serverSideLogging != 'Disable') {
-                    await adminCore.enableServerSideLogging({ platform, subscriptionLevel: data.body.button.formData.serverSideLogging });
+                    await adminCore.enableServerSideLogging({
+                      platform,
+                      subscriptionLevel: data.body.button.formData.serverSideLogging,
+                      loggingByAdmin: data.body.button.formData.activityRecordOwner === 'admin'
+                    });
                     showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
                   }
                   else {

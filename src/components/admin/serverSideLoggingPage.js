@@ -1,4 +1,4 @@
-function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers }) {
+function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin }) {
     const pageRender =
     {
         id: 'serverSideLoggingSetting',
@@ -11,7 +11,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                 serverSideLogging: {
                     type: 'string',
                     title: 'Enable server side logging',
-                    oneOf:[
+                    oneOf: [
                         {
                             const: 'Account',
                             title: 'Enable for account'
@@ -23,6 +23,21 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                         {
                             const: 'Disable',
                             title: 'Disable'
+                        }
+                    ]
+                },
+                activityRecordOwner: {
+                    title: 'Activity record owner',
+                    description: 'Who should be the owner of the activity record?',
+                    type: 'string',
+                    oneOf: [
+                        {
+                            const: 'user',
+                            title: 'Agent/user (if possible)'
+                        },
+                        {
+                            const: 'admin',
+                            title: 'Admin'
                         }
                     ]
                 },
@@ -57,7 +72,8 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
         },
         formData: {
             serverSideLogging: subscriptionLevel,
-            doNotLogNumbers: doNotLogNumbers
+            doNotLogNumbers: doNotLogNumbers,
+            activityRecordOwner: loggingByAdmin ? 'admin' : 'user'
         }
     };
     return pageRender;

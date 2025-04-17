@@ -103,7 +103,7 @@ async function getServerSideLogging({ platform }) {
     }
 }
 
-async function enableServerSideLogging({ platform, subscriptionLevel }) {
+async function enableServerSideLogging({ platform, subscriptionLevel, loggingByAdmin }) {
     if (!platform.serverSideLogging) {
         return;
     }
@@ -133,7 +133,8 @@ async function enableServerSideLogging({ platform, subscriptionLevel }) {
                 {
                     crmToken: rcUnifiedCrmExtJwt,
                     crmPlatform: platform.name,
-                    subscriptionLevel
+                    subscriptionLevel,
+                    loggingByAdmin
                 },
                 {
                     headers: {
