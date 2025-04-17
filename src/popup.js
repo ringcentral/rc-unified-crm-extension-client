@@ -938,7 +938,7 @@ window.addEventListener('message', async (e) => {
             case '/callLogger':
               if (data.body?.call?.action) {
                 const isQueue = await chrome.storage.local.get(`is-call-queue-${data.body.call.sessionId}`);
-                if ((data.body.call.result === 'Missed' && isQueue[`is-call-queue-${data.body.call.sessionId}`].isQueue) || (data.body.call.delegationType === 'QueueForwarding' && data.body.call.result === 'Answered Elsewhere')) {
+                if ((data.body.call.result === 'Missed' && isQueue[`is-call-queue-${data.body.call.sessionId}`]?.isQueue) || (data.body.call.delegationType === 'QueueForwarding' && data.body.call.result === 'Answered Elsewhere')) {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-trigger-call-logger-match',
                     sessionIds: [data.body.call.sessionId]
