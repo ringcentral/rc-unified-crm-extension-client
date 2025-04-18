@@ -1122,7 +1122,7 @@ window.addEventListener('message', async (e) => {
                           contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
                           additionalSubmission
                         });
-                      if (!isObjectEmpty(additionalSubmission)) {
+                      if (!isObjectEmpty(additionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                         await dispositionCore.upsertDisposition({
                           serverUrl: manifest.serverUrl,
                           logType: 'Call',
@@ -1282,7 +1282,7 @@ window.addEventListener('message', async (e) => {
                             contactType: defaultingContact?.type,
                             contactName: defaultingContact?.name
                           });
-                        if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
+                        if (!isObjectEmpty(autoSelectAdditionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                           await dispositionCore.upsertDisposition({
                             serverUrl: manifest.serverUrl,
                             logType: 'Call',

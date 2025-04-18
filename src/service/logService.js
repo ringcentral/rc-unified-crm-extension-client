@@ -69,13 +69,13 @@ async function retroAutoCallLog({
                                 isMain: true,
                                 note,
                                 subject: callLogSubject,
-                                rcAdditionalSubmission,
+                                additionalSubmission: autoSelectAdditionalSubmission,
                                 contactId: callMatchedContact[0]?.id,
                                 contactType: callMatchedContact[0]?.type,
                                 contactName: callMatchedContact[0]?.name,
                                 isShowNotification: false
                             });
-                        if (!isObjectEmpty(autoSelectAdditionalSubmission)) {
+                        if (!isObjectEmpty(autoSelectAdditionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                             await dispositionCore.upsertDisposition({
                                 serverUrl: manifest.serverUrl,
                                 logType: 'Call',
