@@ -656,7 +656,23 @@ window.addEventListener('message', async (e) => {
                       }
                       else {
                         const { crm_extension_bullhornUsername } = await chrome.storage.local.get({ crm_extension_bullhornUsername: null });
-                        showNotification({ level: 'warning', message: 'Bullhorn authorize error. Please refresh Bullhorn webpage and try again.', ttl: 30000 });
+                        showNotification({
+                          level: 'warning',
+                          message: 'Login failure. Refresh Bullhorn page and try again.',
+                          details: [
+                            {
+                              title: 'Details',
+                              items: [
+                                {
+                                  id: '1',
+                                  type: 'text',
+                                  text: `To connect to Bullhorn successfully, please open up the Bullhorn app and reload the page in your browser. Then click the "Connect" button again.`
+                                }
+                              ]
+                            }
+                          ],
+                          ttl: 30000
+                        });
                         const { data: crm_extension_bullhorn_user_urls } = await axios.get(`https://rest.bullhornstaffing.com/rest-services/loginInfo?username=${crm_extension_bullhornUsername}`);
                         await chrome.storage.local.set({ crm_extension_bullhorn_user_urls });
                         if (crm_extension_bullhorn_user_urls?.oauthUrl) {
@@ -765,11 +781,11 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const serverSideLoggingSubscription = await adminCore.getServerSideLogging({ platform });
                   const subscriptionLevel = serverSideLoggingSubscription.subscribed ? serverSideLoggingSubscription.subscriptionLevel : 'Disable';
-                  const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({ 
-                    subscriptionLevel, 
+                  const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({
+                    subscriptionLevel,
                     doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers,
                     loggingByAdmin: serverSideLoggingSubscription.loggingByAdmin,
-                   });
+                  });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: serverSideLoggingSettingPageRender
@@ -950,7 +966,7 @@ window.addEventListener('message', async (e) => {
                   await chrome.storage.local.set({
                     [`is-call-queue-${data.body.call.sessionId}`]: {
                       isQueue: true,
-                      warning: 'Answered elsewhere in call queue',
+                      warning: 'Answered by someone else',
                       expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
                     }
                   });
@@ -980,7 +996,7 @@ window.addEventListener('message', async (e) => {
                   await chrome.storage.local.set({
                     [`is-call-queue-${data.body.call.sessionId}`]: {
                       isQueue: true,
-                      warning: 'Answered elsewhere in call queue',
+                      warning: 'Answered by someone else',
                       expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
                     }
                   });
