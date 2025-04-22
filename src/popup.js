@@ -1208,7 +1208,7 @@ window.addEventListener('message', async (e) => {
                 // eslint-disable-next-line no-fallthrough
                 case 'createLog':
                   const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
-                  let defaultingContact = callMatchedContact?.legnth > 0 ? callMatchedContact[0] : null;
+                  let defaultingContact = callMatchedContact?.length > 0 ? callMatchedContact[0] : null;
                   if (data.body.call.toNumberEntity) {
                     if (callMatchedContact.some(c => c.id == data.body.call.toNumberEntity)) {
                       const toNumberEntityContact = callMatchedContact.find(c => c.id == data.body.call.toNumberEntity);

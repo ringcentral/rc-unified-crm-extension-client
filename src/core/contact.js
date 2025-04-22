@@ -165,13 +165,13 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
         }
     }
     // case: single contact with id
-    if (isKnownContact || (cachedContacts.length == 1 && !!contactId)) {
+    if (isKnownContact || (cachedContacts.length == 1 && !contactId)) {
         showNotification({ level: 'success', message: 'Trying to find and open contact page...', ttl: 5000 });
         // Unique: Bullhorn 
         if (platformName === 'bullhorn') {
             const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
             if (crm_extension_bullhorn_user_urls?.atsUrl) {
-                const newTab = window.open(`${crm_extension_bullhorn_user_urls.atsUrl}/BullhornStaffing/OpenWindow.cfm?Entity=${contactType}&id=${contactId}&view=Overview`, '_blank', 'popup');
+                const newTab = window.open(`${crm_extension_bullhorn_user_urls.atsUrl}/BullhornStaffing/OpenWindow.cfm?Entity=${contactTypeInUse}&id=${contactIdInUse}&view=Overview`, '_blank', 'popup');
                 newTab.blur();
                 window.focus();
             }
