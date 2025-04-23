@@ -220,6 +220,7 @@ window.addEventListener('message', async (e) => {
             // Manifest case: use RC login to login CRM as well
             if (!crmAuthed && !!platform.autoLoginCRMWithRingCentralLogin) {
               const returnedToken = await auth.authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken() });
+              await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
               crmAuthed = !!returnedToken;
               await chrome.storage.local.set({ crmAuthed })
             }
@@ -367,24 +368,7 @@ window.addEventListener('message', async (e) => {
             const adminSettingResults = await adminCore.refreshAdminSettings();
             adminSettings = adminSettingResults.adminSettings;
             userSettings = await userCore.refreshUserSettings({});
-            const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
-            if (serverSideLoggingEnabled) {
-              const serverSideLoggingToken = await adminCore.authServerSideLogging({ platform });
-              const serverDomainUrl = platform.serverSideLogging.url;
-              const updateSSCLTokenResponse = await axios.post(
-                `${serverDomainUrl}/update-crm-token`,
-                {
-                  crmToken: rcUnifiedCrmExtJwt,
-                  crmPlatform: platformName
-                },
-                {
-                  headers: {
-                    Accept: 'application/json',
-                    'X-Access-Token': serverSideLoggingToken
-                  }
-                }
-              );
-            }
+            await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: rcUnifiedCrmExtJwt });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-update-authorization-status',
               authorized: crmAuthed
@@ -710,6 +694,7 @@ window.addEventListener('message', async (e) => {
               }
               else {
                 window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
                 await auth.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
                 window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
@@ -1694,15 +1679,18 @@ window.addEventListener('message', async (e) => {
                 case 'authPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: data.body.button.formData.apiKey, formData: data.body.button.formData });
+                  await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
                   const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
                   if (crmAuthed) {
                     const adminSettingResults = await adminCore.refreshAdminSettings();
                     adminSettings = adminSettingResults.adminSettings;
-                    const adminPageRender = adminPage.getAdminPageRender({ platform });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-register-customized-page',
-                      page: adminPageRender,
-                    }, '*');
+                    if (adminSettings) {
+                      const adminPageRender = adminPage.getAdminPageRender({ platform });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: adminPageRender,
+                      }, '*');
+                    }
                   }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
@@ -1760,6 +1748,7 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                   if (rcUnifiedCrmExtJwt) {
+                    await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
                     await auth.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
                   }
                   await chrome.storage.local.remove('platform-info');
@@ -2038,34 +2027,40 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     else if (request.platform === 'thirdParty') {
       const returnedToken = await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri });
+      await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
       crmAuthed = !!returnedToken;
       await chrome.storage.local.set({ crmAuthed });
       if (crmAuthed) {
         const adminSettingResults = await adminCore.refreshAdminSettings();
         adminSettings = adminSettingResults.adminSettings;
-        const adminPageRender = adminPage.getAdminPageRender({ platform });
+        if (adminSettings) {
+          const adminPageRender = adminPage.getAdminPageRender({ platform });
+          document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-register-customized-page',
+            page: adminPageRender,
+          }, '*');
+        }
         userSettings = await userCore.refreshUserSettings({});
-        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-          type: 'rc-adapter-register-customized-page',
-          page: adminPageRender,
-        }, '*');
       }
     }
     sendResponse({ result: 'ok' });
   }
   // Unique: Pipedrive
   else if (request.type === 'pipedriveCallbackUri' && !(await auth.checkAuth())) {
-    await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive` });
+    const returnedToken = await auth.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive` });
+    await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
     crmAuthed = true;
     await chrome.storage.local.set({ crmAuthed });
     const adminSettingResults = await adminCore.refreshAdminSettings();
     adminSettings = adminSettingResults.adminSettings;
-    const adminPageRender = adminPage.getAdminPageRender({ platform });
-    userSettings = await userCore.refreshUserSettings({});
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-      type: 'rc-adapter-register-customized-page',
-      page: adminPageRender,
-    }, '*');
+    if (adminSettings) {
+      const adminPageRender = adminPage.getAdminPageRender({ platform });
+      userSettings = await userCore.refreshUserSettings({});
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: adminPageRender,
+      }, '*');
+    }
     await dismissNotification({ notificationId: currentNotificationId });
     console.log('pipedriveAltAuthDone')
     chrome.runtime.sendMessage(
@@ -2137,17 +2132,20 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         apiUrl: request.apiUrl
       }
     });
+    await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
     crmAuthed = !!returnedToken;
     await chrome.storage.local.set({ crmAuthed });
     if (crmAuthed) {
       const adminSettingResults = await adminCore.refreshAdminSettings();
       adminSettings = adminSettingResults.adminSettings;
-      const adminPageRender = adminPage.getAdminPageRender({ platform });
+      if (adminSettings) {
+        const adminPageRender = adminPage.getAdminPageRender({ platform });
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+          type: 'rc-adapter-register-customized-page',
+          page: adminPageRender,
+        }, '*');
+      }
       userSettings = await userCore.refreshUserSettings({});
-      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-        type: 'rc-adapter-register-customized-page',
-        page: adminPageRender,
-      }, '*');
     }
     window.postMessage({ type: 'rc-apiKey-input-modal-close', platform: platform.name }, '*');
     chrome.runtime.sendMessage({

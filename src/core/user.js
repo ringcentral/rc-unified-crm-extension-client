@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getServiceManifest } from '../service/embeddableServices';
 import { getRcAccessToken } from '../lib/util';
+import adminCore from './admin';
 
 async function preloadUserSettingsFromAdmin({ serverUrl }) {
     const rcAccessToken = getRcAccessToken();
@@ -110,6 +111,27 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         }, '*');
     }
     return userSettings;
+}
+
+async function updateSSCLToken({ serverUrl, platform, token }) {
+    const userSettings = await getUserSettingsOnline({ serverUrl, rcAccessToken: getRcAccessToken() });
+    const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
+    if (serverSideLoggingEnabled && token !== undefined) {
+        const serverSideLoggingToken = await adminCore.authServerSideLogging({ platform });
+        const updateSSCLTokenResponse = await axios.post(
+            `${platform.serverSideLogging.url}/update-crm-token`,
+            {
+                crmToken: token,
+                crmPlatform: platform.name
+            },
+            {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Access-Token': serverSideLoggingToken
+                }
+            }
+        );
+    }
 }
 
 function getAutoLogCallSetting(userSettings, isAdmin) {
@@ -308,6 +330,7 @@ exports.preloadUserSettingsFromAdmin = preloadUserSettingsFromAdmin;
 exports.getUserSettingsOnline = getUserSettingsOnline;
 exports.uploadUserSettings = uploadUserSettings;
 exports.refreshUserSettings = refreshUserSettings;
+exports.updateSSCLToken = updateSSCLToken;
 
 exports.getAutoLogCallSetting = getAutoLogCallSetting;
 exports.getAutoLogSMSSetting = getAutoLogSMSSetting;
