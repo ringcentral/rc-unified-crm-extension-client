@@ -81,7 +81,10 @@ function getCustomSettingsPageRender({ crmManifest, adminUserSettings }) {
                                 oneOf: setting.options.map(option => ({
                                     const: option.id,
                                     title: option.name
-                                }))
+                                })),
+                                multiple: setting.multiple ?? false,
+                                checkbox: setting.checkbox ?? false,
+                                required: setting.required ?? false,
                             }
                         }
                     };
