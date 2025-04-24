@@ -1679,8 +1679,8 @@ window.addEventListener('message', async (e) => {
                 case 'authPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const returnedToken = await auth.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: data.body.button.formData.apiKey, formData: data.body.button.formData });
+                  crmAuthed = !!returnedToken;
                   await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
-                  const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
                   if (crmAuthed) {
                     const adminSettingResults = await adminCore.refreshAdminSettings();
                     adminSettings = adminSettingResults.adminSettings;
