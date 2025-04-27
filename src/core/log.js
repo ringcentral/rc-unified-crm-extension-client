@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { isObjectEmpty, showNotification } from '../lib/util';
+import { isObjectEmpty, showNotification, getRcAccessToken } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 
 // Input {id} = sessionId from RC
@@ -39,12 +39,12 @@ async function addLog({
         logInfo['customSubject'] = subject;
     }
     let addLogRes;
+    const rcAccessToken = getRcAccessToken();
     if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
                 // case: if call is recorded and recording is ready
                 if (logInfo.recording) {
-                    const rcAccessToken = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).access_token;
                     // eslint-disable-next-line no-param-reassign
                     logInfo.recording.downloadUrl = `${logInfo.recording.contentUri}?accessToken=${rcAccessToken}`;
                 }
@@ -81,6 +81,11 @@ async function addLog({
                 }, '*');
                 break;
             case 'Message':
+                if(logInfo.type === 'Fax')
+                {
+                    // eslint-disable-next-line no-param-reassign
+                    logInfo.rcAccessToken = rcAccessToken;
+                }
                 addLogRes = await axios.post(`${serverUrl}/messageLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addLogRes.data.successful) {
                     if (isMain & addLogRes.data.logIds.length > 0) {

@@ -52,12 +52,6 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
 
     if (!changedSettings) {
         await chrome.storage.local.set({ userSettings });
-        const serviceManifest = await getServiceManifest()
-        RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
-        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-            type: 'rc-adapter-register-third-party-service',
-            service: serviceManifest
-        }, '*');
         const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
         const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -91,13 +85,9 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         recordings: getShowRecordingsTabSetting(userSettings).value,
         contacts: getShowContactsTabSetting(userSettings).value
     }, '*');
+    const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false);
+    RCAdapter.setAutoLog({ call: userSettings.autoLogCall?.value ?? false, message: autoLogMessagesGroupTrigger})
     if (!isAvoidForceChange) {
-        const serviceManifest = await getServiceManifest()
-        RCAdapter.setAutoLog({ call: serviceManifest.callLoggerAutoSettingReadOnlyValue, message: serviceManifest.messageLoggerAutoSettingReadOnlyValue })
-        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-            type: 'rc-adapter-register-third-party-service',
-            service: serviceManifest
-        }, '*');
         const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
         const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -156,6 +146,22 @@ function getAutoLogSMSSetting(userSettings) {
         value: userSettings?.autoLogSMS?.value ?? false,
         readOnly: userSettings?.autoLogSMS?.customizable === undefined ? false : !userSettings?.autoLogSMS?.customizable,
         readOnlyReason: !userSettings?.autoLogSMS?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAutoLogInboundFaxSetting(userSettings) {
+    return {
+        value: userSettings?.autoLogInboundFax?.value ?? false,
+        readOnly: userSettings?.autoLogInboundFax?.customizable === undefined ? false : !userSettings?.autoLogInboundFax?.customizable,
+        readOnlyReason: !userSettings?.autoLogInboundFax?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAutoLogOutboundFaxSetting(userSettings) {
+    return {
+        value: userSettings?.autoLogOutboundFax?.value ?? false,
+        readOnly: userSettings?.autoLogOutboundFax?.customizable === undefined ? false : !userSettings?.autoLogOutboundFax?.customizable,
+        readOnlyReason: !userSettings?.autoLogOutboundFax?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -334,6 +340,8 @@ exports.updateSSCLToken = updateSSCLToken;
 
 exports.getAutoLogCallSetting = getAutoLogCallSetting;
 exports.getAutoLogSMSSetting = getAutoLogSMSSetting;
+exports.getAutoLogInboundFaxSetting = getAutoLogInboundFaxSetting;
+exports.getAutoLogOutboundFaxSetting = getAutoLogOutboundFaxSetting;
 exports.getDisableRetroCallLogSync = getDisableRetroCallLogSync;
 exports.getOneTimeLogSetting = getOneTimeLogSetting;
 exports.getCallPopSetting = getCallPopSetting;

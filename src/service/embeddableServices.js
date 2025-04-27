@@ -34,12 +34,7 @@ async function getServiceManifest() {
         callLoggerPath: '/callLogger',
         callLogPageInputChangedEventPath: '/callLogger/inputChanged',
         callLogEntityMatcherPath: '/callLogger/match',
-        callLoggerAutoSettingLabel: 'Log phone calls automatically',
-        callLoggerAutoSettingReadOnly: userCore.getAutoLogCallSetting(userSettings, isAdmin).readOnly,
-        callLoggerAutoSettingReadOnlyReason: userCore.getAutoLogCallSetting(userSettings, isAdmin).readOnlyReason,
-        callLoggerAutoSettingReadOnlyValue: userCore.getAutoLogCallSetting(userSettings, isAdmin).value,
         callLoggerHideEditLogButton: manifest.platforms[platformName].hideEditLogButton ?? false,
-        callLoggerAutoSettingWarning: userCore.getAutoLogCallSetting(userSettings, isAdmin).warning ?? '',
 
         messageLoggerPath: '/messageLogger',
         messagesLogPageInputChangedEventPath: '/messageLogger/inputChanged',
@@ -49,44 +44,86 @@ async function getServiceManifest() {
         messageLoggerAutoSettingReadOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
         messageLoggerAutoSettingReadOnlyValue: userCore.getAutoLogSMSSetting(userSettings).value,
 
+        callLoggerAutoLogSettingHidden: true,
+        messageLoggerAutoSettingHidden: true,
+
         settingsPath: '/settings',
         settings: [
             {
-                id: "disableRetroCallLogSync",
-                type: "boolean",
-                groupId: "logging",
-                name: 'Disable retroactive call log sync',
-                readOnly: userCore.getDisableRetroCallLogSync(userSettings).readOnly,
-                readOnlyReason: userCore.getDisableRetroCallLogSync(userSettings).readOnlyReason,
-                value: userCore.getDisableRetroCallLogSync(userSettings).value
-            },
-            {
-                id: "oneTimeLog",
-                type: "boolean",
-                groupId: "logging",
-                name: 'Enable one-time call logging',
-                description: 'Log calls when all data is ready. EDIT log permission is not required.',
-                readOnly: userCore.getOneTimeLogSetting(userSettings).readOnly,
-                readOnlyReason: userCore.getOneTimeLogSetting(userSettings).readOnlyReason,
-                value: userCore.getOneTimeLogSetting(userSettings).value
-            },
-            {
-                id: "popupLogPageAfterCall",
-                type: "boolean",
-                groupId: "logging",
-                name: '(Manual log) Open call logging page after call',
-                readOnly: userCore.getCallPopSetting(userSettings).readOnly,
-                readOnlyReason: userCore.getCallPopSetting(userSettings).readOnlyReason,
-                value: userCore.getCallPopSetting(userSettings).value
-            },
-            {
-                id: "popupLogPageAfterSMS",
-                type: "boolean",
-                groupId: "logging",
-                name: '(Manual log) Open SMS logging page after message',
-                readOnly: userCore.getSMSPopSetting(userSettings).readOnly,
-                readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason,
-                value: userCore.getSMSPopSetting(userSettings).value
+                id: 'logging',
+                type: 'group',
+                name: 'Call and SMS logging',
+                items: [
+                    {
+                        id: 'autoLogCall',
+                        type: 'boolean',
+                        name: 'Log phone calls automatically',
+                        description: 'Automatically log calls when they end in this app',
+                        readOnly: userCore.getAutoLogCallSetting(userSettings, isAdmin).readOnly,
+                        readOnlyReason: userCore.getAutoLogCallSetting(userSettings, isAdmin).warning ?? userCore.getAutoLogCallSetting(userSettings, isAdmin).readOnlyReason,
+                        value: userCore.getAutoLogCallSetting(userSettings, isAdmin).value,
+                    },
+                    {
+                        id: 'autoLogSMS',
+                        type: 'boolean',
+                        name: 'Log SMS conversations automatically',
+                        description: 'Automatically log SMS when they are sent or received in this app',
+                        readOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
+                        value: userCore.getAutoLogSMSSetting(userSettings).value,
+                    },
+                    {
+                        id: 'autoLogInboundFax',
+                        type: 'boolean',
+                        name: 'Log inbound faxes automatically',
+                        description: 'Automatically log inbound faxes when they are received in this app',
+                        readOnly: userCore.getAutoLogInboundFaxSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getAutoLogInboundFaxSetting(userSettings).readOnlyReason,
+                        value: userCore.getAutoLogInboundFaxSetting(userSettings).value,
+                    },
+                    {
+                        id: 'autoLogOutboundFax',
+                        type: 'boolean',
+                        name: 'Log outbound faxes automatically',
+                        description: 'Automatically log outbound faxes when they are sent in this app',
+                        readOnly: userCore.getAutoLogOutboundFaxSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getAutoLogOutboundFaxSetting(userSettings).readOnlyReason,
+                        value: userCore.getAutoLogOutboundFaxSetting(userSettings).value,
+                    },
+                    {
+                        id: "disableRetroCallLogSync",
+                        type: "boolean",
+                        name: 'Disable retroactive call log sync',
+                        readOnly: userCore.getDisableRetroCallLogSync(userSettings).readOnly,
+                        readOnlyReason: userCore.getDisableRetroCallLogSync(userSettings).readOnlyReason,
+                        value: userCore.getDisableRetroCallLogSync(userSettings).value
+                    },
+                    {
+                        id: "oneTimeLog",
+                        type: "boolean",
+                        name: 'Enable one-time call logging',
+                        description: 'Log calls when all data is ready. EDIT log permission is not required.',
+                        readOnly: userCore.getOneTimeLogSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getOneTimeLogSetting(userSettings).readOnlyReason,
+                        value: userCore.getOneTimeLogSetting(userSettings).value
+                    },
+                    {
+                        id: "popupLogPageAfterCall",
+                        type: "boolean",
+                        name: '(Manual log) Open call logging page after call',
+                        readOnly: userCore.getCallPopSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getCallPopSetting(userSettings).readOnlyReason,
+                        value: userCore.getCallPopSetting(userSettings).value
+                    },
+                    {
+                        id: "popupLogPageAfterSMS",
+                        type: "boolean",
+                        name: '(Manual log) Open SMS logging page after message',
+                        readOnly: userCore.getSMSPopSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason,
+                        value: userCore.getSMSPopSetting(userSettings).value
+                    }
+                ]
             },
             {
                 id: 'tabs',
@@ -342,7 +379,7 @@ async function getServiceManifest() {
             if (cs.group) {
                 group.groupId = cs.group;
             }
-            services.settings.unshift(group);
+            services.settings.splice(1, 0, group);
         }
     };
     if (platformName === 'clio' || platformName === 'insightly' || platformName === 'netsuite') {

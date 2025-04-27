@@ -537,14 +537,6 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-callLogger-auto-log-notify':
-          userSettings = await userCore.refreshUserSettings({
-            changedSettings: {
-              autoLogCall: {
-                value: data.autoLog
-              }
-            },
-            isAvoidForceChange: true
-          });
           trackEditSettings({ changedItem: 'auto-call-log', status: data.autoLog });
           if (!!data.autoLog && !!crmAuthed) {
             await chrome.storage.local.set({ retroAutoCallLogMaxAttempt: 10 });
@@ -559,14 +551,6 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-messageLogger-auto-log-notify':
-          userSettings = await userCore.refreshUserSettings({
-            changedSettings: {
-              autoLogSMS: {
-                value: data.autoLog
-              }
-            },
-            isAvoidForceChange: true
-          });
           trackEditSettings({ changedItem: 'auto-message-log', status: data.autoLog });
           break;
         case 'rc-route-changed-notify':
@@ -1440,13 +1424,19 @@ window.addEventListener('message', async (e) => {
                 responseMessage(data.requestId, { data: 'ok' });
                 break;
               }
-              const messageAutoLogOn = userSettings.autoLogSMS?.value ?? false;
+              const isAutoLogSMS = userSettings.autoLogSMS?.value ?? false;
+              const isAutoLogInboundFax = userSettings.autoLogInboundFax?.value ?? false;
+              const isAutoLogOutboundFax = userSettings.autoLogOutboundFax?.value ?? false;
+
               const messageAutoPopup = userCore.getSMSPopSetting(userSettings).value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
               const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
               let getContactMatchResult = null;
+              let hasConflict = false;
+              let autoSelectAdditionalSubmission = {};
+              let requireManualDisposition = false;
               // Case: auto log
-              if (messageAutoLogOn && data.body.triggerType === 'auto' && !messageAutoPopup) {
+              if (data.body.triggerType === 'auto' && !messageAutoPopup) {
                 // Sub-case: has existing pref setup, log directly
                 if (existingConversationLogPref[messageLogPrefId]) {
                   // auto log - has existing pref
@@ -1468,44 +1458,89 @@ window.addEventListener('message', async (e) => {
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
                     platformName
                   })).contactInfo;
-                  const { hasConflict, autoSelectAdditionalSubmission, requireManualDisposition } = await getLogConflictInfo({
+                  const getLogConflictInfoResult = await getLogConflictInfo({
                     platform,
-                    isAutoLog: messageAutoLogOn,
+                    isAutoLog: isAutoLogSMS,
                     contactInfo: getContactMatchResult,
                     logType: 'messageLog',
                     direction: '',
                     isVoicemail: data.body.conversation.type === 'VoiceMail'
                   });
-                  // Sub-case: has conflict
-                  if (hasConflict) {
-                    const conflictLog = {
-                      type: 'Message',
-                      id: data.body.conversation.conversationId,
-                      direction: '',
-                      contactInfo: getContactMatchResult ?? [],
-                      date: moment(data.body.conversation.messages[0].creationTime).format('MM/DD/YYYY')
-                    };
-                    const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
-                    showNotification({ level: 'warning', message: `Message not logged. ${conflictContent.description}.`, ttl: 5000 });
-                  }
-                  // Sub-case: no conflict, log directly
-                  else {
-                    // auto log, no pref, no conflict
-                    await logCore.addLog({
-                      serverUrl: manifest.serverUrl,
-                      logType: 'Message',
-                      logInfo: data.body.conversation,
-                      isMain: true,
-                      note: '',
-                      additionalSubmission: autoSelectAdditionalSubmission,
-                      contactId: getContactMatchResult[0]?.id,
-                      contactType: getContactMatchResult[0]?.type,
-                      contactName: getContactMatchResult[0]?.name
-                    });
-                  }
-                  if (requireManualDisposition) {
-                    showNotification({ level: 'warning', message: 'Manual disposition needed. Please edit logged message to disposition.', ttl: 5000 });
-                  }
+                  hasConflict = getLogConflictInfoResult.hasConflict;
+                  autoSelectAdditionalSubmission = getLogConflictInfoResult.autoSelectAdditionalSubmission;
+                  requireManualDisposition = getLogConflictInfoResult.requireManualDisposition;
+                }
+                switch (data.body.conversation.type) {
+                  case 'SMS':
+                  case 'VoiceMail':
+                    if (isAutoLogSMS) {
+                      // Sub-case: has conflict
+                      if (hasConflict) {
+                        const conflictLog = {
+                          type: 'Message',
+                          id: data.body.conversation.conversationId,
+                          direction: '',
+                          contactInfo: getContactMatchResult ?? [],
+                          date: moment(data.body.conversation.messages[0].creationTime).format('MM/DD/YYYY')
+                        };
+                        const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
+                        showNotification({ level: 'warning', message: `Message not logged. ${conflictContent.description}.`, ttl: 5000 });
+                      }
+                      // Sub-case: no conflict, log directly
+                      else {
+                        // auto log, no pref, no conflict
+                        await logCore.addLog({
+                          serverUrl: manifest.serverUrl,
+                          logType: 'Message',
+                          logInfo: data.body.conversation,
+                          isMain: true,
+                          note: '',
+                          additionalSubmission: autoSelectAdditionalSubmission,
+                          contactId: getContactMatchResult[0]?.id,
+                          contactType: getContactMatchResult[0]?.type,
+                          contactName: getContactMatchResult[0]?.name
+                        });
+                      }
+                      if (requireManualDisposition) {
+                        showNotification({ level: 'warning', message: 'Manual disposition needed. Please edit logged message to disposition.', ttl: 5000 });
+                      }
+                    }
+                    break;
+                  case 'Fax':
+                    const faxMessage = data.body.conversation.messages[0];
+                    if (faxMessage.direction === 'Inbound' && isAutoLogInboundFax || faxMessage.direction === 'Outbound' && isAutoLogOutboundFax) {
+                      // Sub-case: has conflict
+                      if (hasConflict) {
+                        const conflictLog = {
+                          type: 'Message',
+                          id: data.body.conversation.conversationId,
+                          direction: '',
+                          contactInfo: getContactMatchResult ?? [],
+                          date: moment(data.body.conversation.messages[0].creationTime).format('MM/DD/YYYY')
+                        };
+                        const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
+                        showNotification({ level: 'warning', message: `Fax not logged. ${conflictContent.description}.`, ttl: 5000 });
+                      }
+                      // Sub-case: no conflict, log directly
+                      else {
+                        // auto log, no pref, no conflict
+                        await logCore.addLog({
+                          serverUrl: manifest.serverUrl,
+                          logType: 'Message',
+                          logInfo: data.body.conversation,
+                          isMain: true,
+                          note: '',
+                          additionalSubmission: autoSelectAdditionalSubmission,
+                          contactId: getContactMatchResult[0]?.id,
+                          contactType: getContactMatchResult[0]?.type,
+                          contactName: getContactMatchResult[0]?.name
+                        });
+                      }
+                      if (requireManualDisposition) {
+                        showNotification({ level: 'warning', message: 'Manual disposition needed. Please edit logged message to disposition.', ttl: 5000 });
+                      }
+                    }
+                    break;
                 }
               }
               // Case: manual log, submit
