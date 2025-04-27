@@ -67,33 +67,60 @@ function getCustomSettingsPageRender({ crmManifest, adminUserSettings }) {
                     }
                     break;
                 case 'option':
-                    page.schema.properties[setting.id] = {
-                        type: 'object',
-                        title: setting.name,
-                        properties: {
-                            customizable: {
-                                type: 'boolean',
-                                title: 'Customizable by user'
-                            },
-                            value: {
-                                type: 'string',
-                                title: setting.name,
-                                oneOf: setting.options.map(option => ({
-                                    const: option.id,
-                                    title: option.name
-                                })),
-                                multiple: setting.multiple ?? false,
-                                checkbox: setting.checkbox ?? false,
-                                required: setting.required ?? false,
-                            }
-                        }
-                    };
                     page.formData[setting.id] = {
                         customizable: adminUserSettings?.[setting.id]?.customizable ?? true,
                         value: adminUserSettings?.[setting.id]?.value ?? setting?.defaultValue
                     };
                     page.uiSchema[setting.id] = {
                         "ui:collapsible": true,
+                    }
+                    if (setting.checkbox) {
+                        page.schema.properties[setting.id] = {
+                            type: 'object',
+                            title: setting.name,
+                            properties: {
+                                customizable: {
+                                    type: 'boolean',
+                                    title: 'Customizable by user'
+                                },
+                                value: {
+                                    type: 'array',
+                                    title: setting.name,
+                                    items: {
+                                        type: 'string',
+                                        enum: setting.options.map(option => option.id),
+                                        enumNames: setting.options.map(option => option.name)
+                                    },
+                                    uniqueItems: true
+                                }
+                            }
+                        }
+                        page.uiSchema[setting.id].value = {
+                            'ui:widget': 'checkboxes',
+                            'ui:options': {
+                                inline: true,
+                            },
+                        };
+                    }
+                    else {
+                        page.schema.properties[setting.id] = {
+                            type: 'object',
+                            title: setting.name,
+                            properties: {
+                                customizable: {
+                                    type: 'boolean',
+                                    title: 'Customizable by user'
+                                },
+                                value: {
+                                    type: 'string',
+                                    title: setting.name,
+                                    oneOf: setting.options.map(option => ({
+                                        const: option.id,
+                                        title: option.name
+                                    }))
+                                }
+                            }
+                        };
                     }
                     break;
             }
