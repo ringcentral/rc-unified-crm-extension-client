@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { getServiceManifest } from '../service/embeddableServices';
 import { getRcAccessToken } from '../lib/util';
 import adminCore from './admin';
 

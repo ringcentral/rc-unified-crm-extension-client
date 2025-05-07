@@ -198,8 +198,10 @@ window.addEventListener('message', async (e) => {
         case 'rc-login-status-notify':
           // get login status from widget
           const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
-          userPermissions.aiNote = data.features && data.features.smartNote;
-          await chrome.storage.local.set({ userPermissions });
+          if (data.loggedIn) {
+            userPermissions.aiNote = data.features && data.features.smartNote;
+            await chrome.storage.local.set({ userPermissions });
+          }
           console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
 
           const platformInfo = await getPlatformInfo();
