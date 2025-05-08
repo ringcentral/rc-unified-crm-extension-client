@@ -1,5 +1,6 @@
 import logCore from './core/log';
 import contactCore from './core/contact';
+import contactSearch from './core/customContactSearch';
 import dispositionCore from './core/disposition';
 import userCore from './core/user';
 import adminCore from './core/admin';
@@ -1053,6 +1054,7 @@ window.addEventListener('message', async (e) => {
                           await contactCore.openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                         }
                       }
+
                       await logCore.addLog(
                         {
                           serverUrl: manifest.serverUrl,
@@ -1311,6 +1313,17 @@ window.addEventListener('message', async (e) => {
                 type: 'rc-adapter-update-call-log-page',
                 page
               }, '*');
+              if (data.body.formData.contact === 'searchContact') {
+                const contactSearchRender = contactSearch.getCustomContactSearch();
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-register-customized-page',
+                  page: contactSearchRender
+                });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-navigate-to',
+                  path: `/customized/${contactSearchRender.id}`,
+                }, '*');
+              }
               responseMessage(data.requestId, { data: 'ok' });
               break;
             case '/callLogger/match':
@@ -1659,7 +1672,6 @@ window.addEventListener('message', async (e) => {
               responseMessage(data.requestId, { data: 'ok' });
               break;
             case '/custom-button-click':
-
               switch (data.body.button.id) {
                 case 'callAndSMSLoggingSettingPage':
                 case 'contactSettingPage':
@@ -2016,6 +2028,19 @@ window.addEventListener('message', async (e) => {
                     path: '/customized/googleSheetsPage', // page id
                   }, '*');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
+                case 'contactSearchAdapterButton':
+                  const contactToBeSearch = data.body.button.formData.contactNameToSearch;
+                  const customContactSearchResponse = await contactSearch.getCustomContactSearchData({ serverUrl: manifest.serverUrl, platform, contactSearch: contactToBeSearch });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: customContactSearchResponse
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${customContactSearchResponse.id}`,
+                  }, '*');
+                  // console.log({ searchedContact });
                   break;
               }
               responseMessage(data.requestId, { data: 'ok' });
