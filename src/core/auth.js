@@ -92,6 +92,7 @@ async function unAuthorize({ serverUrl, platformName, rcUnifiedCrmExtJwt }) {
     }
     await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
     await chrome.storage.local.remove('serverSideLoggingToken');
+    await chrome.storage.local.remove('isAdmin');
     setAuth(false);
 }
 
@@ -99,7 +100,9 @@ async function checkAuth() {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     // get crm user info
     const { crmUserInfo } = (await chrome.storage.local.get({ crmUserInfo: null }));
+    const { isAdmin } = (await chrome.storage.local.get({ isAdmin: null }));
     setAuth(!!rcUnifiedCrmExtJwt, crmUserInfo?.name);
+    setAccountName(crmUserInfo?.name, isAdmin);
     return !!rcUnifiedCrmExtJwt;
 }
 
@@ -111,9 +114,21 @@ function setAuth(auth, accountName) {
     });
 }
 
+function setAccountName(accountName, isAdmin) {
+    if (isAdmin) {
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-update-authorization-status',
+            authorized: true,
+            authorizedAccount: `${accountName} (Admin)`
+        });
+    }
+
+}
+
 exports.submitPlatformSelection = submitPlatformSelection;
 exports.apiKeyLogin = apiKeyLogin;
 exports.onAuthCallback = onAuthCallback;
 exports.unAuthorize = unAuthorize;
 exports.checkAuth = checkAuth;
 exports.setAuth = setAuth;
+exports.setAccountName = setAccountName;

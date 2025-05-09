@@ -1,5 +1,6 @@
 import axios from 'axios';
 import adminPage from '../components/admin/adminPage'
+import authCore from '../core/auth'
 import { parsePhoneNumber } from 'awesome-phonenumber';
 import { getRcAccessToken, getPlatformInfo } from '../lib/util';
 
@@ -48,6 +49,10 @@ async function refreshAdminSettings() {
             console.log('Cannot find admin settings', e);
         }
     }
+
+    // Set user setting display name
+    const { crmUserInfo } = await chrome.storage.local.get({ crmUserInfo: null });
+    authCore.setAccountName(crmUserInfo?.name, !!storedAdminSettings);
 
     return { adminSettings }
 }
