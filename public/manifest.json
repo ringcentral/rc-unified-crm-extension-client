@@ -26,7 +26,8 @@
         "https://*.freshservice.com/*",
         "https://*.freshsales.com/*",
         "https://*.myfreshworks.com/*",
-        "https://docs.google.com/*"
+        "https://docs.google.com/*",
+        "http://app.gohighlevel.com/*"
       ],
       "js": [
         "./c2d/index.js",
@@ -58,7 +59,8 @@
         "https://*.freshservice.com/*",
         "https://*.freshsales.com/*",
         "https://*.myfreshworks.com/*",
-        "https://docs.google.com/*"
+        "https://docs.google.com/*",
+        "http://app.gohighlevel.com/*"
       ]
     }
   ],
