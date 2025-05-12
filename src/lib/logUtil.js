@@ -76,7 +76,8 @@ async function getLogConflictInfo({
     contactInfo,
     logType,
     direction,
-    isVoicemail
+    isVoicemail,
+    isFax
 }) {
     const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
     if (!isAutoLog) {
@@ -117,6 +118,9 @@ async function getLogConflictInfo({
             else if (logType === 'messageLog') {
                 if (isVoicemail) {
                     caseType = 'voicemail';
+                }
+                else if (isFax) {
+                    caseType = 'fax';
                 }
                 else {
                     caseType = 'message';

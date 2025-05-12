@@ -1466,7 +1466,8 @@ window.addEventListener('message', async (e) => {
                     contactInfo: getContactMatchResult,
                     logType: 'messageLog',
                     direction: '',
-                    isVoicemail: data.body.conversation.type === 'VoiceMail'
+                    isVoicemail: data.body.conversation.type === 'VoiceMail',
+                    isFax: data.body.conversation.type === 'Fax'
                   });
                   hasConflict = getLogConflictInfoResult.hasConflict;
                   autoSelectAdditionalSubmission = getLogConflictInfoResult.autoSelectAdditionalSubmission;
@@ -1598,22 +1599,31 @@ window.addEventListener('message', async (e) => {
                     direction: '',
                     contactInfo: getContactMatchResult.contactInfo ?? []
                   });
-                  // default form value from user settings
-                  if (data.body.conversation.type === 'VoiceMail') {
-                    messagePage = await logPageFormDataDefaulting({
-                      platform,
-                      targetPage: messagePage,
-                      caseType: 'voicemail',
-                      logType: 'messageLog'
-                    });
-                  }
-                  else {
-                    messagePage = await logPageFormDataDefaulting({
-                      platform,
-                      targetPage: messagePage,
-                      caseType: 'message',
-                      logType: 'messageLog'
-                    });
+                  switch (data.body.conversation.type) {
+                    case 'SMS':
+                      messagePage = await logPageFormDataDefaulting({
+                        platform,
+                        targetPage: messagePage,
+                        caseType: 'message',
+                        logType: 'messageLog'
+                      });
+                      break;
+                    case 'Fax':
+                      messagePage = await logPageFormDataDefaulting({
+                        platform,
+                        targetPage: messagePage,
+                        caseType: 'fax',
+                        logType: 'messageLog'
+                      });
+                      break;
+                    case 'VoiceMail':
+                      messagePage = await logPageFormDataDefaulting({
+                        platform,
+                        targetPage: messagePage,
+                        caseType: 'voicemail',
+                        logType: 'messageLog'
+                      });
+                      break;
                   }
 
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
