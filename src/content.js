@@ -174,6 +174,11 @@ async function Initialize() {
   if (window.self === window.top && renderQuickAccessButton) {
     await RenderQuickAccessButton();
   }
+
+  if (!renderQuickAccessButton) {
+    localStorage.removeItem('rcQuickAccessButtonTransform');
+  }
+  
   // Case: C2D renders extra elements inside Bullhorn note section
   if (!window.location.href.startsWith('https://app.bullhornstaffing.com/content/record/JobOrder')
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/fast-add')
