@@ -1284,7 +1284,7 @@ window.addEventListener('message', async (e) => {
                     }
                   }
                   // Case: auto log OFF, open log page
-                  else {
+                  else if (data.redirect) {
                     let loggedContactId = null;
                     const existingCallLogRecord = await chrome.storage.local.get(`rc-crm-call-log-${data.body.call.sessionId}`);
                     if (existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`]) {
