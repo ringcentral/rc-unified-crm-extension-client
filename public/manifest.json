@@ -27,7 +27,7 @@
         "https://*.freshsales.com/*",
         "https://*.myfreshworks.com/*",
         "https://docs.google.com/*",
-        "http://app.gohighlevel.com/*"
+        "https://app.gohighlevel.com/*"
       ],
       "js": [
         "./c2d/index.js",
@@ -60,7 +60,7 @@
         "https://*.freshsales.com/*",
         "https://*.myfreshworks.com/*",
         "https://docs.google.com/*",
-        "http://app.gohighlevel.com/*"
+        "https://app.gohighlevel.com/*"
       ]
     }
   ],
