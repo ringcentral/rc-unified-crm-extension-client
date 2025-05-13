@@ -35,6 +35,34 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
+                autoLogInboundFax: {
+                    type: 'object',
+                    title: 'Log inbound faxes automatically',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
+                autoLogOutboundFax: {
+                    type: 'object',
+                    title: 'Log outbound faxes automatically',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
                 disableRetroCallLogSync: {
                     type: 'object',
                     title: 'Disable retroactive call log sync',
@@ -100,6 +128,12 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             autoLogSMS: {
                 "ui:collapsible": true,
             },
+            autoLogInboundFax: {
+                "ui:collapsible": true,
+            },  
+            autoLogOutboundFax: {
+                "ui:collapsible": true,
+            },
             disableRetroCallLogSync: {
                 "ui:collapsible": true,
             },
@@ -126,6 +160,16 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             {
                 customizable: adminUserSettings?.autoLogSMS?.customizable ?? true,
                 value: adminUserSettings?.autoLogSMS?.value ?? false
+            },
+            autoLogInboundFax:
+            {
+                customizable: adminUserSettings?.autoLogInboundFax?.customizable ?? true,
+                value: adminUserSettings?.autoLogInboundFax?.value ?? false
+            },
+            autoLogOutboundFax:
+            {
+                customizable: adminUserSettings?.autoLogOutboundFax?.customizable ?? true,
+                value: adminUserSettings?.autoLogOutboundFax?.value ?? false
             },
             disableRetroCallLogSync:
             {

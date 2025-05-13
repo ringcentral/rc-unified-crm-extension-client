@@ -375,6 +375,11 @@ window.addEventListener('message', async (e) => {
               type: 'rc-adapter-update-authorization-status',
               authorized: crmAuthed
             }, '*');
+            const serviceManifest = await embeddableServices.getServiceManifest();
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+              type: 'rc-adapter-register-third-party-service',
+              service: serviceManifest
+            }, '*');
             setInterval(function () {
               logService.forceCallLogMatcherCheck();
             }, 600000)
