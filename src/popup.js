@@ -362,9 +362,6 @@ window.addEventListener('message', async (e) => {
               showNotification({ level: 'success', message: 'New version released. Please check release notes and reload the extension.', ttl: 60000 });
             }
           }
-          await chrome.storage.local.set({
-            ['rc-crm-extension-version']: manifest.version
-          });
 
           if (crmAuthed) {
             const adminSettingResults = await adminCore.refreshAdminSettings();
@@ -1819,12 +1816,38 @@ window.addEventListener('message', async (e) => {
                 case 'checkForUpdateButton':
                   const registeredVersionInfo = await chrome.storage.local.get('rc-crm-extension-version');
                   const localVersion = registeredVersionInfo['rc-crm-extension-version'];
-                  const onlineVerison = manifest.version;
-                  if (localVersion === onlineVerison) {
+                  const onlineVerisonResp = await axios.get(`${manifest.serverUrl}/serverVersionInfo`);
+                  if (localVersion === onlineVerisonResp?.data?.version) {
                     showNotification({ level: 'success', message: `You are using the latest version (${localVersion})`, ttl: 5000 });
                   }
                   else {
-                    showNotification({ level: 'warning', message: `New version (${onlineVerison}) is available, please go to chrome://extensions and press "Update"`, ttl: 5000 });
+                    showNotification({
+                      level: 'warning',
+                      message: `New version (${onlineVerisonResp?.data?.version}) is available.`,
+                      details: [
+                        {
+                          title: 'Steps to update',
+                          items:[
+                            {
+                              id:'1',
+                              type: 'text',
+                              text: '1. Go to chrome://extensions'
+                            },
+                            {
+                              id:'2',
+                              type: 'text',
+                              text: '2. Click "Update"'
+                            },
+                            {
+                              id:'3',
+                              type: 'text',
+                              text: `3. After a few seconds, "App Connect" should have latests version "${onlineVerisonResp?.data?.version}" next to its name` 
+                            }
+                          ] 
+                        }
+                      ],
+                      ttl: 5000
+                    });
                   }
                   break;
                 case 'openFeedbackPageButton':

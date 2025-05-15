@@ -17,6 +17,7 @@ async function fetchManifest() {
   if (customCrmManifestJson) {
     await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
   }
+  await chrome.storage.local.set({ 'rc-crm-extension-version': baseManifest.version });
 }
 
 async function openPopupWindow() {
