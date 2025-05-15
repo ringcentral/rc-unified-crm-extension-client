@@ -1692,6 +1692,7 @@ window.addEventListener('message', async (e) => {
               });
               if (data.body.setting.id === "developerMode") {
                 showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
+                await chrome.storage.local.set({ developerMode: data.body.setting.value });
                 const serviceManifest = await embeddableServices.getServiceManifest();
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-register-third-party-service',

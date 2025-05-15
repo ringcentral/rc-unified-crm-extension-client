@@ -6,6 +6,7 @@ async function getServiceManifest() {
     const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
     const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
+    const { developerMode } = await chrome.storage.local.get({ developerMode: false });
     const platformInfo = await getPlatformInfo();
     const { customCrmManifest: manifest } = await chrome.storage.local.get({ customCrmManifest: null });
     const platform = manifest.platforms[platformInfo.platformName];
@@ -292,7 +293,7 @@ async function getServiceManifest() {
                         id: 'developerMode',
                         type: 'boolean',
                         name: 'Developer mode',
-                        value: userCore.getDeveloperModeSetting(userSettings).value,
+                        value: userCore.getDeveloperModeSetting(userSettings, developerMode).value,
                         readOnly: userCore.getDeveloperModeSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getDeveloperModeSetting(userSettings).readOnlyReason
                     },
@@ -439,7 +440,7 @@ async function getServiceManifest() {
         )
     }
 
-    if (userCore.getDeveloperModeSetting(userSettings).value) {
+    if (userCore.getDeveloperModeSetting(userSettings, developerMode).value) {
         services.settings.push(
             {
                 id: 'openDeveloperSettingsPage',

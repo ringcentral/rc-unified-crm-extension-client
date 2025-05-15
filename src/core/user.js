@@ -85,7 +85,7 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         contacts: getShowContactsTabSetting(userSettings).value
     }, '*');
     const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false);
-    RCAdapter.setAutoLog({ call: userSettings.autoLogCall?.value ?? false, message: autoLogMessagesGroupTrigger})
+    RCAdapter.setAutoLog({ call: userSettings.autoLogCall?.value ?? false, message: autoLogMessagesGroupTrigger })
     if (!isAvoidForceChange) {
         const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
         const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
@@ -228,9 +228,9 @@ function getOpenContactAfterCreationSetting(userSettings) {
     }
 }
 
-function getDeveloperModeSetting(userSettings) {
+function getDeveloperModeSetting(userSettings, developerModeLocal) {
     return {
-        value: userSettings?.developerMode?.value ?? false,
+        value: (userSettings?.developerMode?.value || developerModeLocal) ?? false,
         readOnly: userSettings?.developerMode?.customizable === undefined ? false : !userSettings?.developerMode?.customizable,
         readOnlyReason: !userSettings?.developerMode?.customizable ? 'This setting is managed by admin' : ''
     }
