@@ -2,7 +2,7 @@ import axios from 'axios';
 import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import { parsePhoneNumber } from 'awesome-phonenumber';
-import { getRcAccessToken, getPlatformInfo } from '../lib/util';
+import { getRcAccessToken, getPlatformInfo, getManifest } from '../lib/util';
 
 async function getAdminSettings({ serverUrl }) {
     try {
@@ -28,7 +28,7 @@ async function uploadAdminSettings({ serverUrl, adminSettings }) {
 }
 
 async function refreshAdminSettings() {
-    const { customCrmManifest: manifest } = await chrome.storage.local.get({ customCrmManifest: {} });
+    const manifest = await getManifest();
     const platformInfo = await getPlatformInfo();
     const platform = manifest.platforms[platformInfo.platformName];
     const rcAccessToken = getRcAccessToken();

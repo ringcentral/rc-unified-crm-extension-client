@@ -1,4 +1,4 @@
-import { isObjectEmpty } from './lib/util';
+import { isObjectEmpty, getManifest } from './lib/util';
 import baseManifest from './manifest.json';
 import packageJson from '../package.json';
 
@@ -79,7 +79,7 @@ async function openPopupWindow() {
 async function registerPlatform(tabUrl) {
   const url = new URL(tabUrl);
   let hostname = url.hostname;
-  const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
+  const customCrmManifest = await getManifest();
   if (customCrmManifest) {
     manifest = customCrmManifest;
   }
@@ -151,7 +151,7 @@ chrome.windows.onBoundsChanged.addListener(async (window) => {
 });
 
 chrome.alarms.onAlarm.addListener(async () => {
-  const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
+  const customCrmManifest = await getManifest();
   manifest = customCrmManifest;
   const { loginWindowInfo } = await chrome.storage.local.get('loginWindowInfo');
   if (!loginWindowInfo) {

@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom';
 import { RcThemeProvider } from '@ringcentral/juno';
 import axios from 'axios';
 import { sendMessageToExtension } from './lib/sendMessage';
-import { isObjectEmpty } from './lib/util';
+import { isObjectEmpty, getManifest } from './lib/util';
 console.log('import content js to web page');
 
 async function checkUrlMatch() {
@@ -17,7 +17,7 @@ async function checkUrlMatch() {
     }
     const platformInfo = await chrome.storage.local.get('platform-info');
     if (!isObjectEmpty(platformInfo)) {
-      const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
+      const customCrmManifest = await getManifest();
       const embedUrls = customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.embedUrls;
       if (embedUrls) {
         const currentUrl = window.location.href;
@@ -178,7 +178,7 @@ async function Initialize() {
   if (!renderQuickAccessButton) {
     localStorage.removeItem('rcQuickAccessButtonTransform');
   }
-  
+
   // Case: C2D renders extra elements inside Bullhorn note section
   if (!window.location.href.startsWith('https://app.bullhornstaffing.com/content/record/JobOrder')
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/fast-add')
