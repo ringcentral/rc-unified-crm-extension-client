@@ -32,8 +32,8 @@ async function getManifest() {
       switch (overrideItem.triggerType) {
         case 'hostname':
           if (overrideItem.triggerValue === platformInfo.hostname) {
-            for (const key in overrideItem.overrideObject) {
-              customCrmManifest[key] = overrideItem.overrideObject[key];
+            for (const overrideObj of overrideItem.overrideObjects) {
+              setValueByPath(customCrmManifest.platforms[platformInfo.platformName], overrideObj.path, overrideObj.value);
             }
           }
           break;
@@ -41,6 +41,29 @@ async function getManifest() {
     }
   }
   return customCrmManifest;
+}
+
+function setValueByPath(obj, path, value) {
+  // Convert path to an array of keys
+  const keys = path.split('.');
+
+  // Get a reference to the object to traverse
+  let current = obj;
+
+  // Iterate through the keys, stopping before the last one
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+
+    // If the current key doesn't exist or is not an object, create an empty object
+    if (!current[key] || typeof current[key] !== 'object') {
+      current[key] = {};
+    }
+    // Move to the next level
+    current = current[key];
+  }
+
+  // Set the value at the final key
+  current[keys[keys.length - 1]] = value;
 }
 
 function responseMessage(responseId, response) {
