@@ -727,7 +727,9 @@ window.addEventListener('message', async (e) => {
                     // await chrome.storage.local.set({ [`rc-crm-search-contact-${contactPhoneNumber}`]: selectedContact });
                     const { cacheLogPageData } = await chrome.storage.local.get("cacheLogPageData");
                     const contactData = cacheLogPageData.contactInfo;
-                    contactData.push(selectedContact);
+                    if (!contactData.some(c => c.id === selectedContact.id)) {
+                      contactData.push(selectedContact);
+                    }
                     const cachedLogPage = await logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData });
                     cachedLogPage.formData.contactInfo = [selectedContact];
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2096,6 +2098,7 @@ window.addEventListener('message', async (e) => {
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${customContactSearchResponse.id}`,
                   }, '*');
+
                   // console.log({ searchedContact });
                   break;
               }
