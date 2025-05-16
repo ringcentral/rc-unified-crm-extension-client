@@ -2019,6 +2019,7 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 case 'contactSearchAdapterButton':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const contactToBeSearch = data.body.button.formData.contactNameToSearch;
                   const customContactSearchResponse = await contactSearch.getCustomContactSearchData({ serverUrl: manifest.serverUrl, platform, contactSearch: contactToBeSearch });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2029,7 +2030,7 @@ window.addEventListener('message', async (e) => {
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${customContactSearchResponse.id}`,
                   }, '*');
-
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   // console.log({ searchedContact });
                   break;
               }
