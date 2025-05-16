@@ -451,7 +451,7 @@ window.addEventListener('message', async (e) => {
                     note,
                     subject: callLogSubject,
                   }
-                  let callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId: null });
+                  let callPage = await logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId: null });
                   // default form value from user settings
                   if (data.call.direction === 'Inbound') {
                     callPage = await logPageFormDataDefaulting({
@@ -683,6 +683,25 @@ window.addEventListener('message', async (e) => {
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${updatedGoogleSheetsPage.id}`, // page id
                   }, '*');
+                  break;
+                case 'searchContactResult':
+                  if (data.body.keys.some(k => k === "contactInfo")) {
+                    const selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
+                    // await chrome.storage.local.set({ [`rc-crm-search-contact-${contactPhoneNumber}`]: selectedContact });
+                    const { cacheLogPageData } = await chrome.storage.local.get("cacheLogPageData");
+                    const contactData = cacheLogPageData.contactInfo;
+                    contactData.push(selectedContact);
+                    const cachedLogPage = await logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData });
+                    cachedLogPage.formData.contactInfo = [selectedContact];
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-update-call-log-page',
+                      page: cachedLogPage
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: `/log/call/${cacheLogPageData.id}`, // page id
+                    }, '*');
+                  }
                   break;
               }
               switch (data.body?.formData?.section) {
@@ -1254,7 +1273,7 @@ window.addEventListener('message', async (e) => {
                       loggedContactId = existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`].contact?.id ?? null;
                     }
                     // add your codes here to log call to your service
-                    let callPage = logPage.getLogPageRender({
+                    let callPage = await logPage.getLogPageRender({
                       id: data.body.call.sessionId,
                       manifest,
                       logType: 'Call',
@@ -1564,7 +1583,7 @@ window.addEventListener('message', async (e) => {
                     platformName
                   });
                   // add your codes here to log call to your service
-                  let messagePage = logPage.getLogPageRender({
+                  let messagePage = await logPage.getLogPageRender({
                     id: data.body.conversation.conversationId,
                     manifest,
                     logType: 'Message',
