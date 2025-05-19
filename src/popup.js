@@ -1182,6 +1182,15 @@ window.addEventListener('message', async (e) => {
                       callMatchedContact.push(cachedContact);
                     }
                   }
+                  for (let i = callMatchedContact.length - 1; i >= 0; i--) {
+                    if (callMatchedContact[i].id === 'searchContact') {
+                      callMatchedContact.splice(i, 1);
+                    }
+                  }
+                  callMatchedContact.push({
+                    id: 'searchContact',
+                    name: `Search ${platformName}`
+                  });
                   let defaultingContact = callMatchedContact?.length > 0 ? callMatchedContact[0] : null;
                   if (data.body.call.toNumberEntity) {
                     if (callMatchedContact.some(c => c.id == data.body.call.toNumberEntity)) {
