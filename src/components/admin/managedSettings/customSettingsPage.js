@@ -1,4 +1,4 @@
-function getCustomSettingsPageRender({ crmManifest, adminUserSettings }) {
+function getCustomSettingsPageRender({ crmManifest, adminUserSettings, userSettings }) {
     if (!crmManifest?.settings) {
         return null;
     }
@@ -71,6 +71,9 @@ function getCustomSettingsPageRender({ crmManifest, adminUserSettings }) {
                         customizable: adminUserSettings?.[setting.id]?.customizable ?? true,
                         value: adminUserSettings?.[setting.id]?.value ?? setting?.defaultValue
                     };
+                    if (setting.dynamicOptions) {
+                        page.formData[setting.id].options = userSettings?.[setting.id]?.options ?? [];
+                    }
                     page.uiSchema[setting.id] = {
                         "ui:collapsible": true,
                     }
@@ -88,8 +91,8 @@ function getCustomSettingsPageRender({ crmManifest, adminUserSettings }) {
                                     title: setting.name,
                                     items: {
                                         type: 'string',
-                                        enum: setting.options.map(option => option.id),
-                                        enumNames: setting.options.map(option => option.name)
+                                        enum: setting.dynamicOptions ? userSettings?.[setting.id]?.options?.map(option => option.id) : setting.options.map(option => option.id),
+                                        enumNames: setting.dynamicOptions ? userSettings?.[setting.id]?.options?.map(option => option.name) : setting.options.map(option => option.name)
                                     },
                                     uniqueItems: true
                                 }
@@ -114,7 +117,10 @@ function getCustomSettingsPageRender({ crmManifest, adminUserSettings }) {
                                 value: {
                                     type: 'string',
                                     title: setting.name,
-                                    oneOf: setting.options.map(option => ({
+                                    oneOf: setting.dynamicOptions ? userSettings?.[setting.id]?.options?.map(option => ({
+                                        const: option.id,
+                                        title: option.name
+                                    })) : setting.options.map(option => ({
                                         const: option.id,
                                         title: option.name
                                     }))

@@ -327,7 +327,8 @@ function getCustomSetting(userSettings, id, defaultValue) {
     return {
         value: userSettings[id]?.value ?? defaultValue,
         readOnly: userSettings[id]?.customizable === undefined ? false : !userSettings[id]?.customizable,
-        readOnlyReason: !userSettings[id]?.customizable ? 'This setting is managed by admin' : ''
+        readOnlyReason: !userSettings[id]?.customizable ? 'This setting is managed by admin' : '',
+        options: userSettings[id]?.options ?? []
     }
 }
 

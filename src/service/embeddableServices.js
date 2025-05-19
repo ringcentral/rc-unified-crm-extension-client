@@ -359,7 +359,7 @@ async function getServiceManifest() {
                                 type: "option",
                                 name: item.name,
                                 description: item.description,
-                                options: item.options,
+                                options: item.dynamicOptions ? userCore.getCustomSetting(userSettings, item.id, item.defaultValue).options : item.options,
                                 multiple: item.multiple ?? false,
                                 checkbox: item.checkbox ?? false,
                                 required: item.required ?? false,

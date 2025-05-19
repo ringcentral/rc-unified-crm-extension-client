@@ -9,7 +9,13 @@ function getAdditionalFieldDefaultValuesFromSetting({
     const result = [];
     if (!!additionalFields && !!platform.settings && platform.settings.length > 0) {
         for (const field of additionalFields) {
-            const defaultValueSetting = platform.settings.find(s => s.id == field.defaultSettingId);
+            let defaultValueSetting = null;
+            for(const setting of platform.settings){
+                if(setting.id === field.defaultSettingId){
+                    defaultValueSetting = setting;
+                    break;
+                }
+            }
             if (defaultValueSetting) {
                 const valueItem = defaultValueSetting.items.find(i => i.id === field.defaultSettingValues[caseType].settingId)
                 if (valueItem) {
@@ -35,7 +41,7 @@ async function logPageFormDataDefaulting({ platform, targetPage, caseType, logTy
         let fieldType = targetPage.schema.properties[defaultValue.field]?.oneOf ? 'options' : 'boolean';
         switch (fieldType) {
             case 'options':
-                const mappedOption = targetPage.schema.properties[defaultValue.field]?.oneOf.find(o => rawTextCompare(o.const, defaultValue.value))?.const;
+                const mappedOption = targetPage.schema.properties[defaultValue.field]?.oneOf.find(o => rawValueCompare(o.const, defaultValue.value))?.const;
                 if (mappedOption) {
                     updatedTargetPage.formData[defaultValue.field] = mappedOption;
                 }
@@ -66,8 +72,15 @@ function allowBullhornCustomNoteAction({ platformName, userSettings }) {
 }
 
 // A fuzzy string compare that ignores cases and spaces
-function rawTextCompare(str1 = '', str2 = '') {
-    return str1.toLowerCase().replace(/\s/g, '') === str2.toLowerCase().replace(/\s/g, '');
+function rawValueCompare(value1 = '', value2 = '') {
+    // check if value1 is a number
+    if(!Number.isNaN(value1))
+    {
+        return value1 === value2;
+    }
+    else{
+        return value1.toLowerCase().replace(/\s/g, '') === value2.toLowerCase().replace(/\s/g, '');
+    }
 }
 
 async function getLogConflictInfo({
@@ -143,7 +156,7 @@ async function getLogConflictInfo({
                     let allMatched = true;
                     const fieldDefaultValue = fieldDefaultValues.find(f => f.field === key);
                     if (fieldDefaultValue) {
-                        const fieldMappedOption = defaultingContact.additionalInfo[key]?.find(o => rawTextCompare(o.const, fieldDefaultValue.value))?.const;
+                        const fieldMappedOption = defaultingContact.additionalInfo[key]?.find(o => rawValueCompare(o.const, fieldDefaultValue.value))?.const;
                         if (fieldMappedOption) {
                             autoSelectAdditionalSubmission[key] = fieldMappedOption;
                             continue;

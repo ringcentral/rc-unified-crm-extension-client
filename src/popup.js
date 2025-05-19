@@ -791,7 +791,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'customSettings':
-                  const customSettingsPageRender = customSettingsPage.getCustomSettingsPageRender({ crmManifest: platform, adminUserSettings: adminSettings?.userSettings });
+                  const customSettingsPageRender = customSettingsPage.getCustomSettingsPageRender({ crmManifest: platform, adminUserSettings: adminSettings?.userSettings, userSettings });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: customSettingsPageRender
@@ -1110,7 +1110,7 @@ window.addEventListener('message', async (e) => {
                           contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
                           additionalSubmission
                         });
-                      if (!isObjectEmpty(additionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
+                      if (!platform.disableDisposition && !isObjectEmpty(additionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                         await dispositionCore.upsertDisposition({
                           serverUrl: manifest.serverUrl,
                           logType: 'Call',
@@ -1134,12 +1134,14 @@ window.addEventListener('message', async (e) => {
                         result: data.body.call.result,
                         isShowNotification: true
                       });
-                      await dispositionCore.upsertDisposition({
-                        serverUrl: manifest.serverUrl,
-                        logType: 'Call',
-                        sessionId: data.body.call.sessionId,
-                        dispositions: additionalSubmission
-                      });
+                      if (!platform.disableDisposition) {
+                        await dispositionCore.upsertDisposition({
+                          serverUrl: manifest.serverUrl,
+                          logType: 'Call',
+                          sessionId: data.body.call.sessionId,
+                          dispositions: additionalSubmission
+                        });
+                      }
                       break;
                   }
                   break;
@@ -1270,7 +1272,7 @@ window.addEventListener('message', async (e) => {
                             contactType: defaultingContact?.type,
                             contactName: defaultingContact?.name
                           });
-                        if (!isObjectEmpty(autoSelectAdditionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
+                        if (!platform.disableDisposition && !isObjectEmpty(autoSelectAdditionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                           await dispositionCore.upsertDisposition({
                             serverUrl: manifest.serverUrl,
                             logType: 'Call',
@@ -1717,6 +1719,11 @@ window.addEventListener('message', async (e) => {
                   }
                   await chrome.storage.local.set({ adminSettings });
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
+                  await userCore.refreshUserSettings({});
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-third-party-service',
+                    service: (await embeddableServices.getServiceManifest())
+                  }, '*');
                   showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
@@ -1826,23 +1833,23 @@ window.addEventListener('message', async (e) => {
                       details: [
                         {
                           title: 'Steps to update',
-                          items:[
+                          items: [
                             {
-                              id:'1',
+                              id: '1',
                               type: 'text',
                               text: '1. Go to chrome://extensions'
                             },
                             {
-                              id:'2',
+                              id: '2',
                               type: 'text',
                               text: '2. Click "Update"'
                             },
                             {
-                              id:'3',
+                              id: '3',
                               type: 'text',
-                              text: `3. After a few seconds, "App Connect" should have latests version "${onlineVerisonResp?.data?.version}" next to its name` 
+                              text: `3. After a few seconds, "App Connect" should have latests version "${onlineVerisonResp?.data?.version}" next to its name`
                             }
-                          ] 
+                          ]
                         }
                       ],
                       ttl: 5000
@@ -1899,6 +1906,11 @@ window.addEventListener('message', async (e) => {
                     }
                     await chrome.storage.local.set({ adminSettings });
                     await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
+                    await userCore.refreshUserSettings({});
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-third-party-service',
+                      service: (await embeddableServices.getServiceManifest())
+                    }, '*');
                     showNotification({ level: 'success', message: 'Custom manifest file uploaded.', ttl: 5000 });
                   }
                   break;
