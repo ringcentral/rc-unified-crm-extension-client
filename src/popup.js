@@ -684,7 +684,7 @@ window.addEventListener('message', async (e) => {
                     path: `/customized/${updatedGoogleSheetsPage.id}`, // page id
                   }, '*');
                   break;
-                case 'searchContactResult':
+                case 'contactSearchResultCallLog':
                   if (data.body.keys.some(k => k === "contactInfo")) {
                     const selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
                     const { cacheLogPageData } = await chrome.storage.local.get("cacheLogPageData");
@@ -715,6 +715,38 @@ window.addEventListener('message', async (e) => {
                     }, '*');
                   }
                   break;
+                case 'contactSearchResultMessageLog':
+                  if (data.body.keys.some(k => k === "contactInfo")) {
+                    const selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
+                    const { cacheLogPageData } = await chrome.storage.local.get("cacheLogPageData");
+                    const contactData = cacheLogPageData.contactInfo;
+                    if (contactData.length > 0) {
+                      const cachedSearchContactKey = `rc-crm-search-contact-${contactData[0].phone}`;
+                      const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
+                      let contactArr = storageObj[cachedSearchContactKey] || [];
+                      if (!contactArr.some(c => c.id === selectedContact.id)) {
+                        contactArr.push(selectedContact);
+                      }
+                      await chrome.storage.local.set({ [cachedSearchContactKey]: contactArr });
+                    }
+                    if (!contactData.some(c => c.id === selectedContact.id)) {
+                      contactData.push(selectedContact);
+                    }
+                    const cachedLogPage = await logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData });
+                    // Set the selected contact as the default contact in the form
+                    cachedLogPage.formData.contactInfo = [selectedContact];
+                    cachedLogPage.formData.contact = selectedContact.id; // Set the selected contact ID
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-update-messages-log-page',
+                      page: cachedLogPage
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: `/log/messages/${cacheLogPageData.id}`, // page id
+                    }, '*');
+                  }
+                  break;
+
               }
               switch (data.body?.formData?.section) {
                 case 'managedSettings':
@@ -1363,7 +1395,7 @@ window.addEventListener('message', async (e) => {
                 page
               }, '*');
               if (data.body.formData.contact === 'searchContact') {
-                const contactSearchRender = contactSearch.getCustomContactSearch();
+                const contactSearchRender = contactSearch.getCustomContactSearch({ contactSearchAdapterButton: "contactSearchAdapterButtonCallLog" });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-register-customized-page',
                   page: contactSearchRender
@@ -1670,6 +1702,17 @@ window.addEventListener('message', async (e) => {
                 type: 'rc-adapter-update-messages-log-page',
                 page: updatedPage
               }, '*');
+              if (data.body.formData.contact === 'searchContact') {
+                const contactSearchRender = contactSearch.getCustomContactSearch({ contactSearchAdapterButton: "contactSearchAdapterButtonMessageLog" });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-register-customized-page',
+                  page: contactSearchRender
+                });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-navigate-to',
+                  path: `/customized/${contactSearchRender.id}`,
+                }, '*');
+              }
               responseMessage(data.requestId, { data: 'ok' });
               break;
             case '/messageLogger/match':
@@ -2078,10 +2121,10 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
-                case 'contactSearchAdapterButton':
+                case 'contactSearchAdapterButtonCallLog':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const contactToBeSearch = data.body.button.formData.contactNameToSearch;
-                  const customContactSearchResponse = await contactSearch.getCustomContactSearchData({ serverUrl: manifest.serverUrl, platform, contactSearch: contactToBeSearch });
+                  const customContactSearchResponse = await contactSearch.getCustomContactSearchData({ serverUrl: manifest.serverUrl, platform, contactSearch: contactToBeSearch, pageId: "contactSearchResultCallLog" });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: customContactSearchResponse
@@ -2093,6 +2136,21 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   // console.log({ searchedContact });
                   break;
+                case 'contactSearchAdapterButtonMessageLog':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const contactNameToBeSearch = data.body.button.formData.contactNameToSearch;
+                  const customContactSearchRes = await contactSearch.getCustomContactSearchData({ serverUrl: manifest.serverUrl, platform, contactSearch: contactNameToBeSearch, pageId: "contactSearchResultMessageLog" });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: customContactSearchRes
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${customContactSearchRes.id}`,
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
+
               }
               responseMessage(data.requestId, { data: 'ok' });
               break;

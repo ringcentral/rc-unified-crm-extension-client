@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { showNotification } from '../lib/util';
-function getCustomContactSearch() {
+function getCustomContactSearch({ contactSearchAdapterButton = "contactSearchAdapterButton" }) {
     return {
         id: 'searchContact',
         type: 'page',
@@ -12,7 +12,7 @@ function getCustomContactSearch() {
                     type: 'string',
                     title: 'Contact Search'
                 },
-                contactSearchAdapterButton: {
+                [contactSearchAdapterButton]: {
                     type: 'string',
                     title: 'Search'
                 }
@@ -25,7 +25,7 @@ function getCustomContactSearch() {
             contactNameToSearch: {
                 "ui:placeholder": 'enter contact name to search',
             },
-            contactSearchAdapterButton: {
+            [contactSearchAdapterButton]: {
                 "ui:field": "button",
                 "ui:variant": "contained", // "text", "outlined", "contained", "plain"
                 "ui:fullWidth": true
@@ -35,7 +35,8 @@ function getCustomContactSearch() {
         }
     }
 }
-async function getCustomContactSearchData({ serverUrl, platform, contactSearch }) {
+
+async function getCustomContactSearchData({ serverUrl, platform, contactSearch, pageId }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const contactRes = await axios.get(`${serverUrl}/custom/contact/search?jwtToken=${rcUnifiedCrmExtJwt}&name=${contactSearch}`);
     if (contactRes.data.contact.length === 0) {
@@ -53,7 +54,7 @@ async function getCustomContactSearchData({ serverUrl, platform, contactSearch }
             })
         }
         return {
-            id: 'searchContactResult',
+            id: pageId,
             title: 'Select Contact to Add',
             type: 'page',
             schema: {
