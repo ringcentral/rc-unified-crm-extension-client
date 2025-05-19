@@ -689,6 +689,15 @@ window.addEventListener('message', async (e) => {
                     const selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
                     const { cacheLogPageData } = await chrome.storage.local.get("cacheLogPageData");
                     const contactData = cacheLogPageData.contactInfo;
+                    if (contactData.length > 0) {
+                      const cachedSearchContactKey = `rc-crm-search-contact-${contactData[0].phone}`;
+                      const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
+                      let contactArr = storageObj[cachedSearchContactKey] || [];
+                      if (!contactArr.some(c => c.id === selectedContact.id)) {
+                        contactArr.push(selectedContact);
+                      }
+                      await chrome.storage.local.set({ [cachedSearchContactKey]: contactArr });
+                    }
                     if (!contactData.some(c => c.id === selectedContact.id)) {
                       contactData.push(selectedContact);
                     }
@@ -1164,6 +1173,15 @@ window.addEventListener('message', async (e) => {
                 // eslint-disable-next-line no-fallthrough
                 case 'createLog':
                   const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
+                  const cachedSearchContactKey = `rc-crm-search-contact-${contactPhoneNumber}`;
+                  const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
+                  const cachedContacts = storageObj[cachedSearchContactKey] || [];
+
+                  for (const cachedContact of cachedContacts) {
+                    if (!callMatchedContact.some(c => c.id === cachedContact.id)) {
+                      callMatchedContact.push(cachedContact);
+                    }
+                  }
                   let defaultingContact = callMatchedContact?.length > 0 ? callMatchedContact[0] : null;
                   if (data.body.call.toNumberEntity) {
                     if (callMatchedContact.some(c => c.id == data.body.call.toNumberEntity)) {
