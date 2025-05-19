@@ -687,14 +687,15 @@ window.addEventListener('message', async (e) => {
                 case 'searchContactResult':
                   if (data.body.keys.some(k => k === "contactInfo")) {
                     const selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
-                    // await chrome.storage.local.set({ [`rc-crm-search-contact-${contactPhoneNumber}`]: selectedContact });
                     const { cacheLogPageData } = await chrome.storage.local.get("cacheLogPageData");
                     const contactData = cacheLogPageData.contactInfo;
                     if (!contactData.some(c => c.id === selectedContact.id)) {
                       contactData.push(selectedContact);
                     }
                     const cachedLogPage = await logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData });
+                    // Set the selected contact as the default contact in the form
                     cachedLogPage.formData.contactInfo = [selectedContact];
+                    cachedLogPage.formData.contact = selectedContact.id; // Set the selected contact ID
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-update-call-log-page',
                       page: cachedLogPage
