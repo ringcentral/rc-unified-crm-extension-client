@@ -1644,6 +1644,24 @@ window.addEventListener('message', async (e) => {
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
                     platformName
                   });
+                  const cachedSearchContactKey = `rc-crm-search-contact-${data.body.conversation.correspondents[0].phoneNumber}`;
+                  const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
+                  const cachedContacts = storageObj[cachedSearchContactKey] || [];
+
+                  for (const cachedContact of cachedContacts) {
+                    if (!getContactMatchResult?.contactInfo?.some(c => c.id === cachedContact.id)) {
+                      getContactMatchResult?.contactInfo.push(cachedContact);
+                    }
+                  }
+                  for (let i = getContactMatchResult?.contactInfo?.length - 1; i >= 0; i--) {
+                    if (getContactMatchResult?.contactInfo[i]?.id === 'searchContact') {
+                      getContactMatchResult?.contactInfo?.splice(i, 1);
+                    }
+                  }
+                  getContactMatchResult?.contactInfo.push({
+                    id: 'searchContact',
+                    name: `Search ${platformName}`
+                  });
                   // add your codes here to log call to your service
                   let messagePage = await logPage.getLogPageRender({
                     id: data.body.conversation.conversationId,
