@@ -1208,21 +1208,24 @@ window.addEventListener('message', async (e) => {
                   const cachedSearchContactKey = `rc-crm-search-contact-${contactPhoneNumber}`;
                   const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
                   const cachedContacts = storageObj[cachedSearchContactKey] || [];
-
                   for (const cachedContact of cachedContacts) {
                     if (!callMatchedContact.some(c => c.id === cachedContact.id)) {
                       callMatchedContact.push(cachedContact);
                     }
                   }
+                  let hasSearchContact = false;
                   for (let i = callMatchedContact.length - 1; i >= 0; i--) {
                     if (callMatchedContact[i].id === 'searchContact') {
                       callMatchedContact.splice(i, 1);
+                      hasSearchContact = true;
                     }
                   }
-                  callMatchedContact.push({
-                    id: 'searchContact',
-                    name: `Search ${platformName}`
-                  });
+                  if (hasSearchContact) {
+                    callMatchedContact.push({
+                      id: 'searchContact',
+                      name: `Search ${platformName}`
+                    });
+                  }
                   let defaultingContact = callMatchedContact?.length > 0 ? callMatchedContact[0] : null;
                   if (data.body.call.toNumberEntity) {
                     if (callMatchedContact.some(c => c.id == data.body.call.toNumberEntity)) {
@@ -1653,15 +1656,19 @@ window.addEventListener('message', async (e) => {
                       getContactMatchResult?.contactInfo.push(cachedContact);
                     }
                   }
+                  let hasSearchContact = false;
                   for (let i = getContactMatchResult?.contactInfo?.length - 1; i >= 0; i--) {
                     if (getContactMatchResult?.contactInfo[i]?.id === 'searchContact') {
                       getContactMatchResult?.contactInfo?.splice(i, 1);
+                      hasSearchContact = true;
                     }
                   }
-                  getContactMatchResult?.contactInfo.push({
-                    id: 'searchContact',
-                    name: `Search ${platformName}`
-                  });
+                  if (hasSearchContact) {
+                    getContactMatchResult?.contactInfo.push({
+                      id: 'searchContact',
+                      name: `Search ${platformName}`
+                    });
+                  }
                   // add your codes here to log call to your service
                   let messagePage = await logPage.getLogPageRender({
                     id: data.body.conversation.conversationId,
