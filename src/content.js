@@ -17,7 +17,7 @@ async function checkUrlMatch() {
     }
     const platformInfo = await chrome.storage.local.get('platform-info');
     if (!isObjectEmpty(platformInfo)) {
-      const customCrmManifest = await getManifest();
+      const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
       const embedUrls = customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.embedUrls;
       if (embedUrls) {
         const currentUrl = window.location.href;

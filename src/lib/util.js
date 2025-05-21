@@ -99,15 +99,20 @@ async function getPlatformInfo() {
 }
 
 function renderCRMSetupErrorPage() {
-  const crmSetupErrorPageRender = crmSetupErrorPage.getCRMSetupErrorPageRender();
-  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-    type: 'rc-adapter-register-customized-page',
-    page: crmSetupErrorPageRender
-  });
-  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-    type: 'rc-adapter-navigate-to',
-    path: '/customized/crmSetupErrorPage', // page id
-  }, '*');
+  try{
+    const crmSetupErrorPageRender = crmSetupErrorPage.getCRMSetupErrorPageRender();
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+      type: 'rc-adapter-register-customized-page',
+      page: crmSetupErrorPageRender
+    });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+      type: 'rc-adapter-navigate-to',
+      path: '/customized/crmSetupErrorPage', // page id
+    }, '*');
+  }
+  catch (e) {
+    console.log(e);
+  }
   trackCRMSetupError();
 }
 

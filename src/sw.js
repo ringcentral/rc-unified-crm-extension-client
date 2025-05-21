@@ -79,7 +79,7 @@ async function openPopupWindow() {
 async function registerPlatform(tabUrl) {
   const url = new URL(tabUrl);
   let hostname = url.hostname;
-  const customCrmManifest = await getManifest();
+  const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
   if (customCrmManifest) {
     manifest = customCrmManifest;
   }
@@ -151,7 +151,7 @@ chrome.windows.onBoundsChanged.addListener(async (window) => {
 });
 
 chrome.alarms.onAlarm.addListener(async () => {
-  const customCrmManifest = await getManifest();
+  const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
   manifest = customCrmManifest;
   const { loginWindowInfo } = await chrome.storage.local.get('loginWindowInfo');
   if (!loginWindowInfo) {
