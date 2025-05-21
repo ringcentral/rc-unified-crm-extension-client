@@ -23,6 +23,49 @@ async function dismissNotification({ notificationId }) {
   }
 }
 
+async function getManifest() {
+  const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
+  const platformInfo = await getPlatformInfo();
+  const override = customCrmManifest.platforms[platformInfo.platformName]?.override;
+  if (override) {
+    for (const overrideItem of override) {
+      switch (overrideItem.triggerType) {
+        case 'hostname':
+          if (overrideItem.triggerValue === platformInfo.hostname) {
+            for (const overrideObj of overrideItem.overrideObjects) {
+              setValueByPath(customCrmManifest.platforms[platformInfo.platformName], overrideObj.path, overrideObj.value);
+            }
+          }
+          break;
+      }
+    }
+  }
+  return customCrmManifest;
+}
+
+function setValueByPath(obj, path, value) {
+  // Convert path to an array of keys
+  const keys = path.split('.');
+
+  // Get a reference to the object to traverse
+  let current = obj;
+
+  // Iterate through the keys, stopping before the last one
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+
+    // If the current key doesn't exist or is not an object, create an empty object
+    if (!current[key] || typeof current[key] !== 'object') {
+      current[key] = {};
+    }
+    // Move to the next level
+    current = current[key];
+  }
+
+  // Set the value at the final key
+  current[keys[keys.length - 1]] = value;
+}
+
 function responseMessage(responseId, response) {
   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
     type: 'rc-post-message-response',
@@ -56,15 +99,20 @@ async function getPlatformInfo() {
 }
 
 function renderCRMSetupErrorPage() {
-  const crmSetupErrorPageRender = crmSetupErrorPage.getCRMSetupErrorPageRender();
-  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-    type: 'rc-adapter-register-customized-page',
-    page: crmSetupErrorPageRender
-  });
-  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-    type: 'rc-adapter-navigate-to',
-    path: '/customized/crmSetupErrorPage', // page id
-  }, '*');
+  try{
+    const crmSetupErrorPageRender = crmSetupErrorPage.getCRMSetupErrorPageRender();
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+      type: 'rc-adapter-register-customized-page',
+      page: crmSetupErrorPageRender
+    });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+      type: 'rc-adapter-navigate-to',
+      path: '/customized/crmSetupErrorPage', // page id
+    }, '*');
+  }
+  catch (e) {
+    console.log(e);
+  }
   trackCRMSetupError();
 }
 
@@ -112,8 +160,8 @@ function downloadTextFile({ filename, text }) {
   document.body.removeChild(element);
 }
 
-function cleanUpExpiredStorage(){
-  chrome.storage.local.get(null, function(items) {
+function cleanUpExpiredStorage() {
+  chrome.storage.local.get(null, function (items) {
     // 'items' is an object containing all key-value pairs
     // stored in chrome.storage.local.
     console.log("Start cleaning expired items");
@@ -121,14 +169,14 @@ function cleanUpExpiredStorage(){
     // You can now process the 'items' object
     for (let key in items) {
       if (Object.prototype.hasOwnProperty.call(items, key)) {
-        if(items[key].expiry && items[key].expiry < Date.now()){
+        if (items[key].expiry && items[key].expiry < Date.now()) {
           keysToBeDeleted.push(key);
         }
       }
     }
     // Now you can delete the keys that are expired
     keysToBeDeleted.forEach(key => {
-      chrome.storage.local.remove(key, function() {
+      chrome.storage.local.remove(key, function () {
         console.log(`Key ${key} removed`);
       });
     });
@@ -138,6 +186,7 @@ function cleanUpExpiredStorage(){
 exports.secondsToHourMinuteSecondString = secondsToHourMinuteSecondString;
 exports.showNotification = showNotification;
 exports.dismissNotification = dismissNotification;
+exports.getManifest = getManifest;
 exports.responseMessage = responseMessage;
 exports.isObjectEmpty = isObjectEmpty;
 exports.getRcInfo = getRcInfo;

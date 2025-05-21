@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getRcAccessToken } from '../lib/util';
+import { getRcAccessToken, getManifest } from '../lib/util';
 import adminCore from './admin';
 
 async function preloadUserSettingsFromAdmin({ serverUrl }) {
@@ -46,7 +46,7 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         return;
     }
     const rcAccessToken = getRcAccessToken();
-    const { customCrmManifest: manifest } = await chrome.storage.local.get({ customCrmManifest: null });
+    const manifest = await getManifest();
     let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
 
     if (changedSettings) {

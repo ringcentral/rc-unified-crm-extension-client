@@ -1,4 +1,4 @@
-import { isObjectEmpty } from './lib/util';
+import { isObjectEmpty, getManifest } from './lib/util';
 import baseManifest from './manifest.json';
 import packageJson from '../package.json';
 

@@ -4,7 +4,7 @@ import dispositionCore from './core/disposition';
 import userCore from './core/user';
 import adminCore from './core/admin';
 import authCore from './core/auth';
-import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getPlatformInfo } from './lib/util';
+import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getPlatformInfo, getManifest } from './lib/util';
 import { getUserInfo } from './lib/rcAPI';
 import moment from 'moment';
 import logPage from './components/logPage';
@@ -75,7 +75,7 @@ checkC2DCollision();
 getCustomManifest();
 
 async function getCustomManifest() {
-  const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
+  const customCrmManifest = await getManifest();
   if (customCrmManifest) {
     manifest = customCrmManifest;
     setAuthor(customCrmManifest.author?.name ?? "");
@@ -172,7 +172,7 @@ window.addEventListener('message', async (e) => {
               console.error('Cannot find platform info');
               return;
             }
-            manifest = (await chrome.storage.local.get({ customCrmManifest: {} }))?.customCrmManifest;
+            manifest = await getManifest();
             platform = manifest.platforms[platformInfo.platformName]
             platformName = platformInfo.platformName;
             platformHostname = platformInfo.hostname;
@@ -208,7 +208,7 @@ window.addEventListener('message', async (e) => {
             console.error('Cannot find platform info');
             return;
           }
-          manifest = (await chrome.storage.local.get({ customCrmManifest: {} }))?.customCrmManifest;
+          manifest = await getManifest();
           platform = manifest.platforms[platformInfo.platformName]
           platformName = platformInfo.platformName;
           platformHostname = platformInfo.hostname;

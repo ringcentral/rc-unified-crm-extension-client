@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { showNotification } from '../lib/util';
+import { showNotification, getManifest } from '../lib/util';
 import { trackCrmAuthFail } from '../lib/analytics';
 import { getServiceManifest } from '../service/embeddableServices';
 
 async function bullhornHeartbeat() {
     console.log('checking bullhorn heartbeat...')
-    const { customCrmManifest: manifest } = await chrome.storage.local.get({ customCrmManifest: {} });
+    const manifest = await getManifest();
     const { rcUnifiedCrmExtJwt: token } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     try {
         const response = await axios.get(`${manifest.serverUrl}/authValidation?jwtToken=${token}`);
