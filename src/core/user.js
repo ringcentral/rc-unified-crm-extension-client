@@ -49,27 +49,14 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     const { customCrmManifest: manifest } = await chrome.storage.local.get({ customCrmManifest: null });
     let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
 
-    if (!changedSettings) {
-        await chrome.storage.local.set({ userSettings });
-        const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
-        const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
-        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-            type: 'rc-adapter-update-ai-assistant-settings',
-            showAiAssistantWidget: showAiAssistantWidgetSetting?.value ?? false,
-            showAiAssistantWidgetReadOnly: showAiAssistantWidgetSetting?.readOnly ?? false,
-            showAiAssistantWidgetReadOnlyReason: showAiAssistantWidgetSetting?.readOnlyReason ?? '',
-            autoStartAiAssistant: autoStartAiAssistantSetting?.value ?? false,
-            autoStartAiAssistantReadOnly: autoStartAiAssistantSetting?.readOnly ?? false,
-            autoStartAiAssistantReadOnlyReason: autoStartAiAssistantSetting?.readOnlyReason ?? '',
-        }, '*');
-        return userSettings;
-    }
-    for (const k of Object.keys(changedSettings)) {
-        if (userSettings[k] === undefined || !userSettings[k].value) {
-            userSettings[k] = changedSettings[k];
-        }
-        else {
-            userSettings[k].value = changedSettings[k].value;
+    if (changedSettings) {
+        for (const k of Object.keys(changedSettings)) {
+            if (userSettings[k] === undefined || !userSettings[k].value) {
+                userSettings[k] = changedSettings[k];
+            }
+            else {
+                userSettings[k].value = changedSettings[k].value;
+            }
         }
     }
     await chrome.storage.local.set({ userSettings });
