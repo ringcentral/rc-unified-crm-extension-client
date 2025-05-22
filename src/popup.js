@@ -706,6 +706,10 @@ window.addEventListener('message', async (e) => {
                     cachedLogPage.formData.contactInfo = [selectedContact];
                     cachedLogPage.formData.contact = selectedContact.id; // Set the selected contact ID
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-trigger-contact-match',
+                      phoneNumbers: [contactData[0]?.phone],
+                    }, '*');
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-update-call-log-page',
                       page: cachedLogPage
                     });
