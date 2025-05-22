@@ -4,21 +4,7 @@ import conflictLogIcon from '../images/conflictLogIcon.png';
 import smsMessageIcon from '../images/smsMessageIcon.png';
 import logCore from '../core/log';
 
-async function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved }) {
-    await chrome.storage.local.set({
-        cacheLogPageData: {
-            id,
-            manifest,
-            logType,
-            triggerType,
-            platformName,
-            direction,
-            contactInfo,
-            logInfo,
-            loggedContactId,
-            isUnresolved
-        }
-    });
+function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved }) {
     const additionalChoiceFields = logType === 'Call' ?
         manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'selection') ?? [] :
         manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'selection') ?? [];
