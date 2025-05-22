@@ -451,7 +451,20 @@ window.addEventListener('message', async (e) => {
                     note,
                     subject: callLogSubject,
                   }
-                  let callPage = await logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId: null });
+                  const cacheLogPageData = {
+                    id: data.call.sessionId,
+                    manifest,
+                    logType: 'Call',
+                    triggerType: 'createLog',
+                    platformName,
+                    direction: data.call.direction,
+                    contactInfo: callMatchedContact ?? [],
+                    logInfo,
+                    loggedContactId: null,
+                    isUnresolved: undefined
+                  };
+                  await chrome.storage.local.set({ cacheLogPageData });
+                  let callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId: null });
                   // default form value from user settings
                   if (data.call.direction === 'Inbound') {
                     callPage = await logPageFormDataDefaulting({
@@ -464,8 +477,7 @@ window.addEventListener('message', async (e) => {
                   if (data.call.direction === 'Outbound') {
                     callPage = await logPageFormDataDefaulting({
                       platform,
-                      targetPage:
-                        callPage,
+                      targetPage: callPage,
                       caseType: 'outboundCall',
                       logType: 'callLog'
                     });
@@ -701,7 +713,7 @@ window.addEventListener('message', async (e) => {
                     if (!contactData.some(c => c.id === selectedContact.id)) {
                       contactData.push(selectedContact);
                     }
-                    const cachedLogPage = await logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData });
+                    const cachedLogPage = logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData });
                     // Set the selected contact as the default contact in the form
                     cachedLogPage.formData.contactInfo = [selectedContact];
                     cachedLogPage.formData.contact = selectedContact.id; // Set the selected contact ID
@@ -736,7 +748,7 @@ window.addEventListener('message', async (e) => {
                     if (!contactData.some(c => c.id === selectedContact.id)) {
                       contactData.push(selectedContact);
                     }
-                    const cachedLogPage = await logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData });
+                    const cachedLogPage = logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData });
                     // Set the selected contact as the default contact in the form
                     cachedLogPage.formData.contactInfo = [selectedContact];
                     cachedLogPage.formData.contact = selectedContact.id; // Set the selected contact ID
@@ -1341,8 +1353,20 @@ window.addEventListener('message', async (e) => {
                     if (existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`]) {
                       loggedContactId = existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`].contact?.id ?? null;
                     }
+                    const cacheLogPageData = {
+                      id: data.body.call.sessionId,
+                      manifest,
+                      logType: 'Call',
+                      triggerType: data.body.triggerType,
+                      platformName,
+                      direction: data.body.call.direction,
+                      contactInfo: callMatchedContact ?? [],
+                      logInfo,
+                      loggedContactId
+                    };
+                    await chrome.storage.local.set({ cacheLogPageData });
                     // add your codes here to log call to your service
-                    let callPage = await logPage.getLogPageRender({
+                    let callPage = logPage.getLogPageRender({
                       id: data.body.call.sessionId,
                       manifest,
                       logType: 'Call',
@@ -1674,7 +1698,17 @@ window.addEventListener('message', async (e) => {
                     });
                   }
                   // add your codes here to log call to your service
-                  let messagePage = await logPage.getLogPageRender({
+                  const cacheLogPageData = {
+                    id: data.body.conversation.conversationId,
+                    manifest,
+                    logType: 'Message',
+                    triggerType: data.body.triggerType,
+                    platformName,
+                    direction: '',
+                    contactInfo: getContactMatchResult.contactInfo ?? []
+                  };
+                  await chrome.storage.local.set({ cacheLogPageData });
+                  let messagePage = logPage.getLogPageRender({
                     id: data.body.conversation.conversationId,
                     manifest,
                     logType: 'Message',
