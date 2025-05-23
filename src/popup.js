@@ -937,11 +937,10 @@ window.addEventListener('message', async (e) => {
                       expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
                     }
                   });
-                  if (data.body.redirect) {
-                    showNotification({ level: 'warning', message: 'This call is answered elsewhere in call queue', ttl: 3000 });
+                  if (!data.body.redirect) {
+                    responseMessage(data.requestId, { data: 'ok' });
+                    break;
                   }
-                  responseMessage(data.requestId, { data: 'ok' });
-                  break;
                 }
               }
               if (data.body.call.queueCall) {
@@ -967,11 +966,10 @@ window.addEventListener('message', async (e) => {
                       expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
                     }
                   });
-                  if (data.body.redirect) {
-                    showNotification({ level: 'warning', message: 'This call is answered elsewhere in call queue', ttl: 3000 });
+                  if (!data.body.redirect) {
+                    responseMessage(data.requestId, { data: 'ok' });
+                    break;
                   }
-                  responseMessage(data.requestId, { data: 'ok' });
-                  break;
                 }
               }
               const isFinalDataResult = data.body?.call?.action !== undefined;
@@ -1362,18 +1360,6 @@ window.addEventListener('message', async (e) => {
                 } else {
                   noLocalMatchedSessionIds.push(sessionId);
                 }
-
-                const isCallQueue = await chrome.storage.local.get({ [`is-call-queue-${sessionId}`]: { isQueue: false } });
-                if (isCallQueue[`is-call-queue-${sessionId}`]?.isQueue && isCallQueue[`is-call-queue-${sessionId}`]?.warning) {
-                  callLogMatchData[sessionId] = [
-                    {
-                      type: 'status',
-                      status: 'failed',
-                      message: isCallQueue[`is-call-queue-${sessionId}`]?.warning
-                    }
-                  ];
-
-                }
               }
               if (noLocalMatchedSessionIds.length > 0) {
                 const { successful, callLogs } = await logCore.getLog({ serverUrl: manifest.serverUrl, logType: 'Call', sessionIds: noLocalMatchedSessionIds.toString(), requireDetails: false });
@@ -1384,6 +1370,18 @@ window.addEventListener('message', async (e) => {
                     if (correspondingLog?.matched) {
                       callLogMatchData[sessionId] = [{ id: sessionId, note: '' }];
                       newLocalMatchedCallLogRecords[`rc-crm-call-log-${sessionId}`] = { logId: correspondingLog.logId, contact: { id: correspondingLog.contact?.id } };
+                    }
+                    else {
+                      const isCallQueue = await chrome.storage.local.get({ [`is-call-queue-${sessionId}`]: { isQueue: false } });
+                      if (isCallQueue[`is-call-queue-${sessionId}`]?.isQueue && isCallQueue[`is-call-queue-${sessionId}`]?.warning) {
+                        callLogMatchData[sessionId] = [
+                          {
+                            type: 'status',
+                            status: 'failed',
+                            message: isCallQueue[`is-call-queue-${sessionId}`]?.warning
+                          }
+                        ];
+                      }
                     }
                   }
                   await chrome.storage.local.set(newLocalMatchedCallLogRecords);
