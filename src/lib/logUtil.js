@@ -97,7 +97,7 @@ async function getLogConflictInfo({
     }
     let hasConflict = false;
     let autoSelectAdditionalSubmission = {};
-    const existingContactInfo = contactInfo.filter(c => !c.isNewContact && c.type !== 'utility');
+    const existingContactInfo = contactInfo.filter(c => !c.isNewContact);
     let defaultingContact = existingContactInfo.find(c => c.toNumberEntity);
     if (existingContactInfo.length === 0) {
         hasConflict = true;

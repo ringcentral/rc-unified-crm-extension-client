@@ -186,9 +186,9 @@ async function getCachedNote({ sessionId }) {
 }
 
 function getConflictContentFromUnresolvedLog(log) {
-    const isMultipleContact = log.contactInfo.filter(c => !c.isNewContact && c.type !== 'utility').length > 1;
-    const isNoContact = log.contactInfo.filter(c => !c.isNewContact && c.type !== 'utility').length === 1 && log.contactInfo.some(c => c.isNewContact);
-    const contactName = isMultipleContact ? 'Multiple contacts' : log.contactInfo.find(c => !c.isNewContact && c.type !== 'utility').name;
+    const isMultipleContact = log.contactInfo.filter(c => !c.isNewContact).length > 1;
+    const isNoContact = log.contactInfo.filter(c => !c.isNewContact).length === 1 && log.contactInfo.some(c => c.isNewContact);
+    const contactName = isMultipleContact ? 'Multiple contacts' : log.contactInfo.find(c => !c.isNewContact).name;
     if (isMultipleContact || isNoContact) {
         return {
             title: `${contactName} ${log?.phoneNumber ? `(${log?.phoneNumber})` : ''}`,
@@ -197,7 +197,7 @@ function getConflictContentFromUnresolvedLog(log) {
     }
     else {
         const multiplAssociations = [];
-        const targetContact = log.contactInfo.find(c => !c.isNewContact && c.type !== 'utility');
+        const targetContact = log.contactInfo.find(c => !c.isNewContact);
         for (const association of Object.keys(targetContact.additionalInfo)) {
             if (Array.isArray(targetContact.additionalInfo[association]) || targetContact.additionalInfo[association].length > 1) {
                 const associationPascalCaseWithSpace = association
