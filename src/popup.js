@@ -698,7 +698,10 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'contactSearchResultCallLog':
                   if (data.body.keys.some(k => k === "contactInfo")) {
-                    const selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
+                    let selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
+                    // Ensure isNewContact is not set for real contacts
+                    selectedContact = { ...selectedContact };
+                    delete selectedContact.isNewContact;
                     const { cacheLogPageData } = await chrome.storage.local.get("cacheLogPageData");
                     const contactData = cacheLogPageData.contactInfo;
                     if (!contactData.some(c => c.id === selectedContact.id)) {
@@ -713,7 +716,7 @@ window.addEventListener('message', async (e) => {
                       }
                       await chrome.storage.local.set({ [cachedSearchContactKey]: contactArr });
                     }
-                    const cachedLogPage = logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData });
+                    const cachedLogPage = logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData.map(c => ({ ...c, isNewContact: undefined })) });
                     // Set the selected contact as the default contact in the form
                     cachedLogPage.formData.contactInfo = [selectedContact];
                     cachedLogPage.formData.contact = selectedContact.id; // Set the selected contact ID
@@ -733,7 +736,10 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'contactSearchResultMessageLog':
                   if (data.body.keys.some(k => k === "contactInfo")) {
-                    const selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
+                    let selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
+                    // Ensure isNewContact is not set for real contacts
+                    selectedContact = { ...selectedContact };
+                    delete selectedContact.isNewContact;
                     const { cacheLogPageData } = await chrome.storage.local.get("cacheLogPageData");
                     const contactData = cacheLogPageData.contactInfo;
                     if (contactData.length > 0) {
@@ -748,7 +754,7 @@ window.addEventListener('message', async (e) => {
                     if (!contactData.some(c => c.id === selectedContact.id)) {
                       contactData.push(selectedContact);
                     }
-                    const cachedLogPage = logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData });
+                    const cachedLogPage = logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData.map(c => ({ ...c, isNewContact: undefined })) });
                     // Set the selected contact as the default contact in the form
                     cachedLogPage.formData.contactInfo = [selectedContact];
                     cachedLogPage.formData.contact = selectedContact.id; // Set the selected contact ID
