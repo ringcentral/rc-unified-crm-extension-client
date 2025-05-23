@@ -196,7 +196,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
         if (!contactMatched) {
             return;
         }
-        const isMultipleContact = contactInfo.filter(c => !c.isNewContact).length > 1;
+        const isMultipleContact = contactInfo.filter(c => !c.isNewContact && c.type !== 'utility').length > 1;
         if (isMultipleContact) {
             if (!multiContactMatchBehavior) {
                 return;
@@ -212,7 +212,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                         const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
                         if (crm_extension_bullhorn_user_urls?.atsUrl) {
                             for (const c of contactInfo) {
-                                if (c.isNewContact) {
+                                if (c.isNewContact || c.type === 'utility') {
                                     continue;
                                 }
                                 const newTab = window.open(`${crm_extension_bullhorn_user_urls.atsUrl}/BullhornStaffing/OpenWindow.cfm?Entity=${c.type}&id=${c.id}&view=Overview`, '_blank', 'popup');
@@ -223,7 +223,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                     }
                     else {
                         for (const c of contactInfo) {
-                            if (c.isNewContact) {
+                            if (c.isNewContact || c.type === 'utility') {
                                 continue;
                             }
                             const hostname = platformInfo['platform-info'].hostname;
@@ -237,7 +237,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                     break;
                 case 'promptToSelect':
                     // open prompt page
-                    const multiContactPopPromptPageRender = multiContactPopPromptPage.getMultiContactPopPromptPageRender({ contactInfo: contactInfo.filter(c => !c.isNewContact) });
+                    const multiContactPopPromptPageRender = multiContactPopPromptPage.getMultiContactPopPromptPageRender({ contactInfo: contactInfo.filter(c => !c.isNewContact && c.type !== 'utility') });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                         type: 'rc-adapter-register-customized-page',
                         page: multiContactPopPromptPageRender

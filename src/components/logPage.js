@@ -118,7 +118,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     }
                 };
             }
-            else if (contactList.length === 1 && defaultContact.isNewContact) {
+            else if (contactList.filter(c => c.type !== 'utility').length === 1 && defaultContact.isNewContact) {
                 warningField = {
                     warning: {
                         type: 'string',
@@ -126,7 +126,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     }
                 };
             }
-            if (contactList.length === 1 && contactList.some(c => c.isNewContact)) { requiredFieldNames.push('newContactName') };
+            if (contactList.filter(c => c.type !== 'utility').length === 1 && contactList.some(c => c.isNewContact)) { requiredFieldNames.push('newContactName') };
             let newContactWidget = {
                 newContactName: {
                     "ui:widget": "hidden",

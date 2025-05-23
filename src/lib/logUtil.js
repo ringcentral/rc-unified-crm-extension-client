@@ -10,8 +10,8 @@ function getAdditionalFieldDefaultValuesFromSetting({
     if (!!additionalFields && !!platform.settings && platform.settings.length > 0) {
         for (const field of additionalFields) {
             let defaultValueSetting = null;
-            for(const setting of platform.settings){
-                if(setting.id === field.defaultSettingId){
+            for (const setting of platform.settings) {
+                if (setting.id === field.defaultSettingId) {
                     defaultValueSetting = setting;
                     break;
                 }
@@ -74,11 +74,10 @@ function allowBullhornCustomNoteAction({ platformName, userSettings }) {
 // A fuzzy string compare that ignores cases and spaces
 function rawValueCompare(value1 = '', value2 = '') {
     // check if value1 is a number
-    if(!Number.isNaN(value1))
-    {
+    if (!Number.isNaN(value1)) {
         return value1 === value2;
     }
-    else{
+    else {
         return value1.toLowerCase().replace(/\s/g, '') === value2.toLowerCase().replace(/\s/g, '');
     }
 }
@@ -98,7 +97,7 @@ async function getLogConflictInfo({
     }
     let hasConflict = false;
     let autoSelectAdditionalSubmission = {};
-    const existingContactInfo = contactInfo.filter(c => !c.isNewContact);
+    const existingContactInfo = contactInfo.filter(c => !c.isNewContact && c.type !== 'utility');
     let defaultingContact = existingContactInfo.find(c => c.toNumberEntity);
     if (existingContactInfo.length === 0) {
         hasConflict = true;
