@@ -303,7 +303,7 @@ async function getServiceManifest() {
                         id: 'autoOpenExtension',
                         type: 'boolean',
                         name: 'Auto-open extension',
-                        description: 'Every time a CRM page is loaded, the extension will be opened automatically.',
+                        description: 'The extension will be opened when a CRM page is loaded.',
                         value: userCore.getAutoOpenSetting(userSettings).value,
                         readOnly: userCore.getAutoOpenSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoOpenSetting(userSettings).readOnlyReason
