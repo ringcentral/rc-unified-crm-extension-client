@@ -371,11 +371,6 @@ window.addEventListener('message', async (e) => {
               type: 'rc-adapter-update-authorization-status',
               authorized: crmAuthed
             }, '*');
-            const serviceManifest = await embeddableServices.getServiceManifest();
-            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-              type: 'rc-adapter-register-third-party-service',
-              service: serviceManifest
-            }, '*');
             setInterval(function () {
               logService.forceCallLogMatcherCheck();
             }, 600000)
@@ -1691,11 +1686,6 @@ window.addEventListener('message', async (e) => {
               if (data.body.setting.id === "developerMode") {
                 showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
                 await chrome.storage.local.set({ developerMode: data.body.setting.value });
-                const serviceManifest = await embeddableServices.getServiceManifest();
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                  type: 'rc-adapter-register-third-party-service',
-                  service: serviceManifest
-                }, '*');
               }
               else if (data.body.setting.id === "autoOpenWithCRM") {
                 showNotification({ level: 'success', message: `Auto open is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
@@ -1720,10 +1710,6 @@ window.addEventListener('message', async (e) => {
                   await chrome.storage.local.set({ adminSettings });
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
                   await userCore.refreshUserSettings({});
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-register-third-party-service',
-                    service: (await embeddableServices.getServiceManifest())
-                  }, '*');
                   showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
@@ -1907,10 +1893,6 @@ window.addEventListener('message', async (e) => {
                     await chrome.storage.local.set({ adminSettings });
                     await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
                     await userCore.refreshUserSettings({});
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-register-third-party-service',
-                      service: (await embeddableServices.getServiceManifest())
-                    }, '*');
                     showNotification({ level: 'success', message: 'Custom manifest file uploaded.', ttl: 5000 });
                   }
                   break;

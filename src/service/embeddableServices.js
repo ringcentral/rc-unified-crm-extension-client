@@ -7,6 +7,7 @@ async function getServiceManifest() {
     const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
     const { developerMode } = await chrome.storage.local.get({ developerMode: false });
+    const { crmUserInfo } = (await chrome.storage.local.get({ crmUserInfo: null }));
     const platformInfo = await getPlatformInfo();
     const manifest = await getManifest();
     const platform = manifest.platforms[platformInfo.platformName];
@@ -28,7 +29,7 @@ async function getServiceManifest() {
         authorizationLogo: platform?.logoUrl ?? '',
         showAuthRedDot: true,
         authorized: crmAuthed,
-        authorizedAccount: '',
+        authorizedAccount: `${crmUserInfo?.name ?? ''} (Admin)`,
         info: `Developed by ${manifest?.author?.name ?? 'Unknown'}`,
 
         // Enable call log sync feature
@@ -293,6 +294,7 @@ async function getServiceManifest() {
                         id: 'developerMode',
                         type: 'boolean',
                         name: 'Developer mode',
+                        description: 'Enable developer mode to access developer settings.',
                         value: userCore.getDeveloperModeSetting(userSettings, developerMode).value,
                         readOnly: userCore.getDeveloperModeSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getDeveloperModeSetting(userSettings).readOnlyReason
@@ -301,6 +303,7 @@ async function getServiceManifest() {
                         id: 'autoOpenExtension',
                         type: 'boolean',
                         name: 'Auto-open extension',
+                        description: 'Every time a CRM page is loaded, the extension will be opened automatically.',
                         value: userCore.getAutoOpenSetting(userSettings).value,
                         readOnly: userCore.getAutoOpenSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoOpenSetting(userSettings).readOnlyReason

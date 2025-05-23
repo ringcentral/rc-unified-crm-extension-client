@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getRcAccessToken, getManifest } from '../lib/util';
 import adminCore from './admin';
+import { getServiceManifest } from '../service/embeddableServices';
 
 async function preloadUserSettingsFromAdmin({ serverUrl }) {
     const rcAccessToken = getRcAccessToken();
@@ -86,6 +87,10 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
             autoStartAiAssistantReadOnlyReason: autoStartAiAssistantSetting?.readOnlyReason ?? '',
         }, '*');
     }
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-third-party-service',
+        service: (await getServiceManifest())
+    }, '*');
     return userSettings;
 }
 
