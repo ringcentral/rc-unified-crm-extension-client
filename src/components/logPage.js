@@ -66,8 +66,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
         if (logInfo?.dispositions?.[f.const]) {
             additionalFieldsValue[f.const] = logInfo.dispositions[f.const];
         }
-        else if(defaultContact.additionalInfo[f.const][0]?.const)
-        {
+        else if (defaultContact.additionalInfo[f.const][0]?.const) {
             additionalFieldsValue[f.const] = defaultContact.additionalInfo[f.const][0].const;
         }
         if (additionalFieldsValue[f.const] && !additionalFields[f.const].oneOf.some(af => af.const === additionalFieldsValue[f.const])) {
@@ -156,7 +155,13 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         contact: {
                             title: 'Contact',
                             type: 'string',
-                            oneOf: contactList
+                            oneOf: manifest.platforms[platformName].page?.useContactSearch ?
+                                [...contactList, {
+                                    const: 'searchContact',
+                                    title: `Search ${platformName}`,
+                                    additionalInfo: null,
+                                    type: "utility"
+                                }] : contactList
                         },
                         newContactName: {
                             title: 'New contact name',
