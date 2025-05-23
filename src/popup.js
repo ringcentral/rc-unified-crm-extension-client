@@ -857,24 +857,26 @@ window.addEventListener('message', async (e) => {
                     if (!matchedContacts[contactPhoneNumber]) {
                       matchedContacts[contactPhoneNumber] = [];
                     }
-                    for (const contactInfoItem of contactInfo) {
-                      if (contactInfoItem.isNewContact) {
-                        continue;
+                    if (contactInfo.some(c => !c.isNewContact && c.type !== 'utility')) {
+                      for (const contactInfoItem of contactInfo) {
+                        if (contactInfoItem.isNewContact) {
+                          continue;
+                        }
+                        matchedContacts[contactPhoneNumber].push({
+                          id: contactInfoItem.id,
+                          type: platformName,
+                          name: contactInfoItem.name,
+                          phoneNumbers: [
+                            {
+                              phoneNumber: contactPhoneNumber,
+                              phoneType: 'direct'
+                            }
+                          ],
+                          entityType: platformName,
+                          contactType: contactInfoItem.type,
+                          additionalInfo: contactInfoItem.additionalInfo
+                        });
                       }
-                      matchedContacts[contactPhoneNumber].push({
-                        id: contactInfoItem.id,
-                        type: platformName,
-                        name: contactInfoItem.name,
-                        phoneNumbers: [
-                          {
-                            phoneNumber: contactPhoneNumber,
-                            phoneType: 'direct'
-                          }
-                        ],
-                        entityType: platformName,
-                        contactType: contactInfoItem.type,
-                        additionalInfo: contactInfoItem.additionalInfo
-                      });
                     }
                     if (matchedContacts[contactPhoneNumber].length > 0) {
                       console.log(`contact matched for ${contactPhoneNumber}`);
