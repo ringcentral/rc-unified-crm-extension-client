@@ -464,7 +464,7 @@ window.addEventListener('message', async (e) => {
                     isUnresolved: undefined
                   };
                   await chrome.storage.local.set({ cacheLogPageData });
-                  let callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId: null });
+                  let callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId: null, contactPhoneNumber });
                   // default form value from user settings
                   if (data.call.direction === 'Inbound') {
                     callPage = await logPageFormDataDefaulting({
@@ -701,17 +701,17 @@ window.addEventListener('message', async (e) => {
                     const selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
                     const { cacheLogPageData } = await chrome.storage.local.get("cacheLogPageData");
                     const contactData = cacheLogPageData.contactInfo;
+                    if (!contactData.some(c => c.id === selectedContact.id)) {
+                      contactData.push(selectedContact);
+                    }
                     if (contactData.length > 0) {
-                      const cachedSearchContactKey = `rc-crm-search-contact-${contactData[0].phone}`;
+                      const cachedSearchContactKey = `rc-crm-search-contact-${data.body.formData?.contactPhoneNumber}`;
                       const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
                       let contactArr = storageObj[cachedSearchContactKey] || [];
                       if (!contactArr.some(c => c.id === selectedContact.id)) {
                         contactArr.push(selectedContact);
                       }
                       await chrome.storage.local.set({ [cachedSearchContactKey]: contactArr });
-                    }
-                    if (!contactData.some(c => c.id === selectedContact.id)) {
-                      contactData.push(selectedContact);
                     }
                     const cachedLogPage = logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData });
                     // Set the selected contact as the default contact in the form
@@ -737,7 +737,7 @@ window.addEventListener('message', async (e) => {
                     const { cacheLogPageData } = await chrome.storage.local.get("cacheLogPageData");
                     const contactData = cacheLogPageData.contactInfo;
                     if (contactData.length > 0) {
-                      const cachedSearchContactKey = `rc-crm-search-contact-${contactData[0].phone}`;
+                      const cachedSearchContactKey = `rc-crm-search-contact-${data.body.formData?.contactPhoneNumber}`;
                       const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
                       let contactArr = storageObj[cachedSearchContactKey] || [];
                       if (!contactArr.some(c => c.id === selectedContact.id)) {
@@ -1362,7 +1362,8 @@ window.addEventListener('message', async (e) => {
                       direction: data.body.call.direction,
                       contactInfo: callMatchedContact ?? [],
                       logInfo,
-                      loggedContactId
+                      loggedContactId,
+                      contactPhoneNumber
                     });
 
                     // create log page defaulting
@@ -1413,7 +1414,7 @@ window.addEventListener('message', async (e) => {
                 page
               }, '*');
               if (data.body.formData.contact === 'searchContact') {
-                const contactSearchRender = contactSearch.getCustomContactSearch({ contactSearchAdapterButton: "contactSearchAdapterButtonCallLog" });
+                const contactSearchRender = contactSearch.getCustomContactSearch({ contactSearchAdapterButton: "contactSearchAdapterButtonCallLog", contactPhoneNumber: data.body.formData?.contactPhoneNumber });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-register-customized-page',
                   page: contactSearchRender
@@ -1689,7 +1690,8 @@ window.addEventListener('message', async (e) => {
                     triggerType: data.body.triggerType,
                     platformName,
                     direction: '',
-                    contactInfo: getContactMatchResult.contactInfo ?? []
+                    contactInfo: getContactMatchResult.contactInfo ?? [],
+                    contactPhoneNumber: data.body?.conversation?.correspondents[0]?.phoneNumber,
                   });
                   switch (data.body.conversation.type) {
                     case 'SMS':
@@ -1740,7 +1742,7 @@ window.addEventListener('message', async (e) => {
                 page: updatedPage
               }, '*');
               if (data.body.formData.contact === 'searchContact') {
-                const contactSearchRender = contactSearch.getCustomContactSearch({ contactSearchAdapterButton: "contactSearchAdapterButtonMessageLog" });
+                const contactSearchRender = contactSearch.getCustomContactSearch({ contactSearchAdapterButton: "contactSearchAdapterButtonMessageLog", contactPhoneNumber: data.body.formData?.contactPhoneNumber });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-register-customized-page',
                   page: contactSearchRender
@@ -2161,7 +2163,7 @@ window.addEventListener('message', async (e) => {
                 case 'contactSearchAdapterButtonCallLog':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const contactToBeSearch = data.body.button.formData.contactNameToSearch;
-                  const customContactSearchResponse = await contactSearch.getCustomContactSearchData({ serverUrl: manifest.serverUrl, platform, contactSearch: contactToBeSearch, pageId: "contactSearchResultCallLog" });
+                  const customContactSearchResponse = await contactSearch.getCustomContactSearchData({ serverUrl: manifest.serverUrl, platform, contactSearch: contactToBeSearch, pageId: "contactSearchResultCallLog", contactPhoneNumber: data.body.button.formData?.contactPhoneNumber });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: customContactSearchResponse
@@ -2176,7 +2178,7 @@ window.addEventListener('message', async (e) => {
                 case 'contactSearchAdapterButtonMessageLog':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const contactNameToBeSearch = data.body.button.formData.contactNameToSearch;
-                  const customContactSearchRes = await contactSearch.getCustomContactSearchData({ serverUrl: manifest.serverUrl, platform, contactSearch: contactNameToBeSearch, pageId: "contactSearchResultMessageLog" });
+                  const customContactSearchRes = await contactSearch.getCustomContactSearchData({ serverUrl: manifest.serverUrl, platform, contactSearch: contactNameToBeSearch, pageId: "contactSearchResultMessageLog", contactPhoneNumber: data.body.button.formData?.contactPhoneNumber });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: customContactSearchRes

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { showNotification } from '../lib/util';
-function getCustomContactSearch({ contactSearchAdapterButton = "contactSearchAdapterButton" }) {
+function getCustomContactSearch({ contactSearchAdapterButton = "contactSearchAdapterButton", contactPhoneNumber }) {
     return {
         id: 'searchContact',
         type: 'page',
@@ -32,11 +32,12 @@ function getCustomContactSearch({ contactSearchAdapterButton = "contactSearchAda
             }
         },
         formData: {
+            contactPhoneNumber
         }
     }
 }
 
-async function getCustomContactSearchData({ serverUrl, platform, contactSearch, pageId }) {
+async function getCustomContactSearchData({ serverUrl, platform, contactSearch, pageId, contactPhoneNumber }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const contactRes = await axios.get(`${serverUrl}/custom/contact/search?jwtToken=${rcUnifiedCrmExtJwt}&name=${contactSearch}`);
     if (contactRes.data.contact.length === 0) {
@@ -75,6 +76,7 @@ async function getCustomContactSearchData({ serverUrl, platform, contactSearch, 
             },
             formData: {
                 search: contactSearch ?? '',
+                contactPhoneNumber,
                 contactInfo
             }
         }
