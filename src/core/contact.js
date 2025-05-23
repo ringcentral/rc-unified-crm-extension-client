@@ -82,22 +82,8 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
         const cachedContacts = storageObj[cachedSearchContactKey] || [];
         for (const cachedContact of cachedContacts) {
             if (!contactRes.data.contact.some(c => c.id === cachedContact.id)) {
-                contactRes.data.contact.push(cachedContact);
+                contactRes.data.contact.unshift(cachedContact);
             }
-        }
-        // Move searchContact to the end of the list
-        let hasSearchContact = false;
-        for (let i = contactRes.data.contact.length - 1; i >= 0; i--) {
-            if (contactRes.data.contact[i].id === 'searchContact') {
-                contactRes.data.contact.splice(i, 1);
-                hasSearchContact = true;
-            }
-        }
-        if (hasSearchContact) {
-            contactRes.data.contact.push({
-                id: 'searchContact',
-                name: `Search ${platformName}`
-            });
         }
         return {
             matched: contactRes.data.successful,
