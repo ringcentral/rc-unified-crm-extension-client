@@ -720,6 +720,8 @@ window.addEventListener('message', async (e) => {
                     // Set the selected contact as the default contact in the form
                     cachedLogPage.formData.contactInfo = [selectedContact];
                     cachedLogPage.formData.contact = selectedContact.id; // Set the selected contact ID
+                    cachedLogPage.formData.contactType = selectedContact.type; // Set the contact type
+                    cachedLogPage.formData.contactName = selectedContact.name; // Set the contact name
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-trigger-contact-match',
                       phoneNumbers: [contactData[0]?.phone],
@@ -758,6 +760,8 @@ window.addEventListener('message', async (e) => {
                     // Set the selected contact as the default contact in the form
                     cachedLogPage.formData.contactInfo = [selectedContact];
                     cachedLogPage.formData.contact = selectedContact.id; // Set the selected contact ID
+                    cachedLogPage.formData.contactType = selectedContact.type; // Set the contact type
+                    cachedLogPage.formData.contactName = selectedContact.name; // Set the contact name
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-update-messages-log-page',
                       page: cachedLogPage

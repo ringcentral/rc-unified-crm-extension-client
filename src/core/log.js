@@ -88,8 +88,7 @@ async function addLog({
 
                 break;
             case 'Message':
-                if(logInfo.type === 'Fax')
-                {
+                if (logInfo.type === 'Fax') {
                     // eslint-disable-next-line no-param-reassign
                     logInfo.rcAccessToken = rcAccessToken;
                 }
