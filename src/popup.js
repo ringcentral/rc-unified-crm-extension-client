@@ -888,6 +888,27 @@ window.addEventListener('message', async (e) => {
                   contactType: c.type,
                   additionalInfo: c.additionalInfo
                 }));
+                const cachedSearchContactKey = `rc-crm-search-contact-${data.body.phoneNumbers[0]}`;
+                const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
+                const cachedContacts = storageObj[cachedSearchContactKey] || [];
+                for (const cachedContact of cachedContacts) {
+                  if (!formattedMactchContacts.some(c => c.id === cachedContact.id)) {
+                    formattedMactchContacts.unshift({
+                      id: cachedContact.id,
+                      type: platformName,
+                      name: cachedContact.name,
+                      phoneNumbers: [
+                        {
+                          phoneNumber: cachedContact.phone,
+                          phoneType: 'direct'
+                        }
+                      ],
+                      entityType: platformName,
+                      contactType: cachedContact.type,
+                      additionalInfo: cachedContact.additionalInfo
+                    });
+                  }
+                }
                 matchedContacts[data.body.phoneNumbers[0]] = [
                   ...platformContactMatching,
                   ...formattedMactchContacts
