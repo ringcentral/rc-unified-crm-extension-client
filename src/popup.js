@@ -857,7 +857,7 @@ window.addEventListener('message', async (e) => {
                     if (!matchedContacts[contactPhoneNumber]) {
                       matchedContacts[contactPhoneNumber] = [];
                     }
-                    if (contactInfo.some(c => !c.isNewContact && c.type !== 'utility')) {
+                    if (contactInfo.some(c => !c.isNewContact)) {
                       for (const contactInfoItem of contactInfo) {
                         if (contactInfoItem.isNewContact) {
                           continue;
