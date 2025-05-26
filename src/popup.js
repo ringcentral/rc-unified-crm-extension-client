@@ -47,7 +47,7 @@ import {
 import logService from './service/logService';
 import embeddableServices from './service/embeddableServices';
 import { logPageFormDataDefaulting, getLogConflictInfo } from './lib/logUtil';
-import { bullhornHeartbeat } from './misc/bullhorn';
+import { bullhornHeartbeat, tryConnectToBullhorn } from './misc/bullhorn';
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
@@ -234,10 +234,10 @@ window.addEventListener('message', async (e) => {
             }
             // Unique: Bullhorn
             if (platform.name === 'bullhorn' && crmAuthed) {
-              bullhornHeartbeat();
+              bullhornHeartbeat({ platform });
               // every 30 min, 
               setInterval(function () {
-                bullhornHeartbeat();
+                bullhornHeartbeat({ platform });
               }, 1800000);
             }
 
@@ -608,48 +608,11 @@ window.addEventListener('message', async (e) => {
                     // Unique: Pipedrive
                     if (platformName === 'pipedrive') {
                       authUri = manifest.platforms.pipedrive.auth.oauth.redirectUri;
+                      handleThirdPartyOAuthWindow(authUri);
                     }
                     // Unique: Bullhorn
                     else if (platformName === 'bullhorn') {
-                      let { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
-                      if (crm_extension_bullhorn_user_urls?.oauthUrl) {
-                        authUri = `${crm_extension_bullhorn_user_urls.oauthUrl}/authorize?` +
-                          `response_type=code` +
-                          `&action=Login` +
-                          `&client_id=${platform.auth.oauth.clientId}` +
-                          `&state=platform=${platform.name}` +
-                          '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
-                      }
-                      else {
-                        const { crm_extension_bullhornUsername } = await chrome.storage.local.get({ crm_extension_bullhornUsername: null });
-                        showNotification({
-                          level: 'warning',
-                          message: 'Login failure. Refresh Bullhorn page and try again.',
-                          details: [
-                            {
-                              title: 'Details',
-                              items: [
-                                {
-                                  id: '1',
-                                  type: 'text',
-                                  text: `To connect to Bullhorn successfully, please open up the Bullhorn app and reload the page in your browser. Then click the "Connect" button again.`
-                                }
-                              ]
-                            }
-                          ],
-                          ttl: 30000
-                        });
-                        const { data: crm_extension_bullhorn_user_urls } = await axios.get(`https://rest.bullhornstaffing.com/rest-services/loginInfo?username=${crm_extension_bullhornUsername}`);
-                        await chrome.storage.local.set({ crm_extension_bullhorn_user_urls });
-                        if (crm_extension_bullhorn_user_urls?.oauthUrl) {
-                          authUri = `${crm_extension_bullhorn_user_urls.oauthUrl}/authorize?` +
-                            `response_type=code` +
-                            `&action=Login` +
-                            `&client_id=${platform.auth.oauth.clientId}` +
-                            `&state=platform=${platform.name}` +
-                            '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
-                        }
-                      }
+                      await tryConnectToBullhorn({ platform });
                     }
                     else {
                       authUri = `${platform.auth.oauth.authUrl}?` +
@@ -658,8 +621,8 @@ window.addEventListener('message', async (e) => {
                         `${!!platform.auth.oauth.scope && platform.auth.oauth.scope != '' ? `&${platform.auth.oauth.scope}` : ''}` +
                         `&state=${customState === '' ? `platform=${platform.name}` : customState}` +
                         '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
+                      handleThirdPartyOAuthWindow(authUri);
                     }
-                    handleThirdPartyOAuthWindow(authUri);
                     break;
                   case 'apiKey':
                     const authPageRender = authPage.getAuthPageRender({ manifest, platformName });
