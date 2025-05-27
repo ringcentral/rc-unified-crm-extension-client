@@ -77,6 +77,14 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
                 phoneNumbers: [phoneNumber],
             }, '*');
         }
+        const cachedSearchContactKey = `rc-crm-search-contact-${phoneNumber}`;
+        const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
+        const cachedContacts = storageObj[cachedSearchContactKey] || [];
+        for (const cachedContact of cachedContacts) {
+            if (!contactRes.data.contact.some(c => c.id === cachedContact.id)) {
+                contactRes.data.contact.unshift(cachedContact);
+            }
+        }
         return {
             matched: contactRes.data.successful,
             returnMessage: contactRes.data.returnMessage,

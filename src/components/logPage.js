@@ -4,7 +4,7 @@ import conflictLogIcon from '../images/conflictLogIcon.png';
 import smsMessageIcon from '../images/smsMessageIcon.png';
 import logCore from '../core/log';
 
-function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved }) {
+function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved, contactPhoneNumber }) {
     const additionalChoiceFields = logType === 'Call' ?
         manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'selection') ?? [] :
         manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'selection') ?? [];
@@ -16,6 +16,13 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
         manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [];
     // format contact list
     const contactList = contactInfo.map(c => { return { const: c.id, title: c.name, type: c.type, description: c.type ? `${c.type} - ${c.id}` : '', toNumberEntity: c.toNumberEntity ?? false, additionalInfo: c.additionalInfo, isNewContact: !!c.isNewContact } });
+    if (manifest.platforms[platformName].page?.useContactSearch) {
+        contactList.push({
+            const: 'searchContact',
+            title: `Search ${platformName}`,
+            additionalInfo: null
+        });
+    }
     const defaultContact = contactList.some(c => c.toNumberEntity) ? contactList.find(c => c.toNumberEntity) : (contactList[0] ?? null);
     const defaultActivityTitle = direction === 'Inbound' ?
         `Inbound ${logType} from ${defaultContact?.title ?? ''}` :
@@ -66,8 +73,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
         if (logInfo?.dispositions?.[f.const]) {
             additionalFieldsValue[f.const] = logInfo.dispositions[f.const];
         }
-        else if(defaultContact.additionalInfo[f.const][0]?.const)
-        {
+        else if (defaultContact.additionalInfo[f.const][0]?.const) {
             additionalFieldsValue[f.const] = defaultContact.additionalInfo[f.const][0].const;
         }
         if (additionalFieldsValue[f.const] && !additionalFields[f.const].oneOf.some(af => af.const === additionalFieldsValue[f.const])) {
@@ -229,6 +235,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     contactName: defaultContact?.title ?? '',
                     triggerType,
                     logType,
+                    contactPhoneNumber,
                     isUnresolved: !!isUnresolved,
                     ...callFormData,
                     ...additionalFieldsValue
@@ -280,6 +287,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     activityTitle: logInfo?.subject ?? '',
                     triggerType,
                     note: logInfo?.note ?? '',
+                    contactPhoneNumber,
                     ...additionalFieldsValue
                 }
             }
