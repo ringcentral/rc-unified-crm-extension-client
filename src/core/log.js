@@ -86,7 +86,7 @@ async function addLog({
                             type: 'rc-adapter-navigate-to',
                             path: `/history`
                         }, '*');
-                    }, 100);
+                    }, 1000);
                 }
                 break;
             case 'Message':
@@ -120,7 +120,7 @@ async function addLog({
                             type: 'rc-adapter-navigate-to',
                             path: `/messages`
                         }, '*');
-                    }, 100);
+                    }, 1000);
                 }
                 break;
         }

@@ -717,15 +717,33 @@ window.addEventListener('message', async (e) => {
                       }
                       await chrome.storage.local.set({ [cachedSearchContactKey]: contactArr });
                     }
-                    const cachedLogPage = logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData.map(c => ({ ...c, isNewContact: undefined })) });
-                    // Set the selected contact as the default contact in the form
-                    cachedLogPage.formData.contactInfo = [selectedContact];
-                    cachedLogPage.formData.contact = selectedContact.id; // Set the selected contact ID
-                    cachedLogPage.formData.contactType = selectedContact.type; // Set the contact type
-                    cachedLogPage.formData.contactName = selectedContact.name; // Set the contact name
+                    // First get the initial log page
+                    const initialLogPage = logPage.getLogPageRender({
+                      ...cacheLogPageData,
+                      contactInfo: contactData.map(c => ({ ...c, isNewContact: undefined }))
+                    });
+
+                    // Then update it with the selected contact
+                    const cachedLogPage = logPage.getUpdatedLogPageRender({
+                      manifest,
+                      platformName,
+                      logType: 'Call',
+                      updateData: {
+                        page: initialLogPage,
+                        formData: {
+                          ...initialLogPage.formData,
+                          contact: selectedContact.id,
+                          contactType: selectedContact.type,
+                          contactName: selectedContact.name,
+                          contactInfo: contactData.map(c => ({ ...c, isNewContact: undefined })),
+                          returnToHistoryPage: true
+                        },
+                        keys: ['contact']
+                      }
+                    });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-trigger-contact-match',
-                      phoneNumbers: [contactData[0]?.phone],
+                      phoneNumbers: [data.body.formData?.contactPhoneNumber],
                     }, '*');
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-update-call-log-page',
@@ -733,7 +751,7 @@ window.addEventListener('message', async (e) => {
                     });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-navigate-to',
-                      path: `/log/call/${cacheLogPageData.id}`, // page id
+                      path: `/log/call/${cacheLogPageData.id}`,
                     }, '*');
                   }
                   break;
@@ -757,12 +775,28 @@ window.addEventListener('message', async (e) => {
                     if (!contactData.some(c => c.id === selectedContact.id)) {
                       contactData.push(selectedContact);
                     }
-                    const cachedLogPage = logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData.map(c => ({ ...c, isNewContact: undefined })) });
-                    // Set the selected contact as the default contact in the form
-                    cachedLogPage.formData.contactInfo = [selectedContact];
-                    cachedLogPage.formData.contact = selectedContact.id; // Set the selected contact ID
-                    cachedLogPage.formData.contactType = selectedContact.type; // Set the contact type
-                    cachedLogPage.formData.contactName = selectedContact.name; // Set the contact name
+                    const initialLogPage = logPage.getLogPageRender({ ...cacheLogPageData, contactInfo: contactData.map(c => ({ ...c, isNewContact: undefined })) });
+                    const cachedLogPage = logPage.getUpdatedLogPageRender({
+                      manifest,
+                      platformName,
+                      logType: 'Call',
+                      updateData: {
+                        page: initialLogPage,
+                        formData: {
+                          ...initialLogPage.formData,
+                          contact: selectedContact.id,
+                          contactType: selectedContact.type,
+                          contactName: selectedContact.name,
+                          contactInfo: contactData.map(c => ({ ...c, isNewContact: undefined })),
+                          returnToHistoryPage: true
+                        },
+                        keys: ['contact']
+                      }
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-trigger-contact-match',
+                      phoneNumbers: [data.body.formData?.contactPhoneNumber],
+                    }, '*');
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-update-messages-log-page',
                       page: cachedLogPage
