@@ -334,6 +334,19 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
 }
 
 function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }) {
+    //TODO need to discuss this case with Da
+    if (platformName === 'redtail' && updateData?.formData?.contact === 'searchContact') {
+        if (updateData?.page?.schema?.properties?.contact?.oneOf) {
+            const contactOptions = updateData.page.schema.properties.contact.oneOf;
+            const searchContactOption = contactOptions.find(option => option.const === 'searchContact');
+            if (searchContactOption) {
+                const contactWithInfo = contactOptions.find(option => option.additionalInfo);
+                if (contactWithInfo?.additionalInfo) {
+                    searchContactOption.additionalInfo = contactWithInfo.additionalInfo;
+                }
+            }
+        }
+    }
     const updatedFieldKey = updateData.keys[0];
     let page = updateData.page;
     // update target field value
