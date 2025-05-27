@@ -5,15 +5,6 @@ import smsMessageIcon from '../images/smsMessageIcon.png';
 import logCore from '../core/log';
 
 function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved, contactPhoneNumber }) {
-    const additionalChoiceFields = logType === 'Call' ?
-        manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'selection') ?? [] :
-        manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'selection') ?? [];
-    const additionalCheckBoxFields = logType === 'Call' ?
-        manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [] :
-        manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [];
-    const additionalInputFields = logType === 'Call' ?
-        manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [] :
-        manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [];
     // format contact list
     const contactList = contactInfo.map(c => { return { const: c.id, title: c.name, type: c.type, description: c.type ? `${c.type} - ${c.id}` : '', toNumberEntity: c.toNumberEntity ?? false, additionalInfo: c.additionalInfo, isNewContact: !!c.isNewContact } });
     if (manifest.platforms[platformName].page?.useContactSearch) {
@@ -60,55 +51,74 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
     let requiredFieldNames = [];
     let additionalFields = {};
     let additionalFieldsValue = {};
-    for (const f of additionalChoiceFields) {
-        if (defaultContact?.additionalInfo?.[f.const] === undefined) {
-            continue;
-        }
-        additionalFields[f.const] = {
-            title: f.title,
-            type: 'string',
-            oneOf: [...defaultContact.additionalInfo[f.const], { const: 'none', title: 'None' }],
-            associationField: !!f.contactDependent
-        }
-        if (logInfo?.dispositions?.[f.const]) {
-            additionalFieldsValue[f.const] = logInfo.dispositions[f.const];
-        }
-        else if (defaultContact.additionalInfo[f.const][0]?.const) {
-            additionalFieldsValue[f.const] = defaultContact.additionalInfo[f.const][0].const;
-        }
-        if (additionalFieldsValue[f.const] && !additionalFields[f.const].oneOf.some(af => af.const === additionalFieldsValue[f.const])) {
-            additionalFields[f.const].oneOf.push({ const: additionalFieldsValue[f.const], title: additionalFieldsValue[f.const] });
-        }
-        if (f.required) {
-            requiredFieldNames.push(f.const);
-        }
-    }
-    for (const f of additionalCheckBoxFields) {
-        if (defaultContact?.additionalInfo?.[f.const] === undefined) {
-            continue;
-        }
-        additionalFields[f.const] = {
-            title: f.title,
-            type: 'boolean',
-            associationField: !!f.contactDependent
-        }
-        additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? (f.defaultValue ?? false);
-        if (f.required) {
-            requiredFieldNames.push(f.const);
-        }
-    }
-    for (const f of additionalInputFields) {
-        if (defaultContact?.additionalInfo?.[f.const] ?? false) {
-            continue;
-        }
-        additionalFields[f.const] = {
-            title: f.title,
-            type: 'string',
-            associationField: !!f.contactDependent
-        }
-        additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? (f.defaultValue ?? '');
-        if (f.required) {
-            requiredFieldNames.push(f.const);
+    const addiitionalWarningUISchemas = {};
+    const allAdditionalFields = logType === 'Call' ? manifest.platforms[platformName].page?.callLog?.additionalFields : manifest.platforms[platformName].page?.messageLog?.additionalFields;
+    if (allAdditionalFields) {
+        for (const f of allAdditionalFields) {
+            switch (f.type) {
+                case 'selection':
+                    if (defaultContact?.additionalInfo?.[f.const] === undefined) {
+                        continue;
+                    }
+                    additionalFields[f.const] = {
+                        title: f.title,
+                        type: 'string',
+                        oneOf: [...defaultContact.additionalInfo[f.const], { const: 'none', title: 'None' }],
+                        associationField: !!f.contactDependent
+                    }
+                    if (logInfo?.dispositions?.[f.const]) {
+                        additionalFieldsValue[f.const] = logInfo.dispositions[f.const];
+                    }
+                    else if (defaultContact.additionalInfo[f.const][0]?.const) {
+                        additionalFieldsValue[f.const] = defaultContact.additionalInfo[f.const][0].const;
+                    }
+                    if (additionalFieldsValue[f.const] && !additionalFields[f.const].oneOf.some(af => af.const === additionalFieldsValue[f.const])) {
+                        additionalFields[f.const].oneOf.push({ const: additionalFieldsValue[f.const], title: additionalFieldsValue[f.const] });
+                    }
+                    if (f.required) {
+                        requiredFieldNames.push(f.const);
+                    }
+                    break;
+                case 'checkbox':
+                    if (defaultContact?.additionalInfo?.[f.const] === undefined) {
+                        continue;
+                    }
+                    additionalFields[f.const] = {
+                        title: f.title,
+                        type: 'boolean',
+                        associationField: !!f.contactDependent
+                    }
+                    additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? (f.defaultValue ?? false);
+                    if (f.required) {
+                        requiredFieldNames.push(f.const);
+                    }
+                    break;
+                case 'inputField':
+                    if (defaultContact?.additionalInfo?.[f.const] ?? false) {
+                        continue;
+                    }
+                    additionalFields[f.const] = {
+                        title: f.title,
+                        type: 'string',
+                        associationField: !!f.contactDependent
+                    }
+                    additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? (f.defaultValue ?? '');
+                    if (f.required) {
+                        requiredFieldNames.push(f.const);
+                    }
+                    break;
+                case 'warning':
+                    additionalFields[f.const] = {
+                        title: f.title,
+                        type: 'string',
+                        description: f.description
+                    }
+                    addiitionalWarningUISchemas[f.const] = {
+                        "ui:field": "admonition", // or typography to show raw text
+                        "ui:severity": "warning", // "warning", "info", "error", "success"
+                    }
+                    break;
+            }
         }
     }
     switch (triggerType) {
@@ -224,7 +234,8 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         submitText: 'Save',
                     },
                     ...callUISchemas,
-                    ...newContactWidget
+                    ...newContactWidget,
+                    ...addiitionalWarningUISchemas
                 },
                 formData: {
                     id,
@@ -279,7 +290,8 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     },
                     submitButtonOptions: {
                         submitText: 'Update',
-                    }
+                    },
+                    ...addiitionalWarningUISchemas
                 },
                 formData: {
                     id,
@@ -360,53 +372,74 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             }
             let additionalFields = {};
             let additionalFieldsValue = {};
-            for (const f of additionalChoiceFields) {
-                if (f.contactDependent && (contact?.additionalInfo?.[f.const] === undefined)) {
-                    continue;
-                }
-                additionalFields[f.const] = {
-                    title: f.title,
-                    type: 'string',
-                    oneOf: [...contact.additionalInfo[f.const], { const: 'none', title: 'None' }],
-                    associationField: f.contactDependent
-                }
-                additionalFieldsValue[f.const] = f.contactDependent ?
-                    contact.additionalInfo[f.const][0].const :
-                    page.formData[f.const];
-                if (f.required) {
-                    page.schema.required.push(f.const);
-                }
-            }
-            for (const f of additionalCheckBoxFields) {
-                if (f.contactDependent && (contact?.additionalInfo?.[f.const] === undefined)) {
-                    continue;
-                }
-                additionalFields[f.const] = {
-                    title: f.title,
-                    type: 'boolean',
-                    associationField: f.contactDependent
-                }
-                additionalFieldsValue[f.const] = f.contactDependent ?
-                    f.defaultValue :
-                    page.formData[f.const];
-                if (f.required) {
-                    page.schema.required.push(f.const);
-                }
-            }
-            for (const f of additionalInputFields) {
-                if (f.contactDependent && (contact?.additionalInfo?.[f.const] ?? false)) {
-                    continue;
-                }
-                additionalFields[f.const] = {
-                    title: f.title,
-                    type: 'string',
-                    associationField: f.contactDependent
-                }
-                additionalFieldsValue[f.const] = f.contactDependent ?
-                    f.defaultValue :
-                    page.formData[f.const];
-                if (f.required) {
-                    page.schema.required.push(f.const);
+            const addiitionalWarningUISchemas = {};
+            const allAdditionalFields = logType === 'Call' ?
+                manifest.platforms[platformName].page?.callLog?.additionalFields :
+                manifest.platforms[platformName].page?.messageLog?.additionalFields;
+            if (allAdditionalFields) {
+                for (const f of allAdditionalFields) {
+                    switch (f.type) {
+                        case 'selection':
+                            if (f.contactDependent && (contact?.additionalInfo?.[f.const] === undefined)) {
+                                continue;
+                            }
+                            additionalFields[f.const] = {
+                                title: f.title,
+                                type: 'string',
+                                oneOf: [...contact.additionalInfo[f.const], { const: 'none', title: 'None' }],
+                                associationField: f.contactDependent
+                            }
+                            additionalFieldsValue[f.const] = f.contactDependent ?
+                                contact.additionalInfo[f.const][0].const :
+                                page.formData[f.const];
+                            if (f.required) {
+                                page.schema.required.push(f.const);
+                            }
+                            break;
+                        case 'checkbox':
+                            if (f.contactDependent && (contact?.additionalInfo?.[f.const] === undefined)) {
+                                continue;
+                            }
+                            additionalFields[f.const] = {
+                                title: f.title,
+                                type: 'boolean',
+                                associationField: f.contactDependent
+                            }
+                            additionalFieldsValue[f.const] = f.contactDependent ?
+                                f.defaultValue :
+                                page.formData[f.const];
+                            if (f.required) {
+                                page.schema.required.push(f.const);
+                            }
+                            break;
+                        case 'inputField':
+                            if (f.contactDependent && (contact?.additionalInfo?.[f.const] ?? false)) {
+                                continue;
+                            }
+                            additionalFields[f.const] = {
+                                title: f.title,
+                                type: 'string',
+                                associationField: f.contactDependent
+                            }
+                            additionalFieldsValue[f.const] = f.contactDependent ?
+                                f.defaultValue :
+                                page.formData[f.const];
+                            if (f.required) {
+                                page.schema.required.push(f.const);
+                            }
+                            break;
+                        case 'warning':
+                            additionalFields[f.const] = {
+                                title: f.title,
+                                type: 'string',
+                                description: f.description
+                            }
+                            addiitionalWarningUISchemas[f.const] = {
+                                "ui:field": "admonition", // or typography to show raw text
+                                "ui:severity": "warning", // "warning", "info", "error", "success"
+                            }
+                            break;
+                    }
                 }
             }
             page.schema.properties = {
@@ -416,6 +449,10 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             page.formData = {
                 ...page.formData,
                 ...additionalFieldsValue
+            }
+            page.uiSchema = {
+                ...page.uiSchema,
+                ...addiitionalWarningUISchemas
             }
             break;
         case 'newContactName':

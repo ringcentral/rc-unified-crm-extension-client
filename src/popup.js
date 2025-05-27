@@ -1178,7 +1178,8 @@ window.addEventListener('message', async (e) => {
                           contactId: newContactInfo?.id ?? data.body.formData.contact,
                           contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                           contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
-                          additionalSubmission
+                          additionalSubmission,
+                          returnToHistoryPage: !!data.body.redirect
                         });
                       if (!platform.disableDisposition && !isObjectEmpty(additionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                         await dispositionCore.upsertDisposition({
@@ -1348,7 +1349,8 @@ window.addEventListener('message', async (e) => {
                             additionalSubmission: autoSelectAdditionalSubmission,
                             contactId: defaultingContact?.id,
                             contactType: defaultingContact?.type,
-                            contactName: defaultingContact?.name
+                            contactName: defaultingContact?.name,
+                            returnToHistoryPage: !!data.body.redirect
                           });
                         if (!platform.disableDisposition && !isObjectEmpty(autoSelectAdditionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                           await dispositionCore.upsertDisposition({
@@ -1556,7 +1558,8 @@ window.addEventListener('message', async (e) => {
                     additionalSubmission: existingConversationLogPref[messageLogPrefId].additionalSubmission,
                     contactId: existingConversationLogPref[messageLogPrefId].contact.id,
                     contactType: existingConversationLogPref[messageLogPrefId].contact.type,
-                    contactName: existingConversationLogPref[messageLogPrefId].contact.name
+                    contactName: existingConversationLogPref[messageLogPrefId].contact.name,
+                    returnToHistoryPage: !!data.body.redirect
                   });
                 }
                 else {
@@ -1606,7 +1609,8 @@ window.addEventListener('message', async (e) => {
                           additionalSubmission: autoSelectAdditionalSubmission,
                           contactId: getContactMatchResult[0]?.id,
                           contactType: getContactMatchResult[0]?.type,
-                          contactName: getContactMatchResult[0]?.name
+                          contactName: getContactMatchResult[0]?.name,
+                          returnToHistoryPage: !!data.body.redirect
                         });
                       }
                       if (requireManualDisposition) {
@@ -1641,7 +1645,8 @@ window.addEventListener('message', async (e) => {
                           additionalSubmission: autoSelectAdditionalSubmission,
                           contactId: getContactMatchResult[0]?.id,
                           contactType: getContactMatchResult[0]?.type,
-                          contactName: getContactMatchResult[0]?.name
+                          contactName: getContactMatchResult[0]?.name,
+                          returnToHistoryPage: !!data.body.redirect
                         });
                       }
                       if (requireManualDisposition) {
@@ -1683,7 +1688,8 @@ window.addEventListener('message', async (e) => {
                   additionalSubmission,
                   contactId: newContactInfo?.id ?? data.body.formData.contact,
                   contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
-                  contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName
+                  contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
+                  returnToHistoryPage: !!data.body.redirect
                 });
               }
               // Case: Open page OR auto pop up log page

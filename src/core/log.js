@@ -16,6 +16,7 @@ async function addLog({
     contactType,
     contactName,
     additionalSubmission,
+    returnToHistoryPage = false,
     isShowNotification = true
 }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
@@ -79,13 +80,14 @@ async function addLog({
                     type: 'rc-adapter-trigger-call-logger-match',
                     sessionIds: [logInfo.sessionId]
                 }, '*');
-                setTimeout(() => {
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                        type: 'rc-adapter-navigate-to',
-                        path: `/history`
-                    }, '*');
-                }, 100);
-
+                if (returnToHistoryPage) {
+                    setTimeout(() => {
+                        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                            type: 'rc-adapter-navigate-to',
+                            path: `/history`
+                        }, '*');
+                    }, 100);
+                }
                 break;
             case 'Message':
                 if (logInfo.type === 'Fax') {
@@ -112,13 +114,14 @@ async function addLog({
                     }
                     await chrome.storage.local.set({ [`rc-crm-conversation-log-${logInfo.conversationLogId}`]: { logged: true } });
                 }
-                setTimeout(() => {
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                        type: 'rc-adapter-navigate-to',
-                        path: `/messages`
-                    }, '*');
-                }, 100);
-
+                if (returnToHistoryPage) {
+                    setTimeout(() => {
+                        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                            type: 'rc-adapter-navigate-to',
+                            path: `/messages`
+                        }, '*');
+                    }, 100);
+                }
                 break;
         }
     }
