@@ -1141,7 +1141,8 @@ window.addEventListener('message', async (e) => {
                 case 'logForm':
                   let additionalSubmission = {};
                   const additionalFields = manifest.platforms[platformName].page?.callLog?.additionalFields ?? [];
-                  for (const f of additionalFields) {
+                  const newContactAdditionalFields = manifest.platforms[platformName].page?.newContact?.additionalFields ?? [];
+                  for (const f of additionalFields.concat(newContactAdditionalFields)) {
                     if (data.body.formData[f.const] && data.body.formData[f.const] != "none") {
                       additionalSubmission[f.const] = data.body.formData[f.const];
                     }
@@ -1155,7 +1156,8 @@ window.addEventListener('message', async (e) => {
                           serverUrl: manifest.serverUrl,
                           phoneNumber: contactPhoneNumber,
                           newContactName: data.body.formData.newContactName,
-                          newContactType: data.body.formData.newContactType
+                          newContactType: data.body.formData.newContactType,
+                          additionalSubmission
                         });
                         newContactInfo = createContactResult.contactInfo;
                         const newContactReturnMessage = createContactResult.returnMessage;
@@ -1660,7 +1662,8 @@ window.addEventListener('message', async (e) => {
               else if (data.body.triggerType === 'logForm') {
                 let additionalSubmission = {};
                 const additionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
-                for (const f of additionalFields) {
+                const newContactAdditionalFields = manifest.platforms[platformName].page?.newContact?.additionalFields ?? [];
+                for (const f of additionalFields.concat(newContactAdditionalFields)) {
                   if (data.body.formData[f.const] != "none") {
                     additionalSubmission[f.const] = data.body.formData[f.const];
                   }
@@ -1671,7 +1674,8 @@ window.addEventListener('message', async (e) => {
                     serverUrl: manifest.serverUrl,
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
                     newContactName: data.body.formData.newContactName,
-                    newContactType: data.body.formData.newContactType
+                    newContactType: data.body.formData.newContactType,
+                    additionalSubmission
                   });
                   newContactInfo = newContactResp.contactInfo;
                   if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {

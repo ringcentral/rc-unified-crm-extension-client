@@ -6,7 +6,17 @@ import logCore from '../core/log';
 
 function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved, contactPhoneNumber }) {
     // format contact list
-    const contactList = contactInfo.map(c => { return { const: c.id, title: c.name, type: c.type, description: c.type ? `${c.type} - ${c.id}` : '', toNumberEntity: c.toNumberEntity ?? false, additionalInfo: c.additionalInfo, isNewContact: !!c.isNewContact } });
+    const contactList = contactInfo.map(c => {
+        return {
+            const: c.id,
+            title: c.name,
+            type: c.type,
+            description: c.type ? `${c.type} - ${c.id}` : '', toNumberEntity: c.toNumberEntity ?? false,
+            additionalInfo: c.additionalInfo,
+            isNewContact: !!c.isNewContact,
+            defaultContactType: c.defaultContactType
+        }
+    });
     if (manifest.platforms[platformName].page?.useContactSearch) {
         contactList.push({
             const: 'searchContact',
@@ -52,24 +62,39 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
     let additionalFields = {};
     let additionalFieldsValue = {};
     const addiitionalWarningUISchemas = {};
-    const allAdditionalFields = logType === 'Call' ? manifest.platforms[platformName].page?.callLog?.additionalFields : manifest.platforms[platformName].page?.messageLog?.additionalFields;
+    let allAdditionalFields = logType === 'Call' ? manifest.platforms[platformName].page?.callLog?.additionalFields : manifest.platforms[platformName].page?.messageLog?.additionalFields;
+    if (defaultContact.isNewContact) {
+        allAdditionalFields = allAdditionalFields.concat(manifest.platforms[platformName].page?.newContact?.additionalFields);
+    }
     if (allAdditionalFields) {
         for (const f of allAdditionalFields) {
             switch (f.type) {
                 case 'selection':
-                    if (defaultContact?.additionalInfo?.[f.const] === undefined) {
-                        continue;
+                    if (defaultContact.isNewContact && f.contactTypeDependent) {
+                        additionalFields[f.const] = {
+                            title: f.title,
+                            type: 'string',
+                            oneOf: [...defaultContact.additionalInfo[defaultContact.defaultContactType][f.const], { const: 'none', title: 'None' }],
+                            associationField: !!f.contactDependent
+                        }
                     }
-                    additionalFields[f.const] = {
-                        title: f.title,
-                        type: 'string',
-                        oneOf: [...defaultContact.additionalInfo[f.const], { const: 'none', title: 'None' }],
-                        associationField: !!f.contactDependent
+                    else {
+                        if (defaultContact?.additionalInfo?.[f.const] === undefined) {
+                            continue;
+                        }
+                        additionalFields[f.const] = {
+                            title: f.title,
+                            type: 'string',
+                            oneOf: [...defaultContact.additionalInfo[f.const], { const: 'none', title: 'None' }],
+                            associationField: !!f.contactDependent
+                        }
                     }
+                    // For EDIT log page, if log already has disposition value, use it
                     if (logInfo?.dispositions?.[f.const]) {
                         additionalFieldsValue[f.const] = logInfo.dispositions[f.const];
                     }
-                    else if (defaultContact.additionalInfo[f.const][0]?.const) {
+                    // For CREATE log page, if there is a default disposition, use it
+                    else if (defaultContact.additionalInfo[f.const]?.[0]?.const) {
                         additionalFieldsValue[f.const] = defaultContact.additionalInfo[f.const][0].const;
                     }
                     if (additionalFieldsValue[f.const] && !additionalFields[f.const].oneOf.some(af => af.const === additionalFieldsValue[f.const])) {
@@ -240,7 +265,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 formData: {
                     id,
                     contact: defaultContact.const,
-                    newContactType: '',
+                    newContactType: defaultContact.defaultContactType ?? '',
                     newContactName: '',
                     contactType: defaultContact?.type ?? '',
                     contactName: defaultContact?.title ?? '',
@@ -313,18 +338,9 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
     let page = updateData.page;
     // update target field value
     page.formData = updateData.formData;
-    const additionalChoiceFields = logType === 'Call' ?
-        manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'selection') ?? [] :
-        manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'selection') ?? [];
-    const additionalCheckBoxFields = logType === 'Call' ?
-        manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [] :
-        manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'checkbox') ?? [];
-    const additionalInputFields = logType === 'Call' ?
-        manifest.platforms[platformName].page?.callLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [] :
-        manifest.platforms[platformName].page?.messageLog?.additionalFields?.filter(f => f.type === 'inputField') ?? [];
+    const contact = page.schema.properties.contact.oneOf.find(c => c.const === page.formData.contact);
     switch (updatedFieldKey) {
         case 'contact':
-            const contact = page.schema.properties.contact.oneOf.find(c => c.const === page.formData.contact);
             // New contact fields
             if (contact.isNewContact) {
                 if (manifest.platforms[platformName].contactTypes) {
@@ -373,9 +389,12 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             let additionalFields = {};
             let additionalFieldsValue = {};
             const addiitionalWarningUISchemas = {};
-            const allAdditionalFields = logType === 'Call' ?
+            let allAdditionalFields = logType === 'Call' ?
                 manifest.platforms[platformName].page?.callLog?.additionalFields :
                 manifest.platforms[platformName].page?.messageLog?.additionalFields;
+            if (contact.isNewContact) {
+                allAdditionalFields = allAdditionalFields.concat(manifest.platforms[platformName].page?.newContact?.additionalFields);
+            }
             if (allAdditionalFields) {
                 for (const f of allAdditionalFields) {
                     switch (f.type) {
@@ -453,6 +472,15 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             page.uiSchema = {
                 ...page.uiSchema,
                 ...addiitionalWarningUISchemas
+            }
+            break;
+        case 'newContactType':
+            const contactTypeDependentFields = manifest.platforms[platformName].page?.newContact?.additionalFields?.filter(f => f.contactTypeDependent);
+            for (const f of contactTypeDependentFields) {
+                page.schema.properties[f.const].oneOf = [
+                    ...contact.additionalInfo[page.formData.newContactType][f.const],
+                    { const: 'none', title: 'None' }
+                ]
             }
             break;
         case 'newContactName':
