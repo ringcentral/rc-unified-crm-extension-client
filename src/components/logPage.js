@@ -69,6 +69,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
     }
     if (allAdditionalFields) {
         for (const f of allAdditionalFields) {
+            if (f === undefined || f === null) {
+                continue;
+            }
             switch (f.type) {
                 case 'selection':
                     if (defaultContact.isNewContact && f.contactTypeDependent) {
