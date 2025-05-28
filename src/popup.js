@@ -805,6 +805,7 @@ window.addEventListener('message', async (e) => {
                     subscriptionLevel,
                     doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers,
                     loggingByAdmin: serverSideLoggingSubscription.loggingByAdmin,
+                    activityOwnerList: platform.serverSideLogging?.activityOwner
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
