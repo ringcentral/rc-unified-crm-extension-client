@@ -23,6 +23,10 @@ function getAdminPageRender({ platform }) {
                             title: "Managed settings",
                         },
                         {
+                            const: "customizeTabs",
+                            title: "Customize tabs",
+                        },
+                        {
                             const: "customAdapter",
                             title: "Custom adapter",
                         }

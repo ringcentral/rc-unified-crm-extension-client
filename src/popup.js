@@ -23,6 +23,7 @@ import serverSideLoggingPage from './components/admin/serverSideLoggingPage';
 import contactSettingPage from './components/admin/managedSettings/contactSettingPage';
 import advancedFeaturesSettingPage from './components/admin/managedSettings/advancedFeaturesSettingPage';
 import customSettingsPage from './components/admin/managedSettings/customSettingsPage';
+import customizeTabsSettingPage from './components/admin/managedSettings/customizeTabsSettingPage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
 import {
@@ -784,6 +785,17 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${managedSettingsPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'customizeTabs':
+                  const customizeTabsSettingPageRender = customizeTabsSettingPage.getCustomizeTabsSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: customizeTabsSettingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${customizeTabsSettingPageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'callAndSMSLogging':
@@ -1849,6 +1861,7 @@ window.addEventListener('message', async (e) => {
                 case 'contactSettingPage':
                 case 'advancedFeaturesSettingPage':
                 case 'customSettingsPage':
+                case 'customizeTabsSettingPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const settingDataKeys = Object.keys(data.body.button.formData);
                   for (const k of settingDataKeys) {
