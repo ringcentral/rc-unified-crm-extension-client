@@ -105,7 +105,7 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
     }
 }
 
-async function createContact({ serverUrl, phoneNumber, newContactName, newContactType }) {
+async function createContact({ serverUrl, phoneNumber, newContactName, newContactType, additionalSubmission }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     if (rcUnifiedCrmExtJwt) {
         const contactRes = await axios.post(
@@ -113,7 +113,8 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
             {
                 phoneNumber,
                 newContactName,
-                newContactType
+                newContactType,
+                additionalSubmission
             }
         );
         let tempContactMatchTask = {};

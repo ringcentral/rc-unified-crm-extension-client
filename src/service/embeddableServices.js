@@ -137,43 +137,57 @@ async function getServiceManifest() {
                         id: 'showChatTab',
                         type: 'boolean',
                         name: 'Show chat tab',
-                        value: userCore.getShowChatTabSetting(userSettings).value
+                        value: userCore.getShowChatTabSetting(userSettings).value,
+                        readOnly: userCore.getShowChatTabSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getShowChatTabSetting(userSettings).readOnlyReason
                     },
                     {
                         id: 'showMeetingsTab',
                         type: 'boolean',
                         name: 'Show meetings tab',
-                        value: userCore.getShowMeetingsTabSetting(userSettings).value
+                        value: userCore.getShowMeetingsTabSetting(userSettings).value,
+                        readOnly: userCore.getShowMeetingsTabSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getShowMeetingsTabSetting(userSettings).readOnlyReason
                     },
                     {
                         id: 'showTextTab',
                         type: 'boolean',
                         name: 'Show text tab',
-                        value: userCore.getShowTextTabSetting(userSettings).value
+                        value: userCore.getShowTextTabSetting(userSettings).value,
+                        readOnly: userCore.getShowTextTabSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getShowTextTabSetting(userSettings).readOnlyReason
                     },
                     {
                         id: 'showFaxTab',
                         type: 'boolean',
                         name: 'Show fax tab',
-                        value: userCore.getShowFaxTabSetting(userSettings).value
+                        value: userCore.getShowFaxTabSetting(userSettings).value,
+                        readOnly: userCore.getShowFaxTabSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getShowFaxTabSetting(userSettings).readOnlyReason
                     },
                     {
                         id: 'showVoicemailTab',
                         type: 'boolean',
                         name: 'Show voicemail tab',
-                        value: userCore.getShowVoicemailTabSetting(userSettings).value
+                        value: userCore.getShowVoicemailTabSetting(userSettings).value,
+                        readOnly: userCore.getShowVoicemailTabSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getShowVoicemailTabSetting(userSettings).readOnlyReason
                     },
                     {
                         id: 'showRecordingsTab',
                         type: 'boolean',
                         name: 'Show recordings tab',
-                        value: userCore.getShowRecordingsTabSetting(userSettings).value
+                        value: userCore.getShowRecordingsTabSetting(userSettings).value,
+                        readOnly: userCore.getShowRecordingsTabSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getShowRecordingsTabSetting(userSettings).readOnlyReason
                     },
                     {
                         id: 'showContactsTab',
                         type: 'boolean',
                         name: 'Show contacts tab',
-                        value: userCore.getShowContactsTabSetting(userSettings).value
+                        value: userCore.getShowContactsTabSetting(userSettings).value,
+                        readOnly: userCore.getShowContactsTabSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getShowContactsTabSetting(userSettings).readOnlyReason
                     }
                 ]
             },

@@ -23,6 +23,7 @@ import serverSideLoggingPage from './components/admin/serverSideLoggingPage';
 import contactSettingPage from './components/admin/managedSettings/contactSettingPage';
 import advancedFeaturesSettingPage from './components/admin/managedSettings/advancedFeaturesSettingPage';
 import customSettingsPage from './components/admin/managedSettings/customSettingsPage';
+import customizeTabsSettingPage from './components/admin/managedSettings/customizeTabsSettingPage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
 import {
@@ -786,6 +787,17 @@ window.addEventListener('message', async (e) => {
                     path: `/customized/${managedSettingsPageRender.id}`, // page id
                   }, '*');
                   break;
+                case 'customizeTabs':
+                  const customizeTabsSettingPageRender = customizeTabsSettingPage.getCustomizeTabsSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: customizeTabsSettingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${customizeTabsSettingPageRender.id}`, // page id
+                  }, '*');
+                  break;
                 case 'callAndSMSLogging':
                   const callAndSMSLoggingSettingPageRender = callAndSMSLoggingSettingPage.getCallAndSMSLoggingSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -1142,7 +1154,8 @@ window.addEventListener('message', async (e) => {
                 case 'logForm':
                   let additionalSubmission = {};
                   const additionalFields = manifest.platforms[platformName].page?.callLog?.additionalFields ?? [];
-                  for (const f of additionalFields) {
+                  const newContactAdditionalFields = manifest.platforms[platformName].page?.newContact?.additionalFields ?? [];
+                  for (const f of additionalFields.concat(newContactAdditionalFields)) {
                     if (data.body.formData[f.const] && data.body.formData[f.const] != "none") {
                       additionalSubmission[f.const] = data.body.formData[f.const];
                     }
@@ -1156,7 +1169,8 @@ window.addEventListener('message', async (e) => {
                           serverUrl: manifest.serverUrl,
                           phoneNumber: contactPhoneNumber,
                           newContactName: data.body.formData.newContactName,
-                          newContactType: data.body.formData.newContactType
+                          newContactType: data.body.formData.newContactType,
+                          additionalSubmission
                         });
                         newContactInfo = createContactResult.contactInfo;
                         const newContactReturnMessage = createContactResult.returnMessage;
@@ -1661,7 +1675,8 @@ window.addEventListener('message', async (e) => {
               else if (data.body.triggerType === 'logForm') {
                 let additionalSubmission = {};
                 const additionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
-                for (const f of additionalFields) {
+                const newContactAdditionalFields = manifest.platforms[platformName].page?.newContact?.additionalFields ?? [];
+                for (const f of additionalFields.concat(newContactAdditionalFields)) {
                   if (data.body.formData[f.const] != "none") {
                     additionalSubmission[f.const] = data.body.formData[f.const];
                   }
@@ -1672,7 +1687,8 @@ window.addEventListener('message', async (e) => {
                     serverUrl: manifest.serverUrl,
                     phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
                     newContactName: data.body.formData.newContactName,
-                    newContactType: data.body.formData.newContactType
+                    newContactType: data.body.formData.newContactType,
+                    additionalSubmission
                   });
                   newContactInfo = newContactResp.contactInfo;
                   if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
@@ -1846,6 +1862,7 @@ window.addEventListener('message', async (e) => {
                 case 'contactSettingPage':
                 case 'advancedFeaturesSettingPage':
                 case 'customSettingsPage':
+                case 'customizeTabsSettingPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const settingDataKeys = Object.keys(data.body.button.formData);
                   for (const k of settingDataKeys) {

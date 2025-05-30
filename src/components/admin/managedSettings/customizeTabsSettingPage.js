@@ -1,15 +1,15 @@
-function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
+function getCustomizeTabsSettingPageRender({ adminUserSettings }) {
     return {
-        id: 'callAndSMSLoggingSettingPage',
-        title: 'Call and SMS logging',
+        id: 'customizeTabsSettingPage',
+        title: 'Customize tabs',
         type: 'page',
         schema: {
             type: 'object',
             required: [],
             properties: {
-                autoLogCall: {
+                showChatTab: {
                     type: 'object',
-                    title: 'Log phone calls automatically',
+                    title: 'Show chat tab',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -21,9 +21,9 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
-                autoLogSMS: {
+                showMeetingsTab: {
                     type: 'object',
-                    title: 'Log SMS conversations automatically',
+                    title: 'Show meetings tab',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -35,9 +35,9 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
-                autoLogInboundFax: {
+                showTextTab: {
                     type: 'object',
-                    title: 'Log inbound faxes automatically',
+                    title: 'Show text tab',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -49,9 +49,9 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
-                autoLogOutboundFax: {
+                showFaxTab: {
                     type: 'object',
-                    title: 'Log outbound faxes automatically',
+                    title: 'Show fax tab',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -63,9 +63,9 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
-                disableRetroCallLogSync: {
+                showVoicemailTab: {
                     type: 'object',
-                    title: 'Disable retroactive call log sync',
+                    title: 'Show voicemail tab',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -77,9 +77,9 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
-                oneTimeLog: {
+                showRecordingsTab: {
                     type: 'object',
-                    title: 'Enable one-time call logging',
+                    title: 'Show recordings tab',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -91,23 +91,9 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
-                popupLogPageAfterCall: {
+                showContactsTab: {
                     type: 'object',
-                    title: '(Manual log) Open call logging page after call',
-                    properties: {
-                        customizable: {
-                            type: 'boolean',
-                            title: 'Customizable by user'
-                        },
-                        value: {
-                            type: 'boolean',
-                            title: 'Value'
-                        }
-                    }
-                },
-                popupLogPageAfterSMS: {
-                    type: 'object',
-                    title: '(Manual log) Open SMS logging page after message',
+                    title: 'Show contacts tab',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -122,28 +108,25 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             }
         },
         uiSchema: {
-            autoLogCall: {
+            showChatTab: {
                 "ui:collapsible": true,
             },
-            autoLogSMS: {
+            showMeetingsTab: {
                 "ui:collapsible": true,
             },
-            autoLogInboundFax: {
+            showTextTab: {
                 "ui:collapsible": true,
             },
-            autoLogOutboundFax: {
+            showFaxTab: {
                 "ui:collapsible": true,
             },
-            disableRetroCallLogSync: {
+            showVoicemailTab: {
                 "ui:collapsible": true,
             },
-            oneTimeLog: {
+            showRecordingsTab: {
                 "ui:collapsible": true,
             },
-            popupLogPageAfterCall: {
-                "ui:collapsible": true,
-            },
-            popupLogPageAfterSMS: {
+            showContactsTab: {
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
@@ -151,48 +134,43 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             }
         },
         formData: {
-            autoLogCall:
+            showChatTab:
             {
-                customizable: adminUserSettings?.autoLogCall?.customizable ?? true,
-                value: adminUserSettings?.autoLogCall?.value ?? false
+                customizable: adminUserSettings?.showChatTab?.customizable ?? true,
+                value: adminUserSettings?.showChatTab?.value ?? true
             },
-            autoLogSMS:
+            showMeetingsTab:
             {
-                customizable: adminUserSettings?.autoLogSMS?.customizable ?? true,
-                value: adminUserSettings?.autoLogSMS?.value ?? false
+                customizable: adminUserSettings?.showMeetingsTab?.customizable ?? true,
+                value: adminUserSettings?.showMeetingsTab?.value ?? true
             },
-            autoLogInboundFax:
+            showTextTab:
             {
-                customizable: adminUserSettings?.autoLogInboundFax?.customizable ?? true,
-                value: adminUserSettings?.autoLogInboundFax?.value ?? false
+                customizable: adminUserSettings?.showTextTab?.customizable ?? true,
+                value: adminUserSettings?.showTextTab?.value ?? true
             },
-            autoLogOutboundFax:
+            showFaxTab:
             {
-                customizable: adminUserSettings?.autoLogOutboundFax?.customizable ?? true,
-                value: adminUserSettings?.autoLogOutboundFax?.value ?? false
+                customizable: adminUserSettings?.showFaxTab?.customizable ?? true,
+                value: adminUserSettings?.showFaxTab?.value ?? true
             },
-            disableRetroCallLogSync:
+            showVoicemailTab:
             {
-                customizable: adminUserSettings?.disableRetroCallLogSync?.customizable ?? true,
-                value: adminUserSettings?.disableRetroCallLogSync?.value ?? false
+                customizable: adminUserSettings?.showVoicemailTab?.customizable ?? true,
+                value: adminUserSettings?.showVoicemailTab?.value ?? true
             },
-            oneTimeLog:
+            showRecordingsTab:
             {
-                customizable: adminUserSettings?.oneTimeLog?.customizable ?? true,
-                value: adminUserSettings?.oneTimeLog?.value ?? false
+                customizable: adminUserSettings?.showRecordingsTab?.customizable ?? true,
+                value: adminUserSettings?.showRecordingsTab?.value ?? true
             },
-            popupLogPageAfterCall:
+            showContactsTab:
             {
-                customizable: adminUserSettings?.popupLogPageAfterCall?.customizable ?? true,
-                value: adminUserSettings?.popupLogPageAfterCall?.value ?? false
-            },
-            popupLogPageAfterSMS:
-            {
-                customizable: adminUserSettings?.popupLogPageAfterSMS?.customizable ?? true,
-                value: adminUserSettings?.popupLogPageAfterSMS?.value ?? false
+                customizable: adminUserSettings?.showContactsTab?.customizable ?? true,
+                value: adminUserSettings?.showContactsTab?.value ?? true
             }
         }
     }
 }
 
-exports.getCallAndSMSLoggingSettingPageRender = getCallAndSMSLoggingSettingPageRender;
+exports.getCustomizeTabsSettingPageRender = getCustomizeTabsSettingPageRender;
