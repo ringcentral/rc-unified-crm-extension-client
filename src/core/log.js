@@ -80,14 +80,6 @@ async function addLog({
                     type: 'rc-adapter-trigger-call-logger-match',
                     sessionIds: [logInfo.sessionId]
                 }, '*');
-                if (returnToHistoryPage) {
-                    setTimeout(() => {
-                        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                            type: 'rc-adapter-navigate-to',
-                            path: `/history`
-                        }, '*');
-                    }, 100);
-                }
                 break;
             case 'Message':
                 if (logInfo.type === 'Fax') {
@@ -113,14 +105,6 @@ async function addLog({
                         showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'success', message: addLogRes.data.returnMessage?.message ?? 'Message log added', ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
                     }
                     await chrome.storage.local.set({ [`rc-crm-conversation-log-${logInfo.conversationLogId}`]: { logged: true } });
-                }
-                if (returnToHistoryPage) {
-                    setTimeout(() => {
-                        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                            type: 'rc-adapter-navigate-to',
-                            path: `/messages`
-                        }, '*');
-                    }, 100);
                 }
                 break;
         }

@@ -21,7 +21,8 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
         contactList.push({
             const: 'searchContact',
             title: `Search ${platformName}`,
-            additionalInfo: null
+            additionalInfo: null,
+            ignoreAdditionalFields: true
         });
     }
     const defaultContact = contactList.some(c => c.toNumberEntity) ? contactList.find(c => c.toNumberEntity) : (contactList[0] ?? null);
@@ -68,6 +69,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
     }
     if (allAdditionalFields) {
         for (const f of allAdditionalFields) {
+            if (!f) {
+                continue;
+            }
             switch (f.type) {
                 case 'selection':
                     if (defaultContact.isNewContact && f.contactTypeDependent) {
@@ -397,6 +401,9 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             }
             if (allAdditionalFields) {
                 for (const f of allAdditionalFields) {
+                    if (contact.ignoreAdditionalFields) {
+                        continue;
+                    }
                     switch (f.type) {
                         case 'selection':
                             if (f.contactDependent && (contact?.additionalInfo?.[f.const] === undefined)) {
