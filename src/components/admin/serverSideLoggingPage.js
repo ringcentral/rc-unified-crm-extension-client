@@ -1,4 +1,4 @@
-function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin, activityOwnerList }) {
+function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin }) {
     const pageRender =
     {
         id: 'serverSideLoggingSetting',
@@ -31,7 +31,14 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                     description: 'Who should be the owner of the activity record?',
                     type: 'string',
                     oneOf: [
-                        ...activityOwnerList
+                        {
+                            const: 'user',
+                            title: 'Agent/user (if possible)'
+                        },
+                        {
+                            const: 'admin',
+                            title: 'Admin'
+                        }
                     ]
                 },
                 doNotLogNumbers: {

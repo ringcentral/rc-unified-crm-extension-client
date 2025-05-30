@@ -816,8 +816,7 @@ window.addEventListener('message', async (e) => {
                   const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({
                     subscriptionLevel,
                     doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers,
-                    loggingByAdmin: serverSideLoggingSubscription.loggingByAdmin,
-                    activityOwnerList: platform.serverSideLogging?.activityOwner
+                    loggingByAdmin: serverSideLoggingSubscription.loggingByAdmin
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
