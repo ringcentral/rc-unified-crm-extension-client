@@ -139,7 +139,8 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                     crmToken: rcUnifiedCrmExtJwt,
                     crmPlatform: platform.name,
                     subscriptionLevel,
-                    loggingByAdmin
+                    loggingByAdmin,
+                    loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ?? false
                 },
                 {
                     headers: {
