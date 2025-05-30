@@ -751,6 +751,10 @@ window.addEventListener('message', async (e) => {
                     });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-navigate-to',
+                      path: `/history`
+                    }, '*');
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
                       path: `/log/call/${cacheLogPageData.id}`,
                     }, '*');
                   }
@@ -801,6 +805,10 @@ window.addEventListener('message', async (e) => {
                       type: 'rc-adapter-update-messages-log-page',
                       page: cachedLogPage
                     });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: `/history`
+                    }, '*');
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-navigate-to',
                       path: `/log/messages/${cacheLogPageData.id}`, // page id
