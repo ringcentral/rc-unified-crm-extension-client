@@ -223,7 +223,12 @@ window.addEventListener('message', async (e) => {
             // Manifest case: use RC login to login CRM as well
             if (!crmAuthed && !!platform.autoLoginCRMWithRingCentralLogin) {
               const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken() });
-              await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
+              try {
+                await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
+              }
+              catch (e) {
+                console.log(e);
+              }
               crmAuthed = !!returnedToken;
               await chrome.storage.local.set({ crmAuthed })
             }
@@ -2328,7 +2333,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     else if (request.platform === 'thirdParty') {
       const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri });
-      await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
+      try {
+        await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
+      }
+      catch (e) {
+        console.log(e);
+      }
       crmAuthed = !!returnedToken;
       await chrome.storage.local.set({ crmAuthed });
       if (crmAuthed) {
@@ -2349,7 +2359,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   // Unique: Pipedrive
   else if (request.type === 'pipedriveCallbackUri' && !(await authCore.checkAuth())) {
     const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive` });
-    await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
+    try {
+      await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
+    }
+    catch (e) {
+      console.log(e);
+    }
     crmAuthed = true;
     await chrome.storage.local.set({ crmAuthed });
     const adminSettingResults = await adminCore.refreshAdminSettings();
@@ -2433,7 +2448,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         apiUrl: request.apiUrl
       }
     });
-    await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
+    try {
+      await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
+    }
+    catch (e) {
+      console.log(e);
+    }
     crmAuthed = !!returnedToken;
     await chrome.storage.local.set({ crmAuthed });
     if (crmAuthed) {
