@@ -308,6 +308,14 @@ function getShowContactsTabSetting(userSettings) {
     }
 }
 
+function getUrlWhitelistSetting(userSettings) {
+    return {
+        value: userSettings?.urlWhitelist?.value ?? '',
+        readOnly: userSettings?.urlWhitelist?.customizable === undefined ? false : !userSettings?.urlWhitelist?.customizable,
+        readOnlyReason: !userSettings?.urlWhitelist?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getCustomSetting(userSettings, id, defaultValue) {
     if (userSettings === undefined) {
         return {
@@ -353,4 +361,5 @@ exports.getShowFaxTabSetting = getShowFaxTabSetting;
 exports.getShowVoicemailTabSetting = getShowVoicemailTabSetting;
 exports.getShowRecordingsTabSetting = getShowRecordingsTabSetting;
 exports.getShowContactsTabSetting = getShowContactsTabSetting;
+exports.getUrlWhitelistSetting = getUrlWhitelistSetting;
 exports.getCustomSetting = getCustomSetting;

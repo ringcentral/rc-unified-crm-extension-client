@@ -24,6 +24,7 @@ import contactSettingPage from './components/admin/managedSettings/contactSettin
 import advancedFeaturesSettingPage from './components/admin/managedSettings/advancedFeaturesSettingPage';
 import customSettingsPage from './components/admin/managedSettings/customSettingsPage';
 import customizeTabsSettingPage from './components/admin/managedSettings/customizeTabsSettingPage';
+import urlWhitelistPage from './components/admin/managedSettings/urlWhitelistPage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
 import {
@@ -843,6 +844,17 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${customizeTabsSettingPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'urlWhitelist':
+                  const urlWhitelistPageRender = urlWhitelistPage.getUrlWhitelistPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: urlWhitelistPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${urlWhitelistPageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'callAndSMSLogging':
@@ -1909,6 +1921,7 @@ window.addEventListener('message', async (e) => {
                 case 'advancedFeaturesSettingPage':
                 case 'customSettingsPage':
                 case 'customizeTabsSettingPage':
+                case 'urlWhitelistPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const settingDataKeys = Object.keys(data.body.button.formData);
                   for (const k of settingDataKeys) {

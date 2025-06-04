@@ -128,6 +128,23 @@ async function getServiceManifest() {
                 ]
             },
             {
+                id: 'urlWhitelist',
+                type: 'section',
+                name: 'Allowed pages',
+                groupId: 'general',
+                items: [
+                    {
+                        id: 'urlWhitelist',
+                        type: 'text',
+                        name: 'Allowed page URLs',
+                        description: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
+                        value: userCore.getUrlWhitelistSetting(userSettings).value,
+                        readOnly: userCore.getUrlWhitelistSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getUrlWhitelistSetting(userSettings).readOnlyReason
+                    }
+                ]
+            },
+            {
                 id: 'tabs',
                 type: 'section',
                 name: 'Customize tabs',

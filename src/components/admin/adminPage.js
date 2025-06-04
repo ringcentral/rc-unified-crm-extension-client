@@ -27,6 +27,10 @@ function getAdminPageRender({ platform }) {
                             title: "Customize tabs",
                         },
                         {
+                            const: "urlWhitelist",
+                            title: "URL whitelist",
+                        },
+                        {
                             const: "customAdapter",
                             title: "Custom adapter",
                         }
