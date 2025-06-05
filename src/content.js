@@ -21,11 +21,11 @@ async function checkUrlMatch() {
       const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
       const embedUrls = customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.embedUrls;
       const { userSettings } = await chrome.storage.local.get('userSettings');
-      const userDefinedWhitelist = userCore.getUrlWhitelistSetting(userSettings).value;
-      const whiteList = [...embedUrls, ...userDefinedWhitelist.split(',')];
-      if (whiteList) {
+      const userDefinedWhitelist = userCore.getUrlWhitelistSetting(userSettings).value ? userCore.getUrlWhitelistSetting(userSettings).value.split(',') : [];
+      const whitelist = [...embedUrls, ...userDefinedWhitelist];
+      if (whitelist) {
         const currentUrl = window.location.href;
-        const isUrlMatched = whiteList.some((pattern) => {
+        const isUrlMatched = whitelist.some((pattern) => {
           const regex = new RegExp(pattern.replace(/\*/g, '.*'));
           return regex.test(currentUrl);
         });
