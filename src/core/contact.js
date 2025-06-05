@@ -55,7 +55,7 @@ async function getContact({ serverUrl, phoneNumber, platformName, isExtensionNum
     }
 
     if (rcUnifiedCrmExtJwt) {
-        const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${overridingFormats.toString()}&isExtension=${isExtensionNumber}`);
+        const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${encodeURIComponent(overridingFormats.toString())}&isExtension=${isExtensionNumber}`);
         if (!contactRes.data.contact) {
             return {
                 matched: false,

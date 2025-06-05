@@ -160,7 +160,7 @@ function getContactSettingPageRender({ adminUserSettings, renderOverridingNumber
             properties: {
                 warning: {
                     type: "string",
-                    description: "Please input your overriding phone number format: (please use * to represent a number, eg. (***) ***-****)",
+                    description: "Please input your overriding phone number format: (please use # to represent a number digit, eg. (###) ###-###)",
                 },
                 customizable: {
                     type: 'boolean',

@@ -407,7 +407,7 @@ async function getServiceManifest() {
                 name: "info",
                 type: "admonition",
                 severity: "warning",
-                value: "Please input your overriding phone number format: (please use * to represent a number, eg. (***) ***-****)",
+                value: "Please input your overriding phone number format: (please use # to represent a number digit, eg. (###) ###-###)",
             },
             {
                 id: "overridingPhoneNumberFormat",
