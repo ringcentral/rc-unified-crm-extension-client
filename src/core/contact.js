@@ -162,11 +162,11 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
     }
     analytics.contactPop();
     const hostname = platformInfo['platform-info'].hostname;
-    const isKnownContact = !!contactId;
+    const isContactIdProvidedDirectly = !!contactId;
     let cachedContacts = [];
     let contactIdInUse = contactId;
     let contactTypeInUse = contactType;
-    if (!contactId) {
+    if (!contactIdInUse) {
         cachedContacts = getLocalCachedContact({ phoneNumber, platformName });
         if (cachedContacts.length > 0) {
             contactIdInUse = cachedContacts[0].id;
@@ -174,7 +174,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
         }
     }
     // case: single contact with id
-    if (isKnownContact || (cachedContacts.length == 1 && !contactId)) {
+    if (isContactIdProvidedDirectly || (cachedContacts.length == 1 && !!contactIdInUse)) {
         showNotification({ level: 'success', message: 'Trying to find and open contact page...', ttl: 5000 });
         // Unique: Bullhorn 
         if (platformName === 'bullhorn') {
@@ -199,12 +199,13 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
             return;
         }
     }
-    // case: multi contacts
+    // case: unknown contact OR multi matches
     else {
         const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber });
         if (!contactMatched) {
             return;
         }
+        // case: multi contacts
         const isMultipleContact = contactInfo.filter(c => !c.isNewContact).length > 1;
         if (isMultipleContact) {
             if (!multiContactMatchBehavior) {
@@ -261,6 +262,35 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                         callAction: 'toggleRingingDialog',
                     }, '*');
                     break;
+            }
+        }
+        //This is the case where there is only one contact and it is not a new contact
+        if (contactInfo.filter(c => !c.isNewContact).length == 1) {
+            if (platformName === 'bullhorn') {
+                const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
+                if (crm_extension_bullhorn_user_urls?.atsUrl) {
+                    for (const c of contactInfo) {
+                        if (c.isNewContact) {
+                            continue;
+                        }
+                        const newTab = window.open(`${crm_extension_bullhorn_user_urls.atsUrl}/BullhornStaffing/OpenWindow.cfm?Entity=${c.type}&id=${c.id}&view=Overview`, '_blank', 'popup');
+                        newTab.blur();
+                        window.focus();
+                    }
+                }
+            }
+            else {
+                for (const c of contactInfo) {
+                    if (c.isNewContact) {
+                        continue;
+                    }
+                    const hostname = platformInfo['platform-info'].hostname;
+                    const contactPageUrl = manifest.platforms[platformName].contactPageUrl
+                        .replace('{hostname}', hostname)
+                        .replaceAll('{contactId}', c.id)
+                        .replaceAll('{contactType}', c.type);
+                    window.open(contactPageUrl);
+                }
             }
         }
         showNotification({ level: 'success', message: 'Trying to find and open contact page...', ttl: 5000 });
