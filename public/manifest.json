@@ -1,7 +1,7 @@
 {
   "name": "RingCentral App Connect",
   "description": "A RingCentral extension for CRM platforms",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "permissions": [
     "storage",
     "alarms",
@@ -13,30 +13,13 @@
   "content_scripts": [
     {
       "matches": [
-        "https://*.labs.ringcentral.com/*",
-        "https://*.pipedrive.com/*",
-        "https://*.insightly.com/*",
-        "https://*.clio.com/*",
-        "https://*.redtailtechnology.com/*",
-        "https://*.bullhornstaffing.com/*",
-        "https://*.app.netsuite.com/*",
-        "https://*.service-now.com/*",
-        "https://*.servicenowservices.com/*",
-        "https://*.freshdesk.com/*",
-        "https://*.freshservice.com/*",
-        "https://*.freshsales.com/*",
-        "https://*.myfreshworks.com/*",
-        "https://docs.google.com/*",
-        "https://app.gohighlevel.com/*"
+        "<all_urls>"
       ],
       "js": [
         "./c2d/index.js",
         "./content.js"
       ],
-      "all_frames": true,
-      "exclude_globs": [
-        "://*.bullhornstaffing.com/content/*"
-      ]
+      "all_frames": true
     }
   ],
   "web_accessible_resources": [
@@ -46,21 +29,7 @@
         "/c2d/*"
       ],
       "matches": [
-        "https://*.labs.ringcentral.com/*",
-        "https://*.pipedrive.com/*",
-        "https://*.insightly.com/*",
-        "https://*.clio.com/*",
-        "https://*.redtailtechnology.com/*",
-        "https://*.bullhornstaffing.com/*",
-        "https://*.app.netsuite.com/*",
-        "https://*.service-now.com/*",
-        "https://*.servicenowservices.com/*",
-        "https://*.freshdesk.com/*",
-        "https://*.freshservice.com/*",
-        "https://*.freshsales.com/*",
-        "https://*.myfreshworks.com/*",
-        "https://docs.google.com/*",
-        "https://app.gohighlevel.com/*"
+        "<all_urls>"
       ]
     }
   ],
