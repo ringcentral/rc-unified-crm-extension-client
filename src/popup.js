@@ -17,14 +17,16 @@ import aboutPage from './components/aboutPage';
 import developerSettingsPage from './components/developerSettingsPage';
 import adminPage from './components/admin/adminPage';
 import managedSettingsPage from './components/admin/managedSettingsPage';
+import generalSettingPage from './components/admin/generalSettingPage';
 import callAndSMSLoggingSettingPage from './components/admin/managedSettings/callAndSMSLoggingSettingPage';
 import customAdapterPage from './components/admin/customAdapterPage';
 import serverSideLoggingPage from './components/admin/serverSideLoggingPage';
 import contactSettingPage from './components/admin/managedSettings/contactSettingPage';
 import advancedFeaturesSettingPage from './components/admin/managedSettings/advancedFeaturesSettingPage';
 import customSettingsPage from './components/admin/managedSettings/customSettingsPage';
-import customizeTabsSettingPage from './components/admin/managedSettings/customizeTabsSettingPage';
-import urlWhitelistPage from './components/admin/managedSettings/urlWhitelistPage';
+import customizeTabsSettingPage from './components/admin/generalSettings/customizeTabsSettingPage';
+import urlWhitelistPage from './components/admin/generalSettings/urlWhitelistPage';
+import notificationLevelSettingPage from './components/admin/generalSettings/notificationLevelSettingPage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
 import {
@@ -824,6 +826,17 @@ window.addEventListener('message', async (e) => {
 
               }
               switch (data.body?.formData?.section) {
+                case 'generalSettings':
+                  const generalSettingsPageRender = generalSettingPage.getGeneralSettingPageRender();
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: generalSettingsPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${generalSettingsPageRender.id}`, // page id
+                  }, '*');
+                  break;
                 case 'managedSettings':
                   const managedSettingsPageRender = managedSettingsPage.getManagedSettingsPageRender({ crmManifest: platform });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -844,6 +857,17 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${customizeTabsSettingPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'notificationLevel':
+                  const notificationLevelSettingPageRender = notificationLevelSettingPage.getNotificationLevelSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: notificationLevelSettingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${notificationLevelSettingPageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'urlWhitelist':
@@ -1921,6 +1945,7 @@ window.addEventListener('message', async (e) => {
                 case 'advancedFeaturesSettingPage':
                 case 'customSettingsPage':
                 case 'customizeTabsSettingPage':
+                case 'notificationLevelSettingPage':
                 case 'urlWhitelistPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const settingDataKeys = Object.keys(data.body.button.formData);
@@ -1932,6 +1957,10 @@ window.addEventListener('message', async (e) => {
                   await userCore.refreshUserSettings({});
                   showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack',
+                  }, '*');
                   break;
                 case 'insightlyGetApiKey':
                   const platformInfo = await chrome.storage.local.get('platform-info');

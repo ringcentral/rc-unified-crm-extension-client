@@ -19,16 +19,12 @@ function getAdminPageRender({ platform }) {
                     type: "string",
                     oneOf: [
                         {
+                            const: "generalSettings",
+                            title: "General settings",
+                        },
+                        {
                             const: "managedSettings",
                             title: "Managed settings",
-                        },
-                        {
-                            const: "customizeTabs",
-                            title: "Customize tabs",
-                        },
-                        {
-                            const: "urlWhitelist",
-                            title: "URL whitelist",
                         },
                         {
                             const: "customAdapter",

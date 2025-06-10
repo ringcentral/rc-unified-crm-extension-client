@@ -13,6 +13,10 @@ async function showNotification({ level, message, ttl, details = null }) {
   if (!level || !message || isObjectEmpty(message)) {
     return;
   }
+  const { notificationLevelSetting } = await chrome.storage.local.get({ notificationLevelSetting: ['success', 'warning', 'error'] });
+  if (!notificationLevelSetting.includes(level)) {
+    return;
+  }
   const notificationId = await RCAdapter.alertMessage({ message, ttl, level, details });
   return notificationId;
 }
@@ -99,7 +103,7 @@ async function getPlatformInfo() {
 }
 
 function renderCRMSetupErrorPage() {
-  try{
+  try {
     const crmSetupErrorPageRender = crmSetupErrorPage.getCRMSetupErrorPageRender();
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
       type: 'rc-adapter-register-customized-page',

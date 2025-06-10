@@ -145,6 +145,39 @@ async function getServiceManifest() {
                 ]
             },
             {
+                id: 'notificationLevel',
+                type: 'section',
+                name: 'Notification level',
+                groupId: 'general',
+                items: [
+                    {
+                        id: 'notificationLevelSetting',
+                        type: 'option',
+                        name: 'Notification level',
+                        description: 'Select the notification level to be displayed in the extension.',
+                        multiple: true,
+                        checkbox: true,
+                        options: [
+                            {
+                                id: 'success',
+                                name: 'Success'
+                            },
+                            {
+                                id: 'warning',
+                                name: 'Warning'
+                            },
+                            {
+                                id: 'error',
+                                name: 'Error'
+                            }
+                        ],
+                        value: userCore.getNotificationLevelSetting(userSettings).value,
+                        readOnly: userCore.getNotificationLevelSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getNotificationLevelSetting(userSettings).readOnlyReason
+                    }
+                ]
+            },
+            {
                 id: 'tabs',
                 type: 'section',
                 name: 'Customize tabs',

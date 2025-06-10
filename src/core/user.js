@@ -87,6 +87,8 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
             autoStartAiAssistantReadOnlyReason: autoStartAiAssistantSetting?.readOnlyReason ?? '',
         }, '*');
     }
+    const notificationLevelSetting = getNotificationLevelSetting(userSettings).value;
+    await chrome.storage.local.set({ notificationLevelSetting });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',
         service: (await getServiceManifest())
@@ -316,6 +318,14 @@ function getUrlWhitelistSetting(userSettings) {
     }
 }
 
+function getNotificationLevelSetting(userSettings) {
+    return {
+        value: userSettings?.notificationLevelSetting?.value ?? ['success', 'warning', 'error'],
+        readOnly: userSettings?.notificationLevelSetting?.customizable === undefined ? false : !userSettings?.notificationLevelSetting?.customizable,
+        readOnlyReason: !userSettings?.notificationLevelSetting?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getCustomSetting(userSettings, id, defaultValue) {
     if (userSettings === undefined) {
         return {
@@ -362,4 +372,5 @@ exports.getShowVoicemailTabSetting = getShowVoicemailTabSetting;
 exports.getShowRecordingsTabSetting = getShowRecordingsTabSetting;
 exports.getShowContactsTabSetting = getShowContactsTabSetting;
 exports.getUrlWhitelistSetting = getUrlWhitelistSetting;
+exports.getNotificationLevelSetting = getNotificationLevelSetting;
 exports.getCustomSetting = getCustomSetting;
