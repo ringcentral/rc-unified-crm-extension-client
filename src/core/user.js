@@ -49,7 +49,6 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     const rcAccessToken = getRcAccessToken();
     const manifest = await getManifest();
     let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
-
     if (changedSettings) {
         for (const k of Object.keys(changedSettings)) {
             if (userSettings[k] === undefined || !userSettings[k].value) {
@@ -59,6 +58,16 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
                 userSettings[k].value = changedSettings[k].value;
             }
         }
+    }
+    // TEMP: replace disableRetroCallLogSync with enableRetroCallLogSync
+    if (userSettings?.disableRetroCallLogSync) {
+        userSettings.enableRetroCallLogSync = {
+            value: !userSettings.disableRetroCallLogSync.value,
+            customizable: userSettings.disableRetroCallLogSync.customizable,
+            readOnly: userSettings.disableRetroCallLogSync.readOnly,
+            readOnlyReason: userSettings.disableRetroCallLogSync.readOnlyReason
+        };
+        delete userSettings.disableRetroCallLogSync;
     }
     await chrome.storage.local.set({ userSettings });
     userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
@@ -158,11 +167,11 @@ function getAutoLogOutboundFaxSetting(userSettings) {
     }
 }
 
-function getDisableRetroCallLogSync(userSettings) {
+function getEnableRetroCallLogSync(userSettings) {
     return {
-        value: userSettings?.disableRetroCallLogSync?.value ?? false,
-        readOnly: userSettings?.disableRetroCallLogSync?.customizable === undefined ? false : !userSettings?.disableRetroCallLogSync?.customizable,
-        readOnlyReason: !userSettings?.disableRetroCallLogSync?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.enableRetroCallLogSync?.value ?? true,
+        readOnly: userSettings?.enableRetroCallLogSync?.customizable === undefined ? false : !userSettings?.enableRetroCallLogSync?.customizable,
+        readOnlyReason: !userSettings?.enableRetroCallLogSync?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -352,7 +361,7 @@ exports.getAutoLogCallSetting = getAutoLogCallSetting;
 exports.getAutoLogSMSSetting = getAutoLogSMSSetting;
 exports.getAutoLogInboundFaxSetting = getAutoLogInboundFaxSetting;
 exports.getAutoLogOutboundFaxSetting = getAutoLogOutboundFaxSetting;
-exports.getDisableRetroCallLogSync = getDisableRetroCallLogSync;
+exports.getEnableRetroCallLogSync = getEnableRetroCallLogSync;
 exports.getOneTimeLogSetting = getOneTimeLogSetting;
 exports.getCallPopSetting = getCallPopSetting;
 exports.getSMSPopSetting = getSMSPopSetting;

@@ -63,7 +63,7 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
-                disableRetroCallLogSync: {
+                enableRetroCallLogSync: {
                     type: 'object',
                     title: 'Disable retroactive call log sync',
                     properties: {
@@ -134,7 +134,7 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             autoLogOutboundFax: {
                 "ui:collapsible": true,
             },
-            disableRetroCallLogSync: {
+            enableRetroCallLogSync: {
                 "ui:collapsible": true,
             },
             oneTimeLog: {
@@ -171,10 +171,10 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                 customizable: adminUserSettings?.autoLogOutboundFax?.customizable ?? true,
                 value: adminUserSettings?.autoLogOutboundFax?.value ?? false
             },
-            disableRetroCallLogSync:
+            enableRetroCallLogSync:
             {
-                customizable: adminUserSettings?.disableRetroCallLogSync?.customizable ?? true,
-                value: adminUserSettings?.disableRetroCallLogSync?.value ?? false
+                customizable: adminUserSettings?.enableRetroCallLogSync?.customizable ?? true,
+                value: adminUserSettings?.enableRetroCallLogSync?.value ?? true
             },
             oneTimeLog:
             {

@@ -13,7 +13,7 @@ async function retroAutoCallLog({
     const { isAdmin } = await chrome.storage.local.get({ isAdmin: false });
     const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
     const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
-    if (userCore.getDisableRetroCallLogSync(userSettings).value) {
+    if (!userCore.getEnableRetroCallLogSync(userSettings).value) {
         return;
     }
     const { retroAutoCallLogMaxAttempt } = await chrome.storage.local.get({ retroAutoCallLogMaxAttempt: 10 });

@@ -240,7 +240,6 @@ window.addEventListener('message', async (e) => {
               setInterval(async function () {
                 userSettings = await userCore.refreshUserSettings({});
               }, 900000);
-              // Submit 
             }
             // Unique: Bullhorn
             if (platform.name === 'bullhorn' && crmAuthed) {
