@@ -67,7 +67,6 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
             readOnly: userSettings.disableRetroCallLogSync.readOnly,
             readOnlyReason: userSettings.disableRetroCallLogSync.readOnlyReason
         };
-        delete userSettings.disableRetroCallLogSync;
     }
     await chrome.storage.local.set({ userSettings });
     userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });

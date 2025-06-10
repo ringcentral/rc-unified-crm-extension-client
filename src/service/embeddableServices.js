@@ -93,12 +93,12 @@ async function getServiceManifest() {
                         value: userCore.getAutoLogOutboundFaxSetting(userSettings).value,
                     },
                     {
-                        id: "disableRetroCallLogSync",
+                        id: "enableRetroCallLogSync",
                         type: "boolean",
-                        name: 'Disable retroactive call log sync',
-                        readOnly: userCore.getDisableRetroCallLogSync(userSettings).readOnly,
-                        readOnlyReason: userCore.getDisableRetroCallLogSync(userSettings).readOnlyReason,
-                        value: userCore.getDisableRetroCallLogSync(userSettings).value
+                        name: 'Enable retroactive call log sync',
+                        readOnly: userCore.getEnableRetroCallLogSync(userSettings).readOnly,
+                        readOnlyReason: userCore.getEnableRetroCallLogSync(userSettings).readOnlyReason,
+                        value: userCore.getEnableRetroCallLogSync(userSettings).value
                     },
                     {
                         id: "oneTimeLog",
