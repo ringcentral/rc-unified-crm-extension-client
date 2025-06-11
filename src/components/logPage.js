@@ -20,7 +20,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
     if (manifest.platforms[platformName].page?.useContactSearch) {
         contactList.push({
             const: 'searchContact',
-            title: `Search ${platformName}`,
+            title: `Search contacts`,
             additionalInfo: null,
             ignoreAdditionalFields: true
         });
@@ -156,12 +156,20 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
         case 'auto':
             let warningField = {};
             if (contactList.length > 2) {
-                warningField = {
-                    warning: {
-                        type: 'string',
-                        description: "Multiple contacts found. Please select the contact to associate this activity with.",
-                    }
-                };
+                // Check if we have exactly 3 contacts and one is new contact and another is search contact
+                const hasNewContact = contactList.some(c => c.isNewContact);
+                const hasSearchContact = contactList.some(c => c.const === 'searchContact');
+                if (contactList.length === 3 && hasNewContact && hasSearchContact) {
+                    // Suppress warning for this case
+                    warningField = {};
+                } else {
+                    warningField = {
+                        warning: {
+                            type: 'string',
+                            description: "Multiple contacts found. Please select the contact to associate this activity with.",
+                        }
+                    };
+                }
             }
             else if (contactList.length === 1 && defaultContact.isNewContact) {
                 warningField = {
