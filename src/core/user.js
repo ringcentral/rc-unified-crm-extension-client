@@ -4,9 +4,10 @@ import adminCore from './admin';
 import { getServiceManifest } from '../service/embeddableServices';
 
 async function preloadUserSettingsFromAdmin({ serverUrl }) {
-    const rcAccessToken = getRcAccessToken();
+    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
+    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
     try {
-        const preloadUserSettingsResponse = await axios.get(`${serverUrl}/user/preloadSettings?rcAccessToken=${rcAccessToken}`);
+        const preloadUserSettingsResponse = await axios.get(`${serverUrl}/user/preloadSettings?rcAccountId=${rcAccountId}`);
         return preloadUserSettingsResponse.data;
     }
     catch (e) {
@@ -15,10 +16,12 @@ async function preloadUserSettingsFromAdmin({ serverUrl }) {
     }
 }
 
-async function getUserSettingsOnline({ serverUrl, rcAccessToken }) {
+async function getUserSettingsOnline({ serverUrl }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
+    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
     const getUserSettingsResponse = await axios.get(
-        `${serverUrl}/user/settings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`);
+        `${serverUrl}/user/settings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`);
     return getUserSettingsResponse.data;
 }
 
