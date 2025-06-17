@@ -1352,6 +1352,15 @@ window.addEventListener('message', async (e) => {
                   const cachedSearchContactKey = `rc-crm-search-contact-${contactPhoneNumber}`;
                   const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
                   const cachedContacts = storageObj[cachedSearchContactKey] || [];
+                  if (!callContactMatched) {
+                    window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                    // Unique: Google Sheets
+                    if (platformName === 'googleSheets') {
+                      showNotification({ level: callLogContactMatchMessage?.messageType, message: callLogContactMatchMessage?.message, ttl: callLogContactMatchMessage?.ttl, details: callLogContactMatchMessage?.details });
+                    }
+                    responseMessage(data.requestId, { data: 'ok' });
+                    break;
+                  }
                   for (const cachedContact of cachedContacts) {
                     if (!callMatchedContact.some(c => c.id === cachedContact.id)) {
                       callMatchedContact.unshift(cachedContact);
@@ -1364,15 +1373,6 @@ window.addEventListener('message', async (e) => {
                       toNumberEntityContact.toNumberEntity = true;
                       defaultingContact = toNumberEntityContact;
                     }
-                  }
-                  if (!callContactMatched) {
-                    window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                    // Unique: Google Sheets
-                    if (platformName === 'googleSheets') {
-                      showNotification({ level: callLogContactMatchMessage?.messageType, message: callLogContactMatchMessage?.message, ttl: callLogContactMatchMessage?.ttl, details: callLogContactMatchMessage?.details });
-                    }
-                    responseMessage(data.requestId, { data: 'ok' });
-                    break;
                   }
                   let logInfo = {
                     note: '',
