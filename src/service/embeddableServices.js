@@ -128,9 +128,9 @@ async function getServiceManifest() {
                 ]
             },
             {
-                id: 'urlWhitelist',
+                id: 'clickToDialEmbed',
                 type: 'section',
-                name: 'Allowed pages',
+                name: 'Click-to-dial',
                 groupId: 'general',
                 items: [
                     {

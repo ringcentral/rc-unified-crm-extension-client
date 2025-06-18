@@ -25,7 +25,7 @@ import contactSettingPage from './components/admin/managedSettings/contactSettin
 import advancedFeaturesSettingPage from './components/admin/managedSettings/advancedFeaturesSettingPage';
 import customSettingsPage from './components/admin/managedSettings/customSettingsPage';
 import customizeTabsSettingPage from './components/admin/generalSettings/customizeTabsSettingPage';
-import urlWhitelistPage from './components/admin/generalSettings/urlWhitelistPage';
+import clickToDialEmbedPage from './components/admin/generalSettings/clickToDialEmbedPage';
 import notificationLevelSettingPage from './components/admin/generalSettings/notificationLevelSettingPage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
@@ -869,15 +869,15 @@ window.addEventListener('message', async (e) => {
                     path: `/customized/${notificationLevelSettingPageRender.id}`, // page id
                   }, '*');
                   break;
-                case 'urlWhitelist':
-                  const urlWhitelistPageRender = urlWhitelistPage.getUrlWhitelistPageRender({ adminUserSettings: adminSettings?.userSettings });
+                case 'clickToDialEmbed':
+                  const clickToDialEmbedPageRender = clickToDialEmbedPage.getClickToDialEmbedPageRender({ adminUserSettings: adminSettings?.userSettings });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
-                    page: urlWhitelistPageRender
+                    page: clickToDialEmbedPageRender
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
-                    path: `/customized/${urlWhitelistPageRender.id}`, // page id
+                    path: `/customized/${clickToDialEmbedPageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'callAndSMSLogging':
@@ -1945,7 +1945,7 @@ window.addEventListener('message', async (e) => {
                 case 'customSettingsPage':
                 case 'customizeTabsSettingPage':
                 case 'notificationLevelSettingPage':
-                case 'urlWhitelistPage':
+                case 'clickToDialEmbedPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const settingDataKeys = Object.keys(data.body.button.formData);
                   for (const k of settingDataKeys) {
