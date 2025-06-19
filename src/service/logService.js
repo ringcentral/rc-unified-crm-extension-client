@@ -80,7 +80,7 @@ async function retroAutoCallLog({
                                 serverUrl: manifest.serverUrl,
                                 logType: 'Call',
                                 sessionId: c.sessionId,
-                                dispositions: autoSelectAdditionalSubmission,
+                                dispositions: { ...autoSelectAdditionalSubmission, note },
                                 rcAdditionalSubmission
                             });
                         }
