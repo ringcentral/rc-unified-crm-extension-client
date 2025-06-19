@@ -19,8 +19,8 @@ function getGeneralSettingPageRender() {
                             title: "Notification level"
                         },
                         {
-                            const: "urlWhitelist",
-                            title: "URL whitelist"
+                            const: "clickToDialEmbed",
+                            title: "Click-to-dial"
                         }
                     ]
                 }

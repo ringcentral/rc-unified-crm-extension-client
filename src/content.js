@@ -21,15 +21,26 @@ async function checkUrlMatch() {
       const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
       const embedUrls = customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.embedUrls;
       const { userSettings } = await chrome.storage.local.get('userSettings');
-      const userDefinedWhitelist = userCore.getUrlWhitelistSetting(userSettings).value ? userCore.getUrlWhitelistSetting(userSettings).value.split(',') : [];
-      const whitelist = [...embedUrls, ...userDefinedWhitelist];
-      if (whitelist) {
-        const currentUrl = window.location.href;
-        const isUrlMatched = whitelist.some((pattern) => {
-          const regex = new RegExp(pattern.replace(/\*/g, '.*'));
-          return regex.test(currentUrl);
-        });
-        return isUrlMatched;
+      const clickToDialEmbedMode = userCore.getClickToDialEmbedMode(userSettings).value;
+      const clickToDialUrls = userCore.getClickToDialUrls(userSettings).value ?? [];
+      switch (clickToDialEmbedMode) {
+        case 'whitelist':
+          return clickToDialUrls.some((pattern) => {
+            const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+            return regex.test(window.location.href);
+          });
+        case 'blacklist':
+            return !clickToDialUrls.some((pattern) => {
+            const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+            return regex.test(window.location.href);
+          });
+        case 'crmOnly':
+          return embedUrls.some((pattern) => {
+            const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+            return regex.test(window.location.href);
+          });
+        case 'disabled':
+          return false;
       }
     }
     return true;

@@ -322,11 +322,19 @@ function getShowContactsTabSetting(userSettings) {
     }
 }
 
-function getUrlWhitelistSetting(userSettings) {
+function getClickToDialEmbedMode(userSettings) {
     return {
-        value: userSettings?.urlWhitelist?.value ?? '',
-        readOnly: userSettings?.urlWhitelist?.customizable === undefined ? false : !userSettings?.urlWhitelist?.customizable,
-        readOnlyReason: !userSettings?.urlWhitelist?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.clickToDialEmbedMode?.value ?? 'crmOnly',
+        readOnly: userSettings?.clickToDialEmbedMode?.customizable === undefined ? false : !userSettings?.clickToDialEmbedMode?.customizable,
+        readOnlyReason: !userSettings?.clickToDialEmbedMode?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getClickToDialUrls(userSettings) {
+    return {
+        value: (!userSettings?.clickToDialUrls?.value || userSettings?.clickToDialUrls?.value === '') ? [] : userSettings?.clickToDialUrls?.value,
+        readOnly: userSettings?.clickToDialUrls?.customizable === undefined ? false : !userSettings?.clickToDialUrls?.customizable,
+        readOnlyReason: !userSettings?.clickToDialUrls?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -383,6 +391,7 @@ exports.getShowFaxTabSetting = getShowFaxTabSetting;
 exports.getShowVoicemailTabSetting = getShowVoicemailTabSetting;
 exports.getShowRecordingsTabSetting = getShowRecordingsTabSetting;
 exports.getShowContactsTabSetting = getShowContactsTabSetting;
-exports.getUrlWhitelistSetting = getUrlWhitelistSetting;
+exports.getClickToDialEmbedMode = getClickToDialEmbedMode;
+exports.getClickToDialUrls = getClickToDialUrls;
 exports.getNotificationLevelSetting = getNotificationLevelSetting;
 exports.getCustomSetting = getCustomSetting;

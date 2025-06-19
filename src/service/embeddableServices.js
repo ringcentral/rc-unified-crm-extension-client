@@ -128,19 +128,45 @@ async function getServiceManifest() {
                 ]
             },
             {
-                id: 'urlWhitelist',
+                id: 'clickToDialEmbed',
                 type: 'section',
-                name: 'Allowed pages',
+                name: 'Click-to-dial',
                 groupId: 'general',
                 items: [
                     {
-                        id: 'urlWhitelist',
-                        type: 'text',
-                        name: 'Allowed page URLs',
-                        description: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
-                        value: userCore.getUrlWhitelistSetting(userSettings).value,
-                        readOnly: userCore.getUrlWhitelistSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getUrlWhitelistSetting(userSettings).readOnlyReason
+                        id: 'clickToDialEmbedMode',
+                        type: 'option',
+                        name: 'Click-to-dial mode',
+                        options: [
+                            {
+                                id: 'disabled',
+                                name: 'Disabled'
+                            },
+                            {
+                                id: 'crmOnly',
+                                name: 'Enable for connected CRM only'
+                            },
+                            {
+                                id: 'whitelist',
+                                name: 'Block by default (then manage a list of sites to allow)'
+                            },
+                            {
+                                id: 'blacklist',
+                                name: 'Allow by default (then manage a list of sites to block)'
+                            }
+                        ],
+                        value: userCore.getClickToDialEmbedMode(userSettings).value,
+                        readOnly: userCore.getClickToDialEmbedMode(userSettings).readOnly,
+                        readOnlyReason: userCore.getClickToDialEmbedMode(userSettings).readOnlyReason
+                    },
+                    {
+                        id: 'clickToDialUrls',
+                        type: 'array',
+                        name: 'URLs for click-to-dial',
+                        helper: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
+                        value: userCore.getClickToDialUrls(userSettings).value,
+                        readOnly: userCore.getClickToDialUrls(userSettings).readOnly,
+                        readOnlyReason: userCore.getClickToDialUrls(userSettings).readOnlyReason
                     }
                 ]
             },
