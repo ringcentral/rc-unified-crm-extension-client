@@ -20,16 +20,16 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
                             oneOf: [
                                 { const: 'disabled', title: 'Disabled' },
                                 { const: 'crmOnly', title: 'Enable for connected CRM only' },
-                                { const: 'whitelist', title: 'Allow by default (then manage a list of sites to block)' },
-                                { const: 'blacklist', title: 'Block by default (then manage a list of sites to allow)' },
+                                { const: 'whitelist', title: 'Block by default (then manage a list of sites to allow)' },
+                                { const: 'blacklist', title: 'Allow by default (then manage a list of sites to block)' },
                             ],
                             default: 'crmOnly'
                         }
                     }
                 },
-                urlWhitelist: {
+                clickToDialUrls: {
                     type: 'object',
-                    title: 'URLs enabled for click-to-dial',
+                    title: 'URLs for click-to-dial',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -51,7 +51,7 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
             clickToDialEmbedMode: {
                 "ui:collapsible": true
             },
-            urlWhitelist: {
+            clickToDialUrls: {
                 "ui:collapsible": true,
                 value: {
                     "ui:options": {
@@ -64,9 +64,13 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
             }
         },
         formData: {
-            urlWhitelist: {
-                customizable: adminUserSettings?.urlWhitelist?.customizable ?? true,
-                value: adminUserSettings?.urlWhitelist?.value ?? ''
+            clickToDialEmbedMode: {
+                customizable: adminUserSettings?.clickToDialEmbedMode?.customizable ?? true,
+                value: adminUserSettings?.clickToDialEmbedMode?.value ?? 'crmOnly'
+            },
+            clickToDialUrls: {
+                customizable: adminUserSettings?.clickToDialUrls?.customizable ?? true,
+                value: adminUserSettings?.clickToDialUrls?.value ?? ''
             }
         }
     }
