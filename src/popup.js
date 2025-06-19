@@ -1282,7 +1282,7 @@ window.addEventListener('message', async (e) => {
                           serverUrl: manifest.serverUrl,
                           logType: 'Call',
                           sessionId: data.body.call.sessionId,
-                          dispositions: additionalSubmission
+                          dispositions: { ...additionalSubmission, note: data.body.formData.note ?? "" }
                         });
                       }
                       break;
@@ -1306,7 +1306,7 @@ window.addEventListener('message', async (e) => {
                           serverUrl: manifest.serverUrl,
                           logType: 'Call',
                           sessionId: data.body.call.sessionId,
-                          dispositions: additionalSubmission
+                          dispositions: { ...additionalSubmission, note: data.body.formData.note ?? "" }
                         });
                       }
                       break;
@@ -1453,7 +1453,7 @@ window.addEventListener('message', async (e) => {
                             serverUrl: manifest.serverUrl,
                             logType: 'Call',
                             sessionId: data.body.call.sessionId,
-                            dispositions: autoSelectAdditionalSubmission
+                            dispositions: { ...autoSelectAdditionalSubmission, note: logInfo.note ?? "" }
                           });
                         }
                       }
