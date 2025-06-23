@@ -95,7 +95,8 @@ async function getServiceManifest() {
                     {
                         id: "enableRetroCallLogSync",
                         type: "boolean",
-                        name: 'Enable retroactive call log sync',
+                        name: 'Retroactive call log sync',
+                        description: 'Periodically scans for and logs any missed activity',
                         readOnly: userCore.getEnableRetroCallLogSync(userSettings).readOnly,
                         readOnlyReason: userCore.getEnableRetroCallLogSync(userSettings).readOnlyReason,
                         value: userCore.getEnableRetroCallLogSync(userSettings).value
@@ -103,8 +104,8 @@ async function getServiceManifest() {
                     {
                         id: "oneTimeLog",
                         type: "boolean",
-                        name: 'Enable one-time call logging',
-                        description: 'Log calls when all data is ready. EDIT log permission is not required.',
+                        name: 'One-time call logging',
+                        description: 'Delays logging until full call details are available',
                         readOnly: userCore.getOneTimeLogSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getOneTimeLogSetting(userSettings).readOnlyReason,
                         value: userCore.getOneTimeLogSetting(userSettings).value
@@ -113,6 +114,7 @@ async function getServiceManifest() {
                         id: "popupLogPageAfterCall",
                         type: "boolean",
                         name: '(Manual log) Open call logging page after call',
+                        description: 'Automatically open the logging form after each call',
                         readOnly: userCore.getCallPopSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getCallPopSetting(userSettings).readOnlyReason,
                         value: userCore.getCallPopSetting(userSettings).value
@@ -121,6 +123,7 @@ async function getServiceManifest() {
                         id: "popupLogPageAfterSMS",
                         type: "boolean",
                         name: '(Manual log) Open SMS logging page after message',
+                        description: 'Automatically open the logging form after each message',
                         readOnly: userCore.getSMSPopSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason,
                         value: userCore.getSMSPopSetting(userSettings).value
@@ -128,142 +131,152 @@ async function getServiceManifest() {
                 ]
             },
             {
-                id: 'clickToDialEmbed',
-                type: 'section',
-                name: 'Click-to-dial',
-                groupId: 'general',
+                id: 'appearance',
+                type: 'group',
+                name: 'Appearance',
                 items: [
                     {
-                        id: 'clickToDialEmbedMode',
-                        type: 'option',
-                        name: 'Click-to-dial mode',
-                        options: [
+                        id: 'tabs',
+                        type: 'section',
+                        name: 'Customize tabs',
+                        groupId: 'appearance',
+                        description: 'Control which tabs are visible in the extension interface',
+                        items: [
                             {
-                                id: 'disabled',
-                                name: 'Disabled'
+                                id: 'showChatTab',
+                                type: 'boolean',
+                                name: 'Show chat tab',
+                                value: userCore.getShowChatTabSetting(userSettings).value,
+                                readOnly: userCore.getShowChatTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowChatTabSetting(userSettings).readOnlyReason
                             },
                             {
-                                id: 'crmOnly',
-                                name: 'Enable for connected CRM only'
+                                id: 'showMeetingsTab',
+                                type: 'boolean',
+                                name: 'Show meetings tab',
+                                value: userCore.getShowMeetingsTabSetting(userSettings).value,
+                                readOnly: userCore.getShowMeetingsTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowMeetingsTabSetting(userSettings).readOnlyReason
                             },
                             {
-                                id: 'whitelist',
-                                name: 'Block by default (then manage a list of sites to allow)'
+                                id: 'showTextTab',
+                                type: 'boolean',
+                                name: 'Show text tab',
+                                value: userCore.getShowTextTabSetting(userSettings).value,
+                                readOnly: userCore.getShowTextTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowTextTabSetting(userSettings).readOnlyReason
                             },
                             {
-                                id: 'blacklist',
-                                name: 'Allow by default (then manage a list of sites to block)'
+                                id: 'showFaxTab',
+                                type: 'boolean',
+                                name: 'Show fax tab',
+                                value: userCore.getShowFaxTabSetting(userSettings).value,
+                                readOnly: userCore.getShowFaxTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowFaxTabSetting(userSettings).readOnlyReason
+                            },
+                            {
+                                id: 'showVoicemailTab',
+                                type: 'boolean',
+                                name: 'Show voicemail tab',
+                                value: userCore.getShowVoicemailTabSetting(userSettings).value,
+                                readOnly: userCore.getShowVoicemailTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowVoicemailTabSetting(userSettings).readOnlyReason
+                            },
+                            {
+                                id: 'showRecordingsTab',
+                                type: 'boolean',
+                                name: 'Show recordings tab',
+                                value: userCore.getShowRecordingsTabSetting(userSettings).value,
+                                readOnly: userCore.getShowRecordingsTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowRecordingsTabSetting(userSettings).readOnlyReason
+                            },
+                            {
+                                id: 'showContactsTab',
+                                type: 'boolean',
+                                name: 'Show contacts tab',
+                                value: userCore.getShowContactsTabSetting(userSettings).value,
+                                readOnly: userCore.getShowContactsTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowContactsTabSetting(userSettings).readOnlyReason
                             }
-                        ],
-                        value: userCore.getClickToDialEmbedMode(userSettings).value,
-                        readOnly: userCore.getClickToDialEmbedMode(userSettings).readOnly,
-                        readOnlyReason: userCore.getClickToDialEmbedMode(userSettings).readOnlyReason
+                        ]
                     },
                     {
-                        id: 'clickToDialUrls',
-                        type: 'array',
-                        name: 'URLs for click-to-dial',
-                        helper: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
-                        value: userCore.getClickToDialUrls(userSettings).value,
-                        readOnly: userCore.getClickToDialUrls(userSettings).readOnly,
-                        readOnlyReason: userCore.getClickToDialUrls(userSettings).readOnlyReason
-                    }
-                ]
-            },
-            {
-                id: 'notificationLevel',
-                type: 'section',
-                name: 'Notification level',
-                groupId: 'general',
-                items: [
-                    {
-                        id: 'notificationLevelSetting',
-                        type: 'option',
+                        id: 'notificationLevel',
+                        type: 'section',
                         name: 'Notification level',
-                        description: 'Select the notification level to be displayed in the extension.',
-                        multiple: true,
-                        checkbox: true,
-                        options: [
+                        groupId: 'appearance',
+                        description: 'Choose which types of notifications to display',
+                        items: [
                             {
-                                id: 'success',
-                                name: 'Success'
-                            },
-                            {
-                                id: 'warning',
-                                name: 'Warning'
-                            },
-                            {
-                                id: 'error',
-                                name: 'Error'
+                                id: 'notificationLevelSetting',
+                                type: 'option',
+                                name: 'Notification level',
+                                description: 'Select the notification level to be displayed in the extension.',
+                                multiple: true,
+                                checkbox: true,
+                                options: [
+                                    {
+                                        id: 'success',
+                                        name: 'Success'
+                                    },
+                                    {
+                                        id: 'warning',
+                                        name: 'Warning'
+                                    },
+                                    {
+                                        id: 'error',
+                                        name: 'Error'
+                                    }
+                                ],
+                                value: userCore.getNotificationLevelSetting(userSettings).value,
+                                readOnly: userCore.getNotificationLevelSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getNotificationLevelSetting(userSettings).readOnlyReason
                             }
-                        ],
-                        value: userCore.getNotificationLevelSetting(userSettings).value,
-                        readOnly: userCore.getNotificationLevelSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getNotificationLevelSetting(userSettings).readOnlyReason
-                    }
-                ]
-            },
-            {
-                id: 'tabs',
-                type: 'section',
-                name: 'Customize tabs',
-                groupId: 'general',
-                items: [
-                    {
-                        id: 'showChatTab',
-                        type: 'boolean',
-                        name: 'Show chat tab',
-                        value: userCore.getShowChatTabSetting(userSettings).value,
-                        readOnly: userCore.getShowChatTabSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getShowChatTabSetting(userSettings).readOnlyReason
+                        ]
                     },
                     {
-                        id: 'showMeetingsTab',
-                        type: 'boolean',
-                        name: 'Show meetings tab',
-                        value: userCore.getShowMeetingsTabSetting(userSettings).value,
-                        readOnly: userCore.getShowMeetingsTabSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getShowMeetingsTabSetting(userSettings).readOnlyReason
-                    },
-                    {
-                        id: 'showTextTab',
-                        type: 'boolean',
-                        name: 'Show text tab',
-                        value: userCore.getShowTextTabSetting(userSettings).value,
-                        readOnly: userCore.getShowTextTabSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getShowTextTabSetting(userSettings).readOnlyReason
-                    },
-                    {
-                        id: 'showFaxTab',
-                        type: 'boolean',
-                        name: 'Show fax tab',
-                        value: userCore.getShowFaxTabSetting(userSettings).value,
-                        readOnly: userCore.getShowFaxTabSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getShowFaxTabSetting(userSettings).readOnlyReason
-                    },
-                    {
-                        id: 'showVoicemailTab',
-                        type: 'boolean',
-                        name: 'Show voicemail tab',
-                        value: userCore.getShowVoicemailTabSetting(userSettings).value,
-                        readOnly: userCore.getShowVoicemailTabSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getShowVoicemailTabSetting(userSettings).readOnlyReason
-                    },
-                    {
-                        id: 'showRecordingsTab',
-                        type: 'boolean',
-                        name: 'Show recordings tab',
-                        value: userCore.getShowRecordingsTabSetting(userSettings).value,
-                        readOnly: userCore.getShowRecordingsTabSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getShowRecordingsTabSetting(userSettings).readOnlyReason
-                    },
-                    {
-                        id: 'showContactsTab',
-                        type: 'boolean',
-                        name: 'Show contacts tab',
-                        value: userCore.getShowContactsTabSetting(userSettings).value,
-                        readOnly: userCore.getShowContactsTabSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getShowContactsTabSetting(userSettings).readOnlyReason
+                        id: 'clickToDialEmbed',
+                        type: 'section',
+                        name: 'Click-to-dial',
+                        groupId: 'general',
+                        description: 'Configure click-to-dial functionality and website permissions',
+                        items: [
+                            {
+                                id: 'clickToDialEmbedMode',
+                                type: 'option',
+                                name: 'Click-to-dial mode',
+                                options: [
+                                    {
+                                        id: 'disabled',
+                                        name: 'Disabled'
+                                    },
+                                    {
+                                        id: 'crmOnly',
+                                        name: 'Enable for connected CRM only'
+                                    },
+                                    {
+                                        id: 'whitelist',
+                                        name: 'Block by default (then manage a list of sites to allow)'
+                                    },
+                                    {
+                                        id: 'blacklist',
+                                        name: 'Allow by default (then manage a list of sites to block)'
+                                    }
+                                ],
+                                value: userCore.getClickToDialEmbedMode(userSettings).value,
+                                readOnly: userCore.getClickToDialEmbedMode(userSettings).readOnly,
+                                readOnlyReason: userCore.getClickToDialEmbedMode(userSettings).readOnlyReason
+                            },
+                            {
+                                id: 'clickToDialUrls',
+                                type: 'array',
+                                name: 'URLs for click-to-dial',
+                                helper: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
+                                value: userCore.getClickToDialUrls(userSettings).value,
+                                readOnly: userCore.getClickToDialUrls(userSettings).readOnly,
+                                readOnlyReason: userCore.getClickToDialUrls(userSettings).readOnlyReason
+                            }
+                        ]
                     }
                 ]
             },
