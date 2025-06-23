@@ -1972,6 +1972,7 @@ window.addEventListener('message', async (e) => {
                   crmAuthed = !!returnedToken;
                   await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
                   if (crmAuthed) {
+                    await chrome.storage.local.set({ crmAuthed });
                     const adminSettingResults = await adminCore.refreshAdminSettings();
                     adminSettings = adminSettingResults.adminSettings;
                     if (adminSettings) {
