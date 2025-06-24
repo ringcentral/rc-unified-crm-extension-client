@@ -91,9 +91,10 @@ async function getLogConflictInfo({
     isVoicemail,
     isFax
 }) {
+    let conflictType = 'No conflict';
     const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
     if (!isAutoLog) {
-        return { hasConflict: false, autoSelectAdditionalSubmission: {} }
+        return { hasConflict: false, autoSelectAdditionalSubmission: {}, conflictType }
     }
     let hasConflict = false;
     let autoSelectAdditionalSubmission = {};
@@ -101,12 +102,14 @@ async function getLogConflictInfo({
     let defaultingContact = existingContactInfo.find(c => c.toNumberEntity);
     if (existingContactInfo.length === 0) {
         hasConflict = true;
+        conflictType = 'Unknown contact';
     }
     else if (existingContactInfo.length > 1 && !defaultingContact) {
         hasConflict = true;
         return {
             hasConflict,
-            autoSelectAdditionalSubmission
+            autoSelectAdditionalSubmission,
+            conflictType: 'Multiple contacts'
         }
     }
 
@@ -168,13 +171,15 @@ async function getLogConflictInfo({
                             }
                             else {
                                 allMatched = false;
+                                conflictType = 'Disposition conflict';
                             }
                         }
                     }
                     else {
                         allMatched = false;
+                        conflictType = 'Disposition conflict';
                     }
-                    return { hasConflict: false, autoSelectAdditionalSubmission, requireManualDisposition: !allMatched };
+                    return { hasConflict: false, autoSelectAdditionalSubmission, requireManualDisposition: !allMatched, conflictType };
                 }
                 else if (fieldOptions.length === 1) {
                     autoSelectAdditionalSubmission[key] = fieldOptions[0].const;
@@ -190,7 +195,7 @@ async function getLogConflictInfo({
             }
         }
     }
-    return { hasConflict, autoSelectAdditionalSubmission }
+    return { hasConflict, autoSelectAdditionalSubmission, conflictType }
 }
 
 

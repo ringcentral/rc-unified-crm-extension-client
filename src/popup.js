@@ -5,7 +5,7 @@ import dispositionCore from './core/disposition';
 import userCore from './core/user';
 import adminCore from './core/admin';
 import authCore from './core/auth';
-import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getPlatformInfo, getManifest } from './lib/util';
+import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getPlatformInfo, getManifest, getUserReportStats } from './lib/util';
 import { getUserInfo } from './lib/rcAPI';
 import moment from 'moment';
 import logPage from './components/logPage';
@@ -15,6 +15,7 @@ import releaseNotesPage from './components/releaseNotesPage';
 import supportPage from './components/supportPage';
 import aboutPage from './components/aboutPage';
 import developerSettingsPage from './components/developerSettingsPage';
+import userReportPage from './components/userReportPage';
 import adminPage from './components/admin/adminPage';
 import managedSettingsPage from './components/admin/managedSettingsPage';
 import generalSettingPage from './components/admin/generalSettingPage';
@@ -240,6 +241,13 @@ window.addEventListener('message', async (e) => {
               setInterval(async function () {
                 userSettings = await userCore.refreshUserSettings({});
               }, 900000);
+              // report tab
+              const userReportStats = await getUserReportStats({ dateRange: 'Day' });
+              const reportPageRender = userReportPage.getUserReportPageRender({ userStats: userReportStats });
+              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-customized-page',
+                page: reportPageRender,
+              }, '*');
             }
             // Unique: Bullhorn
             if (platform.name === 'bullhorn' && crmAuthed) {
@@ -822,7 +830,28 @@ window.addEventListener('message', async (e) => {
                     }, '*');
                   }
                   break;
-
+                case 'userReportPage':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  if (data.body.formData.unloggedCallSummary === 'unloggedCallCount') {
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: `/history`, // page id
+                    }, '*');
+                  }
+                  else {
+                    const userReportStats = await getUserReportStats({ dateRange: data.body.formData.dateRangeEnums });
+                    const reportPageRender = userReportPage.getUserReportPageRender({ userStats: userReportStats });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: reportPageRender,
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: `/customizedTabs/${reportPageRender.id}`, // page id
+                    }, '*');
+                  }
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
               }
               switch (data.body?.formData?.section) {
                 case 'generalSettings':
@@ -1973,6 +2002,14 @@ window.addEventListener('message', async (e) => {
                   await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
                   if (crmAuthed) {
                     await chrome.storage.local.set({ crmAuthed });
+                    // report tab
+                    const userReportStats = await getUserReportStats({ dateRange: 'Day' });
+                    const reportPageRender = userReportPage.getUserReportPageRender({ userStats: userReportStats });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: reportPageRender,
+                    }, '*');
+                    // admin tab
                     const adminSettingResults = await adminCore.refreshAdminSettings();
                     adminSettings = adminSettingResults.adminSettings;
                     if (adminSettings) {
@@ -2332,7 +2369,6 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
-
               }
               responseMessage(data.requestId, { data: 'ok' });
               break;
@@ -2384,6 +2420,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       crmAuthed = !!returnedToken;
       await chrome.storage.local.set({ crmAuthed });
       if (crmAuthed) {
+        // report tab
+        const userReportStats = await getUserReportStats({ dateRange: 'Day' });
+        const reportPageRender = userReportPage.getUserReportPageRender({ userStats: userReportStats });
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+          type: 'rc-adapter-register-customized-page',
+          page: reportPageRender,
+        }, '*');
+        // admin tab
         const adminSettingResults = await adminCore.refreshAdminSettings();
         adminSettings = adminSettingResults.adminSettings;
         if (adminSettings) {
@@ -2408,6 +2452,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       console.log(e);
     }
     crmAuthed = true;
+    // report tab
+    const userReportStats = await getUserReportStats({ dateRange: 'Day' });
+    const reportPageRender = userReportPage.getUserReportPageRender({ userStats: userReportStats });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+      type: 'rc-adapter-register-customized-page',
+      page: reportPageRender,
+    }, '*');
+    // admin tab
     await chrome.storage.local.set({ crmAuthed });
     const adminSettingResults = await adminCore.refreshAdminSettings();
     adminSettings = adminSettingResults.adminSettings;
@@ -2499,6 +2551,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     crmAuthed = !!returnedToken;
     await chrome.storage.local.set({ crmAuthed });
     if (crmAuthed) {
+      // report tab
+      const userReportStats = await getUserReportStats({ dateRange: 'Day' });
+      const reportPageRender = userReportPage.getUserReportPageRender({ userStats: userReportStats });
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: reportPageRender,
+      }, '*');
+      // admin tab
       const adminSettingResults = await adminCore.refreshAdminSettings();
       adminSettings = adminSettingResults.adminSettings;
       if (adminSettings) {

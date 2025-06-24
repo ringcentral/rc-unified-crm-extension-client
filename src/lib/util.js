@@ -1,6 +1,7 @@
 import { openDB } from 'idb';
 import { trackCRMSetupError } from '../lib/analytics';
 import crmSetupErrorPage from '../components/crmSetupErrorPage';
+import rcAPI from '../lib/rcAPI';
 
 function secondsToHourMinuteSecondString(totalSeconds) {
   const hours = parseInt(totalSeconds / 3600);
@@ -193,6 +194,49 @@ function cleanUpExpiredStorage() {
   });
 }
 
+async function getUserReportStats({ dateRange }) {
+  const rcAccessToken = getRcAccessToken();
+  const callLogData = await rcAPI.getRcCallLog({ rcAccessToken, dateRange });
+  const inboundCallCount = callLogData.records.filter(call => call.direction === 'Inbound').length;
+  const outboundCallCount = callLogData.records.filter(call => call.direction === 'Outbound').length;
+  const answeredCallCount = callLogData.records.filter(call => call.direction === 'Inbound' && call.result === 'Call connected').length;
+  const answeredCallPercentage = answeredCallCount === 0 ? '0%' : `${((answeredCallCount / (inboundCallCount + outboundCallCount)) * 100).toFixed(2)}%`;
+  const smsLogData = await rcAPI.getRcSMSLog({ rcAccessToken, dateRange });
+  const smsSentCount = smsLogData.records.filter(sms => sms.direction === 'Outbound').length;
+  const smsReceivedCount = smsLogData.records.filter(sms => sms.direction === 'Inbound').length;
+  const { calls, hasMore } = await RCAdapter.getUnloggedCalls(100, 1);
+  let startDate = new Date();
+  switch (dateRange) {
+    case 'Day':
+      startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      break;
+    case 'Week':
+      startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case 'Month':
+      startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      break;
+  }
+  const withinRangeCalls = calls.filter(call => new Date(call.startTime) >= startDate);
+  const unloggedCallCount = withinRangeCalls.length;
+  return {
+    dateRange,
+    callLogStats: {
+      inboundCallCount,
+      outboundCallCount,
+      answeredCallCount,
+      answeredCallPercentage
+    },
+    smsLogStats: {
+      smsSentCount,
+      smsReceivedCount
+    },
+    unloggedCallStats: {
+      unloggedCallCount
+    }
+  };
+}
+
 exports.secondsToHourMinuteSecondString = secondsToHourMinuteSecondString;
 exports.showNotification = showNotification;
 exports.dismissNotification = dismissNotification;
@@ -205,3 +249,4 @@ exports.checkC2DCollision = checkC2DCollision;
 exports.downloadTextFile = downloadTextFile;
 exports.getPlatformInfo = getPlatformInfo;
 exports.cleanUpExpiredStorage = cleanUpExpiredStorage;
+exports.getUserReportStats = getUserReportStats;
