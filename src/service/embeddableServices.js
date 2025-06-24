@@ -276,7 +276,7 @@ async function getServiceManifest() {
                         id: 'openContactPageFromIncomingCall',
                         type: 'option',
                         name: 'Incoming call pop',
-                        description: 'Select when to trigger call pop for incoming calls.',
+                        helper: 'Select when to trigger call pop for incoming calls.',
                         options: [
                             {
                                 id: 'disabled',
@@ -299,7 +299,7 @@ async function getServiceManifest() {
                         id: 'openContactPageFromOutgoingCall',
                         type: 'option',
                         name: 'Outgoing call pop',
-                        description: 'Select when to trigger call pop for outgoing calls.',
+                        helper: 'Select when to trigger call pop for outgoing calls.',
                         options: [
                             {
                                 id: 'disabled',
@@ -322,7 +322,7 @@ async function getServiceManifest() {
                         id: 'multiContactMatchBehavior',
                         type: 'option',
                         name: 'Multi-contact match behavior',
-                        description: 'Select what to do when multiple contacts match a phone number.',
+                        helper: 'Select what to do when multiple contacts match a phone number.',
                         options: [
                             {
                                 id: 'disabled',
