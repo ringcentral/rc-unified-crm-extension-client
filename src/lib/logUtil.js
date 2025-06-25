@@ -198,6 +198,5 @@ async function getLogConflictInfo({
     return { hasConflict, autoSelectAdditionalSubmission, conflictType }
 }
 
-
 exports.getLogConflictInfo = getLogConflictInfo;
 exports.logPageFormDataDefaulting = logPageFormDataDefaulting;

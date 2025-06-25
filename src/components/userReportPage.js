@@ -97,33 +97,6 @@ function getUserReportPageRender({ userStats }) {
                             backgroundColor: '#ffffff'
                         }
                     ]
-                },
-                topAgentsTitle: {
-                    type: 'string',
-                    description: 'Top Agents'
-                },
-                topAgentsSummary: {
-                    type: 'string',
-                    oneOf: [
-                        {
-                            const: 'topAgentDay',
-                            title: 'John Doe',
-                            description: '24 hour',
-                            backgroundColor: '#ffffff'
-                        },
-                        {
-                            const: 'topAgentWeek',
-                            title: 'John Doe',
-                            description: '7 day',
-                            backgroundColor: '#ffffff'
-                        },
-                        {
-                            const: 'topAgentMonth',
-                            title: 'John Doe',
-                            description: '30 day',
-                            backgroundColor: '#ffffff'
-                        }
-                    ]
                 }
             }
         },
@@ -166,18 +139,6 @@ function getUserReportPageRender({ userStats }) {
                 'ui:itemWidth': '35%',
                 'ui:itemHeight': '70px',
                 'ui:showSelected': false
-            },
-            topAgentsTitle: {
-                "ui:field": "typography",
-                "ui:variant": "h6"
-            },
-            topAgentsSummary: {
-                'ui:field': 'list',
-                'ui:itemType': 'card',
-                'ui:itemWidth': '25%',
-                'ui:itemHeight': '70px',
-                'ui:showSelected': false,
-                'ui:readonly': true
             }
         },
         formData: {

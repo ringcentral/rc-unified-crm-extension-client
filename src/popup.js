@@ -602,6 +602,15 @@ window.addEventListener('message', async (e) => {
               lastUserSettingSyncDate = new Date();
             }
           }
+
+          if (data.path === '/customizedTabs/userReportPage') {
+            const userReportStats = await getUserReportStats({ dateRange: 'Day' });
+            const reportPageRender = userReportPage.getUserReportPageRender({ userStats: userReportStats });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+              type: 'rc-adapter-register-customized-page',
+              page: reportPageRender
+            }, '*');
+          }
           break;
         case 'rc-adapter-ai-assistant-settings-notify':
           userSettings = await userCore.refreshUserSettings({
@@ -833,10 +842,23 @@ window.addEventListener('message', async (e) => {
                 case 'userReportPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   if (data.body.formData.unloggedCallSummary === 'unloggedCallCount') {
+                    const { calls: unloggedCalls } = await RCAdapter.getUnloggedCalls(100, 1);
+                    for (const c of unloggedCalls) {
+                      const { matched, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber, platformName });
+                      c.matched = matched;
+                      c.contactInfo = contactInfo;
+                      c.phoneNumber = c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber;
+                    }
+                    const unloggedCallPageRender = logPage.getUnloggedCallPageRender({ unloggedCalls });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: unloggedCallPageRender,
+                    });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-navigate-to',
-                      path: `/history`, // page id
+                      path: `/customized/${unloggedCallPageRender.id}`, // page id
                     }, '*');
+                    await chrome.storage.local.set({ unloggedCallPageDataCache: unloggedCalls });
                   }
                   else {
                     const userReportStats = await getUserReportStats({ dateRange: data.body.formData.dateRangeEnums });
@@ -850,6 +872,36 @@ window.addEventListener('message', async (e) => {
                       path: `/customizedTabs/${reportPageRender.id}`, // page id
                     }, '*');
                   }
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
+                case 'unloggedCallPage':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const callLogNote = await logCore.getCachedNote({ sessionId: data.body.formData.record.sessionId });
+                  // bring out call log page
+                  const callLogDataId = data.body.formData.record;
+                  const { unloggedCallPageDataCache } = await chrome.storage.local.get({ unloggedCallPageDataCache: null });
+                  const callLogData = unloggedCallPageDataCache.find(c => c.sessionId === callLogDataId);
+                  const callLogPageRender = logPage.getLogPageRender({
+                    id: callLogData.sessionId,
+                    manifest,
+                    logType: 'Call',
+                    contactInfo: callLogData.contactInfo.map(c => ({ ...c, isNewContact: undefined })),
+                    triggerType: 'createLog',
+                    platformName,
+                    direction: callLogData.direction,
+                    logInfo: {
+                      note: callLogNote
+                    },
+                    contactPhoneNumber: callLogData.phoneNumber
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-update-call-log-page',
+                    page: callLogPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/log/call/${callLogData.sessionId}`,
+                  }, '*');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
               }
@@ -1313,6 +1365,17 @@ window.addEventListener('message', async (e) => {
                           sessionId: data.body.call.sessionId,
                           dispositions: { ...additionalSubmission, note: data.body.formData.note ?? "" }
                         });
+                        // update unlogged call page list
+                        let { unloggedCallPageDataCache } = await chrome.storage.local.get({ unloggedCallPageDataCache: null });
+                        if (unloggedCallPageDataCache) {
+                          unloggedCallPageDataCache = unloggedCallPageDataCache.filter(c => c.sessionId !== data.body.call.sessionId);
+                          const unloggedCallPageRender = logPage.getUnloggedCallPageRender({ unloggedCalls: unloggedCallPageDataCache });
+                          document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                            type: 'rc-adapter-register-customized-page',
+                            page: unloggedCallPageRender
+                          });
+                          await chrome.storage.local.set({ unloggedCallPageDataCache });
+                        }
                       }
                       break;
                     // Case 1.2: update log
