@@ -563,7 +563,8 @@ window.addEventListener('message', async (e) => {
               function () {
                 logService.retroAutoCallLog({
                   manifest,
-                  platformName
+                  platformName,
+                  platform
                 })
               }, 60000);
             await chrome.storage.local.set({ retroAutoCallLogIntervalId });
