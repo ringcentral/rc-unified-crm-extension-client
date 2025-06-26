@@ -1915,14 +1915,19 @@ window.addEventListener('message', async (e) => {
               for (const s of data.body.settings) {
                 if (s.items !== undefined) {
                   for (const i of s.items) {
-                    changedSettings[i.id] = { value: i.value };
+                    if (i?.items !== undefined) {
+                      for (const ii of i.items) {
+                        changedSettings[ii.id] = { value: ii.value };
+                      }
+                    } else {
+                      changedSettings[i.id] = { value: i.value };
+                    }
                   }
                 }
                 else if (s.value !== undefined) {
                   changedSettings[s.id] = { value: s.value };
                 }
               }
-
               userSettings = await userCore.refreshUserSettings({
                 changedSettings
               });

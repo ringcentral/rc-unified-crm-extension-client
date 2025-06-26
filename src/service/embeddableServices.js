@@ -238,7 +238,7 @@ async function getServiceManifest() {
                         id: 'clickToDialEmbed',
                         type: 'section',
                         name: 'Click-to-dial',
-                        groupId: 'general',
+                        groupId: 'appearance',
                         description: 'Configure click-to-dial functionality and website permissions',
                         items: [
                             {
