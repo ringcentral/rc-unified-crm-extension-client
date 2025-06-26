@@ -2081,6 +2081,7 @@ window.addEventListener('message', async (e) => {
                         type: 'rc-adapter-register-customized-page',
                         page: adminPageRender,
                       }, '*');
+                      await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl });
                     }
                   }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
@@ -2499,6 +2500,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             type: 'rc-adapter-register-customized-page',
             page: adminPageRender,
           }, '*');
+          await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl });
         }
         userSettings = await userCore.refreshUserSettings({});
       }
@@ -2533,6 +2535,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         type: 'rc-adapter-register-customized-page',
         page: adminPageRender,
       }, '*');
+      await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl });
     }
     await dismissNotification({ notificationId: currentNotificationId });
     console.log('pipedriveAltAuthDone')
@@ -2630,6 +2633,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           type: 'rc-adapter-register-customized-page',
           page: adminPageRender,
         }, '*');
+        await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl });
       }
       userSettings = await userCore.refreshUserSettings({});
     }

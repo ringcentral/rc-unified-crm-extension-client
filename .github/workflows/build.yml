@@ -40,6 +40,7 @@ jobs:
         run: npm run build
         env:
           MIXPANEL_TOKEN: ${{ secrets.MIXPANEL_TOKEN }}
+          RC_CLIENT_ID: ${{ secrets.RC_CLIENT_ID }}
 
       # 5. Zip the 'dist' folder
       - name: Zip dist folder

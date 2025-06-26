@@ -28,7 +28,8 @@ async function runBuild() {
         write: true,
         outdir: 'dist',
         define: {
-            'process.env.MIXPANEL_TOKEN': JSON.stringify(process.env?.MIXPANEL_TOKEN ?? "")
+            'process.env.MIXPANEL_TOKEN': JSON.stringify(process.env?.MIXPANEL_TOKEN ?? ""),
+            'process.env.RC_CLIENT_ID': JSON.stringify(process.env?.RC_CLIENT_ID ?? "")
         },
         plugins: [
             copyStaticFiles({
