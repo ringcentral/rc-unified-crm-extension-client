@@ -27,6 +27,7 @@ import customSettingsPage from './components/admin/managedSettings/customSetting
 import customizeTabsSettingPage from './components/admin/generalSettings/customizeTabsSettingPage';
 import clickToDialEmbedPage from './components/admin/generalSettings/clickToDialEmbedPage';
 import notificationLevelSettingPage from './components/admin/generalSettings/notificationLevelSettingPage';
+import appearancePage from './components/admin/generalSettings/appearancePage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
 import {
@@ -846,6 +847,17 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${managedSettingsPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'appearance':
+                  const appearancePageRender = appearancePage.getAppearancePageRender();
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: appearancePageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${appearancePageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'customizeTabs':
