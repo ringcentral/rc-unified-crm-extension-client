@@ -2,10 +2,10 @@ import userReportIcon from '../images/reportIcon.png';
 import userReportIconActive from '../images/reportIcon_active.png';
 import userReportIconDark from '../images/reportIcon_dark.png';
 
-function getUserReportPageRender({ userStats }) {
+function getReportsPageRender({ userStats }) {
     const page = {
-        id: 'userReportPage',
-        title: 'User report',
+        id: 'reportPage',
+        title: 'Reports',
         type: 'tab',
         priority: 105,
         iconUri: userReportIcon,
@@ -25,75 +25,94 @@ function getUserReportPageRender({ userStats }) {
                 },
                 phoneActivityTitle: {
                     type: 'string',
-                    description: 'Phone Activity Summary'
+                    description: 'Phone activity'
                 },
                 phoneActivitySummary: {
                     type: 'string',
                     oneOf: [
                         {
                             const: 'inboundCallCount',
-                            title: userStats.callLogStats.inboundCallCount,
-                            description: 'Inbound',
+                            value: userStats.callLogStats.inboundCallCount.toString(),
+                            title: 'inbound calls',
                             backgroundColor: '#ffffff'
                         },
                         {
                             const: 'outboundCallCount',
-                            title: userStats.callLogStats.outboundCallCount,
-                            description: 'Outbound',
+                            value: userStats.callLogStats.outboundCallCount.toString(),
+                            title: 'outbound calls',
                             backgroundColor: '#ffffff'
                         },
                         {
                             const: 'answeredCallCount',
-                            title: userStats.callLogStats.answeredCallCount,
-                            description: 'Answered',
+                            value: userStats.callLogStats.answeredCallCount.toString(),
+                            title: 'answered calls',
                             backgroundColor: '#ffffff'
                         },
                         {
                             const: 'answeredCallPercentage',
-                            title: userStats.callLogStats.answeredCallPercentage,
-                            description: 'Answered %',
+                            value: userStats.callLogStats.answeredCallPercentage.toString(),
+                            title: 'answered rate',
+                            backgroundColor: '#ffffff'
+                        }
+                    ]
+                },
+                phoneEngagementTitle: {
+                    type: 'string',
+                    description: 'Phone engagement'
+                },
+                phoneEngagementSummary: {
+                    type: 'string',
+                    oneOf: [
+                        {
+                            const: 'totalTalkTime',
+                            value: userStats.callLogStats.totalTalkTime.toString(),
+                            title: 'total talk time',
+                            unit: 'minutes',
+                            backgroundColor: '#ffffff'
+                        },
+                        {
+                            const: 'averageTalkTime',
+                            value: userStats.callLogStats.averageTalkTime.toString(),
+                            title: 'average talk time',
+                            unit: 'minute',
                             backgroundColor: '#ffffff'
                         }
                     ]
                 },
                 smsActivityTitle: {
                     type: 'string',
-                    description: 'SMS Activity Summary'
+                    description: 'SMS activity'
                 },
                 smsActivitySummary: {
                     type: 'string',
                     oneOf: [
                         {
                             const: 'smsMessageReceivedCount',
-                            title: userStats.smsLogStats.smsReceivedCount,
-                            description: 'Received',
+                            value: userStats.smsLogStats.smsReceivedCount.toString(),
+                            title: 'received sms',
                             backgroundColor: '#ffffff'
                         },
                         {
                             const: 'smsMessageSentCount',
-                            title: userStats.smsLogStats.smsSentCount,
-                            description: 'Sent',
-                            backgroundColor: '#ffffff'
-                        },
-                        {
-                            const: 'smsMessageConversationsLoggedCount',
-                            title: '55',
-                            description: 'Logged',
+                            value: userStats.smsLogStats.smsSentCount.toString(),
+                            title: 'sent sms',
                             backgroundColor: '#ffffff'
                         }
                     ]
                 },
                 unloggedCallTitle: {
                     type: 'string',
-                    description: 'Unlogged Calls'
+                    description: 'Unlogged calls'
                 },
                 unloggedCallSummary: {
                     type: 'string',
                     oneOf: [
                         {
                             const: 'unloggedCallCount',
-                            title: userStats.unloggedCallStats?.unloggedCallCount || 0,
-                            description: 'Total (click to view)',
+                            value: userStats.unloggedCallStats?.unloggedCallCount || '0',
+                            trend: '(click to view)',
+                            trendColor: 'success.f02',
+                            title: 'unlogged calls',
                             backgroundColor: '#ffffff'
                         }
                     ]
@@ -107,37 +126,49 @@ function getUserReportPageRender({ userStats }) {
             },
             phoneActivityTitle: {
                 "ui:field": "typography",
-                "ui:variant": "h6"
+                "ui:variant": "body1"
             },
             phoneActivitySummary: {
                 'ui:field': 'list',
-                'ui:itemType': 'card',
-                'ui:itemWidth': '25%',
-                'ui:itemHeight': '70px',
+                "ui:itemType": "metric",
+                'ui:itemWidth': '48%',
+                'ui:itemHeight': '100px',
+                'ui:showSelected': false,
+                'ui:readonly': true
+            },
+            phoneEngagementTitle: {
+                "ui:field": "typography",
+                "ui:variant": "body1"
+            },
+            phoneEngagementSummary: {
+                'ui:field': 'list',
+                "ui:itemType": "metric",
+                'ui:itemWidth': '48%',
+                'ui:itemHeight': '100px',
                 'ui:showSelected': false,
                 'ui:readonly': true
             },
             smsActivityTitle: {
                 "ui:field": "typography",
-                "ui:variant": "h6"
+                "ui:variant": "body1"
             },
             smsActivitySummary: {
                 'ui:field': 'list',
-                'ui:itemType': 'card',
-                'ui:itemWidth': '25%',
-                'ui:itemHeight': '70px',
+                'ui:itemType': 'metric',
+                'ui:itemWidth': '48%',
+                'ui:itemHeight': '100px',
                 'ui:showSelected': false,
                 'ui:readonly': true
             },
             unloggedCallTitle: {
                 "ui:field": "typography",
-                "ui:variant": "h6"
+                "ui:variant": "body1"
             },
             unloggedCallSummary: {
                 'ui:field': 'list',
-                'ui:itemType': 'card',
-                'ui:itemWidth': '35%',
-                'ui:itemHeight': '70px',
+                'ui:itemType': 'metric',
+                'ui:itemWidth': '48%',
+                'ui:itemHeight': '100px',
                 'ui:showSelected': false
             }
         },
@@ -148,4 +179,4 @@ function getUserReportPageRender({ userStats }) {
     return page;
 }
 
-exports.getUserReportPageRender = getUserReportPageRender;
+exports.getReportsPageRender = getReportsPageRender;

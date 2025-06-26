@@ -197,10 +197,15 @@ function cleanUpExpiredStorage() {
 async function getUserReportStats({ dateRange }) {
   const rcAccessToken = getRcAccessToken();
   const callLogData = await rcAPI.getRcCallLog({ rcAccessToken, dateRange });
+  // phone activity
   const inboundCallCount = callLogData.records.filter(call => call.direction === 'Inbound').length;
   const outboundCallCount = callLogData.records.filter(call => call.direction === 'Outbound').length;
-  const answeredCallCount = callLogData.records.filter(call => call.direction === 'Inbound' && call.result === 'Call connected').length;
-  const answeredCallPercentage = answeredCallCount === 0 ? '0%' : `${((answeredCallCount / (inboundCallCount + outboundCallCount)) * 100).toFixed(2)}%`;
+  const answeredCallCount = callLogData.records.filter(call => call.direction === 'Inbound' && (call.result === 'Call connected' || call.result === 'Accepted' || call.result === 'Answered Not Accepted')).length;
+  const answeredCallPercentage = answeredCallCount === 0 ? '0%' : `${((answeredCallCount / (inboundCallCount)) * 100).toFixed(2)}%`;
+  // phone engagement
+  const totalTalkTime = (callLogData.records.reduce((acc, call) => acc + call.duration, 0) / 60).toFixed(0);
+  const averageTalkTime = (totalTalkTime / (inboundCallCount + outboundCallCount)).toFixed(0);
+  // sms activity
   const smsLogData = await rcAPI.getRcSMSLog({ rcAccessToken, dateRange });
   const smsSentCount = smsLogData.records.filter(sms => sms.direction === 'Outbound').length;
   const smsReceivedCount = smsLogData.records.filter(sms => sms.direction === 'Inbound').length;
@@ -217,15 +222,16 @@ async function getUserReportStats({ dateRange }) {
       startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       break;
   }
-  const withinRangeCalls = calls.filter(call => new Date(call.startTime) >= startDate);
-  const unloggedCallCount = withinRangeCalls.length;
+  const unloggedCallCount = calls.length;
   return {
     dateRange,
     callLogStats: {
       inboundCallCount,
       outboundCallCount,
       answeredCallCount,
-      answeredCallPercentage
+      answeredCallPercentage,
+      totalTalkTime,
+      averageTalkTime
     },
     smsLogStats: {
       smsSentCount,
