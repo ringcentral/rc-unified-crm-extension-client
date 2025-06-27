@@ -35,19 +35,19 @@ function getReportsPageRender({ userStats }) {
                         {
                             const: 'inboundCallCount',
                             value: (userStats.callLogStats?.inboundCallCount || 0).toString(),
-                            title: 'inbound calls',
+                            title: (userStats.callLogStats?.inboundCallCount || 0) <= 1 ? 'inbound call':'inbound calls',
                             backgroundColor: '#ffffff'
                         },
                         {
                             const: 'outboundCallCount',
                             value: (userStats.callLogStats?.outboundCallCount || 0).toString(),
-                            title: 'outbound calls',
+                            title: (userStats.callLogStats?.outboundCallCount || 0) <= 1 ? 'outbound call':'outbound calls',
                             backgroundColor: '#ffffff'
                         },
                         {
                             const: 'answeredCallCount',
                             value: (userStats.callLogStats?.answeredCallCount || 0).toString(),
-                            title: 'answered calls',
+                            title: (userStats.callLogStats?.answeredCallCount || 0) <= 1 ? 'answered call':'answered calls',
                             backgroundColor: '#ffffff'
                         },
                         {
@@ -69,14 +69,14 @@ function getReportsPageRender({ userStats }) {
                             const: 'totalTalkTime',
                             value: (userStats.callLogStats?.totalTalkTime || 0).toString(),
                             title: 'total talk time',
-                            unit: 'minutes',
+                            unit:  (userStats.callLogStats?.totalTalkTime || 0) <= 1 ? 'minute':'minutes',
                             backgroundColor: '#ffffff'
                         },
                         {
                             const: 'averageTalkTime',
                             value: (userStats.callLogStats?.averageTalkTime || 0).toString(),
                             title: 'average talk time',
-                            unit: 'minute',
+                            unit: (userStats.callLogStats?.averageTalkTime || 0) <= 1 ? 'minute':'minutes',
                             backgroundColor: '#ffffff'
                         }
                     ]
