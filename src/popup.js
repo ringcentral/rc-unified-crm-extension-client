@@ -242,7 +242,7 @@ window.addEventListener('message', async (e) => {
                 userSettings = await userCore.refreshUserSettings({});
               }, 900000);
               // report tab
-              const userReportStats = await getUserReportStats({ dateRange: 'Day' });
+              const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
               const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
@@ -605,7 +605,7 @@ window.addEventListener('message', async (e) => {
           }
 
           if (data.path === '/customizedTabs/reportPage') {
-            const userReportStats = await getUserReportStats({ dateRange: 'Day' });
+            const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
             const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-register-customized-page',
@@ -862,7 +862,7 @@ window.addEventListener('message', async (e) => {
                     await chrome.storage.local.set({ unloggedCallPageDataCache: unloggedCalls });
                   }
                   else {
-                    const userReportStats = await getUserReportStats({ dateRange: data.body.formData.dateRangeEnums });
+                    const userReportStats = await getUserReportStats({ dateRange: data.body.formData.dateRangeEnums, customStartDate: data.body.formData.startDate, customEndDate: data.body.formData.endDate });
                     const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-register-customized-page',
@@ -2067,7 +2067,7 @@ window.addEventListener('message', async (e) => {
                   if (crmAuthed) {
                     await chrome.storage.local.set({ crmAuthed });
                     // report tab
-                    const userReportStats = await getUserReportStats({ dateRange: 'Day' });
+                    const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
                     const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-register-customized-page',
@@ -2485,7 +2485,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       await chrome.storage.local.set({ crmAuthed });
       if (crmAuthed) {
         // report tab
-        const userReportStats = await getUserReportStats({ dateRange: 'Day' });
+        const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
         const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
           type: 'rc-adapter-register-customized-page',
@@ -2517,7 +2517,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     crmAuthed = true;
     // report tab
-    const userReportStats = await getUserReportStats({ dateRange: 'Day' });
+    const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
     const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
       type: 'rc-adapter-register-customized-page',
@@ -2616,7 +2616,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     await chrome.storage.local.set({ crmAuthed });
     if (crmAuthed) {
       // report tab
-      const userReportStats = await getUserReportStats({ dateRange: 'Day' });
+      const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
       const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',

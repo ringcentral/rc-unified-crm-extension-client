@@ -194,36 +194,24 @@ function cleanUpExpiredStorage() {
   });
 }
 
-async function getUserReportStats({ dateRange }) {
+async function getUserReportStats({ dateRange, customStartDate, customEndDate }) {
   const rcAccessToken = getRcAccessToken();
-  const callLogData = await rcAPI.getRcCallLog({ rcAccessToken, dateRange });
+  const callLogData = await rcAPI.getRcCallLog({ rcAccessToken, dateRange, customStartDate, customEndDate });
   // phone activity
   const inboundCallCount = callLogData.records.filter(call => call.direction === 'Inbound').length;
   const outboundCallCount = callLogData.records.filter(call => call.direction === 'Outbound').length;
   const answeredCallCount = callLogData.records.filter(call => call.direction === 'Inbound' && (call.result === 'Call connected' || call.result === 'Accepted' || call.result === 'Answered Not Accepted')).length;
-  const answeredCallPercentage = answeredCallCount === 0 ? '0%' : `${((answeredCallCount / (inboundCallCount)) * 100).toFixed(2)}%`;
+  const answeredCallPercentage = answeredCallCount === 0 ? '0%' : `${((answeredCallCount / (inboundCallCount || 1)) * 100).toFixed(2)}%`;
   // phone engagement
-  const totalTalkTime = (callLogData.records.reduce((acc, call) => acc + call.duration, 0) / 60).toFixed(0);
-  const averageTalkTime = (totalTalkTime / (inboundCallCount + outboundCallCount)).toFixed(0);
+  const totalTalkTime = Math.round(callLogData.records.reduce((acc, call) => acc + (call.duration || 0), 0) / 60) || 0;
+  const averageTalkTime = Math.round(totalTalkTime / (inboundCallCount + outboundCallCount)) || 0;
   // sms activity
-  const smsLogData = await rcAPI.getRcSMSLog({ rcAccessToken, dateRange });
+  const smsLogData = await rcAPI.getRcSMSLog({ rcAccessToken, dateRange, customStartDate, customEndDate });
   const smsSentCount = smsLogData.records.filter(sms => sms.direction === 'Outbound').length;
   const smsReceivedCount = smsLogData.records.filter(sms => sms.direction === 'Inbound').length;
   const { calls, hasMore } = await RCAdapter.getUnloggedCalls(100, 1);
-  let startDate = new Date();
-  switch (dateRange) {
-    case 'Day':
-      startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      break;
-    case 'Week':
-      startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      break;
-    case 'Month':
-      startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      break;
-  }
   const unloggedCallCount = calls.length;
-  return {
+  const reportStats = {
     dateRange,
     callLogStats: {
       inboundCallCount,
@@ -241,6 +229,11 @@ async function getUserReportStats({ dateRange }) {
       unloggedCallCount
     }
   };
+  if (dateRange === 'Select date range...') {
+    reportStats.startDate = customStartDate;
+    reportStats.endDate = customEndDate;
+  }
+  return reportStats;
 }
 
 exports.secondsToHourMinuteSecondString = secondsToHourMinuteSecondString;

@@ -16,12 +16,14 @@ function getReportsPageRender({ userStats }) {
             properties: {
                 dateRangeEnums: {
                     type: 'string',
-                    title: 'Date range',
+                    title: 'Show date from the:',
                     enum: [
-                        'Day',
-                        'Week',
-                        'Month'
-                    ]
+                        'Last 24 hours',
+                        'Last 7 days',
+                        'Last 30 days',
+                        'Select date range...'
+                    ],
+                    default: 'Last 24 hours'
                 },
                 phoneActivityTitle: {
                     type: 'string',
@@ -32,25 +34,25 @@ function getReportsPageRender({ userStats }) {
                     oneOf: [
                         {
                             const: 'inboundCallCount',
-                            value: userStats.callLogStats.inboundCallCount.toString(),
+                            value: (userStats.callLogStats?.inboundCallCount || 0).toString(),
                             title: 'inbound calls',
                             backgroundColor: '#ffffff'
                         },
                         {
                             const: 'outboundCallCount',
-                            value: userStats.callLogStats.outboundCallCount.toString(),
+                            value: (userStats.callLogStats?.outboundCallCount || 0).toString(),
                             title: 'outbound calls',
                             backgroundColor: '#ffffff'
                         },
                         {
                             const: 'answeredCallCount',
-                            value: userStats.callLogStats.answeredCallCount.toString(),
+                            value: (userStats.callLogStats?.answeredCallCount || 0).toString(),
                             title: 'answered calls',
                             backgroundColor: '#ffffff'
                         },
                         {
                             const: 'answeredCallPercentage',
-                            value: userStats.callLogStats.answeredCallPercentage.toString(),
+                            value: (userStats.callLogStats?.answeredCallPercentage || '0%').toString(),
                             title: 'answered rate',
                             backgroundColor: '#ffffff'
                         }
@@ -65,14 +67,14 @@ function getReportsPageRender({ userStats }) {
                     oneOf: [
                         {
                             const: 'totalTalkTime',
-                            value: userStats.callLogStats.totalTalkTime.toString(),
+                            value: (userStats.callLogStats?.totalTalkTime || 0).toString(),
                             title: 'total talk time',
                             unit: 'minutes',
                             backgroundColor: '#ffffff'
                         },
                         {
                             const: 'averageTalkTime',
-                            value: userStats.callLogStats.averageTalkTime.toString(),
+                            value: (userStats.callLogStats?.averageTalkTime || 0).toString(),
                             title: 'average talk time',
                             unit: 'minute',
                             backgroundColor: '#ffffff'
@@ -88,13 +90,13 @@ function getReportsPageRender({ userStats }) {
                     oneOf: [
                         {
                             const: 'smsMessageReceivedCount',
-                            value: userStats.smsLogStats.smsReceivedCount.toString(),
+                            value: (userStats.smsLogStats?.smsReceivedCount || 0).toString(),
                             title: 'received sms',
                             backgroundColor: '#ffffff'
                         },
                         {
                             const: 'smsMessageSentCount',
-                            value: userStats.smsLogStats.smsSentCount.toString(),
+                            value: (userStats.smsLogStats?.smsSentCount || 0).toString(),
                             title: 'sent sms',
                             backgroundColor: '#ffffff'
                         }
@@ -109,7 +111,7 @@ function getReportsPageRender({ userStats }) {
                     oneOf: [
                         {
                             const: 'unloggedCallCount',
-                            value: userStats.unloggedCallStats?.unloggedCallCount || '0',
+                            value: (userStats.unloggedCallStats?.unloggedCallCount || 0).toString(),
                             trend: '(click to view)',
                             trendColor: 'success.f02',
                             title: 'unlogged calls',
@@ -120,10 +122,6 @@ function getReportsPageRender({ userStats }) {
             }
         },
         uiSchema: {
-            dateRangeEnums: {
-                "ui:widget": "radio",
-                "ui:itemDirection": "row"
-            },
             phoneActivityTitle: {
                 "ui:field": "typography",
                 "ui:variant": "body1"
@@ -173,8 +171,29 @@ function getReportsPageRender({ userStats }) {
             }
         },
         formData: {
-            dateRangeEnums: userStats?.dateRange || 'Day'
+            dateRangeEnums: userStats?.dateRange || 'Last 24 hours',
+            startDate: userStats?.startDate || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            endDate: userStats?.endDate || new Date(Date.now()).toISOString().split('T')[0]
         }
+    }
+    if (userStats?.dateRange === 'Select date range...') {
+        const properties = { ...page.schema.properties };
+        const { dateRangeEnums, ...otherProperties } = properties;
+        
+        page.schema.properties = {
+            dateRangeEnums,
+            startDate: {
+                type: 'string',
+                title: 'Start date',
+                format: 'date'
+            },
+            endDate: {
+                type: 'string',
+                title: 'End date',
+                format: 'date'
+            },
+            ...otherProperties
+        };
     }
     return page;
 }
