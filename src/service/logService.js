@@ -68,6 +68,8 @@ async function retroAutoCallLog({
                                 logInfo: c,
                                 isMain: true,
                                 note,
+                                aiNote: c.aiNote,
+                                transcript: c.transcript,
                                 subject: callLogSubject,
                                 additionalSubmission: autoSelectAdditionalSubmission,
                                 contactId: callMatchedContact[0]?.id,
