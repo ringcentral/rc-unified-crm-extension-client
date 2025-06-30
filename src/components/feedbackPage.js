@@ -1,3 +1,4 @@
+
 function getFeedbackPageRender({ pageConfig, version }) {
     let properties = {};
     let uiSchema = {
