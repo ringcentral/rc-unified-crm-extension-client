@@ -28,6 +28,7 @@ import customSettingsPage from './components/admin/managedSettings/customSetting
 import customizeTabsSettingPage from './components/admin/generalSettings/customizeTabsSettingPage';
 import clickToDialEmbedPage from './components/admin/generalSettings/clickToDialEmbedPage';
 import notificationLevelSettingPage from './components/admin/generalSettings/notificationLevelSettingPage';
+import appearancePage from './components/admin/generalSettings/appearancePage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
 import {
@@ -927,6 +928,17 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${managedSettingsPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'appearance':
+                  const appearancePageRender = appearancePage.getAppearancePageRender();
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: appearancePageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${appearancePageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'customizeTabs':
@@ -2007,14 +2019,19 @@ window.addEventListener('message', async (e) => {
               for (const s of data.body.settings) {
                 if (s.items !== undefined) {
                   for (const i of s.items) {
-                    changedSettings[i.id] = { value: i.value };
+                    if (i?.items !== undefined) {
+                      for (const ii of i.items) {
+                        changedSettings[ii.id] = { value: ii.value };
+                      }
+                    } else {
+                      changedSettings[i.id] = { value: i.value };
+                    }
                   }
                 }
                 else if (s.value !== undefined) {
                   changedSettings[s.id] = { value: s.value };
                 }
               }
-
               userSettings = await userCore.refreshUserSettings({
                 changedSettings
               });
