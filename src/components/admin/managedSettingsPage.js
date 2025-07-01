@@ -11,7 +11,7 @@ function getManagedSettingsPageRender({ crmManifest }) {
                     type: "string",
                     oneOf: [{
                         const: "generalSettings",
-                        title: "General settings"
+                        title: "General"
                     },
                     {
                         const: "callAndSMSLogging",
