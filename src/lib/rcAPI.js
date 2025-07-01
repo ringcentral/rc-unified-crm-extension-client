@@ -7,7 +7,7 @@ async function getUserInfo({ serverUrl, extensionId, accountId }) {
     return userInfoHashResponse.data;
 }
 
-async function getInteropCode({ rcAccessToken, rcClientId }) {
+async function getRcCallLog({ rcAccessToken, dateRange, customStartDate, customEndDate }) {
     const rcInteropCodeResp = await axios.post(
         'https://platform.ringcentral.com/restapi/v1.0/interop/generate-code',
         {
@@ -22,52 +22,87 @@ async function getInteropCode({ rcAccessToken, rcClientId }) {
     return rcInteropCodeResp.data.code;
 }
 
-async function getRcCallLog({ rcAccessToken, dateRange }) {
     let startDate = '';
+    let endDate = new Date(Date.now()).toISOString();
     switch (dateRange) {
-        case 'Day':
+        case 'Last 24 hours':
             startDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
             break;
-        case 'Week':
+        case 'Last 7 days':
             startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
             break;
-        case 'Month':
+        case 'Last 30 days':
             startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
             break;
+        case 'Select date range...':
+            startDate = customStartDate;
+            endDate = customEndDate;
+            break;
     }
-    const callLogResponse = await axios.get(
-        `https://platform.ringcentral.com/restapi/v1.0/account/~/extension/~/call-log?dateFrom=${startDate}&view=Simple`,
-        {
-            headers: {
-                'Authorization': `Bearer ${rcAccessToken}`
+    let pageStart = 1;
+    let isFinalPage = false;
+    let callLogResponse = null;
+    let result = { records: [] };
+    while (!isFinalPage) {
+        callLogResponse = await axios.get(
+            `https://platform.ringcentral.com/restapi/v1.0/account/~/extension/~/call-log?dateFrom=${startDate}&dateTo=${endDate}&page=${pageStart}&view=Simple&perPage=1000`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${rcAccessToken}`
+                }
             }
+        )
+        result.records.push(...callLogResponse.data.records);
+        if (callLogResponse.data.navigation?.nextPage) {
+            pageStart++;
         }
-    );
-    return callLogResponse.data;
+        else {
+            isFinalPage = true;
+        }
+    }
+    return result;
 }
 
-async function getRcSMSLog({ rcAccessToken, dateRange }) {
+async function getRcSMSLog({ rcAccessToken, dateRange, customStartDate, customEndDate }) {
     let startDate = '';
+    let endDate = new Date(Date.now()).toISOString();
     switch (dateRange) {
-        case 'Day':
+        case 'Last 24 hours':
             startDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
             break;
-        case 'Week':
+        case 'Last 7 days':
             startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
             break;
-        case 'Month':
+        case 'Last 30 days':
             startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
             break;
+        case 'Select date range...':
+            startDate = customStartDate;
+            endDate = customEndDate;
+            break;
     }
-    const smsLogResponse = await axios.get(
-        `https://platform.ringcentral.com/restapi/v1.0/account/~/extension/~/message-store?dateFrom=${startDate}`,
-        {
-            headers: {
-                'Authorization': `Bearer ${rcAccessToken}`
+    let pageStart = 1;
+    let isFinalPage = false;
+    let smsLogResponse = null;
+    let result = { records: [] };
+    while (!isFinalPage) {
+        smsLogResponse = await axios.get(
+            `https://platform.ringcentral.com/restapi/v1.0/account/~/extension/~/message-store?dateFrom=${startDate}&dateTo=${endDate}&page=${pageStart}&perPage=100`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${rcAccessToken}`
+                }
             }
+        );
+        result.records.push(...smsLogResponse.data.records);
+        if (smsLogResponse.data.navigation?.nextPage) {
+            pageStart++;
         }
-    );
-    return smsLogResponse.data;
+        else {
+            isFinalPage = true;
+        }
+    }
+    return result;
 }
 
 exports.getUserInfo = getUserInfo;
