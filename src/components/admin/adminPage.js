@@ -19,10 +19,6 @@ function getAdminPageRender({ platform }) {
                     type: "string",
                     oneOf: [
                         {
-                            const: "generalSettings",
-                            title: "General settings",
-                        },
-                        {
                             const: "managedSettings",
                             title: "Managed settings",
                         },
@@ -41,6 +37,9 @@ function getAdminPageRender({ platform }) {
             }
         }
     }
+
+
+
     if (platform.serverSideLogging) {
         page.schema.properties.section.oneOf.push({
             const: "serverSideLoggingSetting",

@@ -9,20 +9,22 @@ function getManagedSettingsPageRender({ crmManifest }) {
             properties: {
                 section: {
                     type: "string",
-                    oneOf: [
-                        {
-                            const: "callAndSMSLogging",
-                            title: "Call and SMS logging",
-                        },
-                        {
-                            const: "contactSetting",
-                            title: "Call-pop",
-                        },
-                        {
-                            const: "advancedFeaturesSetting",
-                            title: "Advanced features"
-                        }
-                    ]
+                    oneOf: [{
+                        const: "generalSettings",
+                        title: "General settings"
+                    },
+                    {
+                        const: "callAndSMSLogging",
+                        title: "Call and SMS logging"
+                    },
+                    {
+                        const: "contactSetting",
+                        title: "Call-pop"
+                    },
+                    {
+                        const: "advancedFeaturesSetting",
+                        title: "Advanced features"
+                    }]
                 }
             }
         },
@@ -33,8 +35,8 @@ function getManagedSettingsPageRender({ crmManifest }) {
             }
         }
     }
-    if(crmManifest?.settings)
-    {
+
+    if (crmManifest?.settings) {
         page.schema.properties.section.oneOf.push({
             const: "customSettings",
             title: "Custom settings"
