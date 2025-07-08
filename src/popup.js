@@ -908,10 +908,13 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const serverSideLoggingSubscription = await adminCore.getServerSideLogging({ platform });
                   const subscriptionLevel = serverSideLoggingSubscription.subscribed ? serverSideLoggingSubscription.subscriptionLevel : 'Disable';
+                  const additionalFieldValues = await adminCore.getServerSideLoggingAdditionalFieldValues({ platform });
                   const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({
                     subscriptionLevel,
                     doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers,
-                    loggingByAdmin: serverSideLoggingSubscription.loggingByAdmin
+                    loggingByAdmin: serverSideLoggingSubscription.loggingByAdmin,
+                    additionalFields: platform.serverSideLogging?.additionalFields ?? [],
+                    additionalFieldValues
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
@@ -2200,6 +2203,7 @@ window.addEventListener('message', async (e) => {
                     service: (await embeddableServices.getServiceManifest())
                   }, '*');
                   await adminCore.updateServerSideDoNotLogNumbers({ platform, doNotLogNumbers: data.body.button.formData.doNotLogNumbers ?? "" });
+                  await adminCore.uploadServerSideLoggingAdditionalFieldValues({ platform, formData: data.body.button.formData });
                   showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

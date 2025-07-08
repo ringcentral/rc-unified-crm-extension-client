@@ -108,6 +108,41 @@ async function getServerSideLogging({ platform }) {
     }
 }
 
+async function getServerSideLoggingAdditionalFieldValues({ platform }) {
+    if (!platform.serverSideLogging || !platform.serverSideLogging.additionalFields) {
+        return {};
+    }
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
+    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
+    const manifest = await getManifest();
+    const settingsResponse = await axios.get(
+        `${manifest.serverUrl}/admin/serverLoggingSettings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`,
+    );
+    return settingsResponse.data;
+}
+
+async function uploadServerSideLoggingAdditionalFieldValues({ platform, formData }) {
+    if (!platform.serverSideLogging || !platform.serverSideLogging.additionalFields) {
+        return;
+    }
+    const additionalFieldValues = {};
+    platform.serverSideLogging.additionalFields.forEach(field => {
+        additionalFieldValues[field.const] = formData[field.const];
+    });
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
+    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
+    const manifest = await getManifest();
+    const uploadResponse = await axios.post(
+        `${manifest.serverUrl}/admin/serverLoggingSettings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`,
+        {
+            additionalFieldValues,
+        }
+    );
+    return uploadResponse.data;
+}
+
 async function enableServerSideLogging({ platform, subscriptionLevel, loggingByAdmin }) {
     if (!platform.serverSideLogging) {
         return;
@@ -344,3 +379,5 @@ exports.enableServerSideLogging = enableServerSideLogging;
 exports.disableServerSideLogging = disableServerSideLogging;
 exports.updateServerSideDoNotLogNumbers = updateServerSideDoNotLogNumbers;
 exports.authServerSideLogging = authServerSideLogging;
+exports.getServerSideLoggingAdditionalFieldValues = getServerSideLoggingAdditionalFieldValues;
+exports.uploadServerSideLoggingAdditionalFieldValues = uploadServerSideLoggingAdditionalFieldValues;
