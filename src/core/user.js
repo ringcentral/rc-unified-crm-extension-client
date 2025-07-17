@@ -75,7 +75,8 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         contacts: getShowContactsTabSetting(userSettings).value
     }, '*');
     const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false);
-    RCAdapter.setAutoLog({ call: userSettings.autoLogCall?.value ?? false, message: autoLogMessagesGroupTrigger })
+    const autoLogCallsGroupTrigger = (userSettings?.autoLogAnsweredIncoming?.value ?? false) || (userSettings?.autoLogMissedIncoming?.value ?? false) || (userSettings?.autoLogOutgoing?.value ?? false);
+    RCAdapter.setAutoLog({ call: autoLogCallsGroupTrigger || (userSettings.autoLogCall?.value ?? false), message: autoLogMessagesGroupTrigger })
     if (!isAvoidForceChange) {
         const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
         const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
@@ -157,6 +158,73 @@ function getAutoLogOutboundFaxSetting(userSettings) {
         value: userSettings?.autoLogOutboundFax?.value ?? false,
         readOnly: userSettings?.autoLogOutboundFax?.customizable === undefined ? false : !userSettings?.autoLogOutboundFax?.customizable,
         readOnlyReason: !userSettings?.autoLogOutboundFax?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAutoLogAnsweredIncomingSetting(userSettings, isAdmin) {
+    const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
+    if (serverSideLoggingEnabled && (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
+        return {
+            value: false,
+            readOnly: true,
+            readOnlyReason: 'This cannot be turn ON becauase server side logging is enabled by admin',
+            warning: 'Unavailable while server side call logging enabled'
+        }
+    }
+    return {
+        value: userSettings?.autoLogAnsweredIncoming?.value ?? false,
+        readOnly: userSettings?.autoLogAnsweredIncoming?.customizable === undefined ? false : !userSettings?.autoLogAnsweredIncoming?.customizable,
+        readOnlyReason: !userSettings?.autoLogAnsweredIncoming?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAutoLogMissedIncomingSetting(userSettings, isAdmin) {
+    const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
+    if (serverSideLoggingEnabled && (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
+        return {
+            value: false,
+            readOnly: true,
+            readOnlyReason: 'This cannot be turn ON becauase server side logging is enabled by admin',
+            warning: 'Unavailable while server side call logging enabled'
+        }
+    }
+    return {
+        value: userSettings?.autoLogMissedIncoming?.value ?? false,
+        readOnly: userSettings?.autoLogMissedIncoming?.customizable === undefined ? false : !userSettings?.autoLogMissedIncoming?.customizable,
+        readOnlyReason: !userSettings?.autoLogMissedIncoming?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAutoLogOutgoingSetting(userSettings, isAdmin) {
+    const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
+    if (serverSideLoggingEnabled && (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
+        return {
+            value: false,
+            readOnly: true,
+            readOnlyReason: 'This cannot be turn ON becauase server side logging is enabled by admin',
+            warning: 'Unavailable while server side call logging enabled'
+        }
+    }
+    return {
+        value: userSettings?.autoLogOutgoing?.value ?? false,
+        readOnly: userSettings?.autoLogOutgoing?.customizable === undefined ? false : !userSettings?.autoLogOutgoing?.customizable,
+        readOnlyReason: !userSettings?.autoLogOutgoing?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAutoLogVoicemailsSetting(userSettings) {
+    return {
+        value: userSettings?.autoLogVoicemails?.value ?? false,
+        readOnly: userSettings?.autoLogVoicemails?.customizable === undefined ? false : !userSettings?.autoLogVoicemails?.customizable,
+        readOnlyReason: !userSettings?.autoLogVoicemails?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getLogSyncFrequencySetting(userSettings) {
+    return {
+        value: userSettings?.logSyncFrequency?.value ?? '10min',
+        readOnly: userSettings?.logSyncFrequency?.customizable === undefined ? false : !userSettings?.logSyncFrequency?.customizable,
+        readOnlyReason: !userSettings?.logSyncFrequency?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -362,6 +430,11 @@ exports.getAutoLogCallSetting = getAutoLogCallSetting;
 exports.getAutoLogSMSSetting = getAutoLogSMSSetting;
 exports.getAutoLogInboundFaxSetting = getAutoLogInboundFaxSetting;
 exports.getAutoLogOutboundFaxSetting = getAutoLogOutboundFaxSetting;
+exports.getAutoLogAnsweredIncomingSetting = getAutoLogAnsweredIncomingSetting;
+exports.getAutoLogMissedIncomingSetting = getAutoLogMissedIncomingSetting;
+exports.getAutoLogOutgoingSetting = getAutoLogOutgoingSetting;
+exports.getAutoLogVoicemailsSetting = getAutoLogVoicemailsSetting;
+exports.getLogSyncFrequencySetting = getLogSyncFrequencySetting;
 exports.getEnableRetroCallLogSync = getEnableRetroCallLogSync;
 exports.getOneTimeLogSetting = getOneTimeLogSetting;
 exports.getCallPopSetting = getCallPopSetting;
