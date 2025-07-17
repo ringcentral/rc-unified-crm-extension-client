@@ -10,7 +10,6 @@ function getActivityLoggingSettingPageRender({ adminUserSettings }) {
                 enableActivityLoggingSection: {
                     type: 'object',
                     title: 'Enable automatic activity logging for:',
-                    description: 'Automatically log activities for the selected entities',
                     properties: {
                         autoLogAnsweredIncoming: {
                             type: 'object',
@@ -115,7 +114,6 @@ function getActivityLoggingSettingPageRender({ adminUserSettings }) {
                 preferencesSection: {
                     type: 'object',
                     title: 'Preferences',
-                    description: 'Delays logging until full call details are available',
                     properties: {
                         oneTimeLog: {
                             type: 'object',
@@ -136,7 +134,6 @@ function getActivityLoggingSettingPageRender({ adminUserSettings }) {
                 logSyncFrequencySection: {
                     type: 'object',
                     title: 'Log sync frequency',
-                    description: 'How often to sync missed activity; disable to turn off background logging',
                     properties: {
                         logSyncFrequency: {
                             type: 'object',
@@ -159,7 +156,6 @@ function getActivityLoggingSettingPageRender({ adminUserSettings }) {
                 autoOpenSection: {
                     type: 'object',
                     title: 'Auto-open logging page after:',
-                    description: 'Opens the logging page for manual entry after selected events',
                     properties: {
                         popupLogPageAfterSMS: {
                             type: 'object',

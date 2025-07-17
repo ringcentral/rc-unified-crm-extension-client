@@ -228,6 +228,19 @@ function getLogSyncFrequencySetting(userSettings) {
     }
 }
 
+function getLogSyncFrequencyInMilliseconds(userSettings) {
+    const frequency = getLogSyncFrequencySetting(userSettings).value;
+    const frequencyMap = {
+        'disabled': 0,
+        '10min': 10 * 60 * 1000,    // 10 minutes
+        '30min': 30 * 60 * 1000,    // 30 minutes  
+        '1hour': 60 * 60 * 1000,    // 1 hour
+        '3hours': 3 * 60 * 60 * 1000,  // 3 hours
+        '1day': 24 * 60 * 60 * 1000     // 1 day
+    };
+    return frequencyMap[frequency] || frequencyMap['10min'];
+}
+
 function getEnableRetroCallLogSync(userSettings) {
     return {
         value: userSettings?.enableRetroCallLogSync?.value ?? true,
@@ -435,6 +448,7 @@ exports.getAutoLogMissedIncomingSetting = getAutoLogMissedIncomingSetting;
 exports.getAutoLogOutgoingSetting = getAutoLogOutgoingSetting;
 exports.getAutoLogVoicemailsSetting = getAutoLogVoicemailsSetting;
 exports.getLogSyncFrequencySetting = getLogSyncFrequencySetting;
+exports.getLogSyncFrequencyInMilliseconds = getLogSyncFrequencyInMilliseconds;
 exports.getEnableRetroCallLogSync = getEnableRetroCallLogSync;
 exports.getOneTimeLogSetting = getOneTimeLogSetting;
 exports.getCallPopSetting = getCallPopSetting;
