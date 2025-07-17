@@ -78,6 +78,37 @@ let platform = null;
 let hasOngoingCall = false;
 let lastUserSettingSyncDate = new Date();
 
+async function restartSyncInterval() {
+  // Clear existing interval
+  const { retroAutoCallLogIntervalId } = await chrome.storage.local.get({ retroAutoCallLogIntervalId: null });
+  if (retroAutoCallLogIntervalId) {
+    clearInterval(retroAutoCallLogIntervalId);
+  }
+
+  // Check if auto logging is enabled
+  const autoLogCallsGroupTrigger = (userSettings?.autoLogAnsweredIncoming?.value ?? false) ||
+    (userSettings?.autoLogMissedIncoming?.value ?? false) ||
+    (userSettings?.autoLogOutgoing?.value ?? false);
+  const isAutoLogEnabled = autoLogCallsGroupTrigger || (userSettings?.autoLogCall?.value ?? false);
+
+  console.log({ message: 'isAutoLogEnabled:', isAutoLogEnabled, crmAuthed, userSettings });
+  if (isAutoLogEnabled && crmAuthed) {
+    const syncIntervalMs = userCore.getLogSyncFrequencyInMilliseconds(userSettings);
+    if (syncIntervalMs > 0) {
+      const newRetroAutoCallLogIntervalId = setInterval(
+        function () {
+          logService.retroAutoCallLog({
+            manifest,
+            platformName,
+            platform
+          })
+        }, syncIntervalMs);
+      await chrome.storage.local.set({ retroAutoCallLogIntervalId: newRetroAutoCallLogIntervalId });
+      console.log(`Sync interval restarted with frequency: ${syncIntervalMs}ms`);
+    }
+  }
+}
+
 checkC2DCollision();
 getCustomManifest();
 
@@ -397,6 +428,10 @@ window.addEventListener('message', async (e) => {
               type: 'rc-adapter-update-authorization-status',
               authorized: crmAuthed
             }, '*');
+
+            // Initialize sync interval
+            await restartSyncInterval();
+
             setInterval(function () {
               logService.forceCallLogMatcherCheck();
             }, 600000)
@@ -576,15 +611,14 @@ window.addEventListener('message', async (e) => {
           trackEditSettings({ changedItem: 'auto-call-log', status: data.autoLog });
           if (!!data.autoLog && !!crmAuthed) {
             await chrome.storage.local.set({ retroAutoCallLogMaxAttempt: 10 });
-            const retroAutoCallLogIntervalId = setInterval(
-              function () {
-                logService.retroAutoCallLog({
-                  manifest,
-                  platformName,
-                  platform
-                })
-              }, 60000);
-            await chrome.storage.local.set({ retroAutoCallLogIntervalId });
+            await restartSyncInterval();
+          } else {
+            // Clear interval if auto logging is disabled
+            const { retroAutoCallLogIntervalId } = await chrome.storage.local.get({ retroAutoCallLogIntervalId: null });
+            if (retroAutoCallLogIntervalId) {
+              clearInterval(retroAutoCallLogIntervalId);
+              await chrome.storage.local.remove('retroAutoCallLogIntervalId');
+            }
           }
           break;
         case 'rc-messageLogger-auto-log-notify':
@@ -2073,13 +2107,43 @@ window.addEventListener('message', async (e) => {
                 case 'notificationLevelSettingPage':
                 case 'clickToDialEmbedPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  const settingDataKeys = Object.keys(data.body.button.formData);
-                  for (const k of settingDataKeys) {
-                    adminSettings.userSettings[k] = data.body.button.formData[k];
+
+                  // Handle nested form data structure properly
+                  const formData = data.body.button.formData;
+                  console.log('Admin settings form data received:', formData);
+
+                  for (const sectionKey of Object.keys(formData)) {
+                    const section = formData[sectionKey];
+                    if (section && typeof section === 'object') {
+                      // Process nested settings within sections
+                      for (const settingKey of Object.keys(section)) {
+                        const setting = section[settingKey];
+                        if (setting && typeof setting === 'object' && (setting.customizable !== undefined || setting.value !== undefined)) {
+                          // This is an individual setting, save it directly
+                          console.log(`Saving admin setting: ${settingKey}`, setting);
+                          adminSettings.userSettings[settingKey] = setting;
+                        }
+                      }
+                    }
                   }
+
+                  console.log('Final admin settings to save:', adminSettings);
                   await chrome.storage.local.set({ adminSettings });
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
-                  await userCore.refreshUserSettings({});
+                  userSettings = await userCore.refreshUserSettings({});
+
+                  // Refresh the service manifest to reflect admin changes in user settings
+                  const serviceManifest = await embeddableServices.getServiceManifest();
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-third-party-service',
+                    service: serviceManifest
+                  }, '*');
+
+                  // Restart sync interval if activity logging settings changed
+                  if (data.body.button.id === 'activityLoggingSettingPage') {
+                    await restartSyncInterval();
+                  }
+
                   showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
