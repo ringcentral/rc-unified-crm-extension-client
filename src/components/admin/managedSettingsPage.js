@@ -14,8 +14,8 @@ function getManagedSettingsPageRender({ crmManifest }) {
                         title: "General"
                     },
                     {
-                        const: "callAndSMSLogging",
-                        title: "Call and SMS logging"
+                        const: "activityLogging",
+                        title: "Activity logging"
                     },
                     {
                         const: "contactSetting",
