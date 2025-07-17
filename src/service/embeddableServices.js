@@ -55,79 +55,153 @@ async function getServiceManifest() {
             {
                 id: 'logging',
                 type: 'group',
-                name: 'Call and SMS logging',
+                name: 'Activity logging',
                 items: [
                     {
-                        id: 'autoLogCall',
-                        type: 'boolean',
-                        name: 'Log phone calls automatically',
-                        description: 'Automatically log calls when they end in this app',
-                        readOnly: userCore.getAutoLogCallSetting(userSettings, isAdmin).readOnly,
-                        readOnlyReason: userCore.getAutoLogCallSetting(userSettings, isAdmin).warning ?? userCore.getAutoLogCallSetting(userSettings, isAdmin).readOnlyReason,
-                        value: userCore.getAutoLogCallSetting(userSettings, isAdmin).value,
+                        id: 'enableActivityLoggingSection',
+                        type: 'section',
+                        name: 'Enable automatic activity logging for:',
+                        items: [
+                            {
+                                id: 'autoLogAnsweredIncoming',
+                                type: 'boolean',
+                                name: 'Answered incoming calls',
+                                readOnly: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).readOnly,
+                                readOnlyReason: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).warning ?? userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).readOnlyReason,
+                                value: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).value,
+                            },
+                            {
+                                id: 'autoLogMissedIncoming',
+                                type: 'boolean',
+                                name: 'Missed incoming calls',
+                                readOnly: userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).readOnly,
+                                readOnlyReason: userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).warning ?? userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).readOnlyReason,
+                                value: userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).value,
+                            },
+                            {
+                                id: 'autoLogOutgoing',
+                                type: 'boolean',
+                                name: 'Outgoing calls',
+                                readOnly: userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).readOnly,
+                                readOnlyReason: userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).warning ?? userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).readOnlyReason,
+                                value: userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).value,
+                            },
+                            {
+                                id: 'autoLogVoicemails',
+                                type: 'boolean',
+                                name: 'Voicemails',
+                                readOnly: userCore.getAutoLogVoicemailsSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getAutoLogVoicemailsSetting(userSettings).readOnlyReason,
+                                value: userCore.getAutoLogVoicemailsSetting(userSettings).value,
+                            },
+                            {
+                                id: 'autoLogSMS',
+                                type: 'boolean',
+                                name: 'SMS',
+                                readOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
+                                value: userCore.getAutoLogSMSSetting(userSettings).value,
+                            },
+                            {
+                                id: 'autoLogInboundFax',
+                                type: 'boolean',
+                                name: 'Inbound faxes',
+                                readOnly: userCore.getAutoLogInboundFaxSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getAutoLogInboundFaxSetting(userSettings).readOnlyReason,
+                                value: userCore.getAutoLogInboundFaxSetting(userSettings).value,
+                            },
+                            {
+                                id: 'autoLogOutboundFax',
+                                type: 'boolean',
+                                name: 'Outbound faxes',
+                                readOnly: userCore.getAutoLogOutboundFaxSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getAutoLogOutboundFaxSetting(userSettings).readOnlyReason,
+                                value: userCore.getAutoLogOutboundFaxSetting(userSettings).value,
+                            }
+                        ],
+                        description: 'Automatically log activities for the selected entities'
                     },
                     {
-                        id: 'autoLogSMS',
-                        type: 'boolean',
-                        name: 'Log SMS conversations automatically',
-                        description: 'Automatically log SMS when they are sent or received in this app',
-                        readOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
-                        value: userCore.getAutoLogSMSSetting(userSettings).value,
+                        id: 'preferencesSection',
+                        type: 'section',
+                        name: 'Preferences',
+                        items: [
+                            {
+                                id: "oneTimeLog",
+                                type: "boolean",
+                                name: 'One-time call logging',
+                                readOnly: userCore.getOneTimeLogSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getOneTimeLogSetting(userSettings).readOnlyReason,
+                                value: userCore.getOneTimeLogSetting(userSettings).value
+                            }
+                        ],
+                        description: 'Delays logging until full call details are available'
                     },
                     {
-                        id: 'autoLogInboundFax',
-                        type: 'boolean',
-                        name: 'Log inbound faxes automatically',
-                        description: 'Automatically log inbound faxes when they are received in this app',
-                        readOnly: userCore.getAutoLogInboundFaxSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getAutoLogInboundFaxSetting(userSettings).readOnlyReason,
-                        value: userCore.getAutoLogInboundFaxSetting(userSettings).value,
+                        id: 'logSyncFrequencySection',
+                        type: 'section',
+                        name: 'Log sync frequency',
+                        items: [
+                            {
+                                id: "logSyncFrequency",
+                                type: "option",
+                                name: 'Frequency',
+                                options: [
+                                    {
+                                        id: 'disabled',
+                                        name: 'Disabled'
+                                    },
+                                    {
+                                        id: '10min',
+                                        name: '10 min'
+                                    },
+                                    {
+                                        id: '30min',
+                                        name: '30 min'
+                                    },
+                                    {
+                                        id: '1hour',
+                                        name: '1 hour'
+                                    },
+                                    {
+                                        id: '3hours',
+                                        name: '3 hours'
+                                    },
+                                    {
+                                        id: '1day',
+                                        name: '1 day'
+                                    }
+                                ],
+                                value: userCore.getLogSyncFrequencySetting(userSettings).value,
+                                readOnly: userCore.getLogSyncFrequencySetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getLogSyncFrequencySetting(userSettings).readOnlyReason,
+                            }
+                        ],
+                        description: 'How often to sync missed activity; disable to turn off background logging'
                     },
                     {
-                        id: 'autoLogOutboundFax',
-                        type: 'boolean',
-                        name: 'Log outbound faxes automatically',
-                        description: 'Automatically log outbound faxes when they are sent in this app',
-                        readOnly: userCore.getAutoLogOutboundFaxSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getAutoLogOutboundFaxSetting(userSettings).readOnlyReason,
-                        value: userCore.getAutoLogOutboundFaxSetting(userSettings).value,
-                    },
-                    {
-                        id: "enableRetroCallLogSync",
-                        type: "boolean",
-                        name: 'Retroactive call log sync',
-                        description: 'Periodically scans for and logs any missed activity',
-                        readOnly: userCore.getEnableRetroCallLogSync(userSettings).readOnly,
-                        readOnlyReason: userCore.getEnableRetroCallLogSync(userSettings).readOnlyReason,
-                        value: userCore.getEnableRetroCallLogSync(userSettings).value
-                    },
-                    {
-                        id: "oneTimeLog",
-                        type: "boolean",
-                        name: 'One-time call logging',
-                        description: 'Delays logging until full call details are available',
-                        readOnly: userCore.getOneTimeLogSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getOneTimeLogSetting(userSettings).readOnlyReason,
-                        value: userCore.getOneTimeLogSetting(userSettings).value
-                    },
-                    {
-                        id: "popupLogPageAfterCall",
-                        type: "boolean",
-                        name: '(Manual log) Open call logging page after call',
-                        description: 'Automatically open the logging form after each call',
-                        readOnly: userCore.getCallPopSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getCallPopSetting(userSettings).readOnlyReason,
-                        value: userCore.getCallPopSetting(userSettings).value
-                    },
-                    {
-                        id: "popupLogPageAfterSMS",
-                        type: "boolean",
-                        name: '(Manual log) Open SMS logging page after message',
-                        description: 'Automatically open the logging form after each message',
-                        readOnly: userCore.getSMSPopSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason,
-                        value: userCore.getSMSPopSetting(userSettings).value
+                        id: 'autoOpenSection',
+                        type: 'section',
+                        name: 'Auto-open logging page after:',
+                        items: [
+                            {
+                                id: "popupLogPageAfterSMS",
+                                type: "boolean",
+                                name: 'SMS is sent',
+                                readOnly: userCore.getSMSPopSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason,
+                                value: userCore.getSMSPopSetting(userSettings).value
+                            },
+                            {
+                                id: "popupLogPageAfterCall",
+                                type: "boolean",
+                                name: 'Call ends',
+                                readOnly: userCore.getCallPopSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getCallPopSetting(userSettings).readOnlyReason,
+                                value: userCore.getCallPopSetting(userSettings).value
+                            }
+                        ],
+                        description: 'Opens the logging page for manual entry after selected events'
                     }
                 ]
             },

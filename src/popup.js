@@ -19,7 +19,7 @@ import reportPage from './components/reportPage';
 import adminPage from './components/admin/adminPage';
 import managedSettingsPage from './components/admin/managedSettingsPage';
 import generalSettingPage from './components/admin/generalSettingPage';
-import callAndSMSLoggingSettingPage from './components/admin/managedSettings/callAndSMSLoggingSettingPage';
+import activityLoggingSettingPage from './components/admin/managedSettings/activityLoggingSettingPage';
 import customAdapterPage from './components/admin/customAdapterPage';
 import serverSideLoggingPage from './components/admin/serverSideLoggingPage';
 import contactSettingPage from './components/admin/managedSettings/contactSettingPage';
@@ -985,15 +985,15 @@ window.addEventListener('message', async (e) => {
                     path: `/customized/${clickToDialEmbedPageRender.id}`, // page id
                   }, '*');
                   break;
-                case 'callAndSMSLogging':
-                  const callAndSMSLoggingSettingPageRender = callAndSMSLoggingSettingPage.getCallAndSMSLoggingSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                case 'activityLogging':
+                  const activityLoggingSettingPageRender = activityLoggingSettingPage.getActivityLoggingSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
-                    page: callAndSMSLoggingSettingPageRender
+                    page: activityLoggingSettingPageRender
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
-                    path: `/customized/${callAndSMSLoggingSettingPageRender.id}`, // page id
+                    path: `/customized/${activityLoggingSettingPageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'serverSideLoggingSetting':
@@ -2065,7 +2065,7 @@ window.addEventListener('message', async (e) => {
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
-                case 'callAndSMSLoggingSettingPage':
+                case 'activityLoggingSettingPage':
                 case 'contactSettingPage':
                 case 'advancedFeaturesSettingPage':
                 case 'customSettingsPage':
