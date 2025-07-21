@@ -7,127 +7,42 @@ function getActivityLoggingSettingPageRender({ adminUserSettings }) {
             type: 'object',
             required: [],
             properties: {
-                enableActivityLoggingSection: {
+                activityLoggingOptions: {
                     type: 'object',
                     title: 'Enable automatic activity logging for:',
                     properties: {
-                        autoLogAnsweredIncoming: {
-                            type: 'object',
-                            title: 'Answered incoming calls',
-                            properties: {
-                                customizable: {
-                                    type: 'boolean',
-                                    title: 'Customizable by user'
-                                },
-                                value: {
-                                    type: 'boolean',
-                                    title: 'Value'
-                                }
-                            }
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
                         },
-                        autoLogMissedIncoming: {
-                            type: 'object',
-                            title: 'Missed incoming calls',
-                            properties: {
-                                customizable: {
-                                    type: 'boolean',
-                                    title: 'Customizable by user'
-                                },
-                                value: {
-                                    type: 'boolean',
-                                    title: 'Value'
-                                }
-                            }
-                        },
-                        autoLogOutgoing: {
-                            type: 'object',
-                            title: 'Outgoing calls',
-                            properties: {
-                                customizable: {
-                                    type: 'boolean',
-                                    title: 'Customizable by user'
-                                },
-                                value: {
-                                    type: 'boolean',
-                                    title: 'Value'
-                                }
-                            }
-                        },
-                        autoLogVoicemails: {
-                            type: 'object',
-                            title: 'Voicemails',
-                            properties: {
-                                customizable: {
-                                    type: 'boolean',
-                                    title: 'Customizable by user'
-                                },
-                                value: {
-                                    type: 'boolean',
-                                    title: 'Value'
-                                }
-                            }
-                        },
-                        autoLogSMS: {
-                            type: 'object',
-                            title: 'SMS',
-                            properties: {
-                                customizable: {
-                                    type: 'boolean',
-                                    title: 'Customizable by user'
-                                },
-                                value: {
-                                    type: 'boolean',
-                                    title: 'Value'
-                                }
-                            }
-                        },
-                        autoLogInboundFax: {
-                            type: 'object',
-                            title: 'Inbound faxes',
-                            properties: {
-                                customizable: {
-                                    type: 'boolean',
-                                    title: 'Customizable by user'
-                                },
-                                value: {
-                                    type: 'boolean',
-                                    title: 'Value'
-                                }
-                            }
-                        },
-                        autoLogOutboundFax: {
-                            type: 'object',
-                            title: 'Outbound faxes',
-                            properties: {
-                                customizable: {
-                                    type: 'boolean',
-                                    title: 'Customizable by user'
-                                },
-                                value: {
-                                    type: 'boolean',
-                                    title: 'Value'
-                                }
-                            }
-                        }
-                    }
-                },
-                preferencesSection: {
-                    type: 'object',
-                    title: 'Preferences',
-                    properties: {
-                        oneTimeLog: {
-                            type: 'object',
-                            title: 'One-time call logging',
-                            properties: {
-                                customizable: {
-                                    type: 'boolean',
-                                    title: 'Customizable by user'
-                                },
-                                value: {
-                                    type: 'boolean',
-                                    title: 'Value'
-                                }
-                            }
+                        value: {
+                            type: 'array',
+                            title: 'Selected options',
+                            items: {
+                                type: 'string',
+                                enum: [
+                                    'oneTimeLog',
+                                    'autoLogAnsweredIncoming',
+                                    'autoLogMissedIncoming',
+                                    'autoLogOutgoing',
+                                    'autoLogVoicemails',
+                                    'autoLogSMS',
+                                    'autoLogInboundFax',
+                                    'autoLogOutboundFax'
+
+                                ],
+                                enumNames: [
+                                    'One-time call logging',
+                                    'Answered incoming calls',
+                                    'Missed incoming calls',
+                                    'Outgoing calls',
+                                    'Voicemails',
+                                    'SMS',
+                                    'Inbound faxes',
+                                    'Outbound faxes'
+                                ]
+                            },
+                            uniqueItems: true
                         }
                     }
                 },
@@ -153,128 +68,76 @@ function getActivityLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
-                autoOpenSection: {
+                autoOpenOptions: {
                     type: 'object',
                     title: 'Auto-open logging page after:',
                     properties: {
-                        popupLogPageAfterSMS: {
-                            type: 'object',
-                            title: 'SMS is sent',
-                            properties: {
-                                customizable: {
-                                    type: 'boolean',
-                                    title: 'Customizable by user'
-                                },
-                                value: {
-                                    type: 'boolean',
-                                    title: 'Value'
-                                }
-                            }
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
                         },
-                        popupLogPageAfterCall: {
-                            type: 'object',
-                            title: 'Call ends',
-                            properties: {
-                                customizable: {
-                                    type: 'boolean',
-                                    title: 'Customizable by user'
-                                },
-                                value: {
-                                    type: 'boolean',
-                                    title: 'Value'
-                                }
-                            }
+                        value: {
+                            type: 'array',
+                            title: 'Selected options',
+                            items: {
+                                type: 'string',
+                                enum: [
+                                    'popupLogPageAfterSMS',
+                                    'popupLogPageAfterCall'
+                                ]
+                            },
+                            uniqueItems: true
                         }
                     }
                 }
             }
         },
         uiSchema: {
-            enableActivityLoggingSection: {
+            activityLoggingOptions: {
                 "ui:collapsible": true,
-                autoLogAnsweredIncoming: {
-                    "ui:collapsible": true,
-                },
-                autoLogMissedIncoming: {
-                    "ui:collapsible": true,
-                },
-                autoLogOutgoing: {
-                    "ui:collapsible": true,
-                },
-                autoLogVoicemails: {
-                    "ui:collapsible": true,
-                },
-                autoLogSMS: {
-                    "ui:collapsible": true,
-                },
-                autoLogInboundFax: {
-                    "ui:collapsible": true,
-                },
-                autoLogOutboundFax: {
-                    "ui:collapsible": true,
-                }
-            },
-            preferencesSection: {
-                "ui:collapsible": true,
-                oneTimeLog: {
-                    "ui:collapsible": true,
+                value: {
+                    "ui:widget": "checkboxes",
+                    "ui:options": {
+                        "inline": false
+                    }
                 }
             },
             logSyncFrequencySection: {
                 "ui:collapsible": true,
-                logSyncFrequency: {
-                    "ui:collapsible": true,
-                }
             },
-            autoOpenSection: {
+            autoOpenOptions: {
                 "ui:collapsible": true,
-                popupLogPageAfterSMS: {
-                    "ui:collapsible": true,
-                },
-                popupLogPageAfterCall: {
-                    "ui:collapsible": true,
+                value: {
+                    "ui:widget": "checkboxes",
+                    "ui:options": {
+                        "inline": false
+                    }
                 }
             },
             submitButtonOptions: {
                 submitText: 'Save',
-            }
+            },
         },
         formData: {
-            enableActivityLoggingSection: {
-                autoLogAnsweredIncoming: {
-                    customizable: adminUserSettings?.autoLogAnsweredIncoming?.customizable ?? true,
-                    value: adminUserSettings?.autoLogAnsweredIncoming?.value ?? false
-                },
-                autoLogMissedIncoming: {
-                    customizable: adminUserSettings?.autoLogMissedIncoming?.customizable ?? true,
-                    value: adminUserSettings?.autoLogMissedIncoming?.value ?? false
-                },
-                autoLogOutgoing: {
-                    customizable: adminUserSettings?.autoLogOutgoing?.customizable ?? true,
-                    value: adminUserSettings?.autoLogOutgoing?.value ?? false
-                },
-                autoLogVoicemails: {
-                    customizable: adminUserSettings?.autoLogVoicemails?.customizable ?? true,
-                    value: adminUserSettings?.autoLogVoicemails?.value ?? false
-                },
-                autoLogSMS: {
-                    customizable: adminUserSettings?.autoLogSMS?.customizable ?? true,
-                    value: adminUserSettings?.autoLogSMS?.value ?? false
-                },
-                autoLogInboundFax: {
-                    customizable: adminUserSettings?.autoLogInboundFax?.customizable ?? true,
-                    value: adminUserSettings?.autoLogInboundFax?.value ?? false
-                },
-                autoLogOutboundFax: {
-                    customizable: adminUserSettings?.autoLogOutboundFax?.customizable ?? true,
-                    value: adminUserSettings?.autoLogOutboundFax?.value ?? false
-                }
-            },
-            preferencesSection: {
-                oneTimeLog: {
-                    customizable: adminUserSettings?.oneTimeLog?.customizable ?? true,
-                    value: adminUserSettings?.oneTimeLog?.value ?? false
-                }
+            activityLoggingOptions: {
+                customizable: adminUserSettings?.autoLogAnsweredIncoming?.customizable ??
+                    adminUserSettings?.autoLogMissedIncoming?.customizable ??
+                    adminUserSettings?.autoLogOutgoing?.customizable ??
+                    adminUserSettings?.autoLogVoicemails?.customizable ??
+                    adminUserSettings?.autoLogSMS?.customizable ??
+                    adminUserSettings?.autoLogInboundFax?.customizable ??
+                    adminUserSettings?.autoLogOutboundFax?.customizable ??
+                    adminUserSettings?.oneTimeLog?.customizable ?? true,
+                value: [
+                    ...((adminUserSettings?.autoLogAnsweredIncoming?.value ?? false) ? ['autoLogAnsweredIncoming'] : []),
+                    ...((adminUserSettings?.autoLogMissedIncoming?.value ?? false) ? ['autoLogMissedIncoming'] : []),
+                    ...((adminUserSettings?.autoLogOutgoing?.value ?? false) ? ['autoLogOutgoing'] : []),
+                    ...((adminUserSettings?.autoLogVoicemails?.value ?? false) ? ['autoLogVoicemails'] : []),
+                    ...((adminUserSettings?.autoLogSMS?.value ?? false) ? ['autoLogSMS'] : []),
+                    ...((adminUserSettings?.autoLogInboundFax?.value ?? false) ? ['autoLogInboundFax'] : []),
+                    ...((adminUserSettings?.autoLogOutboundFax?.value ?? false) ? ['autoLogOutboundFax'] : []),
+                    ...((adminUserSettings?.oneTimeLog?.value ?? false) ? ['oneTimeLog'] : [])
+                ]
             },
             logSyncFrequencySection: {
                 logSyncFrequency: {
@@ -282,15 +145,13 @@ function getActivityLoggingSettingPageRender({ adminUserSettings }) {
                     value: adminUserSettings?.logSyncFrequency?.value ?? '10min'
                 }
             },
-            autoOpenSection: {
-                popupLogPageAfterSMS: {
-                    customizable: adminUserSettings?.popupLogPageAfterSMS?.customizable ?? true,
-                    value: adminUserSettings?.popupLogPageAfterSMS?.value ?? false
-                },
-                popupLogPageAfterCall: {
-                    customizable: adminUserSettings?.popupLogPageAfterCall?.customizable ?? true,
-                    value: adminUserSettings?.popupLogPageAfterCall?.value ?? false
-                }
+            autoOpenOptions: {
+                customizable: adminUserSettings?.popupLogPageAfterSMS?.customizable ??
+                    adminUserSettings?.popupLogPageAfterCall?.customizable ?? true,
+                value: [
+                    ...((adminUserSettings?.popupLogPageAfterSMS?.value ?? false) ? ['popupLogPageAfterSMS'] : []),
+                    ...((adminUserSettings?.popupLogPageAfterCall?.value ?? false) ? ['popupLogPageAfterCall'] : [])
+                ]
             }
         }
     }

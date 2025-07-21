@@ -51,19 +51,47 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     }
     const rcAccessToken = getRcAccessToken();
     const manifest = await getManifest();
-    let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
+
+    // Try to get user settings from server, with fallback to local storage
+    let userSettings;
+    try {
+        userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
+    } catch (e) {
+        console.log('Failed to get user settings from server, trying local storage:', e);
+        const { userSettings: localUserSettings } = await chrome.storage.local.get({ userSettings: {} });
+        userSettings = localUserSettings;
+    }
+
+    // If both server and local storage fail, initialize with empty object
+    if (!userSettings) {
+        userSettings = {};
+    }
     if (changedSettings) {
+        console.log('Applying changed settings:', changedSettings);
         for (const k of Object.keys(changedSettings)) {
-            if (userSettings[k] === undefined || !userSettings[k].value) {
+            if (userSettings[k] === undefined) {
                 userSettings[k] = changedSettings[k];
+                console.log(`Setting ${k} to new value:`, changedSettings[k]);
             }
             else {
                 userSettings[k].value = changedSettings[k].value;
+                console.log(`Updating ${k} value from ${userSettings[k].value} to ${changedSettings[k].value}`);
             }
         }
+        console.log('Final user settings after changes:', userSettings);
     }
     await chrome.storage.local.set({ userSettings });
-    userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+
+    // Try to upload user settings to server, but continue if it fails
+    try {
+        const uploadedSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+        if (uploadedSettings) {
+            userSettings = uploadedSettings;
+        }
+    } catch (e) {
+        console.log('Failed to upload user settings to server, using local settings:', e);
+        // Continue with local settings if upload fails
+    }
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-update-features-flags',
         chat: getShowChatTabSetting(userSettings).value,

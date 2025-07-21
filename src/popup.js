@@ -2066,15 +2066,63 @@ window.addEventListener('message', async (e) => {
               break;
             case '/settings':
               const changedSettings = {};
+              console.log('Raw settings data from widget:', data.body.settings);
               for (const s of data.body.settings) {
+                console.log('Processing setting section:', s);
                 if (s.items !== undefined) {
                   for (const i of s.items) {
+                    console.log('Processing setting item:', i);
                     if (i?.items !== undefined) {
                       for (const ii of i.items) {
-                        changedSettings[ii.id] = { value: ii.value };
+                        console.log('Processing nested setting item:', ii);
+                        // Handle checkbox options for activity logging at nested level
+                        if (ii.id === 'activityLoggingOptions') {
+                          // Convert array of selected options to individual boolean settings
+                          const selectedOptions = ii.value || [];
+                          console.log('Activity logging options selected:', selectedOptions);
+                          changedSettings.autoLogAnsweredIncoming = { value: selectedOptions.includes('autoLogAnsweredIncoming') };
+                          changedSettings.autoLogMissedIncoming = { value: selectedOptions.includes('autoLogMissedIncoming') };
+                          changedSettings.autoLogOutgoing = { value: selectedOptions.includes('autoLogOutgoing') };
+                          changedSettings.autoLogVoicemails = { value: selectedOptions.includes('autoLogVoicemails') };
+                          changedSettings.autoLogSMS = { value: selectedOptions.includes('autoLogSMS') };
+                          changedSettings.autoLogInboundFax = { value: selectedOptions.includes('autoLogInboundFax') };
+                          changedSettings.autoLogOutboundFax = { value: selectedOptions.includes('autoLogOutboundFax') };
+                          changedSettings.oneTimeLog = { value: selectedOptions.includes('oneTimeLog') };
+                          console.log('Activity logging changed settings:', changedSettings);
+                        } else if (ii.id === 'autoOpenOptions') {
+                          // Convert array of selected options to individual boolean settings
+                          const selectedOptions = ii.value || [];
+                          console.log('Auto-open options selected:', selectedOptions);
+                          changedSettings.popupLogPageAfterSMS = { value: selectedOptions.includes('popupLogPageAfterSMS') };
+                          changedSettings.popupLogPageAfterCall = { value: selectedOptions.includes('popupLogPageAfterCall') };
+                        } else {
+                          changedSettings[ii.id] = { value: ii.value };
+                        }
                       }
                     } else {
-                      changedSettings[i.id] = { value: i.value };
+                      // Handle checkbox options for activity logging at direct level (fallback)
+                      if (i.id === 'activityLoggingOptions') {
+                        // Convert array of selected options to individual boolean settings
+                        const selectedOptions = i.value || [];
+                        console.log('Activity logging options selected:', selectedOptions);
+                        changedSettings.autoLogAnsweredIncoming = { value: selectedOptions.includes('autoLogAnsweredIncoming') };
+                        changedSettings.autoLogMissedIncoming = { value: selectedOptions.includes('autoLogMissedIncoming') };
+                        changedSettings.autoLogOutgoing = { value: selectedOptions.includes('autoLogOutgoing') };
+                        changedSettings.autoLogVoicemails = { value: selectedOptions.includes('autoLogVoicemails') };
+                        changedSettings.autoLogSMS = { value: selectedOptions.includes('autoLogSMS') };
+                        changedSettings.autoLogInboundFax = { value: selectedOptions.includes('autoLogInboundFax') };
+                        changedSettings.autoLogOutboundFax = { value: selectedOptions.includes('autoLogOutboundFax') };
+                        changedSettings.oneTimeLog = { value: selectedOptions.includes('oneTimeLog') };
+                        console.log('Activity logging changed settings:', changedSettings);
+                      } else if (i.id === 'autoOpenOptions') {
+                        // Convert array of selected options to individual boolean settings
+                        const selectedOptions = i.value || [];
+                        console.log('Auto-open options selected:', selectedOptions);
+                        changedSettings.popupLogPageAfterSMS = { value: selectedOptions.includes('popupLogPageAfterSMS') };
+                        changedSettings.popupLogPageAfterCall = { value: selectedOptions.includes('popupLogPageAfterCall') };
+                      } else {
+                        changedSettings[i.id] = { value: i.value };
+                      }
                     }
                   }
                 }
@@ -2085,6 +2133,14 @@ window.addEventListener('message', async (e) => {
               userSettings = await userCore.refreshUserSettings({
                 changedSettings
               });
+
+              // Refresh the service manifest to reflect user settings changes
+              const serviceManifest = await embeddableServices.getServiceManifest();
+              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-third-party-service',
+                service: serviceManifest
+              }, '*');
+
               if (data.body.setting.id === "developerMode") {
                 showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
                 await chrome.storage.local.set({ developerMode: data.body.setting.value });
@@ -2112,16 +2168,84 @@ window.addEventListener('message', async (e) => {
                   const formData = data.body.button.formData;
                   console.log('Admin settings form data received:', formData);
 
-                  for (const sectionKey of Object.keys(formData)) {
-                    const section = formData[sectionKey];
-                    if (section && typeof section === 'object') {
-                      // Process nested settings within sections
-                      for (const settingKey of Object.keys(section)) {
-                        const setting = section[settingKey];
-                        if (setting && typeof setting === 'object' && (setting.customizable !== undefined || setting.value !== undefined)) {
-                          // This is an individual setting, save it directly
+                  // For activity logging page, handle both flat and nested structures
+                  if (data.body.button.id === 'activityLoggingSettingPage') {
+                    // Handle checkbox array structure
+                    for (const settingKey of Object.keys(formData)) {
+                      const setting = formData[settingKey];
+                      if (setting && typeof setting === 'object') {
+                        if (settingKey === 'activityLoggingOptions') {
+                          // Handle activity logging checkbox array
+                          const selectedOptions = setting.value || [];
+                          adminSettings.userSettings.autoLogAnsweredIncoming = {
+                            customizable: setting.customizable ?? true,
+                            value: selectedOptions.includes('autoLogAnsweredIncoming')
+                          };
+                          adminSettings.userSettings.autoLogMissedIncoming = {
+                            customizable: setting.customizable ?? true,
+                            value: selectedOptions.includes('autoLogMissedIncoming')
+                          };
+                          adminSettings.userSettings.autoLogOutgoing = {
+                            customizable: setting.customizable ?? true,
+                            value: selectedOptions.includes('autoLogOutgoing')
+                          };
+                          adminSettings.userSettings.autoLogVoicemails = {
+                            customizable: setting.customizable ?? true,
+                            value: selectedOptions.includes('autoLogVoicemails')
+                          };
+                          adminSettings.userSettings.autoLogSMS = {
+                            customizable: setting.customizable ?? true,
+                            value: selectedOptions.includes('autoLogSMS')
+                          };
+                          adminSettings.userSettings.autoLogInboundFax = {
+                            customizable: setting.customizable ?? true,
+                            value: selectedOptions.includes('autoLogInboundFax')
+                          };
+                          adminSettings.userSettings.autoLogOutboundFax = {
+                            customizable: setting.customizable ?? true,
+                            value: selectedOptions.includes('autoLogOutboundFax')
+                          };
+                          adminSettings.userSettings.oneTimeLog = {
+                            customizable: setting.customizable ?? true,
+                            value: selectedOptions.includes('oneTimeLog')
+                          };
+                          console.log('Saved activity logging options:', selectedOptions);
+                        } else if (settingKey === 'autoOpenOptions') {
+                          // Handle auto-open checkbox array
+                          const selectedOptions = setting.value || [];
+                          adminSettings.userSettings.popupLogPageAfterSMS = {
+                            customizable: setting.customizable ?? true,
+                            value: selectedOptions.includes('popupLogPageAfterSMS')
+                          };
+                          adminSettings.userSettings.popupLogPageAfterCall = {
+                            customizable: setting.customizable ?? true,
+                            value: selectedOptions.includes('popupLogPageAfterCall')
+                          };
+                          console.log('Saved auto-open options:', selectedOptions);
+                        } else if (setting.customizable !== undefined || setting.value !== undefined) {
+                          // This is a direct setting
                           console.log(`Saving admin setting: ${settingKey}`, setting);
                           adminSettings.userSettings[settingKey] = setting;
+                        } else if (settingKey === 'logSyncFrequencySection' && setting.logSyncFrequency) {
+                          // Handle the nested logSyncFrequency setting
+                          console.log(`Saving admin setting: logSyncFrequency`, setting.logSyncFrequency);
+                          adminSettings.userSettings.logSyncFrequency = setting.logSyncFrequency;
+                        }
+                      }
+                    }
+                  } else {
+                    // For other pages, handle nested structure
+                    for (const sectionKey of Object.keys(formData)) {
+                      const section = formData[sectionKey];
+                      if (section && typeof section === 'object') {
+                        // Process nested settings within sections
+                        for (const settingKey of Object.keys(section)) {
+                          const setting = section[settingKey];
+                          if (setting && typeof setting === 'object' && (setting.customizable !== undefined || setting.value !== undefined)) {
+                            // This is an individual setting, save it directly
+                            console.log(`Saving admin setting: ${settingKey}`, setting);
+                            adminSettings.userSettings[settingKey] = setting;
+                          }
                         }
                       }
                     }
