@@ -168,6 +168,9 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                 await disableServerSideLogging({ platform, rcAccessToken });
             }
             //  Subscribe
+            // TODO: loggingWithUserAssigned overrides loggingByAdmin if useAdminAssignedUserToken is true
+            //       There are 2 roles, one to create activity and the other to own it (case: admin creating and assigning to user, so user would eventually own it)
+            //       To change the naming so that it has better readability. Right it's confusing on variable names for different roles.
             const subscribeResp = await axios.post(
                 `${serverDomainUrl}/subscribe`,
                 {
@@ -175,7 +178,7 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                     crmPlatform: platform.name,
                     subscriptionLevel,
                     loggingByAdmin,
-                    loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ?? false
+                    loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false
                 },
                 {
                     headers: {
