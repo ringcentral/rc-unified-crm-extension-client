@@ -2371,7 +2371,7 @@ window.addEventListener('message', async (e) => {
   catch (e) {
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
     console.log(e);
-    if (e.response && e.response.data && !noShowNotification && typeof e.response.data === 'string') {
+    if (e.response && e.response.data && e.response?.status !== 404 && !noShowNotification && typeof e.response.data === 'string') {
       showNotification({ level: 'warning', message: e.response.data, ttl: 5000 });
     }
     else if (e.message.includes('timeout')) {
