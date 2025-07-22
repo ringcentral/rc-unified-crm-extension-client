@@ -203,7 +203,7 @@ async function addPendingRecordingSessionId({ sessionId }) {
 }
 
 async function triggerPendingRecordingCheck({ serverUrl }) {
-    const { pendingRecordings } = await chrome.storage.local.get({ pendingRecordings: [] });
+    let { pendingRecordings } = await chrome.storage.local.get({ pendingRecordings: [] });
     const removedPendingRecordings = [];
     if (pendingRecordings.length > 0) {
         for (const sessionId of pendingRecordings) {
@@ -222,9 +222,9 @@ async function triggerPendingRecordingCheck({ serverUrl }) {
 }
 
 async function removePendingRecordingSessionId({ sessionId }) {
-    const { pendingRecordings } = await chrome.storage.local.get({ pendingRecordings: [] });
+    let { pendingRecordings } = await chrome.storage.local.get({ pendingRecordings: [] });
     if (pendingRecordings.includes(sessionId)) {
-        pendingRecordings.splice(pendingRecordings.indexOf(sessionId), 1);
+        pendingRecordings = pendingRecordings.filter(sessionId => sessionId !== sessionId);
     }
     await chrome.storage.local.set({ pendingRecordings });
 }
