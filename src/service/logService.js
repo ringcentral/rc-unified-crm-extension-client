@@ -128,7 +128,7 @@ async function forceCallLogMatcherCheck() {
 }
 
 async function syncCallData({
-    manifest,
+    serverUrl,
     dataBody
 }) {
     const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
@@ -139,7 +139,7 @@ async function syncCallData({
         console.log('call recording updating...');
         await logCore.updateLog(
             {
-                serverUrl: manifest.serverUrl,
+                serverUrl,
                 logType: 'Call',
                 rcAdditionalSubmission,
                 sessionId: dataBody.call.sessionId,
@@ -156,7 +156,7 @@ async function syncCallData({
     else {
         await logCore.updateLog(
             {
-                serverUrl: manifest.serverUrl,
+                serverUrl,
                 logType: 'Call',
                 rcAdditionalSubmission,
                 sessionId: dataBody.call.sessionId,
