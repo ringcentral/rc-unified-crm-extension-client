@@ -1,4 +1,5 @@
 import userCore from '../core/user';
+import logService from '../service/logService';
 function getAdditionalFieldDefaultValuesFromSetting({
     platform,
     userSettings,
@@ -193,6 +194,43 @@ async function getLogConflictInfo({
     return { hasConflict, autoSelectAdditionalSubmission }
 }
 
+async function addPendingRecordingSessionId({ sessionId }) {
+    const { pendingRecordings } = await chrome.storage.local.get({ pendingRecordings: [] });
+    if (!pendingRecordings.includes(sessionId)) {
+        pendingRecordings.push(sessionId);
+    }
+    await chrome.storage.local.set({ pendingRecordings });
+}
+
+async function triggerPendingRecordingCheck({ serverUrl }) {
+    let { pendingRecordings } = await chrome.storage.local.get({ pendingRecordings: [] });
+    const removedPendingRecordings = [];
+    if (pendingRecordings.length > 0) {
+        for (const sessionId of pendingRecordings) {
+            const callLog = await RCAdapter.getCallLog({ sessionId });
+            if (callLog) {
+                await logService.syncCallData({
+                    serverUrl,
+                    dataBody: callLog
+                });
+                removedPendingRecordings.push(sessionId);
+            }
+        }
+        pendingRecordings = pendingRecordings.filter(sessionId => !removedPendingRecordings.includes(sessionId));
+        await chrome.storage.local.set({ pendingRecordings });
+    }
+}
+
+async function removePendingRecordingSessionId({ sessionId }) {
+    let { pendingRecordings } = await chrome.storage.local.get({ pendingRecordings: [] });
+    if (pendingRecordings.includes(sessionId)) {
+        pendingRecordings = pendingRecordings.filter(sessionId => sessionId !== sessionId);
+    }
+    await chrome.storage.local.set({ pendingRecordings });
+}
 
 exports.getLogConflictInfo = getLogConflictInfo;
 exports.logPageFormDataDefaulting = logPageFormDataDefaulting;
+exports.addPendingRecordingSessionId = addPendingRecordingSessionId;
+exports.triggerPendingRecordingCheck = triggerPendingRecordingCheck;
+exports.removePendingRecordingSessionId = removePendingRecordingSessionId;

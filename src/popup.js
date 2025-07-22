@@ -52,7 +52,7 @@ import {
 
 import logService from './service/logService';
 import embeddableServices from './service/embeddableServices';
-import { logPageFormDataDefaulting, getLogConflictInfo } from './lib/logUtil';
+import { logPageFormDataDefaulting, getLogConflictInfo, addPendingRecordingSessionId, triggerPendingRecordingCheck, removePendingRecordingSessionId } from './lib/logUtil';
 import { bullhornHeartbeat, tryConnectToBullhorn } from './misc/bullhorn';
 
 import axios from 'axios';
@@ -108,7 +108,8 @@ window.addEventListener('message', async (e) => {
                 link: "(pending...)",
                 expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days
               }
-            });
+              });
+              await addPendingRecordingSessionId({ sessionId: data.telephonySession.sessionId });
           }
           break;
         case 'rc-calling-settings-notify':
@@ -241,6 +242,11 @@ window.addEventListener('message', async (e) => {
               setInterval(async function () {
                 userSettings = await userCore.refreshUserSettings({});
               }, 900000);
+
+              // Set every 5min, check if there's any pending recording link
+              setInterval(async function () {
+                await triggerPendingRecordingCheck({ serverUrl: manifest.serverUrl });
+              }, 300000);
             }
             // Unique: Bullhorn
             if (platform.name === 'bullhorn' && crmAuthed) {
@@ -1336,11 +1342,13 @@ window.addEventListener('message', async (e) => {
                   // If there is existing call log, update it
                   if (existingCalls?.length > 0 && existingCalls[0]?.matched) {
                     await logService.syncCallData({
-                      manifest,
+                      serverUrl: manifest.serverUrl,
                       dataBody: data.body
                     });
                     if (data.body.call?.recording?.link) {
                       trackUpdateCallRecordingLink({ processState: 'finish' });
+                      // remove pending recording link mark from storage
+                      await removePendingRecordingSessionId({ sessionId: data.body.call.sessionId });
                     }
                   }
                   break;
