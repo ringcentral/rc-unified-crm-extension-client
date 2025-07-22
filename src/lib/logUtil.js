@@ -216,9 +216,7 @@ async function triggerPendingRecordingCheck({ serverUrl }) {
                 removedPendingRecordings.push(sessionId);
             }
         }
-        for (const sessionId of removedPendingRecordings) {
-            pendingRecordings.splice(pendingRecordings.indexOf(sessionId), 1);
-        }
+        pendingRecordings = pendingRecordings.filter(sessionId => !removedPendingRecordings.includes(sessionId));
         await chrome.storage.local.set({ pendingRecordings });
     }
 }
