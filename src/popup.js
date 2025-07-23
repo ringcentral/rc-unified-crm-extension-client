@@ -267,6 +267,7 @@ window.addEventListener('message', async (e) => {
             }
             else if (!rcUnifiedCrmExtJwt && !crmAuthed) {
               currentNotificationId = await showNotification({ level: 'warning', message: `Please go to Settings and connect to ${platform.name}`, ttl: 60000 });
+              authCore.setAuth(false);
             }
             try {
               const rcInfo = await getRcInfo();
