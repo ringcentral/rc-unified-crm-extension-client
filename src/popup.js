@@ -597,9 +597,9 @@ window.addEventListener('message', async (e) => {
           if (data.path === '/settings' && crmAuthed) {
             const nowDate = new Date();
             if (nowDate - lastUserSettingSyncDate > 60000) {
-              showNotification({ level: 'success', message: 'User settings syncing', ttl: 2000 });
+              // showNotification({ level: 'success', message: 'User settings syncing', ttl: 2000 });
               userSettings = await userCore.refreshUserSettings({});
-              showNotification({ level: 'success', message: 'User settings synced', ttl: 2000 });
+              // showNotification({ level: 'success', message: 'User settings synced', ttl: 2000 });
               lastUserSettingSyncDate = new Date();
             }
           }
