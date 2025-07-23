@@ -20,7 +20,7 @@ function getAppearancePageRender() {
                         },
                         {
                             const: "clickToDialEmbed",
-                            title: "Click-to-dial"
+                            title: "Badge"
                         }
                     ]
                 }

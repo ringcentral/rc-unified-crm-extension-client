@@ -1,7 +1,7 @@
 function getClickToDialEmbedPageRender({ adminUserSettings }) {
     return {
         id: 'clickToDialEmbedPage',
-        title: 'Click-to-dial',
+        title: 'Badge',
         type: 'page',
         schema: {
             type: 'object',
@@ -16,7 +16,7 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
                         },
                         value: {
                             type: 'string',
-                            title: 'Click-to-dial mode',
+                            title: 'Badge mode',
                             oneOf: [
                                 { const: 'disabled', title: 'Disabled' },
                                 { const: 'crmOnly', title: 'Enable for connected CRM only' },
@@ -29,7 +29,7 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
                 },
                 clickToDialUrls: {
                     type: 'object',
-                    title: 'URLs for click-to-dial',
+                    title: 'URLs for badge',
                     properties: {
                         customizable: {
                             type: 'boolean',

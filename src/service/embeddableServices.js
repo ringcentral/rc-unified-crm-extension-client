@@ -237,14 +237,14 @@ async function getServiceManifest() {
                     {
                         id: 'clickToDialEmbed',
                         type: 'section',
-                        name: 'Click-to-dial',
+                        name: 'Badge',
                         groupId: 'appearance',
                         description: 'Configure click-to-dial functionality and website permissions',
                         items: [
                             {
                                 id: 'clickToDialEmbedMode',
                                 type: 'option',
-                                name: 'Click-to-dial mode',
+                                name: 'Badge mode',
                                 options: [
                                     {
                                         id: 'disabled',
@@ -270,7 +270,7 @@ async function getServiceManifest() {
                             {
                                 id: 'clickToDialUrls',
                                 type: 'array',
-                                name: 'URLs for click-to-dial',
+                                name: 'URLs for badge',
                                 helper: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
                                 value: userCore.getClickToDialUrls(userSettings).value,
                                 readOnly: userCore.getClickToDialUrls(userSettings).readOnly,
