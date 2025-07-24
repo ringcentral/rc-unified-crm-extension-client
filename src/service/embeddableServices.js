@@ -134,6 +134,7 @@ async function getServiceManifest() {
                 id: 'appearance',
                 type: 'group',
                 name: 'Appearance',
+                description: 'Modify the display and theme preferences',
                 items: [
                     {
                         id: 'tabs',
@@ -237,14 +238,14 @@ async function getServiceManifest() {
                     {
                         id: 'clickToDialEmbed',
                         type: 'section',
-                        name: 'Badge',
+                        name: 'Enabled domains',
                         groupId: 'appearance',
-                        description: 'Configure click-to-dial functionality and website permissions',
+                        description: 'Manage the URLs App Connect is enabled for',
                         items: [
                             {
                                 id: 'clickToDialEmbedMode',
                                 type: 'option',
-                                name: 'Badge mode',
+                                name: 'Enable mode',
                                 options: [
                                     {
                                         id: 'disabled',
@@ -270,7 +271,7 @@ async function getServiceManifest() {
                             {
                                 id: 'clickToDialUrls',
                                 type: 'array',
-                                name: 'URLs for badge',
+                                name: 'URLs',
                                 helper: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
                                 value: userCore.getClickToDialUrls(userSettings).value,
                                 readOnly: userCore.getClickToDialUrls(userSettings).readOnly,

@@ -20,7 +20,7 @@ function getAppearancePageRender() {
                         },
                         {
                             const: "clickToDialEmbed",
-                            title: "Badge"
+                            title: "Enabled domains"
                         }
                     ]
                 }

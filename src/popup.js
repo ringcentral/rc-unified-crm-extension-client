@@ -2121,11 +2121,8 @@ window.addEventListener('message', async (e) => {
                     });
                   }
                   break;
-                case 'openFeedbackPageButton':
-                  chrome.runtime.sendMessage({
-                    type: "openPopupWindow",
-                    navigationPath: "/feedback"
-                  });
+                case 'openCommunityPageButton':
+                  window.open('https://community.ringcentral.com/groups/app-connect-22', '_blank');
                   break;
                 case 'documentation':
                   if (platform?.documentationUrl) {
