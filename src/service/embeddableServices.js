@@ -53,172 +53,151 @@ async function getServiceManifest() {
         settingsPath: '/settings',
         settings: [
             {
-                id: 'logging',
-                type: 'group',
+                id: 'activityLogging',
+                type: 'section',
                 name: 'Activity logging',
                 items: [
                     {
-                        id: 'activityLoggingSection',
-                        type: 'section',
-                        name: 'Enable automatic activity logging for:',
-                        description: 'Select which activities to log automatically',
-                        items: [
+                        id: 'activityLoggingOptions',
+                        type: 'option',
+                        name: ' Enable automatic activity logging for:',
+                        multiple: true,
+                        checkbox: true,
+                        description: 'Automatically log activities for the selected entities',
+                        options: [
                             {
-                                id: 'activityLoggingOptions',
-                                type: 'option',
-                                name: 'Activity types',
-                                multiple: true,
-                                checkbox: true,
-                                options: [
-                                    {
-                                        id: 'oneTimeLog',
-                                        name: 'One-time call logging'
-                                    },
-                                    {
-                                        id: 'autoLogAnsweredIncoming',
-                                        name: 'Answered incoming calls'
-                                    },
-                                    {
-                                        id: 'autoLogMissedIncoming',
-                                        name: 'Missed incoming calls'
-                                    },
-                                    {
-                                        id: 'autoLogOutgoing',
-                                        name: 'Outgoing calls'
-                                    },
-                                    {
-                                        id: 'autoLogVoicemails',
-                                        name: 'Voicemails'
-                                    },
-                                    {
-                                        id: 'autoLogSMS',
-                                        name: 'SMS'
-                                    },
-                                    {
-                                        id: 'autoLogInboundFax',
-                                        name: 'Inbound faxes'
-                                    },
-                                    {
-                                        id: 'autoLogOutboundFax',
-                                        name: 'Outbound faxes'
-                                    }
-
-                                ],
-                                value: (() => {
-                                    const activityLoggingValues = [
-                                        ...(userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).value ? ['autoLogAnsweredIncoming'] : []),
-                                        ...(userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).value ? ['autoLogMissedIncoming'] : []),
-                                        ...(userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).value ? ['autoLogOutgoing'] : []),
-                                        ...(userCore.getAutoLogVoicemailsSetting(userSettings).value ? ['autoLogVoicemails'] : []),
-                                        ...(userCore.getAutoLogSMSSetting(userSettings).value ? ['autoLogSMS'] : []),
-                                        ...(userCore.getAutoLogInboundFaxSetting(userSettings).value ? ['autoLogInboundFax'] : []),
-                                        ...(userCore.getAutoLogOutboundFaxSetting(userSettings).value ? ['autoLogOutboundFax'] : []),
-                                        ...(userCore.getOneTimeLogSetting(userSettings).value ? ['oneTimeLog'] : [])
-                                    ];
-                                    console.log('Service manifest activity logging values:', activityLoggingValues);
-                                    console.log('User settings for activity logging:', {
-                                        autoLogAnsweredIncoming: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin),
-                                        autoLogMissedIncoming: userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin),
-                                        autoLogOutgoing: userCore.getAutoLogOutgoingSetting(userSettings, isAdmin),
-                                        autoLogVoicemails: userCore.getAutoLogVoicemailsSetting(userSettings),
-                                        autoLogSMS: userCore.getAutoLogSMSSetting(userSettings),
-                                        autoLogInboundFax: userCore.getAutoLogInboundFaxSetting(userSettings),
-                                        autoLogOutboundFax: userCore.getAutoLogOutboundFaxSetting(userSettings),
-                                        oneTimeLog: userCore.getOneTimeLogSetting(userSettings)
-                                    });
-                                    return activityLoggingValues;
-                                })(),
-                                readOnly: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).readOnly ||
-                                    userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).readOnly ||
-                                    userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).readOnly ||
-                                    userCore.getAutoLogVoicemailsSetting(userSettings).readOnly ||
-                                    userCore.getAutoLogSMSSetting(userSettings).readOnly ||
-                                    userCore.getAutoLogInboundFaxSetting(userSettings).readOnly ||
-                                    userCore.getAutoLogOutboundFaxSetting(userSettings).readOnly ||
-                                    userCore.getOneTimeLogSetting(userSettings).readOnly,
-                                readOnlyReason: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).readOnlyReason ||
-                                    userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).readOnlyReason ||
-                                    userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).readOnlyReason ||
-                                    userCore.getAutoLogVoicemailsSetting(userSettings).readOnlyReason ||
-                                    userCore.getAutoLogSMSSetting(userSettings).readOnlyReason ||
-                                    userCore.getAutoLogInboundFaxSetting(userSettings).readOnlyReason ||
-                                    userCore.getAutoLogOutboundFaxSetting(userSettings).readOnlyReason ||
-                                    userCore.getOneTimeLogSetting(userSettings).readOnlyReason
+                                id: 'oneTimeLog',
+                                name: 'One-time call logging'
+                            },
+                            {
+                                id: 'autoLogAnsweredIncoming',
+                                name: 'Answered incoming calls'
+                            },
+                            {
+                                id: 'autoLogMissedIncoming',
+                                name: 'Missed incoming calls'
+                            },
+                            {
+                                id: 'autoLogOutgoing',
+                                name: 'Outgoing calls'
+                            },
+                            {
+                                id: 'autoLogVoicemails',
+                                name: 'Voicemails'
+                            },
+                            {
+                                id: 'autoLogSMS',
+                                name: 'SMS'
+                            },
+                            {
+                                id: 'autoLogInboundFax',
+                                name: 'Inbound faxes'
+                            },
+                            {
+                                id: 'autoLogOutboundFax',
+                                name: 'Outbound faxes'
                             }
-                        ]
+
+                        ],
+                        value: (() => {
+                            const activityLoggingValues = [
+                                ...(userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).value ? ['autoLogAnsweredIncoming'] : []),
+                                ...(userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).value ? ['autoLogMissedIncoming'] : []),
+                                ...(userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).value ? ['autoLogOutgoing'] : []),
+                                ...(userCore.getAutoLogVoicemailsSetting(userSettings).value ? ['autoLogVoicemails'] : []),
+                                ...(userCore.getAutoLogSMSSetting(userSettings).value ? ['autoLogSMS'] : []),
+                                ...(userCore.getAutoLogInboundFaxSetting(userSettings).value ? ['autoLogInboundFax'] : []),
+                                ...(userCore.getAutoLogOutboundFaxSetting(userSettings).value ? ['autoLogOutboundFax'] : []),
+                                ...(userCore.getOneTimeLogSetting(userSettings).value ? ['oneTimeLog'] : [])
+                            ];
+                            console.log('Service manifest activity logging values:', activityLoggingValues);
+                            console.log('User settings for activity logging:', {
+                                autoLogAnsweredIncoming: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin),
+                                autoLogMissedIncoming: userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin),
+                                autoLogOutgoing: userCore.getAutoLogOutgoingSetting(userSettings, isAdmin),
+                                autoLogVoicemails: userCore.getAutoLogVoicemailsSetting(userSettings),
+                                autoLogSMS: userCore.getAutoLogSMSSetting(userSettings),
+                                autoLogInboundFax: userCore.getAutoLogInboundFaxSetting(userSettings),
+                                autoLogOutboundFax: userCore.getAutoLogOutboundFaxSetting(userSettings),
+                                oneTimeLog: userCore.getOneTimeLogSetting(userSettings)
+                            });
+                            return activityLoggingValues;
+                        })(),
+                        readOnly: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).readOnly ||
+                            userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).readOnly ||
+                            userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).readOnly ||
+                            userCore.getAutoLogVoicemailsSetting(userSettings).readOnly ||
+                            userCore.getAutoLogSMSSetting(userSettings).readOnly ||
+                            userCore.getAutoLogInboundFaxSetting(userSettings).readOnly ||
+                            userCore.getAutoLogOutboundFaxSetting(userSettings).readOnly ||
+                            userCore.getOneTimeLogSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).readOnlyReason ||
+                            userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).readOnlyReason ||
+                            userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).readOnlyReason ||
+                            userCore.getAutoLogVoicemailsSetting(userSettings).readOnlyReason ||
+                            userCore.getAutoLogSMSSetting(userSettings).readOnlyReason ||
+                            userCore.getAutoLogInboundFaxSetting(userSettings).readOnlyReason ||
+                            userCore.getAutoLogOutboundFaxSetting(userSettings).readOnlyReason ||
+                            userCore.getOneTimeLogSetting(userSettings).readOnlyReason
                     },
                     {
-                        id: 'logSyncFrequencySection',
-                        type: 'section',
-                        name: 'Log sync frequency',
-                        items: [
+                        id: "logSyncFrequency",
+                        type: "option",
+                        name: '  Log sync frequency',
+                        description: 'How often to sync missed activity; disable to turn off background logging',
+                        options: [
                             {
-                                id: "logSyncFrequency",
-                                type: "option",
-                                name: 'Frequency',
-                                options: [
-                                    {
-                                        id: 'disabled',
-                                        name: 'Disabled'
-                                    },
-                                    {
-                                        id: '10min',
-                                        name: '10 min'
-                                    },
-                                    {
-                                        id: '30min',
-                                        name: '30 min'
-                                    },
-                                    {
-                                        id: '1hour',
-                                        name: '1 hour'
-                                    },
-                                    {
-                                        id: '3hours',
-                                        name: '3 hours'
-                                    },
-                                    {
-                                        id: '1day',
-                                        name: '1 day'
-                                    }
-                                ],
-                                value: userCore.getLogSyncFrequencySetting(userSettings).value,
-                                readOnly: userCore.getLogSyncFrequencySetting(userSettings).readOnly,
-                                readOnlyReason: userCore.getLogSyncFrequencySetting(userSettings).readOnlyReason,
+                                id: 'disabled',
+                                name: 'Disabled'
+                            },
+                            {
+                                id: '10min',
+                                name: '10 min'
+                            },
+                            {
+                                id: '30min',
+                                name: '30 min'
+                            },
+                            {
+                                id: '1hour',
+                                name: '1 hour'
+                            },
+                            {
+                                id: '3hours',
+                                name: '3 hours'
+                            },
+                            {
+                                id: '1day',
+                                name: '1 day'
                             }
                         ],
-                        description: 'How often to sync missed activity; disable to turn off background logging'
+                        value: userCore.getLogSyncFrequencySetting(userSettings).value,
+                        readOnly: userCore.getLogSyncFrequencySetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getLogSyncFrequencySetting(userSettings).readOnlyReason,
                     },
                     {
-                        id: 'autoOpenSection',
-                        type: 'section',
+                        id: 'autoOpenOptions',
+                        type: 'option',
                         name: 'Auto-open logging page after:',
-                        description: 'Choose when to automatically open the logging page',
-                        items: [
+                        description: 'Opens the logging page for manual entry after selected events.',
+                        multiple: true,
+                        checkbox: true,
+                        options: [
                             {
-                                id: 'autoOpenOptions',
-                                type: 'option',
-                                name: 'Trigger events',
-                                multiple: true,
-                                checkbox: true,
-                                options: [
-                                    {
-                                        id: 'popupLogPageAfterSMS',
-                                        name: 'SMS is sent'
-                                    },
-                                    {
-                                        id: 'popupLogPageAfterCall',
-                                        name: 'Call ends'
-                                    }
-                                ],
-                                value: [
-                                    ...(userCore.getSMSPopSetting(userSettings).value ? ['popupLogPageAfterSMS'] : []),
-                                    ...(userCore.getCallPopSetting(userSettings).value ? ['popupLogPageAfterCall'] : [])
-                                ],
-                                readOnly: userCore.getSMSPopSetting(userSettings).readOnly || userCore.getCallPopSetting(userSettings).readOnly,
-                                readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason || userCore.getCallPopSetting(userSettings).readOnlyReason
+                                id: 'popupLogPageAfterSMS',
+                                name: 'SMS is sent'
+                            },
+                            {
+                                id: 'popupLogPageAfterCall',
+                                name: 'Call ends'
                             }
-                        ]
+                        ],
+                        value: [
+                            ...(userCore.getSMSPopSetting(userSettings).value ? ['popupLogPageAfterSMS'] : []),
+                            ...(userCore.getCallPopSetting(userSettings).value ? ['popupLogPageAfterCall'] : [])
+                        ],
+                        readOnly: userCore.getSMSPopSetting(userSettings).readOnly || userCore.getCallPopSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason || userCore.getCallPopSetting(userSettings).readOnlyReason
                     }
                 ]
             },
@@ -521,76 +500,201 @@ async function getServiceManifest() {
     if (customSettings) {
         for (const cs of customSettings) {
             const items = [];
-            for (const item of cs.items) {
-                if (item.requiredPermission && !userPermissions[item.requiredPermission]) {
-                    continue;
-                }
-                switch (item.type) {
-                    case 'inputField':
+
+            // Handle direct setting (cs itself is the setting)
+            if (cs.type && !cs.items) {
+                switch (cs.type) {
+                    case 'option':
+                        // Filter options based on permissions
+                        const filteredOptions = cs.options ? cs.options.filter(opt =>
+                            !opt.requiredPermission || userPermissions[opt.requiredPermission]
+                        ) : [];
+
+                        // For checkbox options, build value array from individual option settings
+                        let finalValue;
+                        let isReadOnly = false;
+                        let readOnlyReason = '';
+
+                        if (cs.multiple && cs.checkbox && cs.options) {
+                            // Build value array from individual option values
+                            finalValue = [];
+                            for (const option of filteredOptions) {
+                                const optionSetting = userCore.getCustomSetting(userSettings, option.id, false);
+                                if (optionSetting.value) {
+                                    finalValue.push(option.id);
+                                }
+                                // If any option is read-only, mark the whole section as read-only
+                                if (optionSetting.readOnly) {
+                                    isReadOnly = true;
+                                    readOnlyReason = optionSetting.readOnlyReason || 'This setting is managed by admin';
+                                }
+                            }
+                            console.log(`User-side ${cs.id} checkbox values:`, {
+                                finalValue,
+                                isReadOnly,
+                                readOnlyReason,
+                                optionDetails: filteredOptions.map(opt => ({
+                                    id: opt.id,
+                                    setting: userCore.getCustomSetting(userSettings, opt.id, false)
+                                }))
+                            });
+                        } else {
+                            // Single value setting
+                            const currentValue = userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue).value;
+                            finalValue = currentValue !== undefined ? currentValue :
+                                (cs.multiple ? (cs.defaultValue || []) : (cs.defaultValue || ""));
+                            const settingInfo = userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue);
+                            isReadOnly = settingInfo.readOnly;
+                            readOnlyReason = settingInfo.readOnlyReason;
+                        }
+
                         items.push({
-                            id: item.id,
-                            type: 'string',
-                            name: item.name,
-                            description: item.description,
-                            placeHolder: item.placeHolder ?? "",
-                            value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
-                            readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
-                            readOnlyReason: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnlyReason
+                            id: cs.id,
+                            type: "option",
+                            name: cs.name,
+                            description: cs.description,
+                            options: filteredOptions,
+                            multiple: cs.multiple ?? false,
+                            checkbox: cs.checkbox ?? false,
+                            required: cs.required ?? false,
+                            value: finalValue,
+                            readOnly: isReadOnly,
+                            readOnlyReason: readOnlyReason
                         });
                         break;
                     case 'boolean':
                         items.push({
-                            id: item.id,
-                            type: item.type,
-                            name: item.name,
-                            description: item.description,
-                            value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
-                            readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
-                            readOnlyReason: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnlyReason
+                            id: cs.id,
+                            type: cs.type,
+                            name: cs.name,
+                            description: cs.description,
+                            value: userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue).value,
+                            readOnly: userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue).readOnly,
+                            readOnlyReason: userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue).readOnlyReason
                         });
                         break;
-                    case 'warning':
-                        items.push(
-                            {
-                                id: item.id,
-                                name: item.name,
-                                type: 'admonition',
-                                severity: 'warning',
-                                value: item.value
-                            }
-                        )
-                        break;
-                    case 'option':
-                        items.push(
-                            {
-                                id: item.id,
-                                type: "option",
-                                name: item.name,
-                                description: item.description,
-                                options: item.dynamicOptions ? userCore.getCustomSetting(userSettings, item.id, item.defaultValue).options : item.options,
-                                multiple: item.multiple ?? false,
-                                checkbox: item.checkbox ?? false,
-                                required: item.required ?? false,
-                                value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value ?? (item.multiple ? [] : ""),
-                                readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
-                                readOnlyReason: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnlyReason
-                            }
-                        )
+                    case 'inputField':
+                        items.push({
+                            id: cs.id,
+                            type: 'string',
+                            name: cs.name,
+                            description: cs.description,
+                            placeHolder: cs.placeHolder ?? "",
+                            value: userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue).value,
+                            readOnly: userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue).readOnly,
+                            readOnlyReason: userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue).readOnlyReason
+                        });
                         break;
                 }
             }
-            const group = {
-                id: cs.id,
-                type: cs.type,
-                name: cs.name,
-                items
-            };
-            if (cs.group) {
-                group.groupId = cs.group;
+            // Handle container with items (existing behavior)
+            else if (cs.items) {
+                for (const item of cs.items) {
+                    if (item.requiredPermission && !userPermissions[item.requiredPermission]) {
+                        continue;
+                    }
+                    switch (item.type) {
+                        case 'inputField':
+                            items.push({
+                                id: item.id,
+                                type: 'string',
+                                name: item.name,
+                                description: item.description,
+                                placeHolder: item.placeHolder ?? "",
+                                value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
+                                readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
+                                readOnlyReason: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnlyReason
+                            });
+                            break;
+                        case 'boolean':
+                            items.push({
+                                id: item.id,
+                                type: item.type,
+                                name: item.name,
+                                description: item.description,
+                                value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
+                                readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
+                                readOnlyReason: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnlyReason
+                            });
+                            break;
+                        case 'warning':
+                            items.push(
+                                {
+                                    id: item.id,
+                                    name: item.name,
+                                    type: 'admonition',
+                                    severity: 'warning',
+                                    value: item.value
+                                }
+                            )
+                            break;
+                        case 'option':
+                            items.push(
+                                {
+                                    id: item.id,
+                                    type: "option",
+                                    name: item.name,
+                                    description: item.description,
+                                    options: item.dynamicOptions ? userCore.getCustomSetting(userSettings, item.id, item.defaultValue).options : item.options,
+                                    multiple: item.multiple ?? false,
+                                    checkbox: item.checkbox ?? false,
+                                    required: item.required ?? false,
+                                    value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value ?? (item.multiple ? [] : ""),
+                                    readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
+                                    readOnlyReason: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnlyReason
+                                }
+                            )
+                            break;
+                    }
+                }
             }
-            services.settings.splice(1, 0, group);
+            // Handle custom settings with section property - add to existing sections
+            if (cs.section) {
+                console.log({ message: "Adding to existing section", cs, section: cs.section });
+                const targetSection = services.settings.find(s => s.id === cs.section);
+                if (targetSection && targetSection.items) {
+                    // For direct settings (cs.type && !cs.items), add the processed items directly
+                    if (cs.type && !cs.items) {
+                        // Add each processed item directly to the target section
+                        targetSection.items.push(...items);
+                        console.log(`Added ${items.length} direct setting(s) from ${cs.id} to section ${cs.section}`);
+                    } else {
+                        // For container settings, add as a subsection
+                        const subsection = {
+                            id: cs.id,
+                            type: cs.type,
+                            name: cs.name,
+                            items
+                        };
+                        targetSection.items.push(subsection);
+                        console.log(`Added custom setting subsection ${cs.id} to section ${cs.section}`);
+                    }
+                } else {
+                    console.warn(`Target section ${cs.section} not found, adding as top-level group`);
+                    // Fallback: add as top-level group if section not found
+                    const group = {
+                        id: cs.id,
+                        type: cs.type,
+                        name: cs.name,
+                        items
+                    };
+                    services.settings.splice(1, 0, group);
+                }
+            } else {
+                // Handle as regular group (existing behavior)
+                const group = {
+                    id: cs.id,
+                    type: cs.type,
+                    name: cs.name,
+                    items
+                };
+                if (cs.group) {
+                    group.groupId = cs.group;
+                }
+                services.settings.splice(1, 0, group);
+            }
         }
-    };
+    }
     if (platformName === 'clio' || platformName === 'insightly' || platformName === 'netsuite') {
         const numberFormatterComponent = [
             {

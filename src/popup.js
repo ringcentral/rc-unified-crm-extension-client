@@ -1020,7 +1020,12 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'activityLogging':
-                  const activityLoggingSettingPageRender = activityLoggingSettingPage.getActivityLoggingSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
+                  const activityLoggingSettingPageRender = activityLoggingSettingPage.getActivityLoggingSettingPageRender({
+                    adminUserSettings: adminSettings?.userSettings,
+                    crmManifest: platform,
+                    userPermissions
+                  });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: activityLoggingSettingPageRender
@@ -2095,6 +2100,20 @@ window.addEventListener('message', async (e) => {
                           console.log('Auto-open options selected:', selectedOptions);
                           changedSettings.popupLogPageAfterSMS = { value: selectedOptions.includes('popupLogPageAfterSMS') };
                           changedSettings.popupLogPageAfterCall = { value: selectedOptions.includes('popupLogPageAfterCall') };
+                        } else if (ii.id === 'callLogDetails') {
+                          // Convert array of selected options to individual boolean settings
+                          const selectedOptions = ii.value || [];
+                          console.log('Call log details options selected:', selectedOptions);
+                          changedSettings.addCallLogNote = { value: selectedOptions.includes('addCallLogNote') };
+                          changedSettings.addCallSessionId = { value: selectedOptions.includes('addCallSessionId') };
+                          changedSettings.addCallLogSubject = { value: selectedOptions.includes('addCallLogSubject') };
+                          changedSettings.addCallLogContactNumber = { value: selectedOptions.includes('addCallLogContactNumber') };
+                          changedSettings.addCallLogDateTime = { value: selectedOptions.includes('addCallLogDateTime') };
+                          changedSettings.addCallLogDuration = { value: selectedOptions.includes('addCallLogDuration') };
+                          changedSettings.addCallLogResult = { value: selectedOptions.includes('addCallLogResult') };
+                          changedSettings.addCallLogRecording = { value: selectedOptions.includes('addCallLogRecording') };
+                          changedSettings.addCallLogAiNote = { value: selectedOptions.includes('addCallLogAiNote') };
+                          changedSettings.addCallLogTranscript = { value: selectedOptions.includes('addCallLogTranscript') };
                         } else {
                           changedSettings[ii.id] = { value: ii.value };
                         }
@@ -2120,6 +2139,20 @@ window.addEventListener('message', async (e) => {
                         console.log('Auto-open options selected:', selectedOptions);
                         changedSettings.popupLogPageAfterSMS = { value: selectedOptions.includes('popupLogPageAfterSMS') };
                         changedSettings.popupLogPageAfterCall = { value: selectedOptions.includes('popupLogPageAfterCall') };
+                      } else if (i.id === 'callLogDetails') {
+                        // Convert array of selected options to individual boolean settings
+                        const selectedOptions = i.value || [];
+                        console.log('Call log details options selected:', selectedOptions);
+                        changedSettings.addCallLogNote = { value: selectedOptions.includes('addCallLogNote') };
+                        changedSettings.addCallSessionId = { value: selectedOptions.includes('addCallSessionId') };
+                        changedSettings.addCallLogSubject = { value: selectedOptions.includes('addCallLogSubject') };
+                        changedSettings.addCallLogContactNumber = { value: selectedOptions.includes('addCallLogContactNumber') };
+                        changedSettings.addCallLogDateTime = { value: selectedOptions.includes('addCallLogDateTime') };
+                        changedSettings.addCallLogDuration = { value: selectedOptions.includes('addCallLogDuration') };
+                        changedSettings.addCallLogResult = { value: selectedOptions.includes('addCallLogResult') };
+                        changedSettings.addCallLogRecording = { value: selectedOptions.includes('addCallLogRecording') };
+                        changedSettings.addCallLogAiNote = { value: selectedOptions.includes('addCallLogAiNote') };
+                        changedSettings.addCallLogTranscript = { value: selectedOptions.includes('addCallLogTranscript') };
                       } else {
                         changedSettings[i.id] = { value: i.value };
                       }
@@ -2222,6 +2255,41 @@ window.addEventListener('message', async (e) => {
                             value: selectedOptions.includes('popupLogPageAfterCall')
                           };
                           console.log('Saved auto-open options:', selectedOptions);
+                        } else if (Array.isArray(setting.value) && setting.customizable !== undefined) {
+                          // Handle custom activity logging settings (like call log details)
+                          const selectedOptions = setting.value || [];
+                          console.log(`Saving custom activity logging setting: ${settingKey}`, {
+                            selectedOptions,
+                            customizable: setting.customizable,
+                            settingObject: setting
+                          });
+
+                          // Find the custom setting definition to get the options
+                          let customSettingDef = null;
+                          if (platform?.settings) {
+                            for (const cs of platform.settings) {
+                              if (cs.id === settingKey && cs.section === 'activityLogging') {
+                                customSettingDef = cs;
+                                break;
+                              }
+                            }
+                          }
+
+                          if (customSettingDef && customSettingDef.options) {
+                            console.log(`Found custom setting definition for ${settingKey}:`, customSettingDef);
+                            // Set each individual option as a separate admin setting
+                            for (const option of customSettingDef.options) {
+                              const individualSetting = {
+                                customizable: setting.customizable ?? true,
+                                value: selectedOptions.includes(option.id)
+                              };
+                              adminSettings.userSettings[option.id] = individualSetting;
+                              console.log(`Set admin setting ${option.id}:`, individualSetting);
+                            }
+                            console.log(`Processed ${customSettingDef.options.length} options for ${settingKey}`);
+                          } else {
+                            console.warn(`No custom setting definition found for ${settingKey}`);
+                          }
                         } else if (setting.customizable !== undefined || setting.value !== undefined) {
                           // This is a direct setting
                           console.log(`Saving admin setting: ${settingKey}`, setting);
@@ -2254,7 +2322,12 @@ window.addEventListener('message', async (e) => {
                   console.log('Final admin settings to save:', adminSettings);
                   await chrome.storage.local.set({ adminSettings });
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
-                  userSettings = await userCore.refreshUserSettings({});
+
+                  // Add delay to avoid race condition - wait for server to process admin settings
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  console.log('Admin settings uploaded, refreshing user settings after delay...');
+
+                  userSettings = await userCore.refreshUserSettings({ isAfterAdminChanges: true });
 
                   // Refresh the service manifest to reflect admin changes in user settings
                   const serviceManifest = await embeddableServices.getServiceManifest();
