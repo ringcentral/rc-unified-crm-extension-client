@@ -9,6 +9,7 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
             properties: {
                 clickToDialEmbedMode: {
                     type: 'object',
+                    title: 'Enable mode',
                     properties: {
                         customizable: {
                             type: 'boolean',
