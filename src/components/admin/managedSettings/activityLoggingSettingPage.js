@@ -1,5 +1,5 @@
-function getActivityLoggingSettingPageRender({ adminUserSettings }) {
-    return {
+function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, userPermissions = {} }) {
+    const page = {
         id: 'activityLoggingSettingPage',
         title: 'Activity logging',
         type: 'page',
@@ -154,7 +154,114 @@ function getActivityLoggingSettingPageRender({ adminUserSettings }) {
                 ]
             }
         }
+    };
+
+    // Add custom settings with section "activityLogging"
+    if (crmManifest?.settings) {
+        for (const customSetting of crmManifest.settings) {
+            if (customSetting.section === 'activityLogging') {
+                console.log('Adding custom setting to activity logging admin page:', customSetting.id);
+
+                // Handle different types of custom settings
+                switch (customSetting.type) {
+                    case 'option':
+                        // Filter options based on permissions
+                        const filteredOptions = customSetting.options ? customSetting.options.filter(opt =>
+                            !opt.requiredPermission || userPermissions[opt.requiredPermission]
+                        ) : [];
+
+                        page.schema.properties[customSetting.id] = {
+                            type: 'object',
+                            title: customSetting.name,
+                            properties: {
+                                customizable: {
+                                    type: 'boolean',
+                                    title: 'Customizable by user'
+                                },
+                                value: {
+                                    type: 'array',
+                                    title: customSetting.name,
+                                    items: {
+                                        type: 'string',
+                                        enum: filteredOptions.map(opt => opt.id),
+                                        enumNames: filteredOptions.map(opt => opt.name)
+                                    },
+                                    uniqueItems: true
+                                }
+                            }
+                        };
+
+                        page.uiSchema[customSetting.id] = {
+                            "ui:collapsible": true,
+                            value: {
+                                "ui:widget": "checkboxes",
+                                "ui:options": {
+                                    "inline": false
+                                }
+                            }
+                        };
+
+                        // Determine current value based on individual setting values
+                        const currentSelectedOptions = [];
+                        let isCustomizable = true;
+
+                        for (const option of filteredOptions) {
+                            if (adminUserSettings?.[option.id]?.value) {
+                                currentSelectedOptions.push(option.id);
+                            }
+                            // If any individual option is not customizable, the whole section becomes non-customizable
+                            if (adminUserSettings?.[option.id]?.customizable === false) {
+                                isCustomizable = false;
+                            }
+                        }
+
+                        page.formData[customSetting.id] = {
+                            customizable: isCustomizable,
+                            value: currentSelectedOptions
+                        };
+
+                        console.log(`Admin page loading - ${customSetting.id}:`, {
+                            customizable: isCustomizable,
+                            selectedOptions: currentSelectedOptions,
+                            individualSettings: filteredOptions.map(opt => ({
+                                id: opt.id,
+                                value: adminUserSettings?.[opt.id]?.value,
+                                customizable: adminUserSettings?.[opt.id]?.customizable
+                            }))
+                        });
+                        break;
+
+                    case 'boolean':
+                        page.schema.properties[customSetting.id] = {
+                            type: 'object',
+                            title: customSetting.name,
+                            properties: {
+                                customizable: {
+                                    type: 'boolean',
+                                    title: 'Customizable by user'
+                                },
+                                value: {
+                                    type: 'boolean',
+                                    title: 'Value'
+                                }
+                            }
+                        };
+
+                        page.uiSchema[customSetting.id] = {
+                            "ui:collapsible": true
+                        };
+
+                        page.formData[customSetting.id] = {
+                            customizable: adminUserSettings?.[customSetting.id]?.customizable ?? true,
+                            value: adminUserSettings?.[customSetting.id]?.value ?? customSetting.defaultValue ?? false
+                        };
+                        break;
+                }
+            }
+        }
     }
+
+    return page;
 }
 
 exports.getActivityLoggingSettingPageRender = getActivityLoggingSettingPageRender;
