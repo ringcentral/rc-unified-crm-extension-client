@@ -62,7 +62,7 @@ async function getServiceManifest() {
                         name: ' Enable automatic activity logging for:',
                         multiple: true,
                         checkbox: true,
-                        description: 'Automatically log activities for the selected entities',
+                        helper: `Select the types of communications you'd like automatically logged to your CRM.`,
                         options: [
                             {
                                 id: 'oneTimeLog',
@@ -142,8 +142,8 @@ async function getServiceManifest() {
                     {
                         id: "logSyncFrequency",
                         type: "option",
-                        name: '  Log sync frequency',
-                        description: 'How often to sync missed activity; disable to turn off background logging',
+                        name: 'Log sync frequency',
+                        helper: `Specify how often you'd like to check for any unlogged calls.`,
                         options: [
                             {
                                 id: 'disabled',
@@ -178,7 +178,7 @@ async function getServiceManifest() {
                         id: 'autoOpenOptions',
                         type: 'option',
                         name: 'Auto-open logging page after:',
-                        description: 'Opens the logging page for manual entry after selected events.',
+                        helper: 'Opens the logging page for manual entry after selected events.',
                         multiple: true,
                         checkbox: true,
                         options: [
@@ -541,7 +541,7 @@ async function getServiceManifest() {
                             id: cs.id,
                             type: "option",
                             name: cs.name,
-                            description: cs.description,
+                            helper: cs.helper,
                             options: filteredOptions,
                             multiple: cs.multiple ?? false,
                             checkbox: cs.checkbox ?? false,
@@ -556,7 +556,7 @@ async function getServiceManifest() {
                             id: cs.id,
                             type: cs.type,
                             name: cs.name,
-                            description: cs.description,
+                            helper: cs.helper,
                             value: userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue).value,
                             readOnly: userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue).readOnly,
                             readOnlyReason: userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue).readOnlyReason
@@ -567,7 +567,7 @@ async function getServiceManifest() {
                             id: cs.id,
                             type: 'string',
                             name: cs.name,
-                            description: cs.description,
+                            helper: cs.helper,
                             placeHolder: cs.placeHolder ?? "",
                             value: userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue).value,
                             readOnly: userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue).readOnly,
