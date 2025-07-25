@@ -34,7 +34,7 @@
   "devDependencies": {
     "@eslint/js": "^9.22.0",
     "dotenv": "^16.5.0",
-    "esbuild": "^0.20.2",
+    "esbuild": "^0.25.0",
     "esbuild-copy-static-files": "^0.1.0",
     "esbuild-plugin-svgr": "^1.1.0",
     "eslint": "^9.22.0",
