@@ -22,6 +22,11 @@ function getCustomSettingsPageRender({ crmManifest, adminUserSettings, userSetti
         }
     }
     for (const section of crmManifest.settings) {
+        // Skip sections that should appear in Activity logging admin page
+        if (section.section === 'activityLogging') {
+            continue;
+        }
+
         page.schema.properties[section.id] = {
             type: 'string',
             description: section.name
