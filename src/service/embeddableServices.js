@@ -642,7 +642,6 @@ async function getServiceManifest() {
             }
             // Handle custom settings with section property - add to existing sections
             if (cs.section) {
-                console.log({ message: "Adding to existing section", cs, section: cs.section });
                 const targetSection = services.settings.find(s => s.id === cs.section);
                 if (targetSection && targetSection.items) {
                     // For direct settings (cs.type && !cs.items), add the processed items directly

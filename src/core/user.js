@@ -158,10 +158,27 @@ function getAutoLogCallSetting(userSettings, isAdmin) {
             warning: 'Unavailable while server side call logging enabled'
         }
     }
+
+    // Check if any of the individual auto logging settings are enabled
+    const autoLogAnsweredIncoming = userSettings?.autoLogAnsweredIncoming?.value ?? false;
+    const autoLogMissedIncoming = userSettings?.autoLogMissedIncoming?.value ?? false;
+    const autoLogOutgoing = userSettings?.autoLogOutgoing?.value ?? false;
+    const legacyAutoLogCall = userSettings?.autoLogCall?.value ?? false; // Fallback for backwards compatibility
+
+    const isAnyAutoLogEnabled = autoLogAnsweredIncoming || autoLogMissedIncoming || autoLogOutgoing || legacyAutoLogCall;
+
+    // Check if any setting is read-only (managed by admin)
+    const isReadOnly = (userSettings?.autoLogAnsweredIncoming?.customizable === false) ||
+        (userSettings?.autoLogMissedIncoming?.customizable === false) ||
+        (userSettings?.autoLogOutgoing?.customizable === false) ||
+        (userSettings?.autoLogCall?.customizable === false);
+
+    const readOnlyReason = isReadOnly ? 'This setting is managed by admin' : '';
+
     return {
-        value: userSettings?.autoLogCall?.value ?? false,
-        readOnly: userSettings?.autoLogCall?.customizable === undefined ? false : !userSettings?.autoLogCall?.customizable,
-        readOnlyReason: !userSettings?.autoLogCall?.customizable ? 'This setting is managed by admin' : ''
+        value: isAnyAutoLogEnabled,
+        readOnly: isReadOnly,
+        readOnlyReason: readOnlyReason
     }
 }
 

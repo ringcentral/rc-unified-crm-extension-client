@@ -13,11 +13,15 @@ async function retroAutoCallLog({
     const { isAdmin } = await chrome.storage.local.get({ isAdmin: false });
     const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
     const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
+
     const logSyncFrequency = userCore.getLogSyncFrequencySetting(userSettings).value;
+
     if (logSyncFrequency === 'disabled') {
         return;
     }
+
     const { retroAutoCallLogMaxAttempt } = await chrome.storage.local.get({ retroAutoCallLogMaxAttempt: 10 });
+
     let retroLoggedCount = 0;
     if (retroAutoCallLogMaxAttempt > 0) {
         await chrome.storage.local.set({ retroAutoCallLogMaxAttempt: retroAutoCallLogMaxAttempt - 1 });
@@ -25,45 +29,71 @@ async function retroAutoCallLog({
         let effectiveCount = 0;
         const itemsPerPage = 50;
         const pageNumber = 1;
-        const { calls, hasMore } = await RCAdapter.getUnloggedCalls(itemsPerPage, pageNumber)
-        const isAutoLog = userCore.getAutoLogCallSetting(userSettings, isAdmin).value;
-        const { retroAutoCallLogNotificationId } = await chrome.storage.local.get({ retroAutoCallLogNotificationId: null })
-        if (isAutoLog) {
+
+        let retroAutoCallLogNotificationId;
+
+        try {
+            const { calls, hasMore } = await RCAdapter.getUnloggedCalls(itemsPerPage, pageNumber);
+
+            const isAutoLog = userCore.getAutoLogCallSetting(userSettings, isAdmin).value;
+
+            if (!isAutoLog) {
+                return;
+            }
+
+            const notificationData = await chrome.storage.local.get({ retroAutoCallLogNotificationId: null });
+            retroAutoCallLogNotificationId = notificationData.retroAutoCallLogNotificationId;
+
             if (!retroAutoCallLogNotificationId) {
-                const newRetroAutoCallLogNotificationId = await showNotification({ level: 'success', message: 'Attempting to sync historical call logs in the background...', ttl: 5000 });
+                const newRetroAutoCallLogNotificationId = await showNotification({
+                    level: 'success',
+                    message: 'Attempting to sync historical call logs in the background...',
+                    ttl: 5000
+                });
                 await chrome.storage.local.set({ retroAutoCallLogNotificationId: newRetroAutoCallLogNotificationId });
             }
+
             for (const c of calls) {
                 if (effectiveCount >= effectiveTotal) {
                     break;
                 }
+
                 const contactPhoneNumber = c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber;
-                const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName });
-                if (!callContactMatched) {
-                    continue;
-                }
-                const { hasConflict, autoSelectAdditionalSubmission } = await getLogConflictInfo({
-                    platform,
-                    isAutoLog,
-                    contactInfo: callMatchedContact,
-                    logType: 'callLog',
-                    direction: c.direction,
-                    isVoicemail: false
-                });
-                if (!hasConflict) {
-                    const callLogSubject = c.direction === 'Inbound' ?
-                        `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
-                        `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
-                    const note = await logCore.getCachedNote({ sessionId: c.sessionId });
-                    const exsitingLog = await logCore.getLog({
+
+                try {
+                    const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({
                         serverUrl: manifest.serverUrl,
-                        logType: 'Call',
-                        sessionIds: c.sessionId,
-                        requireDetails: false
+                        phoneNumber: contactPhoneNumber,
+                        platformName
                     });
-                    if (!!exsitingLog?.callLogs[0] && !exsitingLog.callLogs[0].matched) {
-                        await logCore.addLog(
-                            {
+
+                    if (!callContactMatched) {
+                        continue;
+                    }
+
+                    const { hasConflict, autoSelectAdditionalSubmission } = await getLogConflictInfo({
+                        platform,
+                        isAutoLog,
+                        contactInfo: callMatchedContact,
+                        logType: 'callLog',
+                        direction: c.direction,
+                        isVoicemail: false
+                    });
+
+                    if (!hasConflict) {
+                        const callLogSubject = c.direction === 'Inbound' ?
+                            `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
+                            `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
+                        const note = await logCore.getCachedNote({ sessionId: c.sessionId });
+                        const exsitingLog = await logCore.getLog({
+                            serverUrl: manifest.serverUrl,
+                            logType: 'Call',
+                            sessionIds: c.sessionId,
+                            requireDetails: false
+                        });
+
+                        if (!!exsitingLog?.callLogs[0] && !exsitingLog.callLogs[0].matched) {
+                            await logCore.addLog({
                                 serverUrl: manifest.serverUrl,
                                 logType: 'Call',
                                 logInfo: c,
@@ -78,33 +108,44 @@ async function retroAutoCallLog({
                                 contactName: callMatchedContact[0]?.name,
                                 isShowNotification: false
                             });
-                        if (!isObjectEmpty(autoSelectAdditionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
-                            await dispositionCore.upsertDisposition({
-                                serverUrl: manifest.serverUrl,
-                                logType: 'Call',
-                                sessionId: c.sessionId,
-                                dispositions: { ...autoSelectAdditionalSubmission, note },
-                                rcAdditionalSubmission
-                            });
+
+                            if (!isObjectEmpty(autoSelectAdditionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
+                                await dispositionCore.upsertDisposition({
+                                    serverUrl: manifest.serverUrl,
+                                    logType: 'Call',
+                                    sessionId: c.sessionId,
+                                    dispositions: { ...autoSelectAdditionalSubmission, note },
+                                    rcAdditionalSubmission
+                                });
+                            }
+                            retroLoggedCount++;
+                            effectiveCount++;
                         }
-                        retroLoggedCount++;
-                        effectiveCount++;
+                        else {
+                            // force call log matcher check
+                            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                                type: 'rc-adapter-trigger-call-logger-match',
+                                sessionIds: [exsitingLog.callLogs[0].sessionId]
+                            }, '*');
+                        }
                     }
-                    else {
-                        // force call log matcher check
-                        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                            type: 'rc-adapter-trigger-call-logger-match',
-                            sessionIds: [exsitingLog.callLogs[0].sessionId]
-                        }, '*');
-                    }
+                } catch (error) {
+                    console.error('Error processing call:', c.sessionId, error);
                 }
             }
+
             if (!hasMore) {
                 const { retroAutoCallLogIntervalId } = await chrome.storage.local.get({ retroAutoCallLogIntervalId: null });
                 clearInterval(retroAutoCallLogIntervalId);
                 dismissNotification({ notificationId: retroAutoCallLogNotificationId });
                 showNotification({ level: 'success', message: `Historical call syncing finished. ${retroLoggedCount} call(s) synced.`, ttl: 5000 });
             }
+        } catch (error) {
+            console.error('Error fetching calls:', error);
+            const { retroAutoCallLogIntervalId } = await chrome.storage.local.get({ retroAutoCallLogIntervalId: null });
+            clearInterval(retroAutoCallLogIntervalId);
+            dismissNotification({ notificationId: retroAutoCallLogNotificationId });
+            showNotification({ level: 'error', message: 'Failed to fetch historical calls for sync.', ttl: 5000 });
         }
     }
     else {
