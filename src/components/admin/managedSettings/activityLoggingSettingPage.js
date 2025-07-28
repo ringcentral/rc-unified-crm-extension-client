@@ -84,6 +84,10 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
                                 enum: [
                                     'popupLogPageAfterSMS',
                                     'popupLogPageAfterCall'
+                                ],
+                                enumNames: [
+                                    'SMS is sent',
+                                    'Call ends'
                                 ]
                             },
                             uniqueItems: true
