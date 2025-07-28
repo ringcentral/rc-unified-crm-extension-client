@@ -164,7 +164,6 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
     if (crmManifest?.settings) {
         for (const customSetting of crmManifest.settings) {
             if (customSetting.section === 'activityLogging') {
-                console.log('Adding custom setting to activity logging admin page:', customSetting.id);
 
                 // Handle different types of custom settings
                 switch (customSetting.type) {
@@ -223,16 +222,6 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
                             customizable: isCustomizable,
                             value: currentSelectedOptions
                         };
-
-                        console.log(`Admin page loading - ${customSetting.id}:`, {
-                            customizable: isCustomizable,
-                            selectedOptions: currentSelectedOptions,
-                            individualSettings: filteredOptions.map(opt => ({
-                                id: opt.id,
-                                value: adminUserSettings?.[opt.id]?.value,
-                                customizable: adminUserSettings?.[opt.id]?.customizable
-                            }))
-                        });
                         break;
 
                     case 'boolean':
