@@ -2077,20 +2077,15 @@ window.addEventListener('message', async (e) => {
               break;
             case '/settings':
               const changedSettings = {};
-              console.log('Raw settings data from widget:', data.body.settings);
               for (const s of data.body.settings) {
-                console.log('Processing setting section:', s);
                 if (s.items !== undefined) {
                   for (const i of s.items) {
-                    console.log('Processing setting item:', i);
                     if (i?.items !== undefined) {
                       for (const ii of i.items) {
-                        console.log('Processing nested setting item:', ii);
                         // Handle checkbox options for activity logging at nested level
                         if (ii.id === 'activityLoggingOptions') {
                           // Convert array of selected options to individual boolean settings
                           const selectedOptions = ii.value || [];
-                          console.log('Activity logging options selected:', selectedOptions);
                           changedSettings.autoLogAnsweredIncoming = { value: selectedOptions.includes('autoLogAnsweredIncoming') };
                           changedSettings.autoLogMissedIncoming = { value: selectedOptions.includes('autoLogMissedIncoming') };
                           changedSettings.autoLogOutgoing = { value: selectedOptions.includes('autoLogOutgoing') };
@@ -2103,13 +2098,11 @@ window.addEventListener('message', async (e) => {
                         } else if (ii.id === 'autoOpenOptions') {
                           // Convert array of selected options to individual boolean settings
                           const selectedOptions = ii.value || [];
-                          console.log('Auto-open options selected:', selectedOptions);
                           changedSettings.popupLogPageAfterSMS = { value: selectedOptions.includes('popupLogPageAfterSMS') };
                           changedSettings.popupLogPageAfterCall = { value: selectedOptions.includes('popupLogPageAfterCall') };
                         } else if (ii.id === 'callLogDetails') {
                           // Convert array of selected options to individual boolean settings
                           const selectedOptions = ii.value || [];
-                          console.log('Call log details options selected:', selectedOptions);
                           changedSettings.addCallLogNote = { value: selectedOptions.includes('addCallLogNote') };
                           changedSettings.addCallSessionId = { value: selectedOptions.includes('addCallSessionId') };
                           changedSettings.addCallLogSubject = { value: selectedOptions.includes('addCallLogSubject') };
@@ -2129,7 +2122,6 @@ window.addEventListener('message', async (e) => {
                       if (i.id === 'activityLoggingOptions') {
                         // Convert array of selected options to individual boolean settings
                         const selectedOptions = i.value || [];
-                        console.log('Activity logging options selected:', selectedOptions);
                         changedSettings.autoLogAnsweredIncoming = { value: selectedOptions.includes('autoLogAnsweredIncoming') };
                         changedSettings.autoLogMissedIncoming = { value: selectedOptions.includes('autoLogMissedIncoming') };
                         changedSettings.autoLogOutgoing = { value: selectedOptions.includes('autoLogOutgoing') };
@@ -2138,17 +2130,14 @@ window.addEventListener('message', async (e) => {
                         changedSettings.autoLogInboundFax = { value: selectedOptions.includes('autoLogInboundFax') };
                         changedSettings.autoLogOutboundFax = { value: selectedOptions.includes('autoLogOutboundFax') };
                         changedSettings.oneTimeLog = { value: selectedOptions.includes('oneTimeLog') };
-                        console.log('Activity logging changed settings:', changedSettings);
                       } else if (i.id === 'autoOpenOptions') {
                         // Convert array of selected options to individual boolean settings
                         const selectedOptions = i.value || [];
-                        console.log('Auto-open options selected:', selectedOptions);
                         changedSettings.popupLogPageAfterSMS = { value: selectedOptions.includes('popupLogPageAfterSMS') };
                         changedSettings.popupLogPageAfterCall = { value: selectedOptions.includes('popupLogPageAfterCall') };
                       } else if (i.id === 'callLogDetails') {
                         // Convert array of selected options to individual boolean settings
                         const selectedOptions = i.value || [];
-                        console.log('Call log details options selected:', selectedOptions);
                         changedSettings.addCallLogNote = { value: selectedOptions.includes('addCallLogNote') };
                         changedSettings.addCallSessionId = { value: selectedOptions.includes('addCallSessionId') };
                         changedSettings.addCallLogSubject = { value: selectedOptions.includes('addCallLogSubject') };
@@ -2208,7 +2197,6 @@ window.addEventListener('message', async (e) => {
 
                   // Handle nested form data structure properly
                   const formData = data.body.button.formData;
-                  console.log('Admin settings form data received:', formData);
 
                   // For activity logging page, handle both flat and nested structures
                   if (data.body.button.id === 'activityLoggingSettingPage') {
@@ -2251,7 +2239,6 @@ window.addEventListener('message', async (e) => {
                             customizable: setting.customizable ?? true,
                             value: selectedOptions.includes('oneTimeLog')
                           };
-                          console.log('Saved activity logging options:', selectedOptions);
                         } else if (settingKey === 'autoOpenOptions') {
                           // Handle auto-open checkbox array
                           const selectedOptions = setting.value || [];
@@ -2263,16 +2250,9 @@ window.addEventListener('message', async (e) => {
                             customizable: setting.customizable ?? true,
                             value: selectedOptions.includes('popupLogPageAfterCall')
                           };
-                          console.log('Saved auto-open options:', selectedOptions);
                         } else if (Array.isArray(setting.value) && setting.customizable !== undefined) {
                           // Handle custom activity logging settings (like call log details)
                           const selectedOptions = setting.value || [];
-                          console.log(`Saving custom activity logging setting: ${settingKey}`, {
-                            selectedOptions,
-                            customizable: setting.customizable,
-                            settingObject: setting
-                          });
-
                           // Find the custom setting definition to get the options
                           let customSettingDef = null;
                           if (platform?.settings) {
@@ -2285,7 +2265,6 @@ window.addEventListener('message', async (e) => {
                           }
 
                           if (customSettingDef && customSettingDef.options) {
-                            console.log(`Found custom setting definition for ${settingKey}:`, customSettingDef);
                             // Set each individual option as a separate admin setting
                             for (const option of customSettingDef.options) {
                               const individualSetting = {
@@ -2293,19 +2272,15 @@ window.addEventListener('message', async (e) => {
                                 value: selectedOptions.includes(option.id)
                               };
                               adminSettings.userSettings[option.id] = individualSetting;
-                              console.log(`Set admin setting ${option.id}:`, individualSetting);
                             }
-                            console.log(`Processed ${customSettingDef.options.length} options for ${settingKey}`);
                           } else {
                             console.warn(`No custom setting definition found for ${settingKey}`);
                           }
                         } else if (setting.customizable !== undefined || setting.value !== undefined) {
                           // This is a direct setting
-                          console.log(`Saving admin setting: ${settingKey}`, setting);
                           adminSettings.userSettings[settingKey] = setting;
                         } else if (settingKey === 'logSyncFrequencySection' && setting.logSyncFrequency) {
                           // Handle the nested logSyncFrequency setting
-                          console.log(`Saving admin setting: logSyncFrequency`, setting.logSyncFrequency);
                           adminSettings.userSettings.logSyncFrequency = setting.logSyncFrequency;
                         }
                       }
@@ -2320,24 +2295,18 @@ window.addEventListener('message', async (e) => {
                           const setting = section[settingKey];
                           if (setting && typeof setting === 'object' && (setting.customizable !== undefined || setting.value !== undefined)) {
                             // This is an individual setting, save it directly
-                            console.log(`Saving admin setting: ${settingKey}`, setting);
                             adminSettings.userSettings[settingKey] = setting;
                           }
                         }
                       }
                     }
                   }
-
-                  console.log('Final admin settings to save:', adminSettings);
                   await chrome.storage.local.set({ adminSettings });
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
 
                   // Add delay to avoid race condition - wait for server to process admin settings
                   await new Promise(resolve => setTimeout(resolve, 1000));
-                  console.log('Admin settings uploaded, refreshing user settings after delay...');
-
                   userSettings = await userCore.refreshUserSettings({ isAfterAdminChanges: true });
-
                   // Refresh the service manifest to reflect admin changes in user settings
                   const serviceManifest = await embeddableServices.getServiceManifest();
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

@@ -57,7 +57,6 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     try {
         userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
     } catch (e) {
-        console.log('Failed to get user settings from server, trying local storage:', e);
         const { userSettings: localUserSettings } = await chrome.storage.local.get({ userSettings: {} });
         userSettings = localUserSettings;
     }
@@ -67,18 +66,14 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         userSettings = {};
     }
     if (changedSettings) {
-        console.log('Applying changed settings:', changedSettings);
         for (const k of Object.keys(changedSettings)) {
             if (userSettings[k] === undefined) {
                 userSettings[k] = changedSettings[k];
-                console.log(`Setting ${k} to new value:`, changedSettings[k]);
             }
             else {
                 userSettings[k].value = changedSettings[k].value;
-                console.log(`Updating ${k} value from ${userSettings[k].value} to ${changedSettings[k].value}`);
             }
         }
-        console.log('Final user settings after changes:', userSettings);
     }
     await chrome.storage.local.set({ userSettings });
 
@@ -89,7 +84,7 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
             userSettings = uploadedSettings;
         }
     } catch (e) {
-        console.log('Failed to upload user settings to server, using local settings:', e);
+        console.log('Failed to upload user settings to server, using local settings:');
         // Continue with local settings if upload fails
     }
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

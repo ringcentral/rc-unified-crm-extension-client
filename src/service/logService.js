@@ -141,7 +141,6 @@ async function retroAutoCallLog({
                 showNotification({ level: 'success', message: `Historical call syncing finished. ${retroLoggedCount} call(s) synced.`, ttl: 5000 });
             }
         } catch (error) {
-            console.error('Error fetching calls:', error);
             const { retroAutoCallLogIntervalId } = await chrome.storage.local.get({ retroAutoCallLogIntervalId: null });
             clearInterval(retroAutoCallLogIntervalId);
             dismissNotification({ notificationId: retroAutoCallLogNotificationId });

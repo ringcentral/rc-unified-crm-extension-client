@@ -529,15 +529,6 @@ async function getServiceManifest() {
                                     readOnlyReason = optionSetting.readOnlyReason || 'This setting is managed by admin';
                                 }
                             }
-                            console.log(`User-side ${cs.id} checkbox values:`, {
-                                finalValue,
-                                isReadOnly,
-                                readOnlyReason,
-                                optionDetails: filteredOptions.map(opt => ({
-                                    id: opt.id,
-                                    setting: userCore.getCustomSetting(userSettings, opt.id, false)
-                                }))
-                            });
                         } else {
                             // Single value setting
                             const currentValue = userCore.getCustomSetting(userSettings, cs.id, cs.defaultValue).value;
@@ -656,7 +647,6 @@ async function getServiceManifest() {
                     if (cs.type && !cs.items) {
                         // Add each processed item directly to the target section
                         targetSection.items.push(...items);
-                        console.log(`Added ${items.length} direct setting(s) from ${cs.id} to section ${cs.section}`);
                     } else {
                         // For container settings, add as a subsection
                         const subsection = {
@@ -666,10 +656,8 @@ async function getServiceManifest() {
                             items
                         };
                         targetSection.items.push(subsection);
-                        console.log(`Added custom setting subsection ${cs.id} to section ${cs.section}`);
                     }
                 } else {
-                    console.warn(`Target section ${cs.section} not found, adding as top-level group`);
                     // Fallback: add as top-level group if section not found
                     const group = {
                         id: cs.id,
