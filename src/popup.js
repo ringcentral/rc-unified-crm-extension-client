@@ -367,6 +367,7 @@ window.addEventListener('message', async (e) => {
           if (registeredVersionInfo[['rc-crm-extension-version']]) {
             const releaseNotesPageRender = await releaseNotesPage.getReleaseNotesPageRender({ manifest, platformName, registeredVersion: registeredVersionInfo['rc-crm-extension-version'] });
             if (releaseNotesPageRender) {
+              await chrome.storage.local.set({ 'rc-crm-extension-version': manifest.version });
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
                 page: releaseNotesPageRender
@@ -375,7 +376,7 @@ window.addEventListener('message', async (e) => {
                 type: 'rc-adapter-navigate-to',
                 path: `/customized/${releaseNotesPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
               }, '*');
-              showNotification({ level: 'success', message: 'New version released. Please check release notes and reload the extension.', ttl: 60000 });
+              showNotification({ level: 'success', message: `Updated to the latest version ${manifest.version}`, ttl: 60000 });
             }
           }
 
