@@ -83,6 +83,7 @@ async function restartSyncInterval() {
   const { retroAutoCallLogIntervalId } = await chrome.storage.local.get({ retroAutoCallLogIntervalId: null });
   if (retroAutoCallLogIntervalId) {
     clearInterval(retroAutoCallLogIntervalId);
+    await chrome.storage.local.set({ retroAutoCallLogIntervalId: null });
   }
 
   // Check if auto logging is enabled
@@ -91,23 +92,26 @@ async function restartSyncInterval() {
     (userSettings?.autoLogOutgoing?.value ?? false);
   const isAutoLogEnabled = autoLogCallsGroupTrigger || (userSettings?.autoLogCall?.value ?? false);
 
-  console.log({ message: 'isAutoLogEnabled:', isAutoLogEnabled, crmAuthed, userSettings });
+  // Start interval if conditions are met
   if (isAutoLogEnabled && crmAuthed) {
     const syncIntervalMs = userCore.getLogSyncFrequencyInMilliseconds(userSettings);
+
     if (syncIntervalMs > 0) {
+      await chrome.storage.local.set({ retroAutoCallLogMaxAttempt: 10 });
       const newRetroAutoCallLogIntervalId = setInterval(
         function () {
           logService.retroAutoCallLog({
             manifest,
             platformName,
             platform
-          })
+          });
         }, syncIntervalMs);
       await chrome.storage.local.set({ retroAutoCallLogIntervalId: newRetroAutoCallLogIntervalId });
-      console.log(`Sync interval restarted with frequency: ${syncIntervalMs}ms`);
     }
   }
 }
+
+
 
 checkC2DCollision();
 getCustomManifest();
@@ -286,6 +290,8 @@ window.addEventListener('message', async (e) => {
               setInterval(async function () {
                 await triggerPendingRecordingCheck({ serverUrl: manifest.serverUrl });
               }, 300000);
+
+
             }
             // Unique: Bullhorn
             if (platform.name === 'bullhorn' && crmAuthed) {
@@ -2166,6 +2172,9 @@ window.addEventListener('message', async (e) => {
               userSettings = await userCore.refreshUserSettings({
                 changedSettings
               });
+
+              // Restart sync interval to respect any changes to sync frequency or activity logging settings
+              await restartSyncInterval();
 
               // Refresh the service manifest to reflect user settings changes
               const serviceManifest = await embeddableServices.getServiceManifest();
