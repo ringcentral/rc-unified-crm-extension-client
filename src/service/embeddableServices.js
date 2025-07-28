@@ -234,50 +234,6 @@ async function getServiceManifest() {
                                 readOnlyReason: userCore.getNotificationLevelSetting(userSettings).readOnlyReason
                             }
                         ]
-                    },
-                    {
-                        id: 'clickToDialEmbed',
-                        type: 'section',
-                        name: 'Enabled domains',
-                        groupId: 'appearance',
-                        description: 'Manage the URLs App Connect is enabled for',
-                        items: [
-                            {
-                                id: 'clickToDialEmbedMode',
-                                type: 'option',
-                                name: 'Enable mode',
-                                options: [
-                                    {
-                                        id: 'disabled',
-                                        name: 'Disabled'
-                                    },
-                                    {
-                                        id: 'crmOnly',
-                                        name: 'Enable for connected CRM only'
-                                    },
-                                    {
-                                        id: 'whitelist',
-                                        name: 'Block by default (then manage a list of sites to allow)'
-                                    },
-                                    {
-                                        id: 'blacklist',
-                                        name: 'Allow by default (then manage a list of sites to block)'
-                                    }
-                                ],
-                                value: userCore.getClickToDialEmbedMode(userSettings).value,
-                                readOnly: userCore.getClickToDialEmbedMode(userSettings).readOnly,
-                                readOnlyReason: userCore.getClickToDialEmbedMode(userSettings).readOnlyReason
-                            },
-                            {
-                                id: 'clickToDialUrls',
-                                type: 'array',
-                                name: 'URLs',
-                                helper: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
-                                value: userCore.getClickToDialUrls(userSettings).value,
-                                readOnly: userCore.getClickToDialUrls(userSettings).readOnly,
-                                readOnlyReason: userCore.getClickToDialUrls(userSettings).readOnlyReason
-                            }
-                        ]
                     }
                 ]
             },
@@ -417,6 +373,52 @@ async function getServiceManifest() {
         ],
         buttonEventPath: '/custom-button-click'
     }
+    services.settings.push(
+        {
+            id: 'clickToDialEmbed',
+            type: 'section',
+            name: 'Enabled domains',
+            groupId: 'general',
+            description: 'Manage the URLs App Connect is enabled for',
+            items: [
+                {
+                    id: 'clickToDialEmbedMode',
+                    type: 'option',
+                    name: 'Enable mode',
+                    options: [
+                        {
+                            id: 'disabled',
+                            name: 'Disabled'
+                        },
+                        {
+                            id: 'crmOnly',
+                            name: 'Enable for connected CRM only'
+                        },
+                        {
+                            id: 'whitelist',
+                            name: 'Block by default (then manage a list of sites to allow)'
+                        },
+                        {
+                            id: 'blacklist',
+                            name: 'Allow by default (then manage a list of sites to block)'
+                        }
+                    ],
+                    value: userCore.getClickToDialEmbedMode(userSettings).value,
+                    readOnly: userCore.getClickToDialEmbedMode(userSettings).readOnly,
+                    readOnlyReason: userCore.getClickToDialEmbedMode(userSettings).readOnlyReason
+                },
+                {
+                    id: 'clickToDialUrls',
+                    type: 'array',
+                    name: 'URLs',
+                    helper: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
+                    value: userCore.getClickToDialUrls(userSettings).value,
+                    readOnly: userCore.getClickToDialUrls(userSettings).readOnly,
+                    readOnlyReason: userCore.getClickToDialUrls(userSettings).readOnlyReason
+                }
+            ]
+        }
+    );
     if (customSettings) {
         for (const cs of customSettings) {
             const items = [];

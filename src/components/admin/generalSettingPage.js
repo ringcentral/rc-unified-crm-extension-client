@@ -13,6 +13,10 @@ function getGeneralSettingPageRender() {
                         {
                             const: "appearance",
                             title: "Appearance"
+                        },
+                        {
+                            const: "clickToDialEmbed",
+                            title: "Enabled domains"
                         }
                     ]
                 }

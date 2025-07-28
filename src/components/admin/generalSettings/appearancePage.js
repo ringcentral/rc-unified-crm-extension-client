@@ -17,10 +17,6 @@ function getAppearancePageRender() {
                         {
                             const: "notificationLevel",
                             title: "Notification level"
-                        },
-                        {
-                            const: "clickToDialEmbed",
-                            title: "Enabled domains"
                         }
                     ]
                 }
