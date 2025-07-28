@@ -1,10 +1,11 @@
 {
   "name": "rc-unified-crm-extension-client",
-  "version": "1.5.7",
+  "version": "1.5.8",
   "description": "![image](https://user-images.githubusercontent.com/7036536/190325756-35ef367d-1557-4833-84aa-b09f5d6717ab.png)",
   "main": "background.js",
   "scripts": {
-    "build": "node ./build.js"
+    "build": "node ./build.js",
+    "update": "node ./updateVersion.js"
   },
   "repository": {
     "type": "git",
