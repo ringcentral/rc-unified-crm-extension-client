@@ -37,6 +37,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData }) {
             type: 'rc-adapter-navigate-to',
             path: 'goBack',
         }, '*');
+        await refreshLicenseStatus({ serverUrl });
         return res.data.jwtToken;
     }
     catch (e) {
@@ -73,6 +74,7 @@ async function onAuthCallback({ serverUrl, callbackUri }) {
         ['rcUnifiedCrmExtJwt']: res.data.jwtToken
     });
     trackCrmLogin();
+    await refreshLicenseStatus({ serverUrl });
     return res.data.jwtToken;
 }
 
@@ -126,6 +128,28 @@ function setAccountName(accountName, isAdmin) {
 
 }
 
+async function getLicenseStatus({ serverUrl }) {
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const res = await axios.get(`${serverUrl}/licenseStatus?jwtToken=${rcUnifiedCrmExtJwt}`);
+    const licenseStatusColor = res.data.isLicenseValid ? 'inherit' : 'danger.b04';
+
+    return {
+        licenseStatus: res.data.licenseStatus,
+        licenseStatusColor,
+        licenseStatusDescription: res.data.licenseStatusDescription
+    };
+}
+
+async function refreshLicenseStatus({ serverUrl }) {
+    const licenseStatusResponse = await getLicenseStatus({ serverUrl });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-refresh-license-status',
+        licenseStatus: `License: ${licenseStatusResponse.licenseStatus}`,
+        licenseStatusColor: licenseStatusResponse.licenseStatusColor,
+        licenseDescription: licenseStatusResponse.licenseStatusDescription
+    }, '*');
+}
+
 exports.submitPlatformSelection = submitPlatformSelection;
 exports.apiKeyLogin = apiKeyLogin;
 exports.onAuthCallback = onAuthCallback;
@@ -133,3 +157,5 @@ exports.unAuthorize = unAuthorize;
 exports.checkAuth = checkAuth;
 exports.setAuth = setAuth;
 exports.setAccountName = setAccountName;
+exports.getLicenseStatus = getLicenseStatus;
+exports.refreshLicenseStatus = refreshLicenseStatus;

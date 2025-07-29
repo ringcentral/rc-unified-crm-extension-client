@@ -108,8 +108,8 @@ window.addEventListener('message', async (e) => {
                 link: "(pending...)",
                 expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days
               }
-              });
-              await addPendingRecordingSessionId({ sessionId: data.telephonySession.sessionId });
+            });
+            await addPendingRecordingSessionId({ sessionId: data.telephonySession.sessionId });
           }
           break;
         case 'rc-calling-settings-notify':
@@ -671,7 +671,10 @@ window.addEventListener('message', async (e) => {
               else {
                 window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                 await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
-                await authCore.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
+                await authCore.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });                
+                if (platform.useLicense) {
+                  await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
+                }
                 window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
               responseMessage(data.requestId, { data: 'ok' });
@@ -2072,6 +2075,9 @@ window.addEventListener('message', async (e) => {
                   if (rcUnifiedCrmExtJwt) {
                     await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
                     await authCore.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
+                    if (platform.useLicense) {
+                      await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
+                    }
                   }
                   await chrome.storage.local.remove('platform-info');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2361,7 +2367,11 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
-
+                case 'refreshLicense':
+                  if (platform.useLicense) {
+                    await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
+                  }
+                  break;
               }
               responseMessage(data.requestId, { data: 'ok' });
               break;
