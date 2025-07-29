@@ -11,7 +11,7 @@ async function submitPlatformSelection(platform) {
 
 // apiUrl: Insightly
 // username, password: Redtail
-async function apiKeyLogin({ serverUrl, apiKey, formData }) {
+async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
     try {
         const platformInfo = await chrome.storage.local.get('platform-info');
         const platformName = platformInfo['platform-info'].platformName;
@@ -37,7 +37,9 @@ async function apiKeyLogin({ serverUrl, apiKey, formData }) {
             type: 'rc-adapter-navigate-to',
             path: 'goBack',
         }, '*');
-        await refreshLicenseStatus({ serverUrl });
+        if (useLicense) {
+            await refreshLicenseStatus({ serverUrl });
+        }
         return res.data.jwtToken;
     }
     catch (e) {
@@ -46,7 +48,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData }) {
     }
 }
 
-async function onAuthCallback({ serverUrl, callbackUri }) {
+async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
     const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;
     const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
     const rcInfo = await indexDB.get('keyvaluepairs', 'dataFetcherV2-storageData');
@@ -74,7 +76,9 @@ async function onAuthCallback({ serverUrl, callbackUri }) {
         ['rcUnifiedCrmExtJwt']: res.data.jwtToken
     });
     trackCrmLogin();
-    await refreshLicenseStatus({ serverUrl });
+    if (useLicense) {
+        await refreshLicenseStatus({ serverUrl });
+    }
     return res.data.jwtToken;
 }
 
