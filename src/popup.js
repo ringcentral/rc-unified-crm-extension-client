@@ -78,6 +78,52 @@ let platform = null;
 let hasOngoingCall = false;
 let lastUserSettingSyncDate = new Date();
 
+// Helper function to determine if a call should be auto-logged based on direction and result
+function shouldAutoLogCall(call, userSettings) {
+  let shouldAutoLog = false;
+
+  if (call.direction === 'Inbound') {
+    if (call.result === 'Answered') {
+      shouldAutoLog = userSettings?.autoLogAnsweredIncoming?.value ?? false;
+    } else if (call.result === 'Missed') {
+      shouldAutoLog = userSettings?.autoLogMissedIncoming?.value ?? false;
+    }
+  } else if (call.direction === 'Outbound') {
+    shouldAutoLog = userSettings?.autoLogOutgoing?.value ?? false;
+  }
+
+  // Fallback to legacy setting for backward compatibility
+  if (!shouldAutoLog) {
+    shouldAutoLog = userSettings?.autoLogCall?.value ?? false;
+  }
+
+  return shouldAutoLog;
+}
+
+// Helper function for presence update auto-logging (maps presence results to call results)
+function shouldAutoLogCallFromPresence(call, userSettings) {
+  let shouldAutoLog = false;
+
+  if (call.direction === 'Inbound') {
+    // For inbound calls: CallConnected = answered, Disconnected = missed
+    if (call.result === 'CallConnected') {
+      shouldAutoLog = userSettings?.autoLogAnsweredIncoming?.value ?? false;
+    } else if (call.result === 'Disconnected') {
+      shouldAutoLog = userSettings?.autoLogMissedIncoming?.value ?? false;
+    }
+  } else if (call.direction === 'Outbound') {
+    // For outbound calls: both CallConnected and Disconnected mean call was made
+    shouldAutoLog = userSettings?.autoLogOutgoing?.value ?? false;
+  }
+
+  // Fallback to legacy setting for backward compatibility
+  if (!shouldAutoLog) {
+    shouldAutoLog = userSettings?.autoLogCall?.value ?? false;
+  }
+
+  return shouldAutoLog;
+}
+
 async function restartSyncInterval() {
   // Clear existing interval
   const { retroAutoCallLogIntervalId } = await chrome.storage.local.get({ retroAutoCallLogIntervalId: null });
@@ -1357,16 +1403,23 @@ window.addEventListener('message', async (e) => {
               });
 
               // Translate: If no existing call log, create condition here to navigate to auto log
-              if (userCore.getAutoLogCallSetting(userSettings).value && data.body.triggerType === 'callLogSync' && !(existingCalls?.length > 0 && existingCalls[0]?.matched)) {
-                data.body.triggerType = 'createLog';
-                isAutoLog = true;
+              if (data.body.triggerType === 'callLogSync' && !(existingCalls?.length > 0 && existingCalls[0]?.matched)) {
+                if (shouldAutoLogCall(data.body.call, userSettings)) {
+                  data.body.triggerType = 'createLog';
+                  isAutoLog = true;
+                }
               }
 
               // Translate: Right after call, once presence update to Disconnect, auto log the call
               if (data.body.triggerType === 'presenceUpdate') {
                 if (data.body.call.result === 'Disconnected' || data.body.call.result === 'CallConnected') {
-                  data.body.triggerType = 'createLog';
-                  isAutoLog = true;
+                  if (shouldAutoLogCallFromPresence(data.body.call, userSettings)) {
+                    data.body.triggerType = 'createLog';
+                    isAutoLog = true;
+                  } else {
+                    responseMessage(data.requestId, { data: 'ok' });
+                    break;
+                  }
                 }
                 else {
                   responseMessage(data.requestId, { data: 'ok' });

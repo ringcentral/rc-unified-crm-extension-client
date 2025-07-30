@@ -143,7 +143,7 @@ async function getServiceManifest() {
                     {
                         id: "logSyncFrequency",
                         type: "option",
-                        name: 'Log sync frequency',
+                        name: 'Call Log Sync Frequency',
                         helper: `Specify how often you'd like to check for any unlogged calls.`,
                         options: [
                             {

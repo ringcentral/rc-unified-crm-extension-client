@@ -48,7 +48,7 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
                 },
                 logSyncFrequencySection: {
                     type: 'object',
-                    title: 'Log sync frequency',
+                    title: 'Call Log Sync Frequency',
                     properties: {
                         logSyncFrequency: {
                             type: 'object',
