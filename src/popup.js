@@ -109,8 +109,8 @@ window.addEventListener('message', async (e) => {
                 link: "(pending...)",
                 expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days
               }
-              });
-              await addPendingRecordingSessionId({ sessionId: data.telephonySession.sessionId });
+            });
+            await addPendingRecordingSessionId({ sessionId: data.telephonySession.sessionId });
           }
           break;
         case 'rc-calling-settings-notify':
@@ -248,13 +248,13 @@ window.addEventListener('message', async (e) => {
               const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
+                page: reportPageRender,
+              }, '*');
 
               // Set every 5min, check if there's any pending recording link
               setInterval(async function () {
                 await triggerPendingRecordingCheck({ serverUrl: manifest.serverUrl });
               }, 300000);
-                page: reportPageRender,
-              }, '*');
             }
             // Unique: Bullhorn
             if (platform.name === 'bullhorn' && crmAuthed) {
