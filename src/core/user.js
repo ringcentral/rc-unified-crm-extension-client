@@ -62,16 +62,6 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
             }
         }
     }
-    // TEMP: replace disableRetroCallLogSync with enableRetroCallLogSync
-    if (userSettings?.disableRetroCallLogSync && !userSettings?.enableRetroCallLogSync) {
-        userSettings.enableRetroCallLogSync = {
-            value: !userSettings.disableRetroCallLogSync.value,
-            customizable: userSettings.disableRetroCallLogSync.customizable,
-            readOnly: userSettings.disableRetroCallLogSync.readOnly,
-            readOnlyReason: userSettings.disableRetroCallLogSync.readOnlyReason
-        };
-        delete userSettings.disableRetroCallLogSync;
-    }
     await chrome.storage.local.set({ userSettings });
     userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

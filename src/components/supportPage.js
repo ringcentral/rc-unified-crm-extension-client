@@ -22,9 +22,9 @@ function getSupportPageRender({ manifest, isOnline }) {
                     type: "string",
                     description: "Write a review"
                 },
-                openFeedbackPageButton: {
+                openCommunityPageButton: {
                     type: "string",
-                    description: "Share a feature request",
+                    description: "Community forums",
                 },
                 isServiceOnline: {
                     type: "string",
@@ -77,7 +77,7 @@ function getSupportPageRender({ manifest, isOnline }) {
                 "ui:variant": "body1",
                 "ui:underline": true
             },
-            openFeedbackPageButton: {
+            openCommunityPageButton: {
                 "ui:field": "link",
                 "ui:variant": "body1",
                 "ui:underline": true

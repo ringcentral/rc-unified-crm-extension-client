@@ -1,4 +1,21 @@
-function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin }) {
+function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin, additionalFields = [], additionalFieldValues = {} }) {
+    const additionalProperties = {};
+    additionalFields.forEach(field => {
+        additionalProperties[field.const] = {
+            type: 'string',
+            title: field.title,
+            description: field.description,
+        };
+        if (field.oneOf) {
+            additionalProperties[field.const].oneOf = field.oneOf;
+        }
+        if (field.enum) {
+            additionalProperties[field.const].enum = field.enum;
+        }
+        if (field.enumNames) {
+            additionalProperties[field.const].enumNames = field.enumNames;
+        }
+    });
     const pageRender =
     {
         id: 'serverSideLoggingSetting',
@@ -49,6 +66,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                     type: 'string',
                     description: 'All numbers will be auto-formatted as E.164 standard. Eg. (123) 456-7890 -> +11234567890'
                 },
+                ...additionalProperties,
                 saveServerSideLoggingButton: {
                     type: 'string',
                     title: 'Save'
@@ -76,6 +94,14 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
             activityRecordOwner: loggingByAdmin ? 'admin' : 'user'
         }
     };
+    additionalFields.forEach(field => {
+        if (field.uiSchema) {
+            pageRender.uiSchema[field.const] = field.uiSchema;
+        }
+        if (typeof additionalFieldValues[field.const] !== 'undefined') {
+            pageRender.formData[field.const] = additionalFieldValues[field.const];
+        }
+    });
     return pageRender;
 }
 

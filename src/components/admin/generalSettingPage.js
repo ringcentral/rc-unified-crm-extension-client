@@ -11,16 +11,12 @@ function getGeneralSettingPageRender() {
                     type: "string",
                     oneOf: [
                         {
-                            const: "customizeTabs",
-                            title: "Customize tabs"
-                        },
-                        {
-                            const: "notificationLevel",
-                            title: "Notification level"
+                            const: "appearance",
+                            title: "Appearance"
                         },
                         {
                             const: "clickToDialEmbed",
-                            title: "Click-to-dial"
+                            title: "Enabled domains"
                         }
                     ]
                 }

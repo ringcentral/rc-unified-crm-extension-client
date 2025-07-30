@@ -1,7 +1,7 @@
 function getClickToDialEmbedPageRender({ adminUserSettings }) {
     return {
         id: 'clickToDialEmbedPage',
-        title: 'Click-to-dial',
+        title: 'Enabled domains',
         type: 'page',
         schema: {
             type: 'object',
@@ -9,6 +9,7 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
             properties: {
                 clickToDialEmbedMode: {
                     type: 'object',
+                    title: 'Enable mode',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -16,7 +17,7 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
                         },
                         value: {
                             type: 'string',
-                            title: 'Click-to-dial mode',
+                            title: 'Enable mode',
                             oneOf: [
                                 { const: 'disabled', title: 'Disabled' },
                                 { const: 'crmOnly', title: 'Enable for connected CRM only' },
@@ -29,7 +30,7 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
                 },
                 clickToDialUrls: {
                     type: 'object',
-                    title: 'URLs for click-to-dial',
+                    title: 'URLs',
                     properties: {
                         customizable: {
                             type: 'boolean',

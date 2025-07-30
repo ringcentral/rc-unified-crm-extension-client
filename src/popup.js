@@ -28,6 +28,7 @@ import customSettingsPage from './components/admin/managedSettings/customSetting
 import customizeTabsSettingPage from './components/admin/generalSettings/customizeTabsSettingPage';
 import clickToDialEmbedPage from './components/admin/generalSettings/clickToDialEmbedPage';
 import notificationLevelSettingPage from './components/admin/generalSettings/notificationLevelSettingPage';
+import appearancePage from './components/admin/generalSettings/appearancePage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
 import {
@@ -52,7 +53,7 @@ import {
 
 import logService from './service/logService';
 import embeddableServices from './service/embeddableServices';
-import { logPageFormDataDefaulting, getLogConflictInfo } from './lib/logUtil';
+import { logPageFormDataDefaulting, getLogConflictInfo, addPendingRecordingSessionId, triggerPendingRecordingCheck, removePendingRecordingSessionId } from './lib/logUtil';
 import { bullhornHeartbeat, tryConnectToBullhorn } from './misc/bullhorn';
 
 import axios from 'axios';
@@ -108,7 +109,8 @@ window.addEventListener('message', async (e) => {
                 link: "(pending...)",
                 expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days
               }
-            });
+              });
+              await addPendingRecordingSessionId({ sessionId: data.telephonySession.sessionId });
           }
           break;
         case 'rc-calling-settings-notify':
@@ -246,6 +248,11 @@ window.addEventListener('message', async (e) => {
               const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
+
+              // Set every 5min, check if there's any pending recording link
+              setInterval(async function () {
+                await triggerPendingRecordingCheck({ serverUrl: manifest.serverUrl });
+              }, 300000);
                 page: reportPageRender,
               }, '*');
             }
@@ -268,6 +275,7 @@ window.addEventListener('message', async (e) => {
             }
             else if (!rcUnifiedCrmExtJwt && !crmAuthed) {
               currentNotificationId = await showNotification({ level: 'warning', message: `Please go to Settings and connect to ${platform.name}`, ttl: 60000 });
+              authCore.setAuth(false);
             }
             try {
               const rcInfo = await getRcInfo();
@@ -367,6 +375,7 @@ window.addEventListener('message', async (e) => {
           if (registeredVersionInfo[['rc-crm-extension-version']]) {
             const releaseNotesPageRender = await releaseNotesPage.getReleaseNotesPageRender({ manifest, platformName, registeredVersion: registeredVersionInfo['rc-crm-extension-version'] });
             if (releaseNotesPageRender) {
+              await chrome.storage.local.set({ 'rc-crm-extension-version': manifest.version });
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
                 page: releaseNotesPageRender
@@ -375,7 +384,7 @@ window.addEventListener('message', async (e) => {
                 type: 'rc-adapter-navigate-to',
                 path: `/customized/${releaseNotesPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
               }, '*');
-              showNotification({ level: 'success', message: 'New version released. Please check release notes and reload the extension.', ttl: 60000 });
+              showNotification({ level: 'success', message: `Updated to the latest version ${manifest.version}`, ttl: 60000 });
             }
           }
 
@@ -597,9 +606,9 @@ window.addEventListener('message', async (e) => {
           if (data.path === '/settings' && crmAuthed) {
             const nowDate = new Date();
             if (nowDate - lastUserSettingSyncDate > 60000) {
-              showNotification({ level: 'success', message: 'User settings syncing', ttl: 2000 });
+              // showNotification({ level: 'success', message: 'User settings syncing', ttl: 2000 });
               userSettings = await userCore.refreshUserSettings({});
-              showNotification({ level: 'success', message: 'User settings synced', ttl: 2000 });
+              // showNotification({ level: 'success', message: 'User settings synced', ttl: 2000 });
               lastUserSettingSyncDate = new Date();
             }
           }
@@ -929,6 +938,17 @@ window.addEventListener('message', async (e) => {
                     path: `/customized/${managedSettingsPageRender.id}`, // page id
                   }, '*');
                   break;
+                case 'appearance':
+                  const appearancePageRender = appearancePage.getAppearancePageRender();
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: appearancePageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${appearancePageRender.id}`, // page id
+                  }, '*');
+                  break;
                 case 'customizeTabs':
                   const customizeTabsSettingPageRender = customizeTabsSettingPage.getCustomizeTabsSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -977,10 +997,13 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const serverSideLoggingSubscription = await adminCore.getServerSideLogging({ platform });
                   const subscriptionLevel = serverSideLoggingSubscription.subscribed ? serverSideLoggingSubscription.subscriptionLevel : 'Disable';
+                  const additionalFieldValues = await adminCore.getServerSideLoggingAdditionalFieldValues({ platform });
                   const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({
                     subscriptionLevel,
                     doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers,
-                    loggingByAdmin: serverSideLoggingSubscription.loggingByAdmin
+                    loggingByAdmin: serverSideLoggingSubscription.loggingByAdmin,
+                    additionalFields: platform.serverSideLogging?.additionalFields ?? [],
+                    additionalFieldValues
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
@@ -1413,11 +1436,13 @@ window.addEventListener('message', async (e) => {
                   // If there is existing call log, update it
                   if (existingCalls?.length > 0 && existingCalls[0]?.matched) {
                     await logService.syncCallData({
-                      manifest,
+                      serverUrl: manifest.serverUrl,
                       dataBody: data.body
                     });
                     if (data.body.call?.recording?.link) {
                       trackUpdateCallRecordingLink({ processState: 'finish' });
+                      // remove pending recording link mark from storage
+                      await removePendingRecordingSessionId({ sessionId: data.body.call.sessionId });
                     }
                   }
                   break;
@@ -2007,14 +2032,19 @@ window.addEventListener('message', async (e) => {
               for (const s of data.body.settings) {
                 if (s.items !== undefined) {
                   for (const i of s.items) {
-                    changedSettings[i.id] = { value: i.value };
+                    if (i?.items !== undefined) {
+                      for (const ii of i.items) {
+                        changedSettings[ii.id] = { value: ii.value };
+                      }
+                    } else {
+                      changedSettings[i.id] = { value: i.value };
+                    }
                   }
                 }
                 else if (s.value !== undefined) {
                   changedSettings[s.id] = { value: s.value };
                 }
               }
-
               userSettings = await userCore.refreshUserSettings({
                 changedSettings
               });
@@ -2192,11 +2222,8 @@ window.addEventListener('message', async (e) => {
                     });
                   }
                   break;
-                case 'openFeedbackPageButton':
-                  chrome.runtime.sendMessage({
-                    type: "openPopupWindow",
-                    navigationPath: "/feedback"
-                  });
+                case 'openCommunityPageButton':
+                  window.open('https://community.ringcentral.com/groups/app-connect-22', '_blank');
                   break;
                 case 'documentation':
                   if (platform?.documentationUrl) {
@@ -2283,6 +2310,7 @@ window.addEventListener('message', async (e) => {
                     service: (await embeddableServices.getServiceManifest())
                   }, '*');
                   await adminCore.updateServerSideDoNotLogNumbers({ platform, doNotLogNumbers: data.body.button.formData.doNotLogNumbers ?? "" });
+                  await adminCore.uploadServerSideLoggingAdditionalFieldValues({ platform, formData: data.body.button.formData });
                   showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2449,7 +2477,7 @@ window.addEventListener('message', async (e) => {
   catch (e) {
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
     console.log(e);
-    if (e.response && e.response.data && !noShowNotification && typeof e.response.data === 'string') {
+    if (e.response && e.response.data && e.response?.status !== 404 && !noShowNotification && typeof e.response.data === 'string') {
       showNotification({ level: 'warning', message: e.response.data, ttl: 5000 });
     }
     else if (e.message.includes('timeout')) {

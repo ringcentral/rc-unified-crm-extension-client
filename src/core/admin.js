@@ -108,6 +108,41 @@ async function getServerSideLogging({ platform }) {
     }
 }
 
+async function getServerSideLoggingAdditionalFieldValues({ platform }) {
+    if (!platform.serverSideLogging || !platform.serverSideLogging.additionalFields) {
+        return {};
+    }
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
+    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
+    const manifest = await getManifest();
+    const settingsResponse = await axios.get(
+        `${manifest.serverUrl}/admin/serverLoggingSettings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`,
+    );
+    return settingsResponse.data;
+}
+
+async function uploadServerSideLoggingAdditionalFieldValues({ platform, formData }) {
+    if (!platform.serverSideLogging || !platform.serverSideLogging.additionalFields) {
+        return;
+    }
+    const additionalFieldValues = {};
+    platform.serverSideLogging.additionalFields.forEach(field => {
+        additionalFieldValues[field.const] = formData[field.const];
+    });
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
+    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
+    const manifest = await getManifest();
+    const uploadResponse = await axios.post(
+        `${manifest.serverUrl}/admin/serverLoggingSettings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`,
+        {
+            additionalFieldValues,
+        }
+    );
+    return uploadResponse.data;
+}
+
 async function enableServerSideLogging({ platform, subscriptionLevel, loggingByAdmin }) {
     if (!platform.serverSideLogging) {
         return;
@@ -133,6 +168,9 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                 await disableServerSideLogging({ platform, rcAccessToken });
             }
             //  Subscribe
+            // TODO: loggingWithUserAssigned overrides loggingByAdmin if useAdminAssignedUserToken is true
+            //       There are 2 roles, one to create activity and the other to own it (case: admin creating and assigning to user, so user would eventually own it)
+            //       To change the naming so that it has better readability. Right it's confusing on variable names for different roles.
             const subscribeResp = await axios.post(
                 `${serverDomainUrl}/subscribe`,
                 {
@@ -140,7 +178,7 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                     crmPlatform: platform.name,
                     subscriptionLevel,
                     loggingByAdmin,
-                    loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ?? false
+                    loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false
                 },
                 {
                     headers: {
@@ -344,3 +382,5 @@ exports.enableServerSideLogging = enableServerSideLogging;
 exports.disableServerSideLogging = disableServerSideLogging;
 exports.updateServerSideDoNotLogNumbers = updateServerSideDoNotLogNumbers;
 exports.authServerSideLogging = authServerSideLogging;
+exports.getServerSideLoggingAdditionalFieldValues = getServerSideLoggingAdditionalFieldValues;
+exports.uploadServerSideLoggingAdditionalFieldValues = uploadServerSideLoggingAdditionalFieldValues;
