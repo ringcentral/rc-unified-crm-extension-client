@@ -5,6 +5,8 @@ import contactCore from '../core/contact';
 import { showNotification, dismissNotification, isObjectEmpty, getRcAccessToken } from '../lib/util';
 import { getLogConflictInfo } from '../lib/logUtil';
 
+
+
 async function retroAutoCallLog({
     manifest,
     platformName,
@@ -35,9 +37,13 @@ async function retroAutoCallLog({
         try {
             const { calls, hasMore } = await RCAdapter.getUnloggedCalls(itemsPerPage, pageNumber);
 
-            const isAutoLog = userCore.getAutoLogCallSetting(userSettings, isAdmin).value;
+            // Check if any individual auto-logging setting is enabled
+            const hasAnyAutoLogEnabled = (userSettings?.autoLogAnsweredIncoming?.value ?? false) ||
+                (userSettings?.autoLogMissedIncoming?.value ?? false) ||
+                (userSettings?.autoLogOutgoing?.value ?? false) ||
+                (userSettings?.autoLogCall?.value ?? false);
 
-            if (!isAutoLog) {
+            if (!hasAnyAutoLogEnabled) {
                 return;
             }
 
@@ -73,7 +79,7 @@ async function retroAutoCallLog({
 
                     const { hasConflict, autoSelectAdditionalSubmission } = await getLogConflictInfo({
                         platform,
-                        isAutoLog,
+                        isAutoLog: true,
                         contactInfo: callMatchedContact,
                         logType: 'callLog',
                         direction: c.direction,

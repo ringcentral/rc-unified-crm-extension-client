@@ -97,7 +97,7 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         recordings: getShowRecordingsTabSetting(userSettings).value,
         contacts: getShowContactsTabSetting(userSettings).value
     }, '*');
-    const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false);
+    const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false) || (userSettings?.autoLogVoicemails?.value ?? false);
     const autoLogCallsGroupTrigger = (userSettings?.autoLogAnsweredIncoming?.value ?? false) || (userSettings?.autoLogMissedIncoming?.value ?? false) || (userSettings?.autoLogOutgoing?.value ?? false);
     RCAdapter.setAutoLog({ call: autoLogCallsGroupTrigger || (userSettings.autoLogCall?.value ?? false), message: autoLogMessagesGroupTrigger })
     if (!isAvoidForceChange) {
