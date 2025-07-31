@@ -21,7 +21,6 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
                             items: {
                                 type: 'string',
                                 enum: [
-                                    'oneTimeLog',
                                     'autoLogAnsweredIncoming',
                                     'autoLogMissedIncoming',
                                     'autoLogOutgoing',
@@ -32,7 +31,6 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
 
                                 ],
                                 enumNames: [
-                                    'One-time call logging',
                                     'Answered incoming calls',
                                     'Missed incoming calls',
                                     'Outgoing calls',
@@ -65,6 +63,20 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
                                     enumNames: ['Disabled', '10 min', '30 min', '1 hour', '3 hours', '1 day']
                                 }
                             }
+                        }
+                    }
+                },
+                oneTimeLog: {
+                    type: 'object',
+                    title: 'One-time call logging',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Enable one-time call logging functionality'
                         }
                     }
                 },
@@ -109,6 +121,9 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
             logSyncFrequencySection: {
                 "ui:collapsible": true,
             },
+            oneTimeLog: {
+                "ui:collapsible": true,
+            },
             autoOpenOptions: {
                 "ui:collapsible": true,
                 value: {
@@ -130,8 +145,7 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
                     adminUserSettings?.autoLogVoicemails?.customizable ??
                     adminUserSettings?.autoLogSMS?.customizable ??
                     adminUserSettings?.autoLogInboundFax?.customizable ??
-                    adminUserSettings?.autoLogOutboundFax?.customizable ??
-                    adminUserSettings?.oneTimeLog?.customizable ?? true,
+                    adminUserSettings?.autoLogOutboundFax?.customizable ?? true,
                 value: [
                     ...((adminUserSettings?.autoLogAnsweredIncoming?.value ?? false) ? ['autoLogAnsweredIncoming'] : []),
                     ...((adminUserSettings?.autoLogMissedIncoming?.value ?? false) ? ['autoLogMissedIncoming'] : []),
@@ -139,8 +153,7 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
                     ...((adminUserSettings?.autoLogVoicemails?.value ?? false) ? ['autoLogVoicemails'] : []),
                     ...((adminUserSettings?.autoLogSMS?.value ?? false) ? ['autoLogSMS'] : []),
                     ...((adminUserSettings?.autoLogInboundFax?.value ?? false) ? ['autoLogInboundFax'] : []),
-                    ...((adminUserSettings?.autoLogOutboundFax?.value ?? false) ? ['autoLogOutboundFax'] : []),
-                    ...((adminUserSettings?.oneTimeLog?.value ?? false) ? ['oneTimeLog'] : [])
+                    ...((adminUserSettings?.autoLogOutboundFax?.value ?? false) ? ['autoLogOutboundFax'] : [])
                 ]
             },
             logSyncFrequencySection: {
@@ -148,6 +161,10 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
                     customizable: adminUserSettings?.logSyncFrequency?.customizable ?? true,
                     value: adminUserSettings?.logSyncFrequency?.value ?? '10min'
                 }
+            },
+            oneTimeLog: {
+                customizable: adminUserSettings?.oneTimeLog?.customizable ?? true,
+                value: adminUserSettings?.oneTimeLog?.value ?? false
             },
             autoOpenOptions: {
                 customizable: adminUserSettings?.popupLogPageAfterSMS?.customizable ??

@@ -66,10 +66,6 @@ async function getServiceManifest() {
                         helper: `Select the types of communications you'd like automatically logged to your CRM.`,
                         options: [
                             {
-                                id: 'oneTimeLog',
-                                name: 'One-time call logging'
-                            },
-                            {
                                 id: 'autoLogAnsweredIncoming',
                                 name: 'Answered incoming calls'
                             },
@@ -107,8 +103,7 @@ async function getServiceManifest() {
                                 ...(userCore.getAutoLogVoicemailsSetting(userSettings).value ? ['autoLogVoicemails'] : []),
                                 ...(userCore.getAutoLogSMSSetting(userSettings).value ? ['autoLogSMS'] : []),
                                 ...(userCore.getAutoLogInboundFaxSetting(userSettings).value ? ['autoLogInboundFax'] : []),
-                                ...(userCore.getAutoLogOutboundFaxSetting(userSettings).value ? ['autoLogOutboundFax'] : []),
-                                ...(userCore.getOneTimeLogSetting(userSettings).value ? ['oneTimeLog'] : [])
+                                ...(userCore.getAutoLogOutboundFaxSetting(userSettings).value ? ['autoLogOutboundFax'] : [])
                             ];
                             console.log('Service manifest activity logging values:', activityLoggingValues);
                             console.log('User settings for activity logging:', {
@@ -118,8 +113,7 @@ async function getServiceManifest() {
                                 autoLogVoicemails: userCore.getAutoLogVoicemailsSetting(userSettings),
                                 autoLogSMS: userCore.getAutoLogSMSSetting(userSettings),
                                 autoLogInboundFax: userCore.getAutoLogInboundFaxSetting(userSettings),
-                                autoLogOutboundFax: userCore.getAutoLogOutboundFaxSetting(userSettings),
-                                oneTimeLog: userCore.getOneTimeLogSetting(userSettings)
+                                autoLogOutboundFax: userCore.getAutoLogOutboundFaxSetting(userSettings)
                             });
                             return activityLoggingValues;
                         })(),
@@ -129,16 +123,14 @@ async function getServiceManifest() {
                             userCore.getAutoLogVoicemailsSetting(userSettings).readOnly ||
                             userCore.getAutoLogSMSSetting(userSettings).readOnly ||
                             userCore.getAutoLogInboundFaxSetting(userSettings).readOnly ||
-                            userCore.getAutoLogOutboundFaxSetting(userSettings).readOnly ||
-                            userCore.getOneTimeLogSetting(userSettings).readOnly,
+                            userCore.getAutoLogOutboundFaxSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).readOnlyReason ||
                             userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).readOnlyReason ||
                             userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).readOnlyReason ||
                             userCore.getAutoLogVoicemailsSetting(userSettings).readOnlyReason ||
                             userCore.getAutoLogSMSSetting(userSettings).readOnlyReason ||
                             userCore.getAutoLogInboundFaxSetting(userSettings).readOnlyReason ||
-                            userCore.getAutoLogOutboundFaxSetting(userSettings).readOnlyReason ||
-                            userCore.getOneTimeLogSetting(userSettings).readOnlyReason
+                            userCore.getAutoLogOutboundFaxSetting(userSettings).readOnlyReason
                     },
                     {
                         id: "logSyncFrequency",
@@ -174,6 +166,15 @@ async function getServiceManifest() {
                         value: userCore.getLogSyncFrequencySetting(userSettings).value,
                         readOnly: userCore.getLogSyncFrequencySetting(userSettings).readOnly,
                         readOnlyReason: userCore.getLogSyncFrequencySetting(userSettings).readOnlyReason,
+                    },
+                    {
+                        id: 'oneTimeLog',
+                        type: 'boolean',
+                        name: 'One-time call logging',
+                        description: 'Enable one-time call logging functionality.',
+                        value: userCore.getOneTimeLogSetting(userSettings).value,
+                        readOnly: userCore.getOneTimeLogSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getOneTimeLogSetting(userSettings).readOnlyReason
                     },
                     {
                         id: 'autoOpenOptions',
