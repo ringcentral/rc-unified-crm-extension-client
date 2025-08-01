@@ -105,16 +105,6 @@ async function getServiceManifest() {
                                 ...(userCore.getAutoLogInboundFaxSetting(userSettings).value ? ['autoLogInboundFax'] : []),
                                 ...(userCore.getAutoLogOutboundFaxSetting(userSettings).value ? ['autoLogOutboundFax'] : [])
                             ];
-                            console.log('Service manifest activity logging values:', activityLoggingValues);
-                            console.log('User settings for activity logging:', {
-                                autoLogAnsweredIncoming: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin),
-                                autoLogMissedIncoming: userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin),
-                                autoLogOutgoing: userCore.getAutoLogOutgoingSetting(userSettings, isAdmin),
-                                autoLogVoicemails: userCore.getAutoLogVoicemailsSetting(userSettings),
-                                autoLogSMS: userCore.getAutoLogSMSSetting(userSettings),
-                                autoLogInboundFax: userCore.getAutoLogInboundFaxSetting(userSettings),
-                                autoLogOutboundFax: userCore.getAutoLogOutboundFaxSetting(userSettings)
-                            });
                             return activityLoggingValues;
                         })(),
                         readOnly: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).readOnly ||
@@ -171,7 +161,7 @@ async function getServiceManifest() {
                         id: 'oneTimeLog',
                         type: 'boolean',
                         name: 'One-time call logging',
-                        description: 'Enable one-time call logging functionality.',
+                        description: 'Delays logging until full call details are available.',
                         value: userCore.getOneTimeLogSetting(userSettings).value,
                         readOnly: userCore.getOneTimeLogSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getOneTimeLogSetting(userSettings).readOnlyReason
