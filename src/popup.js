@@ -5,7 +5,7 @@ import dispositionCore from './core/disposition';
 import userCore from './core/user';
 import adminCore from './core/admin';
 import authCore from './core/auth';
-import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getPlatformInfo, getManifest } from './lib/util';
+import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getPlatformInfo, getManifest, getUserReportStats } from './lib/util';
 import { getUserInfo } from './lib/rcAPI';
 import moment from 'moment';
 import logPage from './components/logPage';
@@ -15,6 +15,7 @@ import releaseNotesPage from './components/releaseNotesPage';
 import supportPage from './components/supportPage';
 import aboutPage from './components/aboutPage';
 import developerSettingsPage from './components/developerSettingsPage';
+import reportPage from './components/reportPage';
 import adminPage from './components/admin/adminPage';
 import managedSettingsPage from './components/admin/managedSettingsPage';
 import generalSettingPage from './components/admin/generalSettingPage';
@@ -108,8 +109,8 @@ window.addEventListener('message', async (e) => {
                 link: "(pending...)",
                 expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days
               }
-              });
-              await addPendingRecordingSessionId({ sessionId: data.telephonySession.sessionId });
+            });
+            await addPendingRecordingSessionId({ sessionId: data.telephonySession.sessionId });
           }
           break;
         case 'rc-calling-settings-notify':
@@ -242,6 +243,13 @@ window.addEventListener('message', async (e) => {
               setInterval(async function () {
                 userSettings = await userCore.refreshUserSettings({});
               }, 900000);
+              // report tab
+              const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+              const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
+              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-customized-page',
+                page: reportPageRender,
+              }, '*');
 
               // Set every 5min, check if there's any pending recording link
               setInterval(async function () {
@@ -604,6 +612,15 @@ window.addEventListener('message', async (e) => {
               lastUserSettingSyncDate = new Date();
             }
           }
+
+          if (data.path === '/customizedTabs/reportPage') {
+            const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+            const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+              type: 'rc-adapter-register-customized-page',
+              page: reportPageRender
+            }, '*');
+          }
           break;
         case 'rc-adapter-ai-assistant-settings-notify':
           userSettings = await userCore.refreshUserSettings({
@@ -832,7 +849,71 @@ window.addEventListener('message', async (e) => {
                     }, '*');
                   }
                   break;
-
+                case 'reportPage':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  if (data.body.formData.unloggedCallSummary === 'unloggedCallCount') {
+                    const { calls: unloggedCalls } = await RCAdapter.getUnloggedCalls(100, 1);
+                    for (const c of unloggedCalls) {
+                      const { matched, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber, platformName });
+                      c.matched = matched;
+                      c.contactInfo = contactInfo;
+                      c.phoneNumber = c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber;
+                    }
+                    const unloggedCallPageRender = logPage.getUnloggedCallPageRender({ unloggedCalls });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: unloggedCallPageRender,
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: `/customized/${unloggedCallPageRender.id}`, // page id
+                    }, '*');
+                    await chrome.storage.local.set({ unloggedCallPageDataCache: unloggedCalls });
+                  }
+                  else {
+                    const userReportStats = await getUserReportStats({ dateRange: data.body.formData.dateRangeEnums, customStartDate: data.body.formData.startDate, customEndDate: data.body.formData.endDate });
+                    const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: reportPageRender,
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: `/customizedTabs/${reportPageRender.id}`, // page id
+                    }, '*');
+                  }
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
+                case 'unloggedCallPage':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const callLogNote = await logCore.getCachedNote({ sessionId: data.body.formData.record.sessionId });
+                  // bring out call log page
+                  const callLogDataId = data.body.formData.record;
+                  const { unloggedCallPageDataCache } = await chrome.storage.local.get({ unloggedCallPageDataCache: null });
+                  const callLogData = unloggedCallPageDataCache.find(c => c.sessionId === callLogDataId);
+                  const callLogPageRender = logPage.getLogPageRender({
+                    id: callLogData.sessionId,
+                    manifest,
+                    logType: 'Call',
+                    contactInfo: callLogData.contactInfo.map(c => ({ ...c, isNewContact: undefined })),
+                    triggerType: 'createLog',
+                    platformName,
+                    direction: callLogData.direction,
+                    logInfo: {
+                      note: callLogNote
+                    },
+                    contactPhoneNumber: callLogData.phoneNumber
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-update-call-log-page',
+                    page: callLogPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/log/call/${callLogData.sessionId}`,
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
               }
               switch (data.body?.formData?.section) {
                 case 'generalSettings':
@@ -1308,6 +1389,17 @@ window.addEventListener('message', async (e) => {
                           sessionId: data.body.call.sessionId,
                           dispositions: { ...additionalSubmission, note: data.body.formData.note ?? "" }
                         });
+                        // update unlogged call page list
+                        let { unloggedCallPageDataCache } = await chrome.storage.local.get({ unloggedCallPageDataCache: null });
+                        if (unloggedCallPageDataCache) {
+                          unloggedCallPageDataCache = unloggedCallPageDataCache.filter(c => c.sessionId !== data.body.call.sessionId);
+                          const unloggedCallPageRender = logPage.getUnloggedCallPageRender({ unloggedCalls: unloggedCallPageDataCache });
+                          document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                            type: 'rc-adapter-register-customized-page',
+                            page: unloggedCallPageRender
+                          });
+                          await chrome.storage.local.set({ unloggedCallPageDataCache });
+                        }
                       }
                       break;
                     // Case 1.2: update log
@@ -2004,6 +2096,14 @@ window.addEventListener('message', async (e) => {
                   await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
                   if (crmAuthed) {
                     await chrome.storage.local.set({ crmAuthed });
+                    // report tab
+                    const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+                    const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: reportPageRender,
+                    }, '*');
+                    // admin tab
                     const adminSettingResults = await adminCore.refreshAdminSettings();
                     adminSettings = adminSettingResults.adminSettings;
                     if (adminSettings) {
@@ -2361,7 +2461,6 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
-
               }
               responseMessage(data.requestId, { data: 'ok' });
               break;
@@ -2413,6 +2512,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       crmAuthed = !!returnedToken;
       await chrome.storage.local.set({ crmAuthed });
       if (crmAuthed) {
+        // report tab
+        const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+        const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+          type: 'rc-adapter-register-customized-page',
+          page: reportPageRender,
+        }, '*');
+        // admin tab
         const adminSettingResults = await adminCore.refreshAdminSettings();
         adminSettings = adminSettingResults.adminSettings;
         if (adminSettings) {
@@ -2437,6 +2544,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       console.log(e);
     }
     crmAuthed = true;
+    // report tab
+    const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+    const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+      type: 'rc-adapter-register-customized-page',
+      page: reportPageRender,
+    }, '*');
+    // admin tab
     await chrome.storage.local.set({ crmAuthed });
     const adminSettingResults = await adminCore.refreshAdminSettings();
     adminSettings = adminSettingResults.adminSettings;
@@ -2528,6 +2643,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     crmAuthed = !!returnedToken;
     await chrome.storage.local.set({ crmAuthed });
     if (crmAuthed) {
+      // report tab
+      const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+      const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: reportPageRender,
+      }, '*');
+      // admin tab
       const adminSettingResults = await adminCore.refreshAdminSettings();
       adminSettings = adminSettingResults.adminSettings;
       if (adminSettings) {

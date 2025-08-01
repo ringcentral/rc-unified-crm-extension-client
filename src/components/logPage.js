@@ -512,47 +512,46 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
     return page;
 }
 
-function getUnresolvedLogsPageRender({ unresolvedLogs }) {
+function getUnloggedCallPageRender({ unloggedCalls }) {
     const logsList = []
-    for (const cacheId of Object.keys(unresolvedLogs)) {
-        const { title, description, type } = logCore.getConflictContentFromUnresolvedLog(unresolvedLogs[cacheId]);
+    const today = new Date();
+    const todayDateString = today.toDateString();
+    
+    for (const c of unloggedCalls) {
+        const { title, description, type } = logCore.getConflictContentFromUnresolvedLog(c);
+        const callDate = new Date(c.startTime);
+        const callDateString = callDate.toDateString();
+        const duration = formatDuration(c.duration);
+        // If same date as today, show only time (HH:mm), otherwise show full date
+        const meta = callDateString === todayDateString 
+            ? `${callDate.getHours().toString().padStart(2, '0')}:${callDate.getMinutes().toString().padStart(2, '0')}`
+            : callDate.toLocaleDateString();
+            
         logsList.push({
-            const: cacheId,
+            const: c.sessionId,
             title,
-            description,
-            meta: unresolvedLogs[cacheId].date,
-            icon: type === 'Message' ? smsMessageIcon : (unresolvedLogs[cacheId].direction === 'Inbound' ? inboundCallIcon : outboundCallIcon),
+            description: description ? `${duration} - ${description}` : duration,
+            meta,
+            icon: type === 'Message' ? smsMessageIcon : (c.direction === 'Inbound' ? inboundCallIcon : outboundCallIcon),
         });
     }
     return {
-        id: 'unresolve', // tab id, required
-        title: 'Unlogged',
-        type: 'tab', // tab type
-        hidden: Object.keys(unresolvedLogs).length === 0,
-        iconUri: conflictLogIcon, // icon for tab, 24x24
-        activeIconUri: conflictLogIcon, // icon for tab in active status, 24x24
-        priority: 45,
-        unreadCount: Object.keys(unresolvedLogs).length,
+        id: 'unloggedCallPage',
+        title: 'Unlogged Calls',
+        type: 'page',
+        unreadCount: Object.keys(unloggedCalls).length,
         // schema and uiSchema are used to customize page, api is the same as [react-jsonschema-form](https://rjsf-team.github.io/react-jsonschema-form)
         schema: {
             type: 'object',
             required: [],
             properties: {
-                "warning": {
-                    "type": "string",
-                    "description": "Unresolved call logs are listed below. They cannot be auto logged because of conflicts like multiple matched contacts, multiple associations etc."
-                },
-                "record": {
-                    "type": "string",
-                    "oneOf": logsList
+                record: {
+                    type: "string",
+                    oneOf: logsList
                 },
             },
         },
         uiSchema: {
-            warning: {
-                "ui:field": "admonition",
-                "ui:severity": "warning",  // "warning", "info", "error", "success"
-            },
             record: {
                 "ui:field": "list",
                 "ui:showIconAsAvatar": false
@@ -564,6 +563,18 @@ function getUnresolvedLogsPageRender({ unresolvedLogs }) {
     }
 }
 
+function formatDuration(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    if (hours > 0) {
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+    else {
+        return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+}
+
 exports.getLogPageRender = getLogPageRender;
 exports.getUpdatedLogPageRender = getUpdatedLogPageRender;
-exports.getUnresolvedLogsPageRender = getUnresolvedLogsPageRender;
+exports.getUnloggedCallPageRender = getUnloggedCallPageRender;
