@@ -187,11 +187,11 @@ async function getCachedNote({ sessionId }) {
 
 function getConflictContentFromUnresolvedLog(log) {
     const isMultipleContact = log.contactInfo.filter(c => !c.isNewContact).length > 1;
-    const isNoContact = log.contactInfo.filter(c => !c.isNewContact).length === 1 && log.contactInfo.some(c => c.isNewContact);
-    const contactName = isMultipleContact ? 'Multiple contacts' : log.contactInfo.find(c => !c.isNewContact).name;
+    const isNoContact = log.contactInfo.filter(c => !c.isNewContact).length === 0 && log.contactInfo.some(c => c.isNewContact);
+    const contactName = isMultipleContact ? 'Multiple contacts' : log.contactInfo.find(c => !c.isNewContact)?.name;
     if (isMultipleContact || isNoContact) {
         return {
-            title: `${contactName} ${log?.phoneNumber ? `(${log?.phoneNumber})` : ''}`,
+            title: contactName ? `${contactName} ${log?.phoneNumber ? `(${log?.phoneNumber})` : ''}` : log?.phoneNumber,
             description: isNoContact ? 'There is no matched contact' : 'There are multiple matched contacts'
         }
     }
