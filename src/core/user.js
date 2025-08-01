@@ -51,10 +51,23 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     }
     const rcAccessToken = getRcAccessToken();
     const manifest = await getManifest();
-    let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
+
+    // Try to get user settings from server, with fallback to local storage
+    let userSettings;
+    try {
+        userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
+    } catch (e) {
+        const { userSettings: localUserSettings } = await chrome.storage.local.get({ userSettings: {} });
+        userSettings = localUserSettings;
+    }
+
+    // If both server and local storage fail, initialize with empty object
+    if (!userSettings) {
+        userSettings = {};
+    }
     if (changedSettings) {
         for (const k of Object.keys(changedSettings)) {
-            if (userSettings[k] === undefined || !userSettings[k].value) {
+            if (userSettings[k] === undefined) {
                 userSettings[k] = changedSettings[k];
             }
             else {
@@ -63,7 +76,17 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         }
     }
     await chrome.storage.local.set({ userSettings });
-    userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+
+    // Try to upload user settings to server, but continue if it fails
+    try {
+        const uploadedSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+        if (uploadedSettings) {
+            userSettings = uploadedSettings;
+        }
+    } catch (e) {
+        console.log('Failed to upload user settings to server, using local settings:');
+        // Continue with local settings if upload fails
+    }
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-update-features-flags',
         chat: getShowChatTabSetting(userSettings).value,
@@ -74,8 +97,9 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         recordings: getShowRecordingsTabSetting(userSettings).value,
         contacts: getShowContactsTabSetting(userSettings).value
     }, '*');
-    const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false);
-    RCAdapter.setAutoLog({ call: userSettings.autoLogCall?.value ?? false, message: autoLogMessagesGroupTrigger })
+    const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false) || (userSettings?.autoLogVoicemails?.value ?? false);
+    const autoLogCallsGroupTrigger = (userSettings?.autoLogAnsweredIncoming?.value ?? false) || (userSettings?.autoLogMissedIncoming?.value ?? false) || (userSettings?.autoLogOutgoing?.value ?? false);
+    RCAdapter.setAutoLog({ call: autoLogCallsGroupTrigger || (userSettings.autoLogCall?.value ?? false), message: autoLogMessagesGroupTrigger })
     if (!isAvoidForceChange) {
         const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
         const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
@@ -129,10 +153,27 @@ function getAutoLogCallSetting(userSettings, isAdmin) {
             warning: 'Unavailable while server side call logging enabled'
         }
     }
+
+    // Check if any of the individual auto logging settings are enabled
+    const autoLogAnsweredIncoming = userSettings?.autoLogAnsweredIncoming?.value ?? false;
+    const autoLogMissedIncoming = userSettings?.autoLogMissedIncoming?.value ?? false;
+    const autoLogOutgoing = userSettings?.autoLogOutgoing?.value ?? false;
+    const legacyAutoLogCall = userSettings?.autoLogCall?.value ?? false; // Fallback for backwards compatibility
+
+    const isAnyAutoLogEnabled = autoLogAnsweredIncoming || autoLogMissedIncoming || autoLogOutgoing || legacyAutoLogCall;
+
+    // Check if any setting is read-only (managed by admin)
+    const isReadOnly = (userSettings?.autoLogAnsweredIncoming?.customizable === false) ||
+        (userSettings?.autoLogMissedIncoming?.customizable === false) ||
+        (userSettings?.autoLogOutgoing?.customizable === false) ||
+        (userSettings?.autoLogCall?.customizable === false);
+
+    const readOnlyReason = isReadOnly ? 'This setting is managed by admin' : '';
+
     return {
-        value: userSettings?.autoLogCall?.value ?? false,
-        readOnly: userSettings?.autoLogCall?.customizable === undefined ? false : !userSettings?.autoLogCall?.customizable,
-        readOnlyReason: !userSettings?.autoLogCall?.customizable ? 'This setting is managed by admin' : ''
+        value: isAnyAutoLogEnabled,
+        readOnly: isReadOnly,
+        readOnlyReason: readOnlyReason
     }
 }
 
@@ -158,6 +199,86 @@ function getAutoLogOutboundFaxSetting(userSettings) {
         readOnly: userSettings?.autoLogOutboundFax?.customizable === undefined ? false : !userSettings?.autoLogOutboundFax?.customizable,
         readOnlyReason: !userSettings?.autoLogOutboundFax?.customizable ? 'This setting is managed by admin' : ''
     }
+}
+
+function getAutoLogAnsweredIncomingSetting(userSettings, isAdmin) {
+    const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
+    if (serverSideLoggingEnabled && (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
+        return {
+            value: false,
+            readOnly: true,
+            readOnlyReason: 'This cannot be turn ON becauase server side logging is enabled by admin',
+            warning: 'Unavailable while server side call logging enabled'
+        }
+    }
+    return {
+        value: userSettings?.autoLogAnsweredIncoming?.value ?? false,
+        readOnly: userSettings?.autoLogAnsweredIncoming?.customizable === undefined ? false : !userSettings?.autoLogAnsweredIncoming?.customizable,
+        readOnlyReason: !userSettings?.autoLogAnsweredIncoming?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAutoLogMissedIncomingSetting(userSettings, isAdmin) {
+    const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
+    if (serverSideLoggingEnabled && (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
+        return {
+            value: false,
+            readOnly: true,
+            readOnlyReason: 'This cannot be turn ON becauase server side logging is enabled by admin',
+            warning: 'Unavailable while server side call logging enabled'
+        }
+    }
+    return {
+        value: userSettings?.autoLogMissedIncoming?.value ?? false,
+        readOnly: userSettings?.autoLogMissedIncoming?.customizable === undefined ? false : !userSettings?.autoLogMissedIncoming?.customizable,
+        readOnlyReason: !userSettings?.autoLogMissedIncoming?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAutoLogOutgoingSetting(userSettings, isAdmin) {
+    const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
+    if (serverSideLoggingEnabled && (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
+        return {
+            value: false,
+            readOnly: true,
+            readOnlyReason: 'This cannot be turn ON becauase server side logging is enabled by admin',
+            warning: 'Unavailable while server side call logging enabled'
+        }
+    }
+    return {
+        value: userSettings?.autoLogOutgoing?.value ?? false,
+        readOnly: userSettings?.autoLogOutgoing?.customizable === undefined ? false : !userSettings?.autoLogOutgoing?.customizable,
+        readOnlyReason: !userSettings?.autoLogOutgoing?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAutoLogVoicemailsSetting(userSettings) {
+    return {
+        value: userSettings?.autoLogVoicemails?.value ?? false,
+        readOnly: userSettings?.autoLogVoicemails?.customizable === undefined ? false : !userSettings?.autoLogVoicemails?.customizable,
+        readOnlyReason: !userSettings?.autoLogVoicemails?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getLogSyncFrequencySetting(userSettings) {
+    return {
+        value: userSettings?.logSyncFrequency?.value ?? '10min',
+        readOnly: userSettings?.logSyncFrequency?.customizable === undefined ? false : !userSettings?.logSyncFrequency?.customizable,
+        readOnlyReason: !userSettings?.logSyncFrequency?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getLogSyncFrequencyInMilliseconds(userSettings) {
+    const frequency = getLogSyncFrequencySetting(userSettings).value;
+    const frequencyMap = {
+        'disabled': 0,
+        '10min': 10 * 60 * 1000,    // 10 minutes
+        '30min': 30 * 60 * 1000,    // 30 minutes  
+        '1hour': 60 * 60 * 1000,    // 1 hour
+        '3hours': 3 * 60 * 60 * 1000,  // 3 hours
+        '1day': 24 * 60 * 60 * 1000     // 1 day
+    };
+    return frequencyMap[frequency] || frequencyMap['10min'];
 }
 
 function getEnableRetroCallLogSync(userSettings) {
@@ -362,6 +483,12 @@ exports.getAutoLogCallSetting = getAutoLogCallSetting;
 exports.getAutoLogSMSSetting = getAutoLogSMSSetting;
 exports.getAutoLogInboundFaxSetting = getAutoLogInboundFaxSetting;
 exports.getAutoLogOutboundFaxSetting = getAutoLogOutboundFaxSetting;
+exports.getAutoLogAnsweredIncomingSetting = getAutoLogAnsweredIncomingSetting;
+exports.getAutoLogMissedIncomingSetting = getAutoLogMissedIncomingSetting;
+exports.getAutoLogOutgoingSetting = getAutoLogOutgoingSetting;
+exports.getAutoLogVoicemailsSetting = getAutoLogVoicemailsSetting;
+exports.getLogSyncFrequencySetting = getLogSyncFrequencySetting;
+exports.getLogSyncFrequencyInMilliseconds = getLogSyncFrequencyInMilliseconds;
 exports.getEnableRetroCallLogSync = getEnableRetroCallLogSync;
 exports.getOneTimeLogSetting = getOneTimeLogSetting;
 exports.getCallPopSetting = getCallPopSetting;
