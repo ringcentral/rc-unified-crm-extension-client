@@ -1632,7 +1632,7 @@ window.addEventListener('message', async (e) => {
                       {
                         type: 'status',
                         status: 'failed',
-                        message: 'preparring data...'
+                        message: 'preparing data...'
                       }
                     ]
                   }
