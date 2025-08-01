@@ -1,4 +1,5 @@
 import userCore from '../core/user';
+import authCore from '../core/auth';
 import { getPlatformInfo, getManifest } from '../lib/util';
 
 async function getServiceManifest() {
@@ -31,7 +32,7 @@ async function getServiceManifest() {
         authorized: crmAuthed,
         authorizedAccount: `${crmUserInfo?.name ?? ''} (Admin)`,
         info: `Developed by ${manifest?.author?.name ?? 'Unknown'}`,
-
+            
         // Enable call log sync feature
         callLoggerPath: '/callLogger',
         callLogPageInputChangedEventPath: '/callLogger/inputChanged',
@@ -372,6 +373,13 @@ async function getServiceManifest() {
             }
         ],
         buttonEventPath: '/custom-button-click'
+    }
+    
+    if (platform.useLicense) {
+        const licenseStatusResponse = await authCore.getLicenseStatus({ serverUrl: manifest.serverUrl });
+        services.licenseStatus = `License: ${licenseStatusResponse.licenseStatus}`;
+        services.licenseStatusColor = licenseStatusResponse.licenseStatusColor;
+        services.licenseDescription = licenseStatusResponse.licenseStatusDescription;
     }
     services.settings.push(
         {

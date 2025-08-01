@@ -228,7 +228,7 @@ window.addEventListener('message', async (e) => {
             await chrome.storage.local.set({ crmAuthed })
             // Manifest case: use RC login to login CRM as well
             if (!crmAuthed && !!platform.autoLoginCRMWithRingCentralLogin) {
-              const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken() });
+              const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken(), useLicense: platform.useLicense });
               try {
                 await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
               }
@@ -689,6 +689,9 @@ window.addEventListener('message', async (e) => {
                 window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                 await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
                 await authCore.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
+                if (platform.useLicense) {
+                  await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
+                }
                 window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
               responseMessage(data.requestId, { data: 'ok' });
@@ -2091,7 +2094,7 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'authPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: data.body.button.formData.apiKey, formData: data.body.button.formData });
+                  const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: data.body.button.formData.apiKey, formData: data.body.button.formData, useLicense: platform.useLicense });
                   crmAuthed = !!returnedToken;
                   await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
                   if (crmAuthed) {
@@ -2172,6 +2175,9 @@ window.addEventListener('message', async (e) => {
                   if (rcUnifiedCrmExtJwt) {
                     await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
                     await authCore.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
+                    if (platform.useLicense) {
+                      await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
+                    }
                   }
                   await chrome.storage.local.remove('platform-info');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2461,6 +2467,11 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
+                case 'refreshLicense':
+                  if (platform.useLicense) {
+                    await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
+                  }
+                  break;
               }
               responseMessage(data.requestId, { data: 'ok' });
               break;
@@ -2502,7 +2513,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
     }
     else if (request.platform === 'thirdParty') {
-      const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri });
+      const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri, useLicense: platform.useLicense });
       try {
         await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
       }
@@ -2536,7 +2547,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   }
   // Unique: Pipedrive
   else if (request.type === 'pipedriveCallbackUri' && !(await authCore.checkAuth())) {
-    const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive` });
+    const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive`, useLicense: platform.useLicense });
     try {
       await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
     }
@@ -2632,7 +2643,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       apiKey: request.apiKey,
       formData: {
         apiUrl: request.apiUrl
-      }
+      },
+      useLicense: platform.useLicense
     });
     try {
       await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
