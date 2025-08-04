@@ -65,6 +65,27 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     if (!userSettings) {
         userSettings = {};
     }
+
+    // TEMP: to be deleted after this version 1.6.1
+    // Backward compatibility - migrate old autoLogCall setting to new individual settings
+    // Only run for exactly version 1.6.1
+    const currentVersionNumbers = manifest.version.split('.').map(v => parseInt(v));
+    const targetVersionNumbers = [1, 6, 1]; // 1.6.1
+    const isExactVersion = (
+        currentVersionNumbers[0] === targetVersionNumbers[0] &&
+        currentVersionNumbers[1] === targetVersionNumbers[1] &&
+        currentVersionNumbers[2] === targetVersionNumbers[2]
+    );
+
+
+    if (isExactVersion && userSettings.autoLogCall && userSettings.autoLogCall.value === true) {
+        // One-time translation: Set all three new settings to true
+        userSettings.autoLogAnsweredIncoming = { customizable: true, value: true };
+        userSettings.autoLogMissedIncoming = { customizable: true, value: true };
+        userSettings.autoLogOutgoing = { customizable: true, value: true };
+        // Delete the old autoLogCall setting
+        delete userSettings.autoLogCall;
+    }
     if (changedSettings) {
         for (const k of Object.keys(changedSettings)) {
             if (userSettings[k] === undefined) {
