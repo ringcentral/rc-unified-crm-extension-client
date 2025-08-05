@@ -32,7 +32,7 @@ async function getServiceManifest() {
         authorized: crmAuthed,
         authorizedAccount: `${crmUserInfo?.name ?? ''} (Admin)`,
         info: `Developed by ${manifest?.author?.name ?? 'Unknown'}`,
-            
+
         // Enable call log sync feature
         callLoggerPath: '/callLogger',
         callLogPageInputChangedEventPath: '/callLogger/inputChanged',
@@ -435,7 +435,7 @@ async function getServiceManifest() {
         ],
         buttonEventPath: '/custom-button-click'
     }
-    
+
     if (platform.useLicense) {
         const licenseStatusResponse = await authCore.getLicenseStatus({ serverUrl: manifest.serverUrl });
         services.licenseStatus = `License: ${licenseStatusResponse.licenseStatus}`;
@@ -510,7 +510,7 @@ async function getServiceManifest() {
                             // Build value array from individual option values
                             finalValue = [];
                             for (const option of filteredOptions) {
-                                const optionSetting = userCore.getCustomSetting(userSettings, option.id, false);
+                                const optionSetting = userCore.getCustomCallLogDetailsSetting(userSettings, option.id, false);
                                 if (optionSetting.value) {
                                     finalValue.push(option.id);
                                 }

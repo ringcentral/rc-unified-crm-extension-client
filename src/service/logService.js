@@ -38,9 +38,10 @@ async function retroAutoCallLog({
             const { calls, hasMore } = await RCAdapter.getUnloggedCalls(itemsPerPage, pageNumber);
 
             // Check if any individual auto-logging setting is enabled
-            const hasAnyAutoLogEnabled = (userSettings?.autoLogAnsweredIncoming?.value ?? false) ||
-                (userSettings?.autoLogMissedIncoming?.value ?? false) ||
-                (userSettings?.autoLogOutgoing?.value ?? false) ||
+            const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+            const hasAnyAutoLogEnabled = activityLoggingOptions.includes('autoLogAnsweredIncoming') ||
+                activityLoggingOptions.includes('autoLogMissedIncoming') ||
+                activityLoggingOptions.includes('autoLogOutgoing') ||
                 (userSettings?.autoLogCall?.value ?? false);
 
             if (!hasAnyAutoLogEnabled) {

@@ -139,22 +139,8 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
         },
         formData: {
             activityLoggingOptions: {
-                customizable: adminUserSettings?.autoLogAnsweredIncoming?.customizable ??
-                    adminUserSettings?.autoLogMissedIncoming?.customizable ??
-                    adminUserSettings?.autoLogOutgoing?.customizable ??
-                    adminUserSettings?.autoLogVoicemails?.customizable ??
-                    adminUserSettings?.autoLogSMS?.customizable ??
-                    adminUserSettings?.autoLogInboundFax?.customizable ??
-                    adminUserSettings?.autoLogOutboundFax?.customizable ?? true,
-                value: [
-                    ...((adminUserSettings?.autoLogAnsweredIncoming?.value ?? false) ? ['autoLogAnsweredIncoming'] : []),
-                    ...((adminUserSettings?.autoLogMissedIncoming?.value ?? false) ? ['autoLogMissedIncoming'] : []),
-                    ...((adminUserSettings?.autoLogOutgoing?.value ?? false) ? ['autoLogOutgoing'] : []),
-                    ...((adminUserSettings?.autoLogVoicemails?.value ?? false) ? ['autoLogVoicemails'] : []),
-                    ...((adminUserSettings?.autoLogSMS?.value ?? false) ? ['autoLogSMS'] : []),
-                    ...((adminUserSettings?.autoLogInboundFax?.value ?? false) ? ['autoLogInboundFax'] : []),
-                    ...((adminUserSettings?.autoLogOutboundFax?.value ?? false) ? ['autoLogOutboundFax'] : [])
-                ]
+                customizable: adminUserSettings?.activityLoggingOptions?.customizable ?? true,
+                value: adminUserSettings?.activityLoggingOptions?.value ?? []
             },
             logSyncFrequencySection: {
                 logSyncFrequency: {
@@ -167,12 +153,8 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
                 value: adminUserSettings?.oneTimeLog?.value ?? false
             },
             autoOpenOptions: {
-                customizable: adminUserSettings?.popupLogPageAfterSMS?.customizable ??
-                    adminUserSettings?.popupLogPageAfterCall?.customizable ?? true,
-                value: [
-                    ...((adminUserSettings?.popupLogPageAfterSMS?.value ?? false) ? ['popupLogPageAfterSMS'] : []),
-                    ...((adminUserSettings?.popupLogPageAfterCall?.value ?? false) ? ['popupLogPageAfterCall'] : [])
-                ]
+                customizable: adminUserSettings?.autoOpenOptions?.customizable ?? true,
+                value: adminUserSettings?.autoOpenOptions?.value ?? []
             }
         }
     };
@@ -221,19 +203,9 @@ function getActivityLoggingSettingPageRender({ adminUserSettings, crmManifest, u
                             }
                         };
 
-                        // Determine current value based on individual setting values
-                        const currentSelectedOptions = [];
-                        let isCustomizable = true;
-
-                        for (const option of filteredOptions) {
-                            if (adminUserSettings?.[option.id]?.value) {
-                                currentSelectedOptions.push(option.id);
-                            }
-                            // If any individual option is not customizable, the whole section becomes non-customizable
-                            if (adminUserSettings?.[option.id]?.customizable === false) {
-                                isCustomizable = false;
-                            }
-                        }
+                        // Get current value from array-based setting
+                        const currentSelectedOptions = adminUserSettings?.[customSetting.id]?.value ?? [];
+                        let isCustomizable = adminUserSettings?.[customSetting.id]?.customizable ?? true;
 
                         page.formData[customSetting.id] = {
                             customizable: isCustomizable,

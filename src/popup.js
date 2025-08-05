@@ -82,14 +82,16 @@ let lastUserSettingSyncDate = new Date();
 function shouldAutoLogCall(call, userSettings) {
   let shouldAutoLog = false;
 
+  const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+
   if (call.direction === 'Inbound') {
     if (call.result === 'Answered') {
-      shouldAutoLog = userSettings?.autoLogAnsweredIncoming?.value ?? false;
+      shouldAutoLog = activityLoggingOptions.includes('autoLogAnsweredIncoming');
     } else if (call.result === 'Missed') {
-      shouldAutoLog = userSettings?.autoLogMissedIncoming?.value ?? false;
+      shouldAutoLog = activityLoggingOptions.includes('autoLogMissedIncoming');
     }
   } else if (call.direction === 'Outbound') {
-    shouldAutoLog = userSettings?.autoLogOutgoing?.value ?? false;
+    shouldAutoLog = activityLoggingOptions.includes('autoLogOutgoing');
   }
 
   // Fallback to legacy setting for backward compatibility
@@ -104,16 +106,18 @@ function shouldAutoLogCall(call, userSettings) {
 function shouldAutoLogCallFromPresence(call, userSettings) {
   let shouldAutoLog = false;
 
+  const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+
   if (call.direction === 'Inbound') {
     // For inbound calls: CallConnected = answered, Disconnected = missed
     if (call.result === 'CallConnected') {
-      shouldAutoLog = userSettings?.autoLogAnsweredIncoming?.value ?? false;
+      shouldAutoLog = activityLoggingOptions.includes('autoLogAnsweredIncoming');
     } else if (call.result === 'Disconnected') {
-      shouldAutoLog = userSettings?.autoLogMissedIncoming?.value ?? false;
+      shouldAutoLog = activityLoggingOptions.includes('autoLogMissedIncoming');
     }
   } else if (call.direction === 'Outbound') {
     // For outbound calls: both CallConnected and Disconnected mean call was made
-    shouldAutoLog = userSettings?.autoLogOutgoing?.value ?? false;
+    shouldAutoLog = activityLoggingOptions.includes('autoLogOutgoing');
   }
 
   // Fallback to legacy setting for backward compatibility
@@ -133,9 +137,10 @@ async function restartSyncInterval() {
   }
 
   // Check if auto logging is enabled
-  const autoLogCallsGroupTrigger = (userSettings?.autoLogAnsweredIncoming?.value ?? false) ||
-    (userSettings?.autoLogMissedIncoming?.value ?? false) ||
-    (userSettings?.autoLogOutgoing?.value ?? false);
+  const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+  const autoLogCallsGroupTrigger = activityLoggingOptions.includes('autoLogAnsweredIncoming') ||
+    activityLoggingOptions.includes('autoLogMissedIncoming') ||
+    activityLoggingOptions.includes('autoLogOutgoing');
   const isAutoLogEnabled = autoLogCallsGroupTrigger || (userSettings?.autoLogCall?.value ?? false);
 
   // Start interval if conditions are met
@@ -1848,9 +1853,10 @@ window.addEventListener('message', async (e) => {
                 responseMessage(data.requestId, { data: 'ok' });
                 break;
               }
-              const isAutoLogSMS = userSettings.autoLogSMS?.value ?? false;
-              const isAutoLogInboundFax = userSettings.autoLogInboundFax?.value ?? false;
-              const isAutoLogOutboundFax = userSettings.autoLogOutboundFax?.value ?? false;
+              const messageActivityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+              const isAutoLogSMS = messageActivityLoggingOptions.includes('autoLogSMS');
+              const isAutoLogInboundFax = messageActivityLoggingOptions.includes('autoLogInboundFax');
+              const isAutoLogOutboundFax = messageActivityLoggingOptions.includes('autoLogOutboundFax');
 
               const messageAutoPopup = userCore.getSMSPopSetting(userSettings).value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
@@ -2135,79 +2141,16 @@ window.addEventListener('message', async (e) => {
                   for (const i of s.items) {
                     if (i?.items !== undefined) {
                       for (const ii of i.items) {
-                        // Handle checkbox options for activity logging at nested level
-                        if (ii.id === 'activityLoggingOptions') {
-                          // Convert array of selected options to individual boolean settings
-                          const selectedOptions = ii.value || [];
-                          changedSettings.autoLogAnsweredIncoming = { value: selectedOptions.includes('autoLogAnsweredIncoming') };
-                          changedSettings.autoLogMissedIncoming = { value: selectedOptions.includes('autoLogMissedIncoming') };
-                          changedSettings.autoLogOutgoing = { value: selectedOptions.includes('autoLogOutgoing') };
-                          changedSettings.autoLogVoicemails = { value: selectedOptions.includes('autoLogVoicemails') };
-                          changedSettings.autoLogSMS = { value: selectedOptions.includes('autoLogSMS') };
-                          changedSettings.autoLogInboundFax = { value: selectedOptions.includes('autoLogInboundFax') };
-                          changedSettings.autoLogOutboundFax = { value: selectedOptions.includes('autoLogOutboundFax') };
-                          changedSettings.oneTimeLog = { value: selectedOptions.includes('oneTimeLog') };
-                          console.log('Activity logging changed settings:', changedSettings);
-                        } else if (ii.id === 'autoOpenOptions') {
-                          // Convert array of selected options to individual boolean settings
-                          const selectedOptions = ii.value || [];
-                          changedSettings.popupLogPageAfterSMS = { value: selectedOptions.includes('popupLogPageAfterSMS') };
-                          changedSettings.popupLogPageAfterCall = { value: selectedOptions.includes('popupLogPageAfterCall') };
-                        } else if (ii.id === 'callLogDetails') {
-                          // Convert array of selected options to individual boolean settings
-                          const selectedOptions = ii.value || [];
-                          changedSettings.addCallLogNote = { value: selectedOptions.includes('addCallLogNote') };
-                          changedSettings.addCallSessionId = { value: selectedOptions.includes('addCallSessionId') };
-                          changedSettings.addCallLogSubject = { value: selectedOptions.includes('addCallLogSubject') };
-                          changedSettings.addCallLogContactNumber = { value: selectedOptions.includes('addCallLogContactNumber') };
-                          changedSettings.addCallLogDateTime = { value: selectedOptions.includes('addCallLogDateTime') };
-                          changedSettings.addCallLogDuration = { value: selectedOptions.includes('addCallLogDuration') };
-                          changedSettings.addCallLogResult = { value: selectedOptions.includes('addCallLogResult') };
-                          changedSettings.addCallLogRecording = { value: selectedOptions.includes('addCallLogRecording') };
-                          changedSettings.addCallLogAiNote = { value: selectedOptions.includes('addCallLogAiNote') };
-                          changedSettings.addCallLogTranscript = { value: selectedOptions.includes('addCallLogTranscript') };
-                        } else {
-                          changedSettings[ii.id] = { value: ii.value };
-                        }
+                        changedSettings[ii.id] = { value: ii.value };
                       }
                     } else {
-                      // Handle checkbox options for activity logging at direct level (fallback)
-                      if (i.id === 'activityLoggingOptions') {
-                        // Convert array of selected options to individual boolean settings
-                        const selectedOptions = i.value || [];
-                        changedSettings.autoLogAnsweredIncoming = { value: selectedOptions.includes('autoLogAnsweredIncoming') };
-                        changedSettings.autoLogMissedIncoming = { value: selectedOptions.includes('autoLogMissedIncoming') };
-                        changedSettings.autoLogOutgoing = { value: selectedOptions.includes('autoLogOutgoing') };
-                        changedSettings.autoLogVoicemails = { value: selectedOptions.includes('autoLogVoicemails') };
-                        changedSettings.autoLogSMS = { value: selectedOptions.includes('autoLogSMS') };
-                        changedSettings.autoLogInboundFax = { value: selectedOptions.includes('autoLogInboundFax') };
-                        changedSettings.autoLogOutboundFax = { value: selectedOptions.includes('autoLogOutboundFax') };
-                        changedSettings.oneTimeLog = { value: selectedOptions.includes('oneTimeLog') };
-                      } else if (i.id === 'autoOpenOptions') {
-                        // Convert array of selected options to individual boolean settings
-                        const selectedOptions = i.value || [];
-                        changedSettings.popupLogPageAfterSMS = { value: selectedOptions.includes('popupLogPageAfterSMS') };
-                        changedSettings.popupLogPageAfterCall = { value: selectedOptions.includes('popupLogPageAfterCall') };
-                      } else if (i.id === 'callLogDetails') {
-                        // Convert array of selected options to individual boolean settings
-                        const selectedOptions = i.value || [];
-                        changedSettings.addCallLogNote = { value: selectedOptions.includes('addCallLogNote') };
-                        changedSettings.addCallSessionId = { value: selectedOptions.includes('addCallSessionId') };
-                        changedSettings.addCallLogSubject = { value: selectedOptions.includes('addCallLogSubject') };
-                        changedSettings.addCallLogContactNumber = { value: selectedOptions.includes('addCallLogContactNumber') };
-                        changedSettings.addCallLogDateTime = { value: selectedOptions.includes('addCallLogDateTime') };
-                        changedSettings.addCallLogDuration = { value: selectedOptions.includes('addCallLogDuration') };
-                        changedSettings.addCallLogResult = { value: selectedOptions.includes('addCallLogResult') };
-                        changedSettings.addCallLogRecording = { value: selectedOptions.includes('addCallLogRecording') };
-                        changedSettings.addCallLogAiNote = { value: selectedOptions.includes('addCallLogAiNote') };
-                        changedSettings.addCallLogTranscript = { value: selectedOptions.includes('addCallLogTranscript') };
-                      } else {
-                        changedSettings[i.id] = { value: i.value };
-                      }
+                      console.log('Setting at i level:', i.id, 'value:', i.value);
+                      changedSettings[i.id] = { value: i.value };
                     }
                   }
                 }
                 else if (s.value !== undefined) {
+                  console.log('Setting at s level:', s.id, 'value:', s.value);
                   changedSettings[s.id] = { value: s.value };
                 }
               }
@@ -2257,51 +2200,11 @@ window.addEventListener('message', async (e) => {
                     for (const settingKey of Object.keys(formData)) {
                       const setting = formData[settingKey];
                       if (setting && typeof setting === 'object') {
-                        if (settingKey === 'activityLoggingOptions') {
-                          // Handle activity logging checkbox array
-                          const selectedOptions = setting.value || [];
-                          adminSettings.userSettings.autoLogAnsweredIncoming = {
+                        if (settingKey === 'activityLoggingOptions' || settingKey === 'autoOpenOptions') {
+                          // Save as array setting (consistent with user interface)
+                          adminSettings.userSettings[settingKey] = {
                             customizable: setting.customizable ?? true,
-                            value: selectedOptions.includes('autoLogAnsweredIncoming')
-                          };
-                          adminSettings.userSettings.autoLogMissedIncoming = {
-                            customizable: setting.customizable ?? true,
-                            value: selectedOptions.includes('autoLogMissedIncoming')
-                          };
-                          adminSettings.userSettings.autoLogOutgoing = {
-                            customizable: setting.customizable ?? true,
-                            value: selectedOptions.includes('autoLogOutgoing')
-                          };
-                          adminSettings.userSettings.autoLogVoicemails = {
-                            customizable: setting.customizable ?? true,
-                            value: selectedOptions.includes('autoLogVoicemails')
-                          };
-                          adminSettings.userSettings.autoLogSMS = {
-                            customizable: setting.customizable ?? true,
-                            value: selectedOptions.includes('autoLogSMS')
-                          };
-                          adminSettings.userSettings.autoLogInboundFax = {
-                            customizable: setting.customizable ?? true,
-                            value: selectedOptions.includes('autoLogInboundFax')
-                          };
-                          adminSettings.userSettings.autoLogOutboundFax = {
-                            customizable: setting.customizable ?? true,
-                            value: selectedOptions.includes('autoLogOutboundFax')
-                          };
-                          adminSettings.userSettings.oneTimeLog = {
-                            customizable: setting.customizable ?? true,
-                            value: selectedOptions.includes('oneTimeLog')
-                          };
-                        } else if (settingKey === 'autoOpenOptions') {
-                          // Handle auto-open checkbox array
-                          const selectedOptions = setting.value || [];
-                          adminSettings.userSettings.popupLogPageAfterSMS = {
-                            customizable: setting.customizable ?? true,
-                            value: selectedOptions.includes('popupLogPageAfterSMS')
-                          };
-                          adminSettings.userSettings.popupLogPageAfterCall = {
-                            customizable: setting.customizable ?? true,
-                            value: selectedOptions.includes('popupLogPageAfterCall')
+                            value: setting.value || []
                           };
                         } else if (Array.isArray(setting.value) && setting.customizable !== undefined) {
                           // Handle custom activity logging settings (like call log details)
@@ -2318,14 +2221,11 @@ window.addEventListener('message', async (e) => {
                           }
 
                           if (customSettingDef && customSettingDef.options) {
-                            // Set each individual option as a separate admin setting
-                            for (const option of customSettingDef.options) {
-                              const individualSetting = {
-                                customizable: setting.customizable ?? true,
-                                value: selectedOptions.includes(option.id)
-                              };
-                              adminSettings.userSettings[option.id] = individualSetting;
-                            }
+                            // Save as array setting (consistent with user interface)
+                            adminSettings.userSettings[settingKey] = {
+                              customizable: setting.customizable ?? true,
+                              value: selectedOptions
+                            };
                           } else {
                             console.warn(`No custom setting definition found for ${settingKey}`);
                           }

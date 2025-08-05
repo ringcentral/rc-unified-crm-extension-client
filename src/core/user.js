@@ -76,6 +76,8 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         // Delete the old autoLogCall setting
         delete userSettings.autoLogCall;
     }
+
+
     if (changedSettings) {
         for (const k of Object.keys(changedSettings)) {
             if (userSettings[k] === undefined || !userSettings[k].value) {
@@ -108,8 +110,9 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         recordings: getShowRecordingsTabSetting(userSettings).value,
         contacts: getShowContactsTabSetting(userSettings).value
     }, '*');
-    const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false) || (userSettings?.autoLogVoicemails?.value ?? false);
-    const autoLogCallsGroupTrigger = (userSettings?.autoLogAnsweredIncoming?.value ?? false) || (userSettings?.autoLogMissedIncoming?.value ?? false) || (userSettings?.autoLogOutgoing?.value ?? false);
+    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+    const autoLogMessagesGroupTrigger = activityLoggingOptions.includes('autoLogSMS') || activityLoggingOptions.includes('autoLogInboundFax') || activityLoggingOptions.includes('autoLogOutboundFax') || activityLoggingOptions.includes('autoLogVoicemails');
+    const autoLogCallsGroupTrigger = activityLoggingOptions.includes('autoLogAnsweredIncoming') || activityLoggingOptions.includes('autoLogMissedIncoming') || activityLoggingOptions.includes('autoLogOutgoing');
     RCAdapter.setAutoLog({ call: autoLogCallsGroupTrigger || (userSettings.autoLogCall?.value ?? false), message: autoLogMessagesGroupTrigger })
     if (!isAvoidForceChange) {
         const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
@@ -157,26 +160,35 @@ async function updateSSCLToken({ serverUrl, platform, token }) {
 
 
 function getAutoLogSMSSetting(userSettings) {
+    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+    const value = activityLoggingOptions.includes('autoLogSMS');
+    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
     return {
-        value: userSettings?.autoLogSMS?.value ?? false,
-        readOnly: userSettings?.autoLogSMS?.customizable === undefined ? false : !userSettings?.autoLogSMS?.customizable,
-        readOnlyReason: !userSettings?.autoLogSMS?.customizable ? 'This setting is managed by admin' : ''
+        value: value,
+        readOnly: !isCustomizable,
+        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getAutoLogInboundFaxSetting(userSettings) {
+    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+    const value = activityLoggingOptions.includes('autoLogInboundFax');
+    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
     return {
-        value: userSettings?.autoLogInboundFax?.value ?? false,
-        readOnly: userSettings?.autoLogInboundFax?.customizable === undefined ? false : !userSettings?.autoLogInboundFax?.customizable,
-        readOnlyReason: !userSettings?.autoLogInboundFax?.customizable ? 'This setting is managed by admin' : ''
+        value: value,
+        readOnly: !isCustomizable,
+        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getAutoLogOutboundFaxSetting(userSettings) {
+    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+    const value = activityLoggingOptions.includes('autoLogOutboundFax');
+    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
     return {
-        value: userSettings?.autoLogOutboundFax?.value ?? false,
-        readOnly: userSettings?.autoLogOutboundFax?.customizable === undefined ? false : !userSettings?.autoLogOutboundFax?.customizable,
-        readOnlyReason: !userSettings?.autoLogOutboundFax?.customizable ? 'This setting is managed by admin' : ''
+        value: value,
+        readOnly: !isCustomizable,
+        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -190,10 +202,13 @@ function getAutoLogAnsweredIncomingSetting(userSettings, isAdmin) {
             warning: 'Unavailable while server side call logging enabled'
         }
     }
+    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+    const value = activityLoggingOptions.includes('autoLogAnsweredIncoming');
+    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
     return {
-        value: userSettings?.autoLogAnsweredIncoming?.value ?? false,
-        readOnly: userSettings?.autoLogAnsweredIncoming?.customizable === undefined ? false : !userSettings?.autoLogAnsweredIncoming?.customizable,
-        readOnlyReason: !userSettings?.autoLogAnsweredIncoming?.customizable ? 'This setting is managed by admin' : ''
+        value: value,
+        readOnly: !isCustomizable,
+        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -207,10 +222,13 @@ function getAutoLogMissedIncomingSetting(userSettings, isAdmin) {
             warning: 'Unavailable while server side call logging enabled'
         }
     }
+    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+    const value = activityLoggingOptions.includes('autoLogMissedIncoming');
+    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
     return {
-        value: userSettings?.autoLogMissedIncoming?.value ?? false,
-        readOnly: userSettings?.autoLogMissedIncoming?.customizable === undefined ? false : !userSettings?.autoLogMissedIncoming?.customizable,
-        readOnlyReason: !userSettings?.autoLogMissedIncoming?.customizable ? 'This setting is managed by admin' : ''
+        value: value,
+        readOnly: !isCustomizable,
+        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -224,18 +242,24 @@ function getAutoLogOutgoingSetting(userSettings, isAdmin) {
             warning: 'Unavailable while server side call logging enabled'
         }
     }
+    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+    const value = activityLoggingOptions.includes('autoLogOutgoing');
+    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
     return {
-        value: userSettings?.autoLogOutgoing?.value ?? false,
-        readOnly: userSettings?.autoLogOutgoing?.customizable === undefined ? false : !userSettings?.autoLogOutgoing?.customizable,
-        readOnlyReason: !userSettings?.autoLogOutgoing?.customizable ? 'This setting is managed by admin' : ''
+        value: value,
+        readOnly: !isCustomizable,
+        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getAutoLogVoicemailsSetting(userSettings) {
+    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+    const value = activityLoggingOptions.includes('autoLogVoicemails');
+    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
     return {
-        value: userSettings?.autoLogVoicemails?.value ?? false,
-        readOnly: userSettings?.autoLogVoicemails?.customizable === undefined ? false : !userSettings?.autoLogVoicemails?.customizable,
-        readOnlyReason: !userSettings?.autoLogVoicemails?.customizable ? 'This setting is managed by admin' : ''
+        value: value,
+        readOnly: !isCustomizable,
+        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -277,18 +301,24 @@ function getOneTimeLogSetting(userSettings) {
 }
 
 function getCallPopSetting(userSettings) {
+    const autoOpenOptions = userSettings?.autoOpenOptions?.value ?? [];
+    const value = autoOpenOptions.includes('popupLogPageAfterCall');
+    const isCustomizable = userSettings?.autoOpenOptions?.customizable ?? true;
     return {
-        value: userSettings?.popupLogPageAfterCall?.value ?? false,
-        readOnly: userSettings?.popupLogPageAfterCall?.customizable === undefined ? false : !userSettings?.popupLogPageAfterCall?.customizable,
-        readOnlyReason: !userSettings?.popupLogPageAfterCall?.customizable ? 'This setting is managed by admin' : ''
+        value: value,
+        readOnly: !isCustomizable,
+        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getSMSPopSetting(userSettings) {
+    const autoOpenOptions = userSettings?.autoOpenOptions?.value ?? [];
+    const value = autoOpenOptions.includes('popupLogPageAfterSMS');
+    const isCustomizable = userSettings?.autoOpenOptions?.customizable ?? true;
     return {
-        value: userSettings?.popupLogPageAfterSMS?.value ?? false,
-        readOnly: userSettings?.popupLogPageAfterSMS?.customizable === undefined ? false : !userSettings?.popupLogPageAfterSMS?.customizable,
-        readOnlyReason: !userSettings?.popupLogPageAfterSMS?.customizable ? 'This setting is managed by admin' : ''
+        value: value,
+        readOnly: !isCustomizable,
+        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -452,6 +482,25 @@ function getCustomSetting(userSettings, id, defaultValue) {
     }
 }
 
+function getCustomCallLogDetailsSetting(userSettings, id, defaultValue) {
+    if (userSettings === undefined) {
+        return {
+            value: null,
+            readOnly: false,
+            readOnlyReason: ''
+        };
+    }
+    const callLogDetails = userSettings?.callLogDetails?.value ?? [];
+    const value = callLogDetails.includes(id);
+    const isCustomizable = userSettings?.callLogDetails?.customizable ?? true;
+    return {
+        value: value ?? defaultValue,
+        readOnly: !isCustomizable,
+        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : '',
+    }
+}
+
+
 exports.preloadUserSettingsFromAdmin = preloadUserSettingsFromAdmin;
 exports.getUserSettingsOnline = getUserSettingsOnline;
 exports.uploadUserSettings = uploadUserSettings;
@@ -489,3 +538,4 @@ exports.getClickToDialEmbedMode = getClickToDialEmbedMode;
 exports.getClickToDialUrls = getClickToDialUrls;
 exports.getNotificationLevelSetting = getNotificationLevelSetting;
 exports.getCustomSetting = getCustomSetting;
+exports.getCustomCallLogDetailsSetting = getCustomCallLogDetailsSetting;
