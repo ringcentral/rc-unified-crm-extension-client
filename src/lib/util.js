@@ -1,6 +1,5 @@
 import { openDB } from 'idb';
 import { trackCRMSetupError } from '../lib/analytics';
-import crmSetupErrorPage from '../components/crmSetupErrorPage';
 import rcAPI from '../lib/rcAPI';
 
 function secondsToHourMinuteSecondString(totalSeconds) {
@@ -31,7 +30,7 @@ async function dismissNotification({ notificationId }) {
 async function getManifest() {
   const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
   const platformInfo = await getPlatformInfo();
-  const override = customCrmManifest.platforms[platformInfo.platformName]?.override;
+  const override = customCrmManifest?.platforms[platformInfo?.platformName]?.override;
   if (override) {
     for (const overrideItem of override) {
       switch (overrideItem.triggerType) {
@@ -102,29 +101,7 @@ function getRcAccessToken() {
 
 async function getPlatformInfo() {
   const platformInfo = await chrome.storage.local.get('platform-info');
-  if (isObjectEmpty(platformInfo)) {
-    renderCRMSetupErrorPage();
-    return null;
-  }
-  return platformInfo['platform-info'];
-}
-
-function renderCRMSetupErrorPage() {
-  try {
-    const crmSetupErrorPageRender = crmSetupErrorPage.getCRMSetupErrorPageRender();
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-      type: 'rc-adapter-register-customized-page',
-      page: crmSetupErrorPageRender
-    });
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-      type: 'rc-adapter-navigate-to',
-      path: '/customized/crmSetupErrorPage', // page id
-    }, '*');
-  }
-  catch (e) {
-    console.log(e);
-  }
-  trackCRMSetupError();
+  return platformInfo?.['platform-info'];
 }
 
 async function checkC2DCollision() {

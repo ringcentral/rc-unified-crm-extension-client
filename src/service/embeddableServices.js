@@ -2,6 +2,20 @@ import userCore from '../core/user';
 import authCore from '../core/auth';
 import { getPlatformInfo, getManifest } from '../lib/util';
 
+async function preconfigureServiceManifest(){
+    const manifest = await getManifest();
+    const services = {
+        name: 'placeholder',
+        displayName: 'placeholder',
+        customizedPageInputChangedEventPath: '/customizedPage/inputChanged',
+        buttonEventPath: '/custom-button-click'
+    }
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-third-party-service',
+        service: services
+    }, '*');
+}
+
 async function getServiceManifest() {
     const { isAdmin } = await chrome.storage.local.get({ isAdmin: false });
     const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
@@ -571,4 +585,5 @@ async function getServiceManifest() {
     return services;
 }
 
+exports.preconfigureServiceManifest = preconfigureServiceManifest;
 exports.getServiceManifest = getServiceManifest;

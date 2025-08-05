@@ -1,12 +1,30 @@
 import axios from 'axios';
-import { showNotification } from '../lib/util';
+import { showNotification, getPlatformInfo } from '../lib/util';
 import { trackCrmLogin, trackCrmLogout } from '../lib/analytics';
 import { openDB } from 'idb';
+import platformSelectionPage from '../components/platformSelectionPage';
+import embeddableServices from '../service/embeddableServices';
 
 async function submitPlatformSelection(platform) {
     await chrome.storage.local.set({
         ['platform-info']: platform
     })
+}
+
+async function checkAndOpenWelcomeScreen({ manifest }) {
+    const platformInfo = await getPlatformInfo();
+    if (!platformInfo) {
+        await embeddableServices.preconfigureServiceManifest();
+        const welcomePageRender = platformSelectionPage.getPlatformSelectionPageRender({ manifest });
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-register-customized-page',
+            page: welcomePageRender,
+        }, '*');
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-navigate-to',
+            path: `/customized/${welcomePageRender.id}`
+        }, '*');
+    }
 }
 
 // apiUrl: Insightly
@@ -154,6 +172,7 @@ async function refreshLicenseStatus({ serverUrl }) {
     }, '*');
 }
 
+exports.checkAndOpenWelcomeScreen = checkAndOpenWelcomeScreen;
 exports.submitPlatformSelection = submitPlatformSelection;
 exports.apiKeyLogin = apiKeyLogin;
 exports.onAuthCallback = onAuthCallback;

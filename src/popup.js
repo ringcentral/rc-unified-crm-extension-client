@@ -31,6 +31,7 @@ import notificationLevelSettingPage from './components/admin/generalSettings/not
 import appearancePage from './components/admin/generalSettings/appearancePage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
+import hostnameInputPage from './components/hostnameInputPage';
 import {
   setAuthor,
   identify,
@@ -62,7 +63,6 @@ axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be ove
 window.__ON_RC_POPUP_WINDOW = 1;
 
 let platformName = '';
-let registered = false;
 let platformHostname = '';
 let rcUserInfo = {};
 let firstTimeLogoutAbsorbed = false;
@@ -174,7 +174,7 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-adapter-pushAdapterState':
-          if (!registered) {
+          if (!false) {
             const platformInfo = await getPlatformInfo();
             if (!platformInfo) {
               console.error('Cannot find platform info');
@@ -194,7 +194,6 @@ window.addEventListener('message', async (e) => {
             if (platform.requestConfig?.timeout) {
               axios.defaults.timeout = platform.requestConfig.timeout * 1000;
             }
-            registered = true;
             const serviceManifest = await embeddableServices.getServiceManifest();
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-register-third-party-service',
@@ -211,23 +210,22 @@ window.addEventListener('message', async (e) => {
           }
           console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
 
-          const platformInfo = await getPlatformInfo();
-          if (!platformInfo) {
-            console.error('Cannot find platform info');
-            return;
-          }
           manifest = await getManifest();
-          platform = manifest.platforms[platformInfo.platformName]
-          platformName = platformInfo.platformName;
-          platformHostname = platformInfo.hostname;
-          rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
+          const platformInfo = await getPlatformInfo();
+          if (platformInfo) {
+            platform = manifest.platforms[platformInfo.platformName]
+            platformName = platformInfo.platformName;
+            platformHostname = platformInfo.hostname;
+          }
           let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
           if (data.loggedIn) {
+            rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
+            await authCore.checkAndOpenWelcomeScreen({ manifest });
             document.getElementById('rc-widget').style.zIndex = 0;
             crmAuthed = !!rcUnifiedCrmExtJwt;
             await chrome.storage.local.set({ crmAuthed })
             // Manifest case: use RC login to login CRM as well
-            if (!crmAuthed && !!platform.autoLoginCRMWithRingCentralLogin) {
+            if (!crmAuthed && !!platform?.autoLoginCRMWithRingCentralLogin) {
               const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken(), useLicense: platform.useLicense });
               try {
                 await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
@@ -257,7 +255,7 @@ window.addEventListener('message', async (e) => {
               }, 300000);
             }
             // Unique: Bullhorn
-            if (platform.name === 'bullhorn' && crmAuthed) {
+            if (platform?.name === 'bullhorn' && crmAuthed) {
               bullhornHeartbeat({ platform });
               // every 30 min, 
               setInterval(function () {
@@ -266,7 +264,7 @@ window.addEventListener('message', async (e) => {
             }
 
             // Unique: Pipedrive
-            if (platform.name === 'pipedrive' && !(await authCore.checkAuth())) {
+            if (platform?.name === 'pipedrive' && !(await authCore.checkAuth())) {
               chrome.runtime.sendMessage(
                 {
                   type: 'popupWindowRequestPipedriveCallbackUri'
@@ -274,13 +272,12 @@ window.addEventListener('message', async (e) => {
               );
             }
             else if (!rcUnifiedCrmExtJwt && !crmAuthed) {
-              currentNotificationId = await showNotification({ level: 'warning', message: `Please go to Settings and connect to ${platform.name}`, ttl: 60000 });
               authCore.setAuth(false);
             }
             try {
               const rcInfo = await getRcInfo();
               const rcAdditionalSubmission = {};
-              if (platform.rcAdditionalSubmission) {
+              if (platform?.rcAdditionalSubmission) {
                 for (const ras of platform.rcAdditionalSubmission) {
                   const pathSegments = ras.path.split('.');
                   let rcInfoSubmissionValue = null;
@@ -314,9 +311,9 @@ window.addEventListener('message', async (e) => {
                 rcExtensionId: userInfoResponse.extensionId
               };
               await chrome.storage.local.set({ ['rcUserInfo']: rcUserInfo });
-              reset();
-              identify({ extensionId: rcUserInfo?.rcExtensionId, rcAccountId: rcUserInfo?.rcAccountId, platformName: platform.name });
-              group({ rcAccountId: rcUserInfo?.rcAccountId });
+              // reset();
+              // identify({ extensionId: rcUserInfo?.rcExtensionId, rcAccountId: rcUserInfo?.rcAccountId, platformName: platform.name });
+              // group({ rcAccountId: rcUserInfo?.rcAccountId });
               // setup headers for server side analytics
               axios.defaults.headers.common['rc-extension-id'] = rcUserInfo?.rcExtensionId;
               axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId;
@@ -704,6 +701,20 @@ window.addEventListener('message', async (e) => {
               }, '*');
               // refresh multi match prompt
               switch (data.body.page.id) {
+                case 'hostnameInputPage':
+                  break;
+                case 'platformSelectionPage':
+                  platformName = data.body.formData.platforms;
+                  const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender({ platformName: manifest.platforms[platformName].displayName, url: data.body.formData.url });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: hostnameInputPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${hostnameInputPageRender.id}`, // page id
+                  }, '*');
+                  break;
                 case 'getMultiContactPopPromptPage':
                   if (data.body.keys.some(k => k === 'search')) {
                     const searchWord = data.body.formData.search;
@@ -2065,6 +2076,24 @@ window.addEventListener('message', async (e) => {
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
+                case 'hostnameInputPage':
+                  const inputUrl = data.body.button.formData.url;
+                  const inputUrlObj = new URL(inputUrl);
+                  const inputHostname = inputUrlObj.hostname;
+                  await chrome.storage.local.set({
+                    ['platform-info']: { platformName, hostname: inputHostname }
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-third-party-service',
+                    service: (await embeddableServices.getServiceManifest())
+                  }, '*');
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: '/dialer',
+                  }, '*');
+                  platform = manifest.platforms[platformName];
+                  showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 5000 });
+                  break;
                 case 'callAndSMSLoggingSettingPage':
                 case 'contactSettingPage':
                 case 'advancedFeaturesSettingPage':
