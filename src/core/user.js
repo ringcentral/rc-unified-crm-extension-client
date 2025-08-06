@@ -96,8 +96,6 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         delete userSettings.autoLogCall;
     }
 
-
-    // TEMP: to be deleted after this version 1.6.1
     // Migrate existing individual boolean call log details to array format (backward compatibility)
     const callLogDetailOptions = ['addCallLogNote', 'addCallSessionId', 'addCallLogSubject',
         'addCallLogContactNumber', 'addCallLogDuration', 'addCallLogResult',
