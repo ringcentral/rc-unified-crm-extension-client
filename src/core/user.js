@@ -159,42 +159,17 @@ async function updateSSCLToken({ serverUrl, platform, token }) {
 
 
 
-function getAutoLogSMSSetting(userSettings) {
-    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
-    const value = activityLoggingOptions.includes('autoLogSMS');
-    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
-    return {
-        value: value,
-        readOnly: !isCustomizable,
-        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
-    }
-}
+// Unified function to get activity logging settings
+function getActivityLoggingSetting(userSettings, isAdmin = false) {
+    const activityLoggingValue = userSettings?.activityLoggingOptions?.value ?? [];
 
-function getAutoLogInboundFaxSetting(userSettings) {
-    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
-    const value = activityLoggingOptions.includes('autoLogInboundFax');
-    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
-    return {
-        value: value,
-        readOnly: !isCustomizable,
-        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
-    }
-}
-
-function getAutoLogOutboundFaxSetting(userSettings) {
-    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
-    const value = activityLoggingOptions.includes('autoLogOutboundFax');
-    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
-    return {
-        value: value,
-        readOnly: !isCustomizable,
-        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
-    }
-}
-
-function getAutoLogAnsweredIncomingSetting(userSettings, isAdmin) {
+    // Check for server side logging conflicts for call-related settings
+    const callRelatedSettings = ['autoLogAnsweredIncoming', 'autoLogMissedIncoming', 'autoLogOutgoing'];
     const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
-    if (serverSideLoggingEnabled && (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
+    const hasCallRelatedSettings = callRelatedSettings.some(setting => activityLoggingValue.includes(setting));
+    if (hasCallRelatedSettings &&
+        serverSideLoggingEnabled &&
+        (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
         return {
             value: false,
             readOnly: true,
@@ -202,62 +177,12 @@ function getAutoLogAnsweredIncomingSetting(userSettings, isAdmin) {
             warning: 'Unavailable while server side call logging enabled'
         }
     }
-    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
-    const value = activityLoggingOptions.includes('autoLogAnsweredIncoming');
-    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
-    return {
-        value: value,
-        readOnly: !isCustomizable,
-        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
-    }
-}
 
-function getAutoLogMissedIncomingSetting(userSettings, isAdmin) {
-    const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
-    if (serverSideLoggingEnabled && (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
-        return {
-            value: false,
-            readOnly: true,
-            readOnlyReason: 'This cannot be turn ON becauase server side logging is enabled by admin',
-            warning: 'Unavailable while server side call logging enabled'
-        }
-    }
-    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
-    const value = activityLoggingOptions.includes('autoLogMissedIncoming');
+    // Standard activity logging logic
     const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
-    return {
-        value: value,
-        readOnly: !isCustomizable,
-        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
-    }
-}
 
-function getAutoLogOutgoingSetting(userSettings, isAdmin) {
-    const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
-    if (serverSideLoggingEnabled && (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
-        return {
-            value: false,
-            readOnly: true,
-            readOnlyReason: 'This cannot be turn ON becauase server side logging is enabled by admin',
-            warning: 'Unavailable while server side call logging enabled'
-        }
-    }
-    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
-    const value = activityLoggingOptions.includes('autoLogOutgoing');
-    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
     return {
-        value: value,
-        readOnly: !isCustomizable,
-        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
-    }
-}
-
-function getAutoLogVoicemailsSetting(userSettings) {
-    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
-    const value = activityLoggingOptions.includes('autoLogVoicemails');
-    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
-    return {
-        value: value,
+        value: activityLoggingValue,
         readOnly: !isCustomizable,
         readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
     }
@@ -506,13 +431,7 @@ exports.getUserSettingsOnline = getUserSettingsOnline;
 exports.uploadUserSettings = uploadUserSettings;
 exports.refreshUserSettings = refreshUserSettings;
 exports.updateSSCLToken = updateSSCLToken;
-exports.getAutoLogSMSSetting = getAutoLogSMSSetting;
-exports.getAutoLogInboundFaxSetting = getAutoLogInboundFaxSetting;
-exports.getAutoLogOutboundFaxSetting = getAutoLogOutboundFaxSetting;
-exports.getAutoLogAnsweredIncomingSetting = getAutoLogAnsweredIncomingSetting;
-exports.getAutoLogMissedIncomingSetting = getAutoLogMissedIncomingSetting;
-exports.getAutoLogOutgoingSetting = getAutoLogOutgoingSetting;
-exports.getAutoLogVoicemailsSetting = getAutoLogVoicemailsSetting;
+exports.getActivityLoggingSetting = getActivityLoggingSetting;
 exports.getLogSyncFrequencySetting = getLogSyncFrequencySetting;
 exports.getLogSyncFrequencyInMilliseconds = getLogSyncFrequencyInMilliseconds;
 exports.getEnableRetroCallLogSync = getEnableRetroCallLogSync;

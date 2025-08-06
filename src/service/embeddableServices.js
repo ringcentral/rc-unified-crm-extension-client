@@ -43,9 +43,9 @@ async function getServiceManifest() {
         messagesLogPageInputChangedEventPath: '/messageLogger/inputChanged',
         messageLogEntityMatcherPath: '/messageLogger/match',
         messageLoggerAutoSettingLabel: 'Log SMS conversations automatically',
-        messageLoggerAutoSettingReadOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
-        messageLoggerAutoSettingReadOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
-        messageLoggerAutoSettingReadOnlyValue: userCore.getAutoLogSMSSetting(userSettings).value,
+        messageLoggerAutoSettingReadOnly: userCore.getActivityLoggingSetting(userSettings, isAdmin).readOnly,
+        messageLoggerAutoSettingReadOnlyReason: userCore.getActivityLoggingSetting(userSettings, isAdmin).readOnlyReason,
+        messageLoggerAutoSettingReadOnlyValue: userCore.getActivityLoggingSetting(userSettings, isAdmin).value,
 
         callLoggerAutoLogSettingHidden: true,
         messageLoggerAutoSettingHidden: true,
@@ -95,32 +95,9 @@ async function getServiceManifest() {
                             }
 
                         ],
-                        value: (() => {
-                            const activityLoggingValues = [
-                                ...(userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).value ? ['autoLogAnsweredIncoming'] : []),
-                                ...(userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).value ? ['autoLogMissedIncoming'] : []),
-                                ...(userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).value ? ['autoLogOutgoing'] : []),
-                                ...(userCore.getAutoLogVoicemailsSetting(userSettings).value ? ['autoLogVoicemails'] : []),
-                                ...(userCore.getAutoLogSMSSetting(userSettings).value ? ['autoLogSMS'] : []),
-                                ...(userCore.getAutoLogInboundFaxSetting(userSettings).value ? ['autoLogInboundFax'] : []),
-                                ...(userCore.getAutoLogOutboundFaxSetting(userSettings).value ? ['autoLogOutboundFax'] : [])
-                            ];
-                            return activityLoggingValues;
-                        })(),
-                        readOnly: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).readOnly ||
-                            userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).readOnly ||
-                            userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).readOnly ||
-                            userCore.getAutoLogVoicemailsSetting(userSettings).readOnly ||
-                            userCore.getAutoLogSMSSetting(userSettings).readOnly ||
-                            userCore.getAutoLogInboundFaxSetting(userSettings).readOnly ||
-                            userCore.getAutoLogOutboundFaxSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getAutoLogAnsweredIncomingSetting(userSettings, isAdmin).readOnlyReason ||
-                            userCore.getAutoLogMissedIncomingSetting(userSettings, isAdmin).readOnlyReason ||
-                            userCore.getAutoLogOutgoingSetting(userSettings, isAdmin).readOnlyReason ||
-                            userCore.getAutoLogVoicemailsSetting(userSettings).readOnlyReason ||
-                            userCore.getAutoLogSMSSetting(userSettings).readOnlyReason ||
-                            userCore.getAutoLogInboundFaxSetting(userSettings).readOnlyReason ||
-                            userCore.getAutoLogOutboundFaxSetting(userSettings).readOnlyReason
+                        value: userSettings?.activityLoggingOptions?.value ?? [],
+                        readOnly: userCore.getActivityLoggingSetting(userSettings, isAdmin).readOnly,
+                        readOnlyReason: userCore.getActivityLoggingSetting(userSettings, isAdmin).readOnlyReason
                     },
                     {
                         id: "logSyncFrequency",
