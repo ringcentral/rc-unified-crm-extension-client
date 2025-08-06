@@ -84,15 +84,11 @@ function shouldAutoLogCall(call, userSettings) {
 
   const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
 
-  if (call.direction === 'Inbound') {
-    if (call.result === 'Answered') {
-      shouldAutoLog = activityLoggingOptions.includes('autoLogAnsweredIncoming');
-    } else if (call.result === 'Missed') {
-      shouldAutoLog = activityLoggingOptions.includes('autoLogMissedIncoming');
-    }
-  } else if (call.direction === 'Outbound') {
-    shouldAutoLog = activityLoggingOptions.includes('autoLogOutgoing');
-  }
+  const callType = call.direction === 'Inbound'
+    ? (call.result === 'Answered' ? 'autoLogAnsweredIncoming' : 'autoLogMissedIncoming')
+    : 'autoLogOutgoing';
+
+  shouldAutoLog = activityLoggingOptions.includes(callType);
 
   // Fallback to legacy setting for backward compatibility
   if (!shouldAutoLog) {
@@ -108,17 +104,12 @@ function shouldAutoLogCallFromPresence(call, userSettings) {
 
   const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
 
-  if (call.direction === 'Inbound') {
-    // For inbound calls: CallConnected = answered, Disconnected = missed
-    if (call.result === 'CallConnected') {
-      shouldAutoLog = activityLoggingOptions.includes('autoLogAnsweredIncoming');
-    } else if (call.result === 'Disconnected') {
-      shouldAutoLog = activityLoggingOptions.includes('autoLogMissedIncoming');
-    }
-  } else if (call.direction === 'Outbound') {
-    // For outbound calls: both CallConnected and Disconnected mean call was made
-    shouldAutoLog = activityLoggingOptions.includes('autoLogOutgoing');
-  }
+  // Determine auto-log setting based on call direction and result
+  const callType = call.direction === 'Inbound'
+    ? (call.result === 'CallConnected' ? 'autoLogAnsweredIncoming' : 'autoLogMissedIncoming')
+    : 'autoLogOutgoing';
+
+  shouldAutoLog = activityLoggingOptions.includes(callType);
 
   // Fallback to legacy setting for backward compatibility
   if (!shouldAutoLog) {
@@ -2236,6 +2227,14 @@ window.addEventListener('message', async (e) => {
                           // Handle the nested logSyncFrequency setting
                           adminSettings.userSettings.logSyncFrequency = setting.logSyncFrequency;
                         }
+                      }
+                    }
+                  } else if (data.body.button.id === 'customSettingsPage') {
+                    // Handle custom settings page - settings are stored directly by ID
+                    for (const settingKey of Object.keys(formData)) {
+                      const setting = formData[settingKey];
+                      if (setting && typeof setting === 'object' && (setting.customizable !== undefined || setting.value !== undefined)) {
+                        adminSettings.userSettings[settingKey] = setting;
                       }
                     }
                   } else {
