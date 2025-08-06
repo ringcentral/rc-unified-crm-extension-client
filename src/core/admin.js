@@ -20,10 +20,30 @@ async function getAdminSettings({ serverUrl }) {
 async function uploadAdminSettings({ serverUrl, adminSettings }) {
     const rcAccessToken = getRcAccessToken();
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+
+    let adminSettingsToUpload = { ...adminSettings };
+
+    // Convert callLogDetails array format to individual boolean settings for backend
+    if (adminSettingsToUpload.userSettings?.callLogDetails && Array.isArray(adminSettingsToUpload.userSettings.callLogDetails.value)) {
+        const callLogDetailsArray = adminSettingsToUpload.userSettings.callLogDetails.value;
+        const customizable = adminSettingsToUpload.userSettings.callLogDetails.customizable;
+        const callLogDetailOptions = ['addCallLogNote', 'addCallSessionId', 'addCallLogSubject',
+            'addCallLogContactNumber', 'addCallLogDuration', 'addCallLogResult',
+            'addCallLogRecording', 'addCallLogAiNote', 'addCallLogTranscript', 'addCallLogDateTime'];
+
+        // Convert to individual boolean settings for backend
+        for (const option of callLogDetailOptions) {
+            adminSettingsToUpload.userSettings[option] = {
+                customizable: customizable,
+                value: callLogDetailsArray.includes(option)
+            };
+        }
+    }
+
     const uploadAdminSettingsResponse = await axios.post(
         `${serverUrl}/admin/settings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`,
         {
-            adminSettings
+            adminSettings: adminSettingsToUpload
         });
 }
 

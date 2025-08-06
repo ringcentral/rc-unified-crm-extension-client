@@ -28,13 +28,32 @@ async function getUserSettingsOnline({ serverUrl }) {
 async function uploadUserSettings({ serverUrl, userSettings }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' });
-    let userSettingsToUpload = userSettings;
+    let userSettingsToUpload = { ...userSettings };
+
     if (userSettingsToUpload.selectedRegion) {
         userSettingsToUpload.selectedRegion.value = selectedRegion;
     }
     else {
         userSettingsToUpload.selectedRegion = { value: selectedRegion };
     }
+
+    // Convert callLogDetails array format to individual boolean settings for backend
+    if (userSettingsToUpload.callLogDetails && Array.isArray(userSettingsToUpload.callLogDetails.value)) {
+        const callLogDetailsArray = userSettingsToUpload.callLogDetails.value;
+        const customizable = userSettingsToUpload.callLogDetails.customizable;
+        const callLogDetailOptions = ['addCallLogNote', 'addCallSessionId', 'addCallLogSubject',
+            'addCallLogContactNumber', 'addCallLogDuration', 'addCallLogResult',
+            'addCallLogRecording', 'addCallLogAiNote', 'addCallLogTranscript', 'addCallLogDateTime'];
+
+        // Convert to individual boolean settings for backend
+        for (const option of callLogDetailOptions) {
+            userSettingsToUpload[option] = {
+                customizable: customizable,
+                value: callLogDetailsArray.includes(option)
+            };
+        }
+    }
+
     const uploadUserSettingsResponse = await axios.post(
         `${serverUrl}/user/settings?jwtToken=${rcUnifiedCrmExtJwt}`,
         {
@@ -77,6 +96,33 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         delete userSettings.autoLogCall;
     }
 
+
+    // TEMP: to be deleted after this version 1.6.1
+    // Migrate existing individual boolean call log details to array format (backward compatibility)
+    const callLogDetailOptions = ['addCallLogNote', 'addCallSessionId', 'addCallLogSubject',
+        'addCallLogContactNumber', 'addCallLogDuration', 'addCallLogResult',
+        'addCallLogRecording', 'addCallLogAiNote', 'addCallLogTranscript', 'addCallLogDateTime'];
+
+    if (!userSettings.callLogDetails && callLogDetailOptions.some(option => userSettings[option])) {
+        // Migrate from individual boolean settings to array format
+        const enabledOptions = [];
+        let isCustomizable = true;
+
+        for (const option of callLogDetailOptions) {
+            if (userSettings[option]?.value === true) {
+                enabledOptions.push(option);
+            }
+            // If any option is not customizable, make the whole array not customizable
+            if (userSettings[option]?.customizable === false) {
+                isCustomizable = false;
+            }
+        }
+
+        userSettings.callLogDetails = {
+            customizable: isCustomizable,
+            value: enabledOptions
+        };
+    }
 
     if (changedSettings) {
         for (const k of Object.keys(changedSettings)) {
@@ -415,14 +461,34 @@ function getCustomCallLogDetailsSetting(userSettings, id, defaultValue) {
             readOnlyReason: ''
         };
     }
-    const callLogDetails = userSettings?.callLogDetails?.value ?? [];
-    const value = callLogDetails.includes(id);
-    const isCustomizable = userSettings?.callLogDetails?.customizable ?? true;
-    return {
-        value: value ?? defaultValue,
-        readOnly: !isCustomizable,
-        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : '',
+
+    // Check if we have the new array format
+    if (userSettings?.callLogDetails?.value) {
+        const callLogDetails = userSettings.callLogDetails.value;
+        const value = callLogDetails.includes(id);
+        const isCustomizable = userSettings.callLogDetails.customizable ?? true;
+        return {
+            value: value ?? defaultValue,
+            readOnly: !isCustomizable,
+            readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : '',
+        }
     }
+
+    // Fallback to individual boolean settings (backward compatibility)
+    if (userSettings[id]) {
+        return {
+            value: userSettings[id].value ?? defaultValue,
+            readOnly: !userSettings[id].customizable,
+            readOnlyReason: !userSettings[id].customizable ? 'This setting is managed by admin' : '',
+        }
+    }
+
+    // Default fallback
+    return {
+        value: defaultValue,
+        readOnly: false,
+        readOnlyReason: ''
+    };
 }
 
 
