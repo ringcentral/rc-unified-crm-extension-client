@@ -1537,12 +1537,16 @@ window.addEventListener('message', async (e) => {
                         `Inbound Call from ${defaultingContact?.name ?? ''}` :
                         `Outbound Call to ${defaultingContact?.name ?? ''}`;
                       if (existingCalls?.length > 0 && existingCalls[0]?.matched) {
+                        // Ensure we get the most recent cached note
+                        const cachedNote = await logCore.getCachedNote({ sessionId: data.body.call.sessionId });
+                        const noteToUse = cachedNote || logInfo.note || '';
+
                         await logCore.updateLog({
                           serverUrl: manifest.serverUrl,
                           logType: 'Call',
                           sessionId: data.body.call.sessionId,
                           subject: logInfo.subject,
-                          note: logInfo.note,
+                          note: noteToUse,
                           aiNote: data.body.aiNote,
                           transcript: data.body.transcript,
                           startTime: data.body.call.startTime,
