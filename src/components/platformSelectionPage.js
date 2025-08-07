@@ -9,24 +9,9 @@ function getPlatformSelectionPageRender({ manifest }) {
             title: platform.displayName,
             icon: platform.logoUrl,
             description: `by ${platform.developer}`,
-            // meta: platform.developer === 'RingCentral Labs' ? 'Official' : 'Community'
+            meta: 'Public'
         };
         platformList.push(newPlatform);
-        // // Find the last element with the same developer
-        // let insertIndex = -1;
-        // for (let i = platformList.length - 1; i >= 0; i--) {
-        //     if (platformList[i].description === newPlatform.description) {
-        //         insertIndex = i + 1;
-        //         break;
-        //     }
-        // }
-
-        // // If no same developer found, insert at the end
-        // if (insertIndex === -1) {
-        //     platformList.push(newPlatform);
-        // } else {
-        //     platformList.splice(insertIndex, 0, newPlatform);
-        // }
     }
     return {
         id: 'platformSelectionPage',
@@ -41,7 +26,8 @@ function getPlatformSelectionPageRender({ manifest }) {
                     title: 'Platforms',
                     oneOf: platformList
                 }
-            }
+            },
+            required: ['platforms']
         },
         uiSchema: {
             platforms: {

@@ -314,7 +314,7 @@ window.addEventListener('message', async (e) => {
               };
               await chrome.storage.local.set({ ['rcUserInfo']: rcUserInfo });
               reset();
-              identify({ extensionId: rcUserInfo?.rcExtensionId, rcAccountId: rcUserInfo?.rcAccountId, platformName: platform.name });
+              identify({ extensionId: rcUserInfo?.rcExtensionId, rcAccountId: rcUserInfo?.rcAccountId, platformName });
               group({ rcAccountId: rcUserInfo?.rcAccountId });
               // setup headers for server side analytics
               axios.defaults.headers.common['rc-extension-id'] = rcUserInfo?.rcExtensionId;
@@ -667,16 +667,17 @@ window.addEventListener('message', async (e) => {
               // refresh multi match prompt
               switch (data.body.page.id) {
                 case 'hostnameInputPage':
-                  const urlIdentifierRegex = new RegExp(manifest.platforms[data.body.formData.platformId].urlIdentifier.replace(/\*/g, '.*'));
-                  const isUrlValid = urlIdentifierRegex.test(data.body.formData.url);
+                  let isUrlValid = true;
+                  if (manifest.platforms[data.body.formData.platformId]?.environment?.urlIdentifier) {
+                    const urlIdentifierRegex = new RegExp(manifest.platforms[data.body.formData.platformId].environment.urlIdentifier.replace(/\*/g, '.*'));
+                    isUrlValid = urlIdentifierRegex.test(data.body.formData.url);
+                  }
                   const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender(
                     {
-                      platformName: manifest.platforms[data.body.formData.platformId].displayName,
-                      platformId: data.body.formData.platformId,
-                      urlIdentifier: manifest.platforms[data.body.formData.platformId].urlIdentifier,
+                      platform: manifest.platforms[data.body.formData.platformId],
                       inputUrl: data.body.formData.url,
-                      isUrlValid,
-                      overrides: manifest.platforms[data.body.formData.platformId].overrides
+                      region: data.body.formData.region,
+                      isUrlValid
                     });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
@@ -2060,23 +2061,54 @@ window.addEventListener('message', async (e) => {
             case '/custom-button-click':
               switch (data.body.button.id) {
                 case 'platformSelectionPage':
-                  const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender({
-                    platformName: manifest.platforms[data.body.button.formData.platforms].displayName,
-                    platformId: data.body.button.formData.platforms,
-                    isUrlValid: true,
-                    overrides: manifest.platforms[data.body.button.formData.platforms].overrides
-                  });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-register-customized-page',
-                    page: hostnameInputPageRender,
-                  }, '*');
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: `/customized/${hostnameInputPageRender.id}`,
-                  }, '*');
+                  if (manifest.platforms[data.body.button.formData.platforms]?.environment?.type === 'fixed') {
+                    const inputUrlObj = new URL(manifest.platforms[data.body.button.formData.platforms]?.environment?.url);
+                    const inputHostname = inputUrlObj.hostname;
+                    await chrome.storage.local.set({
+                      ['platform-info']: { platformName: data.body.button.formData.platforms, hostname: inputHostname }
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-third-party-service',
+                      service: (await embeddableServices.getServiceManifest())
+                    }, '*');
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: '/settings',
+                    }, '*');
+                    platformName = data.body.button.formData.platforms;
+                    manifest = await getManifest();
+                    platform = manifest.platforms[platformName];
+                    // Unique: Bullhorn
+                    if (platformName != 'bullhorn') {
+                      await onUserClickConnectButton();
+                    }
+                    showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
+                  }
+                  else {
+                    const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender({
+                      platform: manifest.platforms[data.body.button.formData.platforms],
+                      isUrlValid: true
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: hostnameInputPageRender,
+                    }, '*');
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: `/customized/${hostnameInputPageRender.id}`,
+                    }, '*');
+                  }
                   break;
                 case 'hostnameInputPage':
-                  const inputUrl = data.body.button.formData.url;
+                  let inputUrl = '';
+                  switch (manifest.platforms[data.body.button.formData.platformId].environment.type) {
+                    case 'regional':
+                      inputUrl = data.body.button.formData.region;
+                      break;
+                    case 'custom':
+                      inputUrl = data.body.button.formData.url;
+                      break;
+                  }
                   const inputUrlObj = new URL(inputUrl);
                   const inputHostname = inputUrlObj.hostname;
                   await chrome.storage.local.set({
@@ -2091,6 +2123,7 @@ window.addEventListener('message', async (e) => {
                     path: '/settings',
                   }, '*');
                   platformName = data.body.button.formData.platformId;
+                  manifest = await getManifest();
                   platform = manifest.platforms[platformName];
                   // Unique: Bullhorn
                   if (platformName != 'bullhorn') {

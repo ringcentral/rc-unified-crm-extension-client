@@ -7,7 +7,6 @@ import DragImage from '../../images/dragImage_orange.png';
 import { ArrowUp2, ArrowDown2 } from '@ringcentral/juno-icon';
 import { isObjectEmpty } from '../../lib/util';
 import Navigator from './navigator';
-import WelcomeScreen from './welcomeScreen';
 
 const quickAccessButtonContainerStyle = {
     bottom: '100px',
@@ -124,7 +123,6 @@ function App() {
                     </div>
                 </Draggable >
             </div>
-            <WelcomeScreen />
         </div>
     )
 }
