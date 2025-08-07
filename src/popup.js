@@ -19,7 +19,7 @@ import reportPage from './components/reportPage';
 import adminPage from './components/admin/adminPage';
 import managedSettingsPage from './components/admin/managedSettingsPage';
 import generalSettingPage from './components/admin/generalSettingPage';
-import callAndSMSLoggingSettingPage from './components/admin/managedSettings/callAndSMSLoggingSettingPage';
+import activityLoggingSettingPage from './components/admin/managedSettings/activityLoggingSettingPage';
 import customAdapterPage from './components/admin/customAdapterPage';
 import serverSideLoggingPage from './components/admin/serverSideLoggingPage';
 import contactSettingPage from './components/admin/managedSettings/contactSettingPage';
@@ -77,6 +77,83 @@ let manifest = {};
 let platform = null;
 let hasOngoingCall = false;
 let lastUserSettingSyncDate = new Date();
+
+// Helper function to determine if a call should be auto-logged based on direction and result
+function shouldAutoLogCall(call, userSettings) {
+  let shouldAutoLog = false;
+
+  const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+
+  const callType = call.direction === 'Inbound'
+    ? (call.result === 'Answered' ? 'autoLogAnsweredIncoming' : 'autoLogMissedIncoming')
+    : 'autoLogOutgoing';
+
+  shouldAutoLog = activityLoggingOptions.includes(callType);
+
+  // Fallback to legacy setting for backward compatibility
+  if (!shouldAutoLog) {
+    shouldAutoLog = userSettings?.autoLogCall?.value ?? false;
+  }
+
+  return shouldAutoLog;
+}
+
+// Helper function for presence update auto-logging (maps presence results to call results)
+function shouldAutoLogCallFromPresence(call, userSettings) {
+  let shouldAutoLog = false;
+
+  const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+
+  // Determine auto-log setting based on call direction and result
+  const callType = call.direction === 'Inbound'
+    ? (call.result === 'CallConnected' ? 'autoLogAnsweredIncoming' : 'autoLogMissedIncoming')
+    : 'autoLogOutgoing';
+
+  shouldAutoLog = activityLoggingOptions.includes(callType);
+
+  // Fallback to legacy setting for backward compatibility
+  if (!shouldAutoLog) {
+    shouldAutoLog = userSettings?.autoLogCall?.value ?? false;
+  }
+
+  return shouldAutoLog;
+}
+
+async function restartSyncInterval() {
+  // Clear existing interval
+  const { retroAutoCallLogIntervalId } = await chrome.storage.local.get({ retroAutoCallLogIntervalId: null });
+  if (retroAutoCallLogIntervalId) {
+    clearInterval(retroAutoCallLogIntervalId);
+    await chrome.storage.local.set({ retroAutoCallLogIntervalId: null });
+  }
+
+  // Check if auto logging is enabled
+  const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+  const autoLogCallsGroupTrigger = activityLoggingOptions.includes('autoLogAnsweredIncoming') ||
+    activityLoggingOptions.includes('autoLogMissedIncoming') ||
+    activityLoggingOptions.includes('autoLogOutgoing');
+  const isAutoLogEnabled = autoLogCallsGroupTrigger || (userSettings?.autoLogCall?.value ?? false);
+
+  // Start interval if conditions are met
+  if (isAutoLogEnabled && crmAuthed) {
+    const syncIntervalMs = userCore.getLogSyncFrequencyInMilliseconds(userSettings);
+
+    if (syncIntervalMs > 0) {
+      await chrome.storage.local.set({ retroAutoCallLogMaxAttempt: 10 });
+      const newRetroAutoCallLogIntervalId = setInterval(
+        function () {
+          logService.retroAutoCallLog({
+            manifest,
+            platformName,
+            platform
+          });
+        }, syncIntervalMs);
+      await chrome.storage.local.set({ retroAutoCallLogIntervalId: newRetroAutoCallLogIntervalId });
+    }
+  }
+}
+
+
 
 checkC2DCollision();
 getCustomManifest();
@@ -255,6 +332,8 @@ window.addEventListener('message', async (e) => {
               setInterval(async function () {
                 await triggerPendingRecordingCheck({ serverUrl: manifest.serverUrl });
               }, 300000);
+
+
             }
             // Unique: Bullhorn
             if (platform.name === 'bullhorn' && crmAuthed) {
@@ -397,6 +476,10 @@ window.addEventListener('message', async (e) => {
               type: 'rc-adapter-update-authorization-status',
               authorized: crmAuthed
             }, '*');
+
+            // Initialize sync interval
+            await restartSyncInterval();
+
             setInterval(function () {
               logService.forceCallLogMatcherCheck();
             }, 600000)
@@ -576,15 +659,14 @@ window.addEventListener('message', async (e) => {
           trackEditSettings({ changedItem: 'auto-call-log', status: data.autoLog });
           if (!!data.autoLog && !!crmAuthed) {
             await chrome.storage.local.set({ retroAutoCallLogMaxAttempt: 10 });
-            const retroAutoCallLogIntervalId = setInterval(
-              function () {
-                logService.retroAutoCallLog({
-                  manifest,
-                  platformName,
-                  platform
-                })
-              }, 60000);
-            await chrome.storage.local.set({ retroAutoCallLogIntervalId });
+            await restartSyncInterval();
+          } else {
+            // Clear interval if auto logging is disabled
+            const { retroAutoCallLogIntervalId } = await chrome.storage.local.get({ retroAutoCallLogIntervalId: null });
+            if (retroAutoCallLogIntervalId) {
+              clearInterval(retroAutoCallLogIntervalId);
+              await chrome.storage.local.remove('retroAutoCallLogIntervalId');
+            }
           }
           break;
         case 'rc-messageLogger-auto-log-notify':
@@ -985,15 +1067,20 @@ window.addEventListener('message', async (e) => {
                     path: `/customized/${clickToDialEmbedPageRender.id}`, // page id
                   }, '*');
                   break;
-                case 'callAndSMSLogging':
-                  const callAndSMSLoggingSettingPageRender = callAndSMSLoggingSettingPage.getCallAndSMSLoggingSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                case 'activityLogging':
+                  const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
+                  const activityLoggingSettingPageRender = activityLoggingSettingPage.getActivityLoggingSettingPageRender({
+                    adminUserSettings: adminSettings?.userSettings,
+                    crmManifest: platform,
+                    userPermissions
+                  });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
-                    page: callAndSMSLoggingSettingPageRender
+                    page: activityLoggingSettingPageRender
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
-                    path: `/customized/${callAndSMSLoggingSettingPageRender.id}`, // page id
+                    path: `/customized/${activityLoggingSettingPageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'serverSideLoggingSetting':
@@ -1312,16 +1399,23 @@ window.addEventListener('message', async (e) => {
               });
 
               // Translate: If no existing call log, create condition here to navigate to auto log
-              if (userCore.getAutoLogCallSetting(userSettings).value && data.body.triggerType === 'callLogSync' && !(existingCalls?.length > 0 && existingCalls[0]?.matched)) {
-                data.body.triggerType = 'createLog';
-                isAutoLog = true;
+              if (data.body.triggerType === 'callLogSync' && !(existingCalls?.length > 0 && existingCalls[0]?.matched)) {
+                if (shouldAutoLogCall(data.body.call, userSettings)) {
+                  data.body.triggerType = 'createLog';
+                  isAutoLog = true;
+                }
               }
 
               // Translate: Right after call, once presence update to Disconnect, auto log the call
               if (data.body.triggerType === 'presenceUpdate') {
                 if (data.body.call.result === 'Disconnected' || data.body.call.result === 'CallConnected') {
-                  data.body.triggerType = 'createLog';
-                  isAutoLog = true;
+                  if (shouldAutoLogCallFromPresence(data.body.call, userSettings)) {
+                    data.body.triggerType = 'createLog';
+                    isAutoLog = true;
+                  } else {
+                    responseMessage(data.requestId, { data: 'ok' });
+                    break;
+                  }
                 }
                 else {
                   responseMessage(data.requestId, { data: 'ok' });
@@ -1750,9 +1844,10 @@ window.addEventListener('message', async (e) => {
                 responseMessage(data.requestId, { data: 'ok' });
                 break;
               }
-              const isAutoLogSMS = userSettings.autoLogSMS?.value ?? false;
-              const isAutoLogInboundFax = userSettings.autoLogInboundFax?.value ?? false;
-              const isAutoLogOutboundFax = userSettings.autoLogOutboundFax?.value ?? false;
+              const messageActivityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+              const isAutoLogSMS = messageActivityLoggingOptions.includes('autoLogSMS');
+              const isAutoLogInboundFax = messageActivityLoggingOptions.includes('autoLogInboundFax');
+              const isAutoLogOutboundFax = messageActivityLoggingOptions.includes('autoLogOutboundFax');
 
               const messageAutoPopup = userCore.getSMSPopSetting(userSettings).value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
@@ -2040,17 +2135,30 @@ window.addEventListener('message', async (e) => {
                         changedSettings[ii.id] = { value: ii.value };
                       }
                     } else {
+                      console.log('Setting at i level:', i.id, 'value:', i.value);
                       changedSettings[i.id] = { value: i.value };
                     }
                   }
                 }
                 else if (s.value !== undefined) {
+                  console.log('Setting at s level:', s.id, 'value:', s.value);
                   changedSettings[s.id] = { value: s.value };
                 }
               }
               userSettings = await userCore.refreshUserSettings({
                 changedSettings
               });
+
+              // Restart sync interval to respect any changes to sync frequency or activity logging settings
+              await restartSyncInterval();
+
+              // Refresh the service manifest to reflect user settings changes
+              const serviceManifest = await embeddableServices.getServiceManifest();
+              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-third-party-service',
+                service: serviceManifest
+              }, '*');
+
               if (data.body.setting.id === "developerMode") {
                 showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
                 await chrome.storage.local.set({ developerMode: data.body.setting.value });
@@ -2065,7 +2173,7 @@ window.addEventListener('message', async (e) => {
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
-                case 'callAndSMSLoggingSettingPage':
+                case 'activityLoggingSettingPage':
                 case 'contactSettingPage':
                 case 'advancedFeaturesSettingPage':
                 case 'customSettingsPage':
@@ -2073,13 +2181,96 @@ window.addEventListener('message', async (e) => {
                 case 'notificationLevelSettingPage':
                 case 'clickToDialEmbedPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  const settingDataKeys = Object.keys(data.body.button.formData);
-                  for (const k of settingDataKeys) {
-                    adminSettings.userSettings[k] = data.body.button.formData[k];
+
+                  // Handle nested form data structure properly
+                  const formData = data.body.button.formData;
+
+                  // For activity logging page, handle both flat and nested structures
+                  if (data.body.button.id === 'activityLoggingSettingPage') {
+                    // Handle checkbox array structure
+                    for (const settingKey of Object.keys(formData)) {
+                      const setting = formData[settingKey];
+                      if (setting && typeof setting === 'object') {
+                        if (settingKey === 'activityLoggingOptions' || settingKey === 'autoOpenOptions') {
+                          // Save as array setting (consistent with user interface)
+                          adminSettings.userSettings[settingKey] = {
+                            customizable: setting.customizable ?? true,
+                            value: setting.value || []
+                          };
+                        } else if (Array.isArray(setting.value) && setting.customizable !== undefined) {
+                          // Handle custom activity logging settings (like call log details)
+                          const selectedOptions = setting.value || [];
+                          // Find the custom setting definition to get the options
+                          let customSettingDef = null;
+                          if (platform?.settings) {
+                            for (const cs of platform.settings) {
+                              if (cs.id === settingKey && cs.section === 'activityLogging') {
+                                customSettingDef = cs;
+                                break;
+                              }
+                            }
+                          }
+
+                          if (customSettingDef && customSettingDef.options) {
+                            // Save as array setting (consistent with user interface)
+                            adminSettings.userSettings[settingKey] = {
+                              customizable: setting.customizable ?? true,
+                              value: selectedOptions
+                            };
+                          } else {
+                            console.warn(`No custom setting definition found for ${settingKey}`);
+                          }
+                        } else if (setting.customizable !== undefined || setting.value !== undefined) {
+                          // This is a direct setting
+                          adminSettings.userSettings[settingKey] = setting;
+                        } else if (settingKey === 'logSyncFrequencySection' && setting.logSyncFrequency) {
+                          // Handle the nested logSyncFrequency setting
+                          adminSettings.userSettings.logSyncFrequency = setting.logSyncFrequency;
+                        }
+                      }
+                    }
+                  } else if (data.body.button.id === 'customSettingsPage') {
+                    // Handle custom settings page - settings are stored directly by ID
+                    for (const settingKey of Object.keys(formData)) {
+                      const setting = formData[settingKey];
+                      if (setting && typeof setting === 'object' && (setting.customizable !== undefined || setting.value !== undefined)) {
+                        adminSettings.userSettings[settingKey] = setting;
+                      }
+                    }
+                  } else {
+                    // For other pages, handle nested structure
+                    for (const sectionKey of Object.keys(formData)) {
+                      const section = formData[sectionKey];
+                      if (section && typeof section === 'object') {
+                        // Process nested settings within sections
+                        for (const settingKey of Object.keys(section)) {
+                          const setting = section[settingKey];
+                          if (setting && typeof setting === 'object' && (setting.customizable !== undefined || setting.value !== undefined)) {
+                            // This is an individual setting, save it directly
+                            adminSettings.userSettings[settingKey] = setting;
+                          }
+                        }
+                      }
+                    }
                   }
                   await chrome.storage.local.set({ adminSettings });
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
-                  await userCore.refreshUserSettings({});
+
+                  // Add delay to avoid race condition - wait for server to process admin settings
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  userSettings = await userCore.refreshUserSettings({ isAfterAdminChanges: true });
+                  // Refresh the service manifest to reflect admin changes in user settings
+                  const serviceManifest = await embeddableServices.getServiceManifest();
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-third-party-service',
+                    service: serviceManifest
+                  }, '*');
+
+                  // Restart sync interval if activity logging settings changed
+                  if (data.body.button.id === 'activityLoggingSettingPage') {
+                    await restartSyncInterval();
+                  }
+
                   showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

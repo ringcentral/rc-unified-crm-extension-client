@@ -20,10 +20,30 @@ async function getAdminSettings({ serverUrl }) {
 async function uploadAdminSettings({ serverUrl, adminSettings }) {
     const rcAccessToken = getRcAccessToken();
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+
+    let adminSettingsToUpload = { ...adminSettings };
+
+    // Convert callLogDetails array format to individual boolean settings for backend
+    if (adminSettingsToUpload.userSettings?.callLogDetails && Array.isArray(adminSettingsToUpload.userSettings.callLogDetails.value)) {
+        const callLogDetailsArray = adminSettingsToUpload.userSettings.callLogDetails.value;
+        const customizable = adminSettingsToUpload.userSettings.callLogDetails.customizable;
+        const callLogDetailOptions = ['addCallLogNote', 'addCallSessionId', 'addCallLogSubject',
+            'addCallLogContactNumber', 'addCallLogDuration', 'addCallLogResult',
+            'addCallLogRecording', 'addCallLogAiNote', 'addCallLogTranscript', 'addCallLogDateTime'];
+
+        // Convert to individual boolean settings for backend
+        for (const option of callLogDetailOptions) {
+            adminSettingsToUpload.userSettings[option] = {
+                customizable: customizable,
+                value: callLogDetailsArray.includes(option)
+            };
+        }
+    }
+
     const uploadAdminSettingsResponse = await axios.post(
         `${serverUrl}/admin/settings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`,
         {
-            adminSettings
+            adminSettings: adminSettingsToUpload
         });
 }
 
@@ -33,18 +53,40 @@ async function refreshAdminSettings() {
     const platform = manifest.platforms[platformInfo.platformName];
     const rcAccessToken = getRcAccessToken();
     let adminSettings;
-    // Admin tab render
+
+    // First try to get from server
     const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
-    await chrome.storage.local.set({ isAdmin: !!storedAdminSettings });
-    if (storedAdminSettings) {
+
+    // If server returns null, try to get from local storage
+    let finalAdminSettings = storedAdminSettings;
+    if (!storedAdminSettings) {
+        const { adminSettings: localAdminSettings } = await chrome.storage.local.get({ adminSettings: null });
+        finalAdminSettings = localAdminSettings;
+    }
+
+    // If both server and local storage are empty, initialize with proper structure
+    if (!finalAdminSettings) {
+        finalAdminSettings = {
+            userSettings: {}
+        };
+    }
+
+    // Ensure userSettings exists
+    if (!finalAdminSettings.userSettings) {
+        finalAdminSettings.userSettings = {};
+    }
+
+    await chrome.storage.local.set({ isAdmin: !!finalAdminSettings });
+
+    if (finalAdminSettings) {
         try {
             const adminPageRender = adminPage.getAdminPageRender({ platform });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
                 page: adminPageRender,
             }, '*');
-            await chrome.storage.local.set({ adminSettings: storedAdminSettings });
-            adminSettings = storedAdminSettings;
+            await chrome.storage.local.set({ adminSettings: finalAdminSettings });
+            adminSettings = finalAdminSettings;
         } catch (e) {
             console.log('Cannot find admin settings', e);
         }
@@ -52,7 +94,7 @@ async function refreshAdminSettings() {
 
     // Set user setting display name
     const { crmUserInfo } = await chrome.storage.local.get({ crmUserInfo: null });
-    authCore.setAccountName(crmUserInfo?.name, !!storedAdminSettings);
+    authCore.setAccountName(crmUserInfo?.name, !!finalAdminSettings);
 
     return { adminSettings }
 }

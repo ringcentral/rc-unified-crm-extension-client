@@ -28,13 +28,32 @@ async function getUserSettingsOnline({ serverUrl }) {
 async function uploadUserSettings({ serverUrl, userSettings }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' });
-    let userSettingsToUpload = userSettings;
+    let userSettingsToUpload = { ...userSettings };
+
     if (userSettingsToUpload.selectedRegion) {
         userSettingsToUpload.selectedRegion.value = selectedRegion;
     }
     else {
         userSettingsToUpload.selectedRegion = { value: selectedRegion };
     }
+
+    // Convert callLogDetails array format to individual boolean settings for backend
+    if (userSettingsToUpload.callLogDetails && Array.isArray(userSettingsToUpload.callLogDetails.value)) {
+        const callLogDetailsArray = userSettingsToUpload.callLogDetails.value;
+        const customizable = userSettingsToUpload.callLogDetails.customizable;
+        const callLogDetailOptions = ['addCallLogNote', 'addCallSessionId', 'addCallLogSubject',
+            'addCallLogContactNumber', 'addCallLogDuration', 'addCallLogResult',
+            'addCallLogRecording', 'addCallLogAiNote', 'addCallLogTranscript', 'addCallLogDateTime'];
+
+        // Convert to individual boolean settings for backend
+        for (const option of callLogDetailOptions) {
+            userSettingsToUpload[option] = {
+                customizable: customizable,
+                value: callLogDetailsArray.includes(option)
+            };
+        }
+    }
+
     const uploadUserSettingsResponse = await axios.post(
         `${serverUrl}/user/settings?jwtToken=${rcUnifiedCrmExtJwt}`,
         {
@@ -51,7 +70,58 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     }
     const rcAccessToken = getRcAccessToken();
     const manifest = await getManifest();
-    let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
+
+    // Try to get user settings from server, with fallback to local storage
+    let userSettings;
+    try {
+        userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
+    } catch (e) {
+        const { userSettings: localUserSettings } = await chrome.storage.local.get({ userSettings: {} });
+        userSettings = localUserSettings;
+    }
+
+    // If both server and local storage fail, initialize with empty object
+    if (!userSettings) {
+        userSettings = {};
+    }
+
+    // TEMP: to be deleted after this version 1.6.1
+    // Backward compatibility - migrate old autoLogCall setting to new individual settings
+    if (userSettings.autoLogCall && userSettings.autoLogCall.value === true) {
+        // One-time translation: Set all three new settings to true
+        userSettings.autoLogAnsweredIncoming = { customizable: true, value: true };
+        userSettings.autoLogMissedIncoming = { customizable: true, value: true };
+        userSettings.autoLogOutgoing = { customizable: true, value: true };
+        // Delete the old autoLogCall setting
+        delete userSettings.autoLogCall;
+    }
+
+    // Migrate existing individual boolean call log details to array format (backward compatibility)
+    const callLogDetailOptions = ['addCallLogNote', 'addCallSessionId', 'addCallLogSubject',
+        'addCallLogContactNumber', 'addCallLogDuration', 'addCallLogResult',
+        'addCallLogRecording', 'addCallLogAiNote', 'addCallLogTranscript', 'addCallLogDateTime'];
+
+    if (!userSettings.callLogDetails && callLogDetailOptions.some(option => userSettings[option])) {
+        // Migrate from individual boolean settings to array format
+        const enabledOptions = [];
+        let isCustomizable = true;
+
+        for (const option of callLogDetailOptions) {
+            if (userSettings[option]?.value === true) {
+                enabledOptions.push(option);
+            }
+            // If any option is not customizable, make the whole array not customizable
+            if (userSettings[option]?.customizable === false) {
+                isCustomizable = false;
+            }
+        }
+
+        userSettings.callLogDetails = {
+            customizable: isCustomizable,
+            value: enabledOptions
+        };
+    }
+
     if (changedSettings) {
         for (const k of Object.keys(changedSettings)) {
             if (userSettings[k] === undefined || !userSettings[k].value) {
@@ -63,7 +133,17 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         }
     }
     await chrome.storage.local.set({ userSettings });
-    userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+
+    // Try to upload user settings to server, but continue if it fails
+    try {
+        const uploadedSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+        if (uploadedSettings) {
+            userSettings = uploadedSettings;
+        }
+    } catch (e) {
+        console.log('Failed to upload user settings to server, using local settings:');
+        // Continue with local settings if upload fails
+    }
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-update-features-flags',
         chat: getShowChatTabSetting(userSettings).value,
@@ -74,8 +154,10 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         recordings: getShowRecordingsTabSetting(userSettings).value,
         contacts: getShowContactsTabSetting(userSettings).value
     }, '*');
-    const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false);
-    RCAdapter.setAutoLog({ call: userSettings.autoLogCall?.value ?? false, message: autoLogMessagesGroupTrigger })
+    const activityLoggingOptions = userSettings?.activityLoggingOptions?.value ?? [];
+    const autoLogMessagesGroupTrigger = activityLoggingOptions.includes('autoLogSMS') || activityLoggingOptions.includes('autoLogInboundFax') || activityLoggingOptions.includes('autoLogOutboundFax') || activityLoggingOptions.includes('autoLogVoicemails');
+    const autoLogCallsGroupTrigger = activityLoggingOptions.includes('autoLogAnsweredIncoming') || activityLoggingOptions.includes('autoLogMissedIncoming') || activityLoggingOptions.includes('autoLogOutgoing');
+    RCAdapter.setAutoLog({ call: autoLogCallsGroupTrigger || (userSettings.autoLogCall?.value ?? false), message: autoLogMessagesGroupTrigger })
     if (!isAvoidForceChange) {
         const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
         const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
@@ -119,9 +201,19 @@ async function updateSSCLToken({ serverUrl, platform, token }) {
     }
 }
 
-function getAutoLogCallSetting(userSettings, isAdmin) {
+
+
+// Unified function to get activity logging settings
+function getActivityLoggingSetting(userSettings, isAdmin = false) {
+    const activityLoggingValue = userSettings?.activityLoggingOptions?.value ?? [];
+
+    // Check for server side logging conflicts for call-related settings
+    const callRelatedSettings = ['autoLogAnsweredIncoming', 'autoLogMissedIncoming', 'autoLogOutgoing'];
     const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
-    if (serverSideLoggingEnabled && (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
+    const hasCallRelatedSettings = callRelatedSettings.some(setting => activityLoggingValue.includes(setting));
+    if (hasCallRelatedSettings &&
+        serverSideLoggingEnabled &&
+        (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
         return {
             value: false,
             readOnly: true,
@@ -129,35 +221,36 @@ function getAutoLogCallSetting(userSettings, isAdmin) {
             warning: 'Unavailable while server side call logging enabled'
         }
     }
+
+    // Standard activity logging logic
+    const isCustomizable = userSettings?.activityLoggingOptions?.customizable ?? true;
+
     return {
-        value: userSettings?.autoLogCall?.value ?? false,
-        readOnly: userSettings?.autoLogCall?.customizable === undefined ? false : !userSettings?.autoLogCall?.customizable,
-        readOnlyReason: !userSettings?.autoLogCall?.customizable ? 'This setting is managed by admin' : ''
+        value: activityLoggingValue,
+        readOnly: !isCustomizable,
+        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
     }
 }
 
-function getAutoLogSMSSetting(userSettings) {
+function getLogSyncFrequencySetting(userSettings) {
     return {
-        value: userSettings?.autoLogSMS?.value ?? false,
-        readOnly: userSettings?.autoLogSMS?.customizable === undefined ? false : !userSettings?.autoLogSMS?.customizable,
-        readOnlyReason: !userSettings?.autoLogSMS?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.logSyncFrequency?.value ?? '10min',
+        readOnly: userSettings?.logSyncFrequency?.customizable === undefined ? false : !userSettings?.logSyncFrequency?.customizable,
+        readOnlyReason: !userSettings?.logSyncFrequency?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
-function getAutoLogInboundFaxSetting(userSettings) {
-    return {
-        value: userSettings?.autoLogInboundFax?.value ?? false,
-        readOnly: userSettings?.autoLogInboundFax?.customizable === undefined ? false : !userSettings?.autoLogInboundFax?.customizable,
-        readOnlyReason: !userSettings?.autoLogInboundFax?.customizable ? 'This setting is managed by admin' : ''
-    }
-}
-
-function getAutoLogOutboundFaxSetting(userSettings) {
-    return {
-        value: userSettings?.autoLogOutboundFax?.value ?? false,
-        readOnly: userSettings?.autoLogOutboundFax?.customizable === undefined ? false : !userSettings?.autoLogOutboundFax?.customizable,
-        readOnlyReason: !userSettings?.autoLogOutboundFax?.customizable ? 'This setting is managed by admin' : ''
-    }
+function getLogSyncFrequencyInMilliseconds(userSettings) {
+    const frequency = getLogSyncFrequencySetting(userSettings).value;
+    const frequencyMap = {
+        'disabled': 0,
+        '10min': 10 * 60 * 1000,    // 10 minutes
+        '30min': 30 * 60 * 1000,    // 30 minutes  
+        '1hour': 60 * 60 * 1000,    // 1 hour
+        '3hours': 3 * 60 * 60 * 1000,  // 3 hours
+        '1day': 24 * 60 * 60 * 1000     // 1 day
+    };
+    return frequencyMap[frequency] || frequencyMap['10min'];
 }
 
 function getEnableRetroCallLogSync(userSettings) {
@@ -177,18 +270,24 @@ function getOneTimeLogSetting(userSettings) {
 }
 
 function getCallPopSetting(userSettings) {
+    const autoOpenOptions = userSettings?.autoOpenOptions?.value ?? [];
+    const value = autoOpenOptions.includes('popupLogPageAfterCall');
+    const isCustomizable = userSettings?.autoOpenOptions?.customizable ?? true;
     return {
-        value: userSettings?.popupLogPageAfterCall?.value ?? false,
-        readOnly: userSettings?.popupLogPageAfterCall?.customizable === undefined ? false : !userSettings?.popupLogPageAfterCall?.customizable,
-        readOnlyReason: !userSettings?.popupLogPageAfterCall?.customizable ? 'This setting is managed by admin' : ''
+        value: value,
+        readOnly: !isCustomizable,
+        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
     }
 }
 
 function getSMSPopSetting(userSettings) {
+    const autoOpenOptions = userSettings?.autoOpenOptions?.value ?? [];
+    const value = autoOpenOptions.includes('popupLogPageAfterSMS');
+    const isCustomizable = userSettings?.autoOpenOptions?.customizable ?? true;
     return {
-        value: userSettings?.popupLogPageAfterSMS?.value ?? false,
-        readOnly: userSettings?.popupLogPageAfterSMS?.customizable === undefined ? false : !userSettings?.popupLogPageAfterSMS?.customizable,
-        readOnlyReason: !userSettings?.popupLogPageAfterSMS?.customizable ? 'This setting is managed by admin' : ''
+        value: value,
+        readOnly: !isCustomizable,
+        readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -352,16 +451,53 @@ function getCustomSetting(userSettings, id, defaultValue) {
     }
 }
 
+function getCustomCallLogDetailsSetting(userSettings, id, defaultValue) {
+    if (userSettings === undefined) {
+        return {
+            value: null,
+            readOnly: false,
+            readOnlyReason: ''
+        };
+    }
+
+    // Check if we have the new array format
+    if (userSettings?.callLogDetails?.value) {
+        const callLogDetails = userSettings.callLogDetails.value;
+        const value = callLogDetails.includes(id);
+        const isCustomizable = userSettings.callLogDetails.customizable ?? true;
+        return {
+            value: value ?? defaultValue,
+            readOnly: !isCustomizable,
+            readOnlyReason: !isCustomizable ? 'This setting is managed by admin' : '',
+        }
+    }
+
+    // Fallback to individual boolean settings (backward compatibility)
+    if (userSettings[id]) {
+        return {
+            value: userSettings[id].value ?? defaultValue,
+            readOnly: !userSettings[id].customizable,
+            readOnlyReason: !userSettings[id].customizable ? 'This setting is managed by admin' : '',
+        }
+    }
+
+    // Default fallback
+    return {
+        value: defaultValue,
+        readOnly: false,
+        readOnlyReason: ''
+    };
+}
+
+
 exports.preloadUserSettingsFromAdmin = preloadUserSettingsFromAdmin;
 exports.getUserSettingsOnline = getUserSettingsOnline;
 exports.uploadUserSettings = uploadUserSettings;
 exports.refreshUserSettings = refreshUserSettings;
 exports.updateSSCLToken = updateSSCLToken;
-
-exports.getAutoLogCallSetting = getAutoLogCallSetting;
-exports.getAutoLogSMSSetting = getAutoLogSMSSetting;
-exports.getAutoLogInboundFaxSetting = getAutoLogInboundFaxSetting;
-exports.getAutoLogOutboundFaxSetting = getAutoLogOutboundFaxSetting;
+exports.getActivityLoggingSetting = getActivityLoggingSetting;
+exports.getLogSyncFrequencySetting = getLogSyncFrequencySetting;
+exports.getLogSyncFrequencyInMilliseconds = getLogSyncFrequencyInMilliseconds;
 exports.getEnableRetroCallLogSync = getEnableRetroCallLogSync;
 exports.getOneTimeLogSetting = getOneTimeLogSetting;
 exports.getCallPopSetting = getCallPopSetting;
@@ -385,3 +521,4 @@ exports.getClickToDialEmbedMode = getClickToDialEmbedMode;
 exports.getClickToDialUrls = getClickToDialUrls;
 exports.getNotificationLevelSetting = getNotificationLevelSetting;
 exports.getCustomSetting = getCustomSetting;
+exports.getCustomCallLogDetailsSetting = getCustomCallLogDetailsSetting;
