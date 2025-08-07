@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { showNotification, getPlatformInfo } from '../lib/util';
+import { showNotification } from '../lib/util';
+import { getPlatformInfo } from '../service/platformService';
 import { trackCrmLogin, trackCrmLogout } from '../lib/analytics';
 import { openDB } from 'idb';
 import platformSelectionPage from '../components/platformSelectionPage';
@@ -11,18 +12,18 @@ async function submitPlatformSelection(platform) {
     })
 }
 
-async function checkAndOpenWelcomeScreen({ manifest }) {
+async function checkAndOpenPlatformSelectionPage({ manifest }) {
     const platformInfo = await getPlatformInfo();
     if (!platformInfo) {
         await embeddableServices.preconfigureServiceManifest();
-        const welcomePageRender = platformSelectionPage.getPlatformSelectionPageRender({ manifest });
+        const platformSelectionPageRender = platformSelectionPage.getPlatformSelectionPageRender({ manifest });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-register-customized-page',
-            page: welcomePageRender,
+            page: platformSelectionPageRender,
         }, '*');
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-navigate-to',
-            path: `/customized/${welcomePageRender.id}`
+            path: `/customized/${platformSelectionPageRender.id}`
         }, '*');
     }
 }
@@ -172,7 +173,7 @@ async function refreshLicenseStatus({ serverUrl }) {
     }, '*');
 }
 
-exports.checkAndOpenWelcomeScreen = checkAndOpenWelcomeScreen;
+exports.checkAndOpenPlatformSelectionPage = checkAndOpenPlatformSelectionPage;
 exports.submitPlatformSelection = submitPlatformSelection;
 exports.apiKeyLogin = apiKeyLogin;
 exports.onAuthCallback = onAuthCallback;

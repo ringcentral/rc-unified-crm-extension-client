@@ -6,7 +6,8 @@ import ReactDOM from 'react-dom';
 import { RcThemeProvider } from '@ringcentral/juno';
 import axios from 'axios';
 import { sendMessageToExtension } from './lib/sendMessage';
-import { isObjectEmpty, getManifest } from './lib/util';
+import { isObjectEmpty } from './lib/util';
+import { getManifest } from './service/manifestService';
 import userCore from './core/user';
 console.log('import content js to web page');
 
@@ -30,7 +31,7 @@ async function checkUrlMatch() {
             return regex.test(window.location.href);
           });
         case 'blacklist':
-            return !clickToDialUrls.some((pattern) => {
+          return !clickToDialUrls.some((pattern) => {
             const regex = new RegExp(pattern.replace(/\*/g, '.*'));
             return regex.test(window.location.href);
           });
@@ -43,11 +44,13 @@ async function checkUrlMatch() {
           return false;
       }
     }
-    return true;
+    else {
+      return false;
+    }
   }
   catch (e) {
     console.error(e);
-    return true;
+    return false;
   }
 }
 
@@ -134,10 +137,10 @@ chrome.runtime.onMessage.addListener(
 );
 
 function Root() {
-  return (
-    <RcThemeProvider>
-      <App />
-    </RcThemeProvider>
+  return React.createElement(
+    RcThemeProvider,
+    null,
+    React.createElement(App, null)
   );
 }
 
@@ -150,7 +153,7 @@ async function RenderQuickAccessButton() {
   const rootElement = window.document.createElement('root');
   rootElement.id = 'rc-crm-extension-quick-access-button';
   window.document.body.appendChild(rootElement);
-  ReactDOM.render(<Root />, rootElement);
+  ReactDOM.render(Root(), rootElement);
 }
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
@@ -175,7 +178,7 @@ async function Initialize() {
     let { c2dDelay } = await chrome.storage.local.get(
       { c2dDelay: '3' }
     );
-    if (!!!c2dDelay) {
+    if (!c2dDelay) {
       c2dDelay = 3;
     }
     const delayInMilliSec = Number(c2dDelay) * 1000;

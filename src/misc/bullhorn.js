@@ -1,7 +1,8 @@
 import axios from 'axios';
-import { showNotification, getManifest } from '../lib/util';
+import { showNotification } from '../lib/util';
 import { trackCrmAuthFail } from '../lib/analytics';
 import { getServiceManifest } from '../service/embeddableServices';
+import { getManifest } from '../service/manifestService';
 
 async function bullhornHeartbeat({ platform }) {
     console.log('checking bullhorn heartbeat...')

@@ -5,7 +5,9 @@ import dispositionCore from './core/disposition';
 import userCore from './core/user';
 import adminCore from './core/admin';
 import authCore from './core/auth';
-import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getPlatformInfo, getManifest, getUserReportStats } from './lib/util';
+import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getUserReportStats } from './lib/util';
+import { getPlatformInfo } from './service/platformService';
+import { getManifest } from './service/manifestService';
 import { getUserInfo } from './lib/rcAPI';
 import moment from 'moment';
 import logPage from './components/logPage';
@@ -31,6 +33,7 @@ import notificationLevelSettingPage from './components/admin/generalSettings/not
 import appearancePage from './components/admin/generalSettings/appearancePage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
+import platformSelectionPage from './components/platformSelectionPage';
 import hostnameInputPage from './components/hostnameInputPage';
 import {
   setAuthor,
@@ -65,6 +68,7 @@ window.__ON_RC_POPUP_WINDOW = 1;
 let platformName = '';
 let platformHostname = '';
 let rcUserInfo = {};
+let platformInfo = null;
 let firstTimeLogoutAbsorbed = false;
 let autoPopupMainConverastionId = null;
 let currentNotificationId = null;
@@ -174,32 +178,30 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-adapter-pushAdapterState':
-          if (!false) {
-            const platformInfo = await getPlatformInfo();
-            if (!platformInfo) {
-              console.error('Cannot find platform info');
-              return;
-            }
-            manifest = await getManifest();
-            platform = manifest.platforms[platformInfo.platformName]
-            platformName = platformInfo.platformName;
-            platformHostname = platformInfo.hostname;
-            // setup C2D match all numbers
-            if (platform.clickToDialMatchAllNumbers !== undefined) {
-              await chrome.storage.local.set({ matchAllNumbers: platform.clickToDialMatchAllNumbers });
-            }
-            else {
-              await chrome.storage.local.set({ matchAllNumbers: false });
-            }
-            if (platform.requestConfig?.timeout) {
-              axios.defaults.timeout = platform.requestConfig.timeout * 1000;
-            }
-            const serviceManifest = await embeddableServices.getServiceManifest();
-            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-              type: 'rc-adapter-register-third-party-service',
-              service: serviceManifest
-            }, '*');
+          platformInfo = await getPlatformInfo();
+          if (!platformInfo) {
+            console.error('Cannot find platform info');
+            return;
           }
+          manifest = await getManifest();
+          platform = manifest.platforms[platformInfo.platformName]
+          platformName = platformInfo.platformName;
+          platformHostname = platformInfo.hostname;
+          // setup C2D match all numbers
+          if (platform.clickToDialMatchAllNumbers !== undefined) {
+            await chrome.storage.local.set({ matchAllNumbers: platform.clickToDialMatchAllNumbers });
+          }
+          else {
+            await chrome.storage.local.set({ matchAllNumbers: false });
+          }
+          if (platform.requestConfig?.timeout) {
+            axios.defaults.timeout = platform.requestConfig.timeout * 1000;
+          }
+          const serviceManifest = await embeddableServices.getServiceManifest();
+          document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-register-third-party-service',
+            service: serviceManifest
+          }, '*');
           break;
         case 'rc-login-status-notify':
           // get login status from widget
@@ -211,7 +213,7 @@ window.addEventListener('message', async (e) => {
           console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
 
           manifest = await getManifest();
-          const platformInfo = await getPlatformInfo();
+          platformInfo = await getPlatformInfo();
           if (platformInfo) {
             platform = manifest.platforms[platformInfo.platformName]
             platformName = platformInfo.platformName;
@@ -220,7 +222,7 @@ window.addEventListener('message', async (e) => {
           let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
           if (data.loggedIn) {
             rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
-            await authCore.checkAndOpenWelcomeScreen({ manifest });
+            await authCore.checkAndOpenPlatformSelectionPage({ manifest });
             document.getElementById('rc-widget').style.zIndex = 0;
             crmAuthed = !!rcUnifiedCrmExtJwt;
             await chrome.storage.local.set({ crmAuthed })
@@ -311,9 +313,9 @@ window.addEventListener('message', async (e) => {
                 rcExtensionId: userInfoResponse.extensionId
               };
               await chrome.storage.local.set({ ['rcUserInfo']: rcUserInfo });
-              // reset();
-              // identify({ extensionId: rcUserInfo?.rcExtensionId, rcAccountId: rcUserInfo?.rcAccountId, platformName: platform.name });
-              // group({ rcAccountId: rcUserInfo?.rcAccountId });
+              reset();
+              identify({ extensionId: rcUserInfo?.rcExtensionId, rcAccountId: rcUserInfo?.rcAccountId, platformName: platform.name });
+              group({ rcAccountId: rcUserInfo?.rcAccountId });
               // setup headers for server side analytics
               axios.defaults.headers.common['rc-extension-id'] = rcUserInfo?.rcExtensionId;
               axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId;
@@ -634,7 +636,7 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-post-message-request':
           if (!crmAuthed && (data.path === '/callLogger' || data.path === '/messageLogger')) {
-            showNotification({ level: 'warning', message: `Please go to Settings and connect to ${platformName}`, ttl: 60000 });
+            showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
             responseMessage(data.requestId, { data: 'ok' });
             break;
           }
@@ -643,44 +645,7 @@ window.addEventListener('message', async (e) => {
               const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
               crmAuthed = !!rcUnifiedCrmExtJwt;
               if (!rcUnifiedCrmExtJwt) {
-                switch (platform.auth.type) {
-                  case 'oauth':
-                    let authUri;
-                    let customState = '';
-                    if (platform.auth.oauth.customState) {
-                      customState = platform.auth.oauth.customState;
-                    }
-                    // Unique: Pipedrive
-                    if (platformName === 'pipedrive') {
-                      authUri = manifest.platforms.pipedrive.auth.oauth.redirectUri;
-                      handleThirdPartyOAuthWindow(authUri);
-                    }
-                    // Unique: Bullhorn
-                    else if (platformName === 'bullhorn') {
-                      await tryConnectToBullhorn({ platform });
-                    }
-                    else {
-                      authUri = `${platform.auth.oauth.authUrl}?` +
-                        `response_type=code` +
-                        `&client_id=${platform.auth.oauth.clientId}` +
-                        `${!!platform.auth.oauth.scope && platform.auth.oauth.scope != '' ? `&${platform.auth.oauth.scope}` : ''}` +
-                        `&state=${customState === '' ? `platform=${platform.name}` : customState}` +
-                        '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
-                      handleThirdPartyOAuthWindow(authUri);
-                    }
-                    break;
-                  case 'apiKey':
-                    const authPageRender = authPage.getAuthPageRender({ manifest, platformName });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-register-customized-page',
-                      page: authPageRender
-                    });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-navigate-to',
-                      path: `/customized/${authPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
-                    }, '*');
-                    break;
-                }
+                onUserClickConnectButton();
               }
               else {
                 window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -702,10 +667,17 @@ window.addEventListener('message', async (e) => {
               // refresh multi match prompt
               switch (data.body.page.id) {
                 case 'hostnameInputPage':
-                  break;
-                case 'platformSelectionPage':
-                  platformName = data.body.formData.platforms;
-                  const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender({ platformName: manifest.platforms[platformName].displayName, url: data.body.formData.url });
+                  const urlIdentifierRegex = new RegExp(manifest.platforms[data.body.formData.platformId].urlIdentifier.replace(/\*/g, '.*'));
+                  const isUrlValid = urlIdentifierRegex.test(data.body.formData.url);
+                  const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender(
+                    {
+                      platformName: manifest.platforms[data.body.formData.platformId].displayName,
+                      platformId: data.body.formData.platformId,
+                      urlIdentifier: manifest.platforms[data.body.formData.platformId].urlIdentifier,
+                      inputUrl: data.body.formData.url,
+                      isUrlValid,
+                      overrides: manifest.platforms[data.body.formData.platformId].overrides
+                    });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: hostnameInputPageRender
@@ -713,6 +685,17 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${hostnameInputPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'platformSelectionPage':
+                  const updatedPlatformSelectionPageRender = platformSelectionPage.getUpdatedPlatformSelectionPageRender({ page: data.body.page, formData: data.body.formData });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-update-platform-selection-page',
+                    page: updatedPlatformSelectionPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${updatedPlatformSelectionPageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'getMultiContactPopPromptPage':
@@ -2076,12 +2059,28 @@ window.addEventListener('message', async (e) => {
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
+                case 'platformSelectionPage':
+                  const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender({
+                    platformName: manifest.platforms[data.body.button.formData.platforms].displayName,
+                    platformId: data.body.button.formData.platforms,
+                    isUrlValid: true,
+                    overrides: manifest.platforms[data.body.button.formData.platforms].overrides
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: hostnameInputPageRender,
+                  }, '*');
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${hostnameInputPageRender.id}`,
+                  }, '*');
+                  break;
                 case 'hostnameInputPage':
                   const inputUrl = data.body.button.formData.url;
                   const inputUrlObj = new URL(inputUrl);
                   const inputHostname = inputUrlObj.hostname;
                   await chrome.storage.local.set({
-                    ['platform-info']: { platformName, hostname: inputHostname }
+                    ['platform-info']: { platformName: data.body.button.formData.platformId, hostname: inputHostname }
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-third-party-service',
@@ -2089,10 +2088,15 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
-                    path: '/dialer',
+                    path: '/settings',
                   }, '*');
+                  platformName = data.body.button.formData.platformId;
                   platform = manifest.platforms[platformName];
-                  showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 5000 });
+                  // Unique: Bullhorn
+                  if (platformName != 'bullhorn') {
+                    await onUserClickConnectButton();
+                  }
+                  showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
                   break;
                 case 'callAndSMSLoggingSettingPage':
                 case 'contactSettingPage':
@@ -2722,4 +2726,45 @@ function handleThirdPartyOAuthWindow(oAuthUri) {
     type: 'openThirdPartyAuthWindow',
     oAuthUri
   });
+}
+
+async function onUserClickConnectButton() {
+  switch (platform.auth.type) {
+    case 'oauth':
+      let authUri;
+      let customState = '';
+      if (platform.auth.oauth.customState) {
+        customState = platform.auth.oauth.customState;
+      }
+      // Unique: Pipedrive
+      if (platformName === 'pipedrive') {
+        authUri = manifest.platforms.pipedrive.auth.oauth.redirectUri;
+        handleThirdPartyOAuthWindow(authUri);
+      }
+      // Unique: Bullhorn
+      else if (platformName === 'bullhorn') {
+        await tryConnectToBullhorn({ platform });
+      }
+      else {
+        authUri = `${platform.auth.oauth.authUrl}?` +
+          `response_type=code` +
+          `&client_id=${platform.auth.oauth.clientId}` +
+          `${!!platform.auth.oauth.scope && platform.auth.oauth.scope != '' ? `&${platform.auth.oauth.scope}` : ''}` +
+          `&state=${customState === '' ? `platform=${platform.name}` : customState}` +
+          '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
+        handleThirdPartyOAuthWindow(authUri);
+      }
+      break;
+    case 'apiKey':
+      const authPageRender = authPage.getAuthPageRender({ manifest, platformName });
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: authPageRender
+      });
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-navigate-to',
+        path: `/customized/${authPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
+      }, '*');
+      break;
+  }
 }

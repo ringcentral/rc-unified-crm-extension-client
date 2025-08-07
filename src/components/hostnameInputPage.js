@@ -1,5 +1,5 @@
-function getHostnameInputPageRender({ platformName, url }) {
-    return {
+function getHostnameInputPageRender({ platformName, platformId, urlIdentifier, inputUrl, isUrlValid, overrides }) {
+    const page = {
         id: 'hostnameInputPage',
         title: 'Enter hostname',
         type: 'page',
@@ -40,15 +40,23 @@ function getHostnameInputPageRender({ platformName, url }) {
             },
             url: {
                 "ui:placeholder": 'url...',
+                "ui:help": isUrlValid ? '' : `Invalid url! Please enter it following format: "${urlIdentifier}"`
             },
             submitButtonOptions: { // optional if you don't want to show submit button
-                submitText: 'Save',
+                submitText: 'Next',
             }
         },
         formData: {
-            url: url ?? ''
+            url: inputUrl ?? '',
+            platformId
         }
     }
+
+    if (overrides) {
+        page.schema.properties = overrides.schema.properties;
+        page.uiSchema = overrides.uiSchema;
+    }
+    return page;
 }
 
 exports.getHostnameInputPageRender = getHostnameInputPageRender;

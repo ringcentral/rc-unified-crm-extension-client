@@ -2,7 +2,9 @@ import axios from 'axios';
 import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import { parsePhoneNumber } from 'awesome-phonenumber';
-import { getRcAccessToken, getPlatformInfo, getManifest } from '../lib/util';
+import { getRcAccessToken } from '../lib/util';
+import { getPlatformInfo } from '../service/platformService';
+import { getManifest } from '../service/manifestService';
 
 async function getAdminSettings({ serverUrl }) {
     try {
