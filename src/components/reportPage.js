@@ -36,25 +36,25 @@ function getReportsPageRender({ userStats }) {
                             const: 'inboundCallCount',
                             value: (userStats.callLogStats?.inboundCallCount || 0).toString(),
                             title: (userStats.callLogStats?.inboundCallCount || 0) <= 1 ? 'inbound call':'inbound calls',
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#a0a2a91f'
                         },
                         {
                             const: 'outboundCallCount',
                             value: (userStats.callLogStats?.outboundCallCount || 0).toString(),
                             title: (userStats.callLogStats?.outboundCallCount || 0) <= 1 ? 'outbound call':'outbound calls',
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#a0a2a91f'
                         },
                         {
                             const: 'answeredCallCount',
                             value: (userStats.callLogStats?.answeredCallCount || 0).toString(),
                             title: (userStats.callLogStats?.answeredCallCount || 0) <= 1 ? 'answered call':'answered calls',
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#a0a2a91f'
                         },
                         {
                             const: 'answeredCallPercentage',
                             value: (userStats.callLogStats?.answeredCallPercentage || '0%').toString(),
                             title: 'answered rate',
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#a0a2a91f'
                         }
                     ]
                 },
@@ -70,14 +70,14 @@ function getReportsPageRender({ userStats }) {
                             value: (userStats.callLogStats?.totalTalkTime || 0).toString(),
                             title: 'total talk time',
                             unit:  (userStats.callLogStats?.totalTalkTime || 0) <= 1 ? 'minute':'minutes',
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#a0a2a91f'
                         },
                         {
                             const: 'averageTalkTime',
                             value: (userStats.callLogStats?.averageTalkTime || 0).toString(),
                             title: 'average talk time',
                             unit: (userStats.callLogStats?.averageTalkTime || 0) <= 1 ? 'minute':'minutes',
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#a0a2a91f'
                         }
                     ]
                 },
@@ -92,13 +92,13 @@ function getReportsPageRender({ userStats }) {
                             const: 'smsMessageReceivedCount',
                             value: (userStats.smsLogStats?.smsReceivedCount || 0).toString(),
                             title: 'received sms',
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#a0a2a91f'
                         },
                         {
                             const: 'smsMessageSentCount',
                             value: (userStats.smsLogStats?.smsSentCount || 0).toString(),
                             title: 'sent sms',
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#a0a2a91f'
                         }
                     ]
                 },
@@ -115,7 +115,7 @@ function getReportsPageRender({ userStats }) {
                             trend: '(click to view)',
                             trendColor: 'success.f02',
                             title: 'unlogged calls',
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#a0a2a91f'
                         }
                     ]
                 }
