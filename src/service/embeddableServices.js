@@ -30,7 +30,7 @@ async function getServiceManifest() {
         authorizationLogo: platform?.logoUrl ?? '',
         showAuthRedDot: true,
         authorized: crmAuthed,
-        authorizedAccount: `${crmUserInfo?.name ?? ''} (Admin)`,
+        authorizedAccount: `${crmUserInfo?.name ?? ''} ${isAdmin ? '(Admin)' : ''}`,
         info: `Developed by ${manifest?.author?.name ?? 'Unknown'}`,
             
         // Enable call log sync feature
