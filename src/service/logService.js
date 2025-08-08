@@ -134,6 +134,10 @@ async function syncCallData({
     const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
     const rcAccessToken = getRcAccessToken();
     const recordingLink = dataBody?.call?.recording?.link;
+
+    // Get the cached note for this call
+    const note = await logCore.getCachedNote({ sessionId: dataBody.call.sessionId });
+
     // case: with recording link ready, definitely recorded, update with link
     if (recordingLink) {
         console.log('call recording updating...');
@@ -145,6 +149,7 @@ async function syncCallData({
                 sessionId: dataBody.call.sessionId,
                 recordingLink: dataBody.call.recording.link,
                 recordingDownloadLink: `${dataBody.call.recording.contentUri}?accessToken=${rcAccessToken}`,
+                note,
                 aiNote: dataBody.aiNote,
                 transcript: dataBody.transcript,
                 startTime: dataBody.call.startTime,
@@ -160,6 +165,7 @@ async function syncCallData({
                 logType: 'Call',
                 rcAdditionalSubmission,
                 sessionId: dataBody.call.sessionId,
+                note,
                 aiNote: dataBody.aiNote,
                 transcript: dataBody.transcript,
                 startTime: dataBody.call.startTime,
