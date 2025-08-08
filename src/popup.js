@@ -1123,7 +1123,7 @@ window.addEventListener('message', async (e) => {
                 // If not a direct number, but allow extension number logging, go ahead as well
                 if (contactPhoneNumber.startsWith('+') || allowExtensionNumberLogging) {
                   // query on 3rd party API to get the matched contact info and return
-                  const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber: contactPhoneNumber.startsWith('+'), isForceRefresh: true, isToTriggerContactMatch: false });
+                  const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber: !contactPhoneNumber.startsWith('+'), isForceRefresh: true, isToTriggerContactMatch: false });
                   if (contactMatched) {
                     if (!matchedContacts[contactPhoneNumber]) {
                       matchedContacts[contactPhoneNumber] = [];
