@@ -76,6 +76,10 @@ async function openPopupWindow() {
 }
 
 async function registerPlatform(tabUrl) {
+  const platformInfo = await chrome.storage.local.get('platform-info');
+  if (!isObjectEmpty(platformInfo)) {
+    return true;
+  }
   const url = new URL(tabUrl);
   let hostname = url.hostname;
   const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
