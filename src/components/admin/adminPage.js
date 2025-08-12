@@ -25,6 +25,10 @@ function getAdminPageRender({ platform }) {
                         {
                             const: "customAdapter",
                             title: "Custom adapter",
+                        },
+                        {
+                            const: "userMapping",
+                            title: "User mapping",
                         }
                     ]
                 }

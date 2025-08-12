@@ -5,7 +5,7 @@ import dispositionCore from './core/disposition';
 import userCore from './core/user';
 import adminCore from './core/admin';
 import authCore from './core/auth';
-import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getPlatformInfo, getManifest, getUserReportStats } from './lib/util';
+import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getPlatformInfo, getManifest, getUserReportStats, getRcContactInfo } from './lib/util';
 import { getUserInfo } from './lib/rcAPI';
 import moment from 'moment';
 import logPage from './components/logPage';
@@ -21,6 +21,7 @@ import managedSettingsPage from './components/admin/managedSettingsPage';
 import generalSettingPage from './components/admin/generalSettingPage';
 import callAndSMSLoggingSettingPage from './components/admin/managedSettings/callAndSMSLoggingSettingPage';
 import customAdapterPage from './components/admin/customAdapterPage';
+import userMappingPage from './components/admin/userMappingPage';
 import serverSideLoggingPage from './components/admin/serverSideLoggingPage';
 import contactSettingPage from './components/admin/managedSettings/contactSettingPage';
 import advancedFeaturesSettingPage from './components/admin/managedSettings/advancedFeaturesSettingPage';
@@ -1062,6 +1063,21 @@ window.addEventListener('message', async (e) => {
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${customAdapterPageRender.id}`, // page id
                   }, '*');
+                  break;
+                case 'userMapping':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const userMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
+                  const rcExtensionList = await getRcContactInfo();
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping, rcExtensionList });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: userMappingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${userMappingPageRender.id}`, // page id
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 default:
                   break;
@@ -2617,7 +2633,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     else if (request.path === '/support') {
       let isOnline = false;
       try {
-        const isServiceOnlineResponse = await axios.get(`${manifest.serverUrl}/is-alive`);
+        const isServiceOnlineResponse = await axios.get(`${manifest.serverUrl}/isAlive`);
         isOnline = isServiceOnlineResponse.status === 200;
       }
       catch (e) {

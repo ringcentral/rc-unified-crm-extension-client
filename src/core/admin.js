@@ -374,6 +374,16 @@ async function authServerSideLogging({ platform }) {
     return serverSideLoggingToken;
 }
 
+async function getUserMapping({ serverUrl }) {
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
+    const rcAccessToken = getRcAccessToken();
+    const userMappingResp = await axios.get(
+        `${serverUrl}/admin/userMapping?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`
+    );
+    return userMappingResp.data;
+}
+
 exports.getAdminSettings = getAdminSettings;
 exports.uploadAdminSettings = uploadAdminSettings;
 exports.refreshAdminSettings = refreshAdminSettings;
@@ -384,3 +394,4 @@ exports.updateServerSideDoNotLogNumbers = updateServerSideDoNotLogNumbers;
 exports.authServerSideLogging = authServerSideLogging;
 exports.getServerSideLoggingAdditionalFieldValues = getServerSideLoggingAdditionalFieldValues;
 exports.uploadServerSideLoggingAdditionalFieldValues = uploadServerSideLoggingAdditionalFieldValues;
+exports.getUserMapping = getUserMapping;
