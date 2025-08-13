@@ -21,7 +21,8 @@ import managedSettingsPage from './components/admin/managedSettingsPage';
 import generalSettingPage from './components/admin/generalSettingPage';
 import callAndSMSLoggingSettingPage from './components/admin/managedSettings/callAndSMSLoggingSettingPage';
 import customAdapterPage from './components/admin/customAdapterPage';
-import userMappingPage from './components/admin/userMappingPage';
+import userMappingPage from './components/admin/userMappingPage/userMappingPage';
+import editUserMappingPage from './components/admin/userMappingPage/editUserMappingPage';
 import serverSideLoggingPage from './components/admin/serverSideLoggingPage';
 import contactSettingPage from './components/admin/managedSettings/contactSettingPage';
 import advancedFeaturesSettingPage from './components/admin/managedSettings/advancedFeaturesSettingPage';
@@ -705,6 +706,19 @@ window.addEventListener('message', async (e) => {
               }, '*');
               // refresh multi match prompt
               switch (data.body.page.id) {
+                case 'userMappingPage':
+                  const crmUser = data.body.formData.allUserMapping.find(um => um.crmUserId === data.body.formData.userMappingList);
+                  const rcExtensions = await getRcContactInfo();
+                  const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({ crmUser, platformName, rcExtensions: [...rcExtensions, { id: 'none', name: 'None' }] });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: editUserMappingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${editUserMappingPageRender.id}`, // page id
+                  }, '*');
+                  break;
                 case 'getMultiContactPopPromptPage':
                   if (data.body.keys.some(k => k === 'search')) {
                     const searchWord = data.body.formData.search;
@@ -2085,6 +2099,42 @@ window.addEventListener('message', async (e) => {
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
+                case 'editUserMappingPage':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const userMapping = {
+                    crmUserId: data.body.button.formData.crmUserId,
+                    rcExtensionId: data.body.button.formData.rcExtensionList
+                  };
+                  if (adminSettings?.userMappingOverride) {
+                    const existingUserMapping = adminSettings.userMappingOverride.find(um => um.crmUserId === userMapping.crmUserId);
+                    if (existingUserMapping) {
+                      existingUserMapping.rcExtensionId = userMapping.rcExtensionId;
+                    }
+                    else {
+                      adminSettings.userMappingOverride.push(
+                        userMapping
+                      )
+                    }
+                  }
+                  else {
+                    adminSettings.userMappingOverride = [
+                      userMapping
+                    ]
+                  }
+                  await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
+                  const updatedUserMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
+                  const rcExtensionList = await getRcContactInfo();
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping, rcExtensionList });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: userMappingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack', // page id
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
                 case 'callAndSMSLoggingSettingPage':
                 case 'contactSettingPage':
                 case 'advancedFeaturesSettingPage':
