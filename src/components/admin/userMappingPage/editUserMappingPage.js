@@ -1,40 +1,40 @@
 const CONTENT_MARGIN_TOP = '-20px';
 const SECTION_MARGIN_TOP = '-5px';
 
-function renderEditUserMappingPage({ crmUser, platformName, rcExtensions }) {
+function renderEditUserMappingPage({ userMapping, platformName, rcExtensions }) {
     return {
         id: 'editUserMappingPage',
-        title: `Edit mapping for ${crmUser.crmUserName}`,
+        title: `Edit mapping for ${userMapping.crmUser.name}`,
         type: 'page',
         schema: {
             type: 'object',
             properties: {
                 crmUserIdTitle: {
                     type: 'string',
-                    description: 'User ID'
+                    description: 'ID'
                 },
                 crmUserId: {
                     type: 'string',
-                    const: crmUser.crmUserId,
-                    description: crmUser.crmUserId
+                    const: userMapping.crmUser.id,
+                    description: userMapping.crmUser.id
                 },
                 crmUserNameTitle: {
                     type: 'string',
-                    description: 'User name'
+                    description: 'Name'
                 },
                 crmUserName: {
                     type: 'string',
-                    const: crmUser.crmUserName,
-                    description: crmUser.crmUserName
+                    const: userMapping.crmUser.name,
+                    description: userMapping.crmUser.name
                 },
                 crmUserEmailTitle: {
                     type: 'string',
-                    description: 'User email'
+                    description: 'Email'
                 },
                 crmUserEmail: {
                     type: 'string',
-                    const: crmUser.crmUserEmail,
-                    description: crmUser.crmUserEmail
+                    const: userMapping.crmUser.email,
+                    description: userMapping.crmUser.email
                 },
                 rcExtensionList: {
                     type: 'string',
@@ -83,10 +83,10 @@ function renderEditUserMappingPage({ crmUser, platformName, rcExtensions }) {
             }
         },
         formData: {
-            crmUserId: crmUser.crmUserId,
-            crmUserName: crmUser.crmUserName,
-            crmUserEmail: crmUser.crmUserEmail,
-            rcExtensionList: rcExtensions.find(rc => rc.id === crmUser.rcExtensionId)?.id
+            crmUserId: userMapping.crmUser.id,
+            crmUserName: userMapping.crmUser.name,
+            crmUserEmail: userMapping.crmUser.email,
+            rcExtensionList: rcExtensions.find(rc => rc.id === userMapping?.rcUser?.extensionId)?.id || 'none'
         }
     }
 }

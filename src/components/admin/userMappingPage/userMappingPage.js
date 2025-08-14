@@ -1,39 +1,28 @@
-function getUserMappingPageRender({ userMapping, rcExtensionList }) {
-    const userMappingList = [];
+function getUserMappingPageRender({ userMapping, searchWord = '', filter = 'All' }) {
+    let userMappingList = [];
     for (const um of userMapping) {
-        let matchedRcUser = null;
-        if (um.rcExtensionId && um.rcExtensionId !== 'none') {
-            matchedRcUser = rcExtensionList.find(u => u.id === um.rcExtensionId);
+        if (um.rcUser?.extensionId) {
             userMappingList.push({
-                const: um.crmUserId,
-                title: um.crmUserName,
-                description: `${um.crmUserEmail}, ext: ${matchedRcUser.extensionNumber}`,
+                const: um.crmUser.id,
+                title: um.crmUser.name,
+                description: `Mapped to ${um.rcUser.email} ${um.rcUser.extensionNumber ? `, ext: ${um.rcUser.extensionNumber}` : ''}`,
                 meta: '(Click to edit)'
             })
-            continue;
-        }
-        matchedRcUser = rcExtensionList.find(u =>
-            u.email === um.crmUserEmail ||
-            u.name === um.crmUserName ||
-            (`${u.firstName} ${u.lastName}` === um.crmUserName)
-        );
-        if (matchedRcUser && um.rcExtensionId !== 'none') {
-            userMappingList.push({
-                const: um.crmUserId,
-                title: um.crmUserName,
-                description: `${um.crmUserEmail}, ext: ${matchedRcUser.extensionNumber}`,
-                meta: '(Click to edit)'
-            })
-            um.rcExtensionId = matchedRcUser.id;
         }
         else {
             userMappingList.push({
-                const: um.crmUserId,
-                title: um.crmUserName,
+                const: um.crmUser.id,
+                title: um.crmUser.name,
                 description: 'Unmatched',
                 meta: '(Click to edit)'
             })
         }
+    }
+    if (searchWord) {
+        userMappingList = userMappingList.filter(um => um.title.toLowerCase().includes(searchWord.toLowerCase()) || um.description.toLowerCase().includes(searchWord.toLowerCase()));
+    }
+    if (filter !== 'All') {
+        userMappingList = userMappingList.filter(um => um.description.startsWith(filter));
     }
     return {
         id: 'userMappingPage',
@@ -42,6 +31,19 @@ function getUserMappingPageRender({ userMapping, rcExtensionList }) {
         schema: {
             type: 'object',
             properties: {
+                userSearch: {
+                    type: 'object',
+                    properties: {
+                        search: {
+                            type: 'string',
+                            title: 'Search'
+                        },
+                        filter: {
+                            type: 'string',
+                            title: 'Filter'
+                        }
+                    }
+                },
                 userMappingList: {
                     type: 'string',
                     title: 'User mapping',
@@ -50,12 +52,25 @@ function getUserMappingPageRender({ userMapping, rcExtensionList }) {
             }
         },
         uiSchema: {
+            userSearch: {
+                "ui:field": "search",
+                "ui:placeholder": "Search with filters...",
+                "ui:filters": [
+                    "All",
+                    "Mapped",
+                    "Unmatched"
+                ]
+            },
             userMappingList: {
                 "ui:field": "list",
             }
         },
         formData: {
-            allUserMapping: userMapping
+            allUserMapping: userMapping,
+            userSearch: {
+                search: searchWord,
+                filter: filter
+            }
         }
     }
 }

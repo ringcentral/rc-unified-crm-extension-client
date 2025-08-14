@@ -707,17 +707,36 @@ window.addEventListener('message', async (e) => {
               // refresh multi match prompt
               switch (data.body.page.id) {
                 case 'userMappingPage':
-                  const crmUser = data.body.formData.allUserMapping.find(um => um.crmUserId === data.body.formData.userMappingList);
-                  const rcExtensions = await getRcContactInfo();
-                  const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({ crmUser, platformName, rcExtensions: [...rcExtensions, { id: 'none', name: 'None' }] });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-register-customized-page',
-                    page: editUserMappingPageRender
-                  });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: `/customized/${editUserMappingPageRender.id}`, // page id
-                  }, '*');
+                  // Case: user click on item in userMappingList
+                  if (data.body.formData.userMappingList) {
+                    const userMapping = data.body.formData.allUserMapping.find(um => um.crmUser.id === data.body.formData.userMappingList);
+                    const rcExtensions = await getRcContactInfo();
+                    const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
+                      userMapping,
+                      platformName,
+                      rcExtensions: [...rcExtensions, { id: 'none', name: 'None' }]
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: editUserMappingPageRender
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: `/customized/${editUserMappingPageRender.id}`, // page id
+                    }, '*');
+                  }
+                  // Case: user search in userMappingList
+                  else if (data.body.formData.userSearch) {
+                    const userMappingPageRender = userMappingPage.getUserMappingPageRender({
+                      userMapping: data.body.formData.allUserMapping,
+                      searchWord: data.body.formData.userSearch.search,
+                      filter: data.body.formData.userSearch.filter
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: userMappingPageRender
+                    });
+                  }
                   break;
                 case 'getMultiContactPopPromptPage':
                   if (data.body.keys.some(k => k === 'search')) {
@@ -1081,8 +1100,7 @@ window.addEventListener('message', async (e) => {
                 case 'userMapping':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const userMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
-                  const rcExtensionList = await getRcContactInfo();
-                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping, rcExtensionList });
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: userMappingPageRender
@@ -2102,29 +2120,28 @@ window.addEventListener('message', async (e) => {
                 case 'editUserMappingPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const userMapping = {
-                    crmUserId: data.body.button.formData.crmUserId,
+                    crmUserId: data.body.button.formData.crmUserId.toString(),
                     rcExtensionId: data.body.button.formData.rcExtensionList
                   };
-                  if (adminSettings?.userMappingOverride) {
-                    const existingUserMapping = adminSettings.userMappingOverride.find(um => um.crmUserId === userMapping.crmUserId);
+                  if (adminSettings?.userMappings) {
+                    const existingUserMapping = adminSettings.userMappings.find(um => um.crmUserId == userMapping.crmUserId);
                     if (existingUserMapping) {
                       existingUserMapping.rcExtensionId = userMapping.rcExtensionId;
                     }
                     else {
-                      adminSettings.userMappingOverride.push(
+                      adminSettings.userMappings.push(
                         userMapping
                       )
                     }
                   }
                   else {
-                    adminSettings.userMappingOverride = [
+                    adminSettings.userMappings = [
                       userMapping
                     ]
                   }
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
                   const updatedUserMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
-                  const rcExtensionList = await getRcContactInfo();
-                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping, rcExtensionList });
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: userMappingPageRender

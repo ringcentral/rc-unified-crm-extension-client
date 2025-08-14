@@ -2,7 +2,7 @@ import axios from 'axios';
 import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import { parsePhoneNumber } from 'awesome-phonenumber';
-import { getRcAccessToken, getPlatformInfo, getManifest } from '../lib/util';
+import { getRcAccessToken, getPlatformInfo, getManifest, getRcContactInfo } from '../lib/util';
 
 async function getAdminSettings({ serverUrl }) {
     try {
@@ -378,8 +378,12 @@ async function getUserMapping({ serverUrl }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
     const rcAccessToken = getRcAccessToken();
-    const userMappingResp = await axios.get(
-        `${serverUrl}/admin/userMapping?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`
+    const rcExtensionList = await getRcContactInfo();
+    const userMappingResp = await axios.post(
+        `${serverUrl}/admin/userMapping?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`,
+        {
+            rcExtensionList
+        }
     );
     return userMappingResp.data;
 }
