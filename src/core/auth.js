@@ -108,28 +108,16 @@ async function checkAuth() {
     // get crm user info
     const { crmUserInfo } = (await chrome.storage.local.get({ crmUserInfo: null }));
     const { isAdmin } = (await chrome.storage.local.get({ isAdmin: null }));
-    setAuth(!!rcUnifiedCrmExtJwt, crmUserInfo?.name);
-    setAccountName(crmUserInfo?.name, isAdmin);
+    setAuth(!!rcUnifiedCrmExtJwt, crmUserInfo?.name, isAdmin);
     return !!rcUnifiedCrmExtJwt;
 }
 
-function setAuth(auth, accountName) {
+function setAuth(auth, accountName, isAdmin = false) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-update-authorization-status',
         authorized: auth,
-        authorizedAccount: accountName ?? ''
+        authorizedAccount: accountName ? `${accountName} ${isAdmin ? '(Admin)' : ''}` : ''
     });
-}
-
-function setAccountName(accountName, isAdmin) {
-    if (isAdmin) {
-        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-            type: 'rc-adapter-update-authorization-status',
-            authorized: true,
-            authorizedAccount: `${accountName} (Admin)`
-        });
-    }
-
 }
 
 async function getLicenseStatus({ serverUrl }) {
@@ -160,6 +148,5 @@ exports.onAuthCallback = onAuthCallback;
 exports.unAuthorize = unAuthorize;
 exports.checkAuth = checkAuth;
 exports.setAuth = setAuth;
-exports.setAccountName = setAccountName;
 exports.getLicenseStatus = getLicenseStatus;
 exports.refreshLicenseStatus = refreshLicenseStatus;
