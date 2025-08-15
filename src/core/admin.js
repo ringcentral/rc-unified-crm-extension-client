@@ -31,6 +31,7 @@ async function refreshAdminSettings() {
     const manifest = await getManifest();
     const platformInfo = await getPlatformInfo();
     const platform = manifest.platforms[platformInfo.platformName];
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const rcAccessToken = getRcAccessToken();
     let adminSettings;
     // Admin tab render
@@ -52,7 +53,7 @@ async function refreshAdminSettings() {
 
     // Set user setting display name
     const { crmUserInfo } = await chrome.storage.local.get({ crmUserInfo: null });
-    authCore.setAccountName(crmUserInfo?.name, !!storedAdminSettings);
+    authCore.setAuth(!!rcUnifiedCrmExtJwt, crmUserInfo?.name, !!storedAdminSettings);
 
     return { adminSettings }
 }
