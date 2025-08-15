@@ -2119,22 +2119,31 @@ window.addEventListener('message', async (e) => {
               switch (data.body.button.id) {
                 case 'editUserMappingPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const { crmUserId, rcExtensionList } = data.body.button.formData;
                   const userMapping = {
-                    crmUserId: data.body.button.formData.crmUserId.toString(),
-                    rcExtensionId: data.body.button.formData.rcExtensionList
+                    crmUserId: crmUserId.toString(),
+                    rcExtensionId: rcExtensionList
                   };
                   if (adminSettings?.userMappings) {
                     const existingUserMapping = adminSettings.userMappings.find(um => um.crmUserId == userMapping.crmUserId);
                     if (existingUserMapping) {
-                      existingUserMapping.rcExtensionId = userMapping.rcExtensionId;
+                      // Case: delete
+                      if (userMapping.rcExtensionId === 'none') {
+                        adminSettings.userMappings = adminSettings.userMappings.filter(um => um.crmUserId !== existingUserMapping.crmUserId);
+                      }
+                      // Case: update
+                      else {
+                        existingUserMapping.rcExtensionId = userMapping.rcExtensionId;
+                      }
                     }
+                    // case: create
                     else {
                       adminSettings.userMappings.push(
                         userMapping
                       )
                     }
                   }
-                  else {
+                  else if (userMapping.rcExtensionId !== 'none') {
                     adminSettings.userMappings = [
                       userMapping
                     ]

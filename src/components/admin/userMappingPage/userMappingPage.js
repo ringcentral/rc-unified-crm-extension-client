@@ -5,7 +5,7 @@ function getUserMappingPageRender({ userMapping, searchWord = '', filter = 'All'
             userMappingList.push({
                 const: um.crmUser.id,
                 title: um.crmUser.name,
-                description: `Mapped to ${um.rcUser.email} ${um.rcUser.extensionNumber ? `, ext: ${um.rcUser.extensionNumber}` : ''}`,
+                description: `Mapped to ${um.rcUser.email || um.rcUser.name} ${um.rcUser.extensionNumber ? `, ext: ${um.rcUser.extensionNumber}` : ''}`,
                 meta: '(Click to edit)'
             })
         }
