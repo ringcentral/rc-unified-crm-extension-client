@@ -706,6 +706,20 @@ window.addEventListener('message', async (e) => {
               }, '*');
               // refresh multi match prompt
               switch (data.body.page.id) {
+                case 'editUserMappingPage':
+                  if (data.body.formData.searchWord) {
+                    const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
+                      userMapping: data.body.formData.userMapping,
+                      platformName,
+                      rcExtensions: data.body.formData.rcExtensions,
+                      searchWord: data.body.formData.searchWord
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: editUserMappingPageRender
+                    });
+                  }
+                  break;
                 case 'userMappingPage':
                   // Case: user click on item in userMappingList
                   if (data.body.formData.userMappingList) {

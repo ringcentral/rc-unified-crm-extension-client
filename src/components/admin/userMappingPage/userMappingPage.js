@@ -13,7 +13,7 @@ function getUserMappingPageRender({ userMapping, searchWord = '', filter = 'All'
             userMappingList.push({
                 const: um.crmUser.id,
                 title: um.crmUser.name,
-                description: 'Unmatched',
+                description: 'Unmapped',
                 meta: '(Click to edit)'
             })
         }
@@ -57,12 +57,12 @@ function getUserMappingPageRender({ userMapping, searchWord = '', filter = 'All'
                 "ui:placeholder": "Search with filters...",
                 "ui:filters": [
                     "All",
-                    "Mapped",
-                    "Unmatched"
+                    "Unmapped",
+                    "Mapped"
                 ]
             },
             userMappingList: {
-                "ui:field": "list",
+                "ui:field": "list"
             }
         },
         formData: {
