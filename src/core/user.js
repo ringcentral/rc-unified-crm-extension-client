@@ -121,7 +121,8 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         fax: getShowFaxTabSetting(userSettings).value,
         voicemail: getShowVoicemailTabSetting(userSettings).value,
         recordings: getShowRecordingsTabSetting(userSettings).value,
-        contacts: getShowContactsTabSetting(userSettings).value
+        contacts: getShowContactsTabSetting(userSettings).value,
+        calldown: getShowCalldownTabSetting(userSettings).value
     }, '*');
     const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false);
     const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
@@ -366,6 +367,14 @@ function getShowContactsTabSetting(userSettings) {
         value: userSettings?.showContactsTab?.value ?? true,
         readOnly: userSettings?.showContactsTab?.customizable === undefined ? false : !userSettings?.showContactsTab?.customizable,
         readOnlyReason: !userSettings?.showContactsTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getShowCalldownTabSetting(userSettings) {
+    return {
+        value: userSettings?.showCalldownTab?.value ?? true,
+        readOnly: userSettings?.showCalldownTab?.customizable === undefined ? false : !userSettings?.showCalldownTab?.customizable,
+        readOnlyReason: !userSettings?.showCalldownTab?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
