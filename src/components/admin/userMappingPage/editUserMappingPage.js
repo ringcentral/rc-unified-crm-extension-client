@@ -1,7 +1,7 @@
 const CONTENT_MARGIN_TOP = '-20px';
 const SECTION_MARGIN_TOP = '-5px';
 
-function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, searchWord = '' }) {
+function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, selectedRcExtensionId, searchWord = '' }) {
     const rcExtensionsToRender = searchWord ? rcExtensions.filter(rc =>
         rc.name && rc.name.toLowerCase().includes(searchWord.toLowerCase()) ||
         rc.firstName && rc.lastName && `${rc.firstName} ${rc.lastName}`.toLowerCase().includes(searchWord.toLowerCase()) ||
@@ -125,7 +125,7 @@ function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, se
             crmUserId: userMapping.crmUser.id,
             crmUserName: userMapping.crmUser.name,
             crmUserEmail: userMapping.crmUser.email,
-            rcExtensionList: rcExtensions.find(rc => rc.id === userMapping?.rcUser?.extensionId)?.id || 'none'
+            rcExtensionList: selectedRcExtensionId || rcExtensions.find(rc => rc.id === userMapping?.rcUser?.extensionId)?.id || 'none'
         }
     }
 }

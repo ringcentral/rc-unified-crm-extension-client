@@ -712,6 +712,7 @@ window.addEventListener('message', async (e) => {
                       userMapping: data.body.formData.userMapping,
                       platformName,
                       rcExtensions: data.body.formData.rcExtensions,
+                      selectedRcExtensionId: data.body.formData.rcExtensionList,
                       searchWord: data.body.formData.searchWord
                     });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
