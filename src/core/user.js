@@ -73,7 +73,8 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         fax: getShowFaxTabSetting(userSettings).value,
         voicemail: getShowVoicemailTabSetting(userSettings).value,
         recordings: getShowRecordingsTabSetting(userSettings).value,
-        contacts: getShowContactsTabSetting(userSettings).value
+        contacts: getShowContactsTabSetting(userSettings).value,
+        calldown: getShowCalldownTabSetting(userSettings).value
     }, '*');
     const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false);
     const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
@@ -321,6 +322,14 @@ function getShowContactsTabSetting(userSettings) {
     }
 }
 
+function getShowCalldownTabSetting(userSettings) {
+    return {
+        value: userSettings?.showCalldownTab?.value ?? true,
+        readOnly: userSettings?.showCalldownTab?.customizable === undefined ? false : !userSettings?.showCalldownTab?.customizable,
+        readOnlyReason: !userSettings?.showCalldownTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getShowUserReportTabSetting(userSettings) {
     return {
         value: userSettings?.showUserReportTab?.value ?? true,
@@ -500,7 +509,7 @@ exports.getShowTextTabSetting = getShowTextTabSetting;
 exports.getShowFaxTabSetting = getShowFaxTabSetting;
 exports.getShowVoicemailTabSetting = getShowVoicemailTabSetting;
 exports.getShowRecordingsTabSetting = getShowRecordingsTabSetting;
-exports.getShowContactsTabSetting = getShowContactsTabSetting;  
+exports.getShowContactsTabSetting = getShowContactsTabSetting;
 exports.getShowUserReportTabSetting = getShowUserReportTabSetting;
 exports.getClickToDialEmbedMode = getClickToDialEmbedMode;
 exports.getClickToDialUrls = getClickToDialUrls;

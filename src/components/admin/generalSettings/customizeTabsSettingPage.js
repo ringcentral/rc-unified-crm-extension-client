@@ -105,9 +105,23 @@ function getCustomizeTabsSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
-                showUserReportTab:{
+                showUserReportTab: {
                     type: 'object',
                     title: 'Show user report tab',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
+                showCalldownTab: {
+                    type: 'object',
+                    title: 'Show Call-down tab',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -142,8 +156,11 @@ function getCustomizeTabsSettingPageRender({ adminUserSettings }) {
             },
             showContactsTab: {
                 "ui:collapsible": true,
-            },  
+            },
             showUserReportTab: {
+                "ui:collapsible": true,
+            },
+            showCalldownTab: {
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
@@ -190,6 +207,11 @@ function getCustomizeTabsSettingPageRender({ adminUserSettings }) {
             {
                 customizable: adminUserSettings?.showUserReportTab?.customizable ?? true,
                 value: adminUserSettings?.showUserReportTab?.value ?? true
+            },
+            showCalldownTab:
+            {
+                customizable: adminUserSettings?.showCalldownTab?.customizable ?? true,
+                value: adminUserSettings?.showCalldownTab?.value ?? true
             }
         }
     }
