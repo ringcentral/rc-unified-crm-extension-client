@@ -16,6 +16,7 @@ import supportPage from './components/supportPage';
 import aboutPage from './components/aboutPage';
 import developerSettingsPage from './components/developerSettingsPage';
 import reportPage from './components/reportPage';
+import calldownPage from './components/calldownPage';
 import adminPage from './components/admin/adminPage';
 import managedSettingsPage from './components/admin/managedSettingsPage';
 import generalSettingPage from './components/admin/generalSettingPage';
@@ -250,6 +251,22 @@ window.addEventListener('message', async (e) => {
                 type: 'rc-adapter-register-customized-page',
                 page: reportPageRender,
               }, '*');
+
+              // Call-down tab (register only if enabled by admin)
+              try {
+                const stored = await chrome.storage.local.get({ userSettings: {} });
+                const enableCalldown = userCore?.getShowCalldownTabSetting
+                  ? userCore.getShowCalldownTabSetting(stored.userSettings).value
+                  : true;
+                if (enableCalldown) {
+                  const calldownPageRender = calldownPage.getCalldownPageRender();
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: calldownPageRender,
+                  }, '*');
+                }
+              }
+              catch (e) { /* ignore */ }
 
               // Set every 5min, check if there's any pending recording link
               setInterval(async function () {
@@ -702,7 +719,7 @@ window.addEventListener('message', async (e) => {
                 responseId: data.requestId,
                 response: { data: 'ok' },
               }, '*');
-              // refresh multi match prompt
+              // refresh multi match prompt / customized pages
               switch (data.body.page.id) {
                 case 'getMultiContactPopPromptPage':
                   if (data.body.keys.some(k => k === 'search')) {
@@ -722,6 +739,20 @@ window.addEventListener('message', async (e) => {
                       callAction: 'toggleRingingDialog',
                     }, '*');
                   }
+                  break;
+                case 'calldownPage':
+                  // When user changes filters, re-register the page with updated form values
+                  const refreshed = calldownPage.getCalldownPageRender();
+                  refreshed.formData.filterName = data.body.formData.filterName ?? '';
+                  refreshed.formData.filterStatus = data.body.formData.filterStatus ?? 'all';
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: refreshed
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customizedTabs/${refreshed.id}`,
+                  }, '*');
                   break;
                 case 'googleSheetsPage':
                   const updatedGoogleSheetsPage = googleSheetsPage.getUpdatedGoogleSheetsPage({ page: data.body.page, formData: data.body.formData, manifest, userSettings });
