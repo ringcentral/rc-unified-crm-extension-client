@@ -63,8 +63,8 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
             }
         }
     }
-    await chrome.storage.local.set({ userSettings });
     userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+    await chrome.storage.local.set({ userSettings });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-update-features-flags',
         chat: getShowChatTabSetting(userSettings).value,
@@ -76,8 +76,8 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         contacts: getShowContactsTabSetting(userSettings).value
     }, '*');
     const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false);
-    const isServerSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
-    RCAdapter.setAutoLog({ call: (userSettings.autoLogCall?.value && !isServerSideLoggingEnabled) ?? false, message: autoLogMessagesGroupTrigger })
+    const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
+    RCAdapter.setAutoLog({ call: (userSettings.autoLogCall?.value && !isServerSideLoggingEnabledForEndUsers) ?? false, message: autoLogMessagesGroupTrigger })
     if (!isAvoidForceChange) {
         const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
         const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);

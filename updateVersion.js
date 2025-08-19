@@ -12,6 +12,10 @@ const FILES_TO_UPDATE = [
     description: 'Package manifest'
   },
   {
+    path: 'package-lock.json',
+    description: 'Package lock'
+  },
+  {
     path: 'public/manifest.json',
     description: 'Public manifest'
   },
