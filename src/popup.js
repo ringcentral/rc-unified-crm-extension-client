@@ -295,7 +295,8 @@ window.addEventListener('message', async (e) => {
                   ? userCore.getShowCalldownTabSetting(stored.userSettings).value
                   : true;
                 if (enableCalldown) {
-                  const calldownPageRender = calldownPage.getCalldownPageRender();
+                  const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                  const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All' });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: calldownPageRender,
@@ -800,17 +801,21 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
                 case 'calldownPage':
-                  // When user changes filters, re-register the page with updated form values
-                  const refreshed = calldownPage.getCalldownPageRender();
-                  refreshed.formData.filterName = data.body.formData.filterName ?? '';
-                  refreshed.formData.filterStatus = data.body.formData.filterStatus ?? 'all';
+                  // When user changes filters, query and re-register the page with updated rows
+                  const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                  const updated = await calldownPage.getCalldownPageWithRecords({
+                    manifest,
+                    jwtToken: rcUnifiedCrmExtJwt,
+                    filterName: data.body.formData.filterName ?? '',
+                    filterStatus: data.body.formData.filterStatus ?? 'All'
+                  });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
-                    page: refreshed
+                    page: updated
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
-                    path: `/customizedTabs/${refreshed.id}`,
+                    path: `/customizedTabs/${updated.id}`,
                   }, '*');
                   break;
                 case 'googleSheetsPage':
