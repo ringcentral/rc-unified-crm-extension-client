@@ -1,4 +1,5 @@
 import callIcon from '../images/outboundCallIcon.png';
+import axios from 'axios';
 
 function getCalldownPageRender() {
     const page = {
@@ -27,11 +28,60 @@ function getCalldownPageRender() {
         },
         formData: {
             filterName: '',
-            filterStatus: 'all'
+            filterStatus: 'All'
         }
     };
     return page;
 }
 
 exports.getCalldownPageRender = getCalldownPageRender;
+
+async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '', filterStatus = 'All' }) {
+    const page = getCalldownPageRender();
+    page.formData.filterName = filterName;
+    page.formData.filterStatus = filterStatus;
+
+    try {
+        const { data } = await axios.get(`${manifest.serverUrl}/calldown/list`, {
+            params: {
+                jwtToken,
+                status: filterStatus
+            }
+        });
+        const items = Array.isArray(data?.items) ? data.items : [];
+
+        // client-side name filter
+        const normalizedSearch = (filterName || '').trim().toLowerCase();
+        const filtered = normalizedSearch === ''
+            ? items
+            : items.filter(i => (i.contactName || i.phoneNumber || '').toLowerCase().includes(normalizedSearch));
+
+        const today = new Date();
+        const todayDateString = today.toDateString();
+
+        page.schema.properties.records.oneOf = filtered.map(i => {
+            const displayName = (i.contactName && i.contactName.trim() !== '') ? i.contactName : i.phoneNumber;
+            const dateSource = i.lastCallAt || i.scheduledAt;
+            const d = dateSource ? new Date(dateSource) : null;
+            const meta = d
+                ? (d.toDateString() === todayDateString
+                    ? `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
+                    : d.toLocaleDateString())
+                : '';
+            return {
+                const: i.id,
+                title: displayName,
+                description: i.phoneNumber,
+                meta
+            };
+        });
+    }
+    catch (e) {
+        // leave list empty on error
+    }
+
+    return page;
+}
+
+exports.getCalldownPageWithRecords = getCalldownPageWithRecords;
 
