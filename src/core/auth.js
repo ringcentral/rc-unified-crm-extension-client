@@ -96,6 +96,8 @@ async function unAuthorize({ serverUrl, platformName, rcUnifiedCrmExtJwt }) {
     catch (e) {
         console.log(e);
     }
+
+    await chrome.storage.local.remove('platform-info');
     await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
     await chrome.storage.local.remove('serverSideLoggingToken');
     await chrome.storage.local.remove('isAdmin');
