@@ -42,6 +42,16 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             note: {
                 title: 'Note',
                 type: 'string'
+            },
+            scheduleCallback: {
+                title: 'Schedule callback',
+                type: 'boolean'
+            },
+            callbackDateTime: {
+                title: 'Callback time',
+                type: 'string',
+                format: 'date-time',
+                minimum: new Date().toISOString()
             }
         }
         callUISchemas = {
@@ -51,11 +61,19 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             note: {
                 "ui:placeholder": 'Enter note...',
                 "ui:widget": "textarea",
+            },
+            callbackDateTime: {
+                "ui:widget": "datetime"
+            },
+            submitButtonOptions: {
+                "ui:disabled": false
             }
         }
         callFormData = {
             activityTitle: (!!logInfo?.subject & logInfo.subject !== '') ? logInfo.subject : defaultActivityTitle,
             note: logInfo?.note ?? '',
+            scheduleCallback: false,
+            callbackDateTime: ''
         }
     }
     let page = {};
@@ -289,6 +307,10 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     ...additionalFieldsValue
                 }
             }
+            // Hide callbackDateTime when scheduleCallback is false
+            if (!page.formData.scheduleCallback) {
+                page.uiSchema.callbackDateTime = { "ui:widget": "hidden" };
+            }
             break;
         case 'editLog':
             page = {
@@ -314,6 +336,16 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                             title: 'Note',
                             type: 'string'
                         },
+                        scheduleCallback: {
+                            title: 'Schedule callback',
+                            type: 'boolean'
+                        },
+                        callbackDateTime: {
+                            title: 'Callback time',
+                            type: 'string',
+                            format: 'date-time',
+                            minimum: new Date().toISOString()
+                        },
                         ...additionalFields
                     }
                 },
@@ -324,6 +356,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     note: {
                         "ui:placeholder": 'Enter note...',
                         "ui:widget": "textarea",
+                    },
+                    callbackDateTime: {
+                        "ui:widget": "datetime"
                     },
                     submitButtonOptions: {
                         submitText: 'Update',
@@ -337,6 +372,8 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     triggerType,
                     note: logInfo?.note ?? '',
                     contactPhoneNumber,
+                    scheduleCallback: false,
+                    callbackDateTime: '',
                     ...additionalFieldsValue
                 }
             }
@@ -352,6 +389,19 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
     page.formData = updateData.formData;
     const contact = page.schema.properties.contact.oneOf.find(c => c.const === page.formData.contact);
     switch (updatedFieldKey) {
+        case 'scheduleCallback':
+            if (page.formData.scheduleCallback) {
+                // show and set minimum to now
+                page.uiSchema.callbackDateTime = { "ui:widget": "datetime" };
+                page.schema.properties.callbackDateTime = {
+                    ...(page.schema.properties.callbackDateTime || { title: 'Callback time', type: 'string', format: 'date-time' }),
+                    minimum: new Date().toISOString()
+                };
+            } else {
+                page.uiSchema.callbackDateTime = { "ui:widget": "hidden" };
+                page.formData.callbackDateTime = '';
+            }
+            break;
         case 'contact':
             // New contact fields
             if (contact.isNewContact) {
@@ -488,6 +538,10 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                 ...page.uiSchema,
                 ...addiitionalWarningUISchemas
             }
+            // Hide callbackDateTime when scheduleCallback is false
+            if (!page.formData.scheduleCallback) {
+                page.uiSchema.callbackDateTime = { "ui:widget": "hidden" };
+            }
             break;
         case 'newContactType':
             const contactTypeDependentFields = manifest.platforms[platformName].page?.newContact?.additionalFields?.filter(f => f.contactTypeDependent);
@@ -516,17 +570,17 @@ function getUnloggedCallPageRender({ unloggedCalls }) {
     const logsList = []
     const today = new Date();
     const todayDateString = today.toDateString();
-    
+
     for (const c of unloggedCalls) {
         const { title, description, type } = logCore.getConflictContentFromUnresolvedLog(c);
         const callDate = new Date(c.startTime);
         const callDateString = callDate.toDateString();
         const duration = formatDuration(c.duration);
         // If same date as today, show only time (HH:mm), otherwise show full date
-        const meta = callDateString === todayDateString 
+        const meta = callDateString === todayDateString
             ? `${callDate.getHours().toString().padStart(2, '0')}:${callDate.getMinutes().toString().padStart(2, '0')}`
             : callDate.toLocaleDateString();
-            
+
         logsList.push({
             const: c.sessionId,
             title,
