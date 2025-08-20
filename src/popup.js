@@ -1588,6 +1588,23 @@ window.addEventListener('message', async (e) => {
                           additionalSubmission,
                           returnToHistoryPage: !!data.body.redirect
                         });
+                      // Optional: schedule callback into Call-down after successful log creation
+                      try {
+                        if (data.body.formData.scheduleCallback && data.body.formData.callbackDateTime) {
+                          const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                          const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
+                          const rcAccountId = rcUserInfo?.rcAccountId ?? '';
+                          const schedulePayload = {
+                            contactId: newContactInfo?.id ?? data.body.formData.contact,
+                            contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
+                            contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
+                            phoneNumber: contactPhoneNumber,
+                            scheduledAt: data.body.formData.callbackDateTime,
+                            note: data.body.formData.note ?? ''
+                          };
+                          await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, schedulePayload);
+                        }
+                      } catch (e) { /* ignore scheduling errors to not block logging */ }
                       if (!platform.disableDisposition && !isObjectEmpty(additionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                         await dispositionCore.upsertDisposition({
                           serverUrl: manifest.serverUrl,
