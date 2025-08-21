@@ -388,10 +388,38 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                     ...(page.schema.properties.callbackDateTime || { title: 'Callback time', type: 'string', format: 'date-time' }),
                     minimum: new Date().toISOString()
                 };
+                // mark callback time as required so Save disables until provided
+                if (!Array.isArray(page.schema.required)) {
+                    page.schema.required = [];
+                }
+                if (!page.schema.required.includes('callbackDateTime')) {
+                    page.schema.required.push('callbackDateTime');
+                }
+                // disable Save until a callback time is provided
+                page.uiSchema.submitButtonOptions = {
+                    ...page.uiSchema.submitButtonOptions,
+                    "ui:disabled": !page.formData.callbackDateTime
+                };
             } else {
                 page.uiSchema.callbackDateTime = { "ui:widget": "hidden" };
                 page.formData.callbackDateTime = '';
+                // remove required flag when scheduling is off
+                if (Array.isArray(page.schema.required)) {
+                    page.schema.required = page.schema.required.filter(r => r !== 'callbackDateTime');
+                }
+                // enable Save when scheduling is off
+                page.uiSchema.submitButtonOptions = {
+                    ...page.uiSchema.submitButtonOptions,
+                    "ui:disabled": false
+                };
             }
+            break;
+        case 'callbackDateTime':
+            // if scheduling is enabled, enable Save only when time is set
+            page.uiSchema.submitButtonOptions = {
+                ...page.uiSchema.submitButtonOptions,
+                "ui:disabled": (page.formData.scheduleCallback === true) && !page.formData.callbackDateTime
+            };
             break;
         case 'contact':
             // New contact fields
