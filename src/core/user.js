@@ -337,6 +337,85 @@ function getNotificationLevelSetting(userSettings) {
     }
 }
 
+function getAddCallLogNoteSetting(userSettings) {
+    return {
+        value: userSettings?.addCallLogNote?.value ?? true,
+        readOnly: userSettings?.addCallLogNote?.customizable === undefined ? false : !userSettings?.addCallLogNote?.customizable,
+        readOnlyReason: !userSettings?.addCallLogNote?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAddCallSessionIdSetting(userSettings) {
+    return {
+        value: userSettings?.addCallSessionId?.value ?? false,
+        readOnly: userSettings?.addCallSessionId?.customizable === undefined ? false : !userSettings?.addCallSessionId?.customizable,
+        readOnlyReason: !userSettings?.addCallSessionId?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAddCallLogSubjectSetting(userSettings) {
+    return {
+        value: userSettings?.addCallLogSubject?.value ?? true,
+        readOnly: userSettings?.addCallLogSubject?.customizable === undefined ? false : !userSettings?.addCallLogSubject?.customizable,
+        readOnlyReason: !userSettings?.addCallLogSubject?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAddCallLogContactNumberSetting(userSettings) {
+    return {
+        value: userSettings?.addCallLogContactNumber?.value ?? true,
+        readOnly: userSettings?.addCallLogContactNumber?.customizable === undefined ? false : !userSettings?.addCallLogContactNumber?.customizable,
+        readOnlyReason: !userSettings?.addCallLogContactNumber?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAddCallLogDateTimeSetting(userSettings) {
+    return {
+        value: userSettings?.addCallLogDateTime?.value ?? true,
+        readOnly: userSettings?.addCallLogDateTime?.customizable === undefined ? false : !userSettings?.addCallLogDateTime?.customizable,
+        readOnlyReason: !userSettings?.addCallLogDateTime?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAddCallLogDurationSetting(userSettings) {
+    return {
+        value: userSettings?.addCallLogDuration?.value ?? true,
+        readOnly: userSettings?.addCallLogDuration?.customizable === undefined ? false : !userSettings?.addCallLogDuration?.customizable,
+        readOnlyReason: !userSettings?.addCallLogDuration?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAddCallLogResultSetting(userSettings) {
+    return {
+        value: userSettings?.addCallLogResult?.value ?? true,
+        readOnly: userSettings?.addCallLogResult?.customizable === undefined ? false : !userSettings?.addCallLogResult?.customizable,
+        readOnlyReason: !userSettings?.addCallLogResult?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAddCallLogRecordingSetting(userSettings) {
+    return {
+        value: userSettings?.addCallLogRecording?.value ?? true,
+        readOnly: userSettings?.addCallLogRecording?.customizable === undefined ? false : !userSettings?.addCallLogRecording?.customizable,
+        readOnlyReason: !userSettings?.addCallLogRecording?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAddCallLogAiNoteSetting(userSettings) {
+    return {
+        value: userSettings?.addCallLogAiNote?.value ?? true,
+        readOnly: userSettings?.addCallLogAiNote?.customizable === undefined ? false : !userSettings?.addCallLogAiNote?.customizable,
+        readOnlyReason: !userSettings?.addCallLogAiNote?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+function getAddCallLogTranscriptSetting(userSettings) {
+    return {
+        value: userSettings?.addCallLogTranscript?.value ?? true,
+        readOnly: userSettings?.addCallLogTranscript?.customizable === undefined ? false : !userSettings?.addCallLogTranscript?.customizable,
+        readOnlyReason: !userSettings?.addCallLogTranscript?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getCustomSetting(userSettings, id, defaultValue) {
     if (userSettings === undefined) {
         return {
@@ -385,4 +464,16 @@ exports.getShowContactsTabSetting = getShowContactsTabSetting;
 exports.getClickToDialEmbedMode = getClickToDialEmbedMode;
 exports.getClickToDialUrls = getClickToDialUrls;
 exports.getNotificationLevelSetting = getNotificationLevelSetting;
+
+exports.getAddCallLogNoteSetting = getAddCallLogNoteSetting;
+exports.getAddCallSessionIdSetting = getAddCallSessionIdSetting;
+exports.getAddCallLogSubjectSetting = getAddCallLogSubjectSetting;
+exports.getAddCallLogContactNumberSetting = getAddCallLogContactNumberSetting;
+exports.getAddCallLogDateTimeSetting = getAddCallLogDateTimeSetting;
+exports.getAddCallLogDurationSetting = getAddCallLogDurationSetting;
+exports.getAddCallLogResultSetting = getAddCallLogResultSetting;
+exports.getAddCallLogRecordingSetting = getAddCallLogRecordingSetting;
+exports.getAddCallLogAiNoteSetting = getAddCallLogAiNoteSetting;
+exports.getAddCallLogTranscriptSetting = getAddCallLogTranscriptSetting;
+
 exports.getCustomSetting = getCustomSetting;
