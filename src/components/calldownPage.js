@@ -72,9 +72,22 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                 const: i.id,
                 title: displayName,
                 description: i.phoneNumber,
-                meta
+                meta,
+                additionalInfo: {
+                    contactId: i.contactId,
+                    contactType: i.contactType
+                }
             };
         });
+        // pill: number of calls scheduled today
+        const todaysCount = items.filter(i => {
+            if (!i.scheduledAt) return false;
+            const d = new Date(i.scheduledAt);
+            return d.toDateString() === todayDateString;
+        }).length;
+        page.unreadCount = todaysCount;
+        // cache current list for row click handling (id -> phoneNumber lookup)
+        await chrome.storage.local.set({ calldownListCache: filtered });
     }
     catch (e) {
         // leave list empty on error
