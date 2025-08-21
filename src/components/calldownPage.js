@@ -23,7 +23,7 @@ function getCalldownPageRender() {
             }
         },
         uiSchema: {
-            filterName: { 'ui:placeholder': 'Search contacts by name', 'ui:label': false },
+            filterName: { 'ui:placeholder': 'Search contacts by name' },
             records: { 'ui:field': 'list', 'ui:showIconAsAvatar': false }
         },
         formData: {
@@ -63,11 +63,13 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
             const displayName = (i.contactName && i.contactName.trim() !== '') ? i.contactName : i.phoneNumber;
             const dateSource = i.lastCallAt || i.scheduledAt;
             const d = dateSource ? new Date(dateSource) : null;
-            const meta = d
+            const whenText = d
                 ? (d.toDateString() === todayDateString
                     ? `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
                     : d.toLocaleDateString())
                 : '';
+            const statusText = i.status ? String(i.status) : '';
+            const meta = [statusText, whenText].filter(Boolean).join(' • ');
             return {
                 const: i.id,
                 title: displayName,
