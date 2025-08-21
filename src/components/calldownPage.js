@@ -50,17 +50,45 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
         });
         const items = Array.isArray(data?.items) ? data.items : [];
 
-        // client-side name filter
+        // Build contactId -> { name, phone } index from RC widget matcher
+        const idToContact = new Map();
+        try {
+            const platformInfo = await chrome.storage.local.get('platform-info');
+            const platformName = platformInfo['platform-info']?.platformName ?? '';
+            const matcherRoot = document.querySelector('#rc-widget-adapter-frame')?.contentWindow?.phone?.contactMatcher?.data ?? {};
+            for (const [phone, platformData] of Object.entries(matcherRoot)) {
+                const arr = platformData?.[platformName]?.data ?? [];
+                for (const c of arr) {
+                    if (c && !c.isNewContact && c.id) {
+                        if (!idToContact.has(c.id)) idToContact.set(c.id, { name: c.name, phone });
+                    }
+                }
+            }
+        } catch (e) {
+            // ignore if matcher not present
+        }
+
+        // client-side name filter (use enriched name fallback later)
         const normalizedSearch = (filterName || '').trim().toLowerCase();
         const filtered = normalizedSearch === ''
             ? items
             : items.filter(i => (i.contactName || i.phoneNumber || '').toLowerCase().includes(normalizedSearch));
 
+        // Enrich
+        const enriched = filtered.map(i => {
+            const mapped = idToContact.get(i.contactId);
+            return {
+                ...i,
+                contactName: mapped?.name ?? i.contactName,
+                phoneNumber: mapped?.phone ?? i.phoneNumber,
+            };
+        });
+
         const today = new Date();
         const todayDateString = today.toDateString();
 
-        page.schema.properties.records.oneOf = filtered.map(i => {
-            const displayName = (i.contactName && i.contactName.trim() !== '') ? i.contactName : i.phoneNumber;
+        page.schema.properties.records.oneOf = enriched.map(i => {
+            const displayName = (i.contactName && i.contactName.trim() !== '') ? i.contactName : (i.phoneNumber ?? i.contactId);
             const dateSource = i.lastCallAt || i.scheduledAt;
             const d = dateSource ? new Date(dateSource) : null;
             const whenText = d
@@ -73,7 +101,7 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
             return {
                 const: i.id,
                 title: displayName,
-                description: i.phoneNumber,
+                description: i.phoneNumber ?? '',
                 meta,
                 additionalInfo: {
                     contactId: i.contactId,
@@ -88,8 +116,8 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
             return d.toDateString() === todayDateString;
         }).length;
         page.unreadCount = todaysCount;
-        // cache current list for row click handling (id -> phoneNumber lookup)
-        await chrome.storage.local.set({ calldownListCache: filtered });
+        // cache current list
+        await chrome.storage.local.set({ calldownListCache: enriched });
     }
     catch (e) {
         // leave list empty on error
