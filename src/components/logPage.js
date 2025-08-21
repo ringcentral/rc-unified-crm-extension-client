@@ -337,16 +337,6 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                             title: 'Note',
                             type: 'string'
                         },
-                        scheduleCallback: {
-                            title: 'Schedule callback',
-                            type: 'boolean'
-                        },
-                        callbackDateTime: {
-                            title: 'Callback time',
-                            type: 'string',
-                            format: 'date-time',
-                            minimum: new Date().toISOString()
-                        },
                         ...additionalFields
                     }
                 },
