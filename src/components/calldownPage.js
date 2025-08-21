@@ -68,14 +68,8 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
             // ignore if matcher not present
         }
 
-        // client-side name filter (use enriched name fallback later)
-        const normalizedSearch = (filterName || '').trim().toLowerCase();
-        const filtered = normalizedSearch === ''
-            ? items
-            : items.filter(i => (i.contactName || i.phoneNumber || '').toLowerCase().includes(normalizedSearch));
-
-        // Enrich
-        const enriched = filtered.map(i => {
+        // Enrich FIRST so we can filter using resolved names/phones
+        const enriched = items.map(i => {
             const mapped = idToContact.get(i.contactId);
             return {
                 ...i,
@@ -84,10 +78,19 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
             };
         });
 
+        // client-side name filter using enriched values
+        const normalizedSearch = (filterName || '').trim().toLowerCase();
+        const filtered = normalizedSearch === ''
+            ? enriched
+            : enriched.filter(i => (
+                (i.contactName || '').toLowerCase().includes(normalizedSearch) ||
+                (i.phoneNumber || '').toLowerCase().includes(normalizedSearch)
+            ));
+
         const today = new Date();
         const todayDateString = today.toDateString();
 
-        page.schema.properties.records.oneOf = enriched.map(i => {
+        page.schema.properties.records.oneOf = filtered.map(i => {
             const displayName = (i.contactName && i.contactName.trim() !== '') ? i.contactName : (i.phoneNumber ?? i.contactId);
             const dateSource = i.lastCallAt || i.scheduledAt;
             const d = dateSource ? new Date(dateSource) : null;
@@ -117,7 +120,7 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
         }).length;
         page.unreadCount = todaysCount;
         // cache current list
-        await chrome.storage.local.set({ calldownListCache: enriched });
+        await chrome.storage.local.set({ calldownListCache: filtered });
     }
     catch (e) {
         // leave list empty on error
