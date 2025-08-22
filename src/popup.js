@@ -399,7 +399,7 @@ window.addEventListener('message', async (e) => {
             }, '*');
             setInterval(function () {
               logService.forceCallLogMatcherCheck();
-            }, 600000)
+            }, 600000) // 10min
           }
           break;
         case 'rc-login-popup-notify':
@@ -1683,24 +1683,42 @@ window.addEventListener('message', async (e) => {
             case '/callLogger/match':
               let callLogMatchData = {};
               let noLocalMatchedSessionIds = [];
+              // existingCallLogRecords: call logs in local storage
               const existingCallLogRecords = await chrome.storage.local.get(
                 data.body.sessionIds.map(sessionId => `rc-crm-call-log-${sessionId}`)
               );
               for (const sessionId of data.body.sessionIds) {
+                // match existing records
                 if (existingCallLogRecords[`rc-crm-call-log-${sessionId}`]) {
                   callLogMatchData[sessionId] = [{ id: sessionId, note: '', contact: { id: existingCallLogRecords[`rc-crm-call-log-${sessionId}`].contact?.id } }];
                 } else {
+                  // register non-existing records to be checked online
                   noLocalMatchedSessionIds.push(sessionId);
                 }
               }
               if (noLocalMatchedSessionIds.length > 0) {
                 const { successful, callLogs } = await logCore.getLog({ serverUrl: manifest.serverUrl, logType: 'Call', sessionIds: noLocalMatchedSessionIds.toString(), requireDetails: false });
+                // Case: no local record, but online DB check says YES
                 if (successful) {
                   const newLocalMatchedCallLogRecords = {};
                   for (const sessionId of noLocalMatchedSessionIds) {
                     const correspondingLog = callLogs.find(l => l.sessionId === sessionId);
+                    // correspondingLog: if matched => exsiting log record in online DB for this sessionId
                     if (correspondingLog?.matched) {
-                      callLogMatchData[sessionId] = [{ id: sessionId, note: '' }];
+                      const localNote = await logCore.getCachedNote({ sessionId });
+                      if (localNote) {
+                        callLogMatchData[sessionId] = [{ id: sessionId, note: localNote }];
+                        // update online record with local note
+                        await logCore.updateLog({
+                          serverUrl: manifest.serverUrl,
+                          logType: 'Call',
+                          sessionId,
+                          note: localNote
+                        })
+                      }
+                      else {
+                        callLogMatchData[sessionId] = [{ id: sessionId, note: '' }];
+                      }
                       newLocalMatchedCallLogRecords[`rc-crm-call-log-${sessionId}`] = { logId: correspondingLog.logId, contact: { id: correspondingLog.contact?.id } };
                     }
                     else {
