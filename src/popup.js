@@ -29,6 +29,7 @@ import customizeTabsSettingPage from './components/admin/generalSettings/customi
 import clickToDialEmbedPage from './components/admin/generalSettings/clickToDialEmbedPage';
 import notificationLevelSettingPage from './components/admin/generalSettings/notificationLevelSettingPage';
 import appearancePage from './components/admin/generalSettings/appearancePage';
+import callLogDetailsSettingPage from './components/admin/managedSettings/callAndSMSLoggingSetting/callLogDetailsSettingPage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
 import {
@@ -1055,6 +1056,17 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${customSettingsPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'callLogDetailsSetting':
+                  const callLogDetailsSettingPageRender = callLogDetailsSettingPage.getCallLogDetailsSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: callLogDetailsSettingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${callLogDetailsSettingPageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'customAdapter':
@@ -2095,6 +2107,7 @@ window.addEventListener('message', async (e) => {
               switch (data.body.button.id) {
                 case 'callAndSMSLoggingSettingPage':
                 case 'contactSettingPage':
+                case 'callLogDetailsSettingPage':
                 case 'advancedFeaturesSettingPage':
                 case 'customSettingsPage':
                 case 'customizeTabsSettingPage':

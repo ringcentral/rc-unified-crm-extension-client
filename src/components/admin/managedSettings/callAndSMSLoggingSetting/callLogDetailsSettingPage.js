@@ -1,0 +1,232 @@
+function getCallLogDetailsSettingPageRender({ adminUserSettings }) {
+    return {
+        id: 'callLogDetailsSettingPage',
+        title: 'Call log details',
+        type: 'page',
+        schema: {
+            type: 'object',
+            required: [],
+            properties: {
+                addCallLogNote: {
+                    type: 'object',
+                    title: 'Agent-entered notes',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
+                addCallSessionId: {
+                    type: 'object',
+                    title: 'Call session id',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
+                addCallLogSubject: {
+                    type: 'object',
+                    title: 'Call subject',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
+                addCallLogContactNumber: {
+                    type: 'object',
+                    title: 'Contact\'s phone number',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
+                addCallLogDateTime: {
+                    type: 'object',
+                    title: 'Date and time',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
+                addCallLogDuration: {
+                    type: 'object',
+                    title: 'Call duration',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
+                addCallLogResult: {
+                    type: 'object',
+                    title: 'Call result',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
+                addCallLogRecording: {
+                    type: 'object',
+                    title: 'Link to the recording',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
+                addCallLogAiNote: {
+                    type: 'object',
+                    title: 'Smart summary',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
+                addCallLogTranscript: {
+                    type: 'object',
+                    title: 'Call transcript',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                }
+            }
+        },
+        uiSchema: {
+            addCallLogNote: {
+                "ui:collapsible": true,
+            },
+            addCallSessionId: {
+                "ui:collapsible": true,
+            },
+            addCallLogSubject: {
+                "ui:collapsible": true,
+            },
+            addCallLogContactNumber: {
+                "ui:collapsible": true,
+            },
+            addCallLogDateTime: {
+                "ui:collapsible": true,
+            },
+            addCallLogDuration: {
+                "ui:collapsible": true,
+            },
+            addCallLogResult: {
+                "ui:collapsible": true,
+            },
+            addCallLogRecording: {
+                "ui:collapsible": true,
+            },
+            addCallLogAiNote: {
+                "ui:collapsible": true,
+            },
+            addCallLogTranscript: {
+                "ui:collapsible": true,
+            },
+            submitButtonOptions: {
+                submitText: 'Save',
+            }
+        },
+        formData: {
+            addCallLogNote: {
+                customizable: adminUserSettings?.addCallLogNote?.customizable ?? true,
+                value: adminUserSettings?.addCallLogNote?.value ?? false
+            },
+            addCallSessionId: {
+                customizable: adminUserSettings?.addCallSessionId?.customizable ?? true,
+                value: adminUserSettings?.addCallSessionId?.value ?? false
+            },
+            addCallLogSubject: {
+                customizable: adminUserSettings?.addCallLogSubject?.customizable ?? true,
+                value: adminUserSettings?.addCallLogSubject?.value ?? false
+            },
+            addCallLogContactNumber: {
+                customizable: adminUserSettings?.addCallLogContactNumber?.customizable ?? true,
+                value: adminUserSettings?.addCallLogContactNumber?.value ?? false
+            },
+            addCallLogDateTime: {
+                customizable: adminUserSettings?.addCallLogDateTime?.customizable ?? true,
+                value: adminUserSettings?.addCallLogDateTime?.value ?? false
+            },
+            addCallLogDuration: {
+                customizable: adminUserSettings?.addCallLogDuration?.customizable ?? true,
+                value: adminUserSettings?.addCallLogDuration?.value ?? false
+            },
+            addCallLogResult: {
+                customizable: adminUserSettings?.addCallLogResult?.customizable ?? true,
+                value: adminUserSettings?.addCallLogResult?.value ?? false
+            },
+            addCallLogRecording: {
+                customizable: adminUserSettings?.addCallLogRecording?.customizable ?? true,
+                value: adminUserSettings?.addCallLogRecording?.value ?? false
+            },
+            addCallLogAiNote: {
+                customizable: adminUserSettings?.addCallLogAiNote?.customizable ?? true,
+                value: adminUserSettings?.addCallLogAiNote?.value ?? false
+            },
+            addCallLogTranscript: {
+                customizable: adminUserSettings?.addCallLogTranscript?.customizable ?? true,
+                value: adminUserSettings?.addCallLogTranscript?.value ?? false
+            }
+        }
+    }
+}
+
+exports.getCallLogDetailsSettingPageRender = getCallLogDetailsSettingPageRender;

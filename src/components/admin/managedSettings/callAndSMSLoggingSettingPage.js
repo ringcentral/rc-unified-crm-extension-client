@@ -118,10 +118,21 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                             title: 'Value'
                         }
                     }
+                },
+                section: {
+                    type: "string",
+                    oneOf: [{
+                        const: "callLogDetailsSetting",
+                        title: "Call log details"
+                    }]
                 }
             }
         },
         uiSchema: {
+            section: {
+                "ui:field": "list",
+                "ui:navigation": true,
+            },
             autoLogCall: {
                 "ui:collapsible": true,
             },
