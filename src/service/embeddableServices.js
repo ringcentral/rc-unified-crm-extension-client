@@ -199,6 +199,14 @@ async function getServiceManifest() {
                                 value: userCore.getShowContactsTabSetting(userSettings).value,
                                 readOnly: userCore.getShowContactsTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowContactsTabSetting(userSettings).readOnlyReason
+                            },
+                            {
+                                id: 'showUserReportTab',
+                                type: 'boolean',
+                                name: 'Show user report tab',
+                                value: userCore.getShowUserReportTabSetting(userSettings).value,
+                                readOnly: userCore.getShowUserReportTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowUserReportTabSetting(userSettings).readOnlyReason
                             }
                         ]
                     },

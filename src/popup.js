@@ -245,11 +245,13 @@ window.addEventListener('message', async (e) => {
               }, 900000);
               // report tab
               const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
-              const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                type: 'rc-adapter-register-customized-page',
-                page: reportPageRender,
-              }, '*');
+              if (userCore.getShowUserReportTabSetting(userSettings).value) {
+                const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-register-customized-page',
+                  page: reportPageRender,
+                }, '*');
+              }
 
               // Set every 5min, check if there's any pending recording link
               setInterval(async function () {
@@ -614,12 +616,14 @@ window.addEventListener('message', async (e) => {
           }
 
           if (data.path === '/customizedTabs/reportPage') {
-            const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
-            const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-              type: 'rc-adapter-register-customized-page',
-              page: reportPageRender
-            }, '*');
+            if (userCore.getShowUserReportTabSetting(userSettings).value) {
+              const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+              const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-customized-page',
+                page: reportPageRender
+              }, '*');
+            }
           }
           break;
         case 'rc-adapter-ai-assistant-settings-notify':
@@ -874,16 +878,18 @@ window.addEventListener('message', async (e) => {
                     await chrome.storage.local.set({ unloggedCallPageDataCache: unloggedCalls });
                   }
                   else {
-                    const userReportStats = await getUserReportStats({ dateRange: data.body.formData.dateRangeEnums, customStartDate: data.body.formData.startDate, customEndDate: data.body.formData.endDate });
-                    const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-register-customized-page',
-                      page: reportPageRender,
-                    });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-navigate-to',
-                      path: `/customizedTabs/${reportPageRender.id}`, // page id
-                    }, '*');
+                    if (userCore.getShowUserReportTabSetting(userSettings).value) {
+                      const userReportStats = await getUserReportStats({ dateRange: data.body.formData.dateRangeEnums, customStartDate: data.body.formData.startDate, customEndDate: data.body.formData.endDate });
+                      const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: reportPageRender,
+                      });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-navigate-to',
+                        path: `/customizedTabs/${reportPageRender.id}`, // page id
+                      }, '*');
+                    }
                   }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
@@ -2122,12 +2128,14 @@ window.addEventListener('message', async (e) => {
                   if (crmAuthed) {
                     await chrome.storage.local.set({ crmAuthed });
                     // report tab
-                    const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
-                    const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-register-customized-page',
-                      page: reportPageRender,
-                    }, '*');
+                    if (userCore.getShowUserReportTabSetting(userSettings).value) {
+                      const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+                      const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: reportPageRender,
+                      }, '*');
+                    }
                     // admin tab
                     const adminSettingResults = await adminCore.refreshAdminSettings();
                     adminSettings = adminSettingResults.adminSettings;
@@ -2546,12 +2554,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       await chrome.storage.local.set({ crmAuthed });
       if (crmAuthed) {
         // report tab
-        const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
-        const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-          type: 'rc-adapter-register-customized-page',
-          page: reportPageRender,
-        }, '*');
+        if (userCore.getShowUserReportTabSetting(userSettings).value) {
+          const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+          const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+          document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-register-customized-page',
+            page: reportPageRender,
+          }, '*');
+        }
         // admin tab
         const adminSettingResults = await adminCore.refreshAdminSettings();
         adminSettings = adminSettingResults.adminSettings;
@@ -2578,12 +2588,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     crmAuthed = true;
     // report tab
-    const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
-    const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-      type: 'rc-adapter-register-customized-page',
-      page: reportPageRender,
-    }, '*');
+    if (userCore.getShowUserReportTabSetting(userSettings).value) {
+      const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+      const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: reportPageRender,
+      }, '*');
+    }
     // admin tab
     await chrome.storage.local.set({ crmAuthed });
     const adminSettingResults = await adminCore.refreshAdminSettings();
@@ -2678,12 +2690,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     await chrome.storage.local.set({ crmAuthed });
     if (crmAuthed) {
       // report tab
-      const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
-      const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-        type: 'rc-adapter-register-customized-page',
-        page: reportPageRender,
-      }, '*');
+      if (userCore.getShowUserReportTabSetting(userSettings).value) {
+        const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+        const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+          type: 'rc-adapter-register-customized-page',
+          page: reportPageRender,
+        }, '*');
+      }
       // admin tab
       const adminSettingResults = await adminCore.refreshAdminSettings();
       adminSettings = adminSettingResults.adminSettings;
