@@ -2346,13 +2346,18 @@ window.addEventListener('message', async (e) => {
                     service: (await embeddableServices.getServiceManifest())
                   }, '*');
                   await adminCore.updateServerSideDoNotLogNumbers({ platform, doNotLogNumbers: data.body.button.formData.doNotLogNumbers ?? "" });
-                  await adminCore.uploadServerSideLoggingAdditionalFieldValues({ platform, formData: data.body.button.formData });
-                  showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
+                  const updateSSCLFieldsResponse = await adminCore.uploadServerSideLoggingAdditionalFieldValues({ platform, formData: data.body.button.formData });
+                  if (updateSSCLFieldsResponse.successful) {
+                    showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: 'goBack',
+                    }, '*');
+                  }
+                  else {
+                    showNotification({ level: updateSSCLFieldsResponse.returnMessage.messageType, message: updateSSCLFieldsResponse.returnMessage.message, ttl: updateSSCLFieldsResponse.returnMessage.ttl });
+                  }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: 'goBack',
-                  }, '*');
                   break;
                 case 'developerSettingsPage':
                   try {
