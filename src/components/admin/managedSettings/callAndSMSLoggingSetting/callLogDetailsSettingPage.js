@@ -77,6 +77,46 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
+                logDateFormat: {
+                    type: 'object',
+                    title: 'Date format',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'string',
+                            title: 'Value',
+                            oneOf: [
+                                {
+                                    const: 'YYYY-MM-DD HH:mm:ss',
+                                    title: 'Global - 24H (e.g. 2024-01-15 14:30:45)'
+                                },
+                                {
+                                    const: 'YYYY-MM-DD hh:mm:ss A',
+                                    title: 'Global - 12H (e.g. 2024-01-15 02:30:45 PM)'
+                                },
+                                {
+                                    const: 'MM/DD/YYYY hh:mm:ss A',
+                                    title: 'US - 12H (e.g. 01/15/2024 02:30:45 PM)'
+                                },
+                                {
+                                    const: 'MM/DD/YYYY HH:mm:ss',
+                                    title: 'US - 24H (e.g. 01/15/2024 14:30:45)'
+                                },
+                                {
+                                    const: 'DD/MM/YYYY HH:mm:ss',
+                                    title: 'EU - 24H (e.g. 15/01/2024 14:30:45)'
+                                },
+                                {
+                                    const: 'DD/MM/YYYY hh:mm:ss A',
+                                    title: 'EU - 12H (e.g. 15/01/2024 02:30:45 PM)'
+                                }
+                            ]
+                        }
+                    }
+                },
                 addCallLogDuration: {
                     type: 'object',
                     title: 'Call duration',
@@ -165,6 +205,9 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings }) {
             addCallLogDateTime: {
                 "ui:collapsible": true,
             },
+            logDateFormat: {
+                "ui:collapsible": true,
+            },
             addCallLogDuration: {
                 "ui:collapsible": true,
             },
@@ -204,6 +247,10 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings }) {
             addCallLogDateTime: {
                 customizable: adminUserSettings?.addCallLogDateTime?.customizable ?? true,
                 value: adminUserSettings?.addCallLogDateTime?.value ?? false
+            },
+            logDateFormat: {
+                customizable: adminUserSettings?.logDateFormat?.customizable ?? true,
+                value: adminUserSettings?.logDateFormat?.value ?? 'YYYY-MM-DD hh:mm:ss A'
             },
             addCallLogDuration: {
                 customizable: adminUserSettings?.addCallLogDuration?.customizable ?? true,

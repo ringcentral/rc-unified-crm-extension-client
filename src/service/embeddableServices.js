@@ -487,6 +487,43 @@ async function getServiceManifest() {
                 readOnlyReason: userCore.getAddCallLogDateTimeSetting(userSettings).readOnlyReason
             },
             {
+                id: "logDateFormat",
+                type: "option",
+                name: "Date format",
+                options: [
+                    // ISO 8601 and Standard Formats
+                    {
+                        id: "YYYY-MM-DD HH:mm:ss",
+                        name: "Global - 24H (e.g. 2024-01-15 14:30:45)"
+                    },
+                    {
+                        id: "YYYY-MM-DD hh:mm:ss A",
+                        name: "Global - 12H (e.g. 2024-01-15 02:30:45 PM)"
+                    },                    
+                    // US Formats
+                    {
+                        id: "MM/DD/YYYY hh:mm:ss A",
+                        name: "US - 12H (e.g. 01/15/2024 02:30:45 PM)"
+                    },
+                    {
+                        id: "MM/DD/YYYY HH:mm:ss",
+                        name: "US - 24H (e.g. 01/15/2024 14:30:45)"
+                    },
+                    // European Formats
+                    {
+                        id: "DD/MM/YYYY HH:mm:ss",
+                        name: "EU - 24H (e.g. 15/01/2024 14:30:45)"
+                    },
+                    {
+                        id: "DD/MM/YYYY hh:mm:ss A",
+                        name: "EU - 12H (e.g. 15/01/2024 02:30:45 PM)"
+                    }
+                ],
+                value: userCore.getLogDateFormatSetting(userSettings).value,
+                readOnly: userCore.getLogDateFormatSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getLogDateFormatSetting(userSettings).readOnlyReason
+            },
+            {
                 id: "addCallLogDuration",
                 type: "boolean",
                 name: "Call duration",

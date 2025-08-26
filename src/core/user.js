@@ -392,6 +392,14 @@ function getAddCallLogDateTimeSetting(userSettings) {
     }
 }
 
+function getLogDateFormatSetting(userSettings) {
+    return {
+        value: userSettings?.logDateFormat?.value ?? 'YYYY-MM-DD hh:mm:ss A',
+        readOnly: userSettings?.logDateFormat?.customizable === undefined ? false : !userSettings?.logDateFormat?.customizable,
+        readOnlyReason: !userSettings?.logDateFormat?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getAddCallLogDurationSetting(userSettings) {
     return {
         value: userSettings?.addCallLogDuration?.value ?? true,
@@ -486,6 +494,7 @@ exports.getAddCallSessionIdSetting = getAddCallSessionIdSetting;
 exports.getAddCallLogSubjectSetting = getAddCallLogSubjectSetting;
 exports.getAddCallLogContactNumberSetting = getAddCallLogContactNumberSetting;
 exports.getAddCallLogDateTimeSetting = getAddCallLogDateTimeSetting;
+exports.getLogDateFormatSetting = getLogDateFormatSetting;
 exports.getAddCallLogDurationSetting = getAddCallLogDurationSetting;
 exports.getAddCallLogResultSetting = getAddCallLogResultSetting;
 exports.getAddCallLogRecordingSetting = getAddCallLogRecordingSetting;
