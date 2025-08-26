@@ -35,6 +35,34 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
+                addRingCentralUserName: {
+                    type: 'object',
+                    title: 'RingCentral user name',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
+                addRingCentralNumber: {
+                    type: 'object',
+                    title: 'RingCentral phone number',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
                 addCallLogSubject: {
                     type: 'object',
                     title: 'Call subject',
@@ -196,6 +224,12 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings }) {
             addCallSessionId: {
                 "ui:collapsible": true,
             },
+            addRingCentralUserName: {
+                "ui:collapsible": true,
+            },
+            addRingCentralNumber: {
+                "ui:collapsible": true,
+            },
             addCallLogSubject: {
                 "ui:collapsible": true,
             },
@@ -235,6 +269,14 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings }) {
             addCallSessionId: {
                 customizable: adminUserSettings?.addCallSessionId?.customizable ?? true,
                 value: adminUserSettings?.addCallSessionId?.value ?? false
+            },
+            addRingCentralUserName: {
+                customizable: adminUserSettings?.addRingCentralUserName?.customizable ?? true,
+                value: adminUserSettings?.addRingCentralUserName?.value ?? false
+            },
+            addRingCentralNumber: {
+                customizable: adminUserSettings?.addRingCentralNumber?.customizable ?? true,
+                value: adminUserSettings?.addRingCentralNumber?.value ?? false
             },
             addCallLogSubject: {
                 customizable: adminUserSettings?.addCallLogSubject?.customizable ?? true,

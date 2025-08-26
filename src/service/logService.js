@@ -154,7 +154,10 @@ async function syncCallData({
                 transcript: dataBody.transcript,
                 startTime: dataBody.call.startTime,
                 duration: dataBody.call.duration,
-                result: dataBody.call.result
+                result: dataBody.call.result,
+                direction: dataBody.call.direction,
+                from: dataBody.call.from,
+                to: dataBody.call.to
             });
     }
     // case: no recording link
@@ -170,7 +173,10 @@ async function syncCallData({
                 transcript: dataBody.transcript,
                 startTime: dataBody.call.startTime,
                 duration: dataBody.call.duration,
-                result: dataBody.call.result
+                result: dataBody.call.result,
+                direction: dataBody.call.direction,
+                from: dataBody.call.from,
+                to: dataBody.call.to
             });
     }
 }
