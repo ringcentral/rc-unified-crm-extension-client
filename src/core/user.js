@@ -1,7 +1,8 @@
 import axios from 'axios';
-import { getRcAccessToken, getManifest } from '../lib/util';
+import { getRcAccessToken, getManifest, getUserReportStats } from '../lib/util';
 import adminCore from './admin';
 import { getServiceManifest } from '../service/embeddableServices';
+import reportPage from '../components/reportPage';
 
 async function preloadUserSettingsFromAdmin({ serverUrl }) {
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
@@ -95,6 +96,12 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',
         service: (await getServiceManifest())
+    }, '*');
+    // custom tabs
+    const reportPageRender = reportPage.getReportsPageRender({ userStats: null, userSettings });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: reportPageRender,
     }, '*');
     return userSettings;
 }
@@ -313,6 +320,14 @@ function getShowContactsTabSetting(userSettings) {
     }
 }
 
+function getShowUserReportTabSetting(userSettings) {
+    return {
+        value: userSettings?.showUserReportTab?.value ?? true,
+        readOnly: userSettings?.showUserReportTab?.customizable === undefined ? false : !userSettings?.showUserReportTab?.customizable,
+        readOnlyReason: !userSettings?.showUserReportTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getClickToDialEmbedMode(userSettings) {
     return {
         value: userSettings?.clickToDialEmbedMode?.value ?? 'crmOnly',
@@ -374,6 +389,14 @@ function getAddCallLogDateTimeSetting(userSettings) {
         value: userSettings?.addCallLogDateTime?.value ?? true,
         readOnly: userSettings?.addCallLogDateTime?.customizable === undefined ? false : !userSettings?.addCallLogDateTime?.customizable,
         readOnlyReason: !userSettings?.addCallLogDateTime?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getLogDateFormatSetting(userSettings) {
+    return {
+        value: userSettings?.logDateFormat?.value ?? 'YYYY-MM-DD hh:mm:ss A',
+        readOnly: userSettings?.logDateFormat?.customizable === undefined ? false : !userSettings?.logDateFormat?.customizable,
+        readOnlyReason: !userSettings?.logDateFormat?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -461,6 +484,7 @@ exports.getShowFaxTabSetting = getShowFaxTabSetting;
 exports.getShowVoicemailTabSetting = getShowVoicemailTabSetting;
 exports.getShowRecordingsTabSetting = getShowRecordingsTabSetting;
 exports.getShowContactsTabSetting = getShowContactsTabSetting;
+exports.getShowUserReportTabSetting = getShowUserReportTabSetting;
 exports.getClickToDialEmbedMode = getClickToDialEmbedMode;
 exports.getClickToDialUrls = getClickToDialUrls;
 exports.getNotificationLevelSetting = getNotificationLevelSetting;
@@ -470,6 +494,7 @@ exports.getAddCallSessionIdSetting = getAddCallSessionIdSetting;
 exports.getAddCallLogSubjectSetting = getAddCallLogSubjectSetting;
 exports.getAddCallLogContactNumberSetting = getAddCallLogContactNumberSetting;
 exports.getAddCallLogDateTimeSetting = getAddCallLogDateTimeSetting;
+exports.getLogDateFormatSetting = getLogDateFormatSetting;
 exports.getAddCallLogDurationSetting = getAddCallLogDurationSetting;
 exports.getAddCallLogResultSetting = getAddCallLogResultSetting;
 exports.getAddCallLogRecordingSetting = getAddCallLogRecordingSetting;
