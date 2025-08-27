@@ -11,7 +11,7 @@ async function submitPlatformSelection(platform) {
 
 // apiUrl: Insightly
 // username, password: Redtail
-async function apiKeyLogin({ serverUrl, apiKey, formData }) {
+async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
     try {
         const platformInfo = await chrome.storage.local.get('platform-info');
         const platformName = platformInfo['platform-info'].platformName;
@@ -37,6 +37,9 @@ async function apiKeyLogin({ serverUrl, apiKey, formData }) {
             type: 'rc-adapter-navigate-to',
             path: 'goBack',
         }, '*');
+        if (useLicense) {
+            await refreshLicenseStatus({ serverUrl });
+        }
         return res.data.jwtToken;
     }
     catch (e) {
@@ -45,7 +48,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData }) {
     }
 }
 
-async function onAuthCallback({ serverUrl, callbackUri }) {
+async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
     const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;
     const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
     const rcInfo = await indexDB.get('keyvaluepairs', 'dataFetcherV2-storageData');
@@ -73,6 +76,9 @@ async function onAuthCallback({ serverUrl, callbackUri }) {
         ['rcUnifiedCrmExtJwt']: res.data.jwtToken
     });
     trackCrmLogin();
+    if (useLicense) {
+        await refreshLicenseStatus({ serverUrl });
+    }
     return res.data.jwtToken;
 }
 
@@ -102,28 +108,38 @@ async function checkAuth() {
     // get crm user info
     const { crmUserInfo } = (await chrome.storage.local.get({ crmUserInfo: null }));
     const { isAdmin } = (await chrome.storage.local.get({ isAdmin: null }));
-    setAuth(!!rcUnifiedCrmExtJwt, crmUserInfo?.name);
-    setAccountName(crmUserInfo?.name, isAdmin);
+    setAuth(!!rcUnifiedCrmExtJwt, crmUserInfo?.name, isAdmin);
     return !!rcUnifiedCrmExtJwt;
 }
 
-function setAuth(auth, accountName) {
+function setAuth(auth, accountName, isAdmin = false) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-update-authorization-status',
         authorized: auth,
-        authorizedAccount: accountName ?? ''
+        authorizedAccount: accountName ? `${accountName} ${isAdmin ? '(Admin)' : ''}` : ''
     });
 }
 
-function setAccountName(accountName, isAdmin) {
-    if (isAdmin) {
-        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-            type: 'rc-adapter-update-authorization-status',
-            authorized: true,
-            authorizedAccount: `${accountName} (Admin)`
-        });
-    }
+async function getLicenseStatus({ serverUrl }) {
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const res = await axios.get(`${serverUrl}/licenseStatus?jwtToken=${rcUnifiedCrmExtJwt}`);
+    const licenseStatusColor = res.data.isLicenseValid ? 'inherit' : 'danger.b04';
 
+    return {
+        licenseStatus: res.data.licenseStatus,
+        licenseStatusColor,
+        licenseStatusDescription: res.data.licenseStatusDescription
+    };
+}
+
+async function refreshLicenseStatus({ serverUrl }) {
+    const licenseStatusResponse = await getLicenseStatus({ serverUrl });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-refresh-license-status',
+        licenseStatus: `License: ${licenseStatusResponse.licenseStatus}`,
+        licenseStatusColor: licenseStatusResponse.licenseStatusColor,
+        licenseDescription: licenseStatusResponse.licenseStatusDescription
+    }, '*');
 }
 
 exports.submitPlatformSelection = submitPlatformSelection;
@@ -132,4 +148,5 @@ exports.onAuthCallback = onAuthCallback;
 exports.unAuthorize = unAuthorize;
 exports.checkAuth = checkAuth;
 exports.setAuth = setAuth;
-exports.setAccountName = setAccountName;
+exports.getLicenseStatus = getLicenseStatus;
+exports.refreshLicenseStatus = refreshLicenseStatus;

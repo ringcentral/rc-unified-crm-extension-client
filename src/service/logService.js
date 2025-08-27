@@ -128,43 +128,55 @@ async function forceCallLogMatcherCheck() {
 }
 
 async function syncCallData({
-    manifest,
+    serverUrl,
     dataBody
 }) {
     const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
     const rcAccessToken = getRcAccessToken();
     const recordingLink = dataBody?.call?.recording?.link;
+
+    // Get the cached note for this call
+    const note = await logCore.getCachedNote({ sessionId: dataBody.call.sessionId });
+
     // case: with recording link ready, definitely recorded, update with link
     if (recordingLink) {
         console.log('call recording updating...');
         await logCore.updateLog(
             {
-                serverUrl: manifest.serverUrl,
+                serverUrl,
                 logType: 'Call',
                 rcAdditionalSubmission,
                 sessionId: dataBody.call.sessionId,
                 recordingLink: dataBody.call.recording.link,
                 recordingDownloadLink: `${dataBody.call.recording.contentUri}?accessToken=${rcAccessToken}`,
+                note,
                 aiNote: dataBody.aiNote,
                 transcript: dataBody.transcript,
                 startTime: dataBody.call.startTime,
                 duration: dataBody.call.duration,
-                result: dataBody.call.result
+                result: dataBody.call.result,
+                direction: dataBody.call.direction,
+                from: dataBody.call.from,
+                to: dataBody.call.to
             });
     }
     // case: no recording link
     else {
         await logCore.updateLog(
             {
-                serverUrl: manifest.serverUrl,
+                serverUrl,
                 logType: 'Call',
                 rcAdditionalSubmission,
                 sessionId: dataBody.call.sessionId,
+                note,
                 aiNote: dataBody.aiNote,
                 transcript: dataBody.transcript,
                 startTime: dataBody.call.startTime,
                 duration: dataBody.call.duration,
-                result: dataBody.call.result
+                result: dataBody.call.result,
+                direction: dataBody.call.direction,
+                from: dataBody.call.from,
+                to: dataBody.call.to
             });
     }
 }

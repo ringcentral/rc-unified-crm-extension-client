@@ -1,4 +1,5 @@
 import userCore from '../core/user';
+import authCore from '../core/auth';
 import { getPlatformInfo, getManifest } from '../lib/util';
 
 async function getServiceManifest() {
@@ -29,7 +30,7 @@ async function getServiceManifest() {
         authorizationLogo: platform?.logoUrl ?? '',
         showAuthRedDot: true,
         authorized: crmAuthed,
-        authorizedAccount: `${crmUserInfo?.name ?? ''} (Admin)`,
+        authorizedAccount: `${crmUserInfo?.name ?? ''} ${isAdmin ? '(Admin)' : ''}`,
         info: `Developed by ${manifest?.author?.name ?? 'Unknown'}`,
 
         // Enable call log sync feature
@@ -134,6 +135,7 @@ async function getServiceManifest() {
                 id: 'appearance',
                 type: 'group',
                 name: 'Appearance',
+                description: 'Modify the display and theme preferences',
                 items: [
                     {
                         id: 'tabs',
@@ -197,6 +199,14 @@ async function getServiceManifest() {
                                 value: userCore.getShowContactsTabSetting(userSettings).value,
                                 readOnly: userCore.getShowContactsTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowContactsTabSetting(userSettings).readOnlyReason
+                            },
+                            {
+                                id: 'showUserReportTab',
+                                type: 'boolean',
+                                name: 'Show user report tab',
+                                value: userCore.getShowUserReportTabSetting(userSettings).value,
+                                readOnly: userCore.getShowUserReportTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowUserReportTabSetting(userSettings).readOnlyReason
                             }
                         ]
                     },
@@ -231,50 +241,6 @@ async function getServiceManifest() {
                                 value: userCore.getNotificationLevelSetting(userSettings).value,
                                 readOnly: userCore.getNotificationLevelSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getNotificationLevelSetting(userSettings).readOnlyReason
-                            }
-                        ]
-                    },
-                    {
-                        id: 'clickToDialEmbed',
-                        type: 'section',
-                        name: 'Click-to-dial',
-                        groupId: 'appearance',
-                        description: 'Configure click-to-dial functionality and website permissions',
-                        items: [
-                            {
-                                id: 'clickToDialEmbedMode',
-                                type: 'option',
-                                name: 'Click-to-dial mode',
-                                options: [
-                                    {
-                                        id: 'disabled',
-                                        name: 'Disabled'
-                                    },
-                                    {
-                                        id: 'crmOnly',
-                                        name: 'Enable for connected CRM only'
-                                    },
-                                    {
-                                        id: 'whitelist',
-                                        name: 'Block by default (then manage a list of sites to allow)'
-                                    },
-                                    {
-                                        id: 'blacklist',
-                                        name: 'Allow by default (then manage a list of sites to block)'
-                                    }
-                                ],
-                                value: userCore.getClickToDialEmbedMode(userSettings).value,
-                                readOnly: userCore.getClickToDialEmbedMode(userSettings).readOnly,
-                                readOnlyReason: userCore.getClickToDialEmbedMode(userSettings).readOnlyReason
-                            },
-                            {
-                                id: 'clickToDialUrls',
-                                type: 'array',
-                                name: 'URLs for click-to-dial',
-                                helper: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
-                                value: userCore.getClickToDialUrls(userSettings).value,
-                                readOnly: userCore.getClickToDialUrls(userSettings).readOnly,
-                                readOnlyReason: userCore.getClickToDialUrls(userSettings).readOnlyReason
                             }
                         ]
                     }
@@ -416,8 +382,218 @@ async function getServiceManifest() {
         ],
         buttonEventPath: '/custom-button-click'
     }
+
+    if (platform.useLicense) {
+        const licenseStatusResponse = await authCore.getLicenseStatus({ serverUrl: manifest.serverUrl });
+        services.licenseStatus = `License: ${licenseStatusResponse.licenseStatus}`;
+        services.licenseStatusColor = licenseStatusResponse.licenseStatusColor;
+        services.licenseDescription = licenseStatusResponse.licenseStatusDescription;
+    }
+    services.settings.push(
+        {
+            id: 'clickToDialEmbed',
+            type: 'section',
+            name: 'Enabled domains',
+            groupId: 'general',
+            description: 'Manage the URLs App Connect is enabled for',
+            items: [
+                {
+                    id: 'clickToDialEmbedMode',
+                    type: 'option',
+                    name: 'Enable mode',
+                    options: [
+                        {
+                            id: 'disabled',
+                            name: 'Disabled'
+                        },
+                        {
+                            id: 'crmOnly',
+                            name: 'Enable for connected CRM only'
+                        },
+                        {
+                            id: 'whitelist',
+                            name: 'Block by default (then manage a list of sites to allow)'
+                        },
+                        {
+                            id: 'blacklist',
+                            name: 'Allow by default (then manage a list of sites to block)'
+                        }
+                    ],
+                    value: userCore.getClickToDialEmbedMode(userSettings).value,
+                    readOnly: userCore.getClickToDialEmbedMode(userSettings).readOnly,
+                    readOnlyReason: userCore.getClickToDialEmbedMode(userSettings).readOnlyReason
+                },
+                {
+                    id: 'clickToDialUrls',
+                    type: 'array',
+                    name: 'URLs',
+                    helper: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
+                    value: userCore.getClickToDialUrls(userSettings).value,
+                    readOnly: userCore.getClickToDialUrls(userSettings).readOnly,
+                    readOnlyReason: userCore.getClickToDialUrls(userSettings).readOnlyReason
+                }
+            ]
+        }
+    );
+    services.settings.push({
+        id: "callLogDetails",
+        type: "section",
+        name: "Call log details",
+        groupId: "logging",
+        items: [
+            {
+                id: "addCallLogNote",
+                type: "boolean",
+                name: "Agent-entered notes",
+                description: "Log the notes manually entered by yourself",
+                value: userCore.getAddCallLogNoteSetting(userSettings).value,
+                readOnly: userCore.getAddCallLogNoteSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddCallLogNoteSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "addCallSessionId",
+                type: "boolean",
+                name: "Call session id",
+                description: "Log RingCentral call session id",
+                value: userCore.getAddCallSessionIdSetting(userSettings).value,
+                readOnly: userCore.getAddCallSessionIdSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddCallSessionIdSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "addRingCentralUserName",
+                type: "boolean",
+                name: "RingCentral user name",
+                description: "Log the RingCentral user name",
+                value: userCore.getAddRingCentralUserNameSetting(userSettings).value,
+                readOnly: userCore.getAddRingCentralUserNameSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddRingCentralUserNameSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "addRingCentralNumber",
+                type: "boolean",
+                name: "RingCentral phone number",
+                description: "Log the RingCentral phone number",
+                value: userCore.getAddRingCentralNumberSetting(userSettings).value,
+                readOnly: userCore.getAddRingCentralNumberSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddRingCentralNumberSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "addCallLogSubject",
+                type: "boolean",
+                name: "Call subject",
+                description: "Log a short phrase to summarize call, e.g. 'Inbound call from...'",
+                value: userCore.getAddCallLogSubjectSetting(userSettings).value,
+                readOnly: userCore.getAddCallLogSubjectSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddCallLogSubjectSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "addCallLogContactNumber",
+                type: "boolean",
+                name: "Contact's phone number",
+                description: "Log the contact information of the other participant",
+                value: userCore.getAddCallLogContactNumberSetting(userSettings).value,
+                readOnly: userCore.getAddCallLogContactNumberSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddCallLogContactNumberSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "addCallLogDateTime",
+                type: "boolean",
+                name: "Date and time",
+                description: "Log the call's explicit start and end date/times",
+                value: userCore.getAddCallLogDateTimeSetting(userSettings).value,
+                readOnly: userCore.getAddCallLogDateTimeSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddCallLogDateTimeSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "logDateFormat",
+                type: "option",
+                name: "Date format",
+                options: [
+                    // ISO 8601 and Standard Formats
+                    {
+                        id: "YYYY-MM-DD HH:mm:ss",
+                        name: "Global - 24H (e.g. 2024-01-15 14:30:45)"
+                    },
+                    {
+                        id: "YYYY-MM-DD hh:mm:ss A",
+                        name: "Global - 12H (e.g. 2024-01-15 02:30:45 PM)"
+                    },                    
+                    // US Formats
+                    {
+                        id: "MM/DD/YYYY hh:mm:ss A",
+                        name: "US - 12H (e.g. 01/15/2024 02:30:45 PM)"
+                    },
+                    {
+                        id: "MM/DD/YYYY HH:mm:ss",
+                        name: "US - 24H (e.g. 01/15/2024 14:30:45)"
+                    },
+                    // European Formats
+                    {
+                        id: "DD/MM/YYYY HH:mm:ss",
+                        name: "EU - 24H (e.g. 15/01/2024 14:30:45)"
+                    },
+                    {
+                        id: "DD/MM/YYYY hh:mm:ss A",
+                        name: "EU - 12H (e.g. 15/01/2024 02:30:45 PM)"
+                    }
+                ],
+                value: userCore.getLogDateFormatSetting(userSettings).value,
+                readOnly: userCore.getLogDateFormatSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getLogDateFormatSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "addCallLogDuration",
+                type: "boolean",
+                name: "Call duration",
+                description: "Log the call duration, noted in minutes and seconds",
+                value: userCore.getAddCallLogDurationSetting(userSettings).value,
+                readOnly: userCore.getAddCallLogDurationSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddCallLogDurationSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "addCallLogResult",
+                type: "boolean",
+                name: "Call result",
+                description: "Log the result of the call, e.g. Call connected",
+                value: userCore.getAddCallLogResultSetting(userSettings).value,
+                readOnly: userCore.getAddCallLogResultSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddCallLogResultSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "addCallLogRecording",
+                type: "boolean",
+                name: "Link to the recording",
+                description: "Provide a link to the call's recording, if it exists",
+                value: userCore.getAddCallLogRecordingSetting(userSettings).value,
+                readOnly: userCore.getAddCallLogRecordingSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddCallLogRecordingSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "addCallLogAiNote",
+                type: "boolean",
+                name: "Smart summary",
+                description: "Log the AI-generated summary of the call, if it exists",
+                value: userCore.getAddCallLogAiNoteSetting(userSettings).value,
+                readOnly: userCore.getAddCallLogAiNoteSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddCallLogAiNoteSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "addCallLogTranscript",
+                type: "boolean",
+                name: "Call transcript",
+                description: "Log the AI-generated transcript of the call, if it exists",
+                value: userCore.getAddCallLogTranscriptSetting(userSettings).value,
+                readOnly: userCore.getAddCallLogTranscriptSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddCallLogTranscriptSetting(userSettings).readOnlyReason
+            }
+        ],
+    });
     if (customSettings) {
         for (const cs of customSettings) {
+            // TEMP: skip custom settings for call log details
+            if (cs.items.some(c => c.id === 'addCallLogNote' || c.id === 'addCallSessionId' || c.id === 'addCallLogSubject' || c.id === 'addCallLogContactNumber' || c.id === 'addCallLogDateTime' || c.id === 'addCallLogDuration' || c.id === 'addCallLogResult' || c.id === 'addCallLogRecording' || c.id === 'addCallLogAiNote' || c.id === 'addCallLogTranscript')) {
+                continue;
+            }
             const items = [];
             for (const item of cs.items) {
                 if (item.requiredPermission && !userPermissions[item.requiredPermission]) {

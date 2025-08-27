@@ -1,10 +1,11 @@
 {
   "name": "rc-unified-crm-extension-client",
-  "version": "1.5.6",
+  "version": "1.6.3",
   "description": "![image](https://user-images.githubusercontent.com/7036536/190325756-35ef367d-1557-4833-84aa-b09f5d6717ab.png)",
   "main": "background.js",
   "scripts": {
-    "build": "node ./build.js"
+    "build": "node ./build.js",
+    "update": "node ./updateVersion.js"
   },
   "repository": {
     "type": "git",
@@ -34,7 +35,7 @@
   "devDependencies": {
     "@eslint/js": "^9.22.0",
     "dotenv": "^16.5.0",
-    "esbuild": "^0.20.2",
+    "esbuild": "^0.25.0",
     "esbuild-copy-static-files": "^0.1.0",
     "esbuild-plugin-svgr": "^1.1.0",
     "eslint": "^9.22.0",

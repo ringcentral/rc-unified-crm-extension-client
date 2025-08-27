@@ -29,6 +29,7 @@ import customizeTabsSettingPage from './components/admin/generalSettings/customi
 import clickToDialEmbedPage from './components/admin/generalSettings/clickToDialEmbedPage';
 import notificationLevelSettingPage from './components/admin/generalSettings/notificationLevelSettingPage';
 import appearancePage from './components/admin/generalSettings/appearancePage';
+import callLogDetailsSettingPage from './components/admin/managedSettings/callAndSMSLoggingSetting/callLogDetailsSettingPage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
 import {
@@ -53,7 +54,7 @@ import {
 
 import logService from './service/logService';
 import embeddableServices from './service/embeddableServices';
-import { logPageFormDataDefaulting, getLogConflictInfo } from './lib/logUtil';
+import { logPageFormDataDefaulting, getLogConflictInfo, addPendingRecordingSessionId, triggerPendingRecordingCheck, removePendingRecordingSessionId } from './lib/logUtil';
 import { bullhornHeartbeat, tryConnectToBullhorn } from './misc/bullhorn';
 
 import axios from 'axios';
@@ -110,6 +111,7 @@ window.addEventListener('message', async (e) => {
                 expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days
               }
             });
+            await addPendingRecordingSessionId({ sessionId: data.telephonySession.sessionId });
           }
           break;
         case 'rc-calling-settings-notify':
@@ -227,7 +229,7 @@ window.addEventListener('message', async (e) => {
             await chrome.storage.local.set({ crmAuthed })
             // Manifest case: use RC login to login CRM as well
             if (!crmAuthed && !!platform.autoLoginCRMWithRingCentralLogin) {
-              const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken() });
+              const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken(), useLicense: platform.useLicense });
               try {
                 await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
               }
@@ -244,11 +246,18 @@ window.addEventListener('message', async (e) => {
               }, 900000);
               // report tab
               const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
-              const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                type: 'rc-adapter-register-customized-page',
-                page: reportPageRender,
-              }, '*');
+              if (userCore.getShowUserReportTabSetting(userSettings).value) {
+                const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-register-customized-page',
+                  page: reportPageRender,
+                }, '*');
+              }
+
+              // Set every 5min, check if there's any pending recording link
+              setInterval(async function () {
+                await triggerPendingRecordingCheck({ serverUrl: manifest.serverUrl });
+              }, 300000);
             }
             // Unique: Bullhorn
             if (platform.name === 'bullhorn' && crmAuthed) {
@@ -269,6 +278,7 @@ window.addEventListener('message', async (e) => {
             }
             else if (!rcUnifiedCrmExtJwt && !crmAuthed) {
               currentNotificationId = await showNotification({ level: 'warning', message: `Please go to Settings and connect to ${platform.name}`, ttl: 60000 });
+              authCore.setAuth(false);
             }
             try {
               const rcInfo = await getRcInfo();
@@ -368,6 +378,7 @@ window.addEventListener('message', async (e) => {
           if (registeredVersionInfo[['rc-crm-extension-version']]) {
             const releaseNotesPageRender = await releaseNotesPage.getReleaseNotesPageRender({ manifest, platformName, registeredVersion: registeredVersionInfo['rc-crm-extension-version'] });
             if (releaseNotesPageRender) {
+              await chrome.storage.local.set({ 'rc-crm-extension-version': manifest.version });
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
                 page: releaseNotesPageRender
@@ -376,7 +387,7 @@ window.addEventListener('message', async (e) => {
                 type: 'rc-adapter-navigate-to',
                 path: `/customized/${releaseNotesPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
               }, '*');
-              showNotification({ level: 'success', message: 'New version released. Please check release notes and reload the extension.', ttl: 60000 });
+              showNotification({ level: 'success', message: `Updated to the latest version ${manifest.version}`, ttl: 60000 });
             }
           }
 
@@ -391,7 +402,7 @@ window.addEventListener('message', async (e) => {
             }, '*');
             setInterval(function () {
               logService.forceCallLogMatcherCheck();
-            }, 600000)
+            }, 600000) // 10min
           }
           break;
         case 'rc-login-popup-notify':
@@ -443,6 +454,7 @@ window.addEventListener('message', async (e) => {
             case 'NoCall':
               if (data.call.terminationType === 'final') {
                 window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
+                await logCore.uploadCacheNote({ serverUrl: manifest.serverUrl, sessionId: data.call.sessionId });
                 const callAutoPopup = userCore.getCallPopSetting(userSettings).value;
                 if (callAutoPopup) {
                   const isExtensionNumber = data.call.direction === 'Inbound' ?
@@ -510,7 +522,7 @@ window.addEventListener('message', async (e) => {
                     path: `/log/call/${data.call.sessionId}`,
                   }, '*');
                 }
-
+                
                 await chrome.storage.local.set({
                   [`call-log-data-ready-${data.call.sessionId}`]: {
                     isReady: false,
@@ -598,20 +610,22 @@ window.addEventListener('message', async (e) => {
           if (data.path === '/settings' && crmAuthed) {
             const nowDate = new Date();
             if (nowDate - lastUserSettingSyncDate > 60000) {
-              showNotification({ level: 'success', message: 'User settings syncing', ttl: 2000 });
+              // showNotification({ level: 'success', message: 'User settings syncing', ttl: 2000 });
               userSettings = await userCore.refreshUserSettings({});
-              showNotification({ level: 'success', message: 'User settings synced', ttl: 2000 });
+              // showNotification({ level: 'success', message: 'User settings synced', ttl: 2000 });
               lastUserSettingSyncDate = new Date();
             }
           }
 
           if (data.path === '/customizedTabs/reportPage') {
-            const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
-            const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-              type: 'rc-adapter-register-customized-page',
-              page: reportPageRender
-            }, '*');
+            if (userCore.getShowUserReportTabSetting(userSettings).value) {
+              const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+              const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-customized-page',
+                page: reportPageRender
+              }, '*');
+            }
           }
           break;
         case 'rc-adapter-ai-assistant-settings-notify':
@@ -681,6 +695,9 @@ window.addEventListener('message', async (e) => {
                 window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                 await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
                 await authCore.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
+                if (platform.useLicense) {
+                  await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
+                }
                 window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
               }
               responseMessage(data.requestId, { data: 'ok' });
@@ -863,16 +880,18 @@ window.addEventListener('message', async (e) => {
                     await chrome.storage.local.set({ unloggedCallPageDataCache: unloggedCalls });
                   }
                   else {
-                    const userReportStats = await getUserReportStats({ dateRange: data.body.formData.dateRangeEnums, customStartDate: data.body.formData.startDate, customEndDate: data.body.formData.endDate });
-                    const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-register-customized-page',
-                      page: reportPageRender,
-                    });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-navigate-to',
-                      path: `/customizedTabs/${reportPageRender.id}`, // page id
-                    }, '*');
+                    if (userCore.getShowUserReportTabSetting(userSettings).value) {
+                      const userReportStats = await getUserReportStats({ dateRange: data.body.formData.dateRangeEnums, customStartDate: data.body.formData.startDate, customEndDate: data.body.formData.endDate });
+                      const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: reportPageRender,
+                      });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-navigate-to',
+                        path: `/customizedTabs/${reportPageRender.id}`, // page id
+                      }, '*');
+                    }
                   }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
@@ -989,10 +1008,13 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const serverSideLoggingSubscription = await adminCore.getServerSideLogging({ platform });
                   const subscriptionLevel = serverSideLoggingSubscription.subscribed ? serverSideLoggingSubscription.subscriptionLevel : 'Disable';
+                  const additionalFieldValues = await adminCore.getServerSideLoggingAdditionalFieldValues({ platform });
                   const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({
                     subscriptionLevel,
                     doNotLogNumbers: serverSideLoggingSubscription.doNotLogNumbers,
-                    loggingByAdmin: serverSideLoggingSubscription.loggingByAdmin
+                    loggingByAdmin: serverSideLoggingSubscription.loggingByAdmin,
+                    additionalFields: platform.serverSideLogging?.additionalFields ?? [],
+                    additionalFieldValues
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
@@ -1035,6 +1057,17 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${customSettingsPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'callLogDetailsSetting':
+                  const callLogDetailsSettingPageRender = callLogDetailsSettingPage.getCallLogDetailsSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: callLogDetailsSettingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${callLogDetailsSettingPageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'customAdapter':
@@ -1114,7 +1147,7 @@ window.addEventListener('message', async (e) => {
                 // If not a direct number, but allow extension number logging, go ahead as well
                 if (contactPhoneNumber.startsWith('+') || allowExtensionNumberLogging) {
                   // query on 3rd party API to get the matched contact info and return
-                  const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: false });
+                  const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber: !contactPhoneNumber.startsWith('+'), isForceRefresh: true, isToTriggerContactMatch: false });
                   if (contactMatched) {
                     if (!matchedContacts[contactPhoneNumber]) {
                       matchedContacts[contactPhoneNumber] = [];
@@ -1404,6 +1437,9 @@ window.addEventListener('message', async (e) => {
                         startTime: data.body.call.startTime,
                         duration: data.body.call.duration,
                         result: data.body.call.result,
+                        direction: data.body.call.direction,
+                        from: data.body.call.from,
+                        to: data.body.call.to,
                         isShowNotification: true
                       });
                       if (!platform.disableDisposition) {
@@ -1425,11 +1461,13 @@ window.addEventListener('message', async (e) => {
                   // If there is existing call log, update it
                   if (existingCalls?.length > 0 && existingCalls[0]?.matched) {
                     await logService.syncCallData({
-                      manifest,
+                      serverUrl: manifest.serverUrl,
                       dataBody: data.body
                     });
                     if (data.body.call?.recording?.link) {
                       trackUpdateCallRecordingLink({ processState: 'finish' });
+                      // remove pending recording link mark from storage
+                      await removePendingRecordingSessionId({ sessionId: data.body.call.sessionId });
                     }
                   }
                   break;
@@ -1521,17 +1559,24 @@ window.addEventListener('message', async (e) => {
                         `Inbound Call from ${defaultingContact?.name ?? ''}` :
                         `Outbound Call to ${defaultingContact?.name ?? ''}`;
                       if (existingCalls?.length > 0 && existingCalls[0]?.matched) {
+                        // Ensure we get the most recent cached note
+                        const cachedNote = await logCore.getCachedNote({ sessionId: data.body.call.sessionId });
+                        const noteToUse = cachedNote || logInfo.note || '';
+
                         await logCore.updateLog({
                           serverUrl: manifest.serverUrl,
                           logType: 'Call',
                           sessionId: data.body.call.sessionId,
                           subject: logInfo.subject,
-                          note: logInfo.note,
+                          note: noteToUse,
                           aiNote: data.body.aiNote,
                           transcript: data.body.transcript,
                           startTime: data.body.call.startTime,
                           duration: data.body.call.duration,
                           result: data.body.call.result,
+                          direction: data.body.call.direction,
+                          from: data.body.call.from,
+                          to: data.body.call.to,
                           isShowNotification: true
                         });
                       }
@@ -1663,24 +1708,42 @@ window.addEventListener('message', async (e) => {
             case '/callLogger/match':
               let callLogMatchData = {};
               let noLocalMatchedSessionIds = [];
+              // existingCallLogRecords: call logs in local storage
               const existingCallLogRecords = await chrome.storage.local.get(
                 data.body.sessionIds.map(sessionId => `rc-crm-call-log-${sessionId}`)
               );
               for (const sessionId of data.body.sessionIds) {
+                // match existing records
                 if (existingCallLogRecords[`rc-crm-call-log-${sessionId}`]) {
                   callLogMatchData[sessionId] = [{ id: sessionId, note: '', contact: { id: existingCallLogRecords[`rc-crm-call-log-${sessionId}`].contact?.id } }];
                 } else {
+                  // register non-existing records to be checked online
                   noLocalMatchedSessionIds.push(sessionId);
                 }
               }
               if (noLocalMatchedSessionIds.length > 0) {
                 const { successful, callLogs } = await logCore.getLog({ serverUrl: manifest.serverUrl, logType: 'Call', sessionIds: noLocalMatchedSessionIds.toString(), requireDetails: false });
+                // Case: no local record, but online DB check says YES
                 if (successful) {
                   const newLocalMatchedCallLogRecords = {};
                   for (const sessionId of noLocalMatchedSessionIds) {
                     const correspondingLog = callLogs.find(l => l.sessionId === sessionId);
+                    // correspondingLog: if matched => exsiting log record in online DB for this sessionId
                     if (correspondingLog?.matched) {
-                      callLogMatchData[sessionId] = [{ id: sessionId, note: '' }];
+                      const localNote = await logCore.getCachedNote({ sessionId });
+                      if (localNote) {
+                        callLogMatchData[sessionId] = [{ id: sessionId, note: localNote }];
+                        // update online record with local note
+                        await logCore.updateLog({
+                          serverUrl: manifest.serverUrl,
+                          logType: 'Call',
+                          sessionId,
+                          note: localNote
+                        })
+                      }
+                      else {
+                        callLogMatchData[sessionId] = [{ id: sessionId, note: '' }];
+                      }
                       newLocalMatchedCallLogRecords[`rc-crm-call-log-${sessionId}`] = { logId: correspondingLog.logId, contact: { id: correspondingLog.contact?.id } };
                     }
                     else {
@@ -1711,7 +1774,7 @@ window.addEventListener('message', async (e) => {
                       {
                         type: 'status',
                         status: 'failed',
-                        message: 'preparring data...'
+                        message: 'preparing data...'
                       }
                     ]
                   }
@@ -2051,6 +2114,7 @@ window.addEventListener('message', async (e) => {
               switch (data.body.button.id) {
                 case 'callAndSMSLoggingSettingPage':
                 case 'contactSettingPage':
+                case 'callLogDetailsSettingPage':
                 case 'advancedFeaturesSettingPage':
                 case 'customSettingsPage':
                 case 'customizeTabsSettingPage':
@@ -2078,18 +2142,20 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'authPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: data.body.button.formData.apiKey, formData: data.body.button.formData });
+                  const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: data.body.button.formData.apiKey, formData: data.body.button.formData, useLicense: platform.useLicense });
                   crmAuthed = !!returnedToken;
                   await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
                   if (crmAuthed) {
                     await chrome.storage.local.set({ crmAuthed });
                     // report tab
-                    const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
-                    const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-register-customized-page',
-                      page: reportPageRender,
-                    }, '*');
+                    if (userCore.getShowUserReportTabSetting(userSettings).value) {
+                      const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+                      const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: reportPageRender,
+                      }, '*');
+                    }
                     // admin tab
                     const adminSettingResults = await adminCore.refreshAdminSettings();
                     adminSettings = adminSettingResults.adminSettings;
@@ -2160,6 +2226,9 @@ window.addEventListener('message', async (e) => {
                   if (rcUnifiedCrmExtJwt) {
                     await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
                     await authCore.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
+                    if (platform.useLicense) {
+                      await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
+                    }
                   }
                   await chrome.storage.local.remove('platform-info');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2210,11 +2279,8 @@ window.addEventListener('message', async (e) => {
                     });
                   }
                   break;
-                case 'openFeedbackPageButton':
-                  chrome.runtime.sendMessage({
-                    type: "openPopupWindow",
-                    navigationPath: "/feedback"
-                  });
+                case 'openCommunityPageButton':
+                  window.open('https://community.ringcentral.com/groups/app-connect-22', '_blank');
                   break;
                 case 'documentation':
                   if (platform?.documentationUrl) {
@@ -2286,11 +2352,11 @@ window.addEventListener('message', async (e) => {
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
                   if (data.body.button.formData.serverSideLogging != 'Disable') {
                     await adminCore.enableServerSideLogging({
+                      serverUrl: manifest.serverUrl,
                       platform,
                       subscriptionLevel: data.body.button.formData.serverSideLogging,
                       loggingByAdmin: data.body.button.formData.activityRecordOwner === 'admin'
                     });
-                    showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
                   }
                   else {
                     await adminCore.disableServerSideLogging({ platform });
@@ -2301,12 +2367,18 @@ window.addEventListener('message', async (e) => {
                     service: (await embeddableServices.getServiceManifest())
                   }, '*');
                   await adminCore.updateServerSideDoNotLogNumbers({ platform, doNotLogNumbers: data.body.button.formData.doNotLogNumbers ?? "" });
-                  showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
+                  const updateSSCLFieldsResponse = await adminCore.uploadServerSideLoggingAdditionalFieldValues({ platform, formData: data.body.button.formData });
+                  if (updateSSCLFieldsResponse.successful) {
+                    showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: 'goBack',
+                    }, '*');
+                  }
+                  else {
+                    showNotification({ level: updateSSCLFieldsResponse.returnMessage.messageType, message: updateSSCLFieldsResponse.returnMessage.message, ttl: updateSSCLFieldsResponse.returnMessage.ttl });
+                  }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: 'goBack',
-                  }, '*');
                   break;
                 case 'developerSettingsPage':
                   try {
@@ -2451,6 +2523,11 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
+                case 'refreshLicense':
+                  if (platform.useLicense) {
+                    await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
+                  }
+                  break;
               }
               responseMessage(data.requestId, { data: 'ok' });
               break;
@@ -2467,7 +2544,7 @@ window.addEventListener('message', async (e) => {
   catch (e) {
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
     console.log(e);
-    if (e.response && e.response.data && !noShowNotification && typeof e.response.data === 'string') {
+    if (e.response && e.response.data && e.response?.status !== 404 && !noShowNotification && typeof e.response.data === 'string') {
       showNotification({ level: 'warning', message: e.response.data, ttl: 5000 });
     }
     else if (e.message.includes('timeout')) {
@@ -2492,7 +2569,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
     }
     else if (request.platform === 'thirdParty') {
-      const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri });
+      const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri, useLicense: platform.useLicense });
       try {
         await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
       }
@@ -2503,12 +2580,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       await chrome.storage.local.set({ crmAuthed });
       if (crmAuthed) {
         // report tab
-        const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
-        const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-          type: 'rc-adapter-register-customized-page',
-          page: reportPageRender,
-        }, '*');
+        if (userCore.getShowUserReportTabSetting(userSettings).value) {
+          const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+          const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+          document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-register-customized-page',
+            page: reportPageRender,
+          }, '*');
+        }
         // admin tab
         const adminSettingResults = await adminCore.refreshAdminSettings();
         adminSettings = adminSettingResults.adminSettings;
@@ -2527,7 +2606,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   }
   // Unique: Pipedrive
   else if (request.type === 'pipedriveCallbackUri' && !(await authCore.checkAuth())) {
-    const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive` });
+    const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive`, useLicense: platform.useLicense });
     try {
       await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
     }
@@ -2536,12 +2615,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     crmAuthed = true;
     // report tab
-    const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
-    const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-      type: 'rc-adapter-register-customized-page',
-      page: reportPageRender,
-    }, '*');
+    if (userCore.getShowUserReportTabSetting(userSettings).value) {
+      const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+      const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: reportPageRender,
+      }, '*');
+    }
     // admin tab
     await chrome.storage.local.set({ crmAuthed });
     const adminSettingResults = await adminCore.refreshAdminSettings();
@@ -2624,7 +2705,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       apiKey: request.apiKey,
       formData: {
         apiUrl: request.apiUrl
-      }
+      },
+      useLicense: platform.useLicense
     });
     try {
       await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
@@ -2636,12 +2718,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     await chrome.storage.local.set({ crmAuthed });
     if (crmAuthed) {
       // report tab
-      const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
-      const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats });
-      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-        type: 'rc-adapter-register-customized-page',
-        page: reportPageRender,
-      }, '*');
+      if (userCore.getShowUserReportTabSetting(userSettings).value) {
+        const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+        const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+          type: 'rc-adapter-register-customized-page',
+          page: reportPageRender,
+        }, '*');
+      }
       // admin tab
       const adminSettingResults = await adminCore.refreshAdminSettings();
       adminSettings = adminSettingResults.adminSettings;

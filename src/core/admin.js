@@ -3,7 +3,7 @@ import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import rcAPI from '../lib/rcAPI';
 import { parsePhoneNumber } from 'awesome-phonenumber';
-import { getRcAccessToken, getPlatformInfo, getManifest } from '../lib/util';
+import { getRcAccessToken, getPlatformInfo, getManifest, showNotification } from '../lib/util';
 
 async function getAdminSettings({ serverUrl }) {
     try {
@@ -32,6 +32,7 @@ async function refreshAdminSettings() {
     const manifest = await getManifest();
     const platformInfo = await getPlatformInfo();
     const platform = manifest.platforms[platformInfo.platformName];
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const rcAccessToken = getRcAccessToken();
     let adminSettings;
     // Admin tab render
@@ -53,7 +54,7 @@ async function refreshAdminSettings() {
 
     // Set user setting display name
     const { crmUserInfo } = await chrome.storage.local.get({ crmUserInfo: null });
-    authCore.setAccountName(crmUserInfo?.name, !!storedAdminSettings);
+    authCore.setAuth(!!rcUnifiedCrmExtJwt, crmUserInfo?.name, !!storedAdminSettings);
 
     return { adminSettings }
 }
@@ -109,7 +110,42 @@ async function getServerSideLogging({ platform }) {
     }
 }
 
-async function enableServerSideLogging({ platform, subscriptionLevel, loggingByAdmin }) {
+async function getServerSideLoggingAdditionalFieldValues({ platform }) {
+    if (!platform.serverSideLogging || !platform.serverSideLogging.additionalFields) {
+        return {};
+    }
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
+    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
+    const manifest = await getManifest();
+    const settingsResponse = await axios.get(
+        `${manifest.serverUrl}/admin/serverLoggingSettings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`,
+    );
+    return settingsResponse.data;
+}
+
+async function uploadServerSideLoggingAdditionalFieldValues({ platform, formData }) {
+    if (!platform.serverSideLogging || !platform.serverSideLogging.additionalFields) {
+        return;
+    }
+    const additionalFieldValues = {};
+    platform.serverSideLogging.additionalFields.forEach(field => {
+        additionalFieldValues[field.const] = formData[field.const];
+    });
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
+    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
+    const manifest = await getManifest();
+    const uploadResponse = await axios.post(
+        `${manifest.serverUrl}/admin/serverLoggingSettings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`,
+        {
+            additionalFieldValues,
+        }
+    );
+    return uploadResponse.data;
+}
+
+async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel, loggingByAdmin }) {
     if (!platform.serverSideLogging) {
         return;
     }
@@ -134,14 +170,18 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                 await disableServerSideLogging({ platform, rcAccessToken });
             }
             //  Subscribe
+            // TODO: loggingWithUserAssigned overrides loggingByAdmin if useAdminAssignedUserToken is true
+            //       There are 2 roles, one to create activity and the other to own it (case: admin creating and assigning to user, so user would eventually own it)
+            //       To change the naming so that it has better readability. Right it's confusing on variable names for different roles.
             const subscribeResp = await axios.post(
                 `${serverDomainUrl}/subscribe`,
                 {
                     crmToken: rcUnifiedCrmExtJwt,
                     crmPlatform: platform.name,
+                    crmAdapterUrl: serverUrl,
                     subscriptionLevel,
                     loggingByAdmin,
-                    loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ?? false
+                    loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false
                 },
                 {
                     headers: {
@@ -150,6 +190,7 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                     }
                 }
             );
+            showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
         }
         catch (e) {
             if (e.response.status === 401) {
@@ -174,7 +215,11 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                     `${serverDomainUrl}/subscribe`,
                     {
                         crmToken: rcUnifiedCrmExtJwt,
-                        crmPlatform: platform.name
+                        crmPlatform: platform.name,
+                        crmAdapterUrl: serverUrl,
+                        subscriptionLevel,
+                        loggingByAdmin,
+                        loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false
                     },
                     {
                         headers: {
@@ -183,6 +228,14 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                         }
                     }
                 );
+                showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
+            }
+            if (e.response.status === 400) {
+                showNotification({
+                    level: "warning",
+                    message: `Failed to create subscription:${e.response.data.result.message}`,
+                    ttl: 10000
+                });
             }
         }
     }
@@ -309,12 +362,12 @@ async function authServerSideLogging({ platform }) {
     }
     const { rcUserInfo } = await chrome.storage.local.get('rcUserInfo');
     const rcAccessToken = getRcAccessToken();
-    const rcClientId = platform.serverSideLogging.rcClientId;
     const serverDomainUrl = platform.serverSideLogging.url;
     // Auth
     const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
     const serverSideLoggingTokenResp = await axios.get(
         `${serverDomainUrl}/oauth/callback?code=${rcInteropCode}&&rcAccountId=${rcUserInfo?.rcAccountId}`,
+            clientId: 'Y4m1YREFKbXdDoet5djv46'
         {
             headers: {
                 Accept: 'application/json'
@@ -354,3 +407,5 @@ exports.enableServerSideLogging = enableServerSideLogging;
 exports.disableServerSideLogging = disableServerSideLogging;
 exports.updateServerSideDoNotLogNumbers = updateServerSideDoNotLogNumbers;
 exports.authServerSideLogging = authServerSideLogging;
+exports.getServerSideLoggingAdditionalFieldValues = getServerSideLoggingAdditionalFieldValues;
+exports.uploadServerSideLoggingAdditionalFieldValues = uploadServerSideLoggingAdditionalFieldValues;

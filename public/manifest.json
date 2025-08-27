@@ -1,7 +1,7 @@
 {
   "name": "RingCentral App Connect",
   "description": "A RingCentral extension for CRM platforms",
-  "version": "1.5.6",
+  "version": "1.6.3",
   "permissions": [
     "storage",
     "alarms",

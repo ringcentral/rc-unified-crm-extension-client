@@ -14,6 +14,7 @@ async function bullhornHeartbeat({ platform }) {
         }
         else {
             await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
+            await chrome.storage.local.remove('crmAuthed');
             const serviceManifest = await getServiceManifest();
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-third-party-service',
@@ -55,6 +56,7 @@ async function bullhornHeartbeat({ platform }) {
     }
     catch (e) {
         await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
+        await chrome.storage.local.remove('crmAuthed');
         const serviceManifest = await getServiceManifest();
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-register-third-party-service',
