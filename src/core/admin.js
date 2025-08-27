@@ -361,13 +361,12 @@ async function authServerSideLogging({ platform }) {
     }
 
     const rcAccessToken = getRcAccessToken();
-    const rcClientId = platform.serverSideLogging.rcClientId;
     const serverDomainUrl = platform.serverSideLogging.url;
     // Auth
     const rcInteropCodeResp = await axios.post(
         'https://platform.ringcentral.com/restapi/v1.0/interop/generate-code',
         {
-            clientId: rcClientId
+            clientId: 'Y4m1YREFKbXdDoet5djv46'
         },
         {
             headers: {
