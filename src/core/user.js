@@ -115,7 +115,8 @@ async function updateSSCLToken({ serverUrl, platform, token }) {
             `${platform.serverSideLogging.url}/update-crm-token`,
             {
                 crmToken: token,
-                crmPlatform: platform.name
+                crmPlatform: platform.name,
+                crmAdapterUrl: serverUrl
             },
             {
                 headers: {

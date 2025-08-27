@@ -144,7 +144,7 @@ async function uploadServerSideLoggingAdditionalFieldValues({ platform, formData
     return uploadResponse.data;
 }
 
-async function enableServerSideLogging({ platform, subscriptionLevel, loggingByAdmin }) {
+async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel, loggingByAdmin }) {
     if (!platform.serverSideLogging) {
         return;
     }
@@ -177,6 +177,7 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                 {
                     crmToken: rcUnifiedCrmExtJwt,
                     crmPlatform: platform.name,
+                    crmAdapterUrl: serverUrl,
                     subscriptionLevel,
                     loggingByAdmin,
                     loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false
@@ -213,7 +214,11 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                     `${serverDomainUrl}/subscribe`,
                     {
                         crmToken: rcUnifiedCrmExtJwt,
-                        crmPlatform: platform.name
+                        crmPlatform: platform.name,
+                        crmAdapterUrl: serverUrl,
+                        subscriptionLevel,
+                        loggingByAdmin,
+                        loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false
                     },
                     {
                         headers: {
