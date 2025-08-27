@@ -185,6 +185,18 @@ async function getCachedNote({ sessionId }) {
     }
 }
 
+async function uploadCacheNote({ serverUrl, sessionId }) {
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const cachedNote = await chrome.storage.local.get(sessionId);
+    if (rcUnifiedCrmExtJwt && cachedNote[sessionId]) {
+        const postBody = {
+            sessionId,
+            note: cachedNote[sessionId]
+        }
+        const postRes = await axios.post(`${serverUrl}/callLog/cacheNote?jwtToken=${rcUnifiedCrmExtJwt}`, postBody);
+    }
+}
+
 function getConflictContentFromUnresolvedLog(log) {
     const isMultipleContact = log.contactInfo.filter(c => !c.isNewContact).length > 1;
     const isNoContact = log.contactInfo.filter(c => !c.isNewContact).length === 0 && log.contactInfo.some(c => c.isNewContact);
@@ -222,4 +234,5 @@ exports.openLog = openLog;
 exports.updateLog = updateLog;
 exports.cacheCallNote = cacheCallNote;
 exports.getCachedNote = getCachedNote;
+exports.uploadCacheNote = uploadCacheNote;
 exports.getConflictContentFromUnresolvedLog = getConflictContentFromUnresolvedLog;

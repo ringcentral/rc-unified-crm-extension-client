@@ -454,6 +454,7 @@ window.addEventListener('message', async (e) => {
             case 'NoCall':
               if (data.call.terminationType === 'final') {
                 window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
+                await logCore.uploadCacheNote({ serverUrl: manifest.serverUrl, sessionId: data.call.sessionId });
                 const callAutoPopup = userCore.getCallPopSetting(userSettings).value;
                 if (callAutoPopup) {
                   const isExtensionNumber = data.call.direction === 'Inbound' ?
@@ -521,7 +522,7 @@ window.addEventListener('message', async (e) => {
                     path: `/log/call/${data.call.sessionId}`,
                   }, '*');
                 }
-
+                
                 await chrome.storage.local.set({
                   [`call-log-data-ready-${data.call.sessionId}`]: {
                     isReady: false,
