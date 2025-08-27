@@ -368,6 +368,22 @@ function getAddCallSessionIdSetting(userSettings) {
     }
 }
 
+function getAddRingCentralUserNameSetting(userSettings) {
+    return {
+        value: userSettings?.addRingCentralUserName?.value ?? false,
+        readOnly: userSettings?.addRingCentralUserName?.customizable === undefined ? false : !userSettings?.addRingCentralUserName?.customizable,
+        readOnlyReason: !userSettings?.addRingCentralUserName?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAddRingCentralNumberSetting(userSettings) {
+    return {
+        value: userSettings?.addRingCentralNumber?.value ?? false,
+        readOnly: userSettings?.addRingCentralNumber?.customizable === undefined ? false : !userSettings?.addRingCentralNumber?.customizable,
+        readOnlyReason: !userSettings?.addRingCentralNumber?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getAddCallLogSubjectSetting(userSettings) {
     return {
         value: userSettings?.addCallLogSubject?.value ?? true,
@@ -483,7 +499,7 @@ exports.getShowTextTabSetting = getShowTextTabSetting;
 exports.getShowFaxTabSetting = getShowFaxTabSetting;
 exports.getShowVoicemailTabSetting = getShowVoicemailTabSetting;
 exports.getShowRecordingsTabSetting = getShowRecordingsTabSetting;
-exports.getShowContactsTabSetting = getShowContactsTabSetting;
+exports.getShowContactsTabSetting = getShowContactsTabSetting;  
 exports.getShowUserReportTabSetting = getShowUserReportTabSetting;
 exports.getClickToDialEmbedMode = getClickToDialEmbedMode;
 exports.getClickToDialUrls = getClickToDialUrls;
@@ -491,6 +507,8 @@ exports.getNotificationLevelSetting = getNotificationLevelSetting;
 
 exports.getAddCallLogNoteSetting = getAddCallLogNoteSetting;
 exports.getAddCallSessionIdSetting = getAddCallSessionIdSetting;
+exports.getAddRingCentralUserNameSetting = getAddRingCentralUserNameSetting;
+exports.getAddRingCentralNumberSetting = getAddRingCentralNumberSetting;
 exports.getAddCallLogSubjectSetting = getAddCallLogSubjectSetting;
 exports.getAddCallLogContactNumberSetting = getAddCallLogContactNumberSetting;
 exports.getAddCallLogDateTimeSetting = getAddCallLogDateTimeSetting;

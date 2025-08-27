@@ -1437,6 +1437,9 @@ window.addEventListener('message', async (e) => {
                         startTime: data.body.call.startTime,
                         duration: data.body.call.duration,
                         result: data.body.call.result,
+                        direction: data.body.call.direction,
+                        from: data.body.call.from,
+                        to: data.body.call.to,
                         isShowNotification: true
                       });
                       if (!platform.disableDisposition) {
@@ -1571,6 +1574,9 @@ window.addEventListener('message', async (e) => {
                           startTime: data.body.call.startTime,
                           duration: data.body.call.duration,
                           result: data.body.call.result,
+                          direction: data.body.call.direction,
+                          from: data.body.call.from,
+                          to: data.body.call.to,
                           isShowNotification: true
                         });
                       }
