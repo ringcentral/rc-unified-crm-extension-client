@@ -2,7 +2,7 @@ import axios from 'axios';
 import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import { parsePhoneNumber } from 'awesome-phonenumber';
-import { getRcAccessToken, getPlatformInfo, getManifest, getRcContactInfo } from '../lib/util';
+import { getRcAccessToken, getPlatformInfo, getManifest, getRcContactInfo, showNotification } from '../lib/util';
 
 async function getAdminSettings({ serverUrl }) {
     try {
@@ -144,7 +144,7 @@ async function uploadServerSideLoggingAdditionalFieldValues({ platform, formData
     return uploadResponse.data;
 }
 
-async function enableServerSideLogging({ platform, subscriptionLevel, loggingByAdmin }) {
+async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel, loggingByAdmin }) {
     if (!platform.serverSideLogging) {
         return;
     }
@@ -177,6 +177,7 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                 {
                     crmToken: rcUnifiedCrmExtJwt,
                     crmPlatform: platform.name,
+                    crmAdapterUrl: serverUrl,
                     subscriptionLevel,
                     loggingByAdmin,
                     loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false
@@ -188,6 +189,7 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                     }
                 }
             );
+            showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
         }
         catch (e) {
             if (e.response.status === 401) {
@@ -212,7 +214,11 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                     `${serverDomainUrl}/subscribe`,
                     {
                         crmToken: rcUnifiedCrmExtJwt,
-                        crmPlatform: platform.name
+                        crmPlatform: platform.name,
+                        crmAdapterUrl: serverUrl,
+                        subscriptionLevel,
+                        loggingByAdmin,
+                        loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false
                     },
                     {
                         headers: {
@@ -221,6 +227,14 @@ async function enableServerSideLogging({ platform, subscriptionLevel, loggingByA
                         }
                     }
                 );
+                showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
+            }
+            if (e.response.status === 400) {
+                showNotification({
+                    level: "warning",
+                    message: `Failed to create subscription:${e.response.data.result.message}`,
+                    ttl: 10000
+                });
             }
         }
     }

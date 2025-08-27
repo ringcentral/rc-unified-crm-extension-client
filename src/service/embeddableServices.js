@@ -460,6 +460,24 @@ async function getServiceManifest() {
                 readOnlyReason: userCore.getAddCallSessionIdSetting(userSettings).readOnlyReason
             },
             {
+                id: "addRingCentralUserName",
+                type: "boolean",
+                name: "RingCentral user name",
+                description: "Log the RingCentral user name",
+                value: userCore.getAddRingCentralUserNameSetting(userSettings).value,
+                readOnly: userCore.getAddRingCentralUserNameSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddRingCentralUserNameSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "addRingCentralNumber",
+                type: "boolean",
+                name: "RingCentral phone number",
+                description: "Log the RingCentral phone number",
+                value: userCore.getAddRingCentralNumberSetting(userSettings).value,
+                readOnly: userCore.getAddRingCentralNumberSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getAddRingCentralNumberSetting(userSettings).readOnlyReason
+            },
+            {
                 id: "addCallLogSubject",
                 type: "boolean",
                 name: "Call subject",

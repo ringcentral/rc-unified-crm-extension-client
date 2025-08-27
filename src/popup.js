@@ -456,6 +456,7 @@ window.addEventListener('message', async (e) => {
             case 'NoCall':
               if (data.call.terminationType === 'final') {
                 window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
+                await logCore.uploadCacheNote({ serverUrl: manifest.serverUrl, sessionId: data.call.sessionId });
                 const callAutoPopup = userCore.getCallPopSetting(userSettings).value;
                 if (callAutoPopup) {
                   const isExtensionNumber = data.call.direction === 'Inbound' ?
@@ -523,7 +524,7 @@ window.addEventListener('message', async (e) => {
                     path: `/log/call/${data.call.sessionId}`,
                   }, '*');
                 }
-
+                
                 await chrome.storage.local.set({
                   [`call-log-data-ready-${data.call.sessionId}`]: {
                     isReady: false,
@@ -1499,6 +1500,9 @@ window.addEventListener('message', async (e) => {
                         startTime: data.body.call.startTime,
                         duration: data.body.call.duration,
                         result: data.body.call.result,
+                        direction: data.body.call.direction,
+                        from: data.body.call.from,
+                        to: data.body.call.to,
                         isShowNotification: true
                       });
                       if (!platform.disableDisposition) {
@@ -1633,6 +1637,9 @@ window.addEventListener('message', async (e) => {
                           startTime: data.body.call.startTime,
                           duration: data.body.call.duration,
                           result: data.body.call.result,
+                          direction: data.body.call.direction,
+                          from: data.body.call.from,
+                          to: data.body.call.to,
                           isShowNotification: true
                         });
                       }
@@ -2451,11 +2458,11 @@ window.addEventListener('message', async (e) => {
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
                   if (data.body.button.formData.serverSideLogging != 'Disable') {
                     await adminCore.enableServerSideLogging({
+                      serverUrl: manifest.serverUrl,
                       platform,
                       subscriptionLevel: data.body.button.formData.serverSideLogging,
                       loggingByAdmin: data.body.button.formData.activityRecordOwner === 'admin'
                     });
-                    showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
                   }
                   else {
                     await adminCore.disableServerSideLogging({ platform });
