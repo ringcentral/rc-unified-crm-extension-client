@@ -44,11 +44,11 @@ function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, se
                 },
                 rcExtensionListTitle: {
                     type: 'string',
-                    description: `Select a RingCentral user: `
+                    description: `Link to a RingCentral user: `
                 },
                 searchWord: {
                     type: 'string',
-                    title: 'Search contact'
+                    title: 'Search RingCentral Address Book'
                 },
                 rcExtensionList: {
                     type: 'string',
