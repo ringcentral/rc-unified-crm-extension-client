@@ -2348,7 +2348,6 @@ window.addEventListener('message', async (e) => {
                       subscriptionLevel: data.body.button.formData.serverSideLogging,
                       loggingByAdmin: data.body.button.formData.activityRecordOwner === 'admin'
                     });
-                    showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
                   }
                   else {
                     await adminCore.disableServerSideLogging({ platform });
