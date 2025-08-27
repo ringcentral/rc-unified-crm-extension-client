@@ -2351,6 +2351,7 @@ window.addEventListener('message', async (e) => {
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
                   if (data.body.button.formData.serverSideLogging != 'Disable') {
                     await adminCore.enableServerSideLogging({
+                      serverUrl: manifest.serverUrl,
                       platform,
                       subscriptionLevel: data.body.button.formData.serverSideLogging,
                       loggingByAdmin: data.body.button.formData.activityRecordOwner === 'admin'
