@@ -5,16 +5,35 @@ function getUserMappingPageRender({ userMapping, searchWord = '', filter = 'All'
             userMappingList.push({
                 const: um.crmUser.id,
                 title: um.crmUser.name,
-                description: `Mapped to ${um.rcUser.email || um.rcUser.name}${um.rcUser.extensionNumber ? `, ext: ${um.rcUser.extensionNumber}` : ''}`,
-                meta: '(Click to edit)'
+                description: `${um.rcUser.email || um.rcUser.name}${um.rcUser.extensionNumber ? `, ext: ${um.rcUser.extensionNumber}` : ''}`,
+                meta: 'Mapped',
+                actions: [
+                    {
+                        id: 'usermappingEdit',
+                        title: 'Edit',
+                        icon: 'edit'
+                    },
+                    {
+                        id: 'usermappingRemove',
+                        title: 'Remove',
+                        icon: 'delete'
+                    }
+                ]
             })
         }
         else {
             userMappingList.push({
                 const: um.crmUser.id,
                 title: um.crmUser.name,
-                description: 'Unmapped',
-                meta: '(Click to edit)'
+                description: '(Unknown)',
+                meta: 'Unmapped',
+                actions: [
+                    {
+                        id: 'usermappingEdit',
+                        title: 'Edit',
+                        icon: 'edit'
+                    }
+                ]
             })
         }
     }
@@ -22,7 +41,7 @@ function getUserMappingPageRender({ userMapping, searchWord = '', filter = 'All'
         userMappingList = userMappingList.filter(um => um.title.toLowerCase().includes(searchWord.toLowerCase()) || um.description.toLowerCase().includes(searchWord.toLowerCase()));
     }
     if (filter !== 'All') {
-        userMappingList = userMappingList.filter(um => um.description.startsWith(filter));
+        userMappingList = userMappingList.filter(um => um.meta === filter);
     }
     return {
         id: 'userMappingPage',

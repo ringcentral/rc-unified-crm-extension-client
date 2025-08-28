@@ -1,23 +1,18 @@
 const CONTENT_MARGIN_TOP = '-20px';
 const SECTION_MARGIN_TOP = '-5px';
 
-function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, selectedRcExtensionId, searchWord = '' }) {
-    const rcExtensionsToRender = searchWord ? rcExtensions.filter(rc =>
-        rc.name && rc.name.toLowerCase().includes(searchWord.toLowerCase()) ||
-        rc.firstName && rc.lastName && `${rc.firstName} ${rc.lastName}`.toLowerCase().includes(searchWord.toLowerCase()) ||
-        rc.email && rc.email.toLowerCase().includes(searchWord.toLowerCase()) ||
-        rc.extensionNumber && rc.extensionNumber.toLowerCase().includes(searchWord.toLowerCase())
-    ) : rcExtensions;
+function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, selectedRcExtensionId }) {
     return {
         id: 'editUserMappingPage',
         title: `Edit mapping for ${userMapping.crmUser.name}`,
         type: 'page',
         schema: {
             type: 'object',
+            required: ['rcExtensionList'],
             properties: {
                 crmUserIdTitle: {
                     type: 'string',
-                    description: 'ID'
+                    description: `${platformName} ID`
                 },
                 crmUserId: {
                     type: 'string',
@@ -26,7 +21,7 @@ function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, se
                 },
                 crmUserNameTitle: {
                     type: 'string',
-                    description: 'Name'
+                    description: `${platformName} Username`
                 },
                 crmUserName: {
                     type: 'string',
@@ -35,30 +30,21 @@ function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, se
                 },
                 crmUserEmailTitle: {
                     type: 'string',
-                    description: 'Email'
+                    description: `${platformName} User Email`
                 },
                 crmUserEmail: {
                     type: 'string',
                     const: userMapping.crmUser.email,
                     description: userMapping.crmUser.email
                 },
-                rcExtensionListTitle: {
-                    type: 'string',
-                    description: `Link to a RingCentral user: `
-                },
-                searchWord: {
-                    type: 'string',
-                    title: 'Search RingCentral Address Book'
-                },
                 rcExtensionList: {
                     type: 'string',
-                    oneOf: rcExtensionsToRender.map(rc => (
-                        {
-                            const: rc.id,
-                            title: rc.name ? `${rc.name} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}` : `${rc.firstName} ${rc.lastName} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}`,
-                            description: rc.email
-                        }
-                    ))
+                    title: 'RingCentral user',
+                    description: 'Link to a RingCentral user',
+                    enum: rcExtensions.map(rc => rc.id),
+                    enumNames: rcExtensions.map(rc => rc.name ?
+                        `${rc.name} ${rc.email ? `- ${rc.email}` : ''} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}` :
+                        `${rc.firstName} ${rc.lastName} ${rc.email ? `- ${rc.email}` : ''} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}`)
                 }
             }
         },
@@ -92,27 +78,9 @@ function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, se
                 "ui:variant": "body2",
                 "ui:style": { marginTop: CONTENT_MARGIN_TOP }
             },
-            rcExtensionListTitle: {
-                "ui:field": "typography",
-                "ui:variant": "body2",
-                "ui:style": {
-                    marginTop: SECTION_MARGIN_TOP,
-                    marginBottom: '-5px'
-                }
-            },
             rcExtensionList: {
-                "ui:field": "list",
-                "ui:style": {
-                    marginLeft: '5%',
-                    marginRight: '5%'
-                }
-            },
-            searchWord: {
-                "ui:placeholder": "search...",
-                "ui:style": {
-                    marginLeft: '5%',
-                    marginRight: '5%'
-                }
+                "ui:widget": "AutocompleteWidget",
+                "ui:placeholder": "Start typing a RingCentral user name..."
             },
             submitButtonOptions: {
                 submitText: 'Save'
@@ -121,11 +89,10 @@ function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, se
         formData: {
             userMapping,
             rcExtensions,
-            searchWord,
             crmUserId: userMapping.crmUser.id,
             crmUserName: userMapping.crmUser.name,
             crmUserEmail: userMapping.crmUser.email,
-            rcExtensionList: selectedRcExtensionId || rcExtensions.find(rc => rc.id === userMapping?.rcUser?.extensionId)?.id || 'none'
+            rcExtensionList: selectedRcExtensionId || rcExtensions.find(rc => rc.id === userMapping?.rcUser?.extensionId)?.id
         }
     }
 }

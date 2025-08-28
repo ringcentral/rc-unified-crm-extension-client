@@ -129,7 +129,7 @@ async function uploadServerSideLoggingAdditionalFieldValues({ platform, formData
     }
     const additionalFieldValues = {};
     platform.serverSideLogging.additionalFields.forEach(field => {
-        additionalFieldValues[field.const] = formData[field.const];
+        additionalFieldValues[field.const] = formData.serverSideLoggingHolder[field.const];
     });
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
