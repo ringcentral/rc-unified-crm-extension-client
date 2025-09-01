@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getRcAccessToken, getManifest, getUserReportStats } from '../lib/util';
+import { getRcAccessToken, getUserReportStats } from '../lib/util';
 import adminCore from './admin';
 import { getServiceManifest } from '../service/embeddableServices';
 import { getManifest } from '../service/manifestService';

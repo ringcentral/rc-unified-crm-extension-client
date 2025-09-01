@@ -2,7 +2,7 @@ import axios from 'axios';
 import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import { parsePhoneNumber } from 'awesome-phonenumber';
-import { getRcAccessToken, getPlatformInfo, getManifest, showNotification } from '../lib/util';
+import { getRcAccessToken, showNotification } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest } from '../service/manifestService';
 

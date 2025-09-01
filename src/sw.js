@@ -74,10 +74,6 @@ async function openPopupWindow() {
   return false;
 }
 
-  const platformInfo = await chrome.storage.local.get('platform-info');
-  if (!isObjectEmpty(platformInfo)) {
-    return true;
-  }
 chrome.action.onClicked.addListener(async function (tab) {
   fetchManifest();
   openPopupWindow();
