@@ -8,7 +8,7 @@ function getPlatformSelectionPageRender({ manifest }) {
             const: platform.name,
             title: platform.displayName,
             icon: platform.logoUrl,
-            description: `by ${platform.developer}`,
+            description: `by ${platform.developer.name}`,
             meta: 'Public'
         };
         platformList.push(newPlatform);

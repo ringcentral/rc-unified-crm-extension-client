@@ -1,6 +1,6 @@
 function getHostnameInputPageRender({ platform, inputUrl, region, isUrlValid }) {
     const platformName = platform.displayName;
-    const urlIdentifier = platform.environment.urlIdentifier;
+    const url = platform.environment.url;
     const overrides = platform.overrides;
     const page = {
         id: 'hostnameInputPage',
@@ -26,7 +26,7 @@ function getHostnameInputPageRender({ platform, inputUrl, region, isUrlValid }) 
             page.title = 'Select region';
             page.schema.properties.region = {
                 type: 'string',
-                oneOf: platform.environment.regionOptions.map(region => {
+                oneOf: platform.environment.regions.map(region => {
                     return {
                         const: region.const,
                         title: region.name
@@ -35,7 +35,7 @@ function getHostnameInputPageRender({ platform, inputUrl, region, isUrlValid }) 
             }
             page.schema.required.push('region');
             break;
-        case 'custom':
+        case 'dynamic':
             page.title = 'Enter hostname';
             page.schema.properties.instructionTitle = {
                 type: 'string',
@@ -64,7 +64,7 @@ function getHostnameInputPageRender({ platform, inputUrl, region, isUrlValid }) 
             page.schema.required.push('url');
             page.uiSchema.url = {
                 "ui:placeholder": 'url...',
-                "ui:help": isUrlValid ? '' : `Invalid url! Please enter it following format: "${urlIdentifier}"`
+                "ui:help": isUrlValid ? '' : `Invalid url! Please enter it following format: "${url}"`
             }
             break;
     }

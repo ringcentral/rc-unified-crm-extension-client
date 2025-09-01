@@ -674,8 +674,8 @@ window.addEventListener('message', async (e) => {
               switch (data.body.page.id) {
                 case 'hostnameInputPage':
                   let isUrlValid = true;
-                  if (manifest.platforms[data.body.formData.platformId]?.environment?.urlIdentifier) {
-                    const urlIdentifierRegex = new RegExp(manifest.platforms[data.body.formData.platformId].environment.urlIdentifier.replace(/\*/g, '.*'));
+                  if (manifest.platforms[data.body.formData.platformId]?.environment?.url) {
+                    const urlIdentifierRegex = new RegExp(manifest.platforms[data.body.formData.platformId].environment.url.replace(/\*/g, '.*'));
                     isUrlValid = urlIdentifierRegex.test(data.body.formData.url);
                   }
                   const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender(
@@ -2152,7 +2152,7 @@ window.addEventListener('message', async (e) => {
                     case 'regional':
                       inputUrl = data.body.button.formData.region;
                       break;
-                    case 'custom':
+                    case 'dynamic':
                       inputUrl = data.body.button.formData.url;
                       break;
                   }
