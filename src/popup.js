@@ -2595,6 +2595,22 @@ window.addEventListener('message', async (e) => {
                         page: reportPageRender,
                       }, '*');
                     }
+                    // Call-down tab (register only if enabled by admin)
+                    try {
+                      const stored = await chrome.storage.local.get({ userSettings: {} });
+                      const enableCalldown = userCore?.getShowCalldownTabSetting
+                        ? userCore.getShowCalldownTabSetting(stored.userSettings).value
+                        : true;
+                      if (enableCalldown) {
+                        const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                        const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All' });
+                        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                          type: 'rc-adapter-register-customized-page',
+                          page: calldownPageRender,
+                        }, '*');
+                      }
+                    }
+                    catch (e) { /* ignore */ }
                     // admin tab
                     const adminSettingResults = await adminCore.refreshAdminSettings();
                     adminSettings = adminSettingResults.adminSettings;
@@ -3119,6 +3135,22 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             page: reportPageRender,
           }, '*');
         }
+        // Call-down tab (register only if enabled by admin)
+        try {
+          const stored = await chrome.storage.local.get({ userSettings: {} });
+          const enableCalldown = userCore?.getShowCalldownTabSetting
+            ? userCore.getShowCalldownTabSetting(stored.userSettings).value
+            : true;
+          if (enableCalldown) {
+            const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+            const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All' });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+              type: 'rc-adapter-register-customized-page',
+              page: calldownPageRender,
+            }, '*');
+          }
+        }
+        catch (e) { /* ignore */ }
         // admin tab
         const adminSettingResults = await adminCore.refreshAdminSettings();
         adminSettings = adminSettingResults.adminSettings;
@@ -3155,6 +3187,22 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         page: reportPageRender,
       }, '*');
     }
+    // Call-down tab (register only if enabled by admin)
+    try {
+      const stored = await chrome.storage.local.get({ userSettings: {} });
+      const enableCalldown = userCore?.getShowCalldownTabSetting
+        ? userCore.getShowCalldownTabSetting(stored.userSettings).value
+        : true;
+      if (enableCalldown) {
+        const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+        const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All' });
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+          type: 'rc-adapter-register-customized-page',
+          page: calldownPageRender,
+        }, '*');
+      }
+    }
+    catch (e) { /* ignore */ }
     // admin tab
     await chrome.storage.local.set({ crmAuthed });
     const adminSettingResults = await adminCore.refreshAdminSettings();
