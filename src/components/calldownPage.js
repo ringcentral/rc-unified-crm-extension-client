@@ -132,9 +132,17 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                 title: displayName,
                 description: i.phoneNumber ?? '',
                 meta,
+                actions: [
+                    { id: 'calldownActionCall', title: 'Call', icon: 'phone' },
+                    { id: 'calldownActionOpen', title: 'Open contact', icon: 'view' },
+                    { id: 'calldownActionRemove', title: 'Delete', icon: 'delete', color: 'danger.b03' }
+                ],
                 additionalInfo: {
+                    recordId: i.id,
                     contactId: i.contactId,
-                    contactType: i.contactType
+                    contactType: i.contactType,
+                    phoneNumber: i.phoneNumber,
+                    contactName: i.contactName
                 }
             };
         });
