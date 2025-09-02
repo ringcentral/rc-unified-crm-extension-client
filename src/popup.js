@@ -821,6 +821,8 @@ window.addEventListener('message', async (e) => {
                     const updated = await calldownPage.getCalldownPageWithRecords({
                       manifest,
                       jwtToken: rcUnifiedCrmExtJwt,
+                      searchWithFilters: data.body.formData.searchWithFilters ?? {},
+                      // fallback for legacy
                       filterName: data.body.formData.filterName ?? '',
                       filterStatus: data.body.formData.filterStatus ?? 'All'
                     });
@@ -828,10 +830,7 @@ window.addEventListener('message', async (e) => {
                       type: 'rc-adapter-register-customized-page',
                       page: updated
                     });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-navigate-to',
-                      path: `/customizedTabs/${updated.id}`,
-                    }, '*');
+                    // Do not navigate again on each keystroke; avoid resetting input focus/value
                   }
                   break;
                 case 'googleSheetsPage':
