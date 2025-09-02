@@ -1,5 +1,5 @@
-function getPlatformSelectionPageRender({ manifest }) {
-    const platformList = [];
+function getPlatformSelectionPageRender({ manifest, searchWord = '', selectedPlatform = '', filter = 'All' }) {
+    let platformList = [];
 
     // put the new element as the last element that has the same developer
     // if there's no same developer, put it at the last of the array
@@ -13,6 +13,12 @@ function getPlatformSelectionPageRender({ manifest }) {
         };
         platformList.push(newPlatform);
     }
+    if (searchWord) {
+        platformList = platformList.filter(um => um.title.toLowerCase().includes(searchWord.toLowerCase()) || um.description.toLowerCase().includes(searchWord.toLowerCase()));
+    }
+    if (filter !== 'All') {
+        platformList = platformList.filter(um => um.meta === filter);
+    }
     return {
         id: 'platformSelectionPage',
         title: 'Select platform',
@@ -21,6 +27,19 @@ function getPlatformSelectionPageRender({ manifest }) {
         schema: {
             type: 'object',
             properties: {
+                platformSearch: {
+                    type: 'object',
+                    properties: {
+                        search: {
+                            type: 'string',
+                            title: 'Search'
+                        },
+                        filter: {
+                            type: 'string',
+                            title: 'Filter'
+                        }
+                    }
+                },
                 platforms: {
                     type: 'string',
                     title: 'Platforms',
@@ -30,6 +49,15 @@ function getPlatformSelectionPageRender({ manifest }) {
             required: ['platforms']
         },
         uiSchema: {
+            platformSearch: {
+                "ui:field": "search",
+                "ui:placeholder": "Search with filters...",
+                "ui:filters": [
+                    "All",
+                    "Public",
+                    "Private"
+                ]
+            },
             platforms: {
                 "ui:field": "list",
                 "ui:showIconAsAvatar": false
@@ -39,16 +67,14 @@ function getPlatformSelectionPageRender({ manifest }) {
             }
         },
         formData: {
-            platforms: ''
+            platforms: selectedPlatform,
+            platformSearch: {
+                search: searchWord,
+                filter: filter
+            }
         }
     }
 }
 
-function getUpdatedPlatformSelectionPageRender({ page, formData }) {
-    const updatedPage = { ...page };
-    updatedPage.formData.platforms = formData.platforms;
-    return updatedPage;
-}
 
 exports.getPlatformSelectionPageRender = getPlatformSelectionPageRender;
-exports.getUpdatedPlatformSelectionPageRender = getUpdatedPlatformSelectionPageRender;

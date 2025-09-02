@@ -521,7 +521,7 @@ window.addEventListener('message', async (e) => {
                     path: `/log/call/${data.call.sessionId}`,
                   }, '*');
                 }
-                
+
                 await chrome.storage.local.set({
                   [`call-log-data-ready-${data.call.sessionId}`]: {
                     isReady: false,
@@ -695,15 +695,16 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'platformSelectionPage':
-                  const updatedPlatformSelectionPageRender = platformSelectionPage.getUpdatedPlatformSelectionPageRender({ page: data.body.page, formData: data.body.formData });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-update-platform-selection-page',
-                    page: updatedPlatformSelectionPageRender
+                  const updatedPlatformSelectionPageRender = platformSelectionPage.getPlatformSelectionPageRender({
+                    manifest,
+                    searchWord: data.body.formData.platformSearch.search,
+                    selectedPlatform: data.body.formData.platforms,
+                    filter: data.body.formData.platformSearch.filter
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: `/customized/${updatedPlatformSelectionPageRender.id}`, // page id
-                  }, '*');
+                    type: 'rc-adapter-register-customized-page',
+                    page: updatedPlatformSelectionPageRender
+                  });
                   break;
                 case 'getMultiContactPopPromptPage':
                   if (data.body.keys.some(k => k === 'search')) {
