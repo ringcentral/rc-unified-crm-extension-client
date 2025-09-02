@@ -13,8 +13,19 @@ function getCalldownPageRender() {
         schema: {
             type: 'object',
             properties: {
-                filterName: { type: 'string', title: 'Filter by name' },
-                filterStatus: { type: 'string', title: 'Status', enum: ['All', 'Called', 'Not Called'], default: 'All' },
+                "searchWithFilters": {
+                    "type": "object",
+                    "properties": {
+                        "search": {
+                            "type": "string",
+                            "title": "Search"
+                        },
+                        "filter": {
+                            "type": "string",
+                            "title": "Filter"
+                        }
+                    }
+                },
                 records: {
                     type: 'string',
                     title: 'Contacts',
@@ -23,12 +34,22 @@ function getCalldownPageRender() {
             }
         },
         uiSchema: {
-            filterName: { 'ui:placeholder': 'Search contacts by name' },
+            "searchWithFilters": {
+                "ui:field": "search",
+                "ui:placeholder": "Filter by name",
+                "ui:filters": [
+                    "All",
+                    "Called",
+                    "Not Called",
+                ]
+            },
             records: { 'ui:field': 'list', 'ui:showIconAsAvatar': false }
         },
         formData: {
-            filterName: '',
-            filterStatus: 'All'
+            searchWithFilters: {
+                search: '',
+                filter: 'All'
+            }
         }
     };
     return page;
@@ -36,16 +57,21 @@ function getCalldownPageRender() {
 
 exports.getCalldownPageRender = getCalldownPageRender;
 
-async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '', filterStatus = 'All' }) {
+async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '', filterStatus = 'All', searchWithFilters = {} }) {
     const page = getCalldownPageRender();
-    page.formData.filterName = filterName;
-    page.formData.filterStatus = filterStatus;
+    // Support new UI first, fallback to legacy
+    const resolvedSearch = (searchWithFilters.search ?? filterName ?? '').trim();
+    const resolvedStatus = (searchWithFilters.filter ?? filterStatus ?? 'All');
+    page.formData.searchWithFilters = {
+        search: searchWithFilters.search ?? '',
+        filter: resolvedStatus
+    };
 
     try {
         const { data } = await axios.get(`${manifest.serverUrl}/calldown/list`, {
             params: {
                 jwtToken,
-                status: filterStatus
+                status: resolvedStatus
             }
         });
         const items = Array.isArray(data?.items) ? data.items : [];
@@ -79,7 +105,7 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
         });
 
         // client-side name filter using enriched values
-        const normalizedSearch = (filterName || '').trim().toLowerCase();
+        const normalizedSearch = resolvedSearch.toLowerCase();
         const filtered = normalizedSearch === ''
             ? enriched
             : enriched.filter(i => (
