@@ -801,22 +801,8 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
                 case 'calldownPage':
-                  // If a row was selected, show actions page; else treat as filter change
-                  if (data.body.keys.some(k => k === 'records') && data.body.formData.records) {
-                    const { calldownListCache } = await chrome.storage.local.get({ calldownListCache: [] });
-                    const rowId = data.body.formData.records;
-                    const matched = (calldownListCache || []).find(i => i.id === rowId);
-                    const { getCalldownActionsPageRender } = await import('./components/calldownActionsPage');
-                    const actionsPage = getCalldownActionsPageRender({ item: matched });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-register-customized-page',
-                      page: actionsPage
-                    }, '*');
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-navigate-to',
-                      path: `/customized/${actionsPage.id}`,
-                    }, '*');
-                  } else {
+                  // Treat any input change as filter change; ignore row selection (actions handled inline)
+                  {
                     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                     const updated = await calldownPage.getCalldownPageWithRecords({
                       manifest,
@@ -830,7 +816,7 @@ window.addEventListener('message', async (e) => {
                       type: 'rc-adapter-register-customized-page',
                       page: updated
                     });
-                    // Do not navigate again on each keystroke; avoid resetting input focus/value
+                    // Do not navigate; avoid resetting input focus/value
                   }
                   break;
                 case 'googleSheetsPage':
@@ -2387,12 +2373,19 @@ window.addEventListener('message', async (e) => {
               responseMessage(data.requestId, { data: 'ok' });
               break;
             case '/custom-button-click':
-              switch (data.body.button.id) {
+              // Embeddable may append a suffix to button id, e.g. "calldownActionCall-<recordId>-action"
+              // Extract base id for switching and capture record id from the id when available.
+              const __btnRawId = String(data.body?.button?.id || '');
+              const __btnIdParts = __btnRawId.split('-');
+              const __btnBaseId = __btnIdParts[0];
+              const __recordIdFromId = __btnIdParts.length > 1 ? __btnIdParts[1] : '';
+              switch (__btnBaseId) {
                 case 'calldownActionCall': {
                   try {
+                    const btn = data.body.button || {};
                     const { calldownListCache } = await chrome.storage.local.get({ calldownListCache: [] });
-                    const rowId = data.body.button.formData.recordId;
-                    const item = (calldownListCache || []).find(i => i.id === rowId);
+                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || __recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
+                    const item = (calldownListCache || []).find(i => i.id === rowId) || { phoneNumber: btn?.additionalInfo?.phoneNumber };
                     if (item?.phoneNumber) {
                       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                         type: 'rc-adapter-new-call',
@@ -2422,9 +2415,10 @@ window.addEventListener('message', async (e) => {
                 }
                 case 'calldownActionOpen': {
                   try {
+                    const btn = data.body.button || {};
                     const { calldownListCache } = await chrome.storage.local.get({ calldownListCache: [] });
-                    const rowId = data.body.button.formData.recordId;
-                    const item = (calldownListCache || []).find(i => i.id === rowId);
+                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || __recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
+                    const item = (calldownListCache || []).find(i => i.id === rowId) || { contactId: btn?.additionalInfo?.contactId, contactType: btn?.additionalInfo?.contactType, phoneNumber: btn?.additionalInfo?.phoneNumber };
                     if (item?.contactId && item?.contactType) {
                       await contactCore.openContactPage({ manifest, platformName, contactId: item.contactId, contactType: item.contactType });
                     } else if (item?.phoneNumber) {
@@ -2453,15 +2447,12 @@ window.addEventListener('message', async (e) => {
                 }
                 case 'calldownActionRemove': {
                   try {
+                    const btn = data.body.button || {};
                     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                    const rowId = data.body.button.formData.recordId;
+                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || __recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
                     await axios.delete(`${manifest.serverUrl}/calldown/item?jwtToken=${rcUnifiedCrmExtJwt}&id=${rowId}`);
-                    // after removal go back and refresh list
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-navigate-to',
-                      path: 'goBack',
-                    }, '*');
-                    const refreshed = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt });
+                    // refresh list in place
+                    const refreshed = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All' });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-register-customized-page',
                       page: refreshed
