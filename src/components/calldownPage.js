@@ -41,6 +41,7 @@ function getCalldownPageRender() {
                     "All",
                     "Called",
                     "Not Called",
+                    "Scheduled"
                 ]
             },
             records: { 'ui:field': 'list', 'ui:showIconAsAvatar': false }
@@ -74,7 +75,27 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                 status: resolvedStatus
             }
         });
-        const items = Array.isArray(data?.items) ? data.items : [];
+        const nowTs = Date.now();
+        let items = Array.isArray(data?.items) ? data.items : [];
+        // Compute derived status per item and then apply filter locally
+        const itemsWithDerived = items.map(i => {
+            const rawStatus = String(i.status || '').toLowerCase();
+            let derivedStatus = 'Not Called';
+            if (rawStatus === 'called') {
+                derivedStatus = 'Called';
+            }
+            else if (rawStatus === 'scheduled') {
+                const sd = i.scheduledAt ? new Date(i.scheduledAt) : null;
+                derivedStatus = sd && sd.getTime() < nowTs ? 'Not Called' : 'Scheduled';
+            }
+            return { ...i, _derivedStatus: derivedStatus };
+        });
+        if (resolvedStatus && resolvedStatus !== 'All') {
+            items = itemsWithDerived.filter(i => i._derivedStatus === resolvedStatus);
+        }
+        else {
+            items = itemsWithDerived;
+        }
 
         // Build contactId -> { name, phone } index from RC widget matcher
         const idToContact = new Map();
@@ -125,13 +146,18 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                     ? `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
                     : d.toLocaleDateString())
                 : '';
-            const statusText = i.status ? String(i.status) : '';
+            // Normalize status and color (use derived status)
+            const statusText = i._derivedStatus || (i.status ? String(i.status) : '');
             const meta = [statusText, whenText].filter(Boolean).join(' • ');
+            let metaColor;
+            if (statusText.toLowerCase() === 'called') metaColor = 'success.b03';
+            if (statusText.toLowerCase() === 'not called') metaColor = 'danger.b03';
             return {
                 const: i.id,
                 title: displayName,
                 description: i.phoneNumber ?? '',
                 meta,
+                metaColor,
                 actions: [
                     { id: 'calldownActionCall', title: 'Call', icon: 'phone' },
                     { id: 'calldownActionOpen', title: 'Open contact', icon: 'view' },
