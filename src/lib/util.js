@@ -160,6 +160,42 @@ async function getUserReportStats({ dateRange, customStartDate, customEndDate })
   return reportStats;
 }
 
+// Debounce storage for different operations
+const debounceStorage = new Map();
+
+function createDebounceHandler(handlerKey, delay = 300) {
+  return function (request, handlerFunction) {
+    // Get or create debounce object for this handler
+    let debounceObj = debounceStorage.get(handlerKey);
+
+    if (!debounceObj) {
+      debounceObj = {};
+      debounceStorage.set(handlerKey, debounceObj);
+    } else {
+      // Clear previous timeout
+      const timeout = debounceObj.timeout;
+      clearTimeout(timeout);
+    }
+
+    // Store current request
+    debounceObj.request = request;
+
+    // Set new timeout
+    debounceObj.timeout = setTimeout(async () => {
+      // Clear debounce object
+      debounceStorage.delete(handlerKey);
+
+      try {
+        // Execute the handler function
+        const result = await handlerFunction(request);
+
+      } catch (error) {
+        console.error(`Debounced handler error for ${handlerKey}:`, error);
+      }
+    }, delay);
+  };
+}
+
 exports.secondsToHourMinuteSecondString = secondsToHourMinuteSecondString;
 exports.showNotification = showNotification;
 exports.dismissNotification = dismissNotification;
@@ -171,3 +207,4 @@ exports.checkC2DCollision = checkC2DCollision;
 exports.downloadTextFile = downloadTextFile;
 exports.cleanUpExpiredStorage = cleanUpExpiredStorage;
 exports.getUserReportStats = getUserReportStats;
+exports.createDebounceHandler = createDebounceHandler;

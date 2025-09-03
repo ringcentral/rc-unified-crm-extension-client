@@ -5,7 +5,7 @@ import dispositionCore from './core/disposition';
 import userCore from './core/user';
 import adminCore from './core/admin';
 import authCore from './core/auth';
-import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getUserReportStats } from './lib/util';
+import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getUserReportStats, createDebounceHandler } from './lib/util';
 import { getPlatformInfo } from './service/platformService';
 import { getManifest, getPlatformList, saveManifest, saveManifestUrl } from './service/manifestService';
 import { getUserInfo } from './lib/rcAPI';
@@ -82,9 +82,14 @@ let manifest = {};
 let platform = null;
 let hasOngoingCall = false;
 let lastUserSettingSyncDate = new Date();
+let platformList = {};
 
 checkC2DCollision();
 getCustomManifest();
+
+// Create debounce handlers for different operations
+const debouncePlatformSearch = createDebounceHandler('platformSearch');
+const debounceContactSearch = createDebounceHandler('contactSearch');
 
 async function getCustomManifest() {
   const customCrmManifest = await getManifest();
@@ -224,7 +229,7 @@ window.addEventListener('message', async (e) => {
           let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
           if (data.loggedIn) {
             rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
-            const platformList = await getPlatformList();
+            platformList = await getPlatformList();
             await authCore.checkAndOpenPlatformSelectionPage({ platformList });
             document.getElementById('rc-widget').style.zIndex = 0;
             crmAuthed = !!rcUnifiedCrmExtJwt;
@@ -689,22 +694,26 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'platformSelectionPage':
-                  const platformList = await getPlatformList();
-                  const updatedPlatformSelectionPageRender = platformSelectionPage.getPlatformSelectionPageRender({
-                    platformList,
-                    searchWord: data.body.formData.platformSearch.search,
-                    selectedPlatform: data.body.formData.platforms,
-                    filter: data.body.formData.platformSearch.filter
-                  });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-register-customized-page',
-                    page: updatedPlatformSelectionPageRender
+                  //Debounce search operations
+                  debouncePlatformSearch(data.body.formData.platformSearch.search, async (request) => {
+                    const updatedPlatformSelectionPageRender = platformSelectionPage.getPlatformSelectionPageRender({
+                      platformList,
+                      searchWord: data.body.formData.platformSearch.search,
+                      selectedPlatform: data.body.formData.platforms,
+                      filter: data.body.formData.platformSearch.filter
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: updatedPlatformSelectionPageRender
+                    });
                   });
                   break;
                 case 'getMultiContactPopPromptPage':
                   if (data.body.keys.some(k => k === 'search')) {
-                    const searchWord = data.body.formData.search;
-                    contactCore.refreshContactPromptPage({ contactInfo: data.body.page.formData.contactInfo, searchWord });
+                    debounceContactSearch(data.requestId, async (request) => {
+                      const searchWord = data.body.formData.search;
+                      contactCore.refreshContactPromptPage({ contactInfo: data.body.page.formData.contactInfo, searchWord });
+                    });
                   }
                   else if (data.body.keys.some(k => k === 'contactList')) {
                     const contactToOpen = data.body.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
@@ -718,6 +727,7 @@ window.addEventListener('message', async (e) => {
                       type: 'rc-adapter-control-call',
                       callAction: 'toggleRingingDialog',
                     }, '*');
+                    responseMessage(data.requestId, { data: 'ok' });
                   }
                   break;
                 case 'googleSheetsPage':
