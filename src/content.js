@@ -145,8 +145,9 @@ function Root() {
 }
 
 async function RenderQuickAccessButton() {
+  const platformInfo = await chrome.storage.local.get('platform-info');
   const isUrlMatched = await checkUrlMatch();
-  if (!isUrlMatched) {
+  if (!isUrlMatched && platformInfo['platform-info']?.hostname) {
     console.log('URL not matched, C2D not initialized');
     return;
   }

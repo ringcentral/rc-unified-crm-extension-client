@@ -32,13 +32,29 @@ function getHostnameInputPageRender({ platform, inputUrl, region, isUrlValid }) 
             "ui:variant": "body2"
         }
         for (let i = 0; i < platform.environment.instructions.length; i++) {
-            page.schema.properties[`instruction${i + 1}`] = {
-                type: 'string',
-                description: platform.environment.instructions[i]
+            if (platform.environment.instructions[i].startsWith('[')) {
+                const linkText = platform.environment.instructions[i].split('[')[1].split(']')[0];
+                const linkUrl = platform.environment.instructions[i].split(`[${linkText}](`)[1].split(')')[0];
+                page.schema.properties[`instruction${i + 1}`] = {
+                    type: 'string',
+                    description: linkText
+                }
+                page.uiSchema[`instruction${i + 1}`] = {
+                    "ui:field": "link",
+                    "ui:variant": "body1",
+                    "ui:underline": "always",
+                    "ui:href": linkUrl
+                }
             }
-            page.uiSchema[`instruction${i + 1}`] = {
-                "ui:field": "typography", // or typography to show raw text
-                "ui:bulletedList": true
+            else {
+                page.schema.properties[`instruction${i + 1}`] = {
+                    type: 'string',
+                    description: platform.environment.instructions[i]
+                }
+                page.uiSchema[`instruction${i + 1}`] = {
+                    "ui:field": "typography", // or typography to show raw text
+                    "ui:bulletedList": true
+                }
             }
         }
     }

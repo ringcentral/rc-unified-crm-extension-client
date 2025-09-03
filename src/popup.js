@@ -2110,6 +2110,9 @@ window.addEventListener('message', async (e) => {
                     case 'dynamic':
                       inputUrl = data.body.button.formData.url;
                       break;
+                    case 'fixed':
+                      inputUrl = manifest.platforms[data.body.button.formData.platformId].environment.url;
+                      break;
                   }
                   const inputUrlObj = new URL(inputUrl);
                   const inputHostname = inputUrlObj.hostname;
@@ -2547,7 +2550,7 @@ window.addEventListener('message', async (e) => {
                   const platformManifestResponse = await axios.get(`${baseManifest.platformListUrl}/${platformItemName}-${platformItemId}/manifest`);
                   await saveManifestUrl({ manifestUrl: `${baseManifest.platformListUrl}/${platformItemName}-${platformItemId}/manifest` });
                   manifest = await saveManifest({ manifest: platformManifestResponse.data });
-                  if (manifest.platforms[platformItemName]?.environment?.type === 'fixed') {
+                  if (manifest.platforms[platformItemName]?.environment?.type === 'fixed' && !manifest.platforms[platformItemName]?.environment?.instructions?.length) {
                     const inputUrlObj = new URL(manifest.platforms[platformItemName]?.environment?.url);
                     const inputHostname = inputUrlObj.hostname;
                     await chrome.storage.local.set({
