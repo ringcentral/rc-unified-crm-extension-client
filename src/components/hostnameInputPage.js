@@ -45,18 +45,6 @@ function getHostnameInputPageRender({ platform, inputUrl, region, isUrlValid }) 
                 "ui:field": "typography", // or typography to show raw text,
                 "ui:variant": "body2"
             }
-            if (platform.environment?.instructions?.length > 0) {
-                for (let i = 0; i < platform.environment.instructions.length; i++) {
-                    page.schema.properties[`instruction${i + 1}`] = {
-                        type: 'string',
-                        description: platform.environment.instructions[i]
-                    }
-                    page.uiSchema[`instruction${i + 1}`] = {
-                        "ui:field": "typography", // or typography to show raw text
-                        "ui:bulletedList": true
-                    }
-                }
-            }
             page.schema.properties.url = {
                 type: 'string',
                 title: `${platformName} url`
@@ -67,6 +55,18 @@ function getHostnameInputPageRender({ platform, inputUrl, region, isUrlValid }) 
                 "ui:help": isUrlValid ? '' : `Invalid url! Please enter it following format: "${url}"`
             }
             break;
+    }
+    if (platform.environment?.instructions?.length > 0) {
+        for (let i = 0; i < platform.environment.instructions.length; i++) {
+            page.schema.properties[`instruction${i + 1}`] = {
+                type: 'string',
+                description: platform.environment.instructions[i]
+            }
+            page.uiSchema[`instruction${i + 1}`] = {
+                "ui:field": "typography", // or typography to show raw text
+                "ui:bulletedList": true
+            }
+        }
     }
 
 
