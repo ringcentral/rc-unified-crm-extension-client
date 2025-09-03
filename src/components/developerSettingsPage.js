@@ -6,14 +6,6 @@ function getDeveloperSettingsPageRender({ customUrl }) {
         schema: {
             type: 'object',
             properties: {
-                customManifestWarning:{
-                    type: "string",
-                    description: "Please be careful that a custom url is not trusted by RingCentral."
-                },
-                customManifestUrl: {
-                    type: "string",
-                    title: "Custom manifest URL"
-                },
                 clearPlatformInfoWarning:{
                     type: "string",
                     description: "This will clear current CRM platform information so to be re-initialized with a new CRM platform."
@@ -25,16 +17,9 @@ function getDeveloperSettingsPageRender({ customUrl }) {
             }
         },
         uiSchema: {
-            customManifestWarning:{
-                "ui:field": "admonition",
-                "ui:severity": "warning",  // "warning", "info", "error", "success"
-            },
-            submitButtonOptions: {
-                submitText: 'Submit'
-            },
-            customManifestUrl: {
-                "ui:placeholder": 'Enter url...',
-            },
+            // submitButtonOptions: {
+            //     submitText: 'Submit'
+            // },
             clearPlatformInfoWarning:{
                 "ui:field": "admonition",
                 "ui:severity": "warning",  // "warning", "info", "error", "success"
@@ -46,7 +31,6 @@ function getDeveloperSettingsPageRender({ customUrl }) {
             },
         },
         formData: {
-            customManifestUrl: customUrl
         }
     }
     return developerSettingsPage;

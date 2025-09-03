@@ -229,8 +229,10 @@ window.addEventListener('message', async (e) => {
           let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
           if (data.loggedIn) {
             rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
-            platformList = await getPlatformList();
-            await authCore.checkAndOpenPlatformSelectionPage({ platformList });
+            if (!platformInfo) {
+              platformList = await getPlatformList();
+              await authCore.checkAndOpenPlatformSelectionPage({ platformList });
+            }
             document.getElementById('rc-widget').style.zIndex = 0;
             crmAuthed = !!rcUnifiedCrmExtJwt;
             await chrome.storage.local.set({ crmAuthed })
@@ -2110,6 +2112,9 @@ window.addEventListener('message', async (e) => {
                     case 'dynamic':
                       inputUrl = data.body.button.formData.url;
                       break;
+                    case 'fixed':
+                      inputUrl = manifest.platforms[data.body.button.formData.platformId].environment.url;
+                      break;
                   }
                   const inputUrlObj = new URL(inputUrl);
                   const inputHostname = inputUrlObj.hostname;
@@ -2222,8 +2227,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'openDeveloperSettingsPage':
-                  const { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: '' });
-                  const developerSettingsPageRender = developerSettingsPage.getDeveloperSettingsPageRender({ customUrl: customCrmManifestUrl });
+                  const developerSettingsPageRender = developerSettingsPage.getDeveloperSettingsPageRender({});
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: developerSettingsPageRender
@@ -2387,22 +2391,12 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'developerSettingsPage':
                   try {
-                    const customManifestUrl = data.body.button.formData.customManifestUrl;
-                    if (customManifestUrl === '') {
-                      return;
-                    }
-                    await chrome.storage.local.set({ customCrmManifestUrl: customManifestUrl });
-
                     await chrome.storage.local.remove('customCrmManifest');
-                    const customCrmManifestJson = await (await fetch(customManifestUrl)).json();
-                    if (customCrmManifestJson) {
-                      await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
-                      showNotification({ level: 'success', message: 'Custom manifest file updated. Please reload the extension.', ttl: 5000 });
-                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                        type: 'rc-adapter-navigate-to',
-                        path: 'goBack',
-                      }, '*');
-                    }
+                    showNotification({ level: 'success', message: 'Custom manifest file updated. Please reload the extension.', ttl: 5000 });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: 'goBack',
+                    }, '*');
                   }
                   catch (e) {
                     showNotification({ level: 'warning', message: 'Failed to get custom manifest file', ttl: 5000 });
@@ -2541,13 +2535,28 @@ window.addEventListener('message', async (e) => {
               switch (listButtonActionId) {
                 case 'selectPlatform':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const selectedPlatform = data.body.button.formData.platformList.find(platform => platform.id === listButtonItemId);
+                  const platformType = selectedPlatform.type;
                   const platformItemName = listButtonItemId.split('-')[0];
                   const platformItemId = listButtonItemId.split(`${platformItemName}-`)[1];
                   platformName = platformItemName;
-                  const platformManifestResponse = await axios.get(`${baseManifest.platformListUrl}/${platformItemName}-${platformItemId}/manifest`);
-                  await saveManifestUrl({ manifestUrl: `${baseManifest.platformListUrl}/${platformItemName}-${platformItemId}/manifest` });
+                  let platformManifestResponse;
+                  switch (platformType) {
+                    case 'public':
+                      platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${platformItemName}-${platformItemId}/manifest`);
+                      await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${platformItemName}-${platformItemId}/manifest` });
+                      break;
+                    case 'shared':
+                      platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${platformItemName}-${platformItemId}/manifest?type=internal&accountId=${selectedPlatform.accountId}`);
+                      await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${platformItemName}-${platformItemId}/manifest?type=internal&accountId=${selectedPlatform.accountId}` });
+                      break;
+                    case 'private':
+                      platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${platformItemName}-${platformItemId}/manifest?type=internal&accountId=${selectedPlatform.accountId}`);
+                      await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${platformItemName}-${platformItemId}/manifest?type=internal&accountId=${selectedPlatform.accountId}` });
+                      break;
+                  }
                   manifest = await saveManifest({ manifest: platformManifestResponse.data });
-                  if (manifest.platforms[platformItemName]?.environment?.type === 'fixed') {
+                  if (manifest.platforms[platformItemName]?.environment?.type === 'fixed' && !manifest.platforms[platformItemName]?.environment?.instructions?.length) {
                     const inputUrlObj = new URL(manifest.platforms[platformItemName]?.environment?.url);
                     const inputHostname = inputUrlObj.hostname;
                     await chrome.storage.local.set({

@@ -3,13 +3,25 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
 
     // put the new element as the last element that has the same developer
     // if there's no same developer, put it at the last of the array
-    for (const platform of platformList.connectors) {
+    for (const platform of platformList) {
+        let meta = '';
+        switch (platform.type) {
+            case 'public':
+                meta = 'Public';
+                break;
+            case 'shared':
+                meta = 'Shared with you';
+                break;
+            case 'private':
+                meta = 'Private';
+                break;
+        }
         const newPlatform = {
             const: platform.id,
-            title: platform.displayName,
-            icon: platform.iconUrl,
+            title: platform.displayName ?? platform.name,
+            icon: platform.iconUrl ? platform.iconUrl : 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
             description: `by ${platform.developer.name}`,
-            meta: 'Shared with you',
+            meta: meta,
             actions:[
                 {
                     id: 'selectPlatform',
@@ -60,6 +72,7 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
                 "ui:placeholder": "Search with filters...",
                 "ui:filters": [
                     "All",
+                    "Public",
                     "Shared with you",
                     "Private"
                 ]
@@ -74,7 +87,8 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
             platformSearch: {
                 search: searchWord,
                 filter: filter
-            }
+            },
+            platformList
         }
     }
 }

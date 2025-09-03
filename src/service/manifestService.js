@@ -1,10 +1,27 @@
 import { getPlatformInfo } from './platformService';
 import axios from 'axios';
 import baseManifest from '../manifest.json';
+import { getRcInfo } from '../lib/util';
 
 async function getPlatformList() {
-    const platformListResponse = await axios.get(baseManifest.platformListUrl);
-    return platformListResponse.data;
+    const result = [];
+    const platformPublicListResponse = await axios.get(baseManifest.platformPublicListUrl);
+    for (const platform of platformPublicListResponse.data.connectors) {
+        platform.type = 'public';
+        result.push(platform);
+    }
+    const rcInfo = await getRcInfo();
+    const rcAccountId = rcInfo.value.cachedData.accountInfo.id;
+    const platformInternalListResponse = await axios.get(`${baseManifest.platformInternalListUrl}?accountId=${rcAccountId}`);
+    for (const platform of platformInternalListResponse.data.sharedConnectors) {
+        platform.type = 'shared';
+        result.push(platform);
+    }
+    for (const platform of platformInternalListResponse.data.privateConnectors) {
+        platform.type = 'private';
+        result.push(platform);
+    }
+    return result;
 }
 
 async function saveManifestUrl({ manifestUrl }) {

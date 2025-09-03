@@ -7,16 +7,6 @@ let pipedriveInstallationTabId;
 let pipedriveCallbackUri;
 let cachedClickToXRequest;
 
-async function fetchManifest() {
-  let { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: null });
-  if (customCrmManifestUrl) {
-    const customCrmManifestJson = await (await fetch(customCrmManifestUrl)).json();
-    if (customCrmManifestJson) {
-      await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
-    }
-  }
-}
-
 async function openPopupWindow() {
   console.log('open popup');
   const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
@@ -72,7 +62,6 @@ async function openPopupWindow() {
 }
 
 chrome.action.onClicked.addListener(async function (tab) {
-  fetchManifest();
   openPopupWindow();
 });
 
