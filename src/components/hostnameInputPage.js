@@ -5,6 +5,7 @@ function getHostnameInputPageRender({ platform, inputUrl, region, isUrlValid }) 
     const page = {
         id: 'hostnameInputPage',
         type: 'page',
+        title: 'Setup',
         schema: {
             type: 'object',
             properties: {},
