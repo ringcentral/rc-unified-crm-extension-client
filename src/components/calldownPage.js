@@ -148,16 +148,14 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                 : '';
             // Normalize status and color (use derived status)
             const statusText = i._derivedStatus || (i.status ? String(i.status) : '');
-            const meta = [statusText, whenText].filter(Boolean).join(' • ');
-            let metaColor;
-            if (statusText.toLowerCase() === 'called') metaColor = 'success.b03';
-            if (statusText.toLowerCase() === 'not called') metaColor = 'danger.b03';
+            // Keep status and time separate; show only time in meta for now
+            const meta = whenText;
             return {
                 const: i.id,
                 title: displayName,
                 description: i.phoneNumber ?? '',
+                authorName: statusText,
                 meta,
-                metaColor,
                 actions: [
                     { id: 'calldownActionCall', title: 'Call', icon: 'phone' },
                     { id: 'calldownActionOpen', title: 'Open contact', icon: 'view' },
@@ -168,7 +166,9 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                     contactId: i.contactId,
                     contactType: i.contactType,
                     phoneNumber: i.phoneNumber,
-                    contactName: i.contactName
+                    contactName: i.contactName,
+                    statusText,
+                    whenText
                 }
             };
         });
