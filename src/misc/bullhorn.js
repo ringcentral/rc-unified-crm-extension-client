@@ -124,7 +124,7 @@ async function tryConnectToBullhorn({ platform }) {
         const { crm_extension_bullhornUsername } = await chrome.storage.local.get({ crm_extension_bullhornUsername: null });
         showNotification({
             level: 'warning',
-            message: 'Login failure. Refresh Bullhorn page and try again.',
+            message: 'Login failure. If you already have Bullhorn page open, please refresh Bullhorn page and try again.',
             details: [
                 {
                     title: 'Details',

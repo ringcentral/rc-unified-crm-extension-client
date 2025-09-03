@@ -2108,45 +2108,6 @@ window.addEventListener('message', async (e) => {
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
-                case 'platformSelectionPage':
-                  if (manifest.platforms[data.body.button.formData.platforms]?.environment?.type === 'fixed') {
-                    const inputUrlObj = new URL(manifest.platforms[data.body.button.formData.platforms]?.environment?.url);
-                    const inputHostname = inputUrlObj.hostname;
-                    await chrome.storage.local.set({
-                      ['platform-info']: { platformName: data.body.button.formData.platforms, hostname: inputHostname }
-                    });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-register-third-party-service',
-                      service: (await embeddableServices.getServiceManifest())
-                    }, '*');
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-navigate-to',
-                      path: '/settings',
-                    }, '*');
-                    platformName = data.body.button.formData.platforms;
-                    manifest = await getManifest();
-                    platform = manifest.platforms[platformName];
-                    // Unique: Bullhorn
-                    if (platformName != 'bullhorn') {
-                      await onUserClickConnectButton();
-                    }
-                    showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
-                  }
-                  else {
-                    const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender({
-                      platform: manifest.platforms[data.body.button.formData.platforms],
-                      isUrlValid: true
-                    });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-register-customized-page',
-                      page: hostnameInputPageRender,
-                    }, '*');
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-navigate-to',
-                      path: `/customized/${hostnameInputPageRender.id}`,
-                    }, '*');
-                  }
-                  break;
                 case 'hostnameInputPage':
                   let inputUrl = '';
                   switch (manifest.platforms[data.body.button.formData.platformId].environment.type) {
@@ -2592,6 +2553,47 @@ window.addEventListener('message', async (e) => {
                 case 'refreshLicense':
                   if (platform.useLicense) {
                     await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
+                  }
+                  break;
+              }
+              const listButtonActionId = data.body.button.id.split('-')[0];
+              const listButtonItemId = data.body.button.id.split('-')[1];
+              switch (listButtonActionId) {
+                case 'selectPlatform':
+                  const platformId = listButtonItemId;
+                  if (manifest.platforms[platformId]?.environment?.type === 'fixed') {
+                    const inputUrlObj = new URL(manifest.platforms[platformId]?.environment?.url);
+                    const inputHostname = inputUrlObj.hostname;
+                    await chrome.storage.local.set({
+                      ['platform-info']: { platformName: platformId, hostname: inputHostname }
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-third-party-service',
+                      service: (await embeddableServices.getServiceManifest())
+                    }, '*');
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: '/settings',
+                    }, '*');
+                    platformName = platformId;
+                    manifest = await getManifest();
+                    platform = manifest.platforms[platformName];
+                    await onUserClickConnectButton();
+                    showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
+                  }
+                  else {
+                    const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender({
+                      platform: manifest.platforms[platformId],
+                      isUrlValid: true
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: hostnameInputPageRender,
+                    }, '*');
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-navigate-to',
+                      path: `/customized/${hostnameInputPageRender.id}`,
+                    }, '*');
                   }
                   break;
               }

@@ -9,7 +9,14 @@ function getPlatformSelectionPageRender({ manifest, searchWord = '', selectedPla
             title: platform.displayName,
             icon: platform.logoUrl,
             description: `by ${platform.developer.name}`,
-            meta: 'Public'
+            meta: 'Shared with you',
+            actions:[
+                {
+                    id: 'selectPlatform',
+                    title: 'Connect',
+                    icon: 'connect'
+                }
+            ]
         };
         platformList.push(newPlatform);
     }
@@ -45,8 +52,7 @@ function getPlatformSelectionPageRender({ manifest, searchWord = '', selectedPla
                     title: 'Platforms',
                     oneOf: platformList
                 }
-            },
-            required: ['platforms']
+            }
         },
         uiSchema: {
             platformSearch: {
@@ -54,16 +60,13 @@ function getPlatformSelectionPageRender({ manifest, searchWord = '', selectedPla
                 "ui:placeholder": "Search with filters...",
                 "ui:filters": [
                     "All",
-                    "Public",
+                    "Shared with you",
                     "Private"
                 ]
             },
             platforms: {
                 "ui:field": "list",
                 "ui:showIconAsAvatar": false
-            },
-            submitButtonOptions: { // optional if you don't want to show submit button
-                submitText: 'Select',
             }
         },
         formData: {
