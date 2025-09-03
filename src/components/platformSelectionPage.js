@@ -1,13 +1,13 @@
-function getPlatformSelectionPageRender({ manifest, searchWord = '', selectedPlatform = '', filter = 'All' }) {
-    let platformList = [];
+function getPlatformSelectionPageRender({ platformList, searchWord = '', selectedPlatform = '', filter = 'All' }) {
+    let platformListToRender = [];
 
     // put the new element as the last element that has the same developer
     // if there's no same developer, put it at the last of the array
-    for (const platform of Object.values(manifest.platforms)) {
+    for (const platform of platformList.connectors) {
         const newPlatform = {
-            const: platform.name,
+            const: platform.id,
             title: platform.displayName,
-            icon: platform.logoUrl,
+            icon: platform.iconUrl,
             description: `by ${platform.developer.name}`,
             meta: 'Shared with you',
             actions:[
@@ -18,13 +18,13 @@ function getPlatformSelectionPageRender({ manifest, searchWord = '', selectedPla
                 }
             ]
         };
-        platformList.push(newPlatform);
+        platformListToRender.push(newPlatform);
     }
     if (searchWord) {
-        platformList = platformList.filter(um => um.title.toLowerCase().includes(searchWord.toLowerCase()) || um.description.toLowerCase().includes(searchWord.toLowerCase()));
+        platformListToRender = platformListToRender.filter(um => um.title.toLowerCase().includes(searchWord.toLowerCase()) || um.description.toLowerCase().includes(searchWord.toLowerCase()));
     }
     if (filter !== 'All') {
-        platformList = platformList.filter(um => um.meta === filter);
+        platformListToRender = platformListToRender.filter(um => um.meta === filter);
     }
     return {
         id: 'platformSelectionPage',
@@ -50,7 +50,7 @@ function getPlatformSelectionPageRender({ manifest, searchWord = '', selectedPla
                 platforms: {
                     type: 'string',
                     title: 'Platforms',
-                    oneOf: platformList
+                    oneOf: platformListToRender
                 }
             }
         },

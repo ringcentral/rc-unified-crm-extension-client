@@ -21,10 +21,6 @@ function getAdminPageRender({ platform }) {
                         {
                             const: "managedSettings",
                             title: "Managed settings",
-                        },
-                        {
-                            const: "customAdapter",
-                            title: "Custom adapter",
                         }
                     ]
                 }

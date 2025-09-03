@@ -1,6 +1,6 @@
 import { isObjectEmpty } from './lib/util';
-import baseManifest from './manifest.json';
 import packageJson from '../package.json';
+import baseManifest from './manifest.json';
 
 let manifest;
 let pipedriveInstallationTabId;
@@ -9,13 +9,11 @@ let cachedClickToXRequest;
 
 async function fetchManifest() {
   let { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: null });
-  if (!customCrmManifestUrl || customCrmManifestUrl === '') {
-    customCrmManifestUrl = baseManifest.defaultCrmManifestUrl;
-    await chrome.storage.local.set({ customCrmManifestUrl });
-  }
-  const customCrmManifestJson = await (await fetch(customCrmManifestUrl)).json();
-  if (customCrmManifestJson) {
-    await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
+  if (customCrmManifestUrl) {
+    const customCrmManifestJson = await (await fetch(customCrmManifestUrl)).json();
+    if (customCrmManifestJson) {
+      await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
+    }
   }
 }
 
@@ -70,7 +68,6 @@ async function openPopupWindow() {
   await chrome.storage.local.set({
     popupWindowId: popup.id,
   });
-  await fetchManifest();
   return false;
 }
 
@@ -96,8 +93,6 @@ chrome.windows.onBoundsChanged.addListener(async (window) => {
 });
 
 chrome.alarms.onAlarm.addListener(async () => {
-  const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
-  manifest = customCrmManifest;
   const { loginWindowInfo } = await chrome.storage.local.get('loginWindowInfo');
   if (!loginWindowInfo) {
     return;
@@ -108,7 +103,7 @@ chrome.alarms.onAlarm.addListener(async () => {
   }
   const loginWindowUrl = tabs[0].url
   console.log('loginWindowUrl', loginWindowUrl);
-  if (loginWindowUrl.indexOf(manifest.redirectUri) !== 0) {
+  if (loginWindowUrl.indexOf(baseManifest.redirectUri) !== 0) {
     chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
     return;
   }

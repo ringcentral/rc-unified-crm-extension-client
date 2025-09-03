@@ -19,9 +19,6 @@ function getCustomContactSearch({ contactSearchAdapterButton = "contactSearchAda
             }
         },
         uiSchema: {
-            customAdapter: {
-                'ui:field': 'typography'
-            },
             contactNameToSearch: {
                 "ui:placeholder": 'enter contact name to search',
             },

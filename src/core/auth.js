@@ -12,11 +12,11 @@ async function submitPlatformSelection(platform) {
     })
 }
 
-async function checkAndOpenPlatformSelectionPage({ manifest }) {
+async function checkAndOpenPlatformSelectionPage({ platformList }) {
     const platformInfo = await getPlatformInfo();
     if (!platformInfo) {
         await embeddableServices.preconfigureServiceManifest();
-        const platformSelectionPageRender = platformSelectionPage.getPlatformSelectionPageRender({ manifest });
+        const platformSelectionPageRender = platformSelectionPage.getPlatformSelectionPageRender({ platformList });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-register-customized-page',
             page: platformSelectionPageRender,

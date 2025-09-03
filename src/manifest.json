@@ -1,4 +1,5 @@
 {
-  "defaultCrmManifestUrl": "https://unified-crm-extension.labs.ringcentral.com/crmManifest",
+  "platformListUrl": "https://appconnect.labs.ringcentral.com/public-api/connectors",
+  "redirectUri": "https://ringcentral.github.io/ringcentral-embeddable/redirect.html",
   "version": "1.6.4"
 }

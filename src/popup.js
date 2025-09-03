@@ -7,9 +7,10 @@ import adminCore from './core/admin';
 import authCore from './core/auth';
 import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getUserReportStats } from './lib/util';
 import { getPlatformInfo } from './service/platformService';
-import { getManifest } from './service/manifestService';
+import { getManifest, getPlatformList, saveManifest, saveManifestUrl } from './service/manifestService';
 import { getUserInfo } from './lib/rcAPI';
 import moment from 'moment';
+import baseManifest from './manifest.json';
 import logPage from './components/logPage';
 import authPage from './components/authPage';
 import feedbackPage from './components/feedbackPage';
@@ -22,7 +23,6 @@ import adminPage from './components/admin/adminPage';
 import managedSettingsPage from './components/admin/managedSettingsPage';
 import generalSettingPage from './components/admin/generalSettingPage';
 import callAndSMSLoggingSettingPage from './components/admin/managedSettings/callAndSMSLoggingSettingPage';
-import customAdapterPage from './components/admin/customAdapterPage';
 import serverSideLoggingPage from './components/admin/serverSideLoggingPage';
 import contactSettingPage from './components/admin/managedSettings/contactSettingPage';
 import advancedFeaturesSettingPage from './components/admin/managedSettings/advancedFeaturesSettingPage';
@@ -181,10 +181,14 @@ window.addEventListener('message', async (e) => {
         case 'rc-adapter-pushAdapterState':
           platformInfo = await getPlatformInfo();
           if (!platformInfo) {
-            console.error('Cannot find platform info');
+            console.log('Cannot find platform info');
             return;
           }
           manifest = await getManifest();
+          if (!manifest) {
+            console.log('Cannot find manifest');
+            return;
+          }
           platform = manifest.platforms[platformInfo.platformName]
           platformName = platformInfo.platformName;
           platformHostname = platformInfo.hostname;
@@ -212,9 +216,6 @@ window.addEventListener('message', async (e) => {
             await chrome.storage.local.set({ userPermissions });
           }
           console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
-
-          manifest = await getManifest();
-          platformInfo = await getPlatformInfo();
           if (platformInfo) {
             platform = manifest.platforms[platformInfo.platformName]
             platformName = platformInfo.platformName;
@@ -223,21 +224,25 @@ window.addEventListener('message', async (e) => {
           let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
           if (data.loggedIn) {
             rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
-            await authCore.checkAndOpenPlatformSelectionPage({ manifest });
+            const platformList = await getPlatformList();
+            await authCore.checkAndOpenPlatformSelectionPage({ platformList });
             document.getElementById('rc-widget').style.zIndex = 0;
             crmAuthed = !!rcUnifiedCrmExtJwt;
             await chrome.storage.local.set({ crmAuthed })
             // Manifest case: use RC login to login CRM as well
             if (!crmAuthed && !!platform?.autoLoginCRMWithRingCentralLogin) {
-              const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken(), useLicense: platform.useLicense });
-              try {
-                await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
+              manifest = await getManifest();
+              if (manifest) {
+                const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken(), useLicense: platform.useLicense });
+                try {
+                  await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
+                }
+                catch (e) {
+                  console.log(e);
+                }
+                crmAuthed = !!returnedToken;
+                await chrome.storage.local.set({ crmAuthed })
               }
-              catch (e) {
-                console.log(e);
-              }
-              crmAuthed = !!returnedToken;
-              await chrome.storage.local.set({ crmAuthed })
             }
             if (crmAuthed) {
               // Set every 15min, user settings will refresh
@@ -338,17 +343,6 @@ window.addEventListener('message', async (e) => {
               rcLoginStatus = true;
               await chrome.storage.local.set({ ['rcLoginStatus']: rcLoginStatus });
               const userSettingsByAdmin = await userCore.preloadUserSettingsFromAdmin({ serverUrl: manifest.serverUrl });
-              const customManifestUrl = userSettingsByAdmin?.customCrmManifestUrl?.url;
-              if (customManifestUrl) {
-                console.log('Custom manifest url:', customManifestUrl);
-                await chrome.storage.local.set({ customCrmManifestUrl: customManifestUrl });
-                await chrome.storage.local.remove('customCrmManifest');
-                const customCrmManifestJson = await (await fetch(customManifestUrl)).json();
-                if (customCrmManifestJson) {
-                  await chrome.storage.local.set({ customCrmManifest: customCrmManifestJson });
-                  console.log('Custom manifest loaded:', customCrmManifestJson);
-                }
-              }
             }
           }
           // case 2: login status changed
@@ -695,8 +689,9 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'platformSelectionPage':
+                  const platformList = await getPlatformList();
                   const updatedPlatformSelectionPageRender = platformSelectionPage.getPlatformSelectionPageRender({
-                    manifest,
+                    platformList,
                     searchWord: data.body.formData.platformSearch.search,
                     selectedPlatform: data.body.formData.platforms,
                     filter: data.body.formData.platformSearch.filter
@@ -1064,18 +1059,6 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${callLogDetailsSettingPageRender.id}`, // page id
-                  }, '*');
-                  break;
-                case 'customAdapter':
-                  const customManifestUrl = adminSettings.customAdapter?.url ?? '';
-                  const customAdapterPageRender = customAdapterPage.getCustomAdapterPageRender({ customManifestUrl });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-register-customized-page',
-                    page: customAdapterPageRender
-                  });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: `/customized/${customAdapterPageRender.id}`, // page id
                   }, '*');
                   break;
                 default:
@@ -2134,10 +2117,7 @@ window.addEventListener('message', async (e) => {
                   platformName = data.body.button.formData.platformId;
                   manifest = await getManifest();
                   platform = manifest.platforms[platformName];
-                  // Unique: Bullhorn
-                  if (platformName != 'bullhorn') {
-                    await onUserClickConnectButton();
-                  }
+                  await onUserClickConnectButton();
                   showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
                   break;
                 case 'callAndSMSLoggingSettingPage':
@@ -2345,18 +2325,6 @@ window.addEventListener('message', async (e) => {
                     showNotification({ level: 'warning', message: 'Write review URL is not set', ttl: 3000 });
                   }
                   break;
-                case 'saveAdminAdapterButton':
-                  const customCrmManifestJson = await (await fetch(data.body.button.formData.customManifestUrl)).json();
-                  if (customCrmManifestJson) {
-                    adminSettings.customAdapter = {
-                      url: data.body.button.formData.customManifestUrl,
-                    }
-                    await chrome.storage.local.set({ adminSettings });
-                    await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
-                    await userCore.refreshUserSettings({});
-                    showNotification({ level: 'success', message: 'Custom manifest file uploaded.', ttl: 5000 });
-                  }
-                  break;
                 case 'saveServerSideLoggingButton':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   adminSettings.userSettings.serverSideLogging =
@@ -2556,16 +2524,24 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
               }
-              const listButtonActionId = data.body.button.id.split('-')[0];
-              const listButtonItemId = data.body.button.id.split('-')[1];
+              // button id is: {actionId}-{itemId}-action
+              const listButtonActionIdAndItemId = data.body.button.id.split('-action')[0]; // {actionId}-{itemId}
+              const listButtonActionId = listButtonActionIdAndItemId.split('-')[0]; // {actionId}
+              const listButtonItemId = listButtonActionIdAndItemId.split(`${listButtonActionId}-`)[1]; // {itemId}
               switch (listButtonActionId) {
                 case 'selectPlatform':
-                  const platformId = listButtonItemId;
-                  if (manifest.platforms[platformId]?.environment?.type === 'fixed') {
-                    const inputUrlObj = new URL(manifest.platforms[platformId]?.environment?.url);
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const platformItemName = listButtonItemId.split('-')[0];
+                  const platformItemId = listButtonItemId.split(`${platformItemName}-`)[1];
+                  platformName = platformItemName;
+                  const platformManifestResponse = await axios.get(`${baseManifest.platformListUrl}/${platformItemName}-${platformItemId}/manifest`);
+                  await saveManifestUrl({ manifestUrl: `${baseManifest.platformListUrl}/${platformItemName}-${platformItemId}/manifest` });
+                  manifest = await saveManifest({ manifest: platformManifestResponse.data });
+                  if (manifest.platforms[platformItemName]?.environment?.type === 'fixed') {
+                    const inputUrlObj = new URL(manifest.platforms[platformItemName]?.environment?.url);
                     const inputHostname = inputUrlObj.hostname;
                     await chrome.storage.local.set({
-                      ['platform-info']: { platformName: platformId, hostname: inputHostname }
+                      ['platform-info']: { platformName: platformItemName, hostname: inputHostname }
                     });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-register-third-party-service',
@@ -2575,15 +2551,13 @@ window.addEventListener('message', async (e) => {
                       type: 'rc-adapter-navigate-to',
                       path: '/settings',
                     }, '*');
-                    platformName = platformId;
-                    manifest = await getManifest();
                     platform = manifest.platforms[platformName];
                     await onUserClickConnectButton();
                     showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
                   }
                   else {
                     const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender({
-                      platform: manifest.platforms[platformId],
+                      platform: manifest.platforms[platformItemName],
                       isUrlValid: true
                     });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2595,6 +2569,7 @@ window.addEventListener('message', async (e) => {
                       path: `/customized/${hostnameInputPageRender.id}`,
                     }, '*');
                   }
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
               }
               responseMessage(data.requestId, { data: 'ok' });
@@ -2626,7 +2601,6 @@ window.addEventListener('message', async (e) => {
 });
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-  platform = manifest.platforms[platformName];
   if (request.type === 'oauthCallBack') {
     if (request.platform === 'rc') {
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2637,6 +2611,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
     }
     else if (request.platform === 'thirdParty') {
+      platform = manifest.platforms[platformName];
       const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri, useLicense: platform.useLicense });
       try {
         await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
@@ -2673,6 +2648,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   }
   // Unique: Pipedrive
   else if (request.type === 'pipedriveCallbackUri' && !(await authCore.checkAuth())) {
+    platform = manifest.platforms[platformName];
     const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: `${request.pipedriveCallbackUri}&state=platform=pipedrive`, useLicense: platform.useLicense });
     try {
       await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
@@ -2766,6 +2742,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     sendResponse({ result: 'ok' });
   }
   else if (request.type === 'insightlyAuth') {
+    platform = manifest.platforms[platformName];
     const returnedToken = await authCore.apiKeyLogin({
       serverUrl: manifest.serverUrl,
       apiKey: request.apiKey,

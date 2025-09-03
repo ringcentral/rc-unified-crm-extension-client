@@ -37,7 +37,7 @@ function getHostnameInputPageRender({ platform, inputUrl, region, isUrlValid }) 
             page.schema.required.push('region');
             break;
         case 'dynamic':
-            page.title = 'Enter hostname';
+            page.title = 'Setup';
             page.schema.properties.instructionTitle = {
                 type: 'string',
                 description: `Please setup your ${platformName} account url:`
