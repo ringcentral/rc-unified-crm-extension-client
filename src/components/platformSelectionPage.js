@@ -42,7 +42,7 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
         id: 'platformSelectionPage',
         title: 'Select platform',
         type: 'page',
-        hideBackButton: true,
+        // hideBackButton: true,
         schema: {
             type: 'object',
             properties: {
