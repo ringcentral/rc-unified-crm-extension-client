@@ -189,7 +189,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 }
             }
             if (defaultContact.isNewContact) {
-                if (manifest.platforms[platformName].contactTypes) {
+                if (manifest.platforms[platformName].contactTypes?.length > 0) {
                     newContactWidget.newContactType = {};
                 }
                 newContactWidget.newContactName = {
@@ -197,7 +197,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 };
             }
             page = {
-                title: `Save to ${platformName}`, // optional
+                title: `Save to ${manifest.platforms[platformName].displayName}`, // optional
                 schema: {
                     type: 'object',
                     required: requiredFieldNames,
@@ -355,7 +355,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
         case 'contact':
             // New contact fields
             if (contact.isNewContact) {
-                if (manifest.platforms[platformName].contactTypes) {
+                if (manifest.platforms[platformName].contactTypes?.length > 0) {
                     page.uiSchema.newContactType = {};
                 }
                 page.uiSchema.newContactName = {
@@ -369,7 +369,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                         'Inbound call from ' :
                         'Outbound call to ';
                 }
-                page.formData.newContactType = manifest.platforms[platformName].contactTypes ? manifest.platforms[platformName].contactTypes[0].value : '';
+                page.formData.newContactType = manifest.platforms[platformName].contactTypes?.length > 0 ? manifest.platforms[platformName].contactTypes[0].value : '';
             }
             else {
                 page.formData.newContactName = '';
@@ -516,17 +516,17 @@ function getUnloggedCallPageRender({ unloggedCalls }) {
     const logsList = []
     const today = new Date();
     const todayDateString = today.toDateString();
-    
+
     for (const c of unloggedCalls) {
         const { title, description, type } = logCore.getConflictContentFromUnresolvedLog(c);
         const callDate = new Date(c.startTime);
         const callDateString = callDate.toDateString();
         const duration = formatDuration(c.duration);
         // If same date as today, show only time (HH:mm), otherwise show full date
-        const meta = callDateString === todayDateString 
+        const meta = callDateString === todayDateString
             ? `${callDate.getHours().toString().padStart(2, '0')}:${callDate.getMinutes().toString().padStart(2, '0')}`
             : callDate.toLocaleDateString();
-            
+
         logsList.push({
             const: c.sessionId,
             title,

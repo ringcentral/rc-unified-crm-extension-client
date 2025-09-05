@@ -34,6 +34,17 @@ async function saveManifest({ manifest }) {
     return manifest;
 }
 
+async function refreshManifest() {
+    const { manifestUrl } = await chrome.storage.local.get({ manifestUrl: null });
+    if (!manifestUrl) {
+        return null;
+    }
+    const manifestResponse = await axios.get(manifestUrl);
+    const manifest = manifestResponse.data;
+    await saveManifest({ manifest: manifest.data });
+    return manifest;
+}
+
 async function getManifest() {
     const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
     const platformInfo = await getPlatformInfo();
@@ -87,3 +98,4 @@ exports.getManifest = getManifest;
 exports.getPlatformList = getPlatformList;
 exports.saveManifest = saveManifest;
 exports.saveManifestUrl = saveManifestUrl;
+exports.refreshManifest = refreshManifest;

@@ -19,7 +19,8 @@ function getHostnameInputPageRender({ platform, inputUrl, region, isUrlValid }) 
         formData: {
             url: inputUrl ?? '',
             platformId: platform.name,
-            region: region ?? ''
+            region: region ?? '',
+            platformDisplayName: platform.displayName ?? platform.name
         }
     }
     if (platform.environment?.instructions?.length > 0) {

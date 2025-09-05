@@ -6,12 +6,6 @@ import { openDB } from 'idb';
 import platformSelectionPage from '../components/platformSelectionPage';
 import embeddableServices from '../service/embeddableServices';
 
-async function submitPlatformSelection(platform) {
-    await chrome.storage.local.set({
-        ['platform-info']: platform
-    })
-}
-
 async function checkAndOpenPlatformSelectionPage({ platformList }) {
     const platformInfo = await getPlatformInfo();
     if (!platformInfo) {
@@ -162,7 +156,6 @@ async function refreshLicenseStatus({ serverUrl }) {
 }
 
 exports.checkAndOpenPlatformSelectionPage = checkAndOpenPlatformSelectionPage;
-exports.submitPlatformSelection = submitPlatformSelection;
 exports.apiKeyLogin = apiKeyLogin;
 exports.onAuthCallback = onAuthCallback;
 exports.unAuthorize = unAuthorize;

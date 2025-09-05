@@ -7,7 +7,7 @@ import adminCore from './core/admin';
 import authCore from './core/auth';
 import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getUserReportStats, createDebounceHandler } from './lib/util';
 import { getPlatformInfo } from './service/platformService';
-import { getManifest, getPlatformList, saveManifest, saveManifestUrl } from './service/manifestService';
+import { getManifest, getPlatformList, saveManifest, saveManifestUrl, refreshManifest } from './service/manifestService';
 import { getUserInfo } from './lib/rcAPI';
 import moment from 'moment';
 import baseManifest from './manifest.json';
@@ -189,7 +189,7 @@ window.addEventListener('message', async (e) => {
             console.log('Cannot find platform info');
             return;
           }
-          manifest = await getManifest();
+          manifest = await refreshManifest();
           if (!manifest) {
             console.log('Cannot find manifest');
             return;
@@ -2119,7 +2119,7 @@ window.addEventListener('message', async (e) => {
                   const inputUrlObj = new URL(inputUrl);
                   const inputHostname = inputUrlObj.hostname;
                   await chrome.storage.local.set({
-                    ['platform-info']: { platformName: data.body.button.formData.platformId, hostname: inputHostname }
+                    ['platform-info']: { platformName: data.body.button.formData.platformId, platformDisplayName: data.body.button.formData.platformDisplayName, hostname: inputHostname }
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-third-party-service',
@@ -2537,30 +2537,28 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const selectedPlatform = data.body.button.formData.platformList.find(platform => platform.id === listButtonItemId);
                   const platformType = selectedPlatform.type;
-                  const platformItemName = listButtonItemId.split('-')[0];
-                  const platformItemId = listButtonItemId.split(`${platformItemName}-`)[1];
-                  platformName = platformItemName;
+                  platformName = selectedPlatform.name;
                   let platformManifestResponse;
                   switch (platformType) {
                     case 'public':
-                      platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${platformItemName}-${platformItemId}/manifest`);
-                      await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${platformItemName}-${platformItemId}/manifest` });
+                      platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest`);
+                      await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest` });
                       break;
                     case 'shared':
-                      platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${platformItemName}-${platformItemId}/manifest?type=internal&accountId=${selectedPlatform.accountId}`);
-                      await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${platformItemName}-${platformItemId}/manifest?type=internal&accountId=${selectedPlatform.accountId}` });
+                      platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${selectedPlatform.accountId}`);
+                      await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${selectedPlatform.accountId}` });
                       break;
                     case 'private':
-                      platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${platformItemName}-${platformItemId}/manifest?type=internal&accountId=${selectedPlatform.accountId}`);
-                      await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${platformItemName}-${platformItemId}/manifest?type=internal&accountId=${selectedPlatform.accountId}` });
+                      platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${selectedPlatform.accountId}`);
+                      await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${selectedPlatform.accountId}` });
                       break;
                   }
                   manifest = await saveManifest({ manifest: platformManifestResponse.data });
-                  if (manifest.platforms[platformItemName]?.environment?.type === 'fixed' && !manifest.platforms[platformItemName]?.environment?.instructions?.length) {
-                    const inputUrlObj = new URL(manifest.platforms[platformItemName]?.environment?.url);
+                  if (manifest.platforms[selectedPlatform.name]?.environment?.type === 'fixed' && !manifest.platforms[selectedPlatform.name]?.environment?.instructions?.length) {
+                    const inputUrlObj = new URL(manifest.platforms[selectedPlatform.name]?.environment?.url);
                     const inputHostname = inputUrlObj.hostname;
                     await chrome.storage.local.set({
-                      ['platform-info']: { platformName: platformItemName, hostname: inputHostname }
+                      ['platform-info']: { platformName: selectedPlatform.name, platformDisplayName: selectedPlatform.displayName ?? selectedPlatform.name, hostname: inputHostname }
                     });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-register-third-party-service',
@@ -2576,7 +2574,7 @@ window.addEventListener('message', async (e) => {
                   }
                   else {
                     const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender({
-                      platform: manifest.platforms[platformItemName],
+                      platform: manifest.platforms[selectedPlatform.name],
                       isUrlValid: true
                     });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
