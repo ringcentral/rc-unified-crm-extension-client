@@ -66,11 +66,22 @@ async function registerPlatform(tabUrl) {
   if (!isObjectEmpty(platformInfo)) {
     return true;
   }
+  const { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: null });
+  if (!customCrmManifestUrl) {
+    return true;
+  }
   const url = new URL(tabUrl);
   let hostname = url.hostname;
   const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
   if (customCrmManifest) {
     manifest = customCrmManifest;
+  }
+  else{
+    const customCrmManifest = await (await fetch(customCrmManifestUrl)).json();
+    if (customCrmManifest) {
+      manifest = customCrmManifest;
+      await chrome.storage.local.set({ customCrmManifest });
+    }
   }
   let platformName = '';
   const platforms = Object.keys(manifest.platforms);
@@ -120,7 +131,6 @@ chrome.action.onClicked.addListener(async function (tab) {
   else {
     openPopupWindow();
   }
-  openPopupWindow();
 });
 
 chrome.windows.onRemoved.addListener(async (windowId) => {
@@ -191,7 +201,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       openPopupWindow();
     }
     sendResponse({ result: 'ok' });
-    await openPopupWindow();
     if (request.navigationPath) {
       chrome.runtime.sendMessage({
         type: 'navigate',

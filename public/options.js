@@ -7,7 +7,7 @@ const saveOptions = () => {
     const allowEmbeddingForAllPages = document.getElementById('allowEmbeddingForAllPages').checked;
 
     chrome.storage.local.set(
-        { c2dDelay, renderQuickAccessButton, trustedParties, allowEmbeddingForAllPages },
+        { customCrmManifestUrl, c2dDelay, renderQuickAccessButton, trustedParties, allowEmbeddingForAllPages },
         () => {
             if (customCrmManifestUrl != '') {
                 setupConfig({ customCrmManifestUrl });
@@ -54,6 +54,14 @@ async function fetchManifest({ party }) {
                 manifest = await fetch('https://rcservicenowapi.gate6.com/crmManifest?platformName=servicenow').then(res => res.json());
                 await chrome.storage.local.set({ customCrmManifestUrl: 'https://rcservicenowapi.gate6.com/crmManifest?platformName=servicenow' });
                 break;
+            case 'none':
+                // Update status to let user know options were saved.
+                const status = document.getElementById('status');
+                status.style = 'color: green';
+                status.textContent = `Saved as None`;
+                await chrome.storage.local.set({ customCrmManifestUrl: null });
+                await chrome.storage.local.set({ customCrmManifest: null });
+                return;
         }
         await chrome.storage.local.set({ customCrmManifest: manifest });
         // Update status to let user know options were saved.
