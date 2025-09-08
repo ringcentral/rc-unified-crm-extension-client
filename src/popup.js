@@ -2445,6 +2445,36 @@ window.addEventListener('message', async (e) => {
                   } catch (e) { console.log(e); }
                   break;
                 }
+                case 'calldownActionText': {
+                  try {
+                    const btn = data.body.button || {};
+                    const { calldownListCache } = await chrome.storage.local.get({ calldownListCache: [] });
+                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || __recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
+                    const item = (calldownListCache || []).find(i => i.id === rowId || String(i.contactId) === String(rowId)) || { phoneNumber: btn?.additionalInfo?.phoneNumber };
+
+                    if (item?.phoneNumber) {
+                      document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+                        type: 'rc-adapter-new-sms',
+                        phoneNumber: item.phoneNumber,
+                        conversation: true
+                      }, '*');
+                    }
+                  } catch (e) { console.log(e); }
+                  break;
+                }
+                case 'calldownActionComplete': {
+                  try {
+                    const btn = data.body.button || {};
+                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || __recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
+                    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                    const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
+                    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
+                    await axios.patch(`${manifest.serverUrl}/calldown/markCalled?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { id: rowId, lastCallAt: new Date().toISOString() });
+                    const refreshed = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All' });
+                    document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: refreshed }, '*');
+                  } catch (e) { console.log(e); }
+                  break;
+                }
                 case 'calldownActionRemove': {
                   try {
                     const btn = data.body.button || {};
