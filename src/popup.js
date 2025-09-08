@@ -683,7 +683,7 @@ window.addEventListener('message', async (e) => {
                     {
                       platform: manifest.platforms[data.body.formData.platformId],
                       inputUrl: data.body.formData.url,
-                      region: data.body.formData.region,
+                      selection: data.body.formData.selection,
                       isUrlValid
                     });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2106,8 +2106,8 @@ window.addEventListener('message', async (e) => {
                 case 'hostnameInputPage':
                   let inputUrl = '';
                   switch (manifest.platforms[data.body.button.formData.platformId].environment.type) {
-                    case 'regional':
-                      inputUrl = data.body.button.formData.region;
+                    case 'selectable':
+                      inputUrl = data.body.button.formData.selection;
                       break;
                     case 'dynamic':
                       inputUrl = data.body.button.formData.url;

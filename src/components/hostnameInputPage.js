@@ -1,4 +1,4 @@
-function getHostnameInputPageRender({ platform, inputUrl, region, isUrlValid }) {
+function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid }) {
     const platformName = platform.displayName ?? platform.name;
     const url = platform.environment.url;
     const overrides = platform.overrides;
@@ -19,7 +19,7 @@ function getHostnameInputPageRender({ platform, inputUrl, region, isUrlValid }) 
         formData: {
             url: inputUrl ?? '',
             platformId: platform.name,
-            region: region ?? '',
+            selection: selection ?? '',
             platformDisplayName: platform.displayName ?? platform.name
         }
     }
@@ -60,18 +60,18 @@ function getHostnameInputPageRender({ platform, inputUrl, region, isUrlValid }) 
         }
     }
     switch (platform.environment.type) {
-        case 'regional':
-            page.title = 'Select region';
-            page.schema.properties.region = {
+        case 'selectable':
+            page.title = 'Select';
+            page.schema.properties.selection = {
                 type: 'string',
-                oneOf: platform.environment.regions.map(region => {
+                oneOf: platform.environment.selections.map(selection => {
                     return {
-                        const: region.const,
-                        title: region.name
+                        const: selection.const,
+                        title: selection.name
                     }
                 })
             }
-            page.schema.required.push('region');
+            page.schema.required.push('selection');
             break;
         case 'dynamic':
             page.title = 'Input hostname';
