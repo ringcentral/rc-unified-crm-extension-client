@@ -39,8 +39,8 @@ function getCalldownPageRender() {
                 "ui:placeholder": "Filter by name",
                 "ui:filters": [
                     "All",
-                    "Called",
                     "Not Called",
+                    "Called",
                     "Scheduled"
                 ]
             },
@@ -158,7 +158,9 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                 meta,
                 actions: [
                     { id: 'calldownActionCall', title: 'Call', icon: 'phone' },
-                    { id: 'calldownActionOpen', title: 'Open contact', icon: 'view' },
+                    { id: 'calldownActionText', title: 'Text', icon: 'sms' },
+                    { id: 'calldownActionOpen', title: 'View contact', icon: 'view' },
+                    { id: 'calldownActionComplete', title: 'Mark as complete', icon: 'check' },
                     { id: 'calldownActionRemove', title: 'Delete', icon: 'delete', color: 'danger.b03' }
                 ],
                 additionalInfo: {
