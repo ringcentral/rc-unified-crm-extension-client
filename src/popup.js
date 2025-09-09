@@ -189,10 +189,12 @@ window.addEventListener('message', async (e) => {
             console.log('Cannot find platform info');
             return;
           }
-          manifest = await refreshManifest();
-          if (!manifest) {
-            console.log('Cannot find manifest');
-            return;
+          if (!platformInfo.isLocal) {
+            manifest = await refreshManifest();
+            if (!manifest) {
+              console.log('Cannot find manifest');
+              return;
+            }
           }
           platform = manifest.platforms[platformInfo.platformName]
           platformName = platformInfo.platformName;

@@ -106,7 +106,7 @@ async function registerPlatform(tabUrl) {
     }
   }
   await chrome.storage.local.set({
-    ['platform-info']: { platformName, hostname }
+    ['platform-info']: { platformName, hostname, isLocal: true }
   });
   return true;
 }
