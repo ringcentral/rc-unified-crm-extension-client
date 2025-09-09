@@ -95,6 +95,10 @@ async function getCustomManifest() {
   const customCrmManifest = await getManifest();
   if (customCrmManifest) {
     manifest = customCrmManifest;
+    const { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: null });
+    if (customCrmManifestUrl) {
+      await saveManifestUrl({ manifestUrl: customCrmManifestUrl });
+    }
     setAuthor(customCrmManifest.author?.name ?? "");
   }
 }
