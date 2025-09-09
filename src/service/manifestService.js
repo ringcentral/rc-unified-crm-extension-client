@@ -95,16 +95,19 @@ function setValueByPath(obj, path, value) {
 }
 
 async function checkForManifestMigration() {
-    const manifest = await getManifest();
+    const {customCrmManifestUrl} = await chrome.storage.local.get({customCrmManifestUrl: null});
+    const localCrmManifest = await axios.get(customCrmManifestUrl);
+    const localCrmManifestJson = localCrmManifest.data;
     const platformInfo = await getPlatformInfo();
-    if (manifest.platforms[platformInfo.platformName].migrationId) {
-        const manifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${manifest.platforms[platformInfo.platformName].migrationId}/manifest`);
+    if (localCrmManifestJson.platforms[platformInfo.platformName].migrationId) {
+        const manifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${localCrmManifestJson.platforms[platformInfo.platformName].migrationId}/manifest`);
         const manifestJson = manifestResponse.data;
         await saveManifest({ manifest: manifestJson });
+        await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${localCrmManifestJson.platforms[platformInfo.platformName].migrationId}/manifest` });
         await chrome.storage.local.remove('customCrmManifestUrl');
         return manifestJson;
     }
-    return manifest;
+    return localCrmManifestJson;
 }
 
 exports.getManifest = getManifest;
