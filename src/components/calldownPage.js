@@ -150,6 +150,8 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
             const statusText = i._derivedStatus || (i.status ? String(i.status) : '');
             // Keep status and time separate; show only time in meta for now
             const meta = whenText;
+            const isCalled = (statusText || '').toLowerCase() === 'called';
+            const completeIcon = isCalled ? 'read' : 'unread';
             return {
                 const: i.id,
                 title: displayName,
@@ -160,7 +162,7 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                     { id: 'calldownActionCall', title: 'Call', icon: 'phone' },
                     { id: 'calldownActionText', title: 'Text', icon: 'sms' },
                     { id: 'calldownActionOpen', title: 'View contact', icon: 'view' },
-                    { id: 'calldownActionComplete', title: 'Mark as complete', icon: 'check' },
+                    { id: 'calldownActionComplete', title: 'Mark as complete', icon: completeIcon },
                     { id: 'calldownActionRemove', title: 'Delete', icon: 'delete', color: 'danger.b03' }
                 ],
                 additionalInfo: {
