@@ -7,7 +7,7 @@ import adminCore from './core/admin';
 import authCore from './core/auth';
 import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getUserReportStats, createDebounceHandler } from './lib/util';
 import { getPlatformInfo } from './service/platformService';
-import { getManifest, getPlatformList, saveManifest, saveManifestUrl, refreshManifest } from './service/manifestService';
+import { getManifest, getPlatformList, saveManifest, saveManifestUrl, refreshManifest, checkForManifestMigration } from './service/manifestService';
 import { getUserInfo } from './lib/rcAPI';
 import moment from 'moment';
 import baseManifest from './manifest.json';
@@ -198,6 +198,13 @@ window.addEventListener('message', async (e) => {
             if (!manifest) {
               console.log('Cannot find manifest');
               return;
+            }
+          }
+          else {
+            try {
+              manifest = await checkForManifestMigration();
+            } catch (e) {
+              console.error(e);
             }
           }
           platform = manifest.platforms[platformInfo.platformName]
@@ -2098,6 +2105,10 @@ window.addEventListener('message', async (e) => {
               if (data.body.setting.id === "developerMode") {
                 showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
                 await chrome.storage.local.set({ developerMode: data.body.setting.value });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-register-third-party-service',
+                  service: (await embeddableServices.getServiceManifest())
+                }, '*');
               }
               else if (data.body.setting.id === "autoOpenWithCRM") {
                 showNotification({ level: 'success', message: `Auto open is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });

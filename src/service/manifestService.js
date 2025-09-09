@@ -94,8 +94,22 @@ function setValueByPath(obj, path, value) {
     current[keys[keys.length - 1]] = value;
 }
 
+async function checkForManifestMigration() {
+    const manifest = await getManifest();
+    const platformInfo = await getPlatformInfo();
+    if (manifest.platforms[platformInfo.platformName].migrationId) {
+        const manifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${manifest.platforms[platformInfo.platformName].migrationId}/manifest`);
+        const manifestJson = manifestResponse.data;
+        await saveManifest({ manifest: manifestJson });
+        await chrome.storage.local.remove('customCrmManifestUrl');
+        return manifestJson;
+    }
+    return manifest;
+}
+
 exports.getManifest = getManifest;
 exports.getPlatformList = getPlatformList;
 exports.saveManifest = saveManifest;
 exports.saveManifestUrl = saveManifestUrl;
 exports.refreshManifest = refreshManifest;
+exports.checkForManifestMigration = checkForManifestMigration;
