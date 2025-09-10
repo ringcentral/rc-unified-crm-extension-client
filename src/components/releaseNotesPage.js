@@ -15,41 +15,28 @@ async function getReleaseNotesPageRender({ manifest, platformName, registeredVer
             const platformNotes = releaseNotes[manifest.version][platformName] ?? [];
             const allNotes = globalNotes.concat(platformNotes);
             const allTypes = allNotes.map(n => { return n.type }).filter((value, index, array) => { return array.indexOf(value) === index; });
-            const notesRender = {};
-            const notesUiSchema = {};
-            let counter = 0;
+            let notesRender = [];
+            let notesUiSchema = [];
             for (const t of allTypes) {
-                counter++;
                 const targetNotes = allNotes.filter(n => { return n.type === t });
-                notesRender[`${t}_${counter}`] = {
+                notesRender.push({
                     type: 'string',
                     description: t
-                };
-                notesUiSchema[`${t}_${counter}`] = {
+                });
+                notesUiSchema.push({
                     "ui:field": "typography",
                     "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
-                };
+                });
                 for (const n of targetNotes) {
-                    counter++;
-                    notesRender[`${t}_${counter}`] = {
+                    notesRender.push({
                         type: 'string',
                         description: n.description
-                    };
-                    if (n.link) {
-                        notesUiSchema[`${t}_${counter}`] = {
-                            "ui:field": "link",
-                            "ui:variant": "body1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
-                            "ui:style": { margin: '-15px 0px 0px 20px' },
-                            "ui:href": n.link
-                        };
-                    }
-                    else {
-                        notesUiSchema[`${t}_${counter}`] = {
-                            "ui:field": "typography",
-                            "ui:variant": "body1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
-                            "ui:style": { margin: '-15px 0px 0px 20px' }
-                        };
-                    }
+                    })
+                    notesUiSchema.push({
+                        "ui:field": "typography",
+                        "ui:variant": "body1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                        "ui:style": { margin: '-15px 0px 0px 20px' }
+                    });
                 }
             }
             return {
