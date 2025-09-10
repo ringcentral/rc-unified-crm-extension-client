@@ -129,6 +129,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     additionalFields[f.const] = {
                         title: f.title,
                         type: 'string',
+                        pattern: f.pattern,
                         associationField: !!f.contactDependent
                     }
                     additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? (f.defaultValue ?? '');
@@ -509,6 +510,24 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             page.schema.properties.activityTitle.manuallyEdited = true;
             break;
     }
+
+    if (page.schema.properties[updatedFieldKey]?.pattern) {
+        const patternRegex = new RegExp(page.schema.properties[updatedFieldKey].pattern)
+        if (!page.formData[updatedFieldKey] || patternRegex.test(page.formData[updatedFieldKey])) {
+            delete page.schema.properties[`${updatedFieldKey}-error`];
+            delete page.uiSchema[`${updatedFieldKey}-error`];
+        }
+        else {
+            page.schema.properties[`${updatedFieldKey}-error`] = {
+                type: 'string',
+                description: `Wrong format: ${page.schema.properties[updatedFieldKey].title ?? updatedFieldKey}`
+            };
+            page.uiSchema[`${updatedFieldKey}-error`] = {
+                "ui:field": "admonition", // or typography to show raw text
+                "ui:severity": "error", // "warning", "info", "error", "success"
+            };
+        }
+    }
     return page;
 }
 
@@ -516,17 +535,17 @@ function getUnloggedCallPageRender({ unloggedCalls }) {
     const logsList = []
     const today = new Date();
     const todayDateString = today.toDateString();
-    
+
     for (const c of unloggedCalls) {
         const { title, description, type } = logCore.getConflictContentFromUnresolvedLog(c);
         const callDate = new Date(c.startTime);
         const callDateString = callDate.toDateString();
         const duration = formatDuration(c.duration);
         // If same date as today, show only time (HH:mm), otherwise show full date
-        const meta = callDateString === todayDateString 
+        const meta = callDateString === todayDateString
             ? `${callDate.getHours().toString().padStart(2, '0')}:${callDate.getMinutes().toString().padStart(2, '0')}`
             : callDate.toLocaleDateString();
-            
+
         logsList.push({
             const: c.sessionId,
             title,
