@@ -182,7 +182,8 @@ async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel,
                     crmAdapterUrl: serverUrl,
                     subscriptionLevel,
                     loggingByAdmin,
-                    loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false
+                    loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false,
+                    detailedCallLog: platform.serverSideLogging?.detailedCallLog ?? false
                 },
                 {
                     headers: {

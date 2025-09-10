@@ -129,6 +129,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     additionalFields[f.const] = {
                         title: f.title,
                         type: 'string',
+                        pattern: f.pattern,
                         associationField: !!f.contactDependent
                     }
                     additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? (f.defaultValue ?? '');
@@ -508,6 +509,24 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
         case 'activityTitle':
             page.schema.properties.activityTitle.manuallyEdited = true;
             break;
+    }
+
+    if (page.schema.properties[updatedFieldKey]?.pattern) {
+        const patternRegex = new RegExp(page.schema.properties[updatedFieldKey].pattern)
+        if (!page.formData[updatedFieldKey] || patternRegex.test(page.formData[updatedFieldKey])) {
+            delete page.schema.properties[`${updatedFieldKey}-error`];
+            delete page.uiSchema[`${updatedFieldKey}-error`];
+        }
+        else {
+            page.schema.properties[`${updatedFieldKey}-error`] = {
+                type: 'string',
+                description: `Wrong format: ${page.schema.properties[updatedFieldKey].title ?? updatedFieldKey}`
+            };
+            page.uiSchema[`${updatedFieldKey}-error`] = {
+                "ui:field": "admonition", // or typography to show raw text
+                "ui:severity": "error", // "warning", "info", "error", "success"
+            };
+        }
     }
     return page;
 }
