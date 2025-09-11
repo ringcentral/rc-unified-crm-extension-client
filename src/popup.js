@@ -187,10 +187,11 @@ window.addEventListener('message', async (e) => {
                       phone: { 'ui:disabled': true },
                       contact: { 'ui:field': 'select', 'ui:placeholder': 'Select contact' },
                       callbackDateTime: { 'ui:widget': 'datetime' },
-                      scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit' },
+                      scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit', 'ui:disabled': true },
                     },
                     formData: { phone: phoneNumber, contact: preselect, callbackDateTime: '' }
                   };
+                  schedulePageSubmitEnabled = false;
                   document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
                   document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${schedulePage.id}` }, '*');
 
@@ -772,7 +773,30 @@ window.addEventListener('message', async (e) => {
               // refresh multi match prompt / customized pages
               switch (data.body.page.id) {
                 case 'c2dSchedulePage': {
-                  // no dynamic re-register; rely on submit handler validation
+                  try {
+                    const formData = data.body.formData || {};
+                    const enabled = !!formData.contact && !!formData.callbackDateTime;
+                    const page = data.body.page;
+                    // Only re-register when the disabled state actually changes to avoid UI reset
+                    if (schedulePageSubmitEnabled !== enabled) {
+                      schedulePageSubmitEnabled = enabled;
+                      const updated = {
+                        id: page.id,
+                        title: page.title,
+                        type: page.type,
+                        schema: page.schema,
+                        uiSchema: {
+                          ...page.uiSchema,
+                          scheduleSubmit: { ...(page.uiSchema?.scheduleSubmit || {}), 'ui:disabled': !enabled }
+                        },
+                        formData: formData
+                      };
+                      document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: updated
+                      }, '*');
+                    }
+                  } catch (e) { /* ignore */ }
                   break;
                 }
                 case 'getMultiContactPopPromptPage':
@@ -2824,6 +2848,9 @@ window.addEventListener('message', async (e) => {
   }
 });
 
+// track schedule page submit enablement to avoid re-registering on every keystroke
+let schedulePageSubmitEnabled = false;
+
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   platform = manifest.platforms[platformName];
   if (request.type === 'oauthCallBack') {
@@ -2986,10 +3013,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           phone: { 'ui:disabled': true },
           contact: { 'ui:field': 'select', 'ui:placeholder': 'Select contact' },
           callbackDateTime: { 'ui:widget': 'datetime' },
-          scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit' },
+          scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit', 'ui:disabled': true },
         },
         formData: { phone: phoneNumber, contact: preselect, callbackDateTime: '' }
       };
+      schedulePageSubmitEnabled = false;
       document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
       document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${schedulePage.id}` }, '*');
 
