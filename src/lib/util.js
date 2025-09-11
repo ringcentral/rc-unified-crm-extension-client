@@ -194,6 +194,8 @@ function cleanUpExpiredStorage() {
   });
 }
 
+async function getCompanyReportStats({ dateRange, customStartDate, customEndDate }) {}
+
 async function getUserReportStats({ dateRange, customStartDate, customEndDate }) {
   const rcAccessToken = getRcAccessToken();
   const callLogData = await rcAPI.getRcCallLog({ rcAccessToken, dateRange, customStartDate, customEndDate });

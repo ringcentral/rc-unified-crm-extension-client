@@ -363,12 +363,12 @@ async function authServerSideLogging({ platform }) {
     }
     const { rcUserInfo } = await chrome.storage.local.get('rcUserInfo');
     const rcAccessToken = getRcAccessToken();
+    const rcClientId = platform.serverSideLogging.rcClientId;
     const serverDomainUrl = platform.serverSideLogging.url;
     // Auth
     const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
     const serverSideLoggingTokenResp = await axios.get(
         `${serverDomainUrl}/oauth/callback?code=${rcInteropCode}&&rcAccountId=${rcUserInfo?.rcAccountId}`,
-            clientId: 'Y4m1YREFKbXdDoet5djv46'
         {
             headers: {
                 Accept: 'application/json'
@@ -410,3 +410,4 @@ exports.updateServerSideDoNotLogNumbers = updateServerSideDoNotLogNumbers;
 exports.authServerSideLogging = authServerSideLogging;
 exports.getServerSideLoggingAdditionalFieldValues = getServerSideLoggingAdditionalFieldValues;
 exports.uploadServerSideLoggingAdditionalFieldValues = uploadServerSideLoggingAdditionalFieldValues;
+exports.authAppConnectServer = authAppConnectServer;

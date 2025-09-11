@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getRcAccessToken, getManifest, getUserReportStats } from '../lib/util';
 import adminCore from './admin';
 import { getServiceManifest } from '../service/embeddableServices';
-import reportPage from '../components/reportPage';
+import reportPage from '../components/reportPage/reportPage';
 
 async function preloadUserSettingsFromAdmin({ serverUrl }) {
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));

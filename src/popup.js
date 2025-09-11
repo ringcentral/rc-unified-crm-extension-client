@@ -15,7 +15,7 @@ import releaseNotesPage from './components/releaseNotesPage';
 import supportPage from './components/supportPage';
 import aboutPage from './components/aboutPage';
 import developerSettingsPage from './components/developerSettingsPage';
-import reportPage from './components/reportPage';
+import reportPage from './components/reportPage/reportPage';
 import adminPage from './components/admin/adminPage';
 import managedSettingsPage from './components/admin/managedSettingsPage';
 import generalSettingPage from './components/admin/generalSettingPage';
@@ -522,7 +522,7 @@ window.addEventListener('message', async (e) => {
                     path: `/log/call/${data.call.sessionId}`,
                   }, '*');
                 }
-                
+
                 await chrome.storage.local.set({
                   [`call-log-data-ready-${data.call.sessionId}`]: {
                     isReady: false,
@@ -881,8 +881,17 @@ window.addEventListener('message', async (e) => {
                   }
                   else {
                     if (userCore.getShowUserReportTabSetting(userSettings).value) {
-                      const userReportStats = await getUserReportStats({ dateRange: data.body.formData.dateRangeEnums, customStartDate: data.body.formData.startDate, customEndDate: data.body.formData.endDate });
-                      const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+                      let userReportStats;
+                      switch (data.body.formData.tab) {
+                        case 'myReportsTab':
+                          userReportStats = await getUserReportStats({ dateRange: data.body.formData.dateRangeEnums || 'Last 24 hours', customStartDate: data.body.formData.startDate, customEndDate: data.body.formData.endDate });
+                          break;
+                        case 'adminReportsTab':
+                          break;
+                        case 'leaderboardTab':
+                          break;
+                      }
+                      const reportPageRender = reportPage.getReportsPageRender({ selectedTab: data.body.formData.tab, userStats: userReportStats, userSettings });
                       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                         type: 'rc-adapter-register-customized-page',
                         page: reportPageRender,
