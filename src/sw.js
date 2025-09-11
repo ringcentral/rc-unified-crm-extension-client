@@ -181,14 +181,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     sendResponse({ result: 'ok' });
     return;
   }
-  if (request.type === 'c2d' || request.type === 'c2sms') {
-    const isPopupExist = await openPopupWindow();
-    if (!isPopupExist) {
-      cachedClickToXRequest = {
-        type: request.type,
-        phoneNumber: request.phoneNumber,
-      }
+  if (request.type === 'c2d' || request.type === 'c2sms' || request.type === 'c2schedule') {
+    // cache first to avoid racing second open
+    if (!cachedClickToXRequest) {
+      cachedClickToXRequest = { type: request.type, phoneNumber: request.phoneNumber };
     }
+    await openPopupWindow();
   }
   if (request.type === 'checkForClickToXCache') {
     sendResponse(cachedClickToXRequest);

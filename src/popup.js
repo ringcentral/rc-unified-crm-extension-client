@@ -157,7 +157,7 @@ window.addEventListener('message', async (e) => {
         case 'rc-dialer-status-notify':
           if (data.ready) {
             // check for Click-To-Dial or Click-To-SMS cached action
-            const cachedClickToXRequest = await chrome.runtime.sendMessage(
+            let cachedClickToXRequest = await chrome.runtime.sendMessage(
               {
                 type: 'checkForClickToXCache'
               }
@@ -170,12 +170,39 @@ window.addEventListener('message', async (e) => {
                   toCall: true,
                 }, '*');
               }
-              if (cachedClickToXRequest.type === 'c2sms') {
+              else if (cachedClickToXRequest.type === 'c2sms') {
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-new-sms',
                   phoneNumber: cachedClickToXRequest.phoneNumber,
                   conversation: true, // will go to conversation page if conversation existed
                 }, '*');
+              }
+              else if (cachedClickToXRequest.type === 'c2schedule') {
+                // Open schedule page directly using cached phone number
+                const schedulePage = {
+                  id: 'c2dSchedulePage',
+                  title: 'Add to call-down list',
+                  type: 'page',
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      phone: { type: 'string', title: 'Phone Number' },
+                      callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
+                      scheduleSubmit: { type: 'string', title: 'Schedule' },
+                    }
+                  },
+                  uiSchema: {
+                    phone: { 'ui:disabled': true },
+                    callbackDateTime: { 'ui:widget': 'datetime' },
+                    scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained' },
+                  },
+                  formData: {
+                    phone: cachedClickToXRequest.phoneNumber,
+                    callbackDateTime: ''
+                  }
+                };
+                document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
+                document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${schedulePage.id}` }, '*');
               }
             }
           }
@@ -2380,6 +2407,32 @@ window.addEventListener('message', async (e) => {
               const __btnBaseId = __btnIdParts[0];
               const __recordIdFromId = __btnIdParts.length > 1 ? __btnIdParts[1] : '';
               switch (__btnBaseId) {
+                case 'scheduleSubmit': { // submit on schedule page
+                  try {
+                    const btn = data.body.button || {};
+                    const { phone, callbackDateTime, note } = btn.formData || {};
+                    if (!callbackDateTime || !phone) break;
+                    // show spinner while scheduling
+                    try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
+                    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                    const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
+                    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
+                    await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { phoneNumber: phone, scheduledAt: callbackDateTime, note });
+                    // Notify user on success
+                    try {
+                      showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
+                    } catch (e) { /* ignore */ }
+                    try {
+                      const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All' });
+                      document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: calldownPageRender }, '*');
+                    } catch (e) { /* ignore */ }
+                    document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: 'goBack' }, '*');
+                  } catch (e) { console.log(e); }
+                  finally {
+                    try { window.postMessage({ type: 'rc-log-modal-loading-off' }, '*'); } catch (e) { /* ignore */ }
+                  }
+                  break;
+                }
                 case 'calldownActionCall': {
                   try {
                     const btn = data.body.button || {};
@@ -3257,6 +3310,58 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       phoneNumber: request.phoneNumber,
       toCall: true,
     }, '*');
+    sendResponse({ result: 'ok' });
+  } else if (request.type === 'c2schedule') {
+    try {
+      const manifest = await getManifest();
+      const schedulePage = {
+        id: 'c2dSchedulePage',
+        title: 'Add to call-down list',
+        type: 'page',
+        schema: {
+          type: 'object',
+          properties: {
+            phone: { type: 'string', title: 'Phone Number' },
+            callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
+            scheduleSubmit: { type: 'string', title: 'Schedule' },
+          }
+        },
+        uiSchema: {
+          phone: { 'ui:disabled': true },
+          callbackDateTime: { 'ui:widget': 'datetime' },
+          scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit' },
+        },
+        formData: {
+          phone: request.phoneNumber,
+          callbackDateTime: ''
+        }
+      };
+      document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
+      document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${schedulePage.id}` }, '*');
+
+      const onMessage = async (e) => {
+        const data = e.data;
+        if (!data) return;
+        if (data.type === 'rc-post-message-request' && data.path === '/custom-button-click' && data.body?.page?.id === 'c2dSchedulePage') {
+          document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-post-message-response', responseId: data.requestId, response: { data: 'ok' } }, '*');
+          try {
+            const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+            const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
+            const rcAccountId = rcUserInfo?.rcAccountId ?? '';
+            const { phone, note, callbackDateTime } = data.body?.formData || {};
+            if (!callbackDateTime) return;
+            await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { phoneNumber: phone, scheduledAt: callbackDateTime, note });
+            try {
+              const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All' });
+              document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: calldownPageRender }, '*');
+            } catch (e) { /* ignore refresh errors */ }
+            document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: 'goBack' }, '*');
+            window.removeEventListener('message', onMessage);
+          } catch (err) { console.log(err); }
+        }
+      };
+      window.addEventListener('message', onMessage);
+    } catch (e) { console.log(e); }
     sendResponse({ result: 'ok' });
   }
   else if (request.type === 'navigate') {
