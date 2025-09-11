@@ -178,31 +178,47 @@ window.addEventListener('message', async (e) => {
                 }, '*');
               }
               else if (cachedClickToXRequest.type === 'c2schedule') {
-                // Open schedule page directly using cached phone number
-                const schedulePage = {
-                  id: 'c2dSchedulePage',
-                  title: 'Add to call-down list',
-                  type: 'page',
-                  schema: {
-                    type: 'object',
-                    properties: {
-                      phone: { type: 'string', title: 'Phone Number' },
-                      callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
-                      scheduleSubmit: { type: 'string', title: 'Schedule' },
-                    }
-                  },
-                  uiSchema: {
-                    phone: { 'ui:disabled': true },
-                    callbackDateTime: { 'ui:widget': 'datetime' },
-                    scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained' },
-                  },
-                  formData: {
-                    phone: cachedClickToXRequest.phoneNumber,
-                    callbackDateTime: ''
-                  }
-                };
-                document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
-                document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${schedulePage.id}` }, '*');
+                // Open schedule page with contact dropdown (simple version)
+                try {
+                  try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
+                  const phoneNumber = cachedClickToXRequest.phoneNumber;
+                  const platformInfo = await getPlatformInfo();
+                  const platformName = platformInfo.platformName;
+                  const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: false });
+                  const contacts = (res?.contactInfo || []).filter(c => !c.isNewContact);
+                  const contactOptions = contacts.map(c => ({ const: c.id, title: c.name }));
+                  const placeholderOption = { const: '', title: 'Select contact' };
+                  const listOneOf = [placeholderOption, ...contactOptions];
+                  const preselect = contactOptions.length === 1 ? contactOptions[0].const : '';
+                  const schedulePage = {
+                    id: 'c2dSchedulePage',
+                    title: 'Add to call-down list',
+                    type: 'page',
+                    schema: {
+                      type: 'object',
+                      required: ['contact', 'callbackDateTime'],
+                      properties: {
+                        phone: { type: 'string', title: 'Phone Number' },
+                        contact: { type: 'string', title: 'Contact', minLength: 1, oneOf: listOneOf },
+                        callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
+                        scheduleSubmit: { type: 'string', title: 'Schedule' },
+                      }
+                    },
+                    uiSchema: {
+                      phone: { 'ui:disabled': true },
+                      contact: { 'ui:field': 'select', 'ui:placeholder': 'Select contact' },
+                      callbackDateTime: { 'ui:widget': 'datetime' },
+                      scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit' },
+                    },
+                    formData: { phone: phoneNumber, contact: preselect, callbackDateTime: '' }
+                  };
+                  document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
+                  document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${schedulePage.id}` }, '*');
+
+                } catch (e) { console.log(e); }
+                finally {
+                  try { window.postMessage({ type: 'rc-log-modal-loading-off' }, '*'); } catch (e) { /* ignore */ }
+                }
               }
             }
           }
@@ -739,6 +755,10 @@ window.addEventListener('message', async (e) => {
               }, '*');
               // refresh multi match prompt / customized pages
               switch (data.body.page.id) {
+                case 'c2dSchedulePage': {
+                  // no dynamic re-register; rely on submit handler validation
+                  break;
+                }
                 case 'editUserMappingPage':
                   if (data.body.formData.searchWord) {
                     const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
@@ -2417,7 +2437,7 @@ window.addEventListener('message', async (e) => {
                     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                     const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
                     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
-                    await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { phoneNumber: phone, scheduledAt: callbackDateTime, note });
+                    await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: btn.formData.contact, note });
                     // Notify user on success
                     try {
                       showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
@@ -3314,27 +3334,37 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   } else if (request.type === 'c2schedule') {
     try {
       const manifest = await getManifest();
+      const platformInfo = await getPlatformInfo();
+      const platformName = platformInfo.platformName;
+      // resolve contacts for the number and show dropdown
+      const phoneNumber = request.phoneNumber;
+      const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: false });
+      const contacts = (res?.contactInfo || []).filter(c => !c.isNewContact);
+      const contactOptions = contacts.map(c => ({ const: c.id, title: c.name }));
+      const placeholderOption = { const: '', title: 'Select contact' };
+      const listOneOf = [placeholderOption, ...contactOptions];
+      const preselect = contactOptions.length === 1 ? contactOptions[0].const : '';
       const schedulePage = {
         id: 'c2dSchedulePage',
         title: 'Add to call-down list',
         type: 'page',
         schema: {
           type: 'object',
+          required: ['contact', 'callbackDateTime'],
           properties: {
             phone: { type: 'string', title: 'Phone Number' },
+            contact: { type: 'string', title: 'Contact', minLength: 1, oneOf: listOneOf },
             callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
             scheduleSubmit: { type: 'string', title: 'Schedule' },
           }
         },
         uiSchema: {
           phone: { 'ui:disabled': true },
+          contact: { 'ui:field': 'select', 'ui:placeholder': 'Select contact' },
           callbackDateTime: { 'ui:widget': 'datetime' },
           scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit' },
         },
-        formData: {
-          phone: request.phoneNumber,
-          callbackDateTime: ''
-        }
+        formData: { phone: phoneNumber, contact: preselect, callbackDateTime: '' }
       };
       document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
       document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${schedulePage.id}` }, '*');
@@ -3350,7 +3380,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             const rcAccountId = rcUserInfo?.rcAccountId ?? '';
             const { phone, note, callbackDateTime } = data.body?.formData || {};
             if (!callbackDateTime) return;
-            await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { phoneNumber: phone, scheduledAt: callbackDateTime, note });
+            await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: data.body?.formData?.contact, note });
             try {
               const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All' });
               document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: calldownPageRender }, '*');
