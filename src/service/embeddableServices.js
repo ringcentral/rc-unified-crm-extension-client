@@ -600,7 +600,7 @@ async function getServiceManifest() {
                 id: "unknownContactPreference",
                 type: "option",
                 name: "Unknown contact",
-                description: "What to do when the phone number does not match any contact",
+                helper: "What to do when the phone number does not match any contact",
                 options: [
                     {
                         id: "skipLogging",
@@ -619,7 +619,7 @@ async function getServiceManifest() {
                 id: "multipleContactsPreference",
                 type: "option",
                 name: "Multiple contacts",
-                description: "What to do when multiple contacts match the phone number",
+                helper: "What to do when multiple contacts match the phone number",
                 options: [
                     {
                         id: "skipLogging",
