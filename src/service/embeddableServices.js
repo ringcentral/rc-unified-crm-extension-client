@@ -508,6 +508,7 @@ async function getServiceManifest() {
                 id: "logDateFormat",
                 type: "option",
                 name: "Date format",
+                description: "The format of the date and time in the call log",
                 options: [
                     // ISO 8601 and Standard Formats
                     {
@@ -588,6 +589,57 @@ async function getServiceManifest() {
             }
         ],
     });
+    services.settings.push({
+        id: "autoLogPreferences",
+        type: "section",
+        name: "Auto log preferences",
+        description: "Setup preferences for auto logging scenarios",
+        groupId: "logging",
+        items: [
+            {
+                id: "unknownContactPreference",
+                type: "option",
+                name: "Unknown contact",
+                description: "What to do when the phone number does not match any contact",
+                options: [
+                    {
+                        id: "skipLogging",
+                        name: "Skip logging"
+                    },
+                    {
+                        id: "createNewPlaceholderContact",
+                        name: "Create new placeholder contact"
+                    }
+                ],
+                value: userCore.getUnknownContactPreferenceSetting(userSettings).value,
+                readOnly: userCore.getUnknownContactPreferenceSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getUnknownContactPreferenceSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "multipleContactsPreference",
+                type: "option",
+                name: "Multiple contacts",
+                description: "What to do when multiple contacts match the phone number",
+                options: [
+                    {
+                        id: "skipLogging",
+                        name: "Skip logging"
+                    },
+                    {
+                        id: "firstAlphabetical",
+                        name: "First alphabetical"
+                    },
+                    {
+                        id: "mostRecentActivity",
+                        name: "Most recent activity"
+                    }
+                ],
+                value: userCore.getMultipleContactsPreferenceSetting(userSettings).value,
+                readOnly: userCore.getMultipleContactsPreferenceSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getMultipleContactsPreferenceSetting(userSettings).readOnlyReason
+            }
+        ]
+    })
     if (customSettings) {
         for (const cs of customSettings) {
             // TEMP: skip custom settings for call log details

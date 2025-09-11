@@ -32,6 +32,7 @@ import clickToDialEmbedPage from './components/admin/generalSettings/clickToDial
 import notificationLevelSettingPage from './components/admin/generalSettings/notificationLevelSettingPage';
 import appearancePage from './components/admin/generalSettings/appearancePage';
 import callLogDetailsSettingPage from './components/admin/managedSettings/callAndSMSLoggingSetting/callLogDetailsSettingPage';
+import autoLogPreferencesPage from './components/admin/managedSettings/callAndSMSLoggingSetting/autoLogPreferenceSettingPage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
 import {
@@ -1098,6 +1099,17 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${callLogDetailsSettingPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'autoLogPreferences':
+                  const autoLogPreferencesPageRender = autoLogPreferencesPage.getAutoLogPreferenceSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: autoLogPreferencesPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${autoLogPreferencesPageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'customAdapter':
@@ -2203,6 +2215,7 @@ window.addEventListener('message', async (e) => {
                 case 'callAndSMSLoggingSettingPage':
                 case 'contactSettingPage':
                 case 'callLogDetailsSettingPage':
+                case 'autoLogPreferenceSettingPage':
                 case 'advancedFeaturesSettingPage':
                 case 'customSettingsPage':
                 case 'customizeTabsSettingPage':
@@ -2210,6 +2223,9 @@ window.addEventListener('message', async (e) => {
                 case 'clickToDialEmbedPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const settingDataKeys = Object.keys(data.body.button.formData);
+                  if(!adminSettings.userSettings) {
+                    adminSettings.userSettings = {};
+                  }
                   for (const k of settingDataKeys) {
                     adminSettings.userSettings[k] = data.body.button.formData[k];
                   }

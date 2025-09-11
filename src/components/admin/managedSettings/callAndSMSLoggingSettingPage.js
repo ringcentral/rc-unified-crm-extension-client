@@ -124,6 +124,9 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                     oneOf: [{
                         const: "callLogDetailsSetting",
                         title: "Call log details"
+                    }, {
+                        const: "autoLogPreferences",
+                        title: "Auto log preferences"
                     }]
                 }
             }

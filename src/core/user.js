@@ -456,6 +456,22 @@ function getAddCallLogTranscriptSetting(userSettings) {
     }
 }
 
+function getUnknownContactPreferenceSetting(userSettings) {
+    return {
+        value: userSettings?.unknownContactPreference?.value ?? 'skipLogging',
+        readOnly: userSettings?.unknownContactPreference?.customizable === undefined ? false : !userSettings?.unknownContactPreference?.customizable,
+        readOnlyReason: !userSettings?.unknownContactPreference?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getMultipleContactsPreferenceSetting(userSettings) {
+    return {
+        value: userSettings?.multipleContactsPreference?.value ?? 'skipLogging',
+        readOnly: userSettings?.multipleContactsPreference?.customizable === undefined ? false : !userSettings?.multipleContactsPreference?.customizable,
+        readOnlyReason: !userSettings?.multipleContactsPreference?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getCustomSetting(userSettings, id, defaultValue) {
     if (userSettings === undefined) {
         return {
@@ -519,5 +535,7 @@ exports.getAddCallLogResultSetting = getAddCallLogResultSetting;
 exports.getAddCallLogRecordingSetting = getAddCallLogRecordingSetting;
 exports.getAddCallLogAiNoteSetting = getAddCallLogAiNoteSetting;
 exports.getAddCallLogTranscriptSetting = getAddCallLogTranscriptSetting;
+exports.getUnknownContactPreferenceSetting = getUnknownContactPreferenceSetting;
+exports.getMultipleContactsPreferenceSetting = getMultipleContactsPreferenceSetting;
 
 exports.getCustomSetting = getCustomSetting;
