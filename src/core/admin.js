@@ -152,6 +152,7 @@ async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel,
     const serverDomainUrl = platform.serverSideLogging.url;
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { serverSideLoggingToken } = await chrome.storage.local.get('serverSideLoggingToken');
+    const { adminSettings } = await chrome.storage.local.get('adminSettings');
     if (serverSideLoggingToken) {
         try {
             // get subscription
@@ -181,7 +182,7 @@ async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel,
                     subscriptionLevel,
                     loggingByAdmin,
                     loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false,
-                    detailedCallLog: platform.serverSideLogging?.detailedCallLog ?? false
+                    detailedCallLog: adminSettings?.userSettings?.addCallLogLegs?.value ?? false
                 },
                 {
                     headers: {
