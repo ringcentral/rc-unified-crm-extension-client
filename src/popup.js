@@ -65,6 +65,7 @@ window.__ON_RC_POPUP_WINDOW = 1;
 let platformName = '';
 let registered = false;
 let platformHostname = '';
+let rcInfo = {};
 let rcUserInfo = {};
 let firstTimeLogoutAbsorbed = false;
 let autoPopupMainConverastionId = null;
@@ -281,7 +282,7 @@ window.addEventListener('message', async (e) => {
               authCore.setAuth(false);
             }
             try {
-              const rcInfo = await getRcInfo();
+              rcInfo = await getRcInfo();
               const rcAdditionalSubmission = {};
               if (platform.rcAdditionalSubmission) {
                 for (const ras of platform.rcAdditionalSubmission) {
@@ -2174,7 +2175,7 @@ window.addEventListener('message', async (e) => {
                         type: 'rc-adapter-register-customized-page',
                         page: adminPageRender,
                       }, '*');
-                      await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl });
+                      await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id });
                     }
                   }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
@@ -2606,7 +2607,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             type: 'rc-adapter-register-customized-page',
             page: adminPageRender,
           }, '*');
-          await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl });
+          await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id });
         }
         userSettings = await userCore.refreshUserSettings({});
       }
@@ -2643,7 +2644,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         type: 'rc-adapter-register-customized-page',
         page: adminPageRender,
       }, '*');
-      await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl });
+      await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id });
     }
     await dismissNotification({ notificationId: currentNotificationId });
     console.log('pipedriveAltAuthDone')
@@ -2744,7 +2745,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           type: 'rc-adapter-register-customized-page',
           page: adminPageRender,
         }, '*');
-        await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl });
+        await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id });
       }
       userSettings = await userCore.refreshUserSettings({});
     }

@@ -380,14 +380,14 @@ async function authServerSideLogging({ platform }) {
     return serverSideLoggingToken;
 }
 
-async function authAppConnectServer({ serverUrl }) {
+async function authAppConnectServer({ serverUrl, rcAccountId }) {
     try {
         const rcAccessToken = getRcAccessToken();
         // eslint-disable-next-line no-undef
         const rcClientId = process.env.RC_CLIENT_ID;
         const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
         const serverSideLoggingTokenResp = await axios.get(
-            `${serverUrl}/ringcentral/oauth/callback?code=${rcInteropCode}`,
+            `${serverUrl}/ringcentral/oauth/callback?code=${rcInteropCode}&rcAccountId=${rcAccountId}`,
             {
                 headers: {
                     Accept: 'application/json'
