@@ -514,11 +514,11 @@ async function getServiceManifest() {
                     {
                         id: "YYYY-MM-DD hh:mm:ss A",
                         name: "2024-01-15 02:30:45 PM - General 12H"
-                    }, 
+                    },
                     {
                         id: "YYYY-MM-DD HH:mm:ss",
                         name: "2024-01-15 14:30:45 - General 24H"
-                    },                   
+                    },
                     // US Formats
                     {
                         id: "MM/DD/YYYY hh:mm:ss A",
@@ -614,6 +614,32 @@ async function getServiceManifest() {
                 value: userCore.getUnknownContactPreferenceSetting(userSettings).value,
                 readOnly: userCore.getUnknownContactPreferenceSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getUnknownContactPreferenceSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "newContactType",
+                type: "option",
+                name: "New contact type (applicable when creating new contact)",
+                helper: "When creating a placeholder contact, what contact type it should be",
+                options: platform.contactTypes ?
+                    platform.contactTypes.map(contactType => ({
+                        id: contactType.value,
+                        name: contactType.display
+                    })) : [{
+                        id: "contact",
+                        name: "Contact"
+                    }],
+                value: userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value,
+                readOnly: userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).readOnly,
+                readOnlyReason: userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).readOnlyReason
+            },
+            {
+                id: "newContactNamePrefix",
+                type: "string",
+                name: "New contact name prefix (applicable when creating new contact)",
+                helper: "When creating a placeholder contact, what name prefix it should have",
+                value: userCore.getNewContactNamePrefixSetting(userSettings).value,
+                readOnly: userCore.getNewContactNamePrefixSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getNewContactNamePrefixSetting(userSettings).readOnlyReason
             },
             {
                 id: "multipleContactsPreference",

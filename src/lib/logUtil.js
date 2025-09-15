@@ -1,5 +1,7 @@
 import userCore from '../core/user';
 import logService from '../service/logService';
+import CONSTANTS from '../misc/constant';
+
 function getAdditionalFieldDefaultValuesFromSetting({
     platform,
     userSettings,
@@ -103,14 +105,14 @@ async function getLogConflictInfo({
     let defaultingContact = existingContactInfo.find(c => c.toNumberEntity);
     if (existingContactInfo.length === 0) {
         hasConflict = true;
-        conflictType = 'Unknown contact';
+        conflictType = CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE;
     }
     else if (existingContactInfo.length > 1 && !defaultingContact) {
         hasConflict = true;
         return {
             hasConflict,
             autoSelectAdditionalSubmission,
-            conflictType: 'Multiple contacts'
+            conflictType: CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE
         }
     }
 
@@ -172,13 +174,13 @@ async function getLogConflictInfo({
                             }
                             else {
                                 allMatched = false;
-                                conflictType = 'Disposition conflict';
+                                conflictType = CONSTANTS.DISPOSITION_CONFLICT_TYPE;
                             }
                         }
                     }
                     else {
                         allMatched = false;
-                        conflictType = 'Disposition conflict';
+                        conflictType = CONSTANTS.DISPOSITION_CONFLICT_TYPE;
                     }
                     return { hasConflict: false, autoSelectAdditionalSubmission, requireManualDisposition: !allMatched, conflictType };
                 }

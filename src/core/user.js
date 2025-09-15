@@ -472,6 +472,22 @@ function getMultipleContactsPreferenceSetting(userSettings) {
     }
 }
 
+function getNewContactTypeSetting(userSettings, contactTypes) {
+    return {
+        value: userSettings?.newContactType?.value ?? contactTypes[0].value,
+        readOnly: userSettings?.newContactType?.customizable === undefined ? false : !userSettings?.newContactType?.customizable,
+        readOnlyReason: !userSettings?.newContactType?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getNewContactNamePrefixSetting(userSettings) {
+    return {
+        value: userSettings?.newContactNamePrefix?.value ?? '[Placeholder Contact]',
+        readOnly: userSettings?.newContactNamePrefix?.customizable === undefined ? false : !userSettings?.newContactNamePrefix?.customizable,
+        readOnlyReason: !userSettings?.newContactNamePrefix?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getCustomSetting(userSettings, id, defaultValue) {
     if (userSettings === undefined) {
         return {
@@ -537,5 +553,7 @@ exports.getAddCallLogAiNoteSetting = getAddCallLogAiNoteSetting;
 exports.getAddCallLogTranscriptSetting = getAddCallLogTranscriptSetting;
 exports.getUnknownContactPreferenceSetting = getUnknownContactPreferenceSetting;
 exports.getMultipleContactsPreferenceSetting = getMultipleContactsPreferenceSetting;
+exports.getNewContactTypeSetting = getNewContactTypeSetting;
+exports.getNewContactNamePrefixSetting = getNewContactNamePrefixSetting;
 
 exports.getCustomSetting = getCustomSetting;

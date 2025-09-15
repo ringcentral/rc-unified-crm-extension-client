@@ -35,6 +35,7 @@ import callLogDetailsSettingPage from './components/admin/managedSettings/callAn
 import autoLogPreferencesPage from './components/admin/managedSettings/callAndSMSLoggingSetting/autoLogPreferenceSettingPage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
+import CONSTANTS from './misc/constant';
 import {
   setAuthor,
   identify,
@@ -1102,7 +1103,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'autoLogPreferences':
-                  const autoLogPreferencesPageRender = autoLogPreferencesPage.getAutoLogPreferenceSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  const autoLogPreferencesPageRender = autoLogPreferencesPage.getAutoLogPreferenceSettingPageRender({ adminUserSettings: adminSettings?.userSettings, contactTypes: platform.contactTypes });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: autoLogPreferencesPageRender
@@ -1583,7 +1584,7 @@ window.addEventListener('message', async (e) => {
                   else {
                     logInfo.note = await logCore.getCachedNote({ sessionId: data.body.call.sessionId }) ?? "";
                   }
-                  const { hasConflict, autoSelectAdditionalSubmission, requireManualDisposition } = await getLogConflictInfo({
+                  let { hasConflict, autoSelectAdditionalSubmission, requireManualDisposition, conflictType } = await getLogConflictInfo({
                     platform,
                     isAutoLog,
                     contactInfo: callMatchedContact,
@@ -1595,22 +1596,61 @@ window.addEventListener('message', async (e) => {
                   if (isAutoLog && !isCallAutoPopup) {
                     // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
                     if (hasConflict) {
+                      // Sub-case: Unknown contact
+                      if (conflictType === CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE) {
+                        if (userCore.getUnknownContactPreferenceSetting(userSettings).value === 'createNewPlaceholderContact') {
+                          const newContactName = userCore.getNewContactNamePrefixSetting(userSettings).value + '_' + moment(data.body.call.startTime).format('YYYY.MM.DD HH:mm:ss');
+                          const newContactType = userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value;
+                          let additionalSubmission = {};
+                          if (platform.page?.newContact?.additionalFields) {
+                            const newContactUnderType = callMatchedContact[0].additionalInfo[newContactType];
+                            for (const fieldKey of Object.keys(newContactUnderType)) {
+                              additionalSubmission[fieldKey] = Array.isArray(newContactUnderType[fieldKey]) ? newContactUnderType[fieldKey][0].const : newContactUnderType[fieldKey];
+                            }
+                          }
+                          const newContactInfo = await contactCore.createContact({
+                            serverUrl: manifest.serverUrl,
+                            phoneNumber: contactPhoneNumber,
+                            newContactName,
+                            newContactType,
+                            additionalSubmission
+                          });
+                          defaultingContact = newContactInfo.contactInfo;
+                          hasConflict = false;
+                        }
+                      }
+                      else if (conflictType === CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE) {
+                        const multipleContactPreference = userCore.getMultipleContactsPreferenceSetting(userSettings).value;
+                        switch (multipleContactPreference) {
+                          case 'skipLogging':
+                            break;
+                          case 'firstAlphabetical':
+                            defaultingContact = callMatchedContact.sort((a, b) => a.name.localeCompare(b.name))[0];
+                            break;
+                          case 'mostRecentActivity':
+                            defaultingContact = callMatchedContact[0];
+                            break;
+                        }
+                      }
                       window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                      const conflictLog = {
-                        type: 'Call',
-                        id: data.body.call.sessionId,
-                        phoneNumber: contactPhoneNumber,
-                        direction: data.body.call.direction,
-                        contactInfo: callMatchedContact ?? [],
-                        subject: logInfo.subject,
-                        note: logInfo.note,
-                        date: moment(data.body.call.startTime).format('MM/DD/YYYY')
-                      };
-                      const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
-                      showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Please log it manually on call history page`, ttl: 5000 });
+                      if (hasConflict) {
+                        const conflictLog = {
+                          type: 'Call',
+                          id: data.body.call.sessionId,
+                          phoneNumber: contactPhoneNumber,
+                          direction: data.body.call.direction,
+                          contactInfo: callMatchedContact ?? [],
+                          subject: logInfo.subject,
+                          note: logInfo.note,
+                          date: moment(data.body.call.startTime).format('MM/DD/YYYY')
+                        };
+                        const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
+                        showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Please log it manually on call history page`, ttl: 5000 });
+                      }
                     }
+
                     // Case: auto log and no conflict, log directly
-                    else {
+                    if (!hasConflict) {
                       logInfo.subject = data.body.call.direction === 'Inbound' ?
                         `Inbound Call from ${defaultingContact?.name ?? ''}` :
                         `Outbound Call to ${defaultingContact?.name ?? ''}`;
@@ -2223,7 +2263,7 @@ window.addEventListener('message', async (e) => {
                 case 'clickToDialEmbedPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const settingDataKeys = Object.keys(data.body.button.formData);
-                  if(!adminSettings.userSettings) {
+                  if (!adminSettings.userSettings) {
                     adminSettings.userSettings = {};
                   }
                   for (const k of settingDataKeys) {

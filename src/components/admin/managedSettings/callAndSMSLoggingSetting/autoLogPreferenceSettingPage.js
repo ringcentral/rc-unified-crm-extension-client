@@ -1,5 +1,9 @@
-function getAutoLogPreferenceSettingPageRender({ adminUserSettings }) {
-    return {
+function getAutoLogPreferenceSettingPageRender({ adminUserSettings, contactTypes }) {
+    const newContactTypes = contactTypes.map(contactType => ({
+        const: contactType.value,
+        title: contactType.display
+    }));
+    const page = {
         id: 'autoLogPreferenceSettingPage',
         title: 'Auto log preferences',
         type: 'page',
@@ -28,6 +32,35 @@ function getAutoLogPreferenceSettingPageRender({ adminUserSettings }) {
                                     title: 'Create new placeholder contact'
                                 }
                             ]
+                        }
+                    }
+                },
+                newContactType: {
+                    type: 'object',
+                    title: 'Contact type',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'string',
+                            title: 'Value',
+                            oneOf: newContactTypes
+                        }
+                    }
+                },
+                newContactNamePrefix: {
+                    type: 'object',
+                    title: 'New contact name prefix',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'string',
+                            title: 'Value'
                         }
                     }
                 },
@@ -65,7 +98,13 @@ function getAutoLogPreferenceSettingPageRender({ adminUserSettings }) {
             unknownContactPreference: {
                 "ui:collapsible": true,
             },
+            newContactType: {
+                "ui:collapsible": true,
+            },
             multipleContactsPreference: {
+                "ui:collapsible": true,
+            },
+            newContactNamePrefix: {
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
@@ -77,12 +116,21 @@ function getAutoLogPreferenceSettingPageRender({ adminUserSettings }) {
                 customizable: adminUserSettings?.unknownContactPreference?.customizable ?? true,
                 value: adminUserSettings?.unknownContactPreference?.value ?? 'skipLogging'
             },
+            newContactType: {
+                customizable: adminUserSettings?.newContactType?.customizable ?? true,
+                value: adminUserSettings?.newContactType?.value ?? contactTypes[0]
+            },
             multipleContactsPreference: {
                 customizable: adminUserSettings?.multipleContactsPreference?.customizable ?? true,
                 value: adminUserSettings?.multipleContactsPreference?.value ?? 'skipLogging'
+            },
+            newContactNamePrefix: {
+                customizable: adminUserSettings?.newContactNamePrefix?.customizable ?? true,
+                value: adminUserSettings?.newContactNamePrefix?.value ?? '[Placeholder Contact]'
             }
         }
     }
+    return page;
 }
 
 exports.getAutoLogPreferenceSettingPageRender = getAutoLogPreferenceSettingPageRender;
