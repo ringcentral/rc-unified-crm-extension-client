@@ -126,7 +126,7 @@ function getAutoLogPreferenceSettingPageRender({ adminUserSettings, contactTypes
             },
             newContactNamePrefix: {
                 customizable: adminUserSettings?.newContactNamePrefix?.customizable ?? true,
-                value: adminUserSettings?.newContactNamePrefix?.value ?? '[Placeholder Contact]'
+                value: adminUserSettings?.newContactNamePrefix?.value ?? 'PlaceholderContact'
             }
         }
     }

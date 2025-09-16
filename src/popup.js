@@ -35,7 +35,7 @@ import callLogDetailsSettingPage from './components/admin/managedSettings/callAn
 import autoLogPreferencesPage from './components/admin/managedSettings/callAndSMSLoggingSetting/autoLogPreferenceSettingPage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
-import CONSTANTS from './misc/constant';
+import { CONSTANTS } from './misc/constant';
 import {
   setAuthor,
   identify,
@@ -1599,7 +1599,7 @@ window.addEventListener('message', async (e) => {
                       // Sub-case: Unknown contact
                       if (conflictType === CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE) {
                         if (userCore.getUnknownContactPreferenceSetting(userSettings).value === 'createNewPlaceholderContact') {
-                          const newContactName = userCore.getNewContactNamePrefixSetting(userSettings).value + '_' + moment(data.body.call.startTime).format('YYYY.MM.DD HH:mm:ss');
+                          const newContactName = userCore.getNewContactNamePrefixSetting(userSettings).value + '_' + moment(data.body.call.startTime).format('YYYYMMDDHHmmss');
                           const newContactType = userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value;
                           let additionalSubmission = {};
                           if (platform.page?.newContact?.additionalFields) {
@@ -1626,9 +1626,11 @@ window.addEventListener('message', async (e) => {
                             break;
                           case 'firstAlphabetical':
                             defaultingContact = callMatchedContact.sort((a, b) => a.name.localeCompare(b.name))[0];
+                            hasConflict = false;
                             break;
                           case 'mostRecentActivity':
-                            defaultingContact = callMatchedContact[0];
+                            defaultingContact = callMatchedContact.sort((a, b) => new Date(b.mostRecentActivityDate) - new Date(a.mostRecentActivityDate))[0];
+                            hasConflict = false;
                             break;
                         }
                       }

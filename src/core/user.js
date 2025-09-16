@@ -482,7 +482,7 @@ function getNewContactTypeSetting(userSettings, contactTypes) {
 
 function getNewContactNamePrefixSetting(userSettings) {
     return {
-        value: userSettings?.newContactNamePrefix?.value ?? '[Placeholder Contact]',
+        value: userSettings?.newContactNamePrefix?.value ?? 'PlaceholderContact',
         readOnly: userSettings?.newContactNamePrefix?.customizable === undefined ? false : !userSettings?.newContactNamePrefix?.customizable,
         readOnlyReason: !userSettings?.newContactNamePrefix?.customizable ? 'This setting is managed by admin' : ''
     }

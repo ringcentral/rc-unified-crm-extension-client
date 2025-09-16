@@ -1,6 +1,6 @@
 import userCore from '../core/user';
 import logService from '../service/logService';
-import CONSTANTS from '../misc/constant';
+import { CONSTANTS } from '../misc/constant';
 
 function getAdditionalFieldDefaultValuesFromSetting({
     platform,
