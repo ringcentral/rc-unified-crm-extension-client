@@ -688,6 +688,21 @@ window.addEventListener('message', async (e) => {
             if (data.path.startsWith('/conversations/') || data.path.startsWith('/composeText')) {
               window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
             }
+            // Force Call-down tab to default to All when user navigates back to it from other tabs
+            if (data.path === '/customizedTabs/calldownPage') {
+              try {
+                const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                const refreshedCalldown = await calldownPage.getCalldownPageWithRecords({
+                  manifest,
+                  jwtToken: rcUnifiedCrmExtJwt,
+                  filterStatus: 'All'
+                });
+                document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+                  type: 'rc-adapter-register-customized-page',
+                  page: refreshedCalldown
+                }, '*');
+              } catch (e) { /* ignore */ }
+            }
           }
           // user setting page needs a refresh mechanism to make sure user settings are up to date
           if (data.path === '/settings' && crmAuthed) {
@@ -2550,13 +2565,33 @@ window.addEventListener('message', async (e) => {
                 }
                 case 'calldownActionOpen': {
                   try {
+                    try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
                     const btn = data.body.button || {};
                     const { calldownListCache } = await chrome.storage.local.get({ calldownListCache: [] });
                     const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
                     const item = (calldownListCache || []).find(i => i.id === rowId) || { contactId: btn?.additionalInfo?.contactId, contactType: btn?.additionalInfo?.contactType, phoneNumber: btn?.additionalInfo?.phoneNumber };
-                    if (item?.contactId && item?.contactType) {
-                      await contactCore.openContactPage({ manifest, platformName, contactId: item.contactId, contactType: item.contactType });
-                    } else if (item?.phoneNumber) {
+                    // Prefer resolving by phone to get a reliable contact type, then select the specific contactId
+                    if (item?.contactId && item?.phoneNumber) {
+                      const { matched, contactInfo } = await contactCore.getContact({
+                        serverUrl: manifest.serverUrl,
+                        phoneNumber: item.phoneNumber,
+                        platformName,
+                        isForceRefresh: true,
+                        isToTriggerContactMatch: false
+                      });
+                      if (matched) {
+                        const realContacts = (contactInfo || []).filter(c => !c.isNewContact);
+                        const exact = realContacts.find(c => c.id == item.contactId);
+                        if (exact) {
+                          await contactCore.openContactPage({ manifest, platformName, contactId: exact.id, contactType: exact.type });
+                        }
+                      }
+                      // Fallback if not found from phone match
+                      else if (item.contactType) {
+                        await contactCore.openContactPage({ manifest, platformName, contactId: item.contactId, contactType: item.contactType });
+                      }
+                    }
+                    else if (item?.phoneNumber) {
                       // Resolve by phone; open the first non-new matched contact directly
                       const { matched, contactInfo } = await contactCore.getContact({
                         serverUrl: manifest.serverUrl,
@@ -2567,9 +2602,11 @@ window.addEventListener('message', async (e) => {
                       });
                       if (matched) {
                         const realContacts = (contactInfo || []).filter(c => !c.isNewContact);
-                        const first = realContacts[0];
-                        if (first) {
-                          await contactCore.openContactPage({ manifest, platformName, contactId: first.id, contactType: first.type });
+                        // If we still have a target contactId, prefer that contact from the list
+                        const preferred = item?.contactId ? realContacts.find(c => c.id == item.contactId) : null;
+                        const chosen = preferred || realContacts[0];
+                        if (chosen) {
+                          await contactCore.openContactPage({ manifest, platformName, contactId: chosen.id, contactType: chosen.type });
                         } else {
                           await contactCore.openContactPage({ manifest, platformName, phoneNumber: item.phoneNumber, multiContactMatchBehavior: 'disabled' });
                         }
@@ -2578,6 +2615,7 @@ window.addEventListener('message', async (e) => {
                       }
                     }
                   } catch (e) { console.log(e); }
+                  try { window.postMessage({ type: 'rc-log-modal-loading-off' }, '*'); } catch (e) { /* ignore */ }
                   break;
                 }
                 case 'calldownActionText': {
@@ -2599,6 +2637,7 @@ window.addEventListener('message', async (e) => {
                 }
                 case 'calldownActionComplete': {
                   try {
+                    try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
                     const btn = data.body.button || {};
                     const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
                     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
@@ -2613,10 +2652,12 @@ window.addEventListener('message', async (e) => {
                     });
                     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: refreshed }, '*');
                   } catch (e) { console.log(e); }
+                  try { window.postMessage({ type: 'rc-log-modal-loading-off' }, '*'); } catch (e) { /* ignore */ }
                   break;
                 }
                 case 'calldownActionRemove': {
                   try {
+                    try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
                     const btn = data.body.button || {};
                     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                     const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
@@ -2633,6 +2674,7 @@ window.addEventListener('message', async (e) => {
                       page: refreshed
                     }, '*');
                   } catch (e) { console.log(e); }
+                  try { window.postMessage({ type: 'rc-log-modal-loading-off' }, '*'); } catch (e) { /* ignore */ }
                   break;
                 }
 
