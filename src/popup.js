@@ -2446,16 +2446,16 @@ window.addEventListener('message', async (e) => {
             case '/custom-button-click':
               // Embeddable may append a suffix to button id, e.g. "calldownActionCall-<recordId>-action"
               // Extract base id for switching and capture record id from the id when available.
-              const __btnRawId = String(data.body?.button?.id || '');
-              const __btnIdParts = __btnRawId.split('-');
-              const __btnBaseId = __btnIdParts[0];
-              const __recordIdFromId = __btnIdParts.length > 1 ? __btnIdParts[1] : '';
-              switch (__btnBaseId) {
+              const btnRawId = String(data.body?.button?.id || '');
+              const btnIdParts = btnRawId.split('-');
+              const btnBaseId = btnIdParts[0];
+              const recordIdFromId = btnIdParts.length > 1 ? btnIdParts[1] : '';
+              switch (btnBaseId) {
                 case 'callLater': {
                   try {
                     const number = data.body?.resource?.to?.phoneNumber;
                     if (!number) break;
-                    try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
+                    //try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
                     chrome.runtime.sendMessage({ type: 'c2schedule', phoneNumber: number });
                   } catch (e) { /* ignore */ }
                   break;
@@ -2464,7 +2464,7 @@ window.addEventListener('message', async (e) => {
                   try {
                     const number = data.body?.resource?.to?.phoneNumber || data.body?.resource?.to?.length > 0 ? data.body?.resource?.to?.[0]?.phoneNumber : undefined;
                     if (!number) break;
-                    try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
+                    // try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
                     chrome.runtime.sendMessage({ type: 'c2schedule', phoneNumber: number });
                   } catch (e) { /* ignore */ }
                   break;
@@ -2484,7 +2484,7 @@ window.addEventListener('message', async (e) => {
                       }
                     }
                     if (!number) break;
-                    try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
+                    //  try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
                     chrome.runtime.sendMessage({ type: 'c2schedule', phoneNumber: number });
                   } catch (e) { /* ignore */ }
                   break;
@@ -2519,7 +2519,7 @@ window.addEventListener('message', async (e) => {
                   try {
                     const btn = data.body.button || {};
                     const { calldownListCache } = await chrome.storage.local.get({ calldownListCache: [] });
-                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || __recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
+                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
                     const item = (calldownListCache || []).find(i => i.id === rowId) || { phoneNumber: btn?.additionalInfo?.phoneNumber };
                     if (item?.phoneNumber) {
                       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2552,7 +2552,7 @@ window.addEventListener('message', async (e) => {
                   try {
                     const btn = data.body.button || {};
                     const { calldownListCache } = await chrome.storage.local.get({ calldownListCache: [] });
-                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || __recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
+                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
                     const item = (calldownListCache || []).find(i => i.id === rowId) || { contactId: btn?.additionalInfo?.contactId, contactType: btn?.additionalInfo?.contactType, phoneNumber: btn?.additionalInfo?.phoneNumber };
                     if (item?.contactId && item?.contactType) {
                       await contactCore.openContactPage({ manifest, platformName, contactId: item.contactId, contactType: item.contactType });
@@ -2584,7 +2584,7 @@ window.addEventListener('message', async (e) => {
                   try {
                     const btn = data.body.button || {};
                     const { calldownListCache } = await chrome.storage.local.get({ calldownListCache: [] });
-                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || __recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
+                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
                     const item = (calldownListCache || []).find(i => i.id === rowId || String(i.contactId) === String(rowId)) || { phoneNumber: btn?.additionalInfo?.phoneNumber };
 
                     if (item?.phoneNumber) {
@@ -2600,12 +2600,17 @@ window.addEventListener('message', async (e) => {
                 case 'calldownActionComplete': {
                   try {
                     const btn = data.body.button || {};
-                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || __recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
+                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
                     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                     const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
                     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
                     await axios.patch(`${manifest.serverUrl}/calldown/markCalled?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { id: rowId, lastCallAt: new Date().toISOString() });
-                    const refreshed = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All' });
+                    const refreshed = await calldownPage.getCalldownPageWithRecords({
+                      manifest,
+                      jwtToken: rcUnifiedCrmExtJwt,
+                      searchWithFilters: data.body?.button?.formData?.searchWithFilters,
+                      filterStatus: data.body?.button?.formData?.searchWithFilters?.filter || 'All'
+                    });
                     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: refreshed }, '*');
                   } catch (e) { console.log(e); }
                   break;
@@ -2614,10 +2619,15 @@ window.addEventListener('message', async (e) => {
                   try {
                     const btn = data.body.button || {};
                     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || __recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
+                    const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
                     await axios.delete(`${manifest.serverUrl}/calldown/item?jwtToken=${rcUnifiedCrmExtJwt}&id=${rowId}`);
                     // refresh list in place
-                    const refreshed = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All' });
+                    const refreshed = await calldownPage.getCalldownPageWithRecords({
+                      manifest,
+                      jwtToken: rcUnifiedCrmExtJwt,
+                      searchWithFilters: data.body?.button?.formData?.searchWithFilters,
+                      filterStatus: data.body?.button?.formData?.searchWithFilters?.filter || 'All'
+                    });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                       type: 'rc-adapter-register-customized-page',
                       page: refreshed
@@ -3261,6 +3271,8 @@ window.addEventListener('message', async (e) => {
 
 // track schedule page submit enablement to avoid re-registering on every keystroke
 let schedulePageSubmitEnabled = false;
+// guard to prevent duplicate c2schedule opens when extension is already open
+let isOpeningSchedule = false;
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.type === 'oauthCallBack') {
@@ -3398,6 +3410,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     sendResponse({ result: 'ok' });
   } else if (request.type === 'c2schedule') {
     try {
+      if (isOpeningSchedule) { sendResponse({ result: 'busy' }); return; }
+      isOpeningSchedule = true;
+      try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
       const manifest = await getManifest();
       const platformInfo = await getPlatformInfo();
       const platformName = platformInfo.platformName;
@@ -3434,7 +3449,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       schedulePageSubmitEnabled = false;
       document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
       document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${schedulePage.id}` }, '*');
-
       const onMessage = async (e) => {
         const data = e.data;
         if (!data) return;
@@ -3452,12 +3466,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: calldownPageRender }, '*');
             } catch (e) { /* ignore refresh errors */ }
             document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: 'goBack' }, '*');
+            isOpeningSchedule = false;
             window.removeEventListener('message', onMessage);
           } catch (err) { console.log(err); }
         }
       };
       window.addEventListener('message', onMessage);
     } catch (e) { console.log(e); }
+    finally { setTimeout(() => { isOpeningSchedule = false; }, 1500); }
     try { window.postMessage({ type: 'rc-log-modal-loading-off' }, '*'); } catch (e) { /* ignore */ }
     sendResponse({ result: 'ok' });
   }
