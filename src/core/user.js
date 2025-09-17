@@ -474,7 +474,7 @@ function getMultipleContactsPreferenceSetting(userSettings) {
 
 function getNewContactTypeSetting(userSettings, contactTypes) {
     return {
-        value: userSettings?.newContactType?.value ?? contactTypes[0].value,
+        value: userSettings?.newContactType?.value ?? null,
         readOnly: userSettings?.newContactType?.customizable === undefined ? false : !userSettings?.newContactType?.customizable,
         readOnlyReason: !userSettings?.newContactType?.customizable ? 'This setting is managed by admin' : ''
     }

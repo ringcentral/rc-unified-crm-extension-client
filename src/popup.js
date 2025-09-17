@@ -1226,7 +1226,8 @@ window.addEventListener('message', async (e) => {
                           ],
                           entityType: platformName,
                           contactType: contactInfoItem.type,
-                          additionalInfo: contactInfoItem.additionalInfo
+                          additionalInfo: contactInfoItem.additionalInfo,
+                          mostRecentActivityDate: contactInfoItem.mostRecentActivityDate
                         });
                       }
                     }
@@ -1599,7 +1600,7 @@ window.addEventListener('message', async (e) => {
                       // Sub-case: Unknown contact
                       if (conflictType === CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE) {
                         if (userCore.getUnknownContactPreferenceSetting(userSettings).value === 'createNewPlaceholderContact') {
-                          const newContactName = userCore.getNewContactNamePrefixSetting(userSettings).value + '_' + moment(data.body.call.startTime).format('YYYYMMDDHHmmss');
+                          const newContactName = userCore.getNewContactNamePrefixSetting(userSettings).value + ' ' + moment(data.body.call.startTime).format('YYYYMMDDHHmmss');
                           const newContactType = userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value;
                           let additionalSubmission = {};
                           if (platform.page?.newContact?.additionalFields) {

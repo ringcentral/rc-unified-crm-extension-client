@@ -628,7 +628,7 @@ async function getServiceManifest() {
                         id: "contact",
                         name: "Contact"
                     }],
-                value: userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value,
+                value: userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value || platform?.contactTypes?.[0]?.value || 'contact',
                 readOnly: userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).readOnly,
                 readOnlyReason: userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).readOnlyReason
             },
