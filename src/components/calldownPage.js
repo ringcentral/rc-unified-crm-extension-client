@@ -107,7 +107,7 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                 const arr = platformData?.[platformName]?.data ?? [];
                 for (const c of arr) {
                     if (c && !c.isNewContact && c.id) {
-                        if (!idToContact.has(c.id)) idToContact.set(c.id, { name: c.name, phone });
+                        if (!idToContact.has(String(c.id))) idToContact.set(String(c.id), { name: c.name, phone });
                     }
                 }
             }
@@ -117,7 +117,7 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
 
         // Enrich FIRST so we can filter using resolved names/phones
         const enriched = items.map(i => {
-            const mapped = idToContact.get(i.contactId);
+            const mapped = idToContact.get(String(i.contactId));
             return {
                 ...i,
                 contactName: mapped?.name ?? i.contactName,
