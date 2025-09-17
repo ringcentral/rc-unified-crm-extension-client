@@ -1,5 +1,5 @@
 {
   "platformPublicListUrl": "https://appconnect.labs.ringcentral.com/public-api/connectors",
   "platformInternalListUrl": "https://appconnect.labs.ringcentral.com/public-api/connectors/internal",
-  "redirectUri": "https://ringcentral.github.io/ringcentral-embeddable/redirect.html",
+  "redirectUri": "https://ringcentral.github.io/ringcentral-embeddable/redirect.html"
 }
