@@ -2451,6 +2451,44 @@ window.addEventListener('message', async (e) => {
               const __btnBaseId = __btnIdParts[0];
               const __recordIdFromId = __btnIdParts.length > 1 ? __btnIdParts[1] : '';
               switch (__btnBaseId) {
+                case 'callLater': {
+                  try {
+                    const number = data.body?.resource?.to?.phoneNumber;
+                    if (!number) break;
+                    try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
+                    chrome.runtime.sendMessage({ type: 'c2schedule', phoneNumber: number });
+                  } catch (e) { /* ignore */ }
+                  break;
+                }
+                case 'callLaterInMessage': {
+                  try {
+                    const number = data.body?.resource?.to?.phoneNumber || data.body?.resource?.to?.length > 0 ? data.body?.resource?.to?.[0]?.phoneNumber : undefined;
+                    if (!number) break;
+                    try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
+                    chrome.runtime.sendMessage({ type: 'c2schedule', phoneNumber: number });
+                  } catch (e) { /* ignore */ }
+                  break;
+                }
+                case 'callLaterInContact': {
+                  try {
+                    let number = data.body?.resource?.phoneNumber;
+                    if (data.body?.resource?.phoneType === 'extension') {
+                      const phoneNumbers = data.body?.resource?.phoneNumbers;
+                      if (phoneNumbers && phoneNumbers.length > 0) {
+                        for (const phoneNumber of phoneNumbers) {
+                          if (phoneNumber.phoneType === 'direct') {
+                            number = phoneNumber.phoneNumber;
+                            break;
+                          }
+                        }
+                      }
+                    }
+                    if (!number) break;
+                    try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
+                    chrome.runtime.sendMessage({ type: 'c2schedule', phoneNumber: number });
+                  } catch (e) { /* ignore */ }
+                  break;
+                }
                 case 'scheduleSubmit': { // submit on schedule page
                   try {
                     const btn = data.body.button || {};
@@ -3420,6 +3458,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       };
       window.addEventListener('message', onMessage);
     } catch (e) { console.log(e); }
+    try { window.postMessage({ type: 'rc-log-modal-loading-off' }, '*'); } catch (e) { /* ignore */ }
     sendResponse({ result: 'ok' });
   }
   else if (request.type === 'navigate') {
