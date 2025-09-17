@@ -9,7 +9,7 @@ function getReportsPageRender({ userStats, userSettings }) {
         id: 'reportPage',
         title: 'Reports',
         type: 'tab',
-        priority: 105,
+        priority: 61,
         hidden: isHidden,
         iconUri: userReportIcon,
         activeIconUri: userReportIconActive,

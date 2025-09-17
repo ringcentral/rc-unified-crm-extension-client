@@ -214,6 +214,16 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings }) {
                             title: 'Value'
                         }
                     }
+                },
+                addCallLogLegs: {
+                    type: 'object',
+                    title: 'Call journey - BETA (Only available for Server-side logging)',
+                    properties: {
+                        value: {
+                            type: 'boolean',
+                            title: 'Value',
+                        }
+                    }
                 }
             }
         },
@@ -255,6 +265,9 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings }) {
                 "ui:collapsible": true,
             },
             addCallLogTranscript: {
+                "ui:collapsible": true,
+            },
+            addCallLogLegs: {
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
@@ -313,6 +326,10 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings }) {
             addCallLogTranscript: {
                 customizable: adminUserSettings?.addCallLogTranscript?.customizable ?? true,
                 value: adminUserSettings?.addCallLogTranscript?.value ?? false
+            },
+            addCallLogLegs: {
+                customizable: false,
+                value: adminUserSettings?.addCallLogLegs?.value ?? false
             }
         }
     }
