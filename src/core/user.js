@@ -1,8 +1,51 @@
 import axios from 'axios';
-import { getRcAccessToken, getManifest, getUserReportStats } from '../lib/util';
+import { getRcAccessToken, getManifest } from '../lib/util';
 import adminCore from './admin';
 import { getServiceManifest } from '../service/embeddableServices';
 import reportPage from '../components/reportPage/reportPage';
+import rcAPI from '../lib/rcAPI';
+
+async function getUserReportStats({ dateRange, customStartDate, customEndDate }) {
+    const rcAccessToken = getRcAccessToken();
+    const callLogData = await rcAPI.getRcCallLog({ rcAccessToken, dateRange, customStartDate, customEndDate });
+    // phone activity
+    const inboundCallCount = callLogData.records.filter(call => call.direction === 'Inbound').length;
+    const outboundCallCount = callLogData.records.filter(call => call.direction === 'Outbound').length;
+    const answeredCallCount = callLogData.records.filter(call => call.direction === 'Inbound' && (call.result === 'Call connected' || call.result === 'Accepted' || call.result === 'Answered Not Accepted')).length;
+    const answeredCallPercentage = answeredCallCount === 0 ? '0%' : `${((answeredCallCount / (inboundCallCount || 1)) * 100).toFixed(2)}%`;
+    // phone engagement
+    const totalTalkTime = Math.round(callLogData.records.reduce((acc, call) => acc + (call.duration || 0), 0) / 60) || 0;
+    const averageTalkTime = Math.round(totalTalkTime / (inboundCallCount + outboundCallCount)) || 0;
+    // sms activity
+    const smsLogData = await rcAPI.getRcSMSLog({ rcAccessToken, dateRange, customStartDate, customEndDate });
+    const smsSentCount = smsLogData.records.filter(sms => sms.direction === 'Outbound').length;
+    const smsReceivedCount = smsLogData.records.filter(sms => sms.direction === 'Inbound').length;
+    const { calls, hasMore } = await RCAdapter.getUnloggedCalls(100, 1);
+    const unloggedCallCount = calls.length;
+    const reportStats = {
+        dateRange,
+        callLogStats: {
+            inboundCallCount,
+            outboundCallCount,
+            answeredCallCount,
+            answeredCallPercentage,
+            totalTalkTime,
+            averageTalkTime
+        },
+        smsLogStats: {
+            smsSentCount,
+            smsReceivedCount
+        },
+        unloggedCallStats: {
+            unloggedCallCount
+        }
+    };
+    if (dateRange === 'Select date range...') {
+        reportStats.startDate = customStartDate;
+        reportStats.endDate = customEndDate;
+    }
+    return reportStats;
+}
 
 async function preloadUserSettingsFromAdmin({ serverUrl }) {
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
@@ -98,7 +141,7 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         service: (await getServiceManifest())
     }, '*');
     // custom tabs
-    const reportPageRender = reportPage.getReportsPageRender({ userStats: null, userSettings });
+    const reportPageRender = reportPage.getReportsPageRender({ userStats: null, adminStats: null, userSettings });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: reportPageRender,
@@ -472,6 +515,7 @@ function getCustomSetting(userSettings, id, defaultValue) {
     }
 }
 
+exports.getUserReportStats = getUserReportStats;
 exports.preloadUserSettingsFromAdmin = preloadUserSettingsFromAdmin;
 exports.getUserSettingsOnline = getUserSettingsOnline;
 exports.uploadUserSettings = uploadUserSettings;
@@ -500,7 +544,7 @@ exports.getShowTextTabSetting = getShowTextTabSetting;
 exports.getShowFaxTabSetting = getShowFaxTabSetting;
 exports.getShowVoicemailTabSetting = getShowVoicemailTabSetting;
 exports.getShowRecordingsTabSetting = getShowRecordingsTabSetting;
-exports.getShowContactsTabSetting = getShowContactsTabSetting;  
+exports.getShowContactsTabSetting = getShowContactsTabSetting;
 exports.getShowUserReportTabSetting = getShowUserReportTabSetting;
 exports.getClickToDialEmbedMode = getClickToDialEmbedMode;
 exports.getClickToDialUrls = getClickToDialUrls;

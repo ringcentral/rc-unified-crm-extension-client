@@ -381,14 +381,14 @@ async function authServerSideLogging({ platform }) {
     return serverSideLoggingToken;
 }
 
-async function authAppConnectServer({ serverUrl, rcAccountId }) {
+async function authAppConnectServer({ serverUrl, jwtToken }) {
     try {
         const rcAccessToken = getRcAccessToken();
         // eslint-disable-next-line no-undef
         const rcClientId = process.env.RC_CLIENT_ID;
         const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
         const serverSideLoggingTokenResp = await axios.get(
-            `${serverUrl}/ringcentral/oauth/callback?code=${rcInteropCode}&rcAccountId=${rcAccountId}`,
+            `${serverUrl}/ringcentral/oauth/callback?code=${rcInteropCode}&jwtToken=${jwtToken}`,
             {
                 headers: {
                     Accept: 'application/json'
@@ -399,6 +399,18 @@ async function authAppConnectServer({ serverUrl, rcAccountId }) {
     catch (e) {
         console.log('Cannot auth app connect server', e);
     }
+}
+
+async function getAdminReportStats({ serverUrl, timezone, timeFrom, timeTo, jwtToken }) {
+    const adminReportStatsResp = await axios.get(
+        `${serverUrl}/ringcentral/admin/report?jwtToken=${jwtToken}&timezone=${timezone}&timeFrom=${timeFrom}&timeTo=${timeTo}`,
+        {
+            headers: {
+                Accept: 'application/json'
+            }
+        }
+    );
+    return adminReportStatsResp.data;
 }
 
 exports.getAdminSettings = getAdminSettings;
@@ -412,3 +424,4 @@ exports.authServerSideLogging = authServerSideLogging;
 exports.getServerSideLoggingAdditionalFieldValues = getServerSideLoggingAdditionalFieldValues;
 exports.uploadServerSideLoggingAdditionalFieldValues = uploadServerSideLoggingAdditionalFieldValues;
 exports.authAppConnectServer = authAppConnectServer;
+exports.getAdminReportStats = getAdminReportStats;

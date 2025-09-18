@@ -5,14 +5,15 @@ import userReportIconActive from '../../images/reportIcon_active.png';
 import userReportIconDark from '../../images/reportIcon_dark.png';
 
 import getMyReportTabRender from './myReportTab';
+import getAdminReportTabRender from './adminReportTab';
 
-function getReportsPageRender({ selectedTab = 'myReportsTab', userStats, userSettings }) {
+function getReportsPageRender({ selectedTab = 'myReportsTab', userStats, adminStats, userSettings }) {
     const isHidden = !userCore.getShowUserReportTabSetting(userSettings)?.value;
     let page = {
         id: 'reportPage',
         title: 'Reports',
         type: 'tab',
-        priority: 105,
+        priority: 66,
         hidden: isHidden,
         iconUri: userReportIcon,
         activeIconUri: userReportIconActive,
@@ -44,6 +45,7 @@ function getReportsPageRender({ selectedTab = 'myReportsTab', userStats, userSet
             page = getMyReportTabRender({ page, userStats, userSettings });
             break;
         case 'adminReportsTab':
+            page = getAdminReportTabRender({ page, adminStats });
             break;
         case 'leaderboardTab':
             break;
