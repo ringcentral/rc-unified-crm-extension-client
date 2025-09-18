@@ -291,7 +291,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     },
                     ...callUISchemas,
                     ...newContactWidget,
-                    ...addiitionalWarningUISchemas
+                    ...addiitionalWarningUISchemas,
+                    // Always render scheduling fields at the end
+                    "ui:order": ["*", "scheduleCallback", "callbackDateTime"]
                 },
                 formData: {
                     id,
@@ -354,7 +356,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     submitButtonOptions: {
                         submitText: 'Update',
                     },
-                    ...addiitionalWarningUISchemas
+                    ...addiitionalWarningUISchemas,
+                    // Always render scheduling fields at the end
+                    "ui:order": ["*", "scheduleCallback", "callbackDateTime"]
                 },
                 formData: {
                     id,
