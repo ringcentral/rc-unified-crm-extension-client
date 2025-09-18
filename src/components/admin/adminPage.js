@@ -7,7 +7,7 @@ function getAdminPageRender({ platform }) {
         id: 'adminPage',
         title: 'Admin',
         type: 'tab',
-        priority: 105,
+        priority: 65,
         iconUri: adminIcon, // icon for tab, 24x24
         activeIconUri: adminIconActive, // icon for tab in active status, 24x24,
         darkIconUri: adminIconDark,
