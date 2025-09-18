@@ -1103,7 +1103,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'autoLogPreferences':
-                  const autoLogPreferencesPageRender = autoLogPreferencesPage.getAutoLogPreferenceSettingPageRender({ adminUserSettings: adminSettings?.userSettings, contactTypes: platform.contactTypes });
+                  const autoLogPreferencesPageRender = autoLogPreferencesPage.getAutoLogPreferenceSettingPageRender({ adminUserSettings: adminSettings?.userSettings, contactTypes: platform.contactTypes ?? [{ value: 'contact', display: 'Contact' }] });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: autoLogPreferencesPageRender
