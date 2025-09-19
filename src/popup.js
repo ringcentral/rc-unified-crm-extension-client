@@ -2420,25 +2420,25 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   adminSettings.userSettings.serverSideLogging =
                   {
-                    enable: data.body.button.formData.serverSideLogging != 'Disable',
-                    loggingLevel: data.body.button.formData.serverSideLogging
+                    enable: data.body.button.formData.serverSideLoggingHolder.serverSideLogging != 'Disable',
+                    loggingLevel: data.body.button.formData.serverSideLoggingHolder.serverSideLogging
                   };
                   userSettings = await userCore.refreshUserSettings({
                     changedSettings: {
                       serverSideLogging:
                       {
-                        enable: data.body.button.formData.serverSideLogging != 'Disable',
-                        loggingLevel: data.body.button.formData.serverSideLogging
+                        enable: data.body.button.formData.serverSideLoggingHolder.serverSideLogging != 'Disable',
+                        loggingLevel: data.body.button.formData.serverSideLoggingHolder.serverSideLogging
                       }
                     }
                   });
                   await chrome.storage.local.set({ adminSettings });
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
-                  if (data.body.button.formData.serverSideLogging != 'Disable') {
+                  if (data.body.button.formData.serverSideLoggingHolder.serverSideLogging != 'Disable') {
                     await adminCore.enableServerSideLogging({
                       serverUrl: manifest.serverUrl,
                       platform,
-                      subscriptionLevel: data.body.button.formData.serverSideLogging,
+                      subscriptionLevel: data.body.button.formData.serverSideLoggingHolder.serverSideLogging,
                       loggingByAdmin: data.body.button.formData.activityRecordOwner === 'admin'
                     });
                   }
