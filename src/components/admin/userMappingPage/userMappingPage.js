@@ -1,7 +1,7 @@
-function getUserMappingPageRender({ userMapping, searchWord = '', filter = 'All' }) {
+function getUserMappingPageRender({ userMapping, platformDisplayName, searchWord = '', filter = 'All' }) {
     let userMappingList = [];
     for (const um of userMapping) {
-        if (um.rcUser?.extensionId) {
+        if (um.rcUser?.extensionId && um.rcUser.extensionId !== 'none') {
             userMappingList.push({
                 const: um.crmUser.id,
                 title: um.crmUser.name,
@@ -63,6 +63,10 @@ function getUserMappingPageRender({ userMapping, searchWord = '', filter = 'All'
                         }
                     }
                 },
+                userMappingTitle: {
+                    type: 'string',
+                    description: `${platformDisplayName} Users`
+                },
                 userMappingList: {
                     type: 'string',
                     title: 'User mapping',
@@ -82,6 +86,10 @@ function getUserMappingPageRender({ userMapping, searchWord = '', filter = 'All'
             },
             userMappingList: {
                 "ui:field": "list"
+            },
+            userMappingTitle: {
+                "ui:field": "typography",
+                "ui:variant": "body2",
             }
         },
         formData: {

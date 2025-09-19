@@ -716,7 +716,7 @@ window.addEventListener('message', async (e) => {
                   if (data.body.formData.searchWord) {
                     const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
                       userMapping: data.body.formData.userMapping,
-                      platformName,
+                      platformDisplayName: platform.displayName,
                       rcExtensions: data.body.formData.rcExtensions,
                       selectedRcExtensionId: data.body.formData.rcExtensionList
                     });
@@ -731,6 +731,7 @@ window.addEventListener('message', async (e) => {
                   if (data.body.formData.userSearch) {
                     const userMappingPageRender = userMappingPage.getUserMappingPageRender({
                       userMapping: data.body.formData.allUserMapping,
+                      platformDisplayName: platform.displayName,
                       searchWord: data.body.formData.userSearch.search,
                       filter: data.body.formData.userSearch.filter
                     });
@@ -1113,7 +1114,7 @@ window.addEventListener('message', async (e) => {
                 case 'userMapping':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const userMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
-                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping });
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping, platformDisplayName: platform.displayName });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: userMappingPageRender
@@ -2187,7 +2188,7 @@ window.addEventListener('message', async (e) => {
                   }
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
                   const updatedUserMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
-                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping });
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping, platformDisplayName: platform.displayName });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: userMappingPageRender
@@ -2642,7 +2643,7 @@ window.addEventListener('message', async (e) => {
                   const rcExtensions = await getRcContactInfo();
                   const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
                     userMapping: userMappingToEdit,
-                    platformName,
+                    platformDisplayName: platform.displayName,
                     rcExtensions: [...rcExtensions, { id: 'none', name: 'None' }]
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2656,11 +2657,10 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'usermappingRemove':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  const userMappingToRemove = data.body.button.formData.allUserMapping.find(um => um.crmUser.id == listButtonItemId);
-                  adminSettings.userMappings = adminSettings.userMappings.filter(um => um.crmUserId != userMappingToRemove.crmUser.id);
+                  adminSettings.userMappings.find(um => um.crmUserId == listButtonItemId).rcExtensionId = 'none';
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
                   const updatedUserMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
-                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping });
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping, platformDisplayName: platform.displayName });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: userMappingPageRender
