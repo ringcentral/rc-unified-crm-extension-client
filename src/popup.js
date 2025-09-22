@@ -1114,6 +1114,7 @@ window.addEventListener('message', async (e) => {
                 case 'userMapping':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const userMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
+                  adminSettings.userMapping = userMapping;
                   const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping, platformDisplayName: platform.displayName });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
