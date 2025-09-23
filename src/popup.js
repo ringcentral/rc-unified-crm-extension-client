@@ -10,7 +10,7 @@ import { getPlatformInfo } from './service/platformService';
 import { getManifest, getPlatformList, saveManifest, saveManifestUrl, refreshManifest, checkForManifestMigration } from './service/manifestService';
 import { getUserInfo } from './lib/rcAPI';
 import moment from 'moment';
-import baseManifest from './manifest.json';
+import 'moment-timezone';
 import logPage from './components/logPage';
 import authPage from './components/authPage';
 import feedbackPage from './components/feedbackPage';
@@ -18,7 +18,7 @@ import releaseNotesPage from './components/releaseNotesPage';
 import supportPage from './components/supportPage';
 import aboutPage from './components/aboutPage';
 import developerSettingsPage from './components/developerSettingsPage';
-import reportPage from './components/reportPage';
+import reportPage from './components/reportPage/reportPage';
 import adminPage from './components/admin/adminPage';
 import managedSettingsPage from './components/admin/managedSettingsPage';
 import generalSettingPage from './components/admin/generalSettingPage';
@@ -70,6 +70,7 @@ window.__ON_RC_POPUP_WINDOW = 1;
 
 let platformName = '';
 let platformHostname = '';
+let rcInfo = {};
 let rcUserInfo = {};
 let platformInfo = null;
 let firstTimeLogoutAbsorbed = false;
@@ -272,7 +273,7 @@ window.addEventListener('message', async (e) => {
                 userSettings = await userCore.refreshUserSettings({});
               }, 900000);
               // report tab
-              const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+              const userReportStats = await userCore.getUserReportStats({ dateRange: 'Last 24 hours' });
               if (userCore.getShowUserReportTabSetting(userSettings).value) {
                 const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -307,7 +308,7 @@ window.addEventListener('message', async (e) => {
               authCore.setAuth(false);
             }
             try {
-              const rcInfo = await getRcInfo();
+              rcInfo = await getRcInfo();
               const rcAdditionalSubmission = {};
               if (platform?.rcAdditionalSubmission) {
                 for (const ras of platform.rcAdditionalSubmission) {
@@ -634,7 +635,7 @@ window.addEventListener('message', async (e) => {
 
           if (data.path === '/customizedTabs/reportPage') {
             if (userCore.getShowUserReportTabSetting(userSettings).value) {
-              const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+              const userReportStats = await userCore.getUserReportStats({ dateRange: 'Last 24 hours' });
               const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
               document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
@@ -926,8 +927,52 @@ window.addEventListener('message', async (e) => {
                   }
                   else {
                     if (userCore.getShowUserReportTabSetting(userSettings).value) {
-                      const userReportStats = await getUserReportStats({ dateRange: data.body.formData.dateRangeEnums, customStartDate: data.body.formData.startDate, customEndDate: data.body.formData.endDate });
-                      const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
+                      let userReportStats;
+                      let adminReportStats;
+                      switch (data.body.formData.tab) {
+                        case 'myReportsTab':
+                          userReportStats = await userCore.getUserReportStats({ dateRange: data.body.formData.dateRangeEnums || 'Last 24 hours', customStartDate: data.body.formData.startDate, customEndDate: data.body.formData.endDate });
+                          break;
+                        case 'adminReportsTab':
+                          const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                          const rcInfoData = await getRcInfo();
+                          const timezone = rcInfoData.value.cachedData.accountInfo.regionalSettings.timezone.name;
+                          let timeFrom = moment(data.body.formData.startDate).toISOString();
+                          let timeTo = moment(data.body.formData.endDate).toISOString();
+                          // set to ISO string with regards to timezone
+                          switch (data.body.formData.dateRangeEnums) {
+                            case 'Last 24 hours':
+                              timeFrom = moment().tz(timezone).subtract(24, 'hours').toISOString();
+                              timeTo = moment().tz(timezone).subtract(1, 'minutes').toISOString();
+                              break;
+                            case 'Last 7 days':
+                              timeFrom = moment().tz(timezone).subtract(7, 'days').toISOString();
+                              timeTo = moment().tz(timezone).subtract(1, 'minutes').toISOString();
+                              break;
+                            case 'Last 30 days':
+                              timeFrom = moment().tz(timezone).subtract(30, 'days').toISOString();
+                              timeTo = moment().tz(timezone).subtract(1, 'minutes').toISOString();
+                              break;
+                            case 'Select date range...':
+                              timeFrom = moment(data.body.formData.startDate).tz(timezone).toISOString();
+                              timeTo = moment(data.body.formData.endDate).tz(timezone).toISOString();
+                              break;
+                          }
+                          adminReportStats = await adminCore.getAdminReportStats({
+                            serverUrl: manifest.serverUrl,
+                            jwtToken: rcUnifiedCrmExtJwt,
+                            timezone,
+                            timeFrom,
+                            timeTo
+                          });
+                          adminReportStats.dateRange = data.body.formData.dateRangeEnums;
+                          adminReportStats.startDate = data.body.formData.startDate;
+                          adminReportStats.endDate = data.body.formData.endDate;
+                          break;
+                        case 'leaderboardTab':
+                          break;
+                      }
+                      const reportPageRender = reportPage.getReportsPageRender({ selectedTab: data.body.formData.tab, userStats: userReportStats, adminStats: adminReportStats, userSettings });
                       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                         type: 'rc-adapter-register-customized-page',
                         page: reportPageRender,
@@ -2280,7 +2325,7 @@ window.addEventListener('message', async (e) => {
                     await chrome.storage.local.set({ crmAuthed });
                     // report tab
                     if (userCore.getShowUserReportTabSetting(userSettings).value) {
-                      const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+                      const userReportStats = await userCore.getUserReportStats({ dateRange: 'Last 24 hours' });
                       const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
                       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                         type: 'rc-adapter-register-customized-page',
@@ -2296,6 +2341,7 @@ window.addEventListener('message', async (e) => {
                         type: 'rc-adapter-register-customized-page',
                         page: adminPageRender,
                       }, '*');
+                      await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, jwtToken: returnedToken });
                     }
                   }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
@@ -2802,7 +2848,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       if (crmAuthed) {
         // report tab
         if (userCore.getShowUserReportTabSetting(userSettings).value) {
-          const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+          const userReportStats = await userCore.getUserReportStats({ dateRange: 'Last 24 hours' });
           const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
           document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-register-customized-page',
@@ -2818,6 +2864,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             type: 'rc-adapter-register-customized-page',
             page: adminPageRender,
           }, '*');
+          await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, jwtToken: returnedToken });
         }
         userSettings = await userCore.refreshUserSettings({});
       }
@@ -2837,7 +2884,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     crmAuthed = true;
     // report tab
     if (userCore.getShowUserReportTabSetting(userSettings).value) {
-      const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+      const userReportStats = await userCore.getUserReportStats({ dateRange: 'Last 24 hours' });
       const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
@@ -2855,6 +2902,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         type: 'rc-adapter-register-customized-page',
         page: adminPageRender,
       }, '*');
+      await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, jwtToken: returnedToken });
     }
     await dismissNotification({ notificationId: currentNotificationId });
     console.log('pipedriveAltAuthDone')
@@ -2940,7 +2988,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     if (crmAuthed) {
       // report tab
       if (userCore.getShowUserReportTabSetting(userSettings).value) {
-        const userReportStats = await getUserReportStats({ dateRange: 'Last 24 hours' });
+        const userReportStats = await userCore.getUserReportStats({ dateRange: 'Last 24 hours' });
         const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
           type: 'rc-adapter-register-customized-page',
@@ -2956,6 +3004,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           type: 'rc-adapter-register-customized-page',
           page: adminPageRender,
         }, '*');
+        await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, jwtToken: returnedToken });
       }
       userSettings = await userCore.refreshUserSettings({});
     }

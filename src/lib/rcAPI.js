@@ -7,6 +7,21 @@ async function getUserInfo({ serverUrl, extensionId, accountId }) {
     return userInfoHashResponse.data;
 }
 
+async function getInteropCode({ rcAccessToken, rcClientId }) {
+    const rcInteropCodeResp = await axios.post(
+        'https://platform.ringcentral.com/restapi/v1.0/interop/generate-code',
+        {
+            clientId: rcClientId
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${rcAccessToken}`
+            }
+        }
+    );
+    return rcInteropCodeResp.data.code;
+}
+
 async function getRcCallLog({ rcAccessToken, dateRange, customStartDate, customEndDate }) {
     let startDate = '';
     let endDate = new Date(Date.now()).toISOString();
@@ -92,5 +107,6 @@ async function getRcSMSLog({ rcAccessToken, dateRange, customStartDate, customEn
 }
 
 exports.getUserInfo = getUserInfo;
+exports.getInteropCode = getInteropCode;
 exports.getRcCallLog = getRcCallLog;
 exports.getRcSMSLog = getRcSMSLog;

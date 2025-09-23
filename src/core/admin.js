@@ -1,6 +1,7 @@
 import axios from 'axios';
 import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
+import rcAPI from '../lib/rcAPI';
 import { parsePhoneNumber } from 'awesome-phonenumber';
 import { getRcAccessToken, getPlatformInfo, getManifest, getRcContactInfo, showNotification } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
@@ -363,24 +364,14 @@ async function authServerSideLogging({ platform }) {
     if (!platform.serverSideLogging) {
         return;
     }
-
+    const { rcUserInfo } = await chrome.storage.local.get('rcUserInfo');
     const rcAccessToken = getRcAccessToken();
+    const rcClientId = platform.serverSideLogging.rcClientId;
     const serverDomainUrl = platform.serverSideLogging.url;
     // Auth
-    const rcInteropCodeResp = await axios.post(
-        'https://platform.ringcentral.com/restapi/v1.0/interop/generate-code',
-        {
-            clientId: 'Y4m1YREFKbXdDoet5djv46'
-        },
-        {
-            headers: {
-                Authorization: `Bearer ${rcAccessToken}`
-            }
-        }
-    );
-    const rcInteropCode = rcInteropCodeResp.data.code;
+    const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
     const serverSideLoggingTokenResp = await axios.get(
-        `${serverDomainUrl}/oauth/callback?code=${rcInteropCode}`,
+        `${serverDomainUrl}/oauth/callback?code=${rcInteropCode}&&rcAccountId=${rcUserInfo?.rcAccountId}`,
         {
             headers: {
                 Accept: 'application/json'
@@ -390,6 +381,38 @@ async function authServerSideLogging({ platform }) {
     const serverSideLoggingToken = serverSideLoggingTokenResp.data.jwtToken;
     await chrome.storage.local.set({ serverSideLoggingToken });
     return serverSideLoggingToken;
+}
+
+async function authAppConnectServer({ serverUrl, jwtToken }) {
+    try {
+        const rcAccessToken = getRcAccessToken();
+        // eslint-disable-next-line no-undef
+        const rcClientId = process.env.RC_CLIENT_ID;
+        const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
+        const serverSideLoggingTokenResp = await axios.get(
+            `${serverUrl}/ringcentral/oauth/callback?code=${rcInteropCode}&jwtToken=${jwtToken}`,
+            {
+                headers: {
+                    Accept: 'application/json'
+                }
+            }
+        );
+    }
+    catch (e) {
+        console.log('Cannot auth app connect server', e);
+    }
+}
+
+async function getAdminReportStats({ serverUrl, timezone, timeFrom, timeTo, jwtToken }) {
+    const adminReportStatsResp = await axios.get(
+        `${serverUrl}/ringcentral/admin/report?jwtToken=${jwtToken}&timezone=${timezone}&timeFrom=${timeFrom}&timeTo=${timeTo}`,
+        {
+            headers: {
+                Accept: 'application/json'
+            }
+        }
+    );
+    return adminReportStatsResp.data;
 }
 
 async function getUserMapping({ serverUrl }) {
@@ -416,4 +439,6 @@ exports.updateServerSideDoNotLogNumbers = updateServerSideDoNotLogNumbers;
 exports.authServerSideLogging = authServerSideLogging;
 exports.getServerSideLoggingAdditionalFieldValues = getServerSideLoggingAdditionalFieldValues;
 exports.uploadServerSideLoggingAdditionalFieldValues = uploadServerSideLoggingAdditionalFieldValues;
+exports.authAppConnectServer = authAppConnectServer;
 exports.getUserMapping = getUserMapping;
+exports.getAdminReportStats = getAdminReportStats;
