@@ -61,76 +61,8 @@ async function openPopupWindow() {
   return false;
 }
 
-async function registerPlatform(tabUrl) {
-  const platformInfo = await chrome.storage.local.get('platform-info');
-  if (!isObjectEmpty(platformInfo)) {
-    return true;
-  }
-  const { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: null });
-  if (!customCrmManifestUrl) {
-    return true;
-  }
-  const url = new URL(tabUrl);
-  let hostname = url.hostname;
-  const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
-  if (customCrmManifest) {
-    manifest = customCrmManifest;
-  }
-  else{
-    const customCrmManifest = await (await fetch(customCrmManifestUrl)).json();
-    if (customCrmManifest) {
-      manifest = customCrmManifest;
-      await chrome.storage.local.set({ customCrmManifest });
-    }
-  }
-  let platformName = '';
-  const platforms = Object.keys(manifest.platforms);
-  for (const p of platforms) {
-    // identify crm website
-    const urlRegex = new RegExp(manifest.platforms[p].urlIdentifier.replace('*', '.*'));
-    if (urlRegex.test(url.href)) {
-      platformName = p;
-      break;
-    }
-  }
-  if (platformName === '') {
-    // Unique: Pipedrive
-    if ((hostname.includes('ngrok') || hostname.includes('labs.ringcentral')) && url.pathname === '/pipedrive-redirect') {
-      platformName = 'pipedrive';
-      hostname = 'temp';
-      // eslint-disable-next-line no-undef
-      chrome.tabs.sendMessage(tab.id, { action: 'needCallbackUri' })
-    }
-    else {
-      return false;
-    }
-  }
-  await chrome.storage.local.set({
-    ['platform-info']: { platformName, hostname, isLocal: true }
-  });
-  return true;
-}
-
 chrome.action.onClicked.addListener(async function (tab) {
-  const platformInfo = await chrome.storage.local.get('platform-info');
-  if (isObjectEmpty(platformInfo)) {
-    const registered = await registerPlatform(tab.url);
-    if (registered) {
-      await openPopupWindow();
-    }
-    else {
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: '/images/logo32.png',
-        title: `Please open the extension from a CRM page`,
-        message: "For first time setup, please open it from a CRM page. RingCentral App Connect requires initial setup and match to your CRM platform.",
-        priority: 1
-      });
-    }
-  }
-  else {
-    openPopupWindow();
-  }
+  openPopupWindow();
 });
 
 chrome.windows.onRemoved.addListener(async (windowId) => {
@@ -180,26 +112,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     "from a content script:" + sender.tab.url :
     "from the extension");
   if (request.type === "openPopupWindow") {
-    registerPlatform(sender.tab.url);
-    const platformInfo = await chrome.storage.local.get('platform-info');
-    if (isObjectEmpty(platformInfo)) {
-      const registered = await registerPlatform(sender.tab.url);
-      if (registered) {
-        await openPopupWindow();
-      }
-      else {
-        chrome.notifications.create({
-          type: 'basic',
-          iconUrl: '/images/logo32.png',
-          title: `Please open the extension from a CRM page`,
-          message: "For first time setup, please open it from a CRM page. RingCentral App Connect requires initial setup and match to your CRM platform.",
-          priority: 1
-        });
-      }
-    }
-    else {
-      openPopupWindow();
-    }
+    openPopupWindow();
     sendResponse({ result: 'ok' });
     if (request.navigationPath) {
       chrome.runtime.sendMessage({

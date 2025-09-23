@@ -64,6 +64,7 @@ import logService from './service/logService';
 import embeddableServices from './service/embeddableServices';
 import { logPageFormDataDefaulting, getLogConflictInfo, addPendingRecordingSessionId, triggerPendingRecordingCheck, removePendingRecordingSessionId } from './lib/logUtil';
 import { bullhornHeartbeat, tryConnectToBullhorn } from './misc/bullhorn';
+import baseManifest from './manifest.json';
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest

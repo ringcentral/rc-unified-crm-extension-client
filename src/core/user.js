@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { getRcAccessToken, getManifest, getUserReportStats } from '../lib/util';
+import { getRcAccessToken } from '../lib/util';
+import { getManifest } from '../service/manifestService';
 import adminCore from './admin';
 import { getServiceManifest } from '../service/embeddableServices';
 import reportPage from '../components/reportPage/reportPage';

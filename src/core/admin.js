@@ -3,7 +3,7 @@ import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import rcAPI from '../lib/rcAPI';
 import { parsePhoneNumber } from 'awesome-phonenumber';
-import { getRcAccessToken, getPlatformInfo, getManifest, getRcContactInfo, showNotification } from '../lib/util';
+import { getRcAccessToken, getRcContactInfo, showNotification } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest } from '../service/manifestService';
 
@@ -366,7 +366,7 @@ async function authServerSideLogging({ platform }) {
     }
     const { rcUserInfo } = await chrome.storage.local.get('rcUserInfo');
     const rcAccessToken = getRcAccessToken();
-    const rcClientId = platform.serverSideLogging.rcClientId;
+    const rcClientId = "Y4m1YREFKbXdDoet5djv46";
     const serverDomainUrl = platform.serverSideLogging.url;
     // Auth
     const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
