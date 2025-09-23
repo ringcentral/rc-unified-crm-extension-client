@@ -25,81 +25,127 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
             type: 'object',
             required: [],
             properties: {
-                serverSideLogging: {
+                serverSideLoggingHolder: {
+                    type: 'object',
+                    title: 'Server side logging',
+                    properties: {
+                        serverSideLogging: {
+                            type: 'string',
+                            title: 'Enable server side logging',
+                            oneOf: [
+                                {
+                                    const: 'Account',
+                                    title: 'Enable for account'
+                                },
+                                {
+                                    const: 'User',
+                                    title: 'Enable for admin only (trial mode)'
+                                },
+                                {
+                                    const: 'Disable',
+                                    title: 'Disable'
+                                }
+                            ]
+                        },
+                        activityRecordOwner: {
+                            title: 'Activity record owner (Who should be the owner of the activity record?)',
+                            type: 'string',
+                            oneOf: [
+                                {
+                                    const: 'user',
+                                    title: 'Agent/user (if possible)'
+                                },
+                                {
+                                    const: 'admin',
+                                    title: 'Admin'
+                                }
+                            ]
+                        },
+                        ...additionalProperties,
+                        saveServerSideLoggingButton: {
+                            type: 'string',
+                            title: 'Save'
+                        }
+                    }
+                },
+                doNotLogNumbersHolder: {
+                    type: 'object',
+                    title: 'Do not log numbers',
+                    properties: {
+                        doNotLogNumbers: {
+                            type: 'string',
+                            title: 'Do not log numbers (separated by comma)'
+                        },
+                        doNotLogNumbersWarning: {
+                            type: 'string',
+                            description: 'All numbers will be auto-formatted as E.164 standard. Eg. (123) 456-7890 -> +11234567890'
+                        },
+                        doNotLogNumbersSubmitButton: {
+                            type: 'string',
+                            title: 'Save'
+                        }
+                    }
+                },
+                section: {
                     type: 'string',
-                    title: 'Enable server side logging',
                     oneOf: [
                         {
-                            const: 'Account',
-                            title: 'Enable for account'
-                        },
-                        {
-                            const: 'User',
-                            title: 'Enable for admin only (trial mode)'
-                        },
-                        {
-                            const: 'Disable',
-                            title: 'Disable'
+                            const: "userMapping",
+                            title: "User mapping",
                         }
                     ]
-                },
-                activityRecordOwner: {
-                    title: 'Activity record owner',
-                    description: 'Who should be the owner of the activity record?',
-                    type: 'string',
-                    oneOf: [
-                        {
-                            const: 'user',
-                            title: 'Agent/user (if possible)'
-                        },
-                        {
-                            const: 'admin',
-                            title: 'Admin'
-                        }
-                    ]
-                },
-                doNotLogNumbers: {
-                    type: 'string',
-                    title: 'Do not log numbers (separated by comma)'
-                },
-                doNotLogNumbersWarning: {
-                    type: 'string',
-                    description: 'All numbers will be auto-formatted as E.164 standard. Eg. (123) 456-7890 -> +11234567890'
-                },
-                ...additionalProperties,
-                saveServerSideLoggingButton: {
-                    type: 'string',
-                    title: 'Save'
                 }
             }
         },
         uiSchema: {
-            doNotLogNumbers: {
-                "ui:placeholder": 'Enter do not log numbers, separated by comma',
-                "ui:widget": "textarea", // show note input as textarea
+            doNotLogNumbersHolder: {
+                "ui:collapsible": true,
+                doNotLogNumbers: {
+                    "ui:placeholder": 'Enter do not log numbers, separated by comma',
+                    "ui:widget": "textarea", // show note input as textarea
+                },
+                doNotLogNumbersWarning: {
+                    "ui:field": "admonition",
+                    "ui:severity": "warning",  // "warning", "info", "error", "success"
+                },
+                doNotLogNumbersSubmitButton: {
+                    "ui:field": "button",
+                    "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                    "ui:fullWidth": true
+                }
             },
-            doNotLogNumbersWarning: {
-                "ui:field": "admonition",
-                "ui:severity": "warning",  // "warning", "info", "error", "success"
+            serverSideLoggingHolder: {
+                "ui:collapsible": true,
+                saveServerSideLoggingButton: {
+                    "ui:field": "button",
+                    "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                    "ui:fullWidth": true
+                }
             },
-            saveServerSideLoggingButton: {
-                "ui:field": "button",
-                "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                "ui:fullWidth": true
+            section: {
+                "ui:field": "list",
+                "ui:navigation": true,
+                "ui:style": {
+                    marginTop: '-10px'
+                }
             }
         },
         formData: {
-            serverSideLogging: subscriptionLevel,
-            doNotLogNumbers: doNotLogNumbers,
-            activityRecordOwner: loggingByAdmin ? 'admin' : 'user'
+            serverSideLoggingHolder: {
+                serverSideLogging: subscriptionLevel,
+                activityRecordOwner: loggingByAdmin ? 'admin' : 'user'
+            },
+            doNotLogNumbersHolder: {
+                doNotLogNumbers: doNotLogNumbers,
+            }
         }
     };
     additionalFields.forEach(field => {
         if (field.uiSchema) {
-            pageRender.uiSchema[field.const] = field.uiSchema;
+            pageRender.uiSchema.serverSideLoggingHolder[field.const] = field.uiSchema;
         }
         if (typeof additionalFieldValues[field.const] !== 'undefined') {
-            pageRender.formData[field.const] = additionalFieldValues[field.const];
+            pageRender.formData.serverSideLoggingHolder[field.const] = additionalFieldValues[field.const];
         }
     });
     return pageRender;

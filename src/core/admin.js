@@ -3,7 +3,7 @@ import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import rcAPI from '../lib/rcAPI';
 import { parsePhoneNumber } from 'awesome-phonenumber';
-import { getRcAccessToken, getPlatformInfo, getManifest, showNotification } from '../lib/util';
+import { getRcAccessToken, getPlatformInfo, getManifest, getRcContactInfo, showNotification } from '../lib/util';
 
 async function getAdminSettings({ serverUrl }) {
     try {
@@ -130,7 +130,7 @@ async function uploadServerSideLoggingAdditionalFieldValues({ platform, formData
     }
     const additionalFieldValues = {};
     platform.serverSideLogging.additionalFields.forEach(field => {
-        additionalFieldValues[field.const] = formData[field.const];
+        additionalFieldValues[field.const] = formData.serverSideLoggingHolder[field.const];
     });
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
@@ -413,6 +413,20 @@ async function getAdminReportStats({ serverUrl, timezone, timeFrom, timeTo, jwtT
     return adminReportStatsResp.data;
 }
 
+async function getUserMapping({ serverUrl }) {
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
+    const rcAccessToken = getRcAccessToken();
+    const rcExtensionList = await getRcContactInfo();
+    const userMappingResp = await axios.post(
+        `${serverUrl}/admin/userMapping?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`,
+        {
+            rcExtensionList
+        }
+    );
+    return userMappingResp.data;
+}
+
 exports.getAdminSettings = getAdminSettings;
 exports.uploadAdminSettings = uploadAdminSettings;
 exports.refreshAdminSettings = refreshAdminSettings;
@@ -424,4 +438,5 @@ exports.authServerSideLogging = authServerSideLogging;
 exports.getServerSideLoggingAdditionalFieldValues = getServerSideLoggingAdditionalFieldValues;
 exports.uploadServerSideLoggingAdditionalFieldValues = uploadServerSideLoggingAdditionalFieldValues;
 exports.authAppConnectServer = authAppConnectServer;
+exports.getUserMapping = getUserMapping;
 exports.getAdminReportStats = getAdminReportStats;

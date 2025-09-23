@@ -9,7 +9,7 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
             properties: {
                 clickToDialEmbedMode: {
                     type: 'object',
-                    title: 'Enable mode',
+                    title: 'Click-to-dial enable mode',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -17,7 +17,7 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
                         },
                         value: {
                             type: 'string',
-                            title: 'Enable mode',
+                            title: 'Click-to-dial enable mode',
                             oneOf: [
                                 { const: 'disabled', title: 'Disabled' },
                                 { const: 'crmOnly', title: 'Enable for connected CRM only' },
@@ -30,7 +30,7 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
                 },
                 clickToDialUrls: {
                     type: 'object',
-                    title: 'URLs',
+                    title: 'Click-to-dial URLs',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -38,7 +38,46 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
                         },
                         value: {
                             type: 'array',
-                            title: 'URL',
+                            title: 'Click-to-dial URLs',
+                            items: {
+                                type: 'string',
+                                default: ''
+                            }
+                        }
+                    }
+                },
+                quickAccessButtonEmbedMode: {
+                    type: 'object',
+                    title: 'Quick access button enable mode',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'string',
+                            title: 'Quick access button enable mode',
+                            oneOf: [
+                                { const: 'disabled', title: 'Disabled' },
+                                { const: 'crmOnly', title: 'Enable for connected CRM only' },
+                                { const: 'whitelist', title: 'Block by default (then manage a list of sites to allow)' },
+                                { const: 'blacklist', title: 'Allow by default (then manage a list of sites to block)' },
+                            ],
+                            default: 'crmOnly'
+                        }
+                    }
+                },
+                quickAccessButtonUrls: {
+                    type: 'object',
+                    title: 'Quick access button URLs',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'array',
+                            title: 'Quick access button URLs',
                             items: {
                                 type: 'string',
                                 default: ''
@@ -60,6 +99,17 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
                     }
                 }
             },
+            quickAccessButtonEmbedMode: {
+                "ui:collapsible": true
+            },
+            quickAccessButtonUrls: {
+                "ui:collapsible": true,
+                value: {
+                    "ui:options": {
+                        "orderable": false
+                    }
+                }
+            },
             submitButtonOptions: {
                 submitText: 'Save',
             }
@@ -72,6 +122,14 @@ function getClickToDialEmbedPageRender({ adminUserSettings }) {
             clickToDialUrls: {
                 customizable: adminUserSettings?.clickToDialUrls?.customizable ?? true,
                 value: adminUserSettings?.clickToDialUrls?.value ?? ''
+            },
+            quickAccessButtonEmbedMode: {
+                customizable: adminUserSettings?.quickAccessButtonEmbedMode?.customizable ?? true,
+                value: adminUserSettings?.quickAccessButtonEmbedMode?.value ?? 'crmOnly'
+            },
+            quickAccessButtonUrls: {
+                customizable: adminUserSettings?.quickAccessButtonUrls?.customizable ?? true,
+                value: adminUserSettings?.quickAccessButtonUrls?.value ?? ''
             }
         }
     }

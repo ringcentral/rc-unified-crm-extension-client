@@ -388,6 +388,22 @@ function getClickToDialUrls(userSettings) {
     }
 }
 
+function getQuickAccessButtonEmbedMode(userSettings) {
+    return {
+        value: userSettings?.quickAccessButtonEmbedMode?.value ?? 'crmOnly',
+        readOnly: userSettings?.quickAccessButtonEmbedMode?.customizable === undefined ? false : !userSettings?.quickAccessButtonEmbedMode?.customizable,
+        readOnlyReason: !userSettings?.quickAccessButtonEmbedMode?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getQuickAccessButtonUrls(userSettings) {
+    return {
+        value: (!userSettings?.quickAccessButtonUrls?.value || userSettings?.quickAccessButtonUrls?.value === '') ? [] : userSettings?.quickAccessButtonUrls?.value,
+        readOnly: userSettings?.quickAccessButtonUrls?.customizable === undefined ? false : !userSettings?.quickAccessButtonUrls?.customizable,
+        readOnlyReason: !userSettings?.quickAccessButtonUrls?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getNotificationLevelSetting(userSettings) {
     return {
         value: userSettings?.notificationLevelSetting?.value ?? ['success', 'warning', 'error'],
@@ -548,6 +564,8 @@ exports.getShowContactsTabSetting = getShowContactsTabSetting;
 exports.getShowUserReportTabSetting = getShowUserReportTabSetting;
 exports.getClickToDialEmbedMode = getClickToDialEmbedMode;
 exports.getClickToDialUrls = getClickToDialUrls;
+exports.getQuickAccessButtonEmbedMode = getQuickAccessButtonEmbedMode;
+exports.getQuickAccessButtonUrls = getQuickAccessButtonUrls;
 exports.getNotificationLevelSetting = getNotificationLevelSetting;
 
 exports.getAddCallLogNoteSetting = getAddCallLogNoteSetting;
