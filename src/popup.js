@@ -193,6 +193,7 @@ window.addEventListener('message', async (e) => {
                   // Default to Create new contact when there is no match
                   const isDefaultNew = contacts.length === 0;
                   const preselect = isDefaultNew ? 'newContact' : '';
+                  const ct = manifest.platforms[platformName]?.contactTypes || [];
                   const schedulePage = {
                     id: 'c2dSchedulePage',
                     title: 'Add to call-down list',
@@ -204,6 +205,7 @@ window.addEventListener('message', async (e) => {
                         phone: { type: 'string', title: 'Phone Number' },
                         contact: { type: 'string', title: 'Contact', oneOf: listOneOf },
                         newContactName: { type: 'string', title: 'New contact name' },
+                        ...(ct.length > 0 ? { newContactType: { type: 'string', title: 'Contact type', oneOf: ct.map(t => ({ const: t.value, title: t.display })) } } : {}),
                         callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
                         scheduleSubmit: { type: 'string', title: 'Schedule' },
                       }
@@ -212,10 +214,11 @@ window.addEventListener('message', async (e) => {
                       phone: { 'ui:disabled': true },
                       contact: { 'ui:field': 'select', 'ui:placeholder': 'Select contact' },
                       newContactName: isDefaultNew ? { 'ui:widget': 'text', 'ui:placeholder': 'Enter name...' } : { 'ui:widget': 'hidden' },
+                      ...(ct.length > 0 ? { newContactType: isDefaultNew ? {} : { 'ui:widget': 'hidden' } } : {}),
                       callbackDateTime: { 'ui:widget': 'datetime' },
                       scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit', 'ui:disabled': true },
                     },
-                    formData: { phone: phoneNumber, contact: preselect, newContactName: '', callbackDateTime: '' }
+                    formData: { phone: phoneNumber, contact: preselect, newContactName: '', newContactType: isDefaultNew && ct.length > 0 ? ct[0].value : '', callbackDateTime: '' }
                   };
                   schedulePageSubmitEnabled = false;
                   document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
@@ -789,6 +792,16 @@ window.addEventListener('message', async (e) => {
                     if (needsToggle || needsEnable) {
                       schedulePageIsNewSelected = isNew;
                       schedulePageSubmitEnabled = enabled;
+                      const ct = manifest.platforms[platformName]?.contactTypes || [];
+                      // If switched to new contact and type exists, set a default value
+                      if (isNew && ct.length > 0 && !formData.newContactType) {
+                        formData.newContactType = ct[0].value;
+                      }
+                      // If switched away from new contact, clear name/type
+                      if (!isNew) {
+                        formData.newContactName = '';
+                        if (ct.length > 0) formData.newContactType = '';
+                      }
                       const updated = {
                         id: page.id,
                         title: page.title,
@@ -797,6 +810,7 @@ window.addEventListener('message', async (e) => {
                         uiSchema: {
                           ...page.uiSchema,
                           newContactName: isNew ? { 'ui:widget': 'text', 'ui:placeholder': 'Enter name...' } : { 'ui:widget': 'hidden' },
+                          ...(ct.length > 0 ? { newContactType: isNew ? {} : { 'ui:widget': 'hidden' } } : {}),
                           scheduleSubmit: { ...(page.uiSchema?.scheduleSubmit || {}), 'ui:disabled': !enabled }
                         },
                         formData: formData
@@ -2528,24 +2542,35 @@ window.addEventListener('message', async (e) => {
                     let contactIdToUse = contact;
                     if (contact === 'newContact' && newContactName && newContactName.trim() !== '') {
                       try {
-                        const created = await contactCore.createContact({ serverUrl: manifest.serverUrl, phoneNumber: phone, newContactName, newContactType: '', additionalSubmission: {} });
+                        const ct = manifest.platforms[platformName]?.contactTypes || [];
+                        const selectedType = (btn.formData && btn.formData.newContactType) || (ct[0]?.value || '');
+                        const created = await contactCore.createContact({ serverUrl: manifest.serverUrl, phoneNumber: phone, newContactName, newContactType: selectedType, additionalSubmission: {} });
+                        console.log({ message: 'created', created });
                         if (created?.contactInfo?.id) {
                           contactIdToUse = created.contactInfo.id;
-                          try { showNotification({ level: 'success', message: 'Contact created', ttl: 3000 }); } catch (e) { /* ignore */ }
+                          showNotification({ level: 'success', message: 'Contact created', ttl: 3000 });
+                          await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
+                          showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
                           try {
                             document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
                               type: 'rc-adapter-trigger-contact-match',
                               phoneNumbers: [phone]
                             }, '*');
                           } catch (e) { /* ignore */ }
+                        } else {
+                          showNotification({ level: 'warning', message: 'Contact creation failed', ttl: 3000 });
                         }
-                      } catch (e) { /* ignore create errors; fallback to phone-only */ }
+                      } catch (e) {
+                        /* ignore create errors; fallback to phone-only */
+                        showNotification({ level: 'warning', message: 'Contact creation failed', ttl: 3000 });
+                      }
+                    } else {
+                      await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
+                      // Notify user on success
+                      try {
+                        showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
+                      } catch (e) { /* ignore */ }
                     }
-                    await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
-                    // Notify user on success
-                    try {
-                      showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
-                    } catch (e) { /* ignore */ }
                     try {
                       const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All' });
                       document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: calldownPageRender }, '*');
@@ -3508,6 +3533,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             phone: { type: 'string', title: 'Phone Number' },
             contact: { type: 'string', title: 'Contact', oneOf: listOneOf },
             newContactName: { type: 'string', title: 'New contact name' },
+            ...(manifest.platforms[platformName]?.contactTypes?.length > 0 ? { newContactType: { type: 'string', title: 'Contact type', oneOf: manifest.platforms[platformName].contactTypes.map(t => ({ const: t.value, title: t.display })) } } : {}),
             callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
             scheduleSubmit: { type: 'string', title: 'Schedule' },
           }
@@ -3516,10 +3542,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           phone: { 'ui:disabled': true },
           contact: { 'ui:field': 'select', 'ui:placeholder': 'Select contact' },
           newContactName: isDefaultNew ? { 'ui:widget': 'text', 'ui:placeholder': 'Enter name...' } : { 'ui:widget': 'hidden' },
+          ...(manifest.platforms[platformName]?.contactTypes?.length > 0 ? { newContactType: isDefaultNew ? {} : { 'ui:widget': 'hidden' } } : {}),
           callbackDateTime: { 'ui:widget': 'datetime' },
           scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit', 'ui:disabled': true },
         },
-        formData: { phone: phoneNumber, contact: preselect, newContactName: '', callbackDateTime: '' }
+        formData: { phone: phoneNumber, contact: preselect, newContactName: '', newContactType: isDefaultNew && (manifest.platforms[platformName]?.contactTypes?.length > 0) ? manifest.platforms[platformName].contactTypes[0].value : '', callbackDateTime: '' }
       };
       schedulePageSubmitEnabled = false;
       document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
