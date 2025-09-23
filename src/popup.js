@@ -188,18 +188,22 @@ window.addEventListener('message', async (e) => {
                   const contacts = (res?.contactInfo || []).filter(c => !c.isNewContact);
                   const contactOptions = contacts.map(c => ({ const: c.id, title: c.name }));
                   const placeholderOption = { const: '', title: 'Select contact' };
-                  const listOneOf = [placeholderOption, ...contactOptions];
-                  const preselect = contactOptions.length === 1 ? contactOptions[0].const : '';
+                  const newContactOption = { const: 'newContact', title: 'Create new contact' };
+                  const listOneOf = [placeholderOption, ...contactOptions, newContactOption];
+                  // Default to Create new contact when there is no match
+                  const isDefaultNew = contacts.length === 0;
+                  const preselect = isDefaultNew ? 'newContact' : '';
                   const schedulePage = {
                     id: 'c2dSchedulePage',
                     title: 'Add to call-down list',
                     type: 'page',
                     schema: {
                       type: 'object',
-                      required: ['contact', 'callbackDateTime'],
+                      required: ['callbackDateTime'],
                       properties: {
                         phone: { type: 'string', title: 'Phone Number' },
-                        contact: { type: 'string', title: 'Contact', minLength: 1, oneOf: listOneOf },
+                        contact: { type: 'string', title: 'Contact', oneOf: listOneOf },
+                        newContactName: { type: 'string', title: 'New contact name' },
                         callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
                         scheduleSubmit: { type: 'string', title: 'Schedule' },
                       }
@@ -207,10 +211,11 @@ window.addEventListener('message', async (e) => {
                     uiSchema: {
                       phone: { 'ui:disabled': true },
                       contact: { 'ui:field': 'select', 'ui:placeholder': 'Select contact' },
+                      newContactName: isDefaultNew ? { 'ui:widget': 'text', 'ui:placeholder': 'Enter name...' } : { 'ui:widget': 'hidden' },
                       callbackDateTime: { 'ui:widget': 'datetime' },
                       scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit', 'ui:disabled': true },
                     },
-                    formData: { phone: phoneNumber, contact: preselect, callbackDateTime: '' }
+                    formData: { phone: phoneNumber, contact: preselect, newContactName: '', callbackDateTime: '' }
                   };
                   schedulePageSubmitEnabled = false;
                   document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
@@ -774,10 +779,15 @@ window.addEventListener('message', async (e) => {
                 case 'c2dSchedulePage': {
                   try {
                     const formData = data.body.formData || {};
-                    const enabled = !!formData.contact && !!formData.callbackDateTime;
+                    const isNew = formData.contact === 'newContact';
+                    const enabled = !!formData.callbackDateTime && (!isNew || (formData.newContactName && formData.newContactName.trim() !== ''));
                     const page = data.body.page;
-                    // Only re-register when the disabled state actually changes to avoid UI reset
-                    if (schedulePageSubmitEnabled !== enabled) {
+                    const keys = Array.isArray(data.body.keys) ? data.body.keys : [];
+                    const contactChanged = keys.includes('contact');
+                    const needsToggle = contactChanged || (schedulePageIsNewSelected !== isNew);
+                    const needsEnable = schedulePageSubmitEnabled !== enabled;
+                    if (needsToggle || needsEnable) {
+                      schedulePageIsNewSelected = isNew;
                       schedulePageSubmitEnabled = enabled;
                       const updated = {
                         id: page.id,
@@ -786,6 +796,7 @@ window.addEventListener('message', async (e) => {
                         schema: page.schema,
                         uiSchema: {
                           ...page.uiSchema,
+                          newContactName: isNew ? { 'ui:widget': 'text', 'ui:placeholder': 'Enter name...' } : { 'ui:widget': 'hidden' },
                           scheduleSubmit: { ...(page.uiSchema?.scheduleSubmit || {}), 'ui:disabled': !enabled }
                         },
                         formData: formData
@@ -2507,14 +2518,30 @@ window.addEventListener('message', async (e) => {
                 case 'scheduleSubmit': { // submit on schedule page
                   try {
                     const btn = data.body.button || {};
-                    const { phone, callbackDateTime, note } = btn.formData || {};
+                    const { phone, callbackDateTime, note, contact, newContactName } = btn.formData || {};
                     if (!callbackDateTime || !phone) break;
                     // show spinner while scheduling
                     try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
                     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                     const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
                     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
-                    await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: btn.formData.contact, note });
+                    let contactIdToUse = contact;
+                    if (contact === 'newContact' && newContactName && newContactName.trim() !== '') {
+                      try {
+                        const created = await contactCore.createContact({ serverUrl: manifest.serverUrl, phoneNumber: phone, newContactName, newContactType: '', additionalSubmission: {} });
+                        if (created?.contactInfo?.id) {
+                          contactIdToUse = created.contactInfo.id;
+                          try { showNotification({ level: 'success', message: 'Contact created', ttl: 3000 }); } catch (e) { /* ignore */ }
+                          try {
+                            document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+                              type: 'rc-adapter-trigger-contact-match',
+                              phoneNumbers: [phone]
+                            }, '*');
+                          } catch (e) { /* ignore */ }
+                        }
+                      } catch (e) { /* ignore create errors; fallback to phone-only */ }
+                    }
+                    await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
                     // Notify user on success
                     try {
                       showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
@@ -3313,6 +3340,8 @@ window.addEventListener('message', async (e) => {
 
 // track schedule page submit enablement to avoid re-registering on every keystroke
 let schedulePageSubmitEnabled = false;
+// track whether "Create new contact" is currently selected to toggle name field immediately
+let schedulePageIsNewSelected = false;
 // guard to prevent duplicate c2schedule opens when extension is already open
 let isOpeningSchedule = false;
 
@@ -3464,18 +3493,21 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       const contacts = (res?.contactInfo || []).filter(c => !c.isNewContact);
       const contactOptions = contacts.map(c => ({ const: c.id, title: c.name }));
       const placeholderOption = { const: '', title: 'Select contact' };
-      const listOneOf = [placeholderOption, ...contactOptions];
-      const preselect = contactOptions.length === 1 ? contactOptions[0].const : '';
+      const newContactOption = { const: 'newContact', title: 'Create new contact' };
+      const listOneOf = [placeholderOption, ...contactOptions, newContactOption];
+      const isDefaultNew = contacts.length === 0;
+      const preselect = isDefaultNew ? 'newContact' : '';
       const schedulePage = {
         id: 'c2dSchedulePage',
         title: 'Add to call-down list',
         type: 'page',
         schema: {
           type: 'object',
-          required: ['contact', 'callbackDateTime'],
+          required: ['callbackDateTime'],
           properties: {
             phone: { type: 'string', title: 'Phone Number' },
-            contact: { type: 'string', title: 'Contact', minLength: 1, oneOf: listOneOf },
+            contact: { type: 'string', title: 'Contact', oneOf: listOneOf },
+            newContactName: { type: 'string', title: 'New contact name' },
             callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
             scheduleSubmit: { type: 'string', title: 'Schedule' },
           }
@@ -3483,10 +3515,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         uiSchema: {
           phone: { 'ui:disabled': true },
           contact: { 'ui:field': 'select', 'ui:placeholder': 'Select contact' },
+          newContactName: isDefaultNew ? { 'ui:widget': 'text', 'ui:placeholder': 'Enter name...' } : { 'ui:widget': 'hidden' },
           callbackDateTime: { 'ui:widget': 'datetime' },
           scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit', 'ui:disabled': true },
         },
-        formData: { phone: phoneNumber, contact: preselect, callbackDateTime: '' }
+        formData: { phone: phoneNumber, contact: preselect, newContactName: '', callbackDateTime: '' }
       };
       schedulePageSubmitEnabled = false;
       document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
