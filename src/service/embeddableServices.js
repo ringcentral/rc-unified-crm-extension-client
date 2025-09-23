@@ -572,16 +572,17 @@ async function getServiceManifest() {
                 id: "logDateFormat",
                 type: "option",
                 name: "Date format",
+                description: "The format of the date and time in the call log",
                 options: [
                     // ISO 8601 and Standard Formats
                     {
                         id: "YYYY-MM-DD hh:mm:ss A",
                         name: "2024-01-15 02:30:45 PM - General 12H"
-                    }, 
+                    },
                     {
                         id: "YYYY-MM-DD HH:mm:ss",
                         name: "2024-01-15 14:30:45 - General 24H"
-                    },                   
+                    },
                     // US Formats
                     {
                         id: "MM/DD/YYYY hh:mm:ss A",
@@ -652,6 +653,83 @@ async function getServiceManifest() {
             }
         ],
     });
+    services.settings.push({
+        id: "autoLogPreferences",
+        type: "section",
+        name: "Auto log preferences",
+        description: "Setup preferences for auto logging scenarios",
+        groupId: "logging",
+        items: [
+            {
+                id: "unknownContactPreference",
+                type: "option",
+                name: "Unknown contact",
+                helper: "What to do when the phone number does not match any contact",
+                options: [
+                    {
+                        id: "skipLogging",
+                        name: "Skip logging"
+                    },
+                    {
+                        id: "createNewPlaceholderContact",
+                        name: "Create new placeholder contact"
+                    }
+                ],
+                value: userCore.getUnknownContactPreferenceSetting(userSettings).value,
+                readOnly: userCore.getUnknownContactPreferenceSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getUnknownContactPreferenceSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "newContactType",
+                type: "option",
+                name: "New contact type (applicable when creating new contact)",
+                helper: "When creating a placeholder contact, what contact type it should be",
+                options: platform.contactTypes ?
+                    platform.contactTypes.map(contactType => ({
+                        id: contactType.value,
+                        name: contactType.display
+                    })) : [{
+                        id: "contact",
+                        name: "Contact"
+                    }],
+                value: userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value || platform?.contactTypes?.[0]?.value || 'contact',
+                readOnly: userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).readOnly,
+                readOnlyReason: userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).readOnlyReason
+            },
+            {
+                id: "newContactNamePrefix",
+                type: "string",
+                name: "New contact name prefix (applicable when creating new contact)",
+                helper: "When creating a placeholder contact, what name prefix it should have",
+                value: userCore.getNewContactNamePrefixSetting(userSettings).value,
+                readOnly: userCore.getNewContactNamePrefixSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getNewContactNamePrefixSetting(userSettings).readOnlyReason
+            },
+            {
+                id: "multipleContactsPreference",
+                type: "option",
+                name: "Multiple contacts",
+                helper: "What to do when multiple contacts match the phone number",
+                options: [
+                    {
+                        id: "skipLogging",
+                        name: "Skip logging"
+                    },
+                    {
+                        id: "firstAlphabetical",
+                        name: "First alphabetical"
+                    },
+                    {
+                        id: "mostRecentActivity",
+                        name: "Most recent activity"
+                    }
+                ],
+                value: userCore.getMultipleContactsPreferenceSetting(userSettings).value,
+                readOnly: userCore.getMultipleContactsPreferenceSetting(userSettings).readOnly,
+                readOnlyReason: userCore.getMultipleContactsPreferenceSetting(userSettings).readOnlyReason
+            }
+        ]
+    })
     if (customSettings) {
         for (const cs of customSettings) {
             // TEMP: skip custom settings for call log details

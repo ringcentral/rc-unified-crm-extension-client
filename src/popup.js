@@ -34,9 +34,11 @@ import clickToDialEmbedPage from './components/admin/generalSettings/clickToDial
 import notificationLevelSettingPage from './components/admin/generalSettings/notificationLevelSettingPage';
 import appearancePage from './components/admin/generalSettings/appearancePage';
 import callLogDetailsSettingPage from './components/admin/managedSettings/callAndSMSLoggingSetting/callLogDetailsSettingPage';
+import autoLogPreferencesPage from './components/admin/managedSettings/callAndSMSLoggingSetting/autoLogPreferenceSettingPage';
 import tempLogNotePage from './components/tempLogNotePage';
 import googleSheetsPage from './components/platformSpecific/googleSheetsPage';
 import platformSelectionPage from './components/platformSelectionPage';
+import { CONSTANTS } from './misc/constant';
 import hostnameInputPage from './components/hostnameInputPage';
 import {
   setAuthor,
@@ -1160,6 +1162,17 @@ window.addEventListener('message', async (e) => {
                     path: `/customized/${callLogDetailsSettingPageRender.id}`, // page id
                   }, '*');
                   break;
+                case 'autoLogPreferences':
+                  const autoLogPreferencesPageRender = autoLogPreferencesPage.getAutoLogPreferenceSettingPageRender({ adminUserSettings: adminSettings?.userSettings, contactTypes: platform.contactTypes ?? [{ value: 'contact', display: 'Contact' }] });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: autoLogPreferencesPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${autoLogPreferencesPageRender.id}`, // page id
+                  }, '*');
+                  break;
                 case 'userMapping':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const userMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
@@ -1265,7 +1278,8 @@ window.addEventListener('message', async (e) => {
                           ],
                           entityType: platformName,
                           contactType: contactInfoItem.type,
-                          additionalInfo: contactInfoItem.additionalInfo
+                          additionalInfo: contactInfoItem.additionalInfo,
+                          mostRecentActivityDate: contactInfoItem.mostRecentActivityDate
                         });
                       }
                     }
@@ -1623,7 +1637,7 @@ window.addEventListener('message', async (e) => {
                   else {
                     logInfo.note = await logCore.getCachedNote({ sessionId: data.body.call.sessionId }) ?? "";
                   }
-                  const { hasConflict, autoSelectAdditionalSubmission, requireManualDisposition } = await getLogConflictInfo({
+                  let { hasConflict, autoSelectAdditionalSubmission, requireManualDisposition, conflictType } = await getLogConflictInfo({
                     platform,
                     isAutoLog,
                     contactInfo: callMatchedContact,
@@ -1635,22 +1649,63 @@ window.addEventListener('message', async (e) => {
                   if (isAutoLog && !isCallAutoPopup) {
                     // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
                     if (hasConflict) {
+                      // Sub-case: Unknown contact
+                      if (conflictType === CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE) {
+                        if (userCore.getUnknownContactPreferenceSetting(userSettings).value === 'createNewPlaceholderContact') {
+                          const newContactName = userCore.getNewContactNamePrefixSetting(userSettings).value + ' ' + moment(data.body.call.startTime).format('YYYYMMDDHHmmss');
+                          const newContactType = userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value;
+                          let additionalSubmission = {};
+                          if (platform.page?.newContact?.additionalFields) {
+                            const newContactUnderType = callMatchedContact[0].additionalInfo[newContactType];
+                            for (const fieldKey of Object.keys(newContactUnderType)) {
+                              additionalSubmission[fieldKey] = Array.isArray(newContactUnderType[fieldKey]) ? newContactUnderType[fieldKey][0].const : newContactUnderType[fieldKey];
+                            }
+                          }
+                          const newContactInfo = await contactCore.createContact({
+                            serverUrl: manifest.serverUrl,
+                            phoneNumber: contactPhoneNumber,
+                            newContactName,
+                            newContactType,
+                            additionalSubmission
+                          });
+                          defaultingContact = newContactInfo.contactInfo;
+                          hasConflict = false;
+                        }
+                      }
+                      else if (conflictType === CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE) {
+                        const multipleContactPreference = userCore.getMultipleContactsPreferenceSetting(userSettings).value;
+                        switch (multipleContactPreference) {
+                          case 'skipLogging':
+                            break;
+                          case 'firstAlphabetical':
+                            defaultingContact = callMatchedContact.sort((a, b) => a.name.localeCompare(b.name))[0];
+                            hasConflict = false;
+                            break;
+                          case 'mostRecentActivity':
+                            defaultingContact = callMatchedContact.sort((a, b) => new Date(b.mostRecentActivityDate) - new Date(a.mostRecentActivityDate))[0];
+                            hasConflict = false;
+                            break;
+                        }
+                      }
                       window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                      const conflictLog = {
-                        type: 'Call',
-                        id: data.body.call.sessionId,
-                        phoneNumber: contactPhoneNumber,
-                        direction: data.body.call.direction,
-                        contactInfo: callMatchedContact ?? [],
-                        subject: logInfo.subject,
-                        note: logInfo.note,
-                        date: moment(data.body.call.startTime).format('MM/DD/YYYY')
-                      };
-                      const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
-                      showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Please log it manually on call history page`, ttl: 5000 });
+                      if (hasConflict) {
+                        const conflictLog = {
+                          type: 'Call',
+                          id: data.body.call.sessionId,
+                          phoneNumber: contactPhoneNumber,
+                          direction: data.body.call.direction,
+                          contactInfo: callMatchedContact ?? [],
+                          subject: logInfo.subject,
+                          note: logInfo.note,
+                          date: moment(data.body.call.startTime).format('MM/DD/YYYY')
+                        };
+                        const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
+                        showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Please log it manually on call history page`, ttl: 5000 });
+                      }
                     }
+
                     // Case: auto log and no conflict, log directly
-                    else {
+                    if (!hasConflict) {
                       logInfo.subject = data.body.call.direction === 'Inbound' ?
                         `Inbound Call from ${defaultingContact?.name ?? ''}` :
                         `Outbound Call to ${defaultingContact?.name ?? ''}`;
@@ -2291,6 +2346,7 @@ window.addEventListener('message', async (e) => {
                 case 'callAndSMSLoggingSettingPage':
                 case 'contactSettingPage':
                 case 'callLogDetailsSettingPage':
+                case 'autoLogPreferenceSettingPage':
                 case 'advancedFeaturesSettingPage':
                 case 'customSettingsPage':
                 case 'customizeTabsSettingPage':
@@ -2298,6 +2354,9 @@ window.addEventListener('message', async (e) => {
                 case 'clickToDialEmbedPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const settingDataKeys = Object.keys(data.body.button.formData);
+                  if (!adminSettings.userSettings) {
+                    adminSettings.userSettings = {};
+                  }
                   for (const k of settingDataKeys) {
                     adminSettings.userSettings[k] = data.body.button.formData[k];
                   }
