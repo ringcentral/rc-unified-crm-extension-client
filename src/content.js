@@ -212,7 +212,7 @@ async function initializeC2D() {
 
       this._callBtn = mkBtn('Call with RingCentral', 'call');
       this._smsBtn = mkBtn('SMS with RingCentral', 'sms');
-      this._scheduleBtn = mkBtn('Add to call-down list', 'calendar');
+      this._scheduleBtn = mkBtn('Call later', 'calendar');
       const onPress = (handler) => (e) => {
         // Fire immediately before any hover-out occurs
         this._widgetHovering = true;
