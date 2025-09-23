@@ -5,7 +5,7 @@ import dispositionCore from './core/disposition';
 import userCore from './core/user';
 import adminCore from './core/admin';
 import authCore from './core/auth';
-import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getPlatformInfo, getManifest, getUserReportStats, getRcContactInfo, createDebounceHandler } from './lib/util';
+import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getUserReportStats, getRcContactInfo, createDebounceHandler } from './lib/util';
 import { getPlatformInfo } from './service/platformService';
 import { getManifest, getPlatformList, saveManifest, saveManifestUrl, refreshManifest, checkForManifestMigration } from './service/manifestService';
 import { getUserInfo } from './lib/rcAPI';
@@ -688,7 +688,7 @@ window.addEventListener('message', async (e) => {
               }, '*');
               // refresh multi match prompt
               switch (data.body.page.id) {
-              case 'editUserMappingPage':
+                case 'editUserMappingPage':
                   if (data.body.formData.searchWord) {
                     const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
                       userMapping: data.body.formData.userMapping,
@@ -2167,7 +2167,7 @@ window.addEventListener('message', async (e) => {
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
-              case 'editUserMappingPage':
+                case 'editUserMappingPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const { crmUserId, rcExtensionList } = data.body.button.formData;
                   const userMapping = {
@@ -2242,18 +2242,6 @@ window.addEventListener('message', async (e) => {
                   platform = manifest.platforms[platformName];
                   await onUserClickConnectButton();
                   showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
-                  break;
-                  const updatedUserMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
-                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping, platformDisplayName: platform.displayName });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-register-customized-page',
-                    page: userMappingPageRender
-                  });
-                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: 'goBack', // page id
-                  }, '*');
-                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 case 'callAndSMSLoggingSettingPage':
                 case 'contactSettingPage':
@@ -2673,7 +2661,7 @@ window.addEventListener('message', async (e) => {
               const listButtonActionId = listButtonActionIdAndItemId.split('-')[0]; // {actionId}
               const listButtonItemId = listButtonActionIdAndItemId.split(`${listButtonActionId}-`)[1]; // {itemId}
               switch (listButtonActionId) {
-              case 'usermappingEdit':
+                case 'usermappingEdit':
                   const userMappingToEdit = data.body.button.formData.allUserMapping.find(um => um.crmUser.id == listButtonItemId);
                   const rcExtensions = await getRcContactInfo();
                   const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
