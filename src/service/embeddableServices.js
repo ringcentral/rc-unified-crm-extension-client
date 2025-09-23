@@ -398,9 +398,16 @@ async function getServiceManifest() {
             description: 'Manage the URLs App Connect is enabled for',
             items: [
                 {
+                    id: 'clickToDialEmbedWarning',
+                    name: 'Warning',
+                    type: 'admonition',
+                    severity: 'warning',
+                    value: 'Click-to-dial is a pop up widget that will be shown when a user hovers on a phone number.'
+                },
+                {
                     id: 'clickToDialEmbedMode',
                     type: 'option',
-                    name: 'Enable mode',
+                    name: 'Click-to-dial enable mode',
                     options: [
                         {
                             id: 'disabled',
@@ -426,11 +433,53 @@ async function getServiceManifest() {
                 {
                     id: 'clickToDialUrls',
                     type: 'array',
-                    name: 'URLs',
+                    name: 'Click-to-dial URLs',
                     helper: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
                     value: userCore.getClickToDialUrls(userSettings).value,
                     readOnly: userCore.getClickToDialUrls(userSettings).readOnly,
                     readOnlyReason: userCore.getClickToDialUrls(userSettings).readOnlyReason
+                },
+                {
+                    id: 'quickAccessButtonEmbedWarning',
+                    name: 'Warning',
+                    type: 'admonition',
+                    severity: 'warning',
+                    value: 'Quick access button is shown at right bottom corner of the screen.'
+                },
+                {
+                    id: 'quickAccessButtonEmbedMode',
+                    type: 'option',
+                    name: 'Quick access button enable mode',
+                    options: [
+                        {
+                            id: 'disabled',
+                            name: 'Disabled'
+                        },
+                        {
+                            id: 'crmOnly',
+                            name: 'Enable for connected CRM only'
+                        },
+                        {
+                            id: 'whitelist',
+                            name: 'Block by default (then manage a list of sites to allow)'
+                        },
+                        {
+                            id: 'blacklist',
+                            name: 'Allow by default (then manage a list of sites to block)'
+                        }
+                    ],
+                    value: userCore.getQuickAccessButtonEmbedMode(userSettings).value,
+                    readOnly: userCore.getQuickAccessButtonEmbedMode(userSettings).readOnly,
+                    readOnlyReason: userCore.getQuickAccessButtonEmbedMode(userSettings).readOnlyReason
+                },
+                {
+                    id: 'quickAccessButtonUrls',
+                    type: 'array',
+                    name: 'Quick access button URLs',
+                    helper: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
+                    value: userCore.getQuickAccessButtonUrls(userSettings).value,
+                    readOnly: userCore.getQuickAccessButtonUrls(userSettings).readOnly,
+                    readOnlyReason: userCore.getQuickAccessButtonUrls(userSettings).readOnlyReason
                 }
             ]
         }

@@ -10,7 +10,8 @@ import { isObjectEmpty, getManifest } from './lib/util';
 import userCore from './core/user';
 console.log('import content js to web page');
 
-async function checkUrlMatch() {
+// type: c2d, quickAccessButton
+async function checkUrlMatch({ type = 'quickAccessButton' }) {
   try {
     const { allowEmbeddingForAllPages } = await chrome.storage.local.get({ allowEmbeddingForAllPages: false });
     if (allowEmbeddingForAllPages) {
@@ -21,8 +22,24 @@ async function checkUrlMatch() {
       const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
       const embedUrls = customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.embedUrls;
       const { userSettings } = await chrome.storage.local.get('userSettings');
-      const clickToDialEmbedMode = userCore.getClickToDialEmbedMode(userSettings).value;
-      const clickToDialUrls = userCore.getClickToDialUrls(userSettings).value ?? [];
+      let clickToDialEmbedMode = null;
+      switch (type) {
+        case 'c2d':
+          clickToDialEmbedMode = userCore.getClickToDialEmbedMode(userSettings).value;
+          break;
+        case 'quickAccessButton':
+          clickToDialEmbedMode = userCore.getQuickAccessButtonEmbedMode(userSettings).value;
+          break;
+      }
+      let clickToDialUrls = [];
+      switch (type) {
+        case 'c2d':
+          clickToDialUrls = userCore.getClickToDialUrls(userSettings).value ?? [];
+          break;
+        case 'quickAccessButton':
+          clickToDialUrls = userCore.getQuickAccessButtonUrls(userSettings).value ?? [];
+          break;
+      }
       switch (clickToDialEmbedMode) {
         case 'whitelist':
           return clickToDialUrls.some((pattern) => {
@@ -30,7 +47,7 @@ async function checkUrlMatch() {
             return regex.test(window.location.href);
           });
         case 'blacklist':
-            return !clickToDialUrls.some((pattern) => {
+          return !clickToDialUrls.some((pattern) => {
             const regex = new RegExp(pattern.replace(/\*/g, '.*'));
             return regex.test(window.location.href);
           });
@@ -52,9 +69,9 @@ async function checkUrlMatch() {
 }
 
 async function initializeC2D() {
-  const isUrlMatched = await checkUrlMatch();
+  const isUrlMatched = await checkUrlMatch({ type: 'c2d' });
   if (!isUrlMatched) {
-    console.log('URL not matched, C2D not initialized');
+    console.log('[App Connect]URL not matched, C2D not initialized');
     return;
   }
   const countryCode = await chrome.storage.local.get({ selectedRegion: 'US' });
@@ -142,9 +159,9 @@ function Root() {
 }
 
 async function RenderQuickAccessButton() {
-  const isUrlMatched = await checkUrlMatch();
+  const isUrlMatched = await checkUrlMatch({ type: 'quickAccessButton' });
   if (!isUrlMatched) {
-    console.log('URL not matched, C2D not initialized');
+    console.log('[App Connect] URL not matched, quick access button not initialized');
     return;
   }
   const rootElement = window.document.createElement('root');
