@@ -1,7 +1,7 @@
 const CONTENT_MARGIN_TOP = '-20px';
 const SECTION_MARGIN_TOP = '-5px';
 
-function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, selectedRcExtensionId }) {
+function renderEditUserMappingPage({ userMapping, platformDisplayName, rcExtensions, selectedRcExtensionId }) {
     return {
         id: 'editUserMappingPage',
         title: `Edit mapping for ${userMapping.crmUser.name}`,
@@ -12,7 +12,7 @@ function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, se
             properties: {
                 crmUserIdTitle: {
                     type: 'string',
-                    description: `${platformName} ID`
+                    description: `${platformDisplayName} ID`
                 },
                 crmUserId: {
                     type: 'string',
@@ -21,7 +21,7 @@ function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, se
                 },
                 crmUserNameTitle: {
                     type: 'string',
-                    description: `${platformName} Username`
+                    description: `${platformDisplayName} Username`
                 },
                 crmUserName: {
                     type: 'string',
@@ -30,7 +30,7 @@ function renderEditUserMappingPage({ userMapping, platformName, rcExtensions, se
                 },
                 crmUserEmailTitle: {
                     type: 'string',
-                    description: `${platformName} User Email`
+                    description: `${platformDisplayName} User Email`
                 },
                 crmUserEmail: {
                     type: 'string',

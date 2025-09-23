@@ -718,7 +718,7 @@ window.addEventListener('message', async (e) => {
                   if (data.body.formData.searchWord) {
                     const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
                       userMapping: data.body.formData.userMapping,
-                      platformName,
+                      platformDisplayName: platform.displayName,
                       rcExtensions: data.body.formData.rcExtensions,
                       selectedRcExtensionId: data.body.formData.rcExtensionList
                     });
@@ -733,6 +733,7 @@ window.addEventListener('message', async (e) => {
                   if (data.body.formData.userSearch) {
                     const userMappingPageRender = userMappingPage.getUserMappingPageRender({
                       userMapping: data.body.formData.allUserMapping,
+                      platformDisplayName: platform.displayName,
                       searchWord: data.body.formData.userSearch.search,
                       filter: data.body.formData.userSearch.filter
                     });
@@ -773,66 +774,64 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'contactSearchResultCallLog':
-                  if (data.body.keys.some(k => k === "contactInfo")) {
-                    let selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
-                    // Ensure isNewContact is not set for real contacts
-                    selectedContact = { ...selectedContact };
-                    delete selectedContact.isNewContact;
-                    const { cacheLogPageData } = await chrome.storage.local.get("cacheLogPageData");
-                    const contactData = cacheLogPageData.contactInfo;
-                    if (!contactData.some(c => c.id === selectedContact.id)) {
-                      contactData.push(selectedContact);
-                    }
-                    if (contactData.length > 0) {
-                      const cachedSearchContactKey = `rc-crm-search-contact-${data.body.formData?.contactPhoneNumber}`;
-                      const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
-                      let contactArr = storageObj[cachedSearchContactKey] || [];
-                      if (!contactArr.some(c => c.id === selectedContact.id)) {
-                        contactArr.push(selectedContact);
-                      }
-                      await chrome.storage.local.set({ [cachedSearchContactKey]: contactArr });
-                    }
-                    // First get the initial log page
-                    const initialLogPage = logPage.getLogPageRender({
-                      ...cacheLogPageData,
-                      contactInfo: contactData.map(c => ({ ...c, isNewContact: undefined }))
-                    });
-
-                    // Then update it with the selected contact
-                    const cachedLogPage = logPage.getUpdatedLogPageRender({
-                      manifest,
-                      platformName,
-                      logType: 'Call',
-                      updateData: {
-                        page: initialLogPage,
-                        formData: {
-                          ...initialLogPage.formData,
-                          contact: selectedContact.id,
-                          contactType: selectedContact.type,
-                          contactName: selectedContact.name,
-                          contactInfo: contactData.map(c => ({ ...c, isNewContact: undefined })),
-                          returnToHistoryPage: true
-                        },
-                        keys: ['contact']
-                      }
-                    });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-trigger-contact-match',
-                      phoneNumbers: [data.body.formData?.contactPhoneNumber],
-                    }, '*');
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-update-call-log-page',
-                      page: cachedLogPage
-                    });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-navigate-to',
-                      path: `/history`
-                    }, '*');
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-navigate-to',
-                      path: `/log/call/${cacheLogPageData.id}`,
-                    }, '*');
+                  let selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
+                  // Ensure isNewContact is not set for real contacts
+                  selectedContact = { ...selectedContact };
+                  delete selectedContact.isNewContact;
+                  const { cacheLogPageData } = await chrome.storage.local.get("cacheLogPageData");
+                  const contactData = cacheLogPageData.contactInfo;
+                  if (!contactData.some(c => c.id === selectedContact.id)) {
+                    contactData.push(selectedContact);
                   }
+                  if (contactData.length > 0) {
+                    const cachedSearchContactKey = `rc-crm-search-contact-${data.body.formData?.contactPhoneNumber}`;
+                    const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
+                    let contactArr = storageObj[cachedSearchContactKey] || [];
+                    if (!contactArr.some(c => c.id === selectedContact.id)) {
+                      contactArr.push(selectedContact);
+                    }
+                    await chrome.storage.local.set({ [cachedSearchContactKey]: contactArr });
+                  }
+                  // First get the initial log page
+                  const initialLogPage = logPage.getLogPageRender({
+                    ...cacheLogPageData,
+                    contactInfo: contactData.map(c => ({ ...c, isNewContact: undefined }))
+                  });
+
+                  // Then update it with the selected contact
+                  const cachedLogPage = logPage.getUpdatedLogPageRender({
+                    manifest,
+                    platformName,
+                    logType: 'Call',
+                    updateData: {
+                      page: initialLogPage,
+                      formData: {
+                        ...initialLogPage.formData,
+                        contact: selectedContact.id,
+                        contactType: selectedContact.type,
+                        contactName: selectedContact.name,
+                        contactInfo: contactData.map(c => ({ ...c, isNewContact: undefined })),
+                        returnToHistoryPage: true
+                      },
+                      keys: ['contact']
+                    }
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-trigger-contact-match',
+                    phoneNumbers: [data.body.formData?.contactPhoneNumber],
+                  }, '*');
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-update-call-log-page',
+                    page: cachedLogPage
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/history`
+                  }, '*');
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/log/call/${cacheLogPageData.id}`,
+                  }, '*');
                   break;
                 case 'contactSearchResultMessageLog':
                   if (data.body.keys.some(k => k === "contactInfo")) {
@@ -1128,7 +1127,11 @@ window.addEventListener('message', async (e) => {
                 case 'userMapping':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const userMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
-                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping });
+                  adminSettings.userMappings = userMapping.map(um => ({
+                    crmUserId: um.crmUser.id,
+                    rcExtensionId: um.rcUser?.extensionId ?? 'none'
+                  }));
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping, platformDisplayName: platform.displayName });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: userMappingPageRender
@@ -2244,7 +2247,7 @@ window.addEventListener('message', async (e) => {
                   }
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
                   const updatedUserMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
-                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping });
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping, platformDisplayName: platform.displayName });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: userMappingPageRender
@@ -2480,25 +2483,25 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   adminSettings.userSettings.serverSideLogging =
                   {
-                    enable: data.body.button.formData.serverSideLogging != 'Disable',
-                    loggingLevel: data.body.button.formData.serverSideLogging
+                    enable: data.body.button.formData.serverSideLoggingHolder.serverSideLogging != 'Disable',
+                    loggingLevel: data.body.button.formData.serverSideLoggingHolder.serverSideLogging
                   };
                   userSettings = await userCore.refreshUserSettings({
                     changedSettings: {
                       serverSideLogging:
                       {
-                        enable: data.body.button.formData.serverSideLogging != 'Disable',
-                        loggingLevel: data.body.button.formData.serverSideLogging
+                        enable: data.body.button.formData.serverSideLoggingHolder.serverSideLogging != 'Disable',
+                        loggingLevel: data.body.button.formData.serverSideLoggingHolder.serverSideLogging
                       }
                     }
                   });
                   await chrome.storage.local.set({ adminSettings });
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
-                  if (data.body.button.formData.serverSideLogging != 'Disable') {
+                  if (data.body.button.formData.serverSideLoggingHolder.serverSideLogging != 'Disable') {
                     await adminCore.enableServerSideLogging({
                       serverUrl: manifest.serverUrl,
                       platform,
-                      subscriptionLevel: data.body.button.formData.serverSideLogging,
+                      subscriptionLevel: data.body.button.formData.serverSideLoggingHolder.serverSideLogging,
                       loggingByAdmin: data.body.button.formData.activityRecordOwner === 'admin'
                     });
                   }
@@ -2511,8 +2514,17 @@ window.addEventListener('message', async (e) => {
                     service: (await embeddableServices.getServiceManifest())
                   }, '*');
                   const updateSSCLFieldsResponse = await adminCore.uploadServerSideLoggingAdditionalFieldValues({ platform, formData: data.body.button.formData });
-                  if (!updateSSCLFieldsResponse.successful) {
-                    showNotification({ level: updateSSCLFieldsResponse.returnMessage.messageType, message: updateSSCLFieldsResponse.returnMessage.message, ttl: updateSSCLFieldsResponse.returnMessage.ttl });
+                  if (updateSSCLFieldsResponse) {
+                    if (updateSSCLFieldsResponse.successful) {
+                      showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-navigate-to',
+                        path: 'goBack',
+                      }, '*');
+                    }
+                    else {
+                      showNotification({ level: updateSSCLFieldsResponse.returnMessage.messageType, message: updateSSCLFieldsResponse.returnMessage.message, ttl: updateSSCLFieldsResponse.returnMessage.ttl });
+                    }
                   }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
@@ -2694,7 +2706,7 @@ window.addEventListener('message', async (e) => {
                   const rcExtensions = await getRcContactInfo();
                   const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
                     userMapping: userMappingToEdit,
-                    platformName,
+                    platformDisplayName: platform.displayName,
                     rcExtensions: [...rcExtensions, { id: 'none', name: 'None' }]
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2708,11 +2720,10 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'usermappingRemove':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  const userMappingToRemove = data.body.button.formData.allUserMapping.find(um => um.crmUser.id == listButtonItemId);
-                  adminSettings.userMappings = adminSettings.userMappings.filter(um => um.crmUserId != userMappingToRemove.crmUser.id);
+                  adminSettings.userMappings.find(um => um.crmUserId == listButtonItemId).rcExtensionId = 'none';
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
                   const updatedUserMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
-                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping });
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping, platformDisplayName: platform.displayName });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: userMappingPageRender
