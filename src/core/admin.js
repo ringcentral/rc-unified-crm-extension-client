@@ -2,7 +2,7 @@ import axios from 'axios';
 import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import { parsePhoneNumber } from 'awesome-phonenumber';
-import { getRcAccessToken, showNotification } from '../lib/util';
+import { getRcAccessToken, getPlatformInfo, getManifest, getRcContactInfo, showNotification } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest } from '../service/manifestService';
 
@@ -131,7 +131,7 @@ async function uploadServerSideLoggingAdditionalFieldValues({ platform, formData
     }
     const additionalFieldValues = {};
     platform.serverSideLogging.additionalFields.forEach(field => {
-        additionalFieldValues[field.const] = formData[field.const];
+        additionalFieldValues[field.const] = formData.serverSideLoggingHolder[field.const];
     });
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
@@ -392,6 +392,20 @@ async function authServerSideLogging({ platform }) {
     return serverSideLoggingToken;
 }
 
+async function getUserMapping({ serverUrl }) {
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
+    const rcAccessToken = getRcAccessToken();
+    const rcExtensionList = await getRcContactInfo();
+    const userMappingResp = await axios.post(
+        `${serverUrl}/admin/userMapping?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`,
+        {
+            rcExtensionList
+        }
+    );
+    return userMappingResp.data;
+}
+
 exports.getAdminSettings = getAdminSettings;
 exports.uploadAdminSettings = uploadAdminSettings;
 exports.refreshAdminSettings = refreshAdminSettings;
@@ -402,3 +416,4 @@ exports.updateServerSideDoNotLogNumbers = updateServerSideDoNotLogNumbers;
 exports.authServerSideLogging = authServerSideLogging;
 exports.getServerSideLoggingAdditionalFieldValues = getServerSideLoggingAdditionalFieldValues;
 exports.uploadServerSideLoggingAdditionalFieldValues = uploadServerSideLoggingAdditionalFieldValues;
+exports.getUserMapping = getUserMapping;

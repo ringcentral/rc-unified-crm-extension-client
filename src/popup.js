@@ -5,7 +5,7 @@ import dispositionCore from './core/disposition';
 import userCore from './core/user';
 import adminCore from './core/admin';
 import authCore from './core/auth';
-import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getUserReportStats, createDebounceHandler } from './lib/util';
+import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getPlatformInfo, getManifest, getUserReportStats, getRcContactInfo, createDebounceHandler } from './lib/util';
 import { getPlatformInfo } from './service/platformService';
 import { getManifest, getPlatformList, saveManifest, saveManifestUrl, refreshManifest, checkForManifestMigration } from './service/manifestService';
 import { getUserInfo } from './lib/rcAPI';
@@ -23,6 +23,8 @@ import adminPage from './components/admin/adminPage';
 import managedSettingsPage from './components/admin/managedSettingsPage';
 import generalSettingPage from './components/admin/generalSettingPage';
 import callAndSMSLoggingSettingPage from './components/admin/managedSettings/callAndSMSLoggingSettingPage';
+import userMappingPage from './components/admin/userMappingPage/userMappingPage';
+import editUserMappingPage from './components/admin/userMappingPage/editUserMappingPage';
 import serverSideLoggingPage from './components/admin/serverSideLoggingPage';
 import contactSettingPage from './components/admin/managedSettings/contactSettingPage';
 import advancedFeaturesSettingPage from './components/admin/managedSettings/advancedFeaturesSettingPage';
@@ -686,6 +688,35 @@ window.addEventListener('message', async (e) => {
               }, '*');
               // refresh multi match prompt
               switch (data.body.page.id) {
+              case 'editUserMappingPage':
+                  if (data.body.formData.searchWord) {
+                    const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
+                      userMapping: data.body.formData.userMapping,
+                      platformDisplayName: platform.displayName,
+                      rcExtensions: data.body.formData.rcExtensions,
+                      selectedRcExtensionId: data.body.formData.rcExtensionList
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: editUserMappingPageRender
+                    });
+                  }
+                  break;
+                case 'userMappingPage':
+                  // Case: user search in userMappingList
+                  if (data.body.formData.userSearch) {
+                    const userMappingPageRender = userMappingPage.getUserMappingPageRender({
+                      userMapping: data.body.formData.allUserMapping,
+                      platformDisplayName: platform.displayName,
+                      searchWord: data.body.formData.userSearch.search,
+                      filter: data.body.formData.userSearch.filter
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: userMappingPageRender
+                    });
+                  }
+                  break;
                 case 'hostnameInputPage':
                   let isUrlValid = true;
                   if (manifest.platforms[data.body.formData.platformId]?.environment?.url) {
@@ -1083,6 +1114,24 @@ window.addEventListener('message', async (e) => {
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${callLogDetailsSettingPageRender.id}`, // page id
                   }, '*');
+                  break;
+                case 'userMapping':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const userMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
+                  adminSettings.userMappings = userMapping.map(um => ({
+                    crmUserId: um.crmUser.id,
+                    rcExtensionId: um.rcUser?.extensionId ?? 'none'
+                  }));
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping, platformDisplayName: platform.displayName });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: userMappingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${userMappingPageRender.id}`, // page id
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 default:
                   break;
@@ -2118,6 +2167,50 @@ window.addEventListener('message', async (e) => {
               break;
             case '/custom-button-click':
               switch (data.body.button.id) {
+              case 'editUserMappingPage':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const { crmUserId, rcExtensionList } = data.body.button.formData;
+                  const userMapping = {
+                    crmUserId: crmUserId.toString(),
+                    rcExtensionId: rcExtensionList
+                  };
+                  if (adminSettings?.userMappings) {
+                    const existingUserMapping = adminSettings.userMappings.find(um => um.crmUserId == userMapping.crmUserId);
+                    if (existingUserMapping) {
+                      // Case: delete
+                      if (userMapping.rcExtensionId === 'none') {
+                        adminSettings.userMappings = adminSettings.userMappings.filter(um => um.crmUserId !== existingUserMapping.crmUserId);
+                      }
+                      // Case: update
+                      else {
+                        existingUserMapping.rcExtensionId = userMapping.rcExtensionId;
+                      }
+                    }
+                    // case: create
+                    else {
+                      adminSettings.userMappings.push(
+                        userMapping
+                      )
+                    }
+                  }
+                  else if (userMapping.rcExtensionId !== 'none') {
+                    adminSettings.userMappings = [
+                      userMapping
+                    ]
+                  }
+                  await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
+                  const updatedUserMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping, platformDisplayName: platform.displayName });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: userMappingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack', // page id
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
                 case 'hostnameInputPage':
                   let inputUrl = '';
                   switch (manifest.platforms[data.body.button.formData.platformId].environment.type) {
@@ -2149,6 +2242,18 @@ window.addEventListener('message', async (e) => {
                   platform = manifest.platforms[platformName];
                   await onUserClickConnectButton();
                   showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
+                  break;
+                  const updatedUserMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping, platformDisplayName: platform.displayName });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: userMappingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack', // page id
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 case 'callAndSMSLoggingSettingPage':
                 case 'contactSettingPage':
@@ -2358,27 +2463,25 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   adminSettings.userSettings.serverSideLogging =
                   {
-                    enable: data.body.button.formData.serverSideLogging != 'Disable',
-                    doNotLogNumbers: data.body.button.formData.doNotLogNumbers,
-                    loggingLevel: data.body.button.formData.serverSideLogging
+                    enable: data.body.button.formData.serverSideLoggingHolder.serverSideLogging != 'Disable',
+                    loggingLevel: data.body.button.formData.serverSideLoggingHolder.serverSideLogging
                   };
                   userSettings = await userCore.refreshUserSettings({
                     changedSettings: {
                       serverSideLogging:
                       {
-                        enable: data.body.button.formData.serverSideLogging != 'Disable',
-                        doNotLogNumbers: data.body.button.formData.doNotLogNumbers,
-                        loggingLevel: data.body.button.formData.serverSideLogging
+                        enable: data.body.button.formData.serverSideLoggingHolder.serverSideLogging != 'Disable',
+                        loggingLevel: data.body.button.formData.serverSideLoggingHolder.serverSideLogging
                       }
                     }
                   });
                   await chrome.storage.local.set({ adminSettings });
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
-                  if (data.body.button.formData.serverSideLogging != 'Disable') {
+                  if (data.body.button.formData.serverSideLoggingHolder.serverSideLogging != 'Disable') {
                     await adminCore.enableServerSideLogging({
                       serverUrl: manifest.serverUrl,
                       platform,
-                      subscriptionLevel: data.body.button.formData.serverSideLogging,
+                      subscriptionLevel: data.body.button.formData.serverSideLoggingHolder.serverSideLogging,
                       loggingByAdmin: data.body.button.formData.activityRecordOwner === 'admin'
                     });
                   }
@@ -2390,7 +2493,6 @@ window.addEventListener('message', async (e) => {
                     type: 'rc-adapter-register-third-party-service',
                     service: (await embeddableServices.getServiceManifest())
                   }, '*');
-                  await adminCore.updateServerSideDoNotLogNumbers({ platform, doNotLogNumbers: data.body.button.formData.doNotLogNumbers ?? "" });
                   const updateSSCLFieldsResponse = await adminCore.uploadServerSideLoggingAdditionalFieldValues({ platform, formData: data.body.button.formData });
                   if (updateSSCLFieldsResponse) {
                     if (updateSSCLFieldsResponse.successful) {
@@ -2405,6 +2507,27 @@ window.addEventListener('message', async (e) => {
                     }
                   }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
+                case 'doNotLogNumbersSubmitButton':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  adminSettings.userSettings.serverSideLogging.doNotLogNumbers = data.body.button.formData.doNotLogNumbersHolder.doNotLogNumbers ?? "";
+                  userSettings = await userCore.refreshUserSettings({
+                    changedSettings: {
+                      serverSideLogging:
+                      {
+                        doNotLogNumbers: data.body.button.formData.doNotLogNumbersHolder.doNotLogNumbers ?? ""
+                      }
+                    }
+                  });
+                  await chrome.storage.local.set({ adminSettings });
+                  await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-third-party-service',
+                    service: (await embeddableServices.getServiceManifest())
+                  }, '*');
+                  await adminCore.updateServerSideDoNotLogNumbers({ platform, doNotLogNumbers: data.body.button.formData.doNotLogNumbersHolder.doNotLogNumbers ?? "" });
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
                   break;
                 case 'developerSettingsPage':
                   try {
@@ -2550,6 +2673,39 @@ window.addEventListener('message', async (e) => {
               const listButtonActionId = listButtonActionIdAndItemId.split('-')[0]; // {actionId}
               const listButtonItemId = listButtonActionIdAndItemId.split(`${listButtonActionId}-`)[1]; // {itemId}
               switch (listButtonActionId) {
+              case 'usermappingEdit':
+                  const userMappingToEdit = data.body.button.formData.allUserMapping.find(um => um.crmUser.id == listButtonItemId);
+                  const rcExtensions = await getRcContactInfo();
+                  const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
+                    userMapping: userMappingToEdit,
+                    platformDisplayName: platform.displayName,
+                    rcExtensions: [...rcExtensions, { id: 'none', name: 'None' }]
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: editUserMappingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${editUserMappingPageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'usermappingRemove':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  adminSettings.userMappings.find(um => um.crmUserId == listButtonItemId).rcExtensionId = 'none';
+                  await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
+                  const updatedUserMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
+                  const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping, platformDisplayName: platform.displayName });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: userMappingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${userMappingPageRender.id}`, // page id
+                  }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
                 case 'selectPlatform':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const selectedPlatform = data.body.button.formData.platformList.find(platform => platform.id === listButtonItemId);
@@ -2751,7 +2907,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     else if (request.path === '/support') {
       let isOnline = false;
       try {
-        const isServiceOnlineResponse = await axios.get(`${manifest.serverUrl}/is-alive`);
+        const isServiceOnlineResponse = await axios.get(`${manifest.serverUrl}/isAlive`);
         isOnline = isServiceOnlineResponse.status === 200;
       }
       catch (e) {

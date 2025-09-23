@@ -51,6 +51,13 @@ function getRcAccessToken() {
   return JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).access_token;
 }
 
+async function getRcContactInfo() {
+  const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;
+  const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
+  const rcContactInfo = await indexDB.get('keyvaluepairs', 'CompanyContacts-companyContactsData');
+  return rcContactInfo?.value ?? [];
+}
+
 async function checkC2DCollision() {
   try {
     const { rcForGoogleCollisionChecked } = await chrome.storage.local.get({ rcForGoogleCollisionChecked: false });
@@ -203,6 +210,7 @@ exports.responseMessage = responseMessage;
 exports.isObjectEmpty = isObjectEmpty;
 exports.getRcInfo = getRcInfo;
 exports.getRcAccessToken = getRcAccessToken;
+exports.getRcContactInfo = getRcContactInfo;
 exports.checkC2DCollision = checkC2DCollision;
 exports.downloadTextFile = downloadTextFile;
 exports.cleanUpExpiredStorage = cleanUpExpiredStorage;
