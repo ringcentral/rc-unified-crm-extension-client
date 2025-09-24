@@ -4,6 +4,7 @@ import { getManifest } from '../service/manifestService';
 import adminCore from './admin';
 import { getServiceManifest } from '../service/embeddableServices';
 import reportPage from '../components/reportPage/reportPage';
+import calldownPage from '../components/calldownPage';
 import { RcAPI } from '../lib/rcAPI';
 
 async function getUserReportStats({ dateRange, customStartDate, customEndDate }) {
@@ -151,6 +152,12 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: reportPageRender,
+    }, '*');
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: calldownPageRender,
     }, '*');
     return userSettings;
 }
@@ -627,6 +634,7 @@ exports.getAddCallLogResultSetting = getAddCallLogResultSetting;
 exports.getAddCallLogRecordingSetting = getAddCallLogRecordingSetting;
 exports.getAddCallLogAiNoteSetting = getAddCallLogAiNoteSetting;
 exports.getAddCallLogTranscriptSetting = getAddCallLogTranscriptSetting;
+exports.getShowCalldownTabSetting = getShowCalldownTabSetting;
 exports.getUnknownContactPreferenceSetting = getUnknownContactPreferenceSetting;
 exports.getMultipleContactsPreferenceSetting = getMultipleContactsPreferenceSetting;
 exports.getNewContactTypeSetting = getNewContactTypeSetting;

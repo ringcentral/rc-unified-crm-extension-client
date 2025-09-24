@@ -1,5 +1,6 @@
 import callIcon from '../images/outboundCallIcon.png';
 import axios from 'axios';
+import userCore from '../core/user';
 
 function getCalldownPageRender() {
     const page = {
@@ -58,8 +59,10 @@ function getCalldownPageRender() {
 
 exports.getCalldownPageRender = getCalldownPageRender;
 
-async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '', filterStatus = 'All', searchWithFilters = {} }) {
+async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '', filterStatus = 'All', searchWithFilters = {}, userSettings }) {
     const page = getCalldownPageRender();
+    const isHidden = !userCore.getShowCalldownTabSetting(userSettings).value;
+    page.hidden = isHidden;
     // Support new UI first, fallback to legacy
     const resolvedSearch = (searchWithFilters.search ?? filterName ?? '').trim();
     const resolvedStatus = (searchWithFilters.filter ?? filterStatus ?? 'All');

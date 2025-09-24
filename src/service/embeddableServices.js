@@ -230,6 +230,14 @@ async function getServiceManifest() {
                                 value: userCore.getShowUserReportTabSetting(userSettings).value,
                                 readOnly: userCore.getShowUserReportTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowUserReportTabSetting(userSettings).readOnlyReason
+                            },
+                            {
+                                id: 'showCalldownTab',
+                                type: 'boolean',
+                                name: 'Show Call-down tab',
+                                value: userCore.getShowCalldownTabSetting(userSettings).value,
+                                readOnly: userCore.getShowCalldownTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowCalldownTabSetting(userSettings).readOnlyReason
                             }
                         ]
                     },
