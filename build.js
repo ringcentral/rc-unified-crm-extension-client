@@ -41,6 +41,9 @@ async function runBuild() {
             svgr()
         ]
     })
+
+    // print out build datetime in local
+    console.log(`Build datetime: ${new Date().toLocaleString()}`);
 }
 
 runBuild();

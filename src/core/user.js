@@ -4,10 +4,14 @@ import { getManifest } from '../service/manifestService';
 import adminCore from './admin';
 import { getServiceManifest } from '../service/embeddableServices';
 import reportPage from '../components/reportPage/reportPage';
-import rcAPI from '../lib/rcAPI';
+import { RcAPI } from '../lib/rcAPI';
 
 async function getUserReportStats({ dateRange, customStartDate, customEndDate }) {
+    if (customStartDate === undefined || customEndDate === undefined) {
+        return null;
+    }
     const rcAccessToken = getRcAccessToken();
+    const rcAPI = new RcAPI();
     const callLogData = await rcAPI.getRcCallLog({ rcAccessToken, dateRange, customStartDate, customEndDate });
     // phone activity
     const inboundCallCount = callLogData.records.filter(call => call.direction === 'Inbound').length;

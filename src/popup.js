@@ -8,7 +8,7 @@ import authCore from './core/auth';
 import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getUserReportStats, getRcContactInfo, createDebounceHandler } from './lib/util';
 import { getPlatformInfo } from './service/platformService';
 import { getManifest, getPlatformList, saveManifest, saveManifestUrl, refreshManifest, checkForManifestMigration } from './service/manifestService';
-import { getUserInfo } from './lib/rcAPI';
+import { RcAPI } from './lib/rcAPI';
 import moment from 'moment';
 import 'moment-timezone';
 import logPage from './components/logPage';
@@ -113,6 +113,8 @@ let errorLogs = [];
 window.onerror = (event, source, lineno, colno, error) => {
   errorLogs.push({ event, source, lineno, colno, error })
 };
+
+const rcApi = new RcAPI();
 
 // Interact with RingCentral Embeddable Voice:
 window.addEventListener('message', async (e) => {
@@ -335,7 +337,7 @@ window.addEventListener('message', async (e) => {
                 }
               }
               await chrome.storage.local.set({ rcAdditionalSubmission });
-              const userInfoResponse = await getUserInfo({
+              const userInfoResponse = await rcApi.getUserInfo({
                 serverUrl: manifest.serverUrl,
                 extensionId: rcInfo.value.cachedData.extensionInfo.id,
                 accountId: rcInfo.value.cachedData.extensionInfo.account.id
@@ -908,6 +910,16 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
                 case 'reportPage':
+                  const { isAdmin } = await chrome.storage.local.get('isAdmin');
+                  let rcExtensions;
+                  if (isAdmin) {
+                    rcExtensions = await rcApi.getRcExtensionList({ rcAccessToken: getRcAccessToken() });
+                    if (data.body.keys.some(k => k === 'rcExtensionList')) {
+                      if (!rcExtensions?.some(rcExtension => rcExtension.id == data.body.formData.rcExtensionList) && data.body.formData.rcExtensionList !== 'me') {
+                        break;
+                      }
+                    }
+                  }
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   if (data.body.formData.unloggedCallSummary === 'unloggedCallCount') {
                     const { calls: unloggedCalls } = await RCAdapter.getUnloggedCalls(100, 1);
@@ -932,35 +944,39 @@ window.addEventListener('message', async (e) => {
                     if (userCore.getShowUserReportTabSetting(userSettings).value) {
                       let userReportStats;
                       let adminReportStats;
-                      switch (data.body.formData.tab) {
-                        case 'myReportsTab':
-                          userReportStats = await userCore.getUserReportStats({ dateRange: data.body.formData.dateRangeEnums || 'Last 24 hours', customStartDate: data.body.formData.startDate, customEndDate: data.body.formData.endDate });
+                      const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                      const rcInfoData = await getRcInfo();
+                      let timeFrom = moment(data.body.formData.startDate).toISOString();
+                      let timeTo = moment(data.body.formData.endDate).toISOString();
+                      const timezone = rcInfoData.value.cachedData.accountInfo.regionalSettings.timezone.name;
+                      // set to ISO string with regards to timezone
+                      switch (data.body.formData.dateRangeEnums) {
+                        case 'Last 24 hours':
+                          timeFrom = moment().tz(timezone).subtract(24, 'hours').toISOString();
+                          timeTo = moment().tz(timezone).subtract(1, 'minutes').toISOString();
                           break;
-                        case 'adminReportsTab':
-                          const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                          const rcInfoData = await getRcInfo();
-                          const timezone = rcInfoData.value.cachedData.accountInfo.regionalSettings.timezone.name;
-                          let timeFrom = moment(data.body.formData.startDate).toISOString();
-                          let timeTo = moment(data.body.formData.endDate).toISOString();
-                          // set to ISO string with regards to timezone
-                          switch (data.body.formData.dateRangeEnums) {
-                            case 'Last 24 hours':
-                              timeFrom = moment().tz(timezone).subtract(24, 'hours').toISOString();
-                              timeTo = moment().tz(timezone).subtract(1, 'minutes').toISOString();
-                              break;
-                            case 'Last 7 days':
-                              timeFrom = moment().tz(timezone).subtract(7, 'days').toISOString();
-                              timeTo = moment().tz(timezone).subtract(1, 'minutes').toISOString();
-                              break;
-                            case 'Last 30 days':
-                              timeFrom = moment().tz(timezone).subtract(30, 'days').toISOString();
-                              timeTo = moment().tz(timezone).subtract(1, 'minutes').toISOString();
-                              break;
-                            case 'Select date range...':
-                              timeFrom = moment(data.body.formData.startDate).tz(timezone).toISOString();
-                              timeTo = moment(data.body.formData.endDate).tz(timezone).toISOString();
-                              break;
+                        case 'Last 7 days':
+                          timeFrom = moment().tz(timezone).subtract(7, 'days').toISOString();
+                          timeTo = moment().tz(timezone).subtract(1, 'minutes').toISOString();
+                          break;
+                        case 'Last 30 days':
+                          timeFrom = moment().tz(timezone).subtract(30, 'days').toISOString();
+                          timeTo = moment().tz(timezone).subtract(1, 'minutes').toISOString();
+                          break;
+                        case 'Select date range...':
+                          if (data.body.formData.startDate === undefined || data.body.formData.endDate === undefined) {
+                            timeFrom = data.body.formData.startDate;
+                            timeTo = data.body.formData.endDate;
                           }
+                          else {
+                            timeFrom = moment(data.body.formData.startDate).tz(timezone).toISOString();
+                            timeTo = moment(data.body.formData.endDate).tz(timezone).toISOString();
+                          }
+                          break;
+                      }
+                      const currentTab = data.body.formData.tab || 'userReportTab';
+                      switch (currentTab) {
+                        case 'companyReportTab':
                           adminReportStats = await adminCore.getAdminReportStats({
                             serverUrl: manifest.serverUrl,
                             jwtToken: rcUnifiedCrmExtJwt,
@@ -972,10 +988,36 @@ window.addEventListener('message', async (e) => {
                           adminReportStats.startDate = data.body.formData.startDate;
                           adminReportStats.endDate = data.body.formData.endDate;
                           break;
-                        case 'leaderboardTab':
+                        case 'userReportTab':
+                          switch (data.body.formData.rcExtensionList) {
+                            case 'me':
+                              userReportStats = await userCore.getUserReportStats({ dateRange: data.body.formData.dateRangeEnums || 'Last 24 hours', customStartDate: data.body.formData.startDate, customEndDate: data.body.formData.endDate });
+                              break;
+                            default:
+                              userReportStats = await adminCore.getUserExtensionReportStats({
+                                serverUrl: manifest.serverUrl,
+                                jwtToken: rcUnifiedCrmExtJwt,
+                                timezone,
+                                timeFrom,
+                                timeTo,
+                                rcExtensionId: data.body.formData.rcExtensionList
+                              });
+                              break;
+                          }
+                          userReportStats.dateRange = data.body.formData.dateRangeEnums;
+                          userReportStats.startDate = data.body.formData.startDate;
+                          userReportStats.endDate = data.body.formData.endDate;
                           break;
                       }
-                      const reportPageRender = reportPage.getReportsPageRender({ selectedTab: data.body.formData.tab, userStats: userReportStats, adminStats: adminReportStats, userSettings });
+                      const reportPageRender = reportPage.getReportsPageRender(
+                        {
+                          selectedTab: currentTab,
+                          selectedRcExtension: data.body.formData.rcExtensionList,
+                          userStats: userReportStats,
+                          companyStats: adminReportStats,
+                          userSettings,
+                          rcExtensions
+                        });
                       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                         type: 'rc-adapter-register-customized-page',
                         page: reportPageRender,

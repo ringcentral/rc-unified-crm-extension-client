@@ -4,10 +4,10 @@ import userReportIcon from '../../images/reportIcon.png';
 import userReportIconActive from '../../images/reportIcon_active.png';
 import userReportIconDark from '../../images/reportIcon_dark.png';
 
-import getMyReportTabRender from './myReportTab';
-import getAdminReportTabRender from './adminReportTab';
+import getUserReportTabRender from './userReportTab';
+import getCompanyReportTabRender from './companyReportTab';
 
-function getReportsPageRender({ selectedTab = 'myReportsTab', userStats, adminStats, userSettings }) {
+function getReportsPageRender({ selectedTab = 'userReportTab', selectedRcExtension, userStats, companyStats, userSettings, rcExtensions = [] }) {
     const isHidden = !userCore.getShowUserReportTabSetting(userSettings)?.value;
     let page = {
         id: 'reportPage',
@@ -24,8 +24,8 @@ function getReportsPageRender({ selectedTab = 'myReportsTab', userStats, adminSt
                 tab: {
                     type: 'string',
                     title: 'Tab',
-                    enum: ['myReportsTab', 'adminReportsTab', 'leaderboardTab'],
-                    enumNames: ['My Reports', 'Admin Reports', 'Leaderboard']
+                    enum: ['userReportTab', 'companyReportTab'],
+                    enumNames: ['User stats', 'Company stats']
                 }
             }
         },
@@ -41,13 +41,11 @@ function getReportsPageRender({ selectedTab = 'myReportsTab', userStats, adminSt
         }
     }
     switch (selectedTab) {
-        case 'myReportsTab':
-            page = getMyReportTabRender({ page, userStats, userSettings });
+        case 'userReportTab':
+            page = getUserReportTabRender({ page, userStats, userSettings, rcExtensions, selectedRcExtension });
             break;
-        case 'adminReportsTab':
-            page = getAdminReportTabRender({ page, adminStats });
-            break;
-        case 'leaderboardTab':
+        case 'companyReportTab':
+            page = getCompanyReportTabRender({ page, companyStats });
             break;
     }
 

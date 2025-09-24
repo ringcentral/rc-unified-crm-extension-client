@@ -1,6 +1,5 @@
 import { openDB } from 'idb';
 import { trackCRMSetupError } from '../lib/analytics';
-import rcAPI from '../lib/rcAPI';
 
 function secondsToHourMinuteSecondString(totalSeconds) {
   const hours = parseInt(totalSeconds / 3600);

@@ -1,6 +1,22 @@
 
-function getMyReportTabRender({ page, userStats, userSettings }) {
+function getUserReportTabRender({ page, userStats, userSettings, selectedRcExtension, rcExtensions }) {
+    if (rcExtensions.length > 0 && !rcExtensions.some(rcExtension => rcExtension.id == 'me')) {
+        rcExtensions.push({
+            id: 'me',
+            name: 'Me',
+            email: '',
+            extensionNumber: ''
+        });
+    }
     const schemaToAdd = {
+        rcExtensionList: {
+            type: 'string',
+            title: 'RingCentral user',
+            enum: rcExtensions.map(rc => rc.id.toString()),
+            enumNames: rcExtensions.map(rc => rc.name ?
+                `${rc.name} ${rc.email ? `- ${rc.email}` : ''} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}` :
+                `${rc.firstName} ${rc.lastName} ${rc.email ? `- ${rc.email}` : ''} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}`),
+        },
         dateRangeEnums: {
             type: 'string',
             title: 'Show date from the:',
@@ -88,26 +104,13 @@ function getMyReportTabRender({ page, userStats, userSettings }) {
                     backgroundColor: '#a0a2a91f'
                 }
             ]
-        },
-        unloggedCallTitle: {
-            type: 'string',
-            description: 'Unlogged calls'
-        },
-        unloggedCallSummary: {
-            type: 'string',
-            oneOf: [
-                {
-                    const: 'unloggedCallCount',
-                    value: (userStats?.unloggedCallStats?.unloggedCallCount || 0).toString(),
-                    trend: '(click to view)',
-                    trendColor: 'success.f02',
-                    title: 'unlogged calls',
-                    backgroundColor: '#a0a2a91f'
-                }
-            ]
         }
     }
     const uiSchemaToAdd = {
+        rcExtensionList: {
+            "ui:widget": "AutocompleteWidget",
+            "ui:placeholder": "Start typing a RingCentral user name..."
+        },
         phoneActivityTitle: {
             "ui:field": "typography",
             "ui:variant": "body1"
@@ -143,23 +146,43 @@ function getMyReportTabRender({ page, userStats, userSettings }) {
             'ui:itemHeight': '100px',
             'ui:showSelected': false,
             'ui:readonly': true
-        },
-        unloggedCallTitle: {
+        }
+    }
+    const formDataToAdd = {
+        rcExtensionList: selectedRcExtension || 'me',
+        dateRangeEnums: userStats?.dateRange || 'Last 24 hours',
+        startDate: userStats?.startDate || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        endDate: userStats?.endDate || new Date(Date.now()).toISOString().split('T')[0]
+    }
+    if (formDataToAdd.rcExtensionList === 'me') {
+        schemaToAdd.unloggedCallTitle = {
+            type: 'string',
+            description: 'Unlogged calls'
+        };
+        schemaToAdd.unloggedCallSummary = {
+            type: 'string',
+            oneOf: [
+                {
+                    const: 'unloggedCallCount',
+                    value: (userStats?.unloggedCallStats?.unloggedCallCount || 0).toString(),
+                    trend: '(click to view)',
+                    trendColor: 'success.f02',
+                    title: 'unlogged calls',
+                    backgroundColor: '#a0a2a91f'
+                }
+            ]
+        };
+        uiSchemaToAdd.unloggedCallTitle = {
             "ui:field": "typography",
             "ui:variant": "body1"
-        },
-        unloggedCallSummary: {
+        };
+        uiSchemaToAdd.unloggedCallSummary = {
             'ui:field': 'list',
             'ui:itemType': 'metric',
             'ui:itemWidth': '48%',
             'ui:itemHeight': '100px',
             'ui:showSelected': false
-        }
-    }
-    const formDataToAdd = {
-        dateRangeEnums: userStats?.dateRange || 'Last 24 hours',
-        startDate: userStats?.startDate || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        endDate: userStats?.endDate || new Date(Date.now()).toISOString().split('T')[0]
+        };
     }
     // eslint-disable-next-line no-param-reassign
     page.schema.properties = { ...page.schema.properties, ...schemaToAdd };
@@ -169,11 +192,12 @@ function getMyReportTabRender({ page, userStats, userSettings }) {
     page.formData = { ...page.formData, ...formDataToAdd };
     if (userStats?.dateRange === 'Select date range...') {
         const properties = { ...page.schema.properties };
-        const { tab, dateRangeEnums, ...otherProperties } = properties;
+        const { tab, rcExtensionList, dateRangeEnums, ...otherProperties } = properties;
 
         // eslint-disable-next-line no-param-reassign
         page.schema.properties = {
             tab,
+            rcExtensionList,
             dateRangeEnums,
             startDate: {
                 type: 'string',
@@ -191,4 +215,4 @@ function getMyReportTabRender({ page, userStats, userSettings }) {
     return page;
 }
 
-export default getMyReportTabRender;
+export default getUserReportTabRender;

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
-import rcAPI from '../lib/rcAPI';
+import { RcAPI } from '../lib/rcAPI';
 import { parsePhoneNumber } from 'awesome-phonenumber';
 import { getRcAccessToken, getRcContactInfo, showNotification } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
@@ -369,6 +369,7 @@ async function authServerSideLogging({ platform }) {
     const rcClientId = "Y4m1YREFKbXdDoet5djv46";
     const serverDomainUrl = platform.serverSideLogging.url;
     // Auth
+    const rcAPI = new RcAPI();
     const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
     const serverSideLoggingTokenResp = await axios.get(
         `${serverDomainUrl}/oauth/callback?code=${rcInteropCode}&&rcAccountId=${rcUserInfo?.rcAccountId}`,
@@ -388,6 +389,7 @@ async function authAppConnectServer({ serverUrl, jwtToken }) {
         const rcAccessToken = getRcAccessToken();
         // eslint-disable-next-line no-undef
         const rcClientId = process.env.RC_CLIENT_ID;
+        const rcAPI = new RcAPI();
         const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
         const serverSideLoggingTokenResp = await axios.get(
             `${serverUrl}/ringcentral/oauth/callback?code=${rcInteropCode}&jwtToken=${jwtToken}`,
@@ -404,6 +406,9 @@ async function authAppConnectServer({ serverUrl, jwtToken }) {
 }
 
 async function getAdminReportStats({ serverUrl, timezone, timeFrom, timeTo, jwtToken }) {
+    if (timeFrom === undefined || timeTo === undefined) {
+        return null;
+    }
     const adminReportStatsResp = await axios.get(
         `${serverUrl}/ringcentral/admin/report?jwtToken=${jwtToken}&timezone=${timezone}&timeFrom=${timeFrom}&timeTo=${timeTo}`,
         {
@@ -413,6 +418,16 @@ async function getAdminReportStats({ serverUrl, timezone, timeFrom, timeTo, jwtT
         }
     );
     return adminReportStatsResp.data;
+}
+
+async function getUserExtensionReportStats({ serverUrl, rcExtensionId, timezone, timeFrom, timeTo, jwtToken }) {
+    if (timeFrom === undefined || timeTo === undefined) {
+        return null;
+    }
+    const userReportStatsResp = await axios.get(
+        `${serverUrl}/ringcentral/admin/userReport?jwtToken=${jwtToken}&rcExtensionId=${rcExtensionId}&timezone=${timezone}&timeFrom=${timeFrom}&timeTo=${timeTo}`,
+    );
+    return userReportStatsResp.data;
 }
 
 async function getUserMapping({ serverUrl }) {
@@ -441,4 +456,5 @@ exports.getServerSideLoggingAdditionalFieldValues = getServerSideLoggingAddition
 exports.uploadServerSideLoggingAdditionalFieldValues = uploadServerSideLoggingAdditionalFieldValues;
 exports.authAppConnectServer = authAppConnectServer;
 exports.getUserMapping = getUserMapping;
+exports.getUserExtensionReportStats = getUserExtensionReportStats;
 exports.getAdminReportStats = getAdminReportStats;
