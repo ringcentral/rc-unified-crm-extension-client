@@ -684,7 +684,7 @@ async function getServiceManifest() {
                 type: "option",
                 name: "New contact type (applicable when creating new contact)",
                 helper: "When creating a placeholder contact, what contact type it should be",
-                options: platform.contactTypes ?
+                options: (platform.contactTypes && platform.contactTypes.length) > 0 ?
                     platform.contactTypes.map(contactType => ({
                         id: contactType.value,
                         name: contactType.display

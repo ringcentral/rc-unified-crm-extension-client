@@ -17,7 +17,7 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
                 break;
         }
         const newPlatform = {
-            const: platform.id,
+            const: `${platform.id}=${platform.type}`,
             title: platform.displayName ?? platform.name,
             icon: platform.iconUrl ? platform.iconUrl : 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
             description: `by ${platform.developer.name}`,

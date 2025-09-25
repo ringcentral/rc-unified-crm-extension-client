@@ -2844,22 +2844,23 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'selectPlatform':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  const selectedPlatform = data.body.button.formData.platformList.find(platform => platform.id === listButtonItemId);
-                  const platformType = selectedPlatform.type;
+                  const selectedPlatformId = listButtonItemId.split('=')[0];
+                  const selectedPlatformType = listButtonItemId.split('=')[1];
+                  const selectedPlatform = data.body.button.formData.platformList.find(platform => platform.id === selectedPlatformId);
                   platformName = selectedPlatform.name;
                   let platformManifestResponse;
-                  switch (platformType) {
+                  switch (selectedPlatformType) {
                     case 'public':
                       platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest`);
                       await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest` });
                       break;
                     case 'shared':
-                      platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${selectedPlatform.accountId}`);
-                      await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${selectedPlatform.accountId}` });
+                      platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${rcInfo.value.cachedData.accountInfo.id}`);
+                      await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${rcInfo.value.cachedData.accountInfo.id}` });
                       break;
                     case 'private':
-                      platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${selectedPlatform.accountId}`);
-                      await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${selectedPlatform.accountId}` });
+                      platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${rcInfo.value.cachedData.accountInfo.id}`);
+                      await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${rcInfo.value.cachedData.accountInfo.id}` });
                       break;
                   }
                   manifest = await saveManifest({ manifest: platformManifestResponse.data });
