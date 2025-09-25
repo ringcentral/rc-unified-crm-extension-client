@@ -700,7 +700,7 @@ async function getServiceManifest() {
                 id: "newContactNamePrefix",
                 type: "string",
                 name: "New contact name prefix (applicable when creating new contact)",
-                helper: "When creating a placeholder contact, what name prefix it should have",
+                helper: "Name would have Caller ID (if available) + Phone number",
                 value: userCore.getNewContactNamePrefixSetting(userSettings).value,
                 readOnly: userCore.getNewContactNamePrefixSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getNewContactNamePrefixSetting(userSettings).readOnlyReason

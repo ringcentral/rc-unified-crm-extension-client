@@ -1206,7 +1206,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'autoLogPreferences':
-                  const autoLogPreferencesPageRender = autoLogPreferencesPage.getAutoLogPreferenceSettingPageRender({ adminUserSettings: adminSettings?.userSettings, contactTypes: platform.contactTypes ?? [{ value: 'contact', display: 'Contact' }] });
+                  const autoLogPreferencesPageRender = autoLogPreferencesPage.getAutoLogPreferenceSettingPageRender({ adminUserSettings: adminSettings?.userSettings, contactTypes: (platform.contactTypes && platform.contactTypes.length > 0) ? platform.contactTypes : [{ value: 'contact', display: 'Contact' }] });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: autoLogPreferencesPageRender
@@ -1695,7 +1695,9 @@ window.addEventListener('message', async (e) => {
                       // Sub-case: Unknown contact
                       if (conflictType === CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE) {
                         if (userCore.getUnknownContactPreferenceSetting(userSettings).value === 'createNewPlaceholderContact') {
-                          const newContactName = userCore.getNewContactNamePrefixSetting(userSettings).value + ' ' + moment(data.body.call.startTime).format('YYYYMMDDHHmmss');
+                          const callerId = data.body.call.direction === 'Inbound' ? data.body.call.from.name : data.body.call.to.name;
+                          let newContactName = (callerId ? callerId : '') + ' ' + (data.body.call.direction === 'Inbound' ? data.body.call.from.phoneNumber : data.body.call.to.phoneNumber);
+                          newContactName = userCore.getNewContactNamePrefixSetting(userSettings).value + newContactName;
                           const newContactType = userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value;
                           let additionalSubmission = {};
                           if (platform.page?.newContact?.additionalFields) {
