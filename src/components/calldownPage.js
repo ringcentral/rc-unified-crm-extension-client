@@ -72,7 +72,7 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
     };
 
     try {
-        const { data } = await axios.get(`${manifest.serverUrl}/calldown/list`, {
+        const { data } = await axios.get(`${manifest.serverUrl}/calldown`, {
             params: {
                 jwtToken,
                 status: resolvedStatus

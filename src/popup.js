@@ -1717,7 +1717,7 @@ window.addEventListener('message', async (e) => {
                             scheduledAt: data.body.formData.callbackDateTime,
                             note: data.body.formData.note ?? ''
                           };
-                          await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, schedulePayload);
+                          await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, schedulePayload);
                           // Refresh Call-down tab data and badge right after scheduling
                           try {
                             const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
@@ -2547,7 +2547,7 @@ window.addEventListener('message', async (e) => {
                         if (created?.contactInfo?.id) {
                           contactIdToUse = created.contactInfo.id;
                           showNotification({ level: 'success', message: 'Contact created', ttl: 3000 });
-                          await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
+                          await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
                           showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
                           try {
                             document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
@@ -2563,7 +2563,7 @@ window.addEventListener('message', async (e) => {
                         showNotification({ level: 'warning', message: 'Contact creation failed', ttl: 3000 });
                       }
                     } else {
-                      await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
+                      await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
                       // Notify user on success
                       try {
                         showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
@@ -2597,8 +2597,8 @@ window.addEventListener('message', async (e) => {
                         const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                         const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
                         const rcAccountId = rcUserInfo?.rcAccountId ?? '';
-                        await axios.patch(`${manifest.serverUrl}/calldown/markCalled?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`,
-                          { id: rowId, lastCallAt: new Date().toISOString() });
+                        await axios.patch(`${manifest.serverUrl}/calldown/${rowId}?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`,
+                          { lastCallAt: new Date().toISOString() });
                       } catch (e) { console.log(e); }
                       // Refresh Call-down list and pill
                       try {
@@ -2693,7 +2693,7 @@ window.addEventListener('message', async (e) => {
                     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                     const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
                     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
-                    await axios.patch(`${manifest.serverUrl}/calldown/markCalled?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { id: rowId, lastCallAt: new Date().toISOString() });
+                    await axios.patch(`${manifest.serverUrl}/calldown/${rowId}?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { lastCallAt: new Date().toISOString() });
                     const refreshed = await calldownPage.getCalldownPageWithRecords({
                       manifest,
                       jwtToken: rcUnifiedCrmExtJwt,
@@ -2712,7 +2712,7 @@ window.addEventListener('message', async (e) => {
                     const btn = data.body.button || {};
                     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                     const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || recordIdFromId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
-                    await axios.delete(`${manifest.serverUrl}/calldown/item?jwtToken=${rcUnifiedCrmExtJwt}&id=${rowId}`);
+                    await axios.delete(`${manifest.serverUrl}/calldown/${rowId}?jwtToken=${rcUnifiedCrmExtJwt}`);
                     // refresh list in place
                     const refreshed = await calldownPage.getCalldownPageWithRecords({
                       manifest,
@@ -3548,7 +3548,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             const rcAccountId = rcUserInfo?.rcAccountId ?? '';
             const { phone, note, callbackDateTime } = data.body?.formData || {};
             if (!callbackDateTime) return;
-            await axios.post(`${manifest.serverUrl}/calldown/schedule?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: data.body?.formData?.contact, note });
+            await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: data.body?.formData?.contact, note });
             try {
               const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
               document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: calldownPageRender }, '*');
