@@ -217,7 +217,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings }) {
                 },
                 addCallLogLegs: {
                     type: 'object',
-                    title: 'Call journey - BETA (Only available for Server-side logging)',
+                    title: 'Call journey - (Server-side logging only)',
                     properties: {
                         value: {
                             type: 'boolean',
