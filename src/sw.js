@@ -181,13 +181,23 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     sendResponse({ result: 'ok' });
     return;
   }
-  if (request.type === 'c2d' || request.type === 'c2sms') {
-    const isPopupExist = await openPopupWindow();
-    if (!isPopupExist) {
-      cachedClickToXRequest = {
-        type: request.type,
-        phoneNumber: request.phoneNumber,
-      }
+  if (request.type === 'c2d' || request.type === 'c2sms' || request.type === 'c2schedule') {
+    const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
+    if (popupWindowId) {
+      // Bring the existing popup to front
+      try {
+        const win = await chrome.windows.get(popupWindowId);
+        if (win.state === 'minimized') {
+          await chrome.windows.update(popupWindowId, { state: 'normal' });
+        }
+        await chrome.windows.update(popupWindowId, { focused: true });
+      } catch (e) { /* ignore */ }
+      // Popup already open: forward directly to ensure latest intent wins
+      chrome.runtime.sendMessage({ type: request.type, phoneNumber: request.phoneNumber });
+    } else {
+      // Cold start: cache latest intent (overwrite any previous) and open
+      cachedClickToXRequest = { type: request.type, phoneNumber: request.phoneNumber, at: Date.now() };
+      await openPopupWindow();
     }
   }
   if (request.type === 'checkForClickToXCache') {

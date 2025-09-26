@@ -35,6 +35,14 @@ async function getServiceManifest() {
         customizedPageInputChangedEventPath: '/customizedPage/inputChanged',
         contactMatchPath: '/contacts/match',
         viewMatchedContactPath: '/contacts/view',
+        // Where the embeddable will post button click events to
+        buttonEventPath: '/custom-button-click',
+        // Direct button registration (older/newer builds may read this)
+        buttons: [
+            { id: 'callLater', type: 'callAction', label: 'Call later', icon: 'calendar' },
+            { id: 'callLaterInMessage', type: 'messageAction', label: 'Call later', icon: 'calendar' },
+            { id: 'callLaterInContact', type: 'contactAction', label: 'Call later', icon: 'calendar' }
+        ],
         contactMatchTtl: 7 * 24 * 60 * 60 * 1000, // contact match cache time in seconds, set as 7 days
         contactNoMatchTtl: 7 * 24 * 60 * 60 * 1000, // contact no match cache time in seconds, default is 5 minutes, from v1.10.2
 
@@ -222,6 +230,14 @@ async function getServiceManifest() {
                                 value: userCore.getShowUserReportTabSetting(userSettings).value,
                                 readOnly: userCore.getShowUserReportTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowUserReportTabSetting(userSettings).readOnlyReason
+                            },
+                            {
+                                id: 'showCalldownTab',
+                                type: 'boolean',
+                                name: 'Show Call-down tab',
+                                value: userCore.getShowCalldownTabSetting(userSettings).value,
+                                readOnly: userCore.getShowCalldownTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowCalldownTabSetting(userSettings).readOnlyReason
                             }
                         ]
                     },
@@ -394,8 +410,7 @@ async function getServiceManifest() {
                     }
                 ]
             }
-        ],
-        buttonEventPath: '/custom-button-click'
+        ]
     }
 
     if (platform.useLicense) {
