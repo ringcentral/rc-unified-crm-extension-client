@@ -42,6 +42,16 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             note: {
                 title: 'Note',
                 type: 'string'
+            },
+            scheduleCallback: {
+                title: 'Schedule callback',
+                type: 'boolean'
+            },
+            callbackDateTime: {
+                title: 'Callback time',
+                type: 'string',
+                format: 'date-time',
+                minimum: new Date().toISOString()
             }
         }
         callUISchemas = {
@@ -51,11 +61,19 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             note: {
                 "ui:placeholder": 'Enter note...',
                 "ui:widget": "textarea",
+            },
+            callbackDateTime: {
+                "ui:widget": "datetime"
+            },
+            submitButtonOptions: {
+                "ui:disabled": false
             }
         }
         callFormData = {
             activityTitle: (!!logInfo?.subject & logInfo.subject !== '') ? logInfo.subject : defaultActivityTitle,
             note: logInfo?.note ?? '',
+            scheduleCallback: false,
+            callbackDateTime: ''
         }
     }
     let page = {};
@@ -273,7 +291,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     },
                     ...callUISchemas,
                     ...newContactWidget,
-                    ...addiitionalWarningUISchemas
+                    ...addiitionalWarningUISchemas,
+                    // Always render scheduling fields at the end
+                    "ui:order": ["*", "scheduleCallback", "callbackDateTime"]
                 },
                 formData: {
                     id,
@@ -289,6 +309,10 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     ...callFormData,
                     ...additionalFieldsValue
                 }
+            }
+            // Hide callbackDateTime when scheduleCallback is false
+            if (!page.formData.scheduleCallback) {
+                page.uiSchema.callbackDateTime = { "ui:widget": "hidden" };
             }
             break;
         case 'editLog':
@@ -326,10 +350,15 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         "ui:placeholder": 'Enter note...',
                         "ui:widget": "textarea",
                     },
+                    callbackDateTime: {
+                        "ui:widget": "datetime"
+                    },
                     submitButtonOptions: {
                         submitText: 'Update',
                     },
-                    ...addiitionalWarningUISchemas
+                    ...addiitionalWarningUISchemas,
+                    // Always render scheduling fields at the end
+                    "ui:order": ["*", "scheduleCallback", "callbackDateTime"]
                 },
                 formData: {
                     id,
@@ -338,6 +367,8 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     triggerType,
                     note: logInfo?.note ?? '',
                     contactPhoneNumber,
+                    scheduleCallback: false,
+                    callbackDateTime: '',
                     ...additionalFieldsValue
                 }
             }
@@ -353,6 +384,47 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
     page.formData = updateData.formData;
     const contact = page.schema.properties.contact.oneOf.find(c => c.const === page.formData.contact);
     switch (updatedFieldKey) {
+        case 'scheduleCallback':
+            if (page.formData.scheduleCallback) {
+                // show and set minimum to now
+                page.uiSchema.callbackDateTime = { "ui:widget": "datetime" };
+                page.schema.properties.callbackDateTime = {
+                    ...(page.schema.properties.callbackDateTime || { title: 'Callback time', type: 'string', format: 'date-time' }),
+                    minimum: new Date().toISOString()
+                };
+                // mark callback time as required so Save disables until provided
+                if (!Array.isArray(page.schema.required)) {
+                    page.schema.required = [];
+                }
+                if (!page.schema.required.includes('callbackDateTime')) {
+                    page.schema.required.push('callbackDateTime');
+                }
+                // disable Save until a callback time is provided
+                page.uiSchema.submitButtonOptions = {
+                    ...page.uiSchema.submitButtonOptions,
+                    "ui:disabled": !page.formData.callbackDateTime
+                };
+            } else {
+                page.uiSchema.callbackDateTime = { "ui:widget": "hidden" };
+                page.formData.callbackDateTime = '';
+                // remove required flag when scheduling is off
+                if (Array.isArray(page.schema.required)) {
+                    page.schema.required = page.schema.required.filter(r => r !== 'callbackDateTime');
+                }
+                // enable Save when scheduling is off
+                page.uiSchema.submitButtonOptions = {
+                    ...page.uiSchema.submitButtonOptions,
+                    "ui:disabled": false
+                };
+            }
+            break;
+        case 'callbackDateTime':
+            // if scheduling is enabled, enable Save only when time is set
+            page.uiSchema.submitButtonOptions = {
+                ...page.uiSchema.submitButtonOptions,
+                "ui:disabled": (page.formData.scheduleCallback === true) && !page.formData.callbackDateTime
+            };
+            break;
         case 'contact':
             // New contact fields
             if (contact.isNewContact) {
@@ -488,6 +560,10 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             page.uiSchema = {
                 ...page.uiSchema,
                 ...addiitionalWarningUISchemas
+            }
+            // Hide callbackDateTime when scheduleCallback is false
+            if (!page.formData.scheduleCallback) {
+                page.uiSchema.callbackDateTime = { "ui:widget": "hidden" };
             }
             break;
         case 'newContactType':

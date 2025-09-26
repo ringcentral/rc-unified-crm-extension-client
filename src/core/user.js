@@ -4,6 +4,7 @@ import { getManifest } from '../service/manifestService';
 import adminCore from './admin';
 import { getServiceManifest } from '../service/embeddableServices';
 import reportPage from '../components/reportPage/reportPage';
+import calldownPage from '../components/calldownPage';
 import { RcAPI } from '../lib/rcAPI';
 
 async function getUserReportStats({ dateRange, customStartDate, customEndDate }) {
@@ -121,7 +122,8 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         fax: getShowFaxTabSetting(userSettings).value,
         voicemail: getShowVoicemailTabSetting(userSettings).value,
         recordings: getShowRecordingsTabSetting(userSettings).value,
-        contacts: getShowContactsTabSetting(userSettings).value
+        contacts: getShowContactsTabSetting(userSettings).value,
+        calldown: getShowCalldownTabSetting(userSettings).value
     }, '*');
     const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false);
     const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
@@ -150,6 +152,12 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: reportPageRender,
+    }, '*');
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: calldownPageRender,
     }, '*');
     return userSettings;
 }
@@ -366,6 +374,14 @@ function getShowContactsTabSetting(userSettings) {
         value: userSettings?.showContactsTab?.value ?? true,
         readOnly: userSettings?.showContactsTab?.customizable === undefined ? false : !userSettings?.showContactsTab?.customizable,
         readOnlyReason: !userSettings?.showContactsTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getShowCalldownTabSetting(userSettings) {
+    return {
+        value: userSettings?.showCalldownTab?.value ?? true,
+        readOnly: userSettings?.showCalldownTab?.customizable === undefined ? false : !userSettings?.showCalldownTab?.customizable,
+        readOnlyReason: !userSettings?.showCalldownTab?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -618,6 +634,7 @@ exports.getAddCallLogResultSetting = getAddCallLogResultSetting;
 exports.getAddCallLogRecordingSetting = getAddCallLogRecordingSetting;
 exports.getAddCallLogAiNoteSetting = getAddCallLogAiNoteSetting;
 exports.getAddCallLogTranscriptSetting = getAddCallLogTranscriptSetting;
+exports.getShowCalldownTabSetting = getShowCalldownTabSetting;
 exports.getUnknownContactPreferenceSetting = getUnknownContactPreferenceSetting;
 exports.getMultipleContactsPreferenceSetting = getMultipleContactsPreferenceSetting;
 exports.getNewContactTypeSetting = getNewContactTypeSetting;

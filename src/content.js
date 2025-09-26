@@ -1,6 +1,7 @@
 import LibPhoneNumberMatcher from './lib/LibPhoneNumberMatcher'
 import RangeObserver from './lib/RangeObserver'
 import App from './components/embedded';
+import CustomC2DWidget from './misc/CustomC2DWidget'
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { RcThemeProvider } from '@ringcentral/juno';
@@ -81,6 +82,7 @@ async function initializeC2D() {
   const { matchAllNumbers } = await chrome.storage.local.get({ matchAllNumbers: false });
 
   window.clickToDialInject = new window.RingCentralC2D({
+    widget: new CustomC2DWidget(),
     observer: new RangeObserver({
       matcher: new LibPhoneNumberMatcher({
         countryCode: countryCode.selectedRegion,
@@ -109,6 +111,16 @@ async function initializeC2D() {
         type: 'c2sms',
         phoneNumber,
       });
+    },
+  );
+
+  // Schedule click handler
+  window.clickToDialInject.widget.on(
+    'schedule',
+    function (phoneNumber) {
+      console.log('Click To Schedule:', phoneNumber);
+      // Single source of truth: let SW open the window and cache the request
+      sendMessageToExtension({ type: 'c2schedule', phoneNumber });
     },
   );
 }
@@ -154,11 +166,7 @@ chrome.runtime.onMessage.addListener(
 );
 
 function Root() {
-  return React.createElement(
-    RcThemeProvider,
-    null,
-    React.createElement(App, null)
-  );
+  return React.createElement(RcThemeProvider, null, React.createElement(App, null));
 }
 
 async function RenderQuickAccessButton() {
@@ -171,7 +179,7 @@ async function RenderQuickAccessButton() {
   const rootElement = window.document.createElement('root');
   rootElement.id = 'rc-crm-extension-quick-access-button';
   window.document.body.appendChild(rootElement);
-  ReactDOM.render(Root(), rootElement);
+  ReactDOM.render(React.createElement(Root, null), rootElement);
 }
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
