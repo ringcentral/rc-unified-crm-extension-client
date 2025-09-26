@@ -7,7 +7,7 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
         let meta = '';
         switch (platform.type) {
             case 'public':
-                meta = 'Public';
+                meta = '';
                 break;
             case 'shared':
                 meta = 'Shared with you';
@@ -72,9 +72,8 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
                 "ui:placeholder": "Search with filters...",
                 "ui:filters": [
                     "All",
-                    "Public",
-                    "Shared with you",
-                    "Private"
+                    "Private",
+                    "Shared with you"
                 ]
             },
             platforms: {

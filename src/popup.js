@@ -2386,7 +2386,6 @@ window.addEventListener('message', async (e) => {
                   manifest = await getManifest();
                   platform = manifest.platforms[platformName];
                   await onUserClickConnectButton();
-                  showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
                   break;
                 case 'callAndSMSLoggingSettingPage':
                 case 'contactSettingPage':
@@ -2882,7 +2881,6 @@ window.addEventListener('message', async (e) => {
                     }, '*');
                     platform = manifest.platforms[platformName];
                     await onUserClickConnectButton();
-                    showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
                   }
                   else {
                     const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender({
@@ -2940,8 +2938,10 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
     }
     else if (request.platform === 'thirdParty') {
+      window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
       platform = manifest.platforms[platformName];
       const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri, useLicense: platform.useLicense });
+      window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
       try {
         await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
       }
