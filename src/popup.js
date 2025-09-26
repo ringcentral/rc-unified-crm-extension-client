@@ -1000,7 +1000,7 @@ window.addEventListener('message', async (e) => {
                                 timezone,
                                 timeFrom,
                                 timeTo,
-                                rcExtensionId: data.body.formData.rcExtensionList
+                                rcExtensionId: data.body.formData.rcExtensionList ?? '~'
                               });
                               break;
                           }
