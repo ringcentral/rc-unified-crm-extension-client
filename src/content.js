@@ -219,6 +219,7 @@ async function Initialize() {
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/fast-add')
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/actions/compose-message')
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/tools/template')
+    && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/actions/publish-job')
     && window.self === window.top
     && renderQuickAccessButton) {
     await RenderQuickAccessButton();
@@ -233,6 +234,7 @@ async function Initialize() {
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/fast-add')
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/actions/compose-message')
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/tools/template')
+    && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/actions/publish-job')
   ) {
     await initializeC2D();
   }
