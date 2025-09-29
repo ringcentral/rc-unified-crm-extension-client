@@ -187,12 +187,11 @@ window.addEventListener('message', async (e) => {
                   const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: false });
                   const contacts = (res?.contactInfo || []).filter(c => !c.isNewContact);
                   const contactOptions = contacts.map(c => ({ const: c.id, title: c.name }));
-                  const placeholderOption = { const: '', title: 'Select contact' };
                   const newContactOption = { const: 'newContact', title: 'Create new contact' };
-                  const listOneOf = [placeholderOption, ...contactOptions, newContactOption];
+                  const listOneOf = [...contactOptions, newContactOption];
                   // Default to Create new contact when there is no match
                   const isDefaultNew = contacts.length === 0;
-                  const preselect = isDefaultNew ? 'newContact' : '';
+                  const preselect = isDefaultNew ? 'newContact' : (contactOptions[0]?.const ?? '');
                   const ct = manifest.platforms[platformName]?.contactTypes || [];
                   const schedulePage = {
                     id: 'c2dSchedulePage',
@@ -212,7 +211,7 @@ window.addEventListener('message', async (e) => {
                     },
                     uiSchema: {
                       phone: { 'ui:disabled': true },
-                      contact: { 'ui:field': 'select', 'ui:placeholder': 'Select contact' },
+                      contact: {},
                       newContactName: isDefaultNew ? { 'ui:widget': 'text', 'ui:placeholder': 'Enter name...' } : { 'ui:widget': 'hidden' },
                       ...(ct.length > 0 ? { newContactType: isDefaultNew ? {} : { 'ui:widget': 'hidden' } } : {}),
                       callbackDateTime: { 'ui:widget': 'datetime' },
@@ -3503,11 +3502,10 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: false });
       const contacts = (res?.contactInfo || []).filter(c => !c.isNewContact);
       const contactOptions = contacts.map(c => ({ const: c.id, title: c.name }));
-      const placeholderOption = { const: '', title: 'Select contact' };
       const newContactOption = { const: 'newContact', title: 'Create new contact' };
-      const listOneOf = [placeholderOption, ...contactOptions, newContactOption];
+      const listOneOf = [...contactOptions, newContactOption];
       const isDefaultNew = contacts.length === 0;
-      const preselect = isDefaultNew ? 'newContact' : '';
+      const preselect = isDefaultNew ? 'newContact' : (contactOptions[0]?.const ?? '');
       const schedulePage = {
         id: 'c2dSchedulePage',
         title: 'Add to call-down list',
@@ -3526,7 +3524,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         },
         uiSchema: {
           phone: { 'ui:disabled': true },
-          contact: { 'ui:field': 'select', 'ui:placeholder': 'Select contact' },
+          contact: {},
           newContactName: isDefaultNew ? { 'ui:widget': 'text', 'ui:placeholder': 'Enter name...' } : { 'ui:widget': 'hidden' },
           ...(manifest.platforms[platformName]?.contactTypes?.length > 0 ? { newContactType: isDefaultNew ? {} : { 'ui:widget': 'hidden' } } : {}),
           callbackDateTime: { 'ui:widget': 'datetime' },
