@@ -188,7 +188,8 @@ window.addEventListener('message', async (e) => {
                   const contacts = (res?.contactInfo || []).filter(c => !c.isNewContact);
                   const contactOptions = contacts.map(c => ({ const: c.id, title: c.name }));
                   const newContactOption = { const: 'newContact', title: 'Create new contact' };
-                  const listOneOf = [...contactOptions, newContactOption];
+                  const searchContactOption = { const: 'searchContact', title: 'Search contacts' };
+                  const listOneOf = [...contactOptions, newContactOption, searchContactOption];
                   // Default to Create new contact when there is no match
                   const isDefaultNew = contacts.length === 0;
                   const preselect = isDefaultNew ? 'newContact' : (contactOptions[0]?.const ?? '');
@@ -783,6 +784,17 @@ window.addEventListener('message', async (e) => {
                     const page = data.body.page;
                     const keys = Array.isArray(data.body.keys) ? data.body.keys : [];
                     const contactChanged = keys.includes('contact');
+                    if (contactChanged && formData.contact === 'searchContact') {
+                      const contactSearchRender = contactSearch.getCustomContactSearch({ contactSearchAdapterButton: 'contactSearchAdapterButtonSchedule', contactPhoneNumber: formData?.phone });
+                      document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: contactSearchRender
+                      });
+                      document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+                        type: 'rc-adapter-navigate-to',
+                        path: `/customized/${contactSearchRender.id}`
+                      }, '*');
+                    }
                     const needsToggle = contactChanged || (schedulePageIsNewSelected !== isNew);
                     const needsEnable = schedulePageSubmitEnabled !== enabled;
                     if (needsToggle || needsEnable) {
@@ -1054,6 +1066,59 @@ window.addEventListener('message', async (e) => {
                     }, '*');
                   }
                   break;
+                case 'contactSearchResultSchedule': {
+                  try {
+                    const phoneNumber = data.body.page.formData.contactPhoneNumber;
+                    let selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
+                    selectedContact = { ...selectedContact };
+                    delete selectedContact.isNewContact;
+                    // Rebuild schedule page with selected contact preselected
+                    const platformInfo = await getPlatformInfo();
+                    const pName = platformInfo.platformName;
+                    const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName: pName, isForceRefresh: true, isToTriggerContactMatch: false });
+                    const contacts = (res?.contactInfo || []).filter(c => !c.isNewContact);
+                    const contactOptions = contacts.map(c => ({ const: c.id, title: c.name }));
+                    // Ensure selected contact exists in list
+                    if (!contactOptions.some(c => c.const === selectedContact.id)) {
+                      contactOptions.unshift({ const: selectedContact.id, title: selectedContact.name });
+                    }
+                    const newContactOption = { const: 'newContact', title: 'Create new contact' };
+                    const searchContactOption = { const: 'searchContact', title: 'Search contacts' };
+                    const listOneOf = [...contactOptions, newContactOption, searchContactOption];
+                    const ct = manifest.platforms[pName]?.contactTypes || [];
+                    const schedulePage = {
+                      id: 'c2dSchedulePage',
+                      title: 'Add to call-down list',
+                      type: 'page',
+                      schema: {
+                        type: 'object',
+                        required: ['callbackDateTime'],
+                        properties: {
+                          phone: { type: 'string', title: 'Phone Number' },
+                          contact: { type: 'string', title: 'Contact', oneOf: listOneOf },
+                          newContactName: { type: 'string', title: 'New contact name' },
+                          ...(ct.length > 0 ? { newContactType: { type: 'string', title: 'Contact type', oneOf: ct.map(t => ({ const: t.value, title: t.display })) } } : {}),
+                          callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
+                          scheduleSubmit: { type: 'string', title: 'Schedule' },
+                        }
+                      },
+                      uiSchema: {
+                        phone: { 'ui:disabled': true },
+                        contact: {},
+                        newContactName: { 'ui:widget': 'hidden' },
+                        ...(ct.length > 0 ? { newContactType: { 'ui:widget': 'hidden' } } : {}),
+                        callbackDateTime: { 'ui:widget': 'datetime' },
+                        scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit', 'ui:disabled': true },
+                      },
+                      formData: { phone: phoneNumber, contact: selectedContact.id, newContactName: '', newContactType: '', callbackDateTime: '' }
+                    };
+                    schedulePageSubmitEnabled = false;
+                    schedulePageIsNewSelected = false;
+                    document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
+                    document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${schedulePage.id}` }, '*');
+                  } catch (e) { /* ignore */ }
+                  break;
+                }
                 case 'reportPage':
                   const { isAdmin } = await chrome.storage.local.get('isAdmin');
                   let rcExtensions;
@@ -3228,6 +3293,14 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
+                case 'contactSearchAdapterButtonSchedule':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const scheduleSearchStr = data.body.button.formData.contactNameToSearch;
+                  const scheduleSearchRes = await contactSearch.getCustomContactSearchData({ serverUrl: manifest.serverUrl, platform, contactSearch: scheduleSearchStr, pageId: "contactSearchResultSchedule", contactPhoneNumber: data.body.button.formData?.contactPhoneNumber });
+                  document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: scheduleSearchRes });
+                  document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${scheduleSearchRes.id}` }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
                 case 'refreshLicense':
                   if (platform.useLicense) {
                     await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
@@ -3503,7 +3576,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       const contacts = (res?.contactInfo || []).filter(c => !c.isNewContact);
       const contactOptions = contacts.map(c => ({ const: c.id, title: c.name }));
       const newContactOption = { const: 'newContact', title: 'Create new contact' };
-      const listOneOf = [...contactOptions, newContactOption];
+      const searchContactOption = { const: 'searchContact', title: 'Search contacts' };
+      const listOneOf = [...contactOptions, newContactOption, searchContactOption];
       const isDefaultNew = contacts.length === 0;
       const preselect = isDefaultNew ? 'newContact' : (contactOptions[0]?.const ?? '');
       const schedulePage = {
@@ -3558,6 +3632,38 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
       };
       window.addEventListener('message', onMessage);
+      // Handle schedule page contact search result selection
+      const onMessageScheduleSearch = async (e) => {
+        const data = e.data;
+        if (!data) return;
+        if (data.type === 'rc-post-message-request' && data.path === '/customized-form-change' && (data.body?.page?.id === 'contactSearchResultSchedule')) {
+          document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-post-message-response', responseId: data.requestId, response: { data: 'ok' } }, '*');
+          try {
+            if (Array.isArray(data.body.keys) && data.body.keys.includes('contactInfo')) {
+              let selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
+              selectedContact = { ...selectedContact };
+              delete selectedContact.isNewContact;
+              const updated = {
+                id: 'c2dSchedulePage',
+                title: 'Add to call-down list',
+                type: 'page',
+                schema: undefined,
+                uiSchema: undefined,
+                formData: {
+                  phone: data.body.page.formData.contactPhoneNumber,
+                  contact: selectedContact.id,
+                  newContactName: '',
+                  callbackDateTime: ''
+                }
+              };
+              document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: updated }, '*');
+              document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${updated.id}` }, '*');
+              window.removeEventListener('message', onMessageScheduleSearch);
+            }
+          } catch (e) { /* ignore */ }
+        }
+      };
+      window.addEventListener('message', onMessageScheduleSearch);
     } catch (e) { console.log(e); }
     finally { setTimeout(() => { isOpeningSchedule = false; }, 1500); }
     try { window.postMessage({ type: 'rc-log-modal-loading-off' }, '*'); } catch (e) { /* ignore */ }
