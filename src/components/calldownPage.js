@@ -7,7 +7,7 @@ function getCalldownPageRender() {
         id: 'calldownPage',
         title: 'Call-down',
         type: 'tab',
-        priority: 106,
+        priority: 67,
         iconUri: callIcon,
         activeIconUri: callIcon,
         darkIconUri: callIcon,

@@ -62,6 +62,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 "ui:placeholder": 'Enter note...',
                 "ui:widget": "textarea",
             },
+            scheduleCallback: {
+                "ui:help": 'Add this contact to the call-down list'
+            },
             callbackDateTime: {
                 "ui:widget": "datetime"
             },
