@@ -1072,6 +1072,13 @@ window.addEventListener('message', async (e) => {
                     let selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
                     selectedContact = { ...selectedContact };
                     delete selectedContact.isNewContact;
+                    // Persist into a local cache so calldown list can enrich from it even if matcher lacks it
+                    try {
+                      const stored = await chrome.storage.local.get('calldownContactCache');
+                      const cacheObj = stored.calldownContactCache || {};
+                      cacheObj[String(selectedContact.id)] = { name: selectedContact.name, phone: phoneNumber };
+                      await chrome.storage.local.set({ calldownContactCache: cacheObj });
+                    } catch (e) { /* ignore cache errors */ }
                     // Rebuild schedule page with selected contact preselected
                     const platformInfo = await getPlatformInfo();
                     const pName = platformInfo.platformName;
