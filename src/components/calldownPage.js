@@ -114,6 +114,17 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                     }
                 }
             }
+            // Also merge from our local cache populated by schedule search selection
+            try {
+                const stored = await chrome.storage.local.get('calldownContactCache');
+                const cacheObj = stored.calldownContactCache || {};
+                for (const [cid, info] of Object.entries(cacheObj)) {
+                    if (!idToContact.has(String(cid))) {
+                        idToContact.set(String(cid), { name: info.name, phone: info.phone });
+                    }
+                }
+            }
+            catch (e) { /* ignore cache errors */ }
         } catch (e) {
             // ignore if matcher not present
         }
