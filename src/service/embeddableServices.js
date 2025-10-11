@@ -829,7 +829,7 @@ async function getServiceManifest() {
                 name: "info",
                 type: "admonition",
                 severity: "warning",
-                value: "Please input your overriding phone number format: (please use # to represent a number digit, eg. (###) ###-###)",
+                value: "Please input your overriding phone number format: (please use # to represent a number digit, eg. (###) ###-###) [How it works](https://appconnect.labs.ringcentral.com/users/phone-number-formats/#how-it-works)",
             },
             {
                 id: "overridingPhoneNumberFormat",
