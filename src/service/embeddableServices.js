@@ -707,7 +707,15 @@ async function getServiceManifest() {
                         id: "contact",
                         name: "Contact"
                     }],
-                value: userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value || platform?.contactTypes?.[0]?.value || 'contact',
+                value: (() => {
+                    const userPreferredValue = userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value;
+                    // Check if the user's preferred value exists in platform.contactTypes
+                    if (userPreferredValue && platform?.contactTypes?.some(contactType => contactType.value === userPreferredValue)) {
+                        return userPreferredValue;
+                    }
+                    // Fall back to first available contact type or default
+                    return platform?.contactTypes?.[0]?.value || 'contact';
+                })(),
                 readOnly: userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).readOnly,
                 readOnlyReason: userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).readOnlyReason
             },
