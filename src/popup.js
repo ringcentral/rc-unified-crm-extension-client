@@ -33,6 +33,7 @@ import customSettingsPage from './components/admin/managedSettings/customSetting
 import customizeTabsSettingPage from './components/admin/generalSettings/customizeTabsSettingPage';
 import clickToDialEmbedPage from './components/admin/generalSettings/clickToDialEmbedPage';
 import notificationLevelSettingPage from './components/admin/generalSettings/notificationLevelSettingPage';
+import phoneNumberFormatPage from './components/admin/generalSettings/phoneNumberFormatPage';
 import appearancePage from './components/admin/generalSettings/appearancePage';
 import callLogDetailsSettingPage from './components/admin/managedSettings/callAndSMSLoggingSetting/callLogDetailsSettingPage';
 import autoLogPreferencesPage from './components/admin/managedSettings/callAndSMSLoggingSetting/autoLogPreferenceSettingPage';
@@ -1262,6 +1263,17 @@ window.addEventListener('message', async (e) => {
                     path: `/customized/${notificationLevelSettingPageRender.id}`, // page id
                   }, '*');
                   break;
+                case 'phoneNumberFormat':
+                  const phoneNumberFormatPageRender = phoneNumberFormatPage.getPhoneNumberFormatPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: phoneNumberFormatPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${phoneNumberFormatPageRender.id}`, // page id
+                  }, '*');
+                  break;
                 case 'clickToDialEmbed':
                   const clickToDialEmbedPageRender = clickToDialEmbedPage.getClickToDialEmbedPageRender({ adminUserSettings: adminSettings?.userSettings });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -1291,8 +1303,8 @@ window.addEventListener('message', async (e) => {
                   const additionalFieldValues = await adminCore.getServerSideLoggingAdditionalFieldValues({ platform });
                   const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({
                     subscriptionLevel: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.subscriptionLevel : subscriptionLevel,
-                    doNotLogNumbers: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.doNotLogNumbers :serverSideLoggingSubscription.doNotLogNumbers,
-                    loggingByAdmin: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.loggingByAdmin :serverSideLoggingSubscription.loggingByAdmin,
+                    doNotLogNumbers: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.doNotLogNumbers : serverSideLoggingSubscription.doNotLogNumbers,
+                    loggingByAdmin: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.loggingByAdmin : serverSideLoggingSubscription.loggingByAdmin,
                     subscribedByOtherAdmin: serverSideLoggingSubscription.subscribedByOtherAdmin,
                     additionalFields: platform.serverSideLogging?.additionalFields ?? [],
                     additionalFieldValues,
@@ -2813,6 +2825,7 @@ window.addEventListener('message', async (e) => {
                 case 'customSettingsPage':
                 case 'customizeTabsSettingPage':
                 case 'notificationLevelSettingPage':
+                case 'phoneNumberFormatPage':
                 case 'clickToDialEmbedPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const settingDataKeys = Object.keys(data.body.button.formData);
@@ -3335,6 +3348,22 @@ window.addEventListener('message', async (e) => {
               responseMessage(data.requestId, { data: 'ok' });
               break;
           }
+          break;
+        case "rc-adapter-phone-number-format-settings-notify":
+          //formatType, readOnly, template
+          await userCore.refreshUserSettings({
+            changedSettings: {
+              phoneNumberDisplayFormatType:
+              {
+                value: data.formatType,
+                customizable: !data.readOnly
+              },
+              phoneNumberDisplayFormatTemplate: {
+                value: data.template,
+                customizable: !data.readOnly
+              }
+            }
+          });
           break;
         default:
           break;

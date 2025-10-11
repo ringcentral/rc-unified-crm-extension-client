@@ -17,6 +17,10 @@ function getAppearancePageRender() {
                         {
                             const: "notificationLevel",
                             title: "Notification level"
+                        },
+                        {
+                            const: "phoneNumberFormat",
+                            title: "Phone number format"
                         }
                     ]
                 }

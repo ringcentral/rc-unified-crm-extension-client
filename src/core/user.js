@@ -568,6 +568,22 @@ function getNewContactNamePrefixSetting(userSettings) {
     }
 }
 
+function getPhoneNumberDisplayFormatTypeSetting(userSettings) {
+    return {
+        value: userSettings?.phoneNumberDisplayFormatType?.value ?? 'international',
+        readOnly: userSettings?.phoneNumberDisplayFormatType?.customizable === undefined ? false : !userSettings?.phoneNumberDisplayFormatType?.customizable,
+        readOnlyReason: !userSettings?.phoneNumberDisplayFormatType?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getPhoneNumberDisplayFormatTemplateSetting(userSettings) {
+    return {
+        value: userSettings?.phoneNumberDisplayFormatTemplate?.value ?? '',
+        readOnly: userSettings?.phoneNumberDisplayFormatTemplate?.customizable === undefined ? false : !userSettings?.phoneNumberDisplayFormatTemplate?.customizable,
+        readOnlyReason: !userSettings?.phoneNumberDisplayFormatTemplate?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getCustomSetting(userSettings, id, defaultValue) {
     if (userSettings === undefined) {
         return {
@@ -639,5 +655,7 @@ exports.getUnknownContactPreferenceSetting = getUnknownContactPreferenceSetting;
 exports.getMultipleContactsPreferenceSetting = getMultipleContactsPreferenceSetting;
 exports.getNewContactTypeSetting = getNewContactTypeSetting;
 exports.getNewContactNamePrefixSetting = getNewContactNamePrefixSetting;
+exports.getPhoneNumberDisplayFormatTypeSetting = getPhoneNumberDisplayFormatTypeSetting;
+exports.getPhoneNumberDisplayFormatTemplateSetting = getPhoneNumberDisplayFormatTemplateSetting;
 
 exports.getCustomSetting = getCustomSetting;
