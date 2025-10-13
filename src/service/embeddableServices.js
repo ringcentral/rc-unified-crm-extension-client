@@ -871,8 +871,8 @@ async function getServiceManifest() {
                 readOnlyReason: !userSettings?.overridingPhoneNumberFormat3?.customizable ? 'This setting is managed by admin' : ''
             }
         ]
-        const optionSectionName = platform.displayName + " options";
-        services.settings.find(s => s.name === optionSectionName).items.push(
+        const optionSectionName = platform.name + "Options";
+        services.settings.find(s => s.id === optionSectionName).items.push(
             {
                 id: "numberFormatterTitle",
                 name: "Number formatter",
@@ -880,7 +880,7 @@ async function getServiceManifest() {
                 variant: "title2",
                 value: "Phone number format alternatives",
             });
-        services.settings.find(s => s.name === optionSectionName).items.push(...numberFormatterComponent);
+        services.settings.find(s => s.id === optionSectionName).items.push(...numberFormatterComponent);
     }
     if (platformName === 'googleSheets') {
         services.settings.unshift(

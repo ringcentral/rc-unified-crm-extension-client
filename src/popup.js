@@ -74,7 +74,6 @@ axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be ove
 window.__ON_RC_POPUP_WINDOW = 1;
 
 let platformName = '';
-let platformHostname = '';
 let rcInfo = {};
 let rcUserInfo = {};
 let platformInfo = null;
@@ -270,7 +269,6 @@ window.addEventListener('message', async (e) => {
           }
           platform = manifest.platforms[platformInfo.platformName]
           platformName = platformInfo.platformName;
-          platformHostname = platformInfo.hostname;
           // setup C2D match all numbers
           if (platform.clickToDialMatchAllNumbers !== undefined) {
             await chrome.storage.local.set({ matchAllNumbers: platform.clickToDialMatchAllNumbers });
@@ -298,7 +296,6 @@ window.addEventListener('message', async (e) => {
           if (platformInfo) {
             platform = manifest.platforms[platformInfo.platformName]
             platformName = platformInfo.platformName;
-            platformHostname = platformInfo.hostname;
           }
           let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
           if (data.loggedIn) {
@@ -1811,7 +1808,7 @@ window.addEventListener('message', async (e) => {
                 case 'viewLog':
                   const matchedEntity = data.body.call.direction === 'Inbound' ? data.body.fromEntity : data.body.toEntity;
                   if (manifest.platforms[platformName].canOpenLogPage) {
-                    logCore.openLog({ manifest, platformName, hostname: platformHostname, logId: existingCalls.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: matchedEntity.contactType, contactId: matchedEntity.id });
+                    logCore.openLog({ manifest, platformName, hostname: platformInfo.hostname, logId: existingCalls.find(l => l.sessionId == data.body.call.sessionId)?.logId, contactType: matchedEntity.contactType, contactId: matchedEntity.id });
                   }
                   else {
                     await contactCore.openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: matchedEntity.id, contactType: matchedEntity.contactType, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value });
