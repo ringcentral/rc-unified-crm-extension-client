@@ -1,4 +1,5 @@
 import axios from 'axios';
+import moment from 'moment';
 import { getRcAccessToken } from '../lib/util';
 import { getManifest } from '../service/manifestService';
 import adminCore from './admin';
@@ -27,7 +28,7 @@ async function getUserReportStats({ dateRange, customStartDate, customEndDate })
     const smsSentCount = smsLogData.records.filter(sms => sms.direction === 'Outbound').length;
     const smsReceivedCount = smsLogData.records.filter(sms => sms.direction === 'Inbound').length;
     const { calls, hasMore } = await RCAdapter.getUnloggedCalls(100, 1);
-    const unloggedCallCount = calls.length;
+    const filteredCalls = calls.filter(call => moment(call.startTime).isAfter(customStartDate) && moment(call.startTime).isBefore(customEndDate));
     const reportStats = {
         dateRange,
         callLogStats: {
@@ -43,7 +44,8 @@ async function getUserReportStats({ dateRange, customStartDate, customEndDate })
             smsReceivedCount
         },
         unloggedCallStats: {
-            unloggedCallCount
+            unloggedCallCount: filteredCalls.length,
+            calls: filteredCalls
         }
     };
     if (dateRange === 'Select date range...') {

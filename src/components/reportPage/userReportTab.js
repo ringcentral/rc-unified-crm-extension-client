@@ -1,6 +1,6 @@
 
 function getUserReportTabRender({ page, userStats, userSettings, selectedRcExtension, rcExtensions }) {
-    if (rcExtensions.length > 0 && !rcExtensions.some(rcExtension => rcExtension.id == 'me')) {
+    if (rcExtensions?.length > 0 && !rcExtensions.some(rcExtension => rcExtension.id == 'me')) {
         rcExtensions.push({
             id: 'me',
             name: 'Me',
@@ -8,15 +8,17 @@ function getUserReportTabRender({ page, userStats, userSettings, selectedRcExten
             extensionNumber: ''
         });
     }
-    const schemaToAdd = {
-        rcExtensionList: {
-            type: 'string',
-            title: 'RingCentral user',
-            enum: rcExtensions.map(rc => rc.id.toString()),
-            enumNames: rcExtensions.map(rc => rc.name ?
-                `${rc.name} ${rc.email ? `- ${rc.email}` : ''} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}` :
-                `${rc.firstName} ${rc.lastName} ${rc.email ? `- ${rc.email}` : ''} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}`),
-        },
+    let schemaToAdd = {
+        ...(rcExtensions?.length > 0 ? {
+            rcExtensionList: {
+                type: 'string',
+                title: 'RingCentral user',
+                enum: rcExtensions.map(rc => rc.id.toString()),
+                enumNames: rcExtensions.map(rc => rc.name ?
+                    `${rc.name} ${rc.email ? `- ${rc.email}` : ''} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}` :
+                    `${rc.firstName} ${rc.lastName} ${rc.email ? `- ${rc.email}` : ''} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}`),
+            },
+        } : {}),
         dateRangeEnums: {
             type: 'string',
             title: 'Show date from the:',
@@ -106,11 +108,13 @@ function getUserReportTabRender({ page, userStats, userSettings, selectedRcExten
             ]
         }
     }
-    const uiSchemaToAdd = {
+    let uiSchemaToAdd = {
+        ...(rcExtensions?.length > 0 ? {
         rcExtensionList: {
-            "ui:widget": "AutocompleteWidget",
-            "ui:placeholder": "Start typing a RingCentral user name..."
-        },
+                "ui:widget": "AutocompleteWidget",
+                "ui:placeholder": "Start typing a RingCentral user name..."
+            }
+        } : {}),
         phoneActivityTitle: {
             "ui:field": "typography",
             "ui:variant": "body1"
@@ -152,7 +156,8 @@ function getUserReportTabRender({ page, userStats, userSettings, selectedRcExten
         rcExtensionList: selectedRcExtension || 'me',
         dateRangeEnums: userStats?.dateRange || 'Last 24 hours',
         startDate: userStats?.startDate || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        endDate: userStats?.endDate || new Date(Date.now()).toISOString().split('T')[0]
+        endDate: userStats?.endDate || new Date(Date.now()).toISOString().split('T')[0],
+        unloggedCalls: userStats?.unloggedCallStats?.calls || []
     }
     if (formDataToAdd.rcExtensionList === 'me') {
         schemaToAdd.unloggedCallTitle = {

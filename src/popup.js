@@ -1065,23 +1065,25 @@ window.addEventListener('message', async (e) => {
                   }
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   if (data.body.formData.unloggedCallSummary === 'unloggedCallCount') {
-                    const { calls: unloggedCalls } = await RCAdapter.getUnloggedCalls(100, 1);
-                    for (const c of unloggedCalls) {
-                      const { matched, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber, platformName });
-                      c.matched = matched;
-                      c.contactInfo = contactInfo;
-                      c.phoneNumber = c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber;
+                    const unloggedCalls = data.body.formData.unloggedCalls;
+                    if (unloggedCalls?.length > 0) {
+                      for (const c of unloggedCalls) {
+                        const { matched, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber, platformName });
+                        c.matched = matched;
+                        c.contactInfo = contactInfo;
+                        c.phoneNumber = c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber;
+                      }
+                      const unloggedCallPageRender = logPage.getUnloggedCallPageRender({ unloggedCalls });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: unloggedCallPageRender,
+                      });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-navigate-to',
+                        path: `/customized/${unloggedCallPageRender.id}`, // page id
+                      }, '*');
+                      await chrome.storage.local.set({ unloggedCallPageDataCache: unloggedCalls });
                     }
-                    const unloggedCallPageRender = logPage.getUnloggedCallPageRender({ unloggedCalls });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-register-customized-page',
-                      page: unloggedCallPageRender,
-                    });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                      type: 'rc-adapter-navigate-to',
-                      path: `/customized/${unloggedCallPageRender.id}`, // page id
-                    }, '*');
-                    await chrome.storage.local.set({ unloggedCallPageDataCache: unloggedCalls });
                   }
                   else {
                     if (userCore.getShowUserReportTabSetting(userSettings).value) {
@@ -1107,13 +1109,13 @@ window.addEventListener('message', async (e) => {
                           timeTo = moment().tz(timezone).subtract(1, 'minutes').toISOString();
                           break;
                         case 'Select date range...':
-                          if (data.body.formData.startDate === undefined || data.body.formData.endDate === undefined) {
-                            timeFrom = data.body.formData.startDate;
-                            timeTo = data.body.formData.endDate;
-                          }
-                          else {
+                          if (data.body.formData.startDate && data.body.formData.endDate && data.body.formData.startDate < data.body.formData.endDate) {
                             timeFrom = moment(data.body.formData.startDate).tz(timezone).toISOString();
                             timeTo = moment(data.body.formData.endDate).tz(timezone).toISOString();
+                          }
+                          else {
+                            window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                            return;
                           }
                           break;
                       }
@@ -1134,7 +1136,11 @@ window.addEventListener('message', async (e) => {
                         case 'userReportTab':
                           switch (data.body.formData.rcExtensionList) {
                             case 'me':
-                              userReportStats = await userCore.getUserReportStats({ dateRange: data.body.formData.dateRangeEnums || 'Last 24 hours', customStartDate: data.body.formData.startDate, customEndDate: data.body.formData.endDate });
+                              userReportStats = await userCore.getUserReportStats({
+                                dateRange: data.body.formData.dateRangeEnums || 'Last 24 hours',
+                                customStartDate: timeFrom,
+                                customEndDate: timeTo
+                              });
                               break;
                             default:
                               userReportStats = await adminCore.getUserExtensionReportStats({
@@ -1152,10 +1158,12 @@ window.addEventListener('message', async (e) => {
                           userReportStats.endDate = data.body.formData.endDate;
                           break;
                       }
+                      const { isAdmin } = await chrome.storage.local.get('isAdmin');
                       const reportPageRender = reportPage.getReportsPageRender(
                         {
                           selectedTab: currentTab,
                           selectedRcExtension: data.body.formData.rcExtensionList,
+                          isAdmin,
                           userStats: userReportStats,
                           companyStats: adminReportStats,
                           userSettings,
@@ -1184,7 +1192,7 @@ window.addEventListener('message', async (e) => {
                     id: callLogData.sessionId,
                     manifest,
                     logType: 'Call',
-                    contactInfo: callLogData.contactInfo.map(c => ({ ...c, isNewContact: undefined })),
+                    contactInfo: callLogData.contactInfo,
                     triggerType: 'createLog',
                     platformName,
                     direction: callLogData.direction,

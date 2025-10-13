@@ -1,4 +1,5 @@
 import axios from 'axios';
+import moment from 'moment';
 import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import { RcAPI } from '../lib/rcAPI';
@@ -427,6 +428,24 @@ async function getUserExtensionReportStats({ serverUrl, rcExtensionId, timezone,
     const userReportStatsResp = await axios.get(
         `${serverUrl}/ringcentral/admin/userReport?jwtToken=${jwtToken}&rcExtensionId=${rcExtensionId}&timezone=${timezone}&timeFrom=${timeFrom}&timeTo=${timeTo}`,
     );
+    if (rcExtensionId === `~`) {
+        const { calls, hasMore } = await RCAdapter.getUnloggedCalls(100, 1);
+        const filteredCalls = calls.filter(call => moment(call.startTime).isAfter(timeFrom) && moment(call.startTime).isBefore(timeTo));
+        if (userReportStatsResp.data) {
+            userReportStatsResp.data.unloggedCallStats = {
+                unloggedCallCount: filteredCalls.length,
+                calls: filteredCalls
+            }
+        }
+        else {
+            userReportStatsResp.data = {
+                unloggedCallStats: {
+                    unloggedCallCount: filteredCalls.length,
+                    calls: filteredCalls
+                }
+            };
+        }
+    }
     return userReportStatsResp.data;
 }
 

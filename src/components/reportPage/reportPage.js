@@ -7,7 +7,7 @@ import userReportIconDark from '../../images/reportIcon_dark.png';
 import getUserReportTabRender from './userReportTab';
 import getCompanyReportTabRender from './companyReportTab';
 
-function getReportsPageRender({ selectedTab = 'userReportTab', selectedRcExtension, userStats, companyStats, userSettings, rcExtensions = [] }) {
+function getReportsPageRender({ selectedTab = 'userReportTab', selectedRcExtension, isAdmin = false, userStats, companyStats, userSettings, rcExtensions = [] }) {
     const isHidden = !userCore.getShowUserReportTabSetting(userSettings)?.value;
     let page = {
         id: 'reportPage',
@@ -24,8 +24,8 @@ function getReportsPageRender({ selectedTab = 'userReportTab', selectedRcExtensi
                 tab: {
                     type: 'string',
                     title: 'Tab',
-                    enum: ['userReportTab', 'companyReportTab'],
-                    enumNames: ['User stats', 'Company stats']
+                    enum: ['userReportTab'].concat(isAdmin ? ['companyReportTab'] : []),
+                    enumNames: ['User stats'].concat(isAdmin ? ['Company stats'] : [])
                 }
             }
         },
