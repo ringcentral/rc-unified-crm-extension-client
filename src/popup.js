@@ -1099,8 +1099,8 @@ window.addEventListener('message', async (e) => {
                           break;
                         case 'Select date range...':
                           if (data.body.formData.startDate && data.body.formData.endDate && data.body.formData.startDate < data.body.formData.endDate) {
-                            timeFrom = moment(data.body.formData.startDate).tz(timezone).toISOString();
-                            timeTo = moment(data.body.formData.endDate).tz(timezone).toISOString();
+                            timeFrom = moment(data.body.formData.startDate).set('hour', 0).set('minute', 0).set('second', 0).tz(timezone).toISOString();
+                            timeTo = moment(data.body.formData.endDate).set('hour', 23).set('minute', 59).set('second', 59).tz(timezone).toISOString();
                           }
                           else {
                             window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
