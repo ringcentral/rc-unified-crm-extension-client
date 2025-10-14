@@ -716,17 +716,6 @@ window.addEventListener('message', async (e) => {
               lastUserSettingSyncDate = new Date();
             }
           }
-
-          if (data.path === '/customizedTabs/reportPage') {
-            if (userCore.getShowUserReportTabSetting(userSettings).value) {
-              const userReportStats = await userCore.getUserReportStats({ dateRange: 'Last 24 hours' });
-              const reportPageRender = reportPage.getReportsPageRender({ userStats: userReportStats, userSettings });
-              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                type: 'rc-adapter-register-customized-page',
-                page: reportPageRender
-              }, '*');
-            }
-          }
           break;
         case 'rc-adapter-ai-assistant-settings-notify':
           userSettings = await userCore.refreshUserSettings({
