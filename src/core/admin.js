@@ -453,7 +453,7 @@ async function getUserMapping({ serverUrl }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
     const rcAccessToken = getRcAccessToken();
-    const rcExtensionList = await getRcContactInfo();
+    const rcExtensionList = (await getRcContactInfo()).filter(rc => rc.type == 'User' || rc.type == 'Department');
     const userMappingResp = await axios.post(
         `${serverUrl}/admin/userMapping?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`,
         {
