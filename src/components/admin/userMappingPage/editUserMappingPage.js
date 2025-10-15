@@ -38,13 +38,12 @@ function renderEditUserMappingPage({ userMapping, platformDisplayName, rcExtensi
                     description: userMapping.crmUser.email
                 },
                 rcExtensionList: {
-                    type: 'string',
+                    type: 'array',
                     title: 'RingCentral user',
                     description: 'Link to a RingCentral user',
-                    enum: rcExtensions.map(rc => rc.id),
-                    enumNames: rcExtensions.map(rc => rc.name ?
-                        `${rc.name} ${rc.email ? `- ${rc.email}` : ''} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}` :
-                        `${rc.firstName} ${rc.lastName} ${rc.email ? `- ${rc.email}` : ''} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}`)
+                    items: {
+                        type: 'string'
+                    }
                 }
             }
         },
@@ -80,7 +79,18 @@ function renderEditUserMappingPage({ userMapping, platformDisplayName, rcExtensi
             },
             rcExtensionList: {
                 "ui:widget": "AutocompleteWidget",
-                "ui:placeholder": "Start typing a RingCentral user name..."
+                "ui:placeholder": "Start typing a RingCentral user name...",
+                "ui:options": {
+                    "multiple": true,
+                    "enumOptions": rcExtensions.map(rc => {
+                        return {
+                            value: rc.id,
+                            label: rc.name ?
+                                `${rc.name} ${rc.email ? `- ${rc.email}` : ''} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}` :
+                                `${rc.firstName} ${rc.lastName} ${rc.email ? `- ${rc.email}` : ''} ${rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : ''}`
+                        }
+                    })
+                }
             },
             submitButtonOptions: {
                 submitText: 'Save'
@@ -92,7 +102,7 @@ function renderEditUserMappingPage({ userMapping, platformDisplayName, rcExtensi
             crmUserId: userMapping.crmUser.id,
             crmUserName: userMapping.crmUser.name,
             crmUserEmail: userMapping.crmUser.email,
-            rcExtensionList: selectedRcExtensionId || rcExtensions.find(rc => rc.id === userMapping?.rcUser?.extensionId)?.id
+            rcExtensionList: selectedRcExtensionId || userMapping.rcUser?.map(rc => rc.extensionId)
         }
     }
 }

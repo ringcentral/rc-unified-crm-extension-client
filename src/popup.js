@@ -1117,8 +1117,9 @@ window.addEventListener('message', async (e) => {
                   const userMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
                   adminSettings.userMappings = userMapping.map(um => ({
                     crmUserId: um.crmUser.id,
-                    rcExtensionId: um.rcUser?.extensionId ?? 'none'
+                    rcExtensionId: um.rcUser?.map(rc => rc.extensionId) ?? []
                   }));
+                  await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
                   const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping, platformDisplayName: platform.displayName });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
@@ -2171,7 +2172,7 @@ window.addEventListener('message', async (e) => {
                     const existingUserMapping = adminSettings.userMappings.find(um => um.crmUserId == userMapping.crmUserId);
                     if (existingUserMapping) {
                       // Case: delete
-                      if (userMapping.rcExtensionId === 'none') {
+                      if (userMapping.rcExtensionId?.length === 0) {
                         adminSettings.userMappings = adminSettings.userMappings.filter(um => um.crmUserId !== existingUserMapping.crmUserId);
                       }
                       // Case: update
@@ -2186,7 +2187,7 @@ window.addEventListener('message', async (e) => {
                       )
                     }
                   }
-                  else if (userMapping.rcExtensionId !== 'none') {
+                  else if (userMapping.rcExtensionId?.length > 0) {
                     adminSettings.userMappings = [
                       userMapping
                     ]
@@ -2649,7 +2650,7 @@ window.addEventListener('message', async (e) => {
                   const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
                     userMapping: userMappingToEdit,
                     platformDisplayName: platform.displayName,
-                    rcExtensions: [...rcExtensions, { id: 'none', name: 'None' }]
+                    rcExtensions
                   });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
@@ -2662,7 +2663,7 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'usermappingRemove':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  adminSettings.userMappings.find(um => um.crmUserId == listButtonItemId).rcExtensionId = 'none';
+                  adminSettings.userMappings.find(um => um.crmUserId == listButtonItemId).rcExtensionId = [];
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
                   const updatedUserMapping = await adminCore.getUserMapping({ serverUrl: manifest.serverUrl });
                   const userMappingPageRender = userMappingPage.getUserMappingPageRender({ userMapping: updatedUserMapping, platformDisplayName: platform.displayName });
