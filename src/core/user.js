@@ -572,7 +572,7 @@ function getNewContactNamePrefixSetting(userSettings) {
 
 function getPhoneNumberDisplayFormatTypeSetting(userSettings) {
     return {
-        value: userSettings?.phoneNumberDisplayFormatType?.value ?? 'international',
+        value: userSettings?.phoneNumberDisplayFormatType?.value ?? 'national',
         readOnly: userSettings?.phoneNumberDisplayFormatType?.customizable === undefined ? false : !userSettings?.phoneNumberDisplayFormatType?.customizable,
         readOnlyReason: !userSettings?.phoneNumberDisplayFormatType?.customizable ? 'This setting is managed by admin' : ''
     }
