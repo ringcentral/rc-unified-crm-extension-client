@@ -201,8 +201,8 @@ async function uploadCacheNote({ serverUrl, sessionId }) {
 }
 
 function getConflictContentFromUnresolvedLog(log) {
-    const isMultipleContact = log.contactInfo.filter(c => !c.isNewContact).length > 1;
-    const isNoContact = log.contactInfo.filter(c => !c.isNewContact).length === 0 && log.contactInfo.some(c => c.isNewContact);
+    const isMultipleContact = log.contactInfo?.filter(c => !c.isNewContact)?.length > 1;
+    const isNoContact = log.contactInfo?.filter(c => !c.isNewContact)?.length === 0 && log.contactInfo?.some(c => c.isNewContact);
     const contactName = isMultipleContact ? 'Multiple contacts' : log.contactInfo.find(c => !c.isNewContact)?.name;
     if (isMultipleContact || isNoContact) {
         return {

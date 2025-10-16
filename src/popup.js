@@ -1056,11 +1056,23 @@ window.addEventListener('message', async (e) => {
                   if (data.body.formData.unloggedCallSummary === 'unloggedCallCount') {
                     const unloggedCalls = data.body.formData.unloggedCalls;
                     if (unloggedCalls?.length > 0) {
+                      const foundContacts = [];
                       for (const c of unloggedCalls) {
-                        const { matched, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber, platformName });
+                        const contactNumber = c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber;
+                        const foundContact = foundContacts.find(cc => cc.some(c => c.phoneNumber === contactNumber));
+                        if (foundContact) {
+                          c.matched = true;
+                          c.contactInfo = foundContact;
+                          c.phoneNumber = contactNumber;
+                          continue;
+                        }
+                        const { matched, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactNumber, platformName });
+                        if (matched) {
+                          foundContacts.push(contactInfo);
+                        }
                         c.matched = matched;
                         c.contactInfo = contactInfo;
-                        c.phoneNumber = c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber;
+                        c.phoneNumber = contactNumber;
                       }
                       const unloggedCallPageRender = logPage.getUnloggedCallPageRender({ unloggedCalls });
                       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
