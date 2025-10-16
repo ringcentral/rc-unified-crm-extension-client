@@ -97,7 +97,7 @@ getCustomManifest();
 // Create debounce handlers for different operations
 const debouncePlatformSearch = createDebounceHandler('platformSearch');
 const debounceContactSearch = createDebounceHandler('contactSearch');
-const debounceCalldownSearch = createDebounceHandler('calldownSearch');
+const debounceCalldownSearch = createDebounceHandler('calldownSearch'); 
 
 async function getCustomManifest() {
   const customCrmManifest = await getManifest();
@@ -915,7 +915,7 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'calldownPage':
                   // Check if this is a search input change (requires debouncing)
-                  if (data.body.keys && data.body.keys.some(k => k === 'searchWithFilters.search')) {
+                  if (data.body.keys && data.body.keys.some(k => k === 'searchWithFilters')) {
                     // Debounce search input to prevent characters from jumping/missing
                     debounceCalldownSearch(data.requestId, async (request) => {
                       const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
