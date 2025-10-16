@@ -97,6 +97,7 @@ getCustomManifest();
 // Create debounce handlers for different operations
 const debouncePlatformSearch = createDebounceHandler('platformSearch');
 const debounceContactSearch = createDebounceHandler('contactSearch');
+const debounceCalldownSearch = createDebounceHandler('calldownSearch');
 
 async function getCustomManifest() {
   const customCrmManifest = await getManifest();
@@ -684,16 +685,29 @@ window.addEventListener('message', async (e) => {
             if (data.path === '/customizedTabs/calldownPage') {
               try {
                 const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                const refreshedCalldown = await calldownPage.getCalldownPageWithRecords({
-                  manifest,
-                  jwtToken: rcUnifiedCrmExtJwt,
-                  filterStatus: 'All',
-                  userSettings
-                });
-                document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
-                  type: 'rc-adapter-register-customized-page',
-                  page: refreshedCalldown
-                }, '*');
+                if (rcUnifiedCrmExtJwt && crmAuthed) {
+                  const refreshedCalldown = await calldownPage.getCalldownPageWithRecords({
+                    manifest,
+                    jwtToken: rcUnifiedCrmExtJwt,
+                    filterStatus: 'All',
+                    userSettings
+                  });
+                  document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: refreshedCalldown
+                  }, '*');
+                } else {
+                  // CRM is disconnected, hide call-down page if it was enabled
+                  if (userCore.getShowCalldownTabSetting(userSettings).value) {
+                    const emptyCalldownPage = calldownPage.getCalldownPageRender();
+                    emptyCalldownPage.hidden = true; // Hide the tab when CRM is disconnected
+                    emptyCalldownPage.unreadCount = 0;
+                    document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: emptyCalldownPage
+                    }, '*');
+                  }
+                }
               } catch (e) { /* ignore */ }
             }
           }
@@ -738,6 +752,20 @@ window.addEventListener('message', async (e) => {
                 window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                 await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
                 await authCore.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
+                
+                // Clear call-down page after CRM disconnect
+                try {
+                  if (userCore.getShowCalldownTabSetting(userSettings).value) {
+                    const emptyCalldownPage = calldownPage.getCalldownPageRender(); // Get empty page
+                    emptyCalldownPage.hidden = true; // Hide the tab when CRM is disconnected
+                    emptyCalldownPage.unreadCount = 0; // Explicitly set badge to 0
+                    document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: emptyCalldownPage
+                    }, '*');
+                  }
+                } catch (e) { /* ignore */ }
+                
                 if (platform.useLicense) {
                   await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
                 }
@@ -886,8 +914,28 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
                 case 'calldownPage':
-                  // Treat any input change as filter change; ignore row selection (actions handled inline)
-                  {
+                  // Check if this is a search input change (requires debouncing)
+                  if (data.body.keys && data.body.keys.some(k => k === 'searchWithFilters.search')) {
+                    // Debounce search input to prevent characters from jumping/missing
+                    debounceCalldownSearch(data.requestId, async (request) => {
+                      const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                      const updated = await calldownPage.getCalldownPageWithRecords({
+                        manifest,
+                        jwtToken: rcUnifiedCrmExtJwt,
+                        searchWithFilters: data.body.formData.searchWithFilters ?? {},
+                        // fallback for legacy
+                        filterName: data.body.formData.filterName ?? '',
+                        filterStatus: data.body.formData.filterStatus ?? 'All',
+                        userSettings
+                      });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: updated
+                      });
+                      responseMessage(request, { data: 'ok' });
+                    });
+                  } else {
+                    // Filter changes (dropdown) - no debouncing needed, execute immediately
                     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                     const updated = await calldownPage.getCalldownPageWithRecords({
                       manifest,
@@ -902,7 +950,7 @@ window.addEventListener('message', async (e) => {
                       type: 'rc-adapter-register-customized-page',
                       page: updated
                     });
-                    // Do not navigate; avoid resetting input focus/value
+                    responseMessage(data.requestId, { data: 'ok' });
                   }
                   break;
                 case 'googleSheetsPage':
@@ -2501,7 +2549,21 @@ window.addEventListener('message', async (e) => {
               switch (btnBaseId) {
                 case 'callLater': {
                   try {
-                    const number = data.body?.resource?.to?.phoneNumber;
+                    const isExtensionNumber = data.body?.resource?.direction === 'Inbound' ?
+                !!data.body?.resource?.from.extensionNumber :
+                !!data.body?.resource?.to.extensionNumber;
+                if (isExtensionNumber) {
+                  showNotification({ level: 'warning', message: 'Extension numbers cannot be scheduled', ttl: 3000 });
+                  responseMessage(data.requestId, { data: 'ok' });
+                  break;
+                }
+                    let number = undefined;
+                    if (data.body?.resource?.direction==="Inbound") {
+                      number = data.body?.resource?.from?.phoneNumber;
+                    }
+                    else  {
+                      number = data.body?.resource?.to?.phoneNumber;
+                    }
                     if (!number) break;
                     //try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
                     chrome.runtime.sendMessage({ type: 'c2schedule', phoneNumber: number });
@@ -2510,7 +2572,12 @@ window.addEventListener('message', async (e) => {
                 }
                 case 'callLaterInMessage': {
                   try {
-                    const number = data.body?.resource?.to?.phoneNumber || data.body?.resource?.to?.length > 0 ? data.body?.resource?.to?.[0]?.phoneNumber : undefined;
+                    let number=undefined;
+                    if (data.body?.resource?.direction==="Inbound") {
+                      number = data.body?.resource?.from?.phoneNumber;
+                    } else{
+                       number = data.body?.resource?.to?.phoneNumber || data.body?.resource?.to?.length > 0 ? data.body?.resource?.to?.[0]?.phoneNumber : undefined;
+                    }
                     if (!number) break;
                     // try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
                     chrome.runtime.sendMessage({ type: 'c2schedule', phoneNumber: number });
