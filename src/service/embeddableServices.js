@@ -309,7 +309,7 @@ async function getServiceManifest() {
                             },
                             {
                                 id: 'openAllMatches',
-                                name: 'Open all matches'
+                                name: 'Open all matches' + (platform.name == 'bullhorn' ? ' (Bullhorn only supports open one match)' : '')
                             },
                             {
                                 id: 'promptToSelect',
