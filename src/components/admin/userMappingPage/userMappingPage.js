@@ -2,7 +2,7 @@ function getUserMappingPageRender({ userMapping, platformDisplayName, searchWord
     let userMappingList = [];
     for (const um of userMapping) {
         if (um.rcUser?.length > 0) {
-            const description = um.rcUser.map(rc => `${rc.name || rc.email}` + (rc.extensionNumber ? `(ext: ${rc.extensionNumber})` : '')).join(', ');
+            const description = `${um.rcUser[0].name} - ext: ${um.rcUser[0].extensionNumber}` + (um.rcUser.length > 1 ? ` (+${um.rcUser.length - 1} others)` : '');
             userMappingList.push({
                 const: um.crmUser.id,
                 title: um.crmUser.name,

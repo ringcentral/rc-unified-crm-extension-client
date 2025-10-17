@@ -3262,7 +3262,7 @@ window.addEventListener('message', async (e) => {
               switch (listButtonActionId) {
                 case 'usermappingEdit':
                   const userMappingToEdit = data.body.button.formData.allUserMapping.find(um => um.crmUser.id == listButtonItemId);
-                  const rcExtensions = await getRcContactInfo();
+                  const rcExtensions = (await getRcContactInfo()).filter(rc => rc.type == 'User' || rc.type == 'Department');
                   const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
                     userMapping: userMappingToEdit,
                     platformDisplayName: platform.displayName,
