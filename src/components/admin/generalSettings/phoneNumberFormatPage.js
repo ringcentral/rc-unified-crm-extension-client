@@ -18,7 +18,7 @@ function getPhoneNumberFormatPageRender({ adminUserSettings }) {
                         value: {
                             type: 'string',
                             title: 'Value',
-                            enum: ['national', 'international', 'e164', 'customized']
+                            enum: ['national', 'international', 'e164', 'custom']
                         }
                     }
                 },
