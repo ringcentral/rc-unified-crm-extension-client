@@ -31,8 +31,8 @@ async function getServiceManifest() {
     const customSettings = platform.settings;
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-set-phone-number-format',
-        formatType: userCore.getPhoneNumberDisplayFormatTypeSetting(userSettings).value, // 'national', 'international', 'e164', 'customized'
-        template: userCore.getPhoneNumberDisplayFormatTemplateSetting(userSettings).value, // required if 'customized' type, eg: '(###) ###-####'. use # and * to represent the digits. x represents masked digit
+        formatType: userCore.getPhoneNumberDisplayFormatTypeSetting(userSettings).value, // 'national', 'international', 'e164', 'custom'
+        template: userCore.getPhoneNumberDisplayFormatTemplateSetting(userSettings).value, // required if 'custom' type, eg: '(###) ###-####'. use # and * to represent the digits. x represents masked digit
         readOnly: userCore.getPhoneNumberDisplayFormatTypeSetting(userSettings).readOnly, // optional, set to true to disable user change setting
         readOnlyReason: userCore.getPhoneNumberDisplayFormatTypeSetting(userSettings).readOnlyReason, // optional, set to true to disable user change setting
     }, '*');
