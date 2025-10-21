@@ -35,9 +35,17 @@ async function saveManifest({ manifest }) {
 }
 
 async function refreshManifest() {
-    const { manifestUrl } = await chrome.storage.local.get({ manifestUrl: null });
+    let { manifestUrl } = await chrome.storage.local.get({ manifestUrl: null });
     if (!manifestUrl) {
-        return null;
+        const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
+        if (!customCrmManifest) {
+            return null;
+        }
+        else {
+            manifestUrl = customCrmManifest;
+            await saveManifestUrl({ manifestUrl });
+            await chrome.storage.local.remove('customCrmManifest');
+        }
     }
     const manifestResponse = await axios.get(manifestUrl);
     const manifest = manifestResponse.data;
@@ -94,25 +102,8 @@ function setValueByPath(obj, path, value) {
     current[keys[keys.length - 1]] = value;
 }
 
-async function checkForManifestMigration() {
-    const {customCrmManifestUrl} = await chrome.storage.local.get({customCrmManifestUrl: null});
-    const localCrmManifest = await axios.get(customCrmManifestUrl);
-    const localCrmManifestJson = localCrmManifest.data;
-    const platformInfo = await getPlatformInfo();
-    if (localCrmManifestJson.platforms[platformInfo.platformName].migrationId) {
-        const manifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${localCrmManifestJson.platforms[platformInfo.platformName].migrationId}/manifest`);
-        const manifestJson = manifestResponse.data;
-        await saveManifest({ manifest: manifestJson });
-        await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${localCrmManifestJson.platforms[platformInfo.platformName].migrationId}/manifest` });
-        await chrome.storage.local.remove('customCrmManifestUrl');
-        return manifestJson;
-    }
-    return localCrmManifestJson;
-}
-
 exports.getManifest = getManifest;
 exports.getPlatformList = getPlatformList;
 exports.saveManifest = saveManifest;
 exports.saveManifestUrl = saveManifestUrl;
 exports.refreshManifest = refreshManifest;
-exports.checkForManifestMigration = checkForManifestMigration;

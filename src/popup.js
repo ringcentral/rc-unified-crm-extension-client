@@ -7,7 +7,7 @@ import adminCore from './core/admin';
 import authCore from './core/auth';
 import { downloadTextFile, checkC2DCollision, responseMessage, isObjectEmpty, showNotification, dismissNotification, getRcInfo, getRcAccessToken, getUserReportStats, getRcContactInfo, createDebounceHandler } from './lib/util';
 import { getPlatformInfo } from './service/platformService';
-import { getManifest, getPlatformList, saveManifest, saveManifestUrl, refreshManifest, checkForManifestMigration } from './service/manifestService';
+import { getManifest, getPlatformList, saveManifest, saveManifestUrl, refreshManifest } from './service/manifestService';
 import { RcAPI } from './lib/rcAPI';
 import moment from 'moment';
 import 'moment-timezone';
@@ -253,19 +253,10 @@ window.addEventListener('message', async (e) => {
             console.log('Cannot find platform info');
             return;
           }
-          if (!platformInfo.isLocal) {
+          try {
             manifest = await refreshManifest();
-            if (!manifest) {
-              console.log('Cannot find manifest');
-              return;
-            }
-          }
-          else {
-            try {
-              manifest = await checkForManifestMigration();
-            } catch (e) {
-              console.error(e);
-            }
+          } catch (e) {
+            console.error(e);
           }
           platform = manifest.platforms[platformInfo.platformName]
           platformName = platformInfo.platformName;
