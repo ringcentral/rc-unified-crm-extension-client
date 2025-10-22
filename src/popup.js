@@ -20,6 +20,7 @@ import aboutPage from './components/aboutPage';
 import developerSettingsPage from './components/developerSettingsPage';
 import reportPage from './components/reportPage/reportPage';
 import calldownPage from './components/calldownPage';
+import createSchedulePage from './components/schedulePage';
 import adminPage from './components/admin/adminPage';
 import managedSettingsPage from './components/admin/managedSettingsPage';
 import generalSettingPage from './components/admin/generalSettingPage';
@@ -185,7 +186,7 @@ window.addEventListener('message', async (e) => {
                   const phoneNumber = cachedClickToXRequest.phoneNumber;
                   const platformInfo = await getPlatformInfo();
                   const platformName = platformInfo.platformName;
-                  const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: false });
+                  const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: true });
                   const contacts = (res?.contactInfo || []).filter(c => !c.isNewContact);
                   const contactOptions = contacts.map(c => ({ const: c.id, title: c.name }));
                   const newContactOption = { const: 'newContact', title: 'Create new contact' };
@@ -194,33 +195,15 @@ window.addEventListener('message', async (e) => {
                   const isDefaultNew = contacts.length === 0;
                   const preselect = isDefaultNew ? 'newContact' : (contactOptions[0]?.const ?? '');
                   const ct = manifest.platforms[platformName]?.contactTypes || [];
-                  const schedulePage = {
-                    id: 'c2dSchedulePage',
-                    title: 'Add to call-down list',
-                    type: 'page',
-                    schema: {
-                      type: 'object',
-                      required: ['callbackDateTime'],
-                      properties: {
-                        phone: { type: 'string', title: 'Phone Number' },
-                        contact: { type: 'string', title: 'Contact', oneOf: listOneOf },
-                        newContactName: { type: 'string', title: 'New contact name' },
-                        ...(ct.length > 0 ? { newContactType: { type: 'string', title: 'Contact type', oneOf: ct.map(t => ({ const: t.value, title: t.display })) } } : {}),
-                        callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
-                        scheduleSubmit: { type: 'string', title: 'Schedule' },
-                      }
-                    },
-                    uiSchema: {
-                      phone: { 'ui:disabled': true },
-                      contact: {},
-                      newContactName: isDefaultNew ? { 'ui:widget': 'text', 'ui:placeholder': 'Enter name...' } : { 'ui:widget': 'hidden' },
-                      ...(ct.length > 0 ? { newContactType: isDefaultNew ? {} : { 'ui:widget': 'hidden' } } : {}),
-                      callbackDateTime: { 'ui:widget': 'datetime' },
-                      scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit', 'ui:disabled': true },
-                    },
-                    formData: { phone: phoneNumber, contact: preselect, newContactName: '', newContactType: isDefaultNew && ct.length > 0 ? ct[0].value : '', callbackDateTime: '' }
-                  };
+                  const schedulePage = createSchedulePage({
+                    phoneNumber,
+                    listOneOf,
+                    isDefaultNew,
+                    preselect,
+                    contactTypes: ct
+                  });
                   schedulePageSubmitEnabled = false;
+                  schedulePageIsNewSelected = isDefaultNew;
                   document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
                   document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${schedulePage.id}` }, '*');
 
@@ -3557,40 +3540,22 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       const platformName = platformInfo.platformName;
       // resolve contacts for the number and show dropdown
       const phoneNumber = request.phoneNumber;
-      const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: false });
+      const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: true });
       const contacts = (res?.contactInfo || []).filter(c => !c.isNewContact);
       const contactOptions = contacts.map(c => ({ const: c.id, title: c.name }));
       const newContactOption = { const: 'newContact', title: 'Create new contact' };
       const listOneOf = [...contactOptions, newContactOption];
       const isDefaultNew = contacts.length === 0;
       const preselect = isDefaultNew ? 'newContact' : (contactOptions[0]?.const ?? '');
-      const schedulePage = {
-        id: 'c2dSchedulePage',
-        title: 'Add to call-down list',
-        type: 'page',
-        schema: {
-          type: 'object',
-          required: ['callbackDateTime'],
-          properties: {
-            phone: { type: 'string', title: 'Phone Number' },
-            contact: { type: 'string', title: 'Contact', oneOf: listOneOf },
-            newContactName: { type: 'string', title: 'New contact name' },
-            ...(manifest.platforms[platformName]?.contactTypes?.length > 0 ? { newContactType: { type: 'string', title: 'Contact type', oneOf: manifest.platforms[platformName].contactTypes.map(t => ({ const: t.value, title: t.display })) } } : {}),
-            callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
-            scheduleSubmit: { type: 'string', title: 'Schedule' },
-          }
-        },
-        uiSchema: {
-          phone: { 'ui:disabled': true },
-          contact: {},
-          newContactName: isDefaultNew ? { 'ui:widget': 'text', 'ui:placeholder': 'Enter name...' } : { 'ui:widget': 'hidden' },
-          ...(manifest.platforms[platformName]?.contactTypes?.length > 0 ? { newContactType: isDefaultNew ? {} : { 'ui:widget': 'hidden' } } : {}),
-          callbackDateTime: { 'ui:widget': 'datetime' },
-          scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit', 'ui:disabled': true },
-        },
-        formData: { phone: phoneNumber, contact: preselect, newContactName: '', newContactType: isDefaultNew && (manifest.platforms[platformName]?.contactTypes?.length > 0) ? manifest.platforms[platformName].contactTypes[0].value : '', callbackDateTime: '' }
-      };
+      const schedulePage = createSchedulePage({
+        phoneNumber,
+        listOneOf,
+        isDefaultNew,
+        preselect,
+        contactTypes: manifest.platforms[platformName]?.contactTypes || []
+      });
       schedulePageSubmitEnabled = false;
+      schedulePageIsNewSelected = isDefaultNew;
       document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
       document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${schedulePage.id}` }, '*');
       const onMessage = async (e) => {
