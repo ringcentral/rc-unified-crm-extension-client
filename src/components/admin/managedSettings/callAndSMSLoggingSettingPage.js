@@ -1,7 +1,7 @@
 function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
     return {
         id: 'callAndSMSLoggingSettingPage',
-        title: 'Call and SMS logging',
+        title: 'Activity logging',
         type: 'page',
         schema: {
             type: 'object',

@@ -85,7 +85,7 @@ async function getServiceManifest() {
             {
                 id: 'logging',
                 type: 'group',
-                name: 'Call and SMS logging',
+                name: 'Activity logging',
                 items: [
                     {
                         id: 'autoLogCall',
