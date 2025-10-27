@@ -132,7 +132,6 @@ async function cacheCalldownContact({ contactId, contactName, phoneNumber, conta
       cachedAt: Date.now()
     };
     await chrome.storage.local.set({ calldownContactCache });
-    console.log('Cached contact for calldown:', { contactId, contactName, phoneNumber });
   } catch (error) {
     console.warn('Failed to cache calldown contact:', error);
   }
@@ -199,6 +198,12 @@ window.addEventListener('message', async (e) => {
                 }, '*');
               }
               else if (cachedClickToXRequest.type === 'c2schedule') {
+                // Prevent duplicate processing if already handling a c2schedule
+                if (isOpeningSchedule || processingCachedRequest) {
+                  return;
+                }
+                
+                processingCachedRequest = true;
                 // Open schedule page with contact dropdown (simple version)
                 try {
                   try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
@@ -228,6 +233,7 @@ window.addEventListener('message', async (e) => {
 
                 } catch (e) { console.log(e); }
                 finally {
+                  processingCachedRequest = false;
                   try { window.postMessage({ type: 'rc-log-modal-loading-off' }, '*'); } catch (e) { /* ignore */ }
                 }
               }
@@ -3541,6 +3547,7 @@ let schedulePageSubmitEnabled = false;
 let schedulePageIsNewSelected = false;
 // guard to prevent duplicate c2schedule opens when extension is already open
 let isOpeningSchedule = false;
+let processingCachedRequest = false;
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.type === 'oauthCallBack') {
@@ -3670,7 +3677,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     sendResponse({ result: 'ok' });
   } else if (request.type === 'c2schedule') {
     try {
-      if (isOpeningSchedule) { sendResponse({ result: 'busy' }); return; }
+      // Prevent duplicate processing if cached request is being handled or already opening
+      if (isOpeningSchedule || processingCachedRequest) { 
+        sendResponse({ result: 'busy' }); 
+        return; 
+      }
       isOpeningSchedule = true;
       try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
       const manifest = await getManifest();
@@ -3740,7 +3751,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       };
       window.addEventListener('message', onMessage);
     } catch (e) { console.log(e); }
-    finally { setTimeout(() => { isOpeningSchedule = false; }, 1500); }
+    finally { 
+      setTimeout(() => { 
+        isOpeningSchedule = false; 
+        processingCachedRequest = false; // Safety: clear both flags after timeout
+      }, 1500); 
+    }
     try { window.postMessage({ type: 'rc-log-modal-loading-off' }, '*'); } catch (e) { /* ignore */ }
     sendResponse({ result: 'ok' });
   }
