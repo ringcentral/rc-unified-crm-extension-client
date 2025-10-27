@@ -2724,10 +2724,26 @@ window.addEventListener('message', async (e) => {
                         await axios.patch(`${manifest.serverUrl}/calldown/${rowId}?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`,
                           { lastCallAt: new Date().toISOString() });
                       } catch (e) { console.log(e); }
-                      // Refresh Call-down list and pill
+                      // Refresh Call-down list and pill (preserve current filter)
                       try {
                         const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                        const refreshed = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
+                        // Get current filter from form data to preserve user's view
+                        const currentFilter = data.body?.page?.formData?.searchWithFilters?.filter || 
+                                             data.body?.formData?.searchWithFilters?.filter || 
+                                             data.body?.formData?.filterStatus || 'All';
+                        const currentSearch = data.body?.page?.formData?.searchWithFilters?.search || 
+                                             data.body?.formData?.searchWithFilters?.search || '';
+                        
+                        const refreshed = await calldownPage.getCalldownPageWithRecords({ 
+                          manifest, 
+                          jwtToken: rcUnifiedCrmExtJwt, 
+                          filterStatus: currentFilter,
+                          searchWithFilters: {
+                            search: currentSearch,
+                            filter: currentFilter
+                          },
+                          userSettings 
+                        });
                         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                           type: 'rc-adapter-register-customized-page',
                           page: refreshed

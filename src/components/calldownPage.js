@@ -179,11 +179,26 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                 }
             };
         });
-        // pill: number of calls scheduled today
+        // pill: number of calls scheduled today that haven't been called yet
         const todaysCount = items.filter(i => {
             if (!i.scheduledAt) return false;
             const d = new Date(i.scheduledAt);
-            return d.toDateString() === todayDateString;
+            const isScheduledToday = d.toDateString() === todayDateString;
+            
+            // If scheduled today, check if it hasn't been called yet
+            if (isScheduledToday) {
+                // If no lastCallAt, it hasn't been called
+                if (!i.lastCallAt) return true;
+                
+                // If lastCallAt exists, check if it's from today
+                const lastCallDate = new Date(i.lastCallAt);
+                const isCalledToday = lastCallDate.toDateString() === todayDateString;
+                
+                // Only count if not called today (so still needs to be called)
+                return !isCalledToday;
+            }
+            
+            return false;
         }).length;
         page.unreadCount = todaysCount;
         // cache current list
