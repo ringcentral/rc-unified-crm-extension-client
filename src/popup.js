@@ -98,7 +98,7 @@ getCustomManifest();
 // Create debounce handlers for different operations
 const debouncePlatformSearch = createDebounceHandler('platformSearch');
 const debounceContactSearch = createDebounceHandler('contactSearch');
-const debounceCalldownSearch = createDebounceHandler('calldownSearch'); 
+const debounceCalldownSearch = createDebounceHandler('calldownSearch', 300); // Standard delay like other pages 
 
 async function getCustomManifest() {
   const customCrmManifest = await getManifest();
@@ -897,76 +897,107 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
                 case 'calldownPage':
-                  // Detect if this is a filter change vs search input change
-                  const currentFilter = data.body.formData.searchWithFilters?.filter ?? 'All';
-                  const currentSearch = data.body.formData.searchWithFilters?.search ?? '';
-                  
-                  // Get previous state from storage to compare
-                  const { calldownPrevState = {} } = await chrome.storage.local.get('calldownPrevState');
-                  const prevFilter = calldownPrevState.filter ?? 'All';
-                  const prevSearch = calldownPrevState.search ?? '';
-                  
-                  // Update stored state for next comparison
-                  await chrome.storage.local.set({ 
-                    calldownPrevState: { 
-                      filter: currentFilter, 
-                      search: currentSearch 
-                    } 
-                  });
-                  
-                  const isFilterChange = currentFilter !== prevFilter;
-                  const isSearchChange = currentSearch !== prevSearch && !isFilterChange;
-                  
-                  if (isSearchChange) {
-                    // Search input change - debounce and no spinner
-                    debounceCalldownSearch(data.requestId, async (request) => {
-                      const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                      const updated = await calldownPage.getCalldownPageWithRecords({
-                        manifest,
-                        jwtToken: rcUnifiedCrmExtJwt,
-                        searchWithFilters: data.body.formData.searchWithFilters ?? {},
-                        // fallback for legacy
-                        filterName: data.body.formData.filterName ?? '',
-                        filterStatus: data.body.formData.filterStatus ?? 'All',
-                        userSettings
+                  // Check if this is a search input change (requires debouncing)
+                  if (data.body.keys && data.body.keys.some(k => k === 'searchWithFilters')) {
+                    // Store current search and filter values to compare what actually changed
+                    const currentSearch = data.body.formData.searchWithFilters?.search || '';
+                    const currentFilter = data.body.formData.searchWithFilters?.filter || 'All';
+                    
+                    // Get previous values (if any) to detect what changed
+                    const { calldownLastState = { search: '', filter: 'All' } } = await chrome.storage.local.get('calldownLastState');
+                    
+                    const searchChanged = currentSearch !== calldownLastState.search;
+                    const filterChanged = currentFilter !== calldownLastState.filter;
+                    
+                    // If only search changed (typing), use debounce without spinner
+                    if (searchChanged && !filterChanged) {
+                      // Debounce search input to prevent characters from jumping/missing
+                      debounceCalldownSearch(data.requestId, async (request) => {
+                        // Get fresh form data at execution time to prevent stale data
+                        const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                        const updated = await calldownPage.getCalldownPageWithRecords({
+                          manifest,
+                          jwtToken: rcUnifiedCrmExtJwt,
+                          searchWithFilters: data.body.formData.searchWithFilters ?? {},
+                          // fallback for legacy
+                          filterName: data.body.formData.filterName ?? '',
+                          filterStatus: data.body.formData.filterStatus ?? 'All',
+                          userSettings
+                        });
+                        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                          type: 'rc-adapter-register-customized-page',
+                          page: updated
+                        });
+                        
+                        // Update state only after successful search completion
+                        await chrome.storage.local.set({ 
+                          calldownLastState: { 
+                            search: currentSearch, 
+                            filter: currentFilter 
+                          } 
+                        });
+                        
+                        responseMessage(request, { data: 'ok' });
                       });
-                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                        type: 'rc-adapter-register-customized-page',
-                        page: updated
-                      });
-                      responseMessage(request, { data: 'ok' });
-                    });
-                  } else {
-                    // Filter change or initial load - immediate execution with spinner
-                    try {
-                      if (isFilterChange) {
-                        window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                    } else {
+                      // Filter changed or initial load - immediate execution with spinner
+                      try {
+                        if (filterChanged) {
+                          window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                        }
+                        
+                        // Update state immediately for filter changes
+                        await chrome.storage.local.set({ 
+                          calldownLastState: { 
+                            search: currentSearch, 
+                            filter: currentFilter 
+                          } 
+                        });
+                        
+                        const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                        const updated = await calldownPage.getCalldownPageWithRecords({
+                          manifest,
+                          jwtToken: rcUnifiedCrmExtJwt,
+                          searchWithFilters: data.body.formData.searchWithFilters ?? {},
+                          // fallback for legacy
+                          filterName: data.body.formData.filterName ?? '',
+                          filterStatus: data.body.formData.filterStatus ?? 'All',
+                          userSettings
+                        });
+                        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                          type: 'rc-adapter-register-customized-page',
+                          page: updated
+                        });
+                        responseMessage(data.requestId, { data: 'ok' });
+                        
+                        if (filterChanged) {
+                          window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                        }
+                      } catch (error) {
+                        if (filterChanged) {
+                          window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                        }
+                        console.error('Error in calldown operation:', error);
+                        responseMessage(data.requestId, { error: error.message });
                       }
-                      const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                      const updated = await calldownPage.getCalldownPageWithRecords({
-                        manifest,
-                        jwtToken: rcUnifiedCrmExtJwt,
-                        searchWithFilters: data.body.formData.searchWithFilters ?? {},
-                        // fallback for legacy
-                        filterName: data.body.formData.filterName ?? '',
-                        filterStatus: data.body.formData.filterStatus ?? 'All',
-                        userSettings
-                      });
-                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                        type: 'rc-adapter-register-customized-page',
-                        page: updated
-                      });
-                      responseMessage(data.requestId, { data: 'ok' });
-                      if (isFilterChange) {
-                        window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                      }
-                    } catch (error) {
-                      if (isFilterChange) {
-                        window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-                      }
-                      console.error('Error in calldown operation:', error);
-                      responseMessage(data.requestId, { error: error.message });
                     }
+                  } else {
+                    // Other changes (row actions, etc.) - no debounce, no spinner
+                    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                    const updated = await calldownPage.getCalldownPageWithRecords({
+                      manifest,
+                      jwtToken: rcUnifiedCrmExtJwt,
+                      searchWithFilters: data.body.formData.searchWithFilters ?? {},
+                      // fallback for legacy
+                      filterName: data.body.formData.filterName ?? '',
+                      filterStatus: data.body.formData.filterStatus ?? 'All',
+                      userSettings
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: updated
+                    });
+                    responseMessage(data.requestId, { data: 'ok' });
                   }
                   break;
                 case 'googleSheetsPage':
