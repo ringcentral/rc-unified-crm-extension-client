@@ -119,6 +119,25 @@ window.onerror = (event, source, lineno, colno, error) => {
 
 const rcApi = new RcAPI();
 
+// Helper function to cache contact information for call-down list
+async function cacheCalldownContact({ contactId, contactName, phoneNumber, contactType }) {
+  if (!contactId || !contactName || !phoneNumber) return;
+  
+  try {
+    const { calldownContactCache = {} } = await chrome.storage.local.get('calldownContactCache');
+    calldownContactCache[String(contactId)] = {
+      contactName,
+      phoneNumber,
+      contactType,
+      cachedAt: Date.now()
+    };
+    await chrome.storage.local.set({ calldownContactCache });
+    console.log('Cached contact for calldown:', { contactId, contactName, phoneNumber });
+  } catch (error) {
+    console.warn('Failed to cache calldown contact:', error);
+  }
+}
+
 // Interact with RingCentral Embeddable Voice:
 window.addEventListener('message', async (e) => {
   const data = e.data;
@@ -2672,6 +2691,15 @@ window.addEventListener('message', async (e) => {
                           contactIdToUse = created.contactInfo.id;
                           showNotification({ level: 'success', message: 'Contact created', ttl: 3000 });
                           await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
+                          
+                          // Cache contact information for call-down list display
+                          await cacheCalldownContact({
+                            contactId: contactIdToUse,
+                            contactName: newContactName,
+                            phoneNumber: phone,
+                            contactType: selectedType
+                          });
+                          
                           showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
                           try {
                             document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
@@ -2688,6 +2716,36 @@ window.addEventListener('message', async (e) => {
                       }
                     } else {
                       await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
+                      
+                      // Cache contact information for existing contact
+                      try {
+                        // Get contact info from CRM since page data is not available in submit handler
+                        if (contactIdToUse && contactIdToUse !== 'newContact') {
+                          const { matched, contactInfo } = await contactCore.getContact({
+                            serverUrl: manifest.serverUrl,
+                            phoneNumber: phone,
+                            platformName,
+                            isForceRefresh: false,
+                            isToTriggerContactMatch: false
+                          });
+                          
+                          if (matched && contactInfo && contactInfo.length > 0) {
+                            // Find the specific contact by ID
+                            const selectedContact = contactInfo.find(c => c.id === contactIdToUse);
+                            if (selectedContact) {
+                              await cacheCalldownContact({
+                                contactId: contactIdToUse,
+                                contactName: selectedContact.name,
+                                phoneNumber: phone,
+                                contactType: selectedContact.type || 'Contact'
+                              });
+                            }
+                          }
+                        }
+                      } catch (e) {
+                        console.warn('Failed to cache existing contact info:', e);
+                      }
+                      
                       // Notify user on success
                       try {
                         showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
@@ -3650,6 +3708,26 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             const { phone, note, callbackDateTime } = data.body?.formData || {};
             if (!callbackDateTime) return;
             await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: data.body?.formData?.contact, note });
+            
+            // Cache contact information for c2schedule flow
+            try {
+              const selectedContactId = data.body?.formData?.contact;
+              if (selectedContactId && selectedContactId !== 'newContact') {
+                // Find the contact from the original contacts array that was resolved
+                const selectedContact = contacts.find(c => c.id === selectedContactId);
+                if (selectedContact) {
+                  await cacheCalldownContact({
+                    contactId: selectedContactId,
+                    contactName: selectedContact.name,
+                    phoneNumber: phone,
+                    contactType: selectedContact.type || 'Contact'
+                  });
+                }
+              }
+            } catch (e) {
+              console.warn('Failed to cache c2schedule contact info:', e);
+            }
+            
             try {
               const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
               document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: calldownPageRender }, '*');
