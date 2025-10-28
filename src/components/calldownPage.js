@@ -118,13 +118,23 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
             // ignore if matcher not present
         }
 
-        // Enrich FIRST so we can filter using resolved names/phones
+        // Load cached contact information for calldown items
+        const { calldownContactCache = {} } = await chrome.storage.local.get('calldownContactCache');
+
+        // Enrich FIRST so we can filter using resolved names/phones (RC matcher + cache)
         const enriched = items.map(i => {
-            const mapped = idToContact.get(String(i.contactId));
+            // First priority: RC widget matcher (for contacts that have been called/are in call history)
+            const widgetMatched = idToContact.get(String(i.contactId));
+            
+            // Second priority: cached contact information (for scheduled but not called contacts)
+            const cached = calldownContactCache[String(i.contactId)] || {};
+            
             return {
                 ...i,
-                contactName: mapped?.name ?? i.contactName,
-                phoneNumber: mapped?.phone ?? i.phoneNumber,
+                contactName: widgetMatched?.name ?? cached.contactName ?? i.contactName,
+                phoneNumber: widgetMatched?.phone ?? cached.phoneNumber ?? i.phoneNumber,
+                // Also store contact type from cache if available
+                contactType: cached.contactType ?? i.contactType
             };
         });
 
@@ -179,15 +189,58 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                 }
             };
         });
-        // pill: number of calls scheduled today
+        // pill: number of calls scheduled today that haven't been called yet
         const todaysCount = items.filter(i => {
             if (!i.scheduledAt) return false;
             const d = new Date(i.scheduledAt);
-            return d.toDateString() === todayDateString;
+            const isScheduledToday = d.toDateString() === todayDateString;
+            
+            // If scheduled today, check if it hasn't been called yet
+            if (isScheduledToday) {
+                // If no lastCallAt, it hasn't been called
+                if (!i.lastCallAt) return true;
+                
+                // If lastCallAt exists, check if it's from today
+                const lastCallDate = new Date(i.lastCallAt);
+                const isCalledToday = lastCallDate.toDateString() === todayDateString;
+                
+                // Only count if not called today (so still needs to be called)
+                return !isCalledToday;
+            }
+            
+            return false;
         }).length;
         page.unreadCount = todaysCount;
         // cache current list
         await chrome.storage.local.set({ calldownListCache: filtered });
+        
+        // Clean up contact cache - keep only contacts that are still in the active items 
+        // AND are not available in RC widget matcher
+        try {
+            const activeContactIds = items.map(i => String(i.contactId)).filter(id => id && id !== 'undefined');
+            if (activeContactIds.length > 0) {
+                const updatedCache = {};
+                
+                // Keep only contacts that are still in the active list AND not in RC matcher
+                for (const contactId of activeContactIds) {
+                    if (calldownContactCache[contactId]) {
+                        // Check if this contact is now available in RC widget matcher
+                        const widgetMatched = idToContact.get(String(contactId));
+                        if (!widgetMatched) {
+                            // Contact is not in RC matcher, keep it in cache
+                            updatedCache[contactId] = calldownContactCache[contactId];
+                        }
+                    }
+                }
+                
+                // Only update if there's a change to avoid unnecessary storage writes
+                if (Object.keys(updatedCache).length !== Object.keys(calldownContactCache).length) {
+                    await chrome.storage.local.set({ calldownContactCache: updatedCache });
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to cleanup calldown contact cache:', error);
+        }
     }
     catch (e) {
         // leave list empty on error

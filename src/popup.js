@@ -20,6 +20,7 @@ import aboutPage from './components/aboutPage';
 import developerSettingsPage from './components/developerSettingsPage';
 import reportPage from './components/reportPage/reportPage';
 import calldownPage from './components/calldownPage';
+import createSchedulePage from './components/schedulePage';
 import adminPage from './components/admin/adminPage';
 import managedSettingsPage from './components/admin/managedSettingsPage';
 import generalSettingPage from './components/admin/generalSettingPage';
@@ -97,6 +98,7 @@ getCustomManifest();
 // Create debounce handlers for different operations
 const debouncePlatformSearch = createDebounceHandler('platformSearch');
 const debounceContactSearch = createDebounceHandler('contactSearch');
+const debounceCalldownSearch = createDebounceHandler('calldownSearch', 300); // Standard delay like other pages 
 
 async function getCustomManifest() {
   const customCrmManifest = await getManifest();
@@ -116,6 +118,24 @@ window.onerror = (event, source, lineno, colno, error) => {
 };
 
 const rcApi = new RcAPI();
+
+// Helper function to cache contact information for call-down list
+async function cacheCalldownContact({ contactId, contactName, phoneNumber, contactType }) {
+  if (!contactId || !contactName || !phoneNumber) return;
+  
+  try {
+    const { calldownContactCache = {} } = await chrome.storage.local.get('calldownContactCache');
+    calldownContactCache[String(contactId)] = {
+      contactName,
+      phoneNumber,
+      contactType,
+      cachedAt: Date.now()
+    };
+    await chrome.storage.local.set({ calldownContactCache });
+  } catch (error) {
+    console.warn('Failed to cache calldown contact:', error);
+  }
+}
 
 // Interact with RingCentral Embeddable Voice:
 window.addEventListener('message', async (e) => {
@@ -178,13 +198,19 @@ window.addEventListener('message', async (e) => {
                 }, '*');
               }
               else if (cachedClickToXRequest.type === 'c2schedule') {
+                // Prevent duplicate processing if already handling a c2schedule
+                if (isOpeningSchedule || processingCachedRequest) {
+                  return;
+                }
+                
+                processingCachedRequest = true;
                 // Open schedule page with contact dropdown (simple version)
                 try {
                   try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
                   const phoneNumber = cachedClickToXRequest.phoneNumber;
                   const platformInfo = await getPlatformInfo();
                   const platformName = platformInfo.platformName;
-                  const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: false });
+                  const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: true });
                   const contacts = (res?.contactInfo || []).filter(c => !c.isNewContact);
                   const contactOptions = contacts.map(c => ({ const: c.id, title: c.name }));
                   const newContactOption = { const: 'newContact', title: 'Create new contact' };
@@ -193,38 +219,21 @@ window.addEventListener('message', async (e) => {
                   const isDefaultNew = contacts.length === 0;
                   const preselect = isDefaultNew ? 'newContact' : (contactOptions[0]?.const ?? '');
                   const ct = manifest.platforms[platformName]?.contactTypes || [];
-                  const schedulePage = {
-                    id: 'c2dSchedulePage',
-                    title: 'Add to call-down list',
-                    type: 'page',
-                    schema: {
-                      type: 'object',
-                      required: ['callbackDateTime'],
-                      properties: {
-                        phone: { type: 'string', title: 'Phone Number' },
-                        contact: { type: 'string', title: 'Contact', oneOf: listOneOf },
-                        newContactName: { type: 'string', title: 'New contact name' },
-                        ...(ct.length > 0 ? { newContactType: { type: 'string', title: 'Contact type', oneOf: ct.map(t => ({ const: t.value, title: t.display })) } } : {}),
-                        callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
-                        scheduleSubmit: { type: 'string', title: 'Schedule' },
-                      }
-                    },
-                    uiSchema: {
-                      phone: { 'ui:disabled': true },
-                      contact: {},
-                      newContactName: isDefaultNew ? { 'ui:widget': 'text', 'ui:placeholder': 'Enter name...' } : { 'ui:widget': 'hidden' },
-                      ...(ct.length > 0 ? { newContactType: isDefaultNew ? {} : { 'ui:widget': 'hidden' } } : {}),
-                      callbackDateTime: { 'ui:widget': 'datetime' },
-                      scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit', 'ui:disabled': true },
-                    },
-                    formData: { phone: phoneNumber, contact: preselect, newContactName: '', newContactType: isDefaultNew && ct.length > 0 ? ct[0].value : '', callbackDateTime: '' }
-                  };
+                  const schedulePage = createSchedulePage({
+                    phoneNumber,
+                    listOneOf,
+                    isDefaultNew,
+                    preselect,
+                    contactTypes: ct
+                  });
                   schedulePageSubmitEnabled = false;
+                  schedulePageIsNewSelected = isDefaultNew;
                   document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
                   document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${schedulePage.id}` }, '*');
 
                 } catch (e) { console.log(e); }
                 finally {
+                  processingCachedRequest = false;
                   try { window.postMessage({ type: 'rc-log-modal-loading-off' }, '*'); } catch (e) { /* ignore */ }
                 }
               }
@@ -684,16 +693,29 @@ window.addEventListener('message', async (e) => {
             if (data.path === '/customizedTabs/calldownPage') {
               try {
                 const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                const refreshedCalldown = await calldownPage.getCalldownPageWithRecords({
-                  manifest,
-                  jwtToken: rcUnifiedCrmExtJwt,
-                  filterStatus: 'All',
-                  userSettings
-                });
-                document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
-                  type: 'rc-adapter-register-customized-page',
-                  page: refreshedCalldown
-                }, '*');
+                if (rcUnifiedCrmExtJwt && crmAuthed) {
+                  const refreshedCalldown = await calldownPage.getCalldownPageWithRecords({
+                    manifest,
+                    jwtToken: rcUnifiedCrmExtJwt,
+                    filterStatus: 'All',
+                    userSettings
+                  });
+                  document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: refreshedCalldown
+                  }, '*');
+                } else {
+                  // CRM is disconnected, hide call-down page if it was enabled
+                  if (userCore.getShowCalldownTabSetting(userSettings).value) {
+                    const emptyCalldownPage = calldownPage.getCalldownPageRender();
+                    emptyCalldownPage.hidden = true; // Hide the tab when CRM is disconnected
+                    emptyCalldownPage.unreadCount = 0;
+                    document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: emptyCalldownPage
+                    }, '*');
+                  }
+                }
               } catch (e) { /* ignore */ }
             }
           }
@@ -738,6 +760,20 @@ window.addEventListener('message', async (e) => {
                 window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                 await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
                 await authCore.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
+                
+                // Clear call-down page after CRM disconnect
+                try {
+                  if (userCore.getShowCalldownTabSetting(userSettings).value) {
+                    const emptyCalldownPage = calldownPage.getCalldownPageRender(); // Get empty page
+                    emptyCalldownPage.hidden = true; // Hide the tab when CRM is disconnected
+                    emptyCalldownPage.unreadCount = 0; // Explicitly set badge to 0
+                    document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+                      type: 'rc-adapter-register-customized-page',
+                      page: emptyCalldownPage
+                    }, '*');
+                  }
+                } catch (e) { /* ignore */ }
+                
                 if (platform.useLicense) {
                   await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
                 }
@@ -886,8 +922,92 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
                 case 'calldownPage':
-                  // Treat any input change as filter change; ignore row selection (actions handled inline)
-                  {
+                  // Check if this is a search input change (requires debouncing)
+                  if (data.body.keys && data.body.keys.some(k => k === 'searchWithFilters')) {
+                    // Store current search and filter values to compare what actually changed
+                    const currentSearch = data.body.formData.searchWithFilters?.search || '';
+                    const currentFilter = data.body.formData.searchWithFilters?.filter || 'All';
+                    
+                    // Get previous values (if any) to detect what changed
+                    const { calldownLastState = { search: '', filter: 'All' } } = await chrome.storage.local.get('calldownLastState');
+                    
+                    const searchChanged = currentSearch !== calldownLastState.search;
+                    const filterChanged = currentFilter !== calldownLastState.filter;
+                    
+                    // If only search changed (typing), use debounce without spinner
+                    if (searchChanged && !filterChanged) {
+                      // Debounce search input to prevent characters from jumping/missing
+                      debounceCalldownSearch(data.requestId, async (request) => {
+                        // Get fresh form data at execution time to prevent stale data
+                        const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                        const updated = await calldownPage.getCalldownPageWithRecords({
+                          manifest,
+                          jwtToken: rcUnifiedCrmExtJwt,
+                          searchWithFilters: data.body.formData.searchWithFilters ?? {},
+                          // fallback for legacy
+                          filterName: data.body.formData.filterName ?? '',
+                          filterStatus: data.body.formData.filterStatus ?? 'All',
+                          userSettings
+                        });
+                        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                          type: 'rc-adapter-register-customized-page',
+                          page: updated
+                        });
+                        
+                        // Update state only after successful search completion
+                        await chrome.storage.local.set({ 
+                          calldownLastState: { 
+                            search: currentSearch, 
+                            filter: currentFilter 
+                          } 
+                        });
+                        
+                        responseMessage(request, { data: 'ok' });
+                      });
+                    } else {
+                      // Filter changed or initial load - immediate execution with spinner
+                      try {
+                        if (filterChanged) {
+                          window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                        }
+                        
+                        // Update state immediately for filter changes
+                        await chrome.storage.local.set({ 
+                          calldownLastState: { 
+                            search: currentSearch, 
+                            filter: currentFilter 
+                          } 
+                        });
+                        
+                        const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                        const updated = await calldownPage.getCalldownPageWithRecords({
+                          manifest,
+                          jwtToken: rcUnifiedCrmExtJwt,
+                          searchWithFilters: data.body.formData.searchWithFilters ?? {},
+                          // fallback for legacy
+                          filterName: data.body.formData.filterName ?? '',
+                          filterStatus: data.body.formData.filterStatus ?? 'All',
+                          userSettings
+                        });
+                        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                          type: 'rc-adapter-register-customized-page',
+                          page: updated
+                        });
+                        responseMessage(data.requestId, { data: 'ok' });
+                        
+                        if (filterChanged) {
+                          window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                        }
+                      } catch (error) {
+                        if (filterChanged) {
+                          window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                        }
+                        console.error('Error in calldown operation:', error);
+                        responseMessage(data.requestId, { error: error.message });
+                      }
+                    }
+                  } else {
+                    // Other changes (row actions, etc.) - no debounce, no spinner
                     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                     const updated = await calldownPage.getCalldownPageWithRecords({
                       manifest,
@@ -902,7 +1022,7 @@ window.addEventListener('message', async (e) => {
                       type: 'rc-adapter-register-customized-page',
                       page: updated
                     });
-                    // Do not navigate; avoid resetting input focus/value
+                    responseMessage(data.requestId, { data: 'ok' });
                   }
                   break;
                 case 'googleSheetsPage':
@@ -2501,7 +2621,21 @@ window.addEventListener('message', async (e) => {
               switch (btnBaseId) {
                 case 'callLater': {
                   try {
-                    const number = data.body?.resource?.to?.phoneNumber;
+                    const isExtensionNumber = data.body?.resource?.direction === 'Inbound' ?
+                !!data.body?.resource?.from.extensionNumber :
+                !!data.body?.resource?.to.extensionNumber;
+                if (isExtensionNumber) {
+                  showNotification({ level: 'warning', message: 'Extension numbers cannot be scheduled', ttl: 3000 });
+                  responseMessage(data.requestId, { data: 'ok' });
+                  break;
+                }
+                    let number = undefined;
+                    if (data.body?.resource?.direction==="Inbound") {
+                      number = data.body?.resource?.from?.phoneNumber;
+                    }
+                    else  {
+                      number = data.body?.resource?.to?.phoneNumber;
+                    }
                     if (!number) break;
                     //try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
                     chrome.runtime.sendMessage({ type: 'c2schedule', phoneNumber: number });
@@ -2510,7 +2644,12 @@ window.addEventListener('message', async (e) => {
                 }
                 case 'callLaterInMessage': {
                   try {
-                    const number = data.body?.resource?.to?.phoneNumber || data.body?.resource?.to?.length > 0 ? data.body?.resource?.to?.[0]?.phoneNumber : undefined;
+                    let number=undefined;
+                    if (data.body?.resource?.direction==="Inbound") {
+                      number = data.body?.resource?.from?.phoneNumber;
+                    } else{
+                       number = data.body?.resource?.to?.phoneNumber || data.body?.resource?.to?.length > 0 ? data.body?.resource?.to?.[0]?.phoneNumber : undefined;
+                    }
                     if (!number) break;
                     // try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
                     chrome.runtime.sendMessage({ type: 'c2schedule', phoneNumber: number });
@@ -2558,6 +2697,15 @@ window.addEventListener('message', async (e) => {
                           contactIdToUse = created.contactInfo.id;
                           showNotification({ level: 'success', message: 'Contact created', ttl: 3000 });
                           await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
+                          
+                          // Cache contact information for call-down list display
+                          await cacheCalldownContact({
+                            contactId: contactIdToUse,
+                            contactName: newContactName,
+                            phoneNumber: phone,
+                            contactType: selectedType
+                          });
+                          
                           showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
                           try {
                             document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
@@ -2574,6 +2722,36 @@ window.addEventListener('message', async (e) => {
                       }
                     } else {
                       await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
+                      
+                      // Cache contact information for existing contact
+                      try {
+                        // Get contact info from CRM since page data is not available in submit handler
+                        if (contactIdToUse && contactIdToUse !== 'newContact') {
+                          const { matched, contactInfo } = await contactCore.getContact({
+                            serverUrl: manifest.serverUrl,
+                            phoneNumber: phone,
+                            platformName,
+                            isForceRefresh: false,
+                            isToTriggerContactMatch: false
+                          });
+                          
+                          if (matched && contactInfo && contactInfo.length > 0) {
+                            // Find the specific contact by ID
+                            const selectedContact = contactInfo.find(c => c.id === contactIdToUse);
+                            if (selectedContact) {
+                              await cacheCalldownContact({
+                                contactId: contactIdToUse,
+                                contactName: selectedContact.name,
+                                phoneNumber: phone,
+                                contactType: selectedContact.type || 'Contact'
+                              });
+                            }
+                          }
+                        }
+                      } catch (e) {
+                        console.warn('Failed to cache existing contact info:', e);
+                      }
+                      
                       // Notify user on success
                       try {
                         showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
@@ -2610,10 +2788,26 @@ window.addEventListener('message', async (e) => {
                         await axios.patch(`${manifest.serverUrl}/calldown/${rowId}?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`,
                           { lastCallAt: new Date().toISOString() });
                       } catch (e) { console.log(e); }
-                      // Refresh Call-down list and pill
+                      // Refresh Call-down list and pill (preserve current filter)
                       try {
                         const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                        const refreshed = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
+                        // Get current filter from form data to preserve user's view
+                        const currentFilter = data.body?.page?.formData?.searchWithFilters?.filter || 
+                                             data.body?.formData?.searchWithFilters?.filter || 
+                                             data.body?.formData?.filterStatus || 'All';
+                        const currentSearch = data.body?.page?.formData?.searchWithFilters?.search || 
+                                             data.body?.formData?.searchWithFilters?.search || '';
+                        
+                        const refreshed = await calldownPage.getCalldownPageWithRecords({ 
+                          manifest, 
+                          jwtToken: rcUnifiedCrmExtJwt, 
+                          filterStatus: currentFilter,
+                          searchWithFilters: {
+                            search: currentSearch,
+                            filter: currentFilter
+                          },
+                          userSettings 
+                        });
                         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                           type: 'rc-adapter-register-customized-page',
                           page: refreshed
@@ -3353,6 +3547,7 @@ let schedulePageSubmitEnabled = false;
 let schedulePageIsNewSelected = false;
 // guard to prevent duplicate c2schedule opens when extension is already open
 let isOpeningSchedule = false;
+let processingCachedRequest = false;
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.type === 'oauthCallBack') {
@@ -3482,7 +3677,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     sendResponse({ result: 'ok' });
   } else if (request.type === 'c2schedule') {
     try {
-      if (isOpeningSchedule) { sendResponse({ result: 'busy' }); return; }
+      // Prevent duplicate processing if cached request is being handled or already opening
+      if (isOpeningSchedule || processingCachedRequest) { 
+        sendResponse({ result: 'busy' }); 
+        return; 
+      }
       isOpeningSchedule = true;
       try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
       const manifest = await getManifest();
@@ -3490,40 +3689,22 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       const platformName = platformInfo.platformName;
       // resolve contacts for the number and show dropdown
       const phoneNumber = request.phoneNumber;
-      const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: false });
+      const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: true });
       const contacts = (res?.contactInfo || []).filter(c => !c.isNewContact);
       const contactOptions = contacts.map(c => ({ const: c.id, title: c.name }));
       const newContactOption = { const: 'newContact', title: 'Create new contact' };
       const listOneOf = [...contactOptions, newContactOption];
       const isDefaultNew = contacts.length === 0;
       const preselect = isDefaultNew ? 'newContact' : (contactOptions[0]?.const ?? '');
-      const schedulePage = {
-        id: 'c2dSchedulePage',
-        title: 'Add to call-down list',
-        type: 'page',
-        schema: {
-          type: 'object',
-          required: ['callbackDateTime'],
-          properties: {
-            phone: { type: 'string', title: 'Phone Number' },
-            contact: { type: 'string', title: 'Contact', oneOf: listOneOf },
-            newContactName: { type: 'string', title: 'New contact name' },
-            ...(manifest.platforms[platformName]?.contactTypes?.length > 0 ? { newContactType: { type: 'string', title: 'Contact type', oneOf: manifest.platforms[platformName].contactTypes.map(t => ({ const: t.value, title: t.display })) } } : {}),
-            callbackDateTime: { type: 'string', title: 'Schedule time', format: 'date-time', minimum: new Date().toISOString() },
-            scheduleSubmit: { type: 'string', title: 'Schedule' },
-          }
-        },
-        uiSchema: {
-          phone: { 'ui:disabled': true },
-          contact: {},
-          newContactName: isDefaultNew ? { 'ui:widget': 'text', 'ui:placeholder': 'Enter name...' } : { 'ui:widget': 'hidden' },
-          ...(manifest.platforms[platformName]?.contactTypes?.length > 0 ? { newContactType: isDefaultNew ? {} : { 'ui:widget': 'hidden' } } : {}),
-          callbackDateTime: { 'ui:widget': 'datetime' },
-          scheduleSubmit: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:id': 'scheduleSubmit', 'ui:disabled': true },
-        },
-        formData: { phone: phoneNumber, contact: preselect, newContactName: '', newContactType: isDefaultNew && (manifest.platforms[platformName]?.contactTypes?.length > 0) ? manifest.platforms[platformName].contactTypes[0].value : '', callbackDateTime: '' }
-      };
+      const schedulePage = createSchedulePage({
+        phoneNumber,
+        listOneOf,
+        isDefaultNew,
+        preselect,
+        contactTypes: manifest.platforms[platformName]?.contactTypes || []
+      });
       schedulePageSubmitEnabled = false;
+      schedulePageIsNewSelected = isDefaultNew;
       document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: schedulePage }, '*');
       document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${schedulePage.id}` }, '*');
       const onMessage = async (e) => {
@@ -3538,6 +3719,26 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             const { phone, note, callbackDateTime } = data.body?.formData || {};
             if (!callbackDateTime) return;
             await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: data.body?.formData?.contact, note });
+            
+            // Cache contact information for c2schedule flow
+            try {
+              const selectedContactId = data.body?.formData?.contact;
+              if (selectedContactId && selectedContactId !== 'newContact') {
+                // Find the contact from the original contacts array that was resolved
+                const selectedContact = contacts.find(c => c.id === selectedContactId);
+                if (selectedContact) {
+                  await cacheCalldownContact({
+                    contactId: selectedContactId,
+                    contactName: selectedContact.name,
+                    phoneNumber: phone,
+                    contactType: selectedContact.type || 'Contact'
+                  });
+                }
+              }
+            } catch (e) {
+              console.warn('Failed to cache c2schedule contact info:', e);
+            }
+            
             try {
               const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
               document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: calldownPageRender }, '*');
@@ -3550,7 +3751,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       };
       window.addEventListener('message', onMessage);
     } catch (e) { console.log(e); }
-    finally { setTimeout(() => { isOpeningSchedule = false; }, 1500); }
+    finally { 
+      setTimeout(() => { 
+        isOpeningSchedule = false; 
+        processingCachedRequest = false; // Safety: clear both flags after timeout
+      }, 1500); 
+    }
     try { window.postMessage({ type: 'rc-log-modal-loading-off' }, '*'); } catch (e) { /* ignore */ }
     sendResponse({ result: 'ok' });
   }

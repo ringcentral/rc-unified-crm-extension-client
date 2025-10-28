@@ -3,6 +3,8 @@ import { showNotification } from '../lib/util';
 import { trackCrmAuthFail } from '../lib/analytics';
 import { getServiceManifest } from '../service/embeddableServices';
 import { getManifest } from '../service/manifestService';
+import calldownPage from '../components/calldownPage';
+import userCore from '../core/user';
 
 async function bullhornHeartbeat({ platform }) {
     console.log('checking bullhorn heartbeat...')
@@ -16,6 +18,21 @@ async function bullhornHeartbeat({ platform }) {
         else {
             await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
             await chrome.storage.local.remove('crmAuthed');
+            
+            // Clear call-down page after CRM disconnect
+            try {
+                const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
+                if (userCore.getShowCalldownTabSetting(userSettings).value) {
+                    const emptyCalldownPage = calldownPage.getCalldownPageRender();
+                    emptyCalldownPage.hidden = true; // Hide the tab when CRM is disconnected
+                    emptyCalldownPage.unreadCount = 0;
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: emptyCalldownPage
+                    }, '*');
+                }
+            } catch (e) { /* ignore */ }
+            
             const serviceManifest = await getServiceManifest();
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-third-party-service',
@@ -58,6 +75,21 @@ async function bullhornHeartbeat({ platform }) {
     catch (e) {
         await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
         await chrome.storage.local.remove('crmAuthed');
+        
+        // Clear call-down page after CRM disconnect
+        try {
+            const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
+            if (userCore.getShowCalldownTabSetting(userSettings).value) {
+                const emptyCalldownPage = calldownPage.getCalldownPageRender();
+                emptyCalldownPage.hidden = true; // Hide the tab when CRM is disconnected
+                emptyCalldownPage.unreadCount = 0;
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: emptyCalldownPage
+                }, '*');
+            }
+        } catch (e2) { /* ignore */ }
+        
         const serviceManifest = await getServiceManifest();
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-register-third-party-service',
