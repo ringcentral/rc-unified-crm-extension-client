@@ -302,21 +302,33 @@ async function getServiceManifest() {
                         type: 'option',
                         name: 'Multi-contact match behavior',
                         helper: 'Select what to do when multiple contacts match a phone number.',
-                        options: [
-                            {
-                                id: 'disabled',
-                                name: 'Disabled'
-                            },
-                            {
-                                id: 'openAllMatches',
-                                name: 'Open all matches' + (platform.name == 'bullhorn' ? ' (Bullhorn only supports open one match)' : '')
-                            },
-                            {
-                                id: 'promptToSelect',
-                                name: 'Prompt to select'
-                            }
-                        ],
-                        value: userCore.getCallPopMultiMatchBehavior(userSettings).value,
+                        options: platform?.name != 'bullhorn' ?
+                            [
+                                {
+                                    id: 'disabled',
+                                    name: 'Disabled'
+                                },
+                                {
+                                    id: 'openAllMatches',
+                                    name: 'Open all matches'
+                                },
+                                {
+                                    id: 'promptToSelect',
+                                    name: 'Prompt to select'
+                                }
+                            ] :
+                            [
+                                {
+                                    id: 'disabled',
+                                    name: 'Disabled'
+                                },
+                                {
+                                    id: 'promptToSelect',
+                                    name: 'Prompt to select'
+                                }
+                            ],
+                        // Hack: Bullhorn doesn't have open all option
+                        value: userCore.getCallPopMultiMatchBehavior(userSettings, platform?.name == 'bullhorn' && userSettings?.multiContactMatchBehavior?.value == 'openAllMatches').value,
                         readOnly: userCore.getCallPopMultiMatchBehavior(userSettings).readOnly,
                         readOnlyReason: userCore.getCallPopMultiMatchBehavior(userSettings).readOnlyReason,
                     },
@@ -562,11 +574,11 @@ async function getServiceManifest() {
                     {
                         id: "YYYY-MM-DD hh:mm:ss A",
                         name: "2024-01-15 02:30:45 PM - General 12H"
-                    }, 
+                    },
                     {
                         id: "YYYY-MM-DD HH:mm:ss",
                         name: "2024-01-15 14:30:45 - General 24H"
-                    },                   
+                    },
                     // US Formats
                     {
                         id: "MM/DD/YYYY hh:mm:ss A",

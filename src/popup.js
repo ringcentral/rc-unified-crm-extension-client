@@ -396,7 +396,7 @@ window.addEventListener('message', async (e) => {
           if (crmAuthed) {
             const adminSettingResults = await adminCore.refreshAdminSettings();
             adminSettings = adminSettingResults.adminSettings;
-            userSettings = await userCore.refreshUserSettings({});
+            userSettings = await userCore.refreshUserSettings({ platformName });
             await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: rcUnifiedCrmExtJwt });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-update-authorization-status',
@@ -1040,8 +1040,8 @@ window.addEventListener('message', async (e) => {
                   const additionalFieldValues = await adminCore.getServerSideLoggingAdditionalFieldValues({ platform });
                   const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({
                     subscriptionLevel: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.subscriptionLevel : subscriptionLevel,
-                    doNotLogNumbers: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.doNotLogNumbers :serverSideLoggingSubscription.doNotLogNumbers,
-                    loggingByAdmin: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.loggingByAdmin :serverSideLoggingSubscription.loggingByAdmin,
+                    doNotLogNumbers: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.doNotLogNumbers : serverSideLoggingSubscription.doNotLogNumbers,
+                    loggingByAdmin: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.loggingByAdmin : serverSideLoggingSubscription.loggingByAdmin,
                     subscribedByOtherAdmin: serverSideLoggingSubscription.subscribedByOtherAdmin,
                     additionalFields: platform.serverSideLogging?.additionalFields ?? [],
                     additionalFieldValues,

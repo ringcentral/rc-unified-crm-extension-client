@@ -45,7 +45,7 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
 }
 
 
-async function refreshUserSettings({ changedSettings, isAvoidForceChange = false }) {
+async function refreshUserSettings({ changedSettings, platformName, isAvoidForceChange = false }) {
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
     if (!crmAuthed) {
         return;
@@ -62,6 +62,9 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
                 userSettings[k].value = changedSettings[k].value;
             }
         }
+    }
+    if (platformName === 'bullhorn' && userSettings?.multiContactMatchBehavior?.value == 'openAllMatches') { 
+        userSettings.multiContactMatchBehavior.value = 'promptToSelect';
     }
     userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
     await chrome.storage.local.set({ userSettings });
@@ -219,7 +222,7 @@ function getOutgoingCallPop(userSettings) {
 
 function getCallPopMultiMatchBehavior(userSettings) {
     return {
-        value: userSettings?.multiContactMatchBehavior?.value ?? 'openAllMatches',
+        value: userSettings?.multiContactMatchBehavior?.value ?? 'promptToSelect',
         readOnly: userSettings?.multiContactMatchBehavior?.customizable === undefined ? false : !userSettings?.multiContactMatchBehavior?.customizable,
         readOnlyReason: !userSettings?.multiContactMatchBehavior?.customizable ? 'This setting is managed by admin' : ''
     }
