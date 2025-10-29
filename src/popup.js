@@ -122,7 +122,7 @@ const rcApi = new RcAPI();
 // Helper function to cache contact information for call-down list
 async function cacheCalldownContact({ contactId, contactName, phoneNumber, contactType }) {
   if (!contactId || !contactName || !phoneNumber) return;
-  
+
   try {
     const { calldownContactCache = {} } = await chrome.storage.local.get('calldownContactCache');
     calldownContactCache[String(contactId)] = {
@@ -202,7 +202,7 @@ window.addEventListener('message', async (e) => {
                 if (isOpeningSchedule || processingCachedRequest) {
                   return;
                 }
-                
+
                 processingCachedRequest = true;
                 // Open schedule page with contact dropdown (simple version)
                 try {
@@ -400,25 +400,27 @@ window.addEventListener('message', async (e) => {
                 }
               }
               await chrome.storage.local.set({ rcAdditionalSubmission });
-              const userInfoResponse = await rcApi.getUserInfo({
-                serverUrl: manifest.serverUrl,
-                extensionId: rcInfo.value.cachedData.extensionInfo.id,
-                accountId: rcInfo.value.cachedData.extensionInfo.account.id
-              });
-              rcUserInfo = {
-                rcUserName: rcInfo.value.cachedData.extensionInfo.name,
-                rcUserEmail: rcInfo.value.cachedData.extensionInfo.contact.email,
-                rcAccountId: userInfoResponse.accountId,
-                rcExtensionId: userInfoResponse.extensionId
-              };
-              await chrome.storage.local.set({ ['rcUserInfo']: rcUserInfo });
-              reset();
-              identify({ extensionId: rcUserInfo?.rcExtensionId, rcAccountId: rcUserInfo?.rcAccountId, platformName });
-              group({ rcAccountId: rcUserInfo?.rcAccountId });
-              // setup headers for server side analytics
-              axios.defaults.headers.common['rc-extension-id'] = rcUserInfo?.rcExtensionId;
-              axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId;
-              axios.defaults.headers.common['developer-author-name'] = manifest?.author?.name ?? "";
+              if (manifest.serverUrl) {
+                const userInfoResponse = await rcApi.getUserInfo({
+                  serverUrl: manifest.serverUrl,
+                  extensionId: rcInfo.value.cachedData.extensionInfo.id,
+                  accountId: rcInfo.value.cachedData.extensionInfo.account.id
+                });
+                rcUserInfo = {
+                  rcUserName: rcInfo.value.cachedData.extensionInfo.name,
+                  rcUserEmail: rcInfo.value.cachedData.extensionInfo.contact.email,
+                  rcAccountId: userInfoResponse.accountId,
+                  rcExtensionId: userInfoResponse.extensionId
+                };
+                await chrome.storage.local.set({ ['rcUserInfo']: rcUserInfo });
+                reset();
+                identify({ extensionId: rcUserInfo?.rcExtensionId, rcAccountId: rcUserInfo?.rcAccountId, platformName });
+                group({ rcAccountId: rcUserInfo?.rcAccountId });
+                // setup headers for server side analytics
+                axios.defaults.headers.common['rc-extension-id'] = rcUserInfo?.rcExtensionId;
+                axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId;
+                axios.defaults.headers.common['developer-author-name'] = manifest?.author?.name ?? "";
+              }
             }
             catch (e) {
               reset();
@@ -433,7 +435,10 @@ window.addEventListener('message', async (e) => {
               trackRcLogin();
               rcLoginStatus = true;
               await chrome.storage.local.set({ ['rcLoginStatus']: rcLoginStatus });
+              if(manifest.serverUrl)
+              {
               const userSettingsByAdmin = await userCore.preloadUserSettingsFromAdmin({ serverUrl: manifest.serverUrl });
+              }
             }
           }
           // case 2: login status changed
@@ -760,7 +765,7 @@ window.addEventListener('message', async (e) => {
                 window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                 await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
                 await authCore.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
-                
+
                 // Clear call-down page after CRM disconnect
                 try {
                   if (userCore.getShowCalldownTabSetting(userSettings).value) {
@@ -773,7 +778,7 @@ window.addEventListener('message', async (e) => {
                     }, '*');
                   }
                 } catch (e) { /* ignore */ }
-                
+
                 if (platform.useLicense) {
                   await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
                 }
@@ -927,13 +932,13 @@ window.addEventListener('message', async (e) => {
                     // Store current search and filter values to compare what actually changed
                     const currentSearch = data.body.formData.searchWithFilters?.search || '';
                     const currentFilter = data.body.formData.searchWithFilters?.filter || 'All';
-                    
+
                     // Get previous values (if any) to detect what changed
                     const { calldownLastState = { search: '', filter: 'All' } } = await chrome.storage.local.get('calldownLastState');
-                    
+
                     const searchChanged = currentSearch !== calldownLastState.search;
                     const filterChanged = currentFilter !== calldownLastState.filter;
-                    
+
                     // If only search changed (typing), use debounce without spinner
                     if (searchChanged && !filterChanged) {
                       // Debounce search input to prevent characters from jumping/missing
@@ -953,15 +958,15 @@ window.addEventListener('message', async (e) => {
                           type: 'rc-adapter-register-customized-page',
                           page: updated
                         });
-                        
+
                         // Update state only after successful search completion
-                        await chrome.storage.local.set({ 
-                          calldownLastState: { 
-                            search: currentSearch, 
-                            filter: currentFilter 
-                          } 
+                        await chrome.storage.local.set({
+                          calldownLastState: {
+                            search: currentSearch,
+                            filter: currentFilter
+                          }
                         });
-                        
+
                         responseMessage(request, { data: 'ok' });
                       });
                     } else {
@@ -970,15 +975,15 @@ window.addEventListener('message', async (e) => {
                         if (filterChanged) {
                           window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                         }
-                        
+
                         // Update state immediately for filter changes
-                        await chrome.storage.local.set({ 
-                          calldownLastState: { 
-                            search: currentSearch, 
-                            filter: currentFilter 
-                          } 
+                        await chrome.storage.local.set({
+                          calldownLastState: {
+                            search: currentSearch,
+                            filter: currentFilter
+                          }
                         });
-                        
+
                         const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                         const updated = await calldownPage.getCalldownPageWithRecords({
                           manifest,
@@ -994,7 +999,7 @@ window.addEventListener('message', async (e) => {
                           page: updated
                         });
                         responseMessage(data.requestId, { data: 'ok' });
-                        
+
                         if (filterChanged) {
                           window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                         }
@@ -2622,18 +2627,18 @@ window.addEventListener('message', async (e) => {
                 case 'callLater': {
                   try {
                     const isExtensionNumber = data.body?.resource?.direction === 'Inbound' ?
-                !!data.body?.resource?.from.extensionNumber :
-                !!data.body?.resource?.to.extensionNumber;
-                if (isExtensionNumber) {
-                  showNotification({ level: 'warning', message: 'Extension numbers cannot be scheduled', ttl: 3000 });
-                  responseMessage(data.requestId, { data: 'ok' });
-                  break;
-                }
+                      !!data.body?.resource?.from.extensionNumber :
+                      !!data.body?.resource?.to.extensionNumber;
+                    if (isExtensionNumber) {
+                      showNotification({ level: 'warning', message: 'Extension numbers cannot be scheduled', ttl: 3000 });
+                      responseMessage(data.requestId, { data: 'ok' });
+                      break;
+                    }
                     let number = undefined;
-                    if (data.body?.resource?.direction==="Inbound") {
+                    if (data.body?.resource?.direction === "Inbound") {
                       number = data.body?.resource?.from?.phoneNumber;
                     }
-                    else  {
+                    else {
                       number = data.body?.resource?.to?.phoneNumber;
                     }
                     if (!number) break;
@@ -2644,11 +2649,11 @@ window.addEventListener('message', async (e) => {
                 }
                 case 'callLaterInMessage': {
                   try {
-                    let number=undefined;
-                    if (data.body?.resource?.direction==="Inbound") {
+                    let number = undefined;
+                    if (data.body?.resource?.direction === "Inbound") {
                       number = data.body?.resource?.from?.phoneNumber;
-                    } else{
-                       number = data.body?.resource?.to?.phoneNumber || data.body?.resource?.to?.length > 0 ? data.body?.resource?.to?.[0]?.phoneNumber : undefined;
+                    } else {
+                      number = data.body?.resource?.to?.phoneNumber || data.body?.resource?.to?.length > 0 ? data.body?.resource?.to?.[0]?.phoneNumber : undefined;
                     }
                     if (!number) break;
                     // try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
@@ -2697,7 +2702,7 @@ window.addEventListener('message', async (e) => {
                           contactIdToUse = created.contactInfo.id;
                           showNotification({ level: 'success', message: 'Contact created', ttl: 3000 });
                           await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
-                          
+
                           // Cache contact information for call-down list display
                           await cacheCalldownContact({
                             contactId: contactIdToUse,
@@ -2705,7 +2710,7 @@ window.addEventListener('message', async (e) => {
                             phoneNumber: phone,
                             contactType: selectedType
                           });
-                          
+
                           showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
                           try {
                             document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
@@ -2722,7 +2727,7 @@ window.addEventListener('message', async (e) => {
                       }
                     } else {
                       await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
-                      
+
                       // Cache contact information for existing contact
                       try {
                         // Get contact info from CRM since page data is not available in submit handler
@@ -2734,7 +2739,7 @@ window.addEventListener('message', async (e) => {
                             isForceRefresh: false,
                             isToTriggerContactMatch: false
                           });
-                          
+
                           if (matched && contactInfo && contactInfo.length > 0) {
                             // Find the specific contact by ID
                             const selectedContact = contactInfo.find(c => c.id === contactIdToUse);
@@ -2751,7 +2756,7 @@ window.addEventListener('message', async (e) => {
                       } catch (e) {
                         console.warn('Failed to cache existing contact info:', e);
                       }
-                      
+
                       // Notify user on success
                       try {
                         showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
@@ -2792,21 +2797,21 @@ window.addEventListener('message', async (e) => {
                       try {
                         const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                         // Get current filter from form data to preserve user's view
-                        const currentFilter = data.body?.page?.formData?.searchWithFilters?.filter || 
-                                             data.body?.formData?.searchWithFilters?.filter || 
-                                             data.body?.formData?.filterStatus || 'All';
-                        const currentSearch = data.body?.page?.formData?.searchWithFilters?.search || 
-                                             data.body?.formData?.searchWithFilters?.search || '';
-                        
-                        const refreshed = await calldownPage.getCalldownPageWithRecords({ 
-                          manifest, 
-                          jwtToken: rcUnifiedCrmExtJwt, 
+                        const currentFilter = data.body?.page?.formData?.searchWithFilters?.filter ||
+                          data.body?.formData?.searchWithFilters?.filter ||
+                          data.body?.formData?.filterStatus || 'All';
+                        const currentSearch = data.body?.page?.formData?.searchWithFilters?.search ||
+                          data.body?.formData?.searchWithFilters?.search || '';
+
+                        const refreshed = await calldownPage.getCalldownPageWithRecords({
+                          manifest,
+                          jwtToken: rcUnifiedCrmExtJwt,
                           filterStatus: currentFilter,
                           searchWithFilters: {
                             search: currentSearch,
                             filter: currentFilter
                           },
-                          userSettings 
+                          userSettings
                         });
                         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                           type: 'rc-adapter-register-customized-page',
@@ -3678,9 +3683,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   } else if (request.type === 'c2schedule') {
     try {
       // Prevent duplicate processing if cached request is being handled or already opening
-      if (isOpeningSchedule || processingCachedRequest) { 
-        sendResponse({ result: 'busy' }); 
-        return; 
+      if (isOpeningSchedule || processingCachedRequest) {
+        sendResponse({ result: 'busy' });
+        return;
       }
       isOpeningSchedule = true;
       try { window.postMessage({ type: 'rc-log-modal-loading-on' }, '*'); } catch (e) { /* ignore */ }
@@ -3719,7 +3724,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             const { phone, note, callbackDateTime } = data.body?.formData || {};
             if (!callbackDateTime) return;
             await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: data.body?.formData?.contact, note });
-            
+
             // Cache contact information for c2schedule flow
             try {
               const selectedContactId = data.body?.formData?.contact;
@@ -3738,7 +3743,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             } catch (e) {
               console.warn('Failed to cache c2schedule contact info:', e);
             }
-            
+
             try {
               const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
               document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: calldownPageRender }, '*');
@@ -3751,11 +3756,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       };
       window.addEventListener('message', onMessage);
     } catch (e) { console.log(e); }
-    finally { 
-      setTimeout(() => { 
-        isOpeningSchedule = false; 
+    finally {
+      setTimeout(() => {
+        isOpeningSchedule = false;
         processingCachedRequest = false; // Safety: clear both flags after timeout
-      }, 1500); 
+      }, 1500);
     }
     try { window.postMessage({ type: 'rc-log-modal-loading-off' }, '*'); } catch (e) { /* ignore */ }
     sendResponse({ result: 'ok' });
