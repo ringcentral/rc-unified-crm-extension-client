@@ -7,8 +7,7 @@ async function getReleaseNotesPageRender({ manifest, platformName, registeredVer
         const registeredVersionNumbers = registeredVersion.split('.').map(v => parseInt(v));
         const currentVersionNumbers = manifest.version.split('.').map(v => parseInt(v));
         if (!!releaseNotes[manifest.version] &&
-            (currentVersionNumbers[0] > registeredVersionNumbers[0] ||
-                currentVersionNumbers[0] === registeredVersionNumbers[0] && currentVersionNumbers[1] > registeredVersionNumbers[1] ||
+            (
                 currentVersionNumbers[0] === registeredVersionNumbers[0] && currentVersionNumbers[1] === registeredVersionNumbers[1] && currentVersionNumbers[2] > registeredVersionNumbers[2])
         ) {
             const globalNotes = releaseNotes[manifest.version].global ?? [];
