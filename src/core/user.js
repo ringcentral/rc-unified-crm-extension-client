@@ -78,7 +78,7 @@ async function refreshUserSettings({ changedSettings, platformName, isAvoidForce
         recordings: getShowRecordingsTabSetting(userSettings).value,
         contacts: getShowContactsTabSetting(userSettings).value
     }, '*');
-    const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false);
+    const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false) || (userSettings?.autoLogVoicemail?.value ?? false);
     const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
     RCAdapter.setAutoLog({ call: (userSettings.autoLogCall?.value && !isServerSideLoggingEnabledForEndUsers) ?? false, message: autoLogMessagesGroupTrigger })
     if (!isAvoidForceChange) {
@@ -153,6 +153,14 @@ function getAutoLogSMSSetting(userSettings) {
         value: userSettings?.autoLogSMS?.value ?? false,
         readOnly: userSettings?.autoLogSMS?.customizable === undefined ? false : !userSettings?.autoLogSMS?.customizable,
         readOnlyReason: !userSettings?.autoLogSMS?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getAutoLogVoicemailSetting(userSettings) {
+    return {
+        value: userSettings?.autoLogVoicemail?.value ?? false,
+        readOnly: userSettings?.autoLogVoicemail?.customizable === undefined ? false : !userSettings?.autoLogVoicemail?.customizable,
+        readOnlyReason: !userSettings?.autoLogVoicemail?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -499,6 +507,7 @@ exports.updateSSCLToken = updateSSCLToken;
 
 exports.getAutoLogCallSetting = getAutoLogCallSetting;
 exports.getAutoLogSMSSetting = getAutoLogSMSSetting;
+exports.getAutoLogVoicemailSetting = getAutoLogVoicemailSetting;
 exports.getAutoLogInboundFaxSetting = getAutoLogInboundFaxSetting;
 exports.getAutoLogOutboundFaxSetting = getAutoLogOutboundFaxSetting;
 exports.getEnableRetroCallLogSync = getEnableRetroCallLogSync;

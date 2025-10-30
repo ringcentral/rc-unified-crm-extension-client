@@ -76,6 +76,15 @@ async function getServiceManifest() {
                         value: userCore.getAutoLogSMSSetting(userSettings).value,
                     },
                     {
+                        id: 'autoLogVoicemail',
+                        type: 'boolean',
+                        name: 'Log voicemail messages automatically',
+                        description: 'Automatically log voicemail messages when they are received in this app',
+                        readOnly: userCore.getAutoLogVoicemailSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getAutoLogVoicemailSetting(userSettings).readOnlyReason,
+                        value: userCore.getAutoLogVoicemailSetting(userSettings).value,
+                    },
+                    {
                         id: 'autoLogInboundFax',
                         type: 'boolean',
                         name: 'Log inbound faxes automatically',
