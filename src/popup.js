@@ -1846,9 +1846,9 @@ window.addEventListener('message', async (e) => {
                 responseMessage(data.requestId, { data: 'ok' });
                 break;
               }
-              const isAutoLogSMS = userSettings.autoLogSMS?.value ?? false;
-              const isAutoLogInboundFax = userSettings.autoLogInboundFax?.value ?? false;
-              const isAutoLogOutboundFax = userSettings.autoLogOutboundFax?.value ?? false;
+              const isAutoLogSMS = userSettings?.autoLogSMS?.value ?? false;
+              const isAutoLogInboundFax = userSettings?.autoLogInboundFax?.value ?? false;
+              const isAutoLogOutboundFax = userSettings?.autoLogOutboundFax?.value ?? false;
 
               const messageAutoPopup = userCore.getSMSPopSetting(userSettings).value;
               const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
