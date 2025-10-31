@@ -1,4 +1,4 @@
-function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin, subscribedByOtherAdmin, additionalFields = [], additionalFieldValues = {} }) {
+function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin, subscribedByOtherAdmin, enableUserMapping, additionalFields = [], additionalFieldValues = {} }) {
     const additionalProperties = {};
     additionalFields.forEach(field => {
         additionalProperties[field.const] = {
@@ -18,7 +18,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
     });
     const warningProperty = {};
     const warningUiSchema = {};
-    if(subscribedByOtherAdmin) {
+    if (subscribedByOtherAdmin) {
         warningProperty.warning = {
             type: 'string',
             description: `Server side logging is currently managed by ${subscribedByOtherAdmin.name}`
@@ -102,15 +102,17 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                         }
                     }
                 },
-                section: {
-                    type: 'string',
-                    oneOf: [
-                        {
-                            const: "userMapping",
-                            title: "User mapping",
-                        }
-                    ]
-                }
+                ...(enableUserMapping ? {
+                    userMappingHolder: {
+                        type: 'string',
+                        oneOf: [
+                            {
+                                const: "userMapping",
+                                title: "User mapping",
+                            }
+                        ]
+                    }
+                } : {})
             }
         },
         uiSchema: {
@@ -141,7 +143,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                     "ui:disabled": !!subscribedByOtherAdmin
                 }
             },
-            section: {
+            userMappingHolder: {
                 "ui:field": "list",
                 "ui:navigation": true,
                 "ui:style": {
