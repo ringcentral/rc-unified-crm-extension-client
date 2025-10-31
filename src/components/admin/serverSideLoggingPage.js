@@ -103,7 +103,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                     }
                 },
                 ...(enableUserMapping ? {
-                    userMappingHolder: {
+                    section: {
                         type: 'string',
                         oneOf: [
                             {
@@ -143,7 +143,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                     "ui:disabled": !!subscribedByOtherAdmin
                 }
             },
-            userMappingHolder: {
+            section: {
                 "ui:field": "list",
                 "ui:navigation": true,
                 "ui:style": {
