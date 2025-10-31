@@ -1428,6 +1428,7 @@ window.addEventListener('message', async (e) => {
                     doNotLogNumbers: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.doNotLogNumbers : serverSideLoggingSubscription.doNotLogNumbers,
                     loggingByAdmin: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.loggingByAdmin : serverSideLoggingSubscription.loggingByAdmin,
                     subscribedByOtherAdmin: serverSideLoggingSubscription.subscribedByOtherAdmin,
+                    enableUserMapping: !!platform.serverSideLogging?.enableUserMapping,
                     additionalFields: platform.serverSideLogging?.additionalFields ?? [],
                     additionalFieldValues,
                   });
