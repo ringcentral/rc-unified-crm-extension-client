@@ -460,8 +460,8 @@ window.addEventListener('message', async (e) => {
                 const callAutoPopup = userCore.getCallPopSetting(userSettings).value;
                 if (callAutoPopup) {
                   const isExtensionNumber = data.call.direction === 'Inbound' ?
-                    !!data.call.from.extensionNumber :
-                    !!data.call.to.extensionNumber;
+                    (!!data.call.from.extensionNumber && !data.call.from.phoneNumber) :
+                    (!!data.call.to.extensionNumber && !data.call.to.phoneNumber);
 
                   const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
                   if (isExtensionNumber && !allowExtensionNumberLogging) {
@@ -1353,7 +1353,8 @@ window.addEventListener('message', async (e) => {
               // extensions numbers should NOT be logged unless explicitly allowed
               const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
               const isExtensionNumber = data.body.call.direction === 'Inbound' ?
-                !!data.body.call.from.extensionNumber :
+                (!!data.body.call.from.extensionNumber && !data.body.call.from.phoneNumber) :
+                (!!data.body.call.to.extensionNumber && !data.body.call.to.phoneNumber);
                 !!data.body.call.to.extensionNumber;
               if (!allowExtensionNumberLogging) {
                 if (isExtensionNumber) {
