@@ -191,10 +191,13 @@ window.addEventListener('message', async (e) => {
                 }, '*');
               }
               else if (cachedClickToXRequest.type === 'c2sms') {
+                const cachedContacts = contactCore.getLocalCachedContact({ phoneNumber: cachedClickToXRequest.phoneNumber, platformName });
+                const recipient = cachedContacts?.length > 0 ? { name: cachedContacts[0].name } : {};
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-new-sms',
                   phoneNumber: cachedClickToXRequest.phoneNumber,
                   conversation: true, // will go to conversation page if conversation existed
+                  recipient
                 }, '*');
               }
               else if (cachedClickToXRequest.type === 'c2schedule') {
@@ -3704,10 +3707,13 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     );
   }
   else if (request.type === 'c2sms') {
+    const cachedContacts = contactCore.getLocalCachedContact({ phoneNumber: request.phoneNumber, platformName });
+    const recipient = cachedContacts?.length > 0 ? { name: cachedContacts[0].name } : {};
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
       type: 'rc-adapter-new-sms',
       phoneNumber: request.phoneNumber,
       conversation: true, // will go to conversation page if conversation existed
+      recipient
     }, '*');
     sendResponse({ result: 'ok' });
   } else if (request.type === 'c2d') {
