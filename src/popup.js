@@ -151,10 +151,13 @@ window.addEventListener('message', async (e) => {
                 }, '*');
               }
               if (cachedClickToXRequest.type === 'c2sms') {
+                const cachedContacts = contactCore.getLocalCachedContact({ phoneNumber: cachedClickToXRequest.phoneNumber, platformName });
+                const recipient = cachedContacts?.length > 0 ? { name: cachedContacts[0].name } : {};
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                   type: 'rc-adapter-new-sms',
                   phoneNumber: cachedClickToXRequest.phoneNumber,
                   conversation: true, // will go to conversation page if conversation existed
+                  recipient
                 }, '*');
               }
             }
@@ -1356,7 +1359,7 @@ window.addEventListener('message', async (e) => {
               const isExtensionNumber = data.body.call.direction === 'Inbound' ?
                 (!!data.body.call.from.extensionNumber && !data.body.call.from.phoneNumber) :
                 (!!data.body.call.to.extensionNumber && !data.body.call.to.phoneNumber);
-                !!data.body.call.to.extensionNumber;
+              !!data.body.call.to.extensionNumber;
               if (!allowExtensionNumberLogging) {
                 if (isExtensionNumber) {
                   showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
@@ -2829,10 +2832,13 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     );
   }
   else if (request.type === 'c2sms') {
+    const cachedContacts = contactCore.getLocalCachedContact({ phoneNumber: request.phoneNumber, platformName });
+    const recipient = cachedContacts?.length > 0 ? { name: cachedContacts[0].name } : {};
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
       type: 'rc-adapter-new-sms',
       phoneNumber: request.phoneNumber,
       conversation: true, // will go to conversation page if conversation existed
+      recipient
     }, '*');
     sendResponse({ result: 'ok' });
   } else if (request.type === 'c2d') {

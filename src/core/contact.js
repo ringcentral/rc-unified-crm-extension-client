@@ -314,3 +314,4 @@ exports.getContact = getContact;
 exports.createContact = createContact;
 exports.openContactPage = openContactPage;
 exports.refreshContactPromptPage = refreshContactPromptPage;
+exports.getLocalCachedContact = getLocalCachedContact;
