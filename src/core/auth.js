@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { showNotification } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
+import { getManifest } from '../service/manifestService';
 import { trackCrmLogin, trackCrmLogout } from '../lib/analytics';
 import { openDB } from 'idb';
 import platformSelectionPage from '../components/platformSelectionPage';
@@ -29,10 +30,14 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
         const platformInfo = await chrome.storage.local.get('platform-info');
         const platformName = platformInfo['platform-info'].platformName;
         const hostname = platformInfo['platform-info'].hostname;
+        const manifest = await getManifest();
+        const platform = manifest.platforms[platformName];
+        const proxyId = platform.proxyId;
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
             apiKey: apiKey ?? 'apiKey',
             platform: platformName,
             hostname,
+            proxyId,
             additionalInfo: {
                 ...formData
             }
@@ -67,6 +72,9 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
     const rcInfo = await indexDB.get('keyvaluepairs', 'dataFetcherV2-storageData');
     const platformInfo = await chrome.storage.local.get('platform-info');
     const hostname = platformInfo['platform-info'].hostname;
+    const manifest = await getManifest();
+    const platform = manifest.platforms[platformInfo['platform-info'].platformName];
+    const proxyId = platform.proxyId;
     let oauthCallbackUrl = '';
     // Unique: Bullhorn
     if (platformInfo['platform-info'].platformName === 'bullhorn') {
@@ -75,7 +83,7 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
         oauthCallbackUrl = `${serverUrl}/oauth-callback?callbackUri=${callbackUri}&hostname=${hostname}&tokenUrl=${crm_extension_bullhorn_user_urls.oauthUrl}/token&apiUrl=${crm_extension_bullhorn_user_urls.restUrl}&username=${crm_extension_bullhornUsername}&rcAccountId=${rcInfo.value.cachedData.extensionInfo.account.id}`;
     }
     else {
-        oauthCallbackUrl = `${serverUrl}/oauth-callback?callbackUri=${callbackUri}&hostname=${hostname}&rcAccountId=${rcInfo.value.cachedData.extensionInfo.account.id}`;
+        oauthCallbackUrl = `${serverUrl}/oauth-callback?callbackUri=${callbackUri}&hostname=${hostname}&rcAccountId=${rcInfo.value.cachedData.extensionInfo.account.id}&proxyId=${proxyId}`;
     }
     const res = await axios.get(oauthCallbackUrl);
     showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully authorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
