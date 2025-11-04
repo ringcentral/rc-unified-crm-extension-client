@@ -32,7 +32,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
         const hostname = platformInfo['platform-info'].hostname;
         const manifest = await getManifest();
         const platform = manifest.platforms[platformName];
-        const proxyId = platform.proxyId;
+        const proxyId = platform.proxyId ? platform.proxyId : '';
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
             apiKey: apiKey ?? 'apiKey',
             platform: platformName,
@@ -74,7 +74,7 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
     const hostname = platformInfo['platform-info'].hostname;
     const manifest = await getManifest();
     const platform = manifest.platforms[platformInfo['platform-info'].platformName];
-    const proxyId = platform.proxyId;
+    const proxyId = platform.proxyId ? platform.proxyId : '';
     let oauthCallbackUrl = '';
     // Unique: Bullhorn
     if (platformInfo['platform-info'].platformName === 'bullhorn') {
