@@ -285,7 +285,7 @@ function getOutgoingCallPop(userSettings) {
 
 function getCallPopMultiMatchBehavior(userSettings) {
     return {
-        value: userSettings?.multiContactMatchBehavior?.value ?? 'openAllMatches',
+        value: userSettings?.multiContactMatchBehavior?.value ?? 'promptToSelect',
         readOnly: userSettings?.multiContactMatchBehavior?.customizable === undefined ? false : !userSettings?.multiContactMatchBehavior?.customizable,
         readOnlyReason: !userSettings?.multiContactMatchBehavior?.customizable ? 'This setting is managed by admin' : ''
     }
