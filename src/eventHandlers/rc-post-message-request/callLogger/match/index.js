@@ -85,4 +85,4 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         });
 }
 
-export default onEvent;
+exports.onEvent = onEvent;

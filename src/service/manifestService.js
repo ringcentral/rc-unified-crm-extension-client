@@ -49,7 +49,7 @@ async function refreshManifest() {
     }
     const manifestResponse = await axios.get(manifestUrl);
     const manifest = manifestResponse.data;
-    await saveManifest({ manifest: manifest.data });
+    await saveManifest({ manifest });
     return manifest;
 }
 

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { checkC2DCollision } from './lib/util';
 import { getManifest } from './service/manifestService';
 import { saveManifestUrl } from './service/manifestService';
-import { setAuthor } from './service/manifestService';
+import { setAuthor } from './lib/analytics';
 import { showNotification } from './lib/util';
 
 // event handlers
@@ -50,7 +50,7 @@ async function getCustomManifest() {
     if (customCrmManifestUrl) {
       await saveManifestUrl({ manifestUrl: customCrmManifestUrl });
     }
-    setAuthor(customCrmManifest.author?.name ?? "");
+    setAuthor(customCrmManifest?.author?.name ?? "");
   }
 }
 
@@ -149,30 +149,36 @@ window.addEventListener('message', async (e) => {
 });
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-  switch (request.type) {
-    case 'oauthCallBack':
-      await oauthCallBackHandler.onMessage({ request, sendResponse });
-      break;
-    case 'pipedriveCallbackUri':
-      await pipedriveCallbackUriHandler.onMessage({ request, sendResponse });
-      break;
-    case 'c2sms':
-      await c2smsHandler.onMessage({ request, sendResponse });
-      break;
-    case 'c2d':
-      await c2dHandler.onMessage({ request, sendResponse });
-      break;
-    case 'c2schedule':
-      await c2scheduleHandler.onMessage({ request, sendResponse });
-      break;
-    case 'navigate':
-      await navigateHandler.onMessage({ request, sendResponse });
-      break;
-    case 'insightlyAuth':
-      await insightlyAuthHandler.onMessage({ request, sendResponse });
-      break;
-    default:
-      break;
+  try {
+    switch (request.type) {
+      case 'oauthCallBack':
+        await oauthCallBackHandler.onMessage({ request, sendResponse });
+        break;
+      case 'pipedriveCallbackUri':
+        await pipedriveCallbackUriHandler.onMessage({ request, sendResponse });
+        break;
+      case 'c2sms':
+        await c2smsHandler.onMessage({ request, sendResponse });
+        break;
+      case 'c2d':
+        await c2dHandler.onMessage({ request, sendResponse });
+        break;
+      case 'c2schedule':
+        await c2scheduleHandler.onMessage({ request, sendResponse });
+        break;
+      case 'navigate':
+        await navigateHandler.onMessage({ request, sendResponse });
+        break;
+      case 'insightlyAuth':
+        await insightlyAuthHandler.onMessage({ request, sendResponse });
+        break;
+      default:
+        break;
+    }
+    sendResponse({ result: 'ok' });
   }
-  sendResponse({ result: 'ok' });
+  catch (e) {
+    window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+    console.log(e);
+  }
 });

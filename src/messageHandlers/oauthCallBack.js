@@ -4,7 +4,7 @@ import adminCore from '../core/admin';
 import reportPage from '../components/reportPage/reportPage';
 import calldownPage from '../components/calldownPage';
 import adminPage from '../components/admin/adminPage';
-import { getPlatform } from '../lib/util';
+import { getPlatformInfo } from '../service/platformService';
 import { getManifest } from '../service/manifestService';
 
 async function onMessage({ request, sendResponse }) {
@@ -19,8 +19,9 @@ async function onMessage({ request, sendResponse }) {
             break;
         case 'thirdParty':
             window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-            const platform = await getPlatform();
             const manifest = await getManifest();
+            const platformInfo = await getPlatformInfo();
+            const platform = manifest?.platforms[platformInfo?.platformName ?? ''];
             const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri, useLicense: platform.useLicense });
             window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
             try {

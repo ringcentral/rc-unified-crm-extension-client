@@ -8,7 +8,7 @@ import { trackOpenFeedback } from '../lib/analytics';
 async function onMessage({ request, sendResponse }) {
     const manifest = await getManifest();
     const platformInfo = await getPlatformInfo();
-    const platformName = platformInfo.platformName;
+    const platformName = platformInfo?.platformName ?? '';;
     if (request.path === '/feedback') {
       const feedbackPageRender = feedbackPage.getFeedbackPageRender({ pageConfig: manifest.platforms[platformName].page.feedback, version: manifest.version });
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

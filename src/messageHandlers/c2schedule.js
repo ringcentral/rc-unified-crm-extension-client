@@ -10,7 +10,7 @@ async function onMessage({ request, sendResponse }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     const manifest = await getManifest();
     const platformInfo = await getPlatformInfo();
-    const platformName = platformInfo.platformName;
+    const platformName = platformInfo?.platformName ?? '';;
     // resolve contacts for the number and show dropdown
     const phoneNumber = request.phoneNumber;
     const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: true });

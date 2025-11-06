@@ -19,8 +19,8 @@ async function onEvent({ data }) {
   const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
   const manifest = await getManifest();
   const platformInfo = await getPlatformInfo();
-  const platformName = platformInfo.platformName;
-  const platform = manifest.platforms[platformName];
+  const platformName = platformInfo?.platformName ?? '';;
+  const platform = manifest?.platforms[platformName];
   if (!crmAuthed && (data.path === '/callLogger' || data.path === '/messageLogger')) {
     showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
     responseMessage(data.requestId, { data: 'ok' });

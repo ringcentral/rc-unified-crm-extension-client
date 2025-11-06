@@ -10,8 +10,8 @@ import { getPlatformInfo } from '../service/platformService';
 async function onMessage({ request, sendResponse }) {
     const manifest = await getManifest();
     const platformInfo = await getPlatformInfo();
-    const platformName = platformInfo.platformName;
-    const platform = manifest.platforms[platformName];
+    const platformName = platformInfo?.platformName ?? '';;
+    const platform = manifest?.platforms[platformName];
     const returnedToken = await authCore.apiKeyLogin({
         serverUrl: manifest.serverUrl,
         apiKey: request.apiKey,

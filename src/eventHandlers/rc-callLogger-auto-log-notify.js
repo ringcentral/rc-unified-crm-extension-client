@@ -7,8 +7,8 @@ async function onEvent({ data }) {
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
     const manifest = await getManifest();
     const platformInfo = await getPlatformInfo();
-    const platformName = platformInfo.platformName;
-    const platform = manifest.platforms[platformName];
+    const platformName = platformInfo?.platformName ?? '';;
+    const platform = manifest?.platforms[platformName];
     trackEditSettings({ changedItem: 'auto-call-log', status: data.autoLog });
     if (!!data.autoLog && !!crmAuthed) {
       await chrome.storage.local.set({ retroAutoCallLogMaxAttempt: 10 });

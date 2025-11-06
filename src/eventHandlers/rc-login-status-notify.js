@@ -1,5 +1,5 @@
-import { getPlatformInfo, getPlatformList } from '../service/platformService';
-import { getManifest } from '../service/manifestService';
+import { getPlatformInfo } from '../service/platformService';
+import { getManifest, getPlatformList } from '../service/manifestService';
 import authCore from '../core/auth';
 import userCore from '../core/user';
 import { showNotification, getRcAccessToken, getRcInfo } from '../lib/util';
@@ -23,17 +23,9 @@ async function onEvent({ data }) {
 
     // 1. Get meta info
     const platformInfo = await getPlatformInfo();
-    if (!platformInfo) {
-        console.log('Cannot find platform info');
-        return;
-    }
     const manifest = await getManifest();
-    if (!manifest) {
-        console.log('Cannot find manifest');
-        return;
-    }
-    const platform = manifest.platforms[platformInfo.platformName];
-    const platformName = platformInfo.platformName;
+    const platformName = platformInfo?.platformName ?? '';
+    const platform = manifest?.platforms[platformName];
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     // get login status from widget
     const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
@@ -151,7 +143,7 @@ async function onEvent({ data }) {
                 }
             }
             await chrome.storage.local.set({ rcAdditionalSubmission });
-            if (manifest.serverUrl) {
+            if (manifest?.serverUrl) {
                 const rcAPI = new RcAPI();
                 const userInfoResponse = await rcAPI.getUserInfo({
                     serverUrl: manifest.serverUrl,
@@ -190,7 +182,7 @@ async function onEvent({ data }) {
             trackRcLogin();
             rcLoginStatus = true;
             await chrome.storage.local.set({ ['rcLoginStatus']: rcLoginStatus });
-            if (manifest.serverUrl) {
+            if (manifest?.serverUrl) {
                 const userSettingsByAdmin = await userCore.preloadUserSettingsFromAdmin({ serverUrl: manifest.serverUrl });
             }
         }

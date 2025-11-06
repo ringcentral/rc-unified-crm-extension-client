@@ -22,4 +22,4 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     responseMessage(data.requestId, { data: 'ok' });
 }
 
-export default onEvent;
+exports.onEvent = onEvent;

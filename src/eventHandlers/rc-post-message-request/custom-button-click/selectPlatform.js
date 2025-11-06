@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { saveManifestUrl } from '../../../lib/util';
-import { saveManifest } from '../../../service/manifestService';
+import { saveManifest, saveManifestUrl } from '../../../service/manifestService';
 import hostnameInputPage from '../../../components/hostnameInputPage';
 import authCore from '../../../core/auth';
 import baseManifest from '../../../manifest.json';
@@ -30,7 +29,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${rcInfo.value.cachedData.accountInfo.id}` });
             break;
     }
-    await saveManifest({ manifest: platformManifestResponse.data });
+    // eslint-disable-next-line no-param-reassign
+    manifest = await saveManifest({ manifest: platformManifestResponse.data });
     if (manifest.platforms[selectedPlatform.name]?.environment?.type === 'fixed' && !manifest.platforms[selectedPlatform.name]?.environment?.instructions?.length) {
         const inputUrlObj = new URL(manifest.platforms[selectedPlatform.name]?.environment?.url);
         const inputHostname = inputUrlObj.hostname;

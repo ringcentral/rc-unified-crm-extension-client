@@ -9,8 +9,8 @@ import { responseMessage } from '../lib/util';
 
 async function onEvent({ data }) {
     const platformInfo = await getPlatformInfo();
-    const platformName = platformInfo.platformName;
-    const platform = manifest.platforms[platformName]
+    const platformName = platformInfo?.platformName ?? '';;
+    const platform = manifest?.platforms[platformName]
     if (data.call.queueCall) {
       await chrome.storage.local.set({
         [`is-call-queue-${data.call.sessionId}`]: {

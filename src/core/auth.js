@@ -17,6 +17,15 @@ function handleThirdPartyOAuthWindow(oAuthUri) {
   }
 
 async function onUserClickConnectButton({ platform, platformName, manifest}) {
+    if(!platform || !platformName || !manifest) {
+        const platformInfo = await getPlatformInfo();
+        // eslint-disable-next-line no-param-reassign
+        platformName = platformInfo?.platformName ?? '';
+        // eslint-disable-next-line no-param-reassign
+        manifest = await getManifest();
+        // eslint-disable-next-line no-param-reassign
+        platform = manifest?.platforms[platformName];
+    }
     switch (platform.auth.type) {
       case 'oauth':
         let authUri;
@@ -81,7 +90,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
         const platformName = platformInfo['platform-info'].platformName;
         const hostname = platformInfo['platform-info'].hostname;
         const manifest = await getManifest();
-        const platform = manifest.platforms[platformName];
+        const platform = manifest?.platforms[platformName];
         const proxyId = platform.proxyId ? platform.proxyId : '';
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
             apiKey: apiKey ?? 'apiKey',
