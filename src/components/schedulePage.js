@@ -8,7 +8,7 @@
  * @param {Array} params.contactTypes - Array of contact types for the platform
  * @returns {Object} The schedule page configuration object
  */
-function createSchedulePage({ phoneNumber, listOneOf, isDefaultNew, preselect, contactTypes = [] }) {
+function getSchedulePageRender({ phoneNumber, listOneOf, isDefaultNew, preselect, contactTypes = [] }) {
   return {
     id: 'c2dSchedulePage',
     title: 'Add to call-down list',
@@ -70,4 +70,4 @@ function createSchedulePage({ phoneNumber, listOneOf, isDefaultNew, preselect, c
   };
 }
 
-export default createSchedulePage;
+exports.getSchedulePageRender = getSchedulePageRender;

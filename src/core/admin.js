@@ -29,6 +29,7 @@ async function uploadAdminSettings({ serverUrl, adminSettings }) {
         {
             adminSettings
         });
+    await chrome.storage.local.set({ adminSettings });
 }
 
 async function refreshAdminSettings() {
@@ -59,6 +60,7 @@ async function refreshAdminSettings() {
     const { crmUserInfo } = await chrome.storage.local.get({ crmUserInfo: null });
     authCore.setAuth(!!rcUnifiedCrmExtJwt, crmUserInfo?.name, !!storedAdminSettings);
 
+    await chrome.storage.local.set({ adminSettings });
     return { adminSettings }
 }
 
