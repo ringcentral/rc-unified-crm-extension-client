@@ -9,7 +9,7 @@ import googleSheetsPageHandler from './googleSheetsPage';
 import contactSearchResultCallLogHandler from './contactSearchResultCallLog';
 import contactSearchResultMessageLogHandler from './contactSearchResultMessageLog';
 import reportPageHandler from './reportPage';
-
+import unloggedCallPageHandler from './unloggedCallPage';
 import generalSettingsHandler from './generalSettings';
 import managedSettingsHandler from './managedSettings';
 import appearanceHandler from './appearance';
@@ -69,6 +69,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             await reportPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'unloggedCallPage':
+            await unloggedCallPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
     }
     // Page render update from section change input

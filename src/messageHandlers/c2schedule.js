@@ -1,7 +1,7 @@
 import contactCore from '../core/contact';
 import { getManifest } from '../service/manifestService';
 import { getPlatformInfo } from '../service/platformService';
-import { createSchedulePage } from '../components/schedulePage';
+import { getSchedulePageRender } from '../components/schedulePage';
 import axios from 'axios';
 import calldownPage from '../components/calldownPage';
 import { cacheCalldownContact } from '../lib/util';
@@ -20,7 +20,7 @@ async function onMessage({ request, sendResponse }) {
     const listOneOf = [...contactOptions, newContactOption];
     const isDefaultNew = contacts.length === 0;
     const preselect = isDefaultNew ? 'newContact' : (contactOptions[0]?.const ?? '');
-    const schedulePage = createSchedulePage({
+    const schedulePage = getSchedulePageRender({
         phoneNumber,
         listOneOf,
         isDefaultNew,

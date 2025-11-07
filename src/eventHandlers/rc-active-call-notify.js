@@ -1,6 +1,6 @@
 import userCore from '../core/user';
 import contactCore from '../core/contact';
-import manifest from '../service/manifestService';
+import { getManifest } from '../service/manifestService';
 import { getPlatformInfo } from '../service/platformService';
 import logCore from '../core/log';
 import logPage from '../components/logPage';
@@ -8,6 +8,7 @@ import { logPageFormDataDefaulting } from '../lib/logUtil';
 import { responseMessage } from '../lib/util';
 
 async function onEvent({ data }) {
+    const manifest = await getManifest();
     const platformInfo = await getPlatformInfo();
     const platformName = platformInfo?.platformName ?? '';;
     const platform = manifest?.platforms[platformName]

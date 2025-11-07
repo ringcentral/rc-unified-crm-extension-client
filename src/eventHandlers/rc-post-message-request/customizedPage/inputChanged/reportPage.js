@@ -6,6 +6,7 @@ import userCore from '../../../../core/user';
 import adminCore from '../../../../core/admin';
 import reportPage from '../../../../components/reportPage/reportPage';
 import moment from 'moment';
+import 'moment-timezone';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     const { isAdmin } = await chrome.storage.local.get('isAdmin');
