@@ -6,6 +6,65 @@ import { trackCrmLogin, trackCrmLogout } from '../lib/analytics';
 import { openDB } from 'idb';
 import platformSelectionPage from '../components/platformSelectionPage';
 import embeddableServices from '../service/embeddableServices';
+import authPage from '../components/authPage';
+import { tryConnectToBullhorn } from '../misc/bullhorn';
+
+function handleThirdPartyOAuthWindow(oAuthUri) {
+    chrome.runtime.sendMessage({
+      type: 'openThirdPartyAuthWindow',
+      oAuthUri
+    });
+  }
+
+async function onUserClickConnectButton({ platform, platformName, manifest}) {
+    if(!platform || !platformName || !manifest) {
+        const platformInfo = await getPlatformInfo();
+        // eslint-disable-next-line no-param-reassign
+        platformName = platformInfo?.platformName ?? '';
+        // eslint-disable-next-line no-param-reassign
+        manifest = await getManifest();
+        // eslint-disable-next-line no-param-reassign
+        platform = manifest?.platforms[platformName];
+    }
+    switch (platform.auth.type) {
+      case 'oauth':
+        let authUri;
+        let customState = '';
+        if (platform.auth.oauth.customState) {
+          customState = platform.auth.oauth.customState;
+        }
+        // Unique: Pipedrive
+        if (platformName === 'pipedrive') {
+          authUri = manifest.platforms.pipedrive.auth.oauth.redirectUri;
+          handleThirdPartyOAuthWindow(authUri);
+        }
+        // Unique: Bullhorn
+        else if (platformName === 'bullhorn') {
+          await tryConnectToBullhorn({ platform });
+        }
+        else {
+          authUri = `${platform.auth.oauth.authUrl}?` +
+            `response_type=code` +
+            `&client_id=${platform.auth.oauth.clientId}` +
+            `${!!platform.auth.oauth.scope && platform.auth.oauth.scope != '' ? `&${platform.auth.oauth.scope}` : ''}` +
+            `&state=${customState === '' ? `platform=${platform.name}` : customState}` +
+            '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
+          handleThirdPartyOAuthWindow(authUri);
+        }
+        break;
+      case 'apiKey':
+        const authPageRender = authPage.getAuthPageRender({ manifest, platformName });
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+          type: 'rc-adapter-register-customized-page',
+          page: authPageRender
+        });
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+          type: 'rc-adapter-navigate-to',
+          path: `/customized/${authPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
+        }, '*');
+        break;
+    }
+  }  
 
 async function checkAndOpenPlatformSelectionPage({ platformList }) {
     const platformInfo = await getPlatformInfo();
@@ -31,7 +90,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
         const platformName = platformInfo['platform-info'].platformName;
         const hostname = platformInfo['platform-info'].hostname;
         const manifest = await getManifest();
-        const platform = manifest.platforms[platformName];
+        const platform = manifest?.platforms[platformName];
         const proxyId = platform.proxyId ? platform.proxyId : '';
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
             apiKey: apiKey ?? 'apiKey',
@@ -163,6 +222,7 @@ async function refreshLicenseStatus({ serverUrl }) {
     }, '*');
 }
 
+exports.onUserClickConnectButton = onUserClickConnectButton;
 exports.checkAndOpenPlatformSelectionPage = checkAndOpenPlatformSelectionPage;
 exports.apiKeyLogin = apiKeyLogin;
 exports.onAuthCallback = onAuthCallback;

@@ -1,5 +1,4 @@
 import { openDB } from 'idb';
-import { trackCRMSetupError } from '../lib/analytics';
 
 function secondsToHourMinuteSecondString(totalSeconds) {
   const hours = parseInt(totalSeconds / 3600);
@@ -160,6 +159,26 @@ function createDebounceHandler(handlerKey, delay = 300) {
   };
 }
 
+// Hack: put it here temporarily as there's no better place to go
+// Helper function to cache contact information for call-down list
+async function cacheCalldownContact({ contactId, contactName, phoneNumber, contactType }) {
+  if (!contactId || !contactName || !phoneNumber) return;
+
+  try {
+    const { calldownContactCache = {} } = await chrome.storage.local.get('calldownContactCache');
+    calldownContactCache[String(contactId)] = {
+      contactName,
+      phoneNumber,
+      contactType,
+      cachedAt: Date.now()
+    };
+    await chrome.storage.local.set({ calldownContactCache });
+  } catch (error) {
+    console.warn('Failed to cache calldown contact:', error);
+  }
+}
+
+
 exports.secondsToHourMinuteSecondString = secondsToHourMinuteSecondString;
 exports.showNotification = showNotification;
 exports.dismissNotification = dismissNotification;
@@ -172,3 +191,4 @@ exports.checkC2DCollision = checkC2DCollision;
 exports.downloadTextFile = downloadTextFile;
 exports.cleanUpExpiredStorage = cleanUpExpiredStorage;
 exports.createDebounceHandler = createDebounceHandler;
+exports.cacheCalldownContact = cacheCalldownContact;

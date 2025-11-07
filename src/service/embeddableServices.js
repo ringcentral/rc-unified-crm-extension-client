@@ -379,15 +379,15 @@ async function getServiceManifest() {
                         readOnly: userCore.getCallPopMultiMatchBehavior(userSettings).readOnly,
                         readOnlyReason: userCore.getCallPopMultiMatchBehavior(userSettings).readOnlyReason,
                     },
-                    (platform.enableExtensionNumberLoggingSetting ?
-                        {
+                    ...(platform.enableExtensionNumberLoggingSetting ?
+                        [{
                             id: 'allowExtensionNumberLogging',
                             type: 'boolean',
                             name: 'Allow extension number logging',
                             value: userSettings?.allowExtensionNumberLogging?.value ?? false,
                             readOnly: userSettings?.allowExtensionNumberLogging?.customizable === undefined ? false : !userSettings?.allowExtensionNumberLogging?.customizable,
                             readOnlyReason: 'This setting is managed by admin'
-                        } : {}),
+                        }] : []),
                     {
                         id: 'openContactPageAfterCreation',
                         type: 'boolean',
