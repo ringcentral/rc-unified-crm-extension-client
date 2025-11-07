@@ -243,6 +243,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
           contactInfo: getContactMatchResult.contactInfo ?? []
         };
         await chrome.storage.local.set({ cacheLogPageData });
+        const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
+        const useContactSearch = implementedInterfaces?.findContactWithName;
         let messagePage = logPage.getLogPageRender({
           id: data.body.conversation.conversationId,
           manifest,
@@ -252,6 +254,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
           direction: '',
           contactInfo: getContactMatchResult.contactInfo ?? [],
           contactPhoneNumber: data.body?.conversation?.correspondents[0]?.phoneNumber,
+          useContactSearch
         });
         switch (data.body.conversation.type) {
           case 'SMS':

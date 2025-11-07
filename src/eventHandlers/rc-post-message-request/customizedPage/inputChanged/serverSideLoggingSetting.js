@@ -6,12 +6,14 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const serverSideLoggingSubscription = await adminCore.getServerSideLogging({ platform });
     const subscriptionLevel = serverSideLoggingSubscription.subscribed ? serverSideLoggingSubscription.subscriptionLevel : 'Disable';
     const additionalFieldValues = await adminCore.getServerSideLoggingAdditionalFieldValues({ platform });
+    const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
+    const enableUserMapping = implementedInterfaces?.getUserList;
     const serverSideLoggingSettingPageRender = serverSideLoggingPage.getServerSideLoggingSettingPageRender({
         subscriptionLevel: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.subscriptionLevel : subscriptionLevel,
         doNotLogNumbers: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.doNotLogNumbers : serverSideLoggingSubscription.doNotLogNumbers,
         loggingByAdmin: serverSideLoggingSubscription.subscribedByOtherAdmin ? serverSideLoggingSubscription.subscribedByOtherAdmin.setting.loggingByAdmin : serverSideLoggingSubscription.loggingByAdmin,
         subscribedByOtherAdmin: serverSideLoggingSubscription.subscribedByOtherAdmin,
-        enableUserMapping: !!platform.serverSideLogging?.enableUserMapping,
+        enableUserMapping,
         additionalFields: platform.serverSideLogging?.additionalFields ?? [],
         additionalFieldValues,
     });

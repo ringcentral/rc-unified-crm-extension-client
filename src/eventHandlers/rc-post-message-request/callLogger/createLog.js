@@ -159,7 +159,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                         contactName: defaultingContact?.name,
                         returnToHistoryPage: !!data.body.redirect
                     });
-                if (!platform.disableDisposition && !isObjectEmpty(autoSelectAdditionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
+                const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
+                const supportDisposition = implementedInterfaces?.upsertCallDisposition;
+                if (supportDisposition && !isObjectEmpty(autoSelectAdditionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                     await dispositionCore.upsertDisposition({
                         serverUrl: manifest.serverUrl,
                         logType: 'Call',
@@ -192,6 +194,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
             loggedContactId
         };
         await chrome.storage.local.set({ cacheLogPageData });
+        const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
+        const useContactSearch = implementedInterfaces?.findContactWithName;
         // add your codes here to log call to your service
         let callPage = logPage.getLogPageRender({
             id: data.body.call.sessionId,
@@ -203,7 +207,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
             contactInfo: callMatchedContact ?? [],
             logInfo,
             loggedContactId,
-            contactPhoneNumber
+            contactPhoneNumber,
+            useContactSearch
         });
 
         // create log page defaulting

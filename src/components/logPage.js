@@ -4,7 +4,7 @@ import conflictLogIcon from '../images/conflictLogIcon.png';
 import smsMessageIcon from '../images/smsMessageIcon.png';
 import logCore from '../core/log';
 
-function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved, contactPhoneNumber }) {
+function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved, contactPhoneNumber, useContactSearch }) {
     // format contact list
     const contactList = contactInfo.map(c => {
         return {
@@ -17,7 +17,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             defaultContactType: c.defaultContactType
         }
     });
-    if (manifest.platforms[platformName].page?.useContactSearch) {
+    if (useContactSearch) {
         contactList.push({
             const: 'searchContact',
             title: `Search contacts`,

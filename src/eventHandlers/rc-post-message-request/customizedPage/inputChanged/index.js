@@ -25,6 +25,7 @@ import customSettingsHandler from './customSettings';
 import callLogDetailsSettingHandler from './callLogDetailsSetting';
 import autoLogPreferencesHandler from './autoLogPreferences';
 import userMappingHandler from './userMapping';
+import developerSettingsPageHandler from './developerSettingsPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -32,7 +33,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         responseId: data.requestId,
         response: { data: 'ok' },
     }, '*');
-    
+
     // Input changed for customized pages
     switch (data.body.page.id) {
         case 'c2dSchedulePage':
@@ -70,6 +71,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'unloggedCallPage':
             await unloggedCallPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'developerSettingsPage':
+            await developerSettingsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
     }
     // Page render update from section change input

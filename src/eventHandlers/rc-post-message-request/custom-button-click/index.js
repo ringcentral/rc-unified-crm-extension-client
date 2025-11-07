@@ -19,6 +19,7 @@ import authPageHandler from './authPage';
 import feedbackPageHandler from './feedbackPage';
 import openAboutPageHandler from './openAboutPage';
 import openDeveloperSettingsPageHandler from './openDeveloperSettingsPage';
+import openImplementedInterfacesPageButtonHandler from './openImplementedInterfacesPageButton';
 import factoryResetButtonHandler from './factoryResetButton';
 import generateErrorLogButtonHandler from './generateErrorLogButton';
 import documentationHandler from './documentation';
@@ -123,6 +124,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'clearPlatformInfoButton':
             await clearPlatformInfo();
             showNotification({ level: 'success', message: 'Platform info cleared. Please close the extension and open from CRM page.', ttl: 5000 });
+            break;
+        case 'openImplementedInterfacesPageButton':
+            await openImplementedInterfacesPageButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'saveTempNoteButton':
             await saveTempNoteButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

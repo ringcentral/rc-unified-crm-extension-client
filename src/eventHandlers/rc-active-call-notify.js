@@ -82,7 +82,9 @@ async function onEvent({ data }) {
               isUnresolved: undefined
             };
             await chrome.storage.local.set({ cacheLogPageData });
-            let callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId: null, contactPhoneNumber });
+            const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
+            const useContactSearch = implementedInterfaces?.findContactWithName;
+            let callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId: null, contactPhoneNumber, useContactSearch });
             // default form value from user settings
             if (data.call.direction === 'Inbound') {
               callPage = await logPageFormDataDefaulting({

@@ -8,6 +8,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const callLogDataId = data.body.formData.record;
     const { unloggedCallPageDataCache } = await chrome.storage.local.get({ unloggedCallPageDataCache: null });
     const callLogData = unloggedCallPageDataCache.find(c => c.sessionId === callLogDataId);
+    const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
+    const useContactSearch = implementedInterfaces?.findContactWithName;
     const callLogPageRender = logPage.getLogPageRender({
         id: callLogData.sessionId,
         manifest,
@@ -19,7 +21,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         logInfo: {
             note: callLogNote
         },
-        contactPhoneNumber: callLogData.phoneNumber
+        contactPhoneNumber: callLogData.phoneNumber,
+        useContactSearch
     });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-update-call-log-page',

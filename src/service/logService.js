@@ -77,7 +77,9 @@ async function retroAutoCallLog({
                                 contactName: callMatchedContact[0]?.name,
                                 isShowNotification: false
                             });
-                        if (!isObjectEmpty(autoSelectAdditionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
+                        const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
+                        const supportDisposition = implementedInterfaces?.upsertCallDisposition;
+                        if (supportDisposition && !isObjectEmpty(autoSelectAdditionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                             await dispositionCore.upsertDisposition({
                                 serverUrl: manifest.serverUrl,
                                 logType: 'Call',

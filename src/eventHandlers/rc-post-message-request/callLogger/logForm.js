@@ -17,6 +17,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
             additionalSubmission[f.const] = data.body.formData[f.const];
         }
     }
+    const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
+    const supportDisposition = implementedInterfaces?.upsertCallDisposition;
     switch (data.body.formData.triggerType) {
         // Case 1.1: create log
         case 'createLog':
@@ -78,7 +80,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                     } catch (e) { /* ignore refresh errors */ }
                 }
             } catch (e) { /* ignore scheduling errors to not block logging */ }
-            if (!platform.disableDisposition && !isObjectEmpty(additionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
+            if (supportDisposition && !isObjectEmpty(additionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                 await dispositionCore.upsertDisposition({
                     serverUrl: manifest.serverUrl,
                     logType: 'Call',
@@ -116,7 +118,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                 to: data.body.call.to,
                 isShowNotification: true
             });
-            if (!platform.disableDisposition) {
+            if (supportDisposition && !isObjectEmpty(additionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                 await dispositionCore.upsertDisposition({
                     serverUrl: manifest.serverUrl,
                     logType: 'Call',

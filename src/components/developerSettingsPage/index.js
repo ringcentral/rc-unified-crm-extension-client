@@ -1,4 +1,4 @@
-function getDeveloperSettingsPageRender({ customUrl }) {
+function getDeveloperSettingsPageRender() {
     const developerSettingsPage = {
         id: 'developerSettingsPage',
         title: 'Developer settings',
@@ -6,13 +6,17 @@ function getDeveloperSettingsPageRender({ customUrl }) {
         schema: {
             type: 'object',
             properties: {
-                clearPlatformInfoWarning:{
+                clearPlatformInfoWarning: {
                     type: "string",
                     description: "This will clear current CRM platform information so to be re-initialized with a new CRM platform."
                 },
                 clearPlatformInfoButton: {
                     type: "string",
                     title: "Clear platform info"
+                },
+                openImplementedInterfacesPageButton: {
+                    type: "string",
+                    title: "Check interface implementations"
                 }
             }
         },
@@ -20,7 +24,7 @@ function getDeveloperSettingsPageRender({ customUrl }) {
             // submitButtonOptions: {
             //     submitText: 'Submit'
             // },
-            clearPlatformInfoWarning:{
+            clearPlatformInfoWarning: {
                 "ui:field": "admonition",
                 "ui:severity": "warning",  // "warning", "info", "error", "success"
             },
@@ -29,6 +33,11 @@ function getDeveloperSettingsPageRender({ customUrl }) {
                 "ui:variant": "contained", // "text", "outlined", "contained", "plain"
                 "ui:fullWidth": false
             },
+            openImplementedInterfacesPageButton: {
+                "ui:field": "button",
+                "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                "ui:fullWidth": false
+            }
         },
         formData: {
         }

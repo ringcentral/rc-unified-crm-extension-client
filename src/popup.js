@@ -42,6 +42,7 @@ window.__ON_RC_POPUP_WINDOW = 1;
 
 checkC2DCollision();
 getCustomManifest();
+getImplementedInterfaces();
 
 async function getCustomManifest() {
   const customCrmManifest = await getManifest();
@@ -51,6 +52,17 @@ async function getCustomManifest() {
       await saveManifestUrl({ manifestUrl: customCrmManifestUrl });
     }
     setAuthor(customCrmManifest?.author?.name ?? "");
+  }
+}
+
+async function getImplementedInterfaces() {
+  const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get({ rcUnifiedCrmExtJwt: null });
+  if (rcUnifiedCrmExtJwt) {
+    const manifest = await getManifest();
+    const response = await axios.get(`${manifest.serverUrl}/implementedInterfaces?jwtToken=${rcUnifiedCrmExtJwt}`);
+    if(response.data) {
+      await chrome.storage.local.set({ implementedInterfaces: response.data });
+    }
   }
 }
 
