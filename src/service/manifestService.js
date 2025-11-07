@@ -3,6 +3,8 @@ import axios from 'axios';
 import baseManifest from '../manifest.json';
 import { getRcInfo } from '../lib/util';
 
+let sessionManifest = null;
+
 async function getPlatformList() {
     const result = [];
     const platformPublicListResponse = await axios.get(baseManifest.platformPublicListUrl);
@@ -30,6 +32,7 @@ async function saveManifestUrl({ manifestUrl }) {
 }
 
 async function saveManifest({ manifest }) {
+    sessionManifest = manifest;
     await chrome.storage.local.set({ customCrmManifest: manifest });
     return manifest;
 }
@@ -54,6 +57,9 @@ async function refreshManifest() {
 }
 
 async function getManifest() {
+    if (sessionManifest) {
+        return sessionManifest;
+    }
     const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
     const platformInfo = await getPlatformInfo();
     const override = customCrmManifest?.platforms[platformInfo?.platformName]?.override;

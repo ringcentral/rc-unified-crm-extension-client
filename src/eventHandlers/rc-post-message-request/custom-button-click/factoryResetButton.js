@@ -1,6 +1,7 @@
 import userCore from '../../../core/user';
 import authCore from '../../../core/auth';
 import { trackFactoryReset } from '../../../lib/analytics';
+import { clearPlatformInfo } from '../../../service/platformService';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -16,7 +17,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
         }
     }
-    await chrome.storage.local.remove('platform-info');
+    await clearPlatformInfo();
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-logout'
     }, '*');

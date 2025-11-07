@@ -1,6 +1,7 @@
 import { showNotification } from '../../../lib/util';
 import authCore from '../../../core/auth';
 import { responseMessage } from '../../../lib/util';
+import { clearPlatformInfo } from '../../../service/platformService';
 
 import callLaterHandler from './callLater';
 import callLaterInMessageHandler from './callLaterInMessage';
@@ -120,7 +121,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             await doNotLogNumbersSubmitButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'clearPlatformInfoButton':
-            await chrome.storage.local.remove('platform-info');
+            await clearPlatformInfo();
             showNotification({ level: 'success', message: 'Platform info cleared. Please close the extension and open from CRM page.', ttl: 5000 });
             break;
         case 'saveTempNoteButton':
