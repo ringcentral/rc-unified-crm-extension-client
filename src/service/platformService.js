@@ -15,7 +15,12 @@ async function getPlatformInfo() {
 
 async function clearPlatformInfo() {
     sessionPlatformInfo = null;
+    await chrome.storage.local.remove('serverSideLoggingToken');
+    await chrome.storage.local.remove('isAdmin');
+    await chrome.storage.local.remove('crmAuthed');
     await chrome.storage.local.remove('platform-info');
+    await chrome.storage.local.remove('crm_extension_bullhornUsername');
+    await chrome.storage.local.remove('crm_extension_bullhorn_user_urls');
 } 
 
 exports.setPlatformInfo = setPlatformInfo;

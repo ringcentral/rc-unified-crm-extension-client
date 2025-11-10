@@ -165,11 +165,6 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
 async function unAuthorize({ serverUrl, platformName, rcUnifiedCrmExtJwt }) {
     try {
         const res = await axios.post(`${serverUrl}/unAuthorize?jwtToken=${rcUnifiedCrmExtJwt}`);
-        // Unique: Bullhorn
-        if (platformName === 'bullhorn') {
-            await chrome.storage.local.remove('crm_extension_bullhornUsername');
-            await chrome.storage.local.remove('crm_extension_bullhorn_user_urls');
-        }
         showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully unauthorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
         trackCrmLogout()
     }
