@@ -1,7 +1,7 @@
 {
   "name": "RingCentral App Connect - BETA",
   "description": "A RingCentral extension for CRM platforms",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "permissions": [
     "storage",
     "alarms",
@@ -44,8 +44,10 @@
   "background": {
     "service_worker": "sw.js"
   },
-  "externally_connectable":{
-    "matches": ["https://appconnect.labs.ringcentral.com/*"]
+  "externally_connectable": {
+    "matches": [
+      "https://appconnect.labs.ringcentral.com/*"
+    ]
   },
   "options_ui": {
     "page": "options.html",
