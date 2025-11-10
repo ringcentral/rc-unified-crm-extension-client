@@ -44,6 +44,9 @@
   "background": {
     "service_worker": "sw.js"
   },
+  "externally_connectable":{
+    "matches": ["https://appconnect.labs.ringcentral.com/*"]
+  },
   "options_ui": {
     "page": "options.html",
     "open_in_tab": false
