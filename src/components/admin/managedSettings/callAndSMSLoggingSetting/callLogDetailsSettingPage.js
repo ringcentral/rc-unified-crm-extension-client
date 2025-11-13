@@ -255,36 +255,6 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                         }
                     }
                 },
-                addCallLogRingSenseRecordingNextSteps: {
-                    type: 'object',
-                    title: 'RingSense next steps - (Server-side logging only)',
-                    properties: {
-                        value: {
-                            type: 'boolean',
-                            title: userPermissions.ringSenseInsights ? 'Value' : 'Value (RingSense license required)'
-                        }
-                    }
-                },
-                addCallLogRingSenseRecordingCallNotes: {
-                    type: 'object',
-                    title: 'RingSense call notes - (Server-side logging only)',
-                    properties: {
-                        value: {
-                            type: 'boolean',
-                            title: userPermissions.ringSenseInsights ? 'Value' : 'Value (RingSense license required)'
-                        }
-                    }
-                },
-                addCallLogRingSenseRecordingQnA: {
-                    type: 'object',
-                    title: 'RingSense Q&A - (Server-side logging only)',
-                    properties: {
-                        value: {
-                            type: 'boolean',
-                            title: userPermissions.ringSenseInsights ? 'Value' : 'Value (RingSense license required)'
-                        }
-                    }
-                },
                 addCallLogRingSenseRecordingLink: {
                     type: 'object',
                     title: 'RingSense recording link - (Server-side logging only)',
@@ -362,18 +332,6 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 "ui:disabled": !userPermissions.ringSenseInsights,
             },
             addCallLogRingSenseRecordingBulletedSummary: {
-                "ui:collapsible": true,
-                "ui:disabled": !userPermissions.ringSenseInsights,
-            },
-            addCallLogRingSenseRecordingNextSteps: {
-                "ui:collapsible": true,
-                "ui:disabled": !userPermissions.ringSenseInsights,
-            },
-            addCallLogRingSenseRecordingCallNotes: {
-                "ui:collapsible": true,
-                "ui:disabled": !userPermissions.ringSenseInsights,
-            },
-            addCallLogRingSenseRecordingQnA: {
                 "ui:collapsible": true,
                 "ui:disabled": !userPermissions.ringSenseInsights,
             },
@@ -456,18 +414,6 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
             addCallLogRingSenseRecordingBulletedSummary: {
                 customizable: false,
                 value: adminUserSettings?.addCallLogRingSenseRecordingBulletedSummary?.value ?? false
-            },
-            addCallLogRingSenseRecordingNextSteps: {
-                customizable: false,
-                value: adminUserSettings?.addCallLogRingSenseRecordingNextSteps?.value ?? false
-            },
-            addCallLogRingSenseRecordingCallNotes: {
-                customizable: false,
-                value: adminUserSettings?.addCallLogRingSenseRecordingCallNotes?.value ?? false
-            },
-            addCallLogRingSenseRecordingQnA: {
-                customizable: false,
-                value: adminUserSettings?.addCallLogRingSenseRecordingQnA?.value ?? false
             },
             addCallLogRingSenseRecordingLink: {
                 customizable: false,
