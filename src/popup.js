@@ -835,7 +835,7 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'contactSearchResultMessageLog':
-                  if (data.body.keys.some(k => k === "contactInfo")) {
+                  if (data.body.keys.some(k => k === "contactList")) {
                     let selectedContact = data.body.page.formData.contactInfo.find(c => c.id === data.body.formData.contactList);
                     // Ensure isNewContact is not set for real contacts
                     selectedContact = { ...selectedContact };
