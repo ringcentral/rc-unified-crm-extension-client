@@ -2,7 +2,8 @@ import callLogDetailsSettingPage from '../../../../components/admin/managedSetti
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     const { adminSettings } = await chrome.storage.local.get('adminSettings');
-    const callLogDetailsSettingPageRender = callLogDetailsSettingPage.getCallLogDetailsSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+    const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
+    const callLogDetailsSettingPageRender = callLogDetailsSettingPage.getCallLogDetailsSettingPageRender({ adminUserSettings: adminSettings?.userSettings, userPermissions });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: callLogDetailsSettingPageRender

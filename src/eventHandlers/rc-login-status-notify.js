@@ -31,6 +31,7 @@ async function onEvent({ data }) {
     const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
     if (data.loggedIn) {
         userPermissions.aiNote = data.features && data.features.smartNote;
+        userPermissions.ringSenseInsights = data.features && data.features.ringSenseInsights;
         await chrome.storage.local.set({ userPermissions });
     }
     console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
