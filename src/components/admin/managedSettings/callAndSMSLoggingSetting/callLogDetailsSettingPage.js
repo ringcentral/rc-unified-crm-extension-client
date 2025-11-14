@@ -227,7 +227,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 },
                 addCallLogRingSenseRecordingAIScore: {
                     type: 'object',
-                    title: 'RingSense AI score - (Server-side logging only)',
+                    title: 'RingSense call score - (Server-side logging only)',
                     properties: {
                         value: {
                             type: 'boolean',
