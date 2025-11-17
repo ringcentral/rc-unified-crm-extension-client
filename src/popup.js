@@ -2,6 +2,7 @@ import axios from 'axios';
 import { checkC2DCollision } from './lib/util';
 import { getManifest } from './service/manifestService';
 import { saveManifestUrl } from './service/manifestService';
+import { getPlatformInfo } from './service/platformService';
 import { setAuthor } from './lib/analytics';
 import { showNotification } from './lib/util';
 
@@ -56,10 +57,10 @@ async function getCustomManifest() {
 }
 
 async function getImplementedInterfaces() {
-  const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get({ rcUnifiedCrmExtJwt: null });
-  if (rcUnifiedCrmExtJwt) {
+  const platformInfo = await getPlatformInfo();
+  if (platformInfo) {
     const manifest = await getManifest();
-    const response = await axios.get(`${manifest.serverUrl}/implementedInterfaces?jwtToken=${rcUnifiedCrmExtJwt}`);
+    const response = await axios.get(`${manifest.serverUrl}/implementedInterfaces?platform=${platformInfo.platformName}`);
     if(response.data) {
       await chrome.storage.local.set({ implementedInterfaces: response.data });
     }
