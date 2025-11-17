@@ -172,7 +172,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             })).callLogs;
         // eslint-disable-next-line no-fallthrough
         case 'createLog':
-            await createLogHandler.onEvent({ data, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber });
+            await createLogHandler.onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber });
             break;
     }
     // response to widget

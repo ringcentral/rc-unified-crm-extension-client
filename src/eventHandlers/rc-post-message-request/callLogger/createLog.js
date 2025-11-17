@@ -8,7 +8,7 @@ import dispositionCore from '../../../core/disposition';
 import { getLogConflictInfo, logPageFormDataDefaulting } from '../../../lib/logUtil';
 import { CONSTANTS } from '../../../misc/constant';
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber }) {
+async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber }) {
     const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
     const cachedSearchContactKey = `rc-crm-search-contact-${contactPhoneNumber}`;
     const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
@@ -186,7 +186,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
             id: data.body.call.sessionId,
             manifest,
             logType: 'Call',
-            triggerType: data.body.triggerType,
+            triggerType: triggerTypeInUse,
             platformName,
             direction: data.body.call.direction,
             contactInfo: callMatchedContact ?? [],
@@ -201,7 +201,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
             id: data.body.call.sessionId,
             manifest,
             logType: 'Call',
-            triggerType: data.body.triggerType,
+            triggerType: triggerTypeInUse,
             platformName,
             direction: data.body.call.direction,
             contactInfo: callMatchedContact ?? [],
@@ -212,7 +212,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
         });
 
         // create log page defaulting
-        if (data.body.triggerType === 'createLog') {
+        if (triggerTypeInUse === 'createLog') {
             // default form value from user settings
             if (data.body.call.direction === 'Inbound') {
                 callPage = await logPageFormDataDefaulting({
