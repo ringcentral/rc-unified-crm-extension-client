@@ -15,6 +15,10 @@ function getAppearancePageRender() {
                             title: "Customize tabs"
                         },
                         {
+                            const: "widgetSettings",
+                            title: "Widget settings"
+                        },
+                        {
                             const: "notificationLevel",
                             title: "Notification level"
                         },

@@ -49,14 +49,36 @@ function App() {
     const [isSetup, setIsSetup] = useState(false);
     const [pos, setPos] = useState({ x: 0, y: 0 });
     const [showNavigator, setShowNavigator] = useState(false);
+    const [buttonSize, setButtonSize] = useState('large');
 
     useEffect(() => {
         async function checkSetup() {
             const platformInfo = await chrome.storage.local.get('platform-info');
             setIsSetup(!isObjectEmpty(platformInfo) && platformInfo['platform-info'].platformName);
         }
+        async function loadButtonSize() {
+            const { userSettings } = await chrome.storage.local.get('userSettings');
+            const size = userSettings?.quickAccessButtonSize?.value ?? 'large';
+            setButtonSize(size);
+        }
         checkSetup();
+        loadButtonSize();
         updatePos();
+
+        // Listen for storage changes to update button size in real-time
+        const storageListener = (changes, area) => {
+            if (area === 'local' && changes.userSettings) {
+                const newUserSettings = changes.userSettings.newValue;
+                const size = newUserSettings?.quickAccessButtonSize?.value ?? 'large';
+                setButtonSize(size);
+            }
+        };
+        chrome.storage.onChanged.addListener(storageListener);
+
+        // Cleanup listener on unmount
+        return () => {
+            chrome.storage.onChanged.removeListener(storageListener);
+        };
     }, []);
 
     function updatePos() {
@@ -93,6 +115,7 @@ function App() {
                         {state === 'quick_access' && <QuickAccessButton
                             isSetup={isSetup}
                             setState={setState}
+                            size={buttonSize}
                         />}
                         {state === 'setup' && <SetupButton
                             setIsSetup={setIsSetup}
@@ -108,7 +131,7 @@ function App() {
                             :
                             <div style={needSetupBadgeStyle} ></div>}
                         {showNavigator &&
-                            <Navigator />
+                            <Navigator size={buttonSize} />
                         }
                         <div style={{ cursor: 'grab', display: 'inherit' }}>
                             <RcButton

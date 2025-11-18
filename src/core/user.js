@@ -594,6 +594,14 @@ function getPhoneNumberDisplayFormatTemplateSetting(userSettings) {
     }
 }
 
+function getQuickAccessButtonSizeSetting(userSettings) {
+    return {
+        value: userSettings?.quickAccessButtonSize?.value ?? 'large',
+        readOnly: userSettings?.quickAccessButtonSize?.customizable === undefined ? false : !userSettings?.quickAccessButtonSize?.customizable,
+        readOnlyReason: !userSettings?.quickAccessButtonSize?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getCustomSetting(userSettings, id, defaultValue) {
     if (userSettings === undefined) {
         return {
@@ -668,5 +676,6 @@ exports.getNewContactTypeSetting = getNewContactTypeSetting;
 exports.getNewContactNamePrefixSetting = getNewContactNamePrefixSetting;
 exports.getPhoneNumberDisplayFormatTypeSetting = getPhoneNumberDisplayFormatTypeSetting;
 exports.getPhoneNumberDisplayFormatTemplateSetting = getPhoneNumberDisplayFormatTemplateSetting;
+exports.getQuickAccessButtonSizeSetting = getQuickAccessButtonSizeSetting;
 
 exports.getCustomSetting = getCustomSetting;

@@ -14,6 +14,7 @@ import generalSettingsHandler from './generalSettings';
 import managedSettingsHandler from './managedSettings';
 import appearanceHandler from './appearance';
 import customizeTabsHandler from './customizeTabs';
+import widgetSettingsHandler from './widgetSettings';
 import notificationLevelHandler from './notificationLevel';
 import phoneNumberFormatHandler from './phoneNumberFormat';
 import clickToDialEmbedHandler from './clickToDialEmbed';
@@ -89,6 +90,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'customizeTabs':
             await customizeTabsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'widgetSettings':
+            await widgetSettingsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'notificationLevel':
             await notificationLevelHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

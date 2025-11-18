@@ -290,6 +290,29 @@ async function getServiceManifest() {
                                 readOnlyReason: userCore.getNotificationLevelSetting(userSettings).readOnlyReason
                             }
                         ]
+                    },
+                    {
+                        id: 'widgetSettings',
+                        type: 'section',
+                        name: 'Widget settings',
+                        groupId: 'appearance',
+                        description: 'Modify the widget settings',
+                        items: [
+                            {
+                                id: 'quickAccessButtonSize',
+                                type: 'option',
+                                name: 'Quick access button size',
+                                options: [
+                                    { id: 'small', name: 'Small' },
+                                    { id: 'medium', name: 'Medium' },
+                                    { id: 'large', name: 'Large' },
+                                    { id: 'xlarge', name: 'Extra Large' }
+                                ],
+                                value: userCore.getQuickAccessButtonSizeSetting(userSettings).value,
+                                readOnly: userCore.getQuickAccessButtonSizeSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getQuickAccessButtonSizeSetting(userSettings).readOnlyReason
+                            }
+                        ]
                     }
                 ]
             },

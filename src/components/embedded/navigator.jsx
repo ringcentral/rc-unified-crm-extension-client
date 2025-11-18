@@ -10,11 +10,21 @@ const containerStyle = {
     gap: '5px'
 }
 
-function Navigator() {
+// Map size to pixel dimensions
+const sizeMap = {
+    small: '32px',
+    medium: '40px',
+    large: '48px',
+    xlarge: '56px'
+};
+
+function Navigator({ size = 'large' }) {
+    const buttonSize = sizeMap[size] || '48px';
+    
     return (
         <div style={containerStyle}>
             <RcIconButton
-                size='medium'
+                size={size}
                 symbol={Settings}
                 onClick={() => {
                     chrome.runtime.sendMessage({
@@ -24,14 +34,14 @@ function Navigator() {
                 }}
                 style={{
                     backgroundColor: '#7A7A7A',
-                    height: '48px',
-                    width: '48px',
+                    height: buttonSize,
+                    width: buttonSize,
                 }}
                 variant='contained'
             >
             </RcIconButton >
             <RcIconButton
-                size='medium'
+                size={size}
                 symbol={Feedback}
                 onClick={() => {
                     chrome.runtime.sendMessage({
@@ -41,14 +51,14 @@ function Navigator() {
                 }}
                 style={{
                     backgroundColor: '#00B1A7',
-                    height: '48px',
-                    width: '48px',
+                    height: buttonSize,
+                    width: buttonSize,
                 }}
                 variant='contained'
             >
             </RcIconButton >
             <RcIconButton
-                size='medium'
+                size={size}
                 symbol={Logout}
                 onClick={() => {
                     chrome.runtime.sendMessage({
@@ -58,8 +68,8 @@ function Navigator() {
                 }}
                 style={{
                     backgroundColor: '#E6413C',
-                    height: '48px',
-                    width: '48px',
+                    height: buttonSize,
+                    width: buttonSize,
                 }}
                 variant='contained'
             >

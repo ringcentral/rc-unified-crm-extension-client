@@ -171,6 +171,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'advancedFeaturesSettingPage':
         case 'customSettingsPage':
         case 'customizeTabsSettingPage':
+        case 'widgetSettingsPage':
         case 'notificationLevelSettingPage':
         case 'phoneNumberFormatPage':
         case 'clickToDialEmbedPage':

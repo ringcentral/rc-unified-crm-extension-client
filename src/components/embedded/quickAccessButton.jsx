@@ -8,7 +8,8 @@ import { sendMessageToExtension } from '../../lib/sendMessage';
 function QuickAccessButton(
     {
         isSetup,
-        setState
+        setState,
+        size = 'large'
     }
 ) {
     const [showDialer, setShowDialer] = useState(false);
@@ -16,7 +17,7 @@ function QuickAccessButton(
         <RcIconButton
             symbol={showDialer ? activeLogo : defaultLogo}
             variant="contained"
-            size='large'
+            size={size}
             style={showDialer ? { padding: '0px', background: '#FF7A00' } : { padding: '0px', background: '#FFFFFF' }}
             onClick={() => {
                 sendMessageToExtension(
