@@ -20,18 +20,6 @@ const menuContainerStyle = {
     alignItems: 'center'
 }
 
-const needSetupBadgeStyle = {
-    position: 'absolute',
-    top: '-4px',
-    right: '20px',
-    background: '#f15353',
-    borderRadius: ' 50%',
-    height: '16px',
-    width: '16px',
-    color: 'white',
-    border: 'solid 2px white'
-}
-
 const navigatorBadgeStyle = {
     position: 'absolute',
     top: '-4px',
@@ -121,15 +109,13 @@ function App() {
                             setIsSetup={setIsSetup}
                             setState={setState}
                         />}
-                        {isSetup ?
+                        {isSetup &&
                             <RcIconButton
                                 size='small'
                                 symbol={showNavigator ? ArrowDown2 : ArrowUp2}
                                 onClick={() => { setShowNavigator(!showNavigator) }}
                                 style={navigatorBadgeStyle}
-                            />
-                            :
-                            <div style={needSetupBadgeStyle} ></div>}
+                            />}
                         {showNavigator &&
                             <Navigator size={buttonSize} />
                         }
