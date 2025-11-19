@@ -5,7 +5,7 @@ import userCore from '../../../core/user';
 import moment from 'moment';
 import logPage from '../../../components/logPage';
 import dispositionCore from '../../../core/disposition';
-import { getLogConflictInfo, logPageFormDataDefaulting } from '../../../lib/logUtil';
+import { getLogConflictInfo, logPageFormDataDefaulting, cacheLogPageData } from '../../../lib/logUtil';
 import { CONSTANTS } from '../../../misc/constant';
 
 async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber }) {
@@ -172,17 +172,17 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
             }
         }
         if (requireManualDisposition) {
-            showNotification({ level: 'warning', message: 'Manual disposition needed. Please edit logged call to disposition.', ttl: 5000 });
+            showNotification({ level: 'warning', message: 'Manual disposition might be needed. Please edit logged call to disposition.', ttl: 5000 });
         }
     }
-    // Case: auto log OFF, open log page
+    // Case: auto log OFF and manual -> open log page
     else if (data.body.redirect) {
         let loggedContactId = null;
         const existingCallLogRecord = await chrome.storage.local.get(`rc-crm-call-log-${data.body.call.sessionId}`);
         if (existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`]) {
             loggedContactId = existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`].contact?.id ?? null;
         }
-        const cacheLogPageData = {
+        await cacheLogPageData({
             id: data.body.call.sessionId,
             manifest,
             logType: 'Call',
@@ -192,8 +192,7 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
             contactInfo: callMatchedContact ?? [],
             logInfo,
             loggedContactId
-        };
-        await chrome.storage.local.set({ cacheLogPageData });
+        });
         const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
         const useContactSearch = implementedInterfaces?.findContactWithName;
         // add your codes here to log call to your service

@@ -2,7 +2,7 @@ import userCore from '../../../core/user';
 import { showNotification, responseMessage } from '../../../lib/util';
 import logCore from '../../../core/log';
 import contactCore from '../../../core/contact';
-import { getLogConflictInfo, logPageFormDataDefaulting } from '../../../lib/logUtil';
+import { getLogConflictInfo, logPageFormDataDefaulting, cacheLogPageData } from '../../../lib/logUtil';
 import moment from 'moment';
 import logPage from '../../../components/logPage';
 
@@ -100,7 +100,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
               });
             }
             if (requireManualDisposition) {
-              showNotification({ level: 'warning', message: 'Manual disposition needed. Please edit logged message to disposition.', ttl: 5000 });
+              showNotification({ level: 'warning', message: 'Manual disposition might be needed. Please edit logged message to disposition.', ttl: 5000 });
             }
           }
           break;
@@ -135,7 +135,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
               });
             }
             if (requireManualDisposition) {
-              showNotification({ level: 'warning', message: 'Manual disposition needed. Please edit logged message to disposition.', ttl: 5000 });
+              showNotification({ level: 'warning', message: 'Manual disposition might be needed. Please edit logged message to disposition.', ttl: 5000 });
             }
           }
           break;
@@ -171,7 +171,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
               });
             }
             if (requireManualDisposition) {
-              showNotification({ level: 'warning', message: 'Manual disposition needed. Please edit logged message to disposition.', ttl: 5000 });
+              showNotification({ level: 'warning', message: 'Manual disposition might be needed. Please edit logged message to disposition.', ttl: 5000 });
             }
           }
           break;
@@ -233,7 +233,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
           }
         }
         // add your codes here to log call to your service
-        const cacheLogPageData = {
+        await cacheLogPageData({
           id: data.body.conversation.conversationId,
           manifest,
           logType: 'Message',
@@ -241,8 +241,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
           platformName,
           direction: '',
           contactInfo: getContactMatchResult.contactInfo ?? []
-        };
-        await chrome.storage.local.set({ cacheLogPageData });
+        });
         const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
         const useContactSearch = implementedInterfaces?.findContactWithName;
         let messagePage = logPage.getLogPageRender({

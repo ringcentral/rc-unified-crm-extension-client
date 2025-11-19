@@ -129,6 +129,7 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     }, '*');
     const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false) || (userSettings?.autoLogVoicemail?.value ?? false);
     const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
+    window.postMessage({ type: 'rc-server-side-logging-enabled', enabled: isServerSideLoggingEnabledForEndUsers }, '*');
     RCAdapter.setAutoLog({ call: (userSettings.autoLogCall?.value && !isServerSideLoggingEnabledForEndUsers) ?? false, message: autoLogMessagesGroupTrigger })
     if (!isAvoidForceChange) {
         const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);

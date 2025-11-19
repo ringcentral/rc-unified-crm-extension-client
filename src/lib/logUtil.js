@@ -1,6 +1,8 @@
 import userCore from '../core/user';
 import logService from '../service/logService';
 import { CONSTANTS } from '../misc/constant';
+import { getManifest } from '../service/manifestService';
+import { getPlatformInfo } from '../service/platformService';
 
 function getAdditionalFieldDefaultValuesFromSetting({
     platform,
@@ -235,8 +237,41 @@ async function removePendingRecordingSessionId({ sessionId }) {
     await chrome.storage.local.set({ pendingRecordings });
 }
 
+async function cacheLogPageData({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId }) {
+    if(!manifest)
+    {
+        // eslint-disable-next-line no-param-reassign
+        manifest = await getManifest();
+    }
+    if(!platformName)
+    {
+        const platformInfo = await getPlatformInfo();
+        // eslint-disable-next-line no-param-reassign
+        platformName = platformInfo?.platformName ?? '';
+    }
+    const cacheLogPageData = {
+        id,
+        manifest,
+        logType,
+        triggerType,
+        platformName,
+        direction,
+        contactInfo,
+        logInfo,
+        loggedContactId
+    }
+    await chrome.storage.local.set({ cacheLogPageData });
+}
+
+async function getCachedLogPageData() {
+    const { cacheLogPageData } = await chrome.storage.local.get({ cacheLogPageData: null });
+    return cacheLogPageData;
+}
+
 exports.getLogConflictInfo = getLogConflictInfo;
 exports.logPageFormDataDefaulting = logPageFormDataDefaulting;
 exports.addPendingRecordingSessionId = addPendingRecordingSessionId;
 exports.triggerPendingRecordingCheck = triggerPendingRecordingCheck;
 exports.removePendingRecordingSessionId = removePendingRecordingSessionId;
+exports.cacheLogPageData = cacheLogPageData;
+exports.getCachedLogPageData = getCachedLogPageData;
