@@ -213,6 +213,7 @@ window.addEventListener('message', async (e) => {
           const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
           if (data.loggedIn) {
             userPermissions.aiNote = data.features && data.features.smartNote;
+            userPermissions.ringSenseInsights = data.features && data.features.ringSenseInsights;
             await chrome.storage.local.set({ userPermissions });
           }
           console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
@@ -1094,7 +1095,8 @@ window.addEventListener('message', async (e) => {
                   }, '*');
                   break;
                 case 'callLogDetailsSetting':
-                  const callLogDetailsSettingPageRender = callLogDetailsSettingPage.getCallLogDetailsSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
+                  const callLogDetailsSettingPageRender = callLogDetailsSettingPage.getCallLogDetailsSettingPageRender({ adminUserSettings: adminSettings?.userSettings, userPermissions });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: callLogDetailsSettingPageRender
