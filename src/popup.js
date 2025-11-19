@@ -51,7 +51,8 @@ import {
   trackConnectedCall,
   trackOpenFeedback,
   trackUpdateCallRecordingLink,
-  trackFactoryReset
+  trackFactoryReset,
+  trackRingSensePage
 } from './lib/analytics';
 
 import logService from './service/logService';
@@ -2934,6 +2935,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     chrome.runtime.sendMessage({
       type: 'openPopupWindow'
     });
+  } else if (request.type === 'trackRingSensePage') {
+    trackRingSensePage();
+    sendResponse({ result: 'ok' });
   }
 });
 
