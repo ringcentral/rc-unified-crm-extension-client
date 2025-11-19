@@ -166,6 +166,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'callAndSMSLoggingSettingPage':
         case 'contactSettingPage':
+        case 'phoneSettingPage':
         case 'callLogDetailsSettingPage':
         case 'autoLogPreferenceSettingPage':
         case 'advancedFeaturesSettingPage':

@@ -131,13 +131,9 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
     RCAdapter.setAutoLog({ call: (userSettings.autoLogCall?.value && !isServerSideLoggingEnabledForEndUsers) ?? false, message: autoLogMessagesGroupTrigger })
     if (!isAvoidForceChange) {
-        const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
         const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-update-ai-assistant-settings',
-            showAiAssistantWidget: showAiAssistantWidgetSetting?.value ?? false,
-            showAiAssistantWidgetReadOnly: showAiAssistantWidgetSetting?.readOnly ?? false,
-            showAiAssistantWidgetReadOnlyReason: showAiAssistantWidgetSetting?.readOnlyReason ?? '',
             autoStartAiAssistant: autoStartAiAssistantSetting?.value ?? false,
             autoStartAiAssistantReadOnly: autoStartAiAssistantSetting?.readOnly ?? false,
             autoStartAiAssistantReadOnlyReason: autoStartAiAssistantSetting?.readOnlyReason ?? '',
@@ -312,14 +308,6 @@ function getAutoOpenSetting(userSettings) {
         value: userSettings?.autoOpenExtension?.value ?? false,
         readOnly: userSettings?.autoOpenExtension?.customizable === undefined ? false : !userSettings?.autoOpenExtension?.customizable,
         readOnlyReason: !userSettings?.autoOpenExtension?.customizable ? 'This setting is managed by admin' : ''
-    }
-}
-
-function getShowAiAssistantWidgetSetting(userSettings) {
-    return {
-        value: userSettings?.showAiAssistantWidget?.value ?? false,
-        readOnly: userSettings?.showAiAssistantWidget?.customizable === undefined ? false : !userSettings?.showAiAssistantWidget?.customizable,
-        readOnlyReason: !userSettings?.showAiAssistantWidget?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -640,7 +628,6 @@ exports.getCallPopMultiMatchBehavior = getCallPopMultiMatchBehavior;
 exports.getOpenContactAfterCreationSetting = getOpenContactAfterCreationSetting;
 exports.getDeveloperModeSetting = getDeveloperModeSetting;
 exports.getAutoOpenSetting = getAutoOpenSetting;
-exports.getShowAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting;
 exports.getAutoStartAiAssistantSetting = getAutoStartAiAssistantSetting;
 exports.getShowChatTabSetting = getShowChatTabSetting;
 exports.getShowMeetingsTabSetting = getShowMeetingsTabSetting;

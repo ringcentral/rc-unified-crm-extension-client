@@ -19,6 +19,7 @@ import notificationLevelHandler from './notificationLevel';
 import phoneNumberFormatHandler from './phoneNumberFormat';
 import clickToDialEmbedHandler from './clickToDialEmbed';
 import callAndSMSLoggingHandler from './callAndSMSLogging';
+import phoneSettingsHandler from './phoneSettings';
 import serverSideLoggingSettingHandler from './serverSideLoggingSetting';
 import contactSettingHandler from './contactSetting';
 import advancedFeaturesSettingHandler from './advancedFeaturesSetting';
@@ -102,6 +103,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'clickToDialEmbed':
             await clickToDialEmbedHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'phoneSettings':
+            await phoneSettingsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'callAndSMSLogging':
             await callAndSMSLoggingHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
