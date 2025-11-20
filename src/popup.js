@@ -36,6 +36,8 @@ import c2dHandler from './messageHandlers/c2d';
 import c2scheduleHandler from './messageHandlers/c2schedule';
 import navigateHandler from './messageHandlers/navigate';
 import insightlyAuthHandler from './messageHandlers/insightlyAuth';
+import ringsenseRefTrackHandler from './messageHandlers/ringsenseRefTrack';
+
 
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
 
@@ -184,6 +186,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         break;
       case 'insightlyAuth':
         await insightlyAuthHandler.onMessage({ request, sendResponse });
+        break;
+      case 'ringsenseRefTrack':
+        await ringsenseRefTrackHandler.onMessage({ request, sendResponse });
         break;
       default:
         break;

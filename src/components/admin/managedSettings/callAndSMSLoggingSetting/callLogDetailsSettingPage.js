@@ -10,6 +10,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallLogNote: {
                     type: 'object',
                     title: 'Agent-entered notes',
+                    description: 'Log the notes manually entered by agent user',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -24,6 +25,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallSessionId: {
                     type: 'object',
                     title: 'Call session id',
+                    description: 'Log RingCentral call session id',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -38,6 +40,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addRingCentralUserName: {
                     type: 'object',
                     title: 'RingCentral user name',
+                    description: 'Log the RingCentral user name',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -52,6 +55,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addRingCentralNumber: {
                     type: 'object',
                     title: 'RingCentral phone number',
+                    description: 'Log the RingCentral phone number',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -66,6 +70,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallLogSubject: {
                     type: 'object',
                     title: 'Call subject',
+                    description: "Log a short phrase to summarize call, e.g. 'Inbound call from...'",
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -80,6 +85,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallLogContactNumber: {
                     type: 'object',
                     title: 'Contact\'s phone number',
+                    description: 'Log the contact information of the other participant',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -94,6 +100,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallLogDateTime: {
                     type: 'object',
                     title: 'Date and time',
+                    description: 'Log the call\'s explicit start and end date/times',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -148,6 +155,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallLogDuration: {
                     type: 'object',
                     title: 'Call duration',
+                    description: 'Log the call duration, noted in minutes and seconds',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -162,6 +170,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallLogResult: {
                     type: 'object',
                     title: 'Call result',
+                    description: 'Log the result of the call, e.g. Call connected',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -176,6 +185,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallLogRecording: {
                     type: 'object',
                     title: 'Link to the recording',
+                    description: 'Provide a link to the call\'s recording, if it exists',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -190,6 +200,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallLogAiNote: {
                     type: 'object',
                     title: 'Smart summary',
+                    description: 'Log the AI-generated summary of the call, if it exists',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -197,13 +208,15 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                         },
                         value: {
                             type: 'boolean',
-                            title: userPermissions.aiNote ? 'Value' : 'Value (AI Assistant required)'
+                            title: 'Value',
+                            description: userPermissions.aiNote ? '' : 'AI Assistant required'
                         }
                     }
                 },
                 addCallLogTranscript: {
                     type: 'object',
                     title: 'Call transcript',
+                    description: 'Log the AI-generated transcript of the call, if it exists',
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -211,63 +224,70 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                         },
                         value: {
                             type: 'boolean',
-                            title: userPermissions.aiNote ? 'Value' : 'Value (AI Assistant required)'
+                            title: 'Value',
+                            description: userPermissions.aiNote ? '' : 'AI Assistant required'
                         }
                     }
                 },
                 addCallLogRingSenseRecordingTranscript: {
                     type: 'object',
-                    title: 'RingSense transcript - (Server-side logging only)',
+                    title: 'RingSense transcript',
+                    description: '[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
                     properties: {
                         value: {
                             type: 'boolean',
-                            title: userPermissions.ringSenseInsights ? 'Value' : 'Value (RingSense license required)'
+                            title: 'Value'
                         }
                     }
                 },
                 addCallLogRingSenseRecordingAIScore: {
                     type: 'object',
-                    title: 'RingSense call score - (Server-side logging only)',
+                    title: 'RingSense call score',
+                    description: '[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
                     properties: {
                         value: {
                             type: 'boolean',
-                            title: userPermissions.ringSenseInsights ? 'Value' : 'Value (RingSense license required)'
+                            title: 'Value'
                         }
                     }
                 },
                 addCallLogRingSenseRecordingSummary: {
                     type: 'object',
-                    title: 'RingSense summary - (Server-side logging only)',
+                    title: 'RingSense summary',
+                    description: '[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
                     properties: {
                         value: {
                             type: 'boolean',
-                            title: userPermissions.ringSenseInsights ? 'Value' : 'Value (RingSense license required)'
+                            title: 'Value'
                         }
                     }
                 },
                 addCallLogRingSenseRecordingBulletedSummary: {
                     type: 'object',
-                    title: 'RingSense bulleted summary - (Server-side logging only)',
+                    title: 'RingSense bulleted summary',
+                    description: '[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
                     properties: {
                         value: {
                             type: 'boolean',
-                            title: userPermissions.ringSenseInsights ? 'Value' : 'Value (RingSense license required)'
+                            title: 'Value'
                         }
                     }
                 },
                 addCallLogRingSenseRecordingLink: {
                     type: 'object',
-                    title: 'RingSense recording link - (Server-side logging only)',
+                    title: 'RingSense recording link',
+                    description: '[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
                     properties: {
                         value: {
                             type: 'boolean',
-                            title: userPermissions.ringSenseInsights ? 'Value' : 'Value (RingSense license required)'
+                            title: 'Value'
                         }
                     }
                 },
                 addCallLogLegs: {
                     type: 'object',
-                    title: 'Call journey - (Server-side logging only)',
+                    title: 'Call journey',
+                    description: 'Server-side logging only.',
                     properties: {
                         value: {
                             type: 'boolean',
