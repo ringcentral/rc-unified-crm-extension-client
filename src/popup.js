@@ -1097,7 +1097,23 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'callLogDetailsSetting':
                   const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
-                  const callLogDetailsSettingPageRender = callLogDetailsSettingPage.getCallLogDetailsSettingPageRender({ adminUserSettings: adminSettings?.userSettings, userPermissions });
+                  let serverSideLoggingSubscribed = adminSettings?.userSettings?.serverSideLogging?.enable ?? false;
+                  if (serverSideLoggingSubscribed) {
+                    window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                    try {
+                      const serverSideLogging = await adminCore.getServerSideLogging({ platform });
+                      serverSideLoggingSubscribed = serverSideLogging?.subscribed ?? false;
+                    } catch (error) {
+                      console.error('Error getting server side logging:', error);
+                      serverSideLoggingSubscribed = false;
+                    }
+                    window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  }
+                  const callLogDetailsSettingPageRender = callLogDetailsSettingPage.getCallLogDetailsSettingPageRender({
+                    adminUserSettings: adminSettings?.userSettings,
+                    userPermissions,
+                    serverSideLoggingSubscribed,
+                  });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: callLogDetailsSettingPageRender
@@ -2262,8 +2278,38 @@ window.addEventListener('message', async (e) => {
                     adminSettings.userSettings[k] = data.body.button.formData[k];
                   }
                   await chrome.storage.local.set({ adminSettings });
-                  await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
-                  await userCore.refreshUserSettings({});
+                  try {
+                    await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
+                    await userCore.refreshUserSettings({});
+                  } catch (error) {
+                    console.error('Error uploading admin settings:', error);
+                    showNotification({ level: 'error', message: 'Failed to save settings. Please try again.', ttl: 3000 });
+                    break;
+                  }
+                  const serverSideLoggingEnabled = adminSettings?.userSettings?.serverSideLogging?.enable ?? false;
+                  if (data.body.button.id === 'callLogDetailsSettingPage' && serverSideLoggingEnabled) {
+                    // Response to widget to avoid timeout error
+                    responseMessage(data.requestId, { data: 'ok' });
+                    let serverSideLoggingSubscribed = false;
+                    let serverSideLogging;
+                    try {
+                      serverSideLogging = await adminCore.getServerSideLogging({ platform });
+                      serverSideLoggingSubscribed = serverSideLogging?.subscribed ?? false;
+                    } catch (error) {
+                      console.error('Error getting server side logging:', error);
+                    }
+                    // if server side logging is subscribed, refresh subscription level
+                    if (serverSideLoggingSubscribed) {
+                      const useAdminAssignedUserToken = platform.serverSideLogging?.useAdminAssignedUserToken
+                      await adminCore.enableServerSideLogging({
+                        serverUrl: manifest.serverUrl,
+                        platform,
+                        subscriptionLevel: serverSideLogging.subscriptionLevel,
+                        loggingByAdmin: useAdminAssignedUserToken ? !serverSideLogging.loggingWithUserAssigned : serverSideLogging.loggingByAdmin,
+                        silence: true
+                      });
+                    }
+                  }
                   showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -2466,6 +2512,7 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
                 case 'saveServerSideLoggingButton':
+                  responseMessage(data.requestId, { data: 'ok' }); // Response to widget to avoid timeout error
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   adminSettings.userSettings.serverSideLogging =
                   {
@@ -2488,7 +2535,7 @@ window.addEventListener('message', async (e) => {
                       serverUrl: manifest.serverUrl,
                       platform,
                       subscriptionLevel: data.body.button.formData.serverSideLoggingHolder.serverSideLogging,
-                      loggingByAdmin: data.body.button.formData.activityRecordOwner === 'admin'
+                      loggingByAdmin: data.body.button.formData.serverSideLoggingHolder.activityRecordOwner === 'admin'
                     });
                   }
                   else {

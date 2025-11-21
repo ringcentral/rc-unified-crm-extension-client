@@ -144,7 +144,7 @@ async function uploadServerSideLoggingAdditionalFieldValues({ platform, formData
     return uploadResponse.data;
 }
 
-async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel, loggingByAdmin }) {
+async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel, loggingByAdmin, silence = false }) {
     if (!platform.serverSideLogging) {
         return;
     }
@@ -191,9 +191,12 @@ async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel,
                     }
                 }
             );
-            showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
+            if (!silence) {
+                showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
+            }
         }
         catch (e) {
+            console.error('Error enabling server side logging:', e);
             if (e.response.status === 401) {
                 // Token expired
                 const serverSideLoggingToken = await authServerSideLogging({ platform });
@@ -229,7 +232,9 @@ async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel,
                         }
                     }
                 );
-                showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
+                if (!silence) {
+                    showNotification({ level: 'success', message: 'Server side logging turned ON. Auto call log inside the extension will be forced OFF.', ttl: 5000 });
+                }
             }
             if (e.response.status === 400) {
                 showNotification({
