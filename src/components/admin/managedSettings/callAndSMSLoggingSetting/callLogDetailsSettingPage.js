@@ -1,4 +1,4 @@
-function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions }) {
+function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions, serverSideLoggingSubscribed }) {
     return {
         id: 'callLogDetailsSettingPage',
         title: 'Call log details',
@@ -341,26 +341,27 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
             },
             addCallLogRingSenseRecordingTranscript: {
                 "ui:collapsible": true,
-                "ui:disabled": !userPermissions.ringSenseInsights,
+                "ui:disabled": !userPermissions.ringSenseInsights || !serverSideLoggingSubscribed,
             },
             addCallLogRingSenseRecordingAIScore: {
                 "ui:collapsible": true,
-                "ui:disabled": !userPermissions.ringSenseInsights,
+                "ui:disabled": !userPermissions.ringSenseInsights || !serverSideLoggingSubscribed,
             },
             addCallLogRingSenseRecordingSummary: {
                 "ui:collapsible": true,
-                "ui:disabled": !userPermissions.ringSenseInsights,
+                "ui:disabled": !userPermissions.ringSenseInsights || !serverSideLoggingSubscribed,
             },
             addCallLogRingSenseRecordingBulletedSummary: {
                 "ui:collapsible": true,
-                "ui:disabled": !userPermissions.ringSenseInsights,
+                "ui:disabled": !userPermissions.ringSenseInsights || !serverSideLoggingSubscribed,
             },
             addCallLogRingSenseRecordingLink: {
                 "ui:collapsible": true,
-                "ui:disabled": !userPermissions.ringSenseInsights,
+                "ui:disabled": !userPermissions.ringSenseInsights || !serverSideLoggingSubscribed,
             },
             addCallLogLegs: {
                 "ui:collapsible": true,
+                "ui:disabled": !serverSideLoggingSubscribed,
             },
             submitButtonOptions: {
                 submitText: 'Save',
