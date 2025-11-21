@@ -2283,6 +2283,7 @@ window.addEventListener('message', async (e) => {
                     await userCore.refreshUserSettings({});
                   } catch (error) {
                     console.error('Error uploading admin settings:', error);
+                    window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                     showNotification({ level: 'error', message: 'Failed to save settings. Please try again.', ttl: 3000 });
                     break;
                   }
