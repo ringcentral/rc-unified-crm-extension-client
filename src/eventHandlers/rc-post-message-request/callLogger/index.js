@@ -23,10 +23,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                     expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
                 }
             });
-            if (!data.body.redirect) {
-                responseMessage(data.requestId, { data: 'ok' });
-                return;
+            responseMessage(data.requestId, { data: 'ok' });
+            if (data.body.redirect) {
+                showNotification({ level: 'warning', message: 'Cannot log this call. It is answered by someone else.', ttl: 3000 });
             }
+            return;
         }
     }
     if (data.body.call.queueCall) {
@@ -52,10 +53,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                     expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
                 }
             });
-            if (!data.body.redirect) {
-                responseMessage(data.requestId, { data: 'ok' });
-                return;
+            responseMessage(data.requestId, { data: 'ok' });
+            if (data.body.redirect) {
+                showNotification({ level: 'warning', message: 'Cannot log this call. It is answered by someone else.', ttl: 3000 });
             }
+            return;
         }
     }
     const { userSettings } = await chrome.storage.local.get('userSettings');
