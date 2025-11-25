@@ -325,3 +325,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   //   });
   // }
 });
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.url && changeInfo.url.includes('ringcentral.com/ringsense.html') && changeInfo.url.includes('ref=AppConnect')) {
+    chrome.runtime.sendMessage({
+      type: 'trackRingSensePage'
+    }).catch(e => {
+      // popup might be closed, ignore error
+      console.log('Could not send trackRingSensePage message', e);
+    });
+  }
+});
