@@ -306,3 +306,12 @@ exports.trackCrmAuthFail = function trackCrmAuthFail() {
         author
     });
 }
+
+exports.trackRingSensePage = function trackRingSensePage() {
+    track('Visit RingSense from AppConnect', {
+        appName,
+        via: eventAddedVia,
+        version,
+        author
+    });
+}

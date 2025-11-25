@@ -116,7 +116,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             if (platform?.writeReviewUrl) { window.open(platform.writeReviewUrl); }
             break;
         case 'saveServerSideLoggingButton':
-            await saveServerSideLoggingButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await saveServerSideLoggingButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
             break;
         case 'doNotLogNumbersSubmitButton':
             await doNotLogNumbersSubmitButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
@@ -175,7 +175,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'notificationLevelSettingPage':
         case 'phoneNumberFormatPage':
         case 'clickToDialEmbedPage':
-            await generalHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await generalHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
             break;
     }
     responseMessage(data.requestId, { data: 'ok' });

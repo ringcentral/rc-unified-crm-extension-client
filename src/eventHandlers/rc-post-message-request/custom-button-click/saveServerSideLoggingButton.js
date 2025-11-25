@@ -3,7 +3,8 @@ import userCore from '../../../core/user';
 import { showNotification } from '../../../lib/util';
 import embeddableServices from '../../../service/embeddableServices';
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+async function onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage }) {
+    responseMessage(data.requestId, { data: 'ok' }); // Response to widget to avoid timeout error
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     const { adminSettings } = await chrome.storage.local.get('adminSettings');
     adminSettings.userSettings.serverSideLogging =
@@ -27,7 +28,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             serverUrl: manifest.serverUrl,
             platform,
             subscriptionLevel: data.body.button.formData.serverSideLoggingHolder.serverSideLogging,
-            loggingByAdmin: data.body.button.formData.activityRecordOwner === 'admin'
+            loggingByAdmin: data.body.button.formData.serverSideLoggingHolder.activityRecordOwner === 'admin'
         });
     }
     else {
