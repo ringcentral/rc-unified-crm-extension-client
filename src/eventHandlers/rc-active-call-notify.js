@@ -67,7 +67,10 @@ async function onEvent({ data }) {
     case 'NoCall':
       if (data.call.terminationType === 'final') {
         window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
-        await logCore.uploadCacheNote({ serverUrl: manifest.serverUrl, sessionId: data.call.sessionId });
+        const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
+        if (implementedInterfaces?.cacheCallNote) {
+          await logCore.uploadCacheNote({ serverUrl: manifest.serverUrl, sessionId: data.call.sessionId });
+        }
         const callAutoPopup = userCore.getCallPopSetting(userSettings).value;
         if (callAutoPopup) {
           if (isExtensionNumber && !allowExtensionNumberLogging) {
@@ -92,7 +95,6 @@ async function onEvent({ data }) {
             loggedContactId: null,
             isUnresolved: undefined
           });
-          const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
           const useContactSearch = implementedInterfaces?.findContactWithName;
           let callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId: null, contactPhoneNumber, useContactSearch });
           // default form value from user settings
