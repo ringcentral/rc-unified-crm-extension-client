@@ -872,6 +872,17 @@ async function getServiceManifest() {
                             }
                         )
                         break;
+                    case 'button':
+                        items.push(
+                            {
+                                id: item.id,
+                                type: 'button',
+                                name: item.name,
+                                buttonLabel: item.buttonLabel || 'Open',
+                                buttonType: item.buttonType || 'button'
+                            }
+                        )
+                        break;
                 }
             }
             const group = {

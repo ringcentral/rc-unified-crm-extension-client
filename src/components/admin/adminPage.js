@@ -42,6 +42,14 @@ function getAdminPageRender({ platform }) {
             title: "Server side logging (Beta)",
         })
     };
+    
+    if (platform.name === 'googleSheets') {
+        page.schema.properties.section.oneOf.push({
+            const: "googleSheetsAdminConfig",
+            title: "Google Sheets Configuration",
+        })
+    };
+    
     return page;
 }
 
