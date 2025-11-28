@@ -350,6 +350,7 @@ window.addEventListener('message', async (e) => {
                       ttl: 3000 
                     });
                   }
+                  const updatedAdminGoogleSheetsPage = adminGoogleSheetsPage.getUpdatedAdminGoogleSheetsPage({ page: data.body.page, formData: data.body.formData });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: updatedAdminGoogleSheetsPage
@@ -2271,7 +2272,16 @@ window.addEventListener('message', async (e) => {
                   };
                   await chrome.storage.local.set({ adminSettings });
                   await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
-                  await userCore.refreshUserSettings({});
+                  await userCore.refreshUserSettings({
+                    changedSettings: {
+                      googleSheetsName: {
+                        value: ''
+                      },
+                      googleSheetsUrl: {
+                        value: ''
+                      }
+                    }
+                  });
                   showNotification({ level: 'success', message: 'Admin Google Sheet removed successfully', ttl: 3000 });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
