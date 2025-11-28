@@ -20,7 +20,7 @@ async function checkUrlMatch({ type = 'quickAccessButton' }) {
     const platformInfo = await chrome.storage.local.get('platform-info');
     if (!isObjectEmpty(platformInfo)) {
       const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
-      const embedUrls = customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.embedUrls ?? [];
+      const embedUrls = customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.embedUrls?.length > 0 ? customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.embedUrls : ['*'];
       const { userSettings } = await chrome.storage.local.get('userSettings');
       let clickToDialEmbedMode = null;
       switch (type) {
