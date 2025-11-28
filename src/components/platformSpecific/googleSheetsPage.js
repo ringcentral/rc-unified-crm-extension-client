@@ -25,6 +25,10 @@ function renderGoogleSheetsPage({ manifest, userSettings }) {
         }
     }
     if (existingGoogleSheetsName) {
+        let removeSheetButtonDisabled = false;
+        if (userSettings?.googleSheetsName?.customizable === false && userSettings?.googleSheetsUrl?.customizable === false) {
+            removeSheetButtonDisabled = true;
+        }
         page.schema.properties.sheetInfoButton = {
             type: "string",
             title: `Sheet name: ${existingGoogleSheetsName}`
@@ -42,7 +46,8 @@ function renderGoogleSheetsPage({ manifest, userSettings }) {
             "ui:field": "button",
             "ui:variant": "contained", // "text", "outlined", "contained", "plain"
             "ui:fullWidth": true,
-            "ui:color": "danger.b03"
+            "ui:color": "danger.b03",
+            "ui:disabled": removeSheetButtonDisabled
         }
         page.formData.sheetUrl = existingGoogleSheetsUrl;
     }

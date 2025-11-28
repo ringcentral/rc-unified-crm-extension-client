@@ -30,7 +30,7 @@ function renderAdminGoogleSheetsPage({ manifest, adminSettings }) {
     if (existingGoogleSheetsName) {
         page.schema.properties.adminSheetInfoButton = {
             type: "string",
-            title: `Current sheet: ${existingGoogleSheetsName} ${isManaged ? '(Admin managed)' : ''}`
+            title: `Current sheet: ${existingGoogleSheetsName}`
         }
         page.uiSchema.adminSheetInfoButton = {
             "ui:field": "button",
