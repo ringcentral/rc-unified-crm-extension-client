@@ -2176,11 +2176,66 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'selectExistingSheetButton':
                   const { rcUnifiedCrmExtJwt: tokenForExistingSheet } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                  // Store timestamp for user selection
+                  await chrome.storage.local.set({ 
+                    pendingUserGoogleSheetsSelection: {
+                      timestamp: Date.now()
+                    }
+                  });
                   window.open(`${manifest.serverUrl}/googleSheets/filePicker?token=${tokenForExistingSheet}`, '_blank');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: 'goBack', // page id
                   }, '*');
+                  break;
+                case 'userGoogleSheetSelected':
+                  // Handle user Google Sheet selection from file picker
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const { pendingUserGoogleSheetsSelection } = await chrome.storage.local.get('pendingUserGoogleSheetsSelection');
+                  
+                  if (pendingUserGoogleSheetsSelection && data.body.sheetName && data.body.sheetUrl) {
+                    // Check if selection is recent (within 5 minutes)
+                    const isRecentSelection = pendingUserGoogleSheetsSelection.timestamp && 
+                      (Date.now() - pendingUserGoogleSheetsSelection.timestamp < 300000);
+                    
+                    if (isRecentSelection) {
+                      // Update user settings with selected sheet
+                      userSettings = await userCore.refreshUserSettings({
+                        changedSettings: {
+                          googleSheetsName: {
+                            value: data.body.sheetName
+                          },
+                          googleSheetsUrl: {
+                            value: data.body.sheetUrl
+                          }
+                        }
+                      });
+                      
+                      // Clear pending selection
+                      await chrome.storage.local.remove('pendingUserGoogleSheetsSelection');
+                      
+                      showNotification({ 
+                        level: 'success', 
+                        message: `Google Sheet "${data.body.sheetName}" selected successfully`, 
+                        ttl: 3000
+                      });
+                      
+                      // Re-render user page to show the "sheet exists" UI
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: googleSheetsPage.renderGoogleSheetsPage({ manifest, userSettings })
+                      });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-navigate-to',
+                        path: '/customized/googleSheetsPage', // page id
+                      }, '*');
+                    } else {
+                      showNotification({ level: 'warning', message: 'Sheet selection expired, please try again', ttl: 3000 });
+                    }
+                  } else {
+                    showNotification({ level: 'warning', message: 'Failed to select sheet', ttl: 5000 });
+                  }
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 case 'sheetInfoButton':
                   window.open(data.body.button.formData.sheetUrl, '_blank');
@@ -2208,9 +2263,10 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 case 'adminNewSheetButton':
+                  const rcAccessTokenNewSheet = getRcAccessToken();
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const { rcUnifiedCrmExtJwt: adminTokenForNewSheet } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                  const adminNewSheetResponse = await axios.post(`${manifest.serverUrl}/googleSheets/sheet?jwtToken=${adminTokenForNewSheet}`,
+                  const adminNewSheetResponse = await axios.post(`${manifest.serverUrl}/admin/googleSheets/sheet?jwtToken=${adminTokenForNewSheet}&rcAccessToken=${rcAccessTokenNewSheet}`,
                     {
                       name: data.body.button.formData.newSheetName
                     }
@@ -2249,8 +2305,16 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 case 'adminSelectExistingSheetButton':
+                  const rcAccessToken = getRcAccessToken();
                   const { rcUnifiedCrmExtJwt: adminTokenForExistingSheet } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                  window.open(`${manifest.serverUrl}/googleSheets/filePicker?token=${adminTokenForExistingSheet}&admin=true`, '_blank');
+                  // Store current form data to preserve managedToggle state
+                  await chrome.storage.local.set({ 
+                    pendingAdminGoogleSheetsSelection: {
+                      managedToggle: data.body.button.formData.managedToggle || false,
+                      timestamp: Date.now()
+                    }
+                  });
+                  window.open(`${manifest.serverUrl}/admin/googleSheets/filePicker?jwtToken=${adminTokenForExistingSheet}&rcAccessToken=${rcAccessToken}`, '_blank');
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: 'goBack', // page id
@@ -2291,6 +2355,59 @@ window.addEventListener('message', async (e) => {
                     type: 'rc-adapter-navigate-to',
                     path: '/customized/adminGoogleSheetsPage', // page id
                   }, '*');
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                  break;
+                case 'adminGoogleSheetSelected':
+                  // Handle admin Google Sheet selection from file picker
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  const { pendingAdminGoogleSheetsSelection } = await chrome.storage.local.get('pendingAdminGoogleSheetsSelection');
+                  
+                  if (pendingAdminGoogleSheetsSelection && data.body.sheetName && data.body.sheetUrl) {
+                    // Check if selection is recent (within 5 minutes)
+                    const isRecentSelection = pendingAdminGoogleSheetsSelection.timestamp && 
+                      (Date.now() - pendingAdminGoogleSheetsSelection.timestamp < 300000);
+                    
+                    if (isRecentSelection) {
+                      const isManaged = pendingAdminGoogleSheetsSelection.managedToggle || false;
+                      
+                      // Set admin settings for selected Google Sheet
+                      adminSettings.userSettings.googleSheetsName = {
+                        value: data.body.sheetName,
+                        customizable: !isManaged
+                      };
+                      adminSettings.userSettings.googleSheetsUrl = {
+                        value: data.body.sheetUrl,
+                        customizable: !isManaged
+                      };
+                      
+                      await chrome.storage.local.set({ adminSettings });
+                      await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
+                      await userCore.refreshUserSettings({});
+                      
+                      // Clear pending selection
+                      await chrome.storage.local.remove('pendingAdminGoogleSheetsSelection');
+                      
+                      showNotification({ 
+                        level: 'success', 
+                        message: `Admin Google Sheet "${data.body.sheetName}" selected successfully${isManaged ? ' and enforced for all users' : ''}`, 
+                        ttl: 5000
+                      });
+                      
+                      // Re-render admin page to show the "sheet exists" UI
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: adminGoogleSheetsPage.renderAdminGoogleSheetsPage({ manifest, adminSettings })
+                      });
+                      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-navigate-to',
+                        path: '/customized/adminGoogleSheetsPage', // page id
+                      }, '*');
+                    } else {
+                      showNotification({ level: 'warning', message: 'Sheet selection expired, please try again', ttl: 3000 });
+                    }
+                  } else {
+                    showNotification({ level: 'warning', message: 'Failed to select sheet', ttl: 5000 });
+                  }
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 case 'adminGoogleSheetsPage':
