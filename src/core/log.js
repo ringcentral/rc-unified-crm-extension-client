@@ -82,7 +82,7 @@ async function addLog({
                 }, '*');
                 break;
             case 'Message':
-                if (logInfo.type === 'Fax') {
+                if (logInfo.type === 'Fax' || (logInfo.type === 'SMS' && logInfo.messages.some(m => m.attachments.some(a => a.type === 'MmsAttachment')))) {
                     // eslint-disable-next-line no-param-reassign
                     logInfo.rcAccessToken = rcAccessToken;
                 }
