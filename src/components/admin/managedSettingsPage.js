@@ -13,6 +13,10 @@ function getManagedSettingsPageRender({ crmManifest }) {
                         const: "generalSettings",
                         title: "General"
                     },
+                        ...(crmManifest.name === 'googleSheets' ? [{
+                            const: "googleSheetsAdminConfig",
+                            title: "Google Sheets Configuration",
+                        }] : []),
                     {
                         const: "callAndSMSLogging",
                         title: "Activity logging"
