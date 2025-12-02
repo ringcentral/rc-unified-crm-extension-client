@@ -41,11 +41,21 @@ async function onEvent({ data }) {
             type: 'openPopupWindow'
           });
           if (userCore.getIncomingCallPop(userSettings).value === 'onAnswer') {
+            const isOnHoldFromTransfer = await chrome.storage.local.get(`${data.call.telephonySessionId}-transfer-on-hold`);
+            if (isOnHoldFromTransfer?.[`${data.call.telephonySessionId}-transfer-on-hold`]) {
+              await chrome.storage.local.remove(`${data.call.telephonySessionId}-transfer-on-hold`);
+              break;
+            }
             await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
           }
           break;
         case 'Outbound':
           if (userCore.getOutgoingCallPop(userSettings).value === 'onAnswer') {
+            const isOnHoldFromTransfer = await chrome.storage.local.get(`${data.call.telephonySessionId}-transfer-on-hold`);
+            if (isOnHoldFromTransfer?.[`${data.call.telephonySessionId}-transfer-on-hold`]) {
+              await chrome.storage.local.remove(`${data.call.telephonySessionId}-transfer-on-hold`);
+              break;
+            }
             await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
           }
           break;
