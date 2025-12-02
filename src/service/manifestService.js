@@ -33,8 +33,29 @@ async function saveManifestUrl({ manifestUrl }) {
 
 async function saveManifest({ manifest }) {
     sessionManifest = manifest;
-    await chrome.storage.local.set({ customCrmManifest: manifest });
-    return manifest;
+    const platformInfo = await getPlatformInfo();
+    const override = sessionManifest?.platforms[platformInfo?.platformName]?.override;
+    if (override) {
+        for (const overrideItem of override) {
+            switch (overrideItem.triggerType) {
+                // TEMP: meta should be removed after developer registration is implemented
+                case 'meta':
+                    for (const overrideObj of overrideItem.overrideObjects) {
+                        setValueByPath(sessionManifest, overrideObj.path, overrideObj.value);
+                    }
+                    break;
+                case 'hostname':
+                    if (overrideItem.triggerValue === platformInfo.hostname) {
+                        for (const overrideObj of overrideItem.overrideObjects) {
+                            setValueByPath(sessionManifest.platforms[platformInfo.platformName], overrideObj.path, overrideObj.value);
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+    await chrome.storage.local.set({ customCrmManifest: sessionManifest });
+    return sessionManifest;
 }
 
 async function refreshManifest() {
@@ -56,8 +77,8 @@ async function refreshManifest() {
     return manifest;
 }
 
-async function getManifest() {
-    if (sessionManifest) {
+async function getManifest(forceRefresh = false) {
+    if (sessionManifest && !forceRefresh) {
         return sessionManifest;
     }
     const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
