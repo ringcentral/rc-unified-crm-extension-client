@@ -1,5 +1,6 @@
 import { getManifest } from '../../service/manifestService';
 import { getPlatformInfo } from '../../service/platformService';
+import { getPlatformList } from '../../service/manifestService';
 import { showNotification, responseMessage } from '../../lib/util';
 
 import authorizeHandler from './authorize';
@@ -14,6 +15,7 @@ import messageLoggerInputChangedHandler from './messageLogger/inputChanged';
 import messageLoggerMatchHandler from './messageLogger/match';
 import settingsHandler from './settings';
 import customButtonClickHandler from './custom-button-click';
+import authCore from '../../core/auth';
 
 async function onEvent({ data }) {
   const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
@@ -29,6 +31,12 @@ async function onEvent({ data }) {
   switch (data.path) {
     case '/authorize':
       await authorizeHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+      break;
+    case '/platform-selection':
+      window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+      const platformList = await getPlatformList();
+      await authCore.checkAndOpenPlatformSelectionPage({ platformList });
+      window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
       break;
     case '/customizedPage/inputChanged':
       await customizedPageInputChangedHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

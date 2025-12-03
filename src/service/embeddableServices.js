@@ -7,7 +7,12 @@ async function preconfigureServiceManifest() {
     const manifest = await getManifest();
     const services = {
         name: 'placeholder',
-        displayName: 'placeholder',
+        displayName: 'Require to connect',
+        authorizationPath: '/platform-selection',
+        authorizedTitle: 'Logout',
+        unauthorizedTitle: 'Connect',
+        showAuthRedDot: true,
+        authorized: false,
         customizedPageInputChangedEventPath: '/customizedPage/inputChanged',
         buttonEventPath: '/custom-button-click'
     }
