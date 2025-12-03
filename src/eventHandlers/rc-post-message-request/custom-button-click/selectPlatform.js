@@ -21,8 +21,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest` });
             break;
         case 'shared':
-            platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${rcInfo.value.cachedData.accountInfo.id}`);
-            await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${rcInfo.value.cachedData.accountInfo.id}` });
+            platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${selectedPlatform.accountId}`);
+            await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${selectedPlatform.accountId}` });
             break;
         case 'private':
             platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${rcInfo.value.cachedData.accountInfo.id}`);
