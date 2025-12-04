@@ -90,43 +90,50 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                     break;
             }
             const currentTab = data.body.formData.tab || 'userReportTab';
-            switch (currentTab) {
-                case 'companyReportTab':
-                    adminReportStats = await adminCore.getAdminReportStats({
-                        serverUrl: manifest.serverUrl,
-                        jwtToken: rcUnifiedCrmExtJwt,
-                        timezone,
-                        timeFrom,
-                        timeTo
-                    });
-                    adminReportStats.dateRange = data.body.formData.dateRangeEnums;
-                    adminReportStats.startDate = data.body.formData.startDate;
-                    adminReportStats.endDate = data.body.formData.endDate;
-                    break;
-                case 'userReportTab':
-                    switch (data.body.formData.rcExtensionList) {
-                        case 'me':
-                            userReportStats = await userCore.getUserReportStats({
-                                dateRange: data.body.formData.dateRangeEnums || 'Last 24 hours',
-                                customStartDate: timeFrom,
-                                customEndDate: timeTo
-                            });
-                            break;
-                        default:
-                            userReportStats = await adminCore.getUserExtensionReportStats({
-                                serverUrl: manifest.serverUrl,
-                                jwtToken: rcUnifiedCrmExtJwt,
-                                timezone,
-                                timeFrom,
-                                timeTo,
-                                rcExtensionId: data.body.formData.rcExtensionList ?? '~'
-                            });
-                            break;
-                    }
-                    userReportStats.dateRange = data.body.formData.dateRangeEnums;
-                    userReportStats.startDate = data.body.formData.startDate;
-                    userReportStats.endDate = data.body.formData.endDate;
-                    break;
+            const isSkipDataFetch = data?.body?.keys?.some(k => k === 'itemKeyEnums');
+            if (isSkipDataFetch) {
+                adminReportStats = data.body.formData.companyStats;
+            }
+            else {
+                switch (currentTab) {
+                    case 'companyReportTab':
+                        adminReportStats = await adminCore.getAdminReportStats({
+                            serverUrl: manifest.serverUrl,
+                            jwtToken: rcUnifiedCrmExtJwt,
+                            timezone,
+                            timeFrom,
+                            timeTo,
+                            groupBy: data.body.formData.groupKeyEnums
+                        });
+                        adminReportStats.dateRange = data.body.formData.dateRangeEnums;
+                        adminReportStats.startDate = data.body.formData.startDate;
+                        adminReportStats.endDate = data.body.formData.endDate;
+                        break;
+                    case 'userReportTab':
+                        switch (data.body.formData.rcExtensionList) {
+                            case 'me':
+                                userReportStats = await userCore.getUserReportStats({
+                                    dateRange: data.body.formData.dateRangeEnums || 'Last 24 hours',
+                                    customStartDate: timeFrom,
+                                    customEndDate: timeTo
+                                });
+                                break;
+                            default:
+                                userReportStats = await adminCore.getUserExtensionReportStats({
+                                    serverUrl: manifest.serverUrl,
+                                    jwtToken: rcUnifiedCrmExtJwt,
+                                    timezone,
+                                    timeFrom,
+                                    timeTo,
+                                    rcExtensionId: data.body.formData.rcExtensionList ?? '~'
+                                });
+                                break;
+                        }
+                        userReportStats.dateRange = data.body.formData.dateRangeEnums;
+                        userReportStats.startDate = data.body.formData.startDate;
+                        userReportStats.endDate = data.body.formData.endDate;
+                        break;
+                }
             }
             const { isAdmin } = await chrome.storage.local.get('isAdmin');
             const reportPageRender = reportPage.getReportsPageRender(
@@ -136,6 +143,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                     isAdmin,
                     userStats: userReportStats,
                     companyStats: adminReportStats,
+                    selectedGroupKey: adminReportStats?.groupedBy,
+                    groupKeys: adminReportStats?.groupKeys,
+                    selectedItemKey: data.body.formData.itemKeyEnums,
+                    itemKeys: adminReportStats?.itemKeys,
                     userSettings,
                     rcExtensions
                 });

@@ -413,12 +413,12 @@ async function authAppConnectServer({ serverUrl, jwtToken }) {
     }
 }
 
-async function getAdminReportStats({ serverUrl, timezone, timeFrom, timeTo, jwtToken }) {
+async function getAdminReportStats({ serverUrl, timezone, timeFrom, timeTo, groupBy, jwtToken }) {
     if (timeFrom === undefined || timeTo === undefined) {
         return null;
     }
     const adminReportStatsResp = await axios.get(
-        `${serverUrl}/ringcentral/admin/report?jwtToken=${jwtToken}&timezone=${timezone}&timeFrom=${timeFrom}&timeTo=${timeTo}`,
+        `${serverUrl}/ringcentral/admin/report?jwtToken=${jwtToken}&timezone=${timezone}&timeFrom=${timeFrom}&timeTo=${timeTo}&groupBy=${groupBy}`,
         {
             headers: {
                 Accept: 'application/json'

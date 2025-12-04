@@ -1,4 +1,16 @@
-function getCompanyReportTabRender({ page, companyStats }) {
+function getCompanyReportTabRender({ page, companyStats, selectedGroupKey, groupKeys, selectedItemKey, itemKeys }) {
+    if (!selectedItemKey || !itemKeys?.includes(selectedItemKey)) {
+        // eslint-disable-next-line no-param-reassign
+        selectedItemKey = itemKeys?.[0] || '';
+    }
+    // essentially this category/group is unavailable for this account
+    if (itemKeys?.length === 0) {
+        // eslint-disable-next-line no-param-reassign
+        itemKeys = ['N/A'];
+        // eslint-disable-next-line no-param-reassign
+        selectedItemKey = 'N/A';
+    }
+    const selectedStats = companyStats?.callLogStats?.find(stat => stat.name === selectedItemKey);
     const schemaToAdd = {
         dateRangeEnums: {
             type: 'string',
@@ -11,6 +23,20 @@ function getCompanyReportTabRender({ page, companyStats }) {
             ],
             default: 'Last 24 hours'
         },
+        groupKeyEnums: {
+            type: 'string',
+            title: 'Group',
+            enum: [
+                ...groupKeys
+            ]
+        },
+        itemKeyEnums: {
+            type: 'string',
+            title: 'Item',
+            enum: [
+                ...itemKeys
+            ]
+        },
         phoneActivityTitle: {
             type: 'string',
             description: 'Phone activity'
@@ -20,25 +46,25 @@ function getCompanyReportTabRender({ page, companyStats }) {
             oneOf: [
                 {
                     const: 'inboundCallCount',
-                    value: (companyStats?.callLogStats?.inboundCallCount || 0).toString(),
-                    title: (companyStats?.callLogStats?.inboundCallCount || 0) <= 1 ? 'inbound call' : 'inbound calls',
+                    value: (selectedStats?.inboundCallCount ?? 'N/A').toString(),
+                    title: (selectedStats?.inboundCallCount ?? 'N/A') <= 1 ? 'inbound call' : 'inbound calls',
                     backgroundColor: '#a0a2a91f'
                 },
                 {
                     const: 'outboundCallCount',
-                    value: (companyStats?.callLogStats?.outboundCallCount || 0).toString(),
-                    title: (companyStats?.callLogStats?.outboundCallCount || 0) <= 1 ? 'outbound call' : 'outbound calls',
+                    value: (selectedStats?.outboundCallCount ?? 'N/A').toString(),
+                    title: (selectedStats?.outboundCallCount ?? 'N/A') <= 1 ? 'outbound call' : 'outbound calls',
                     backgroundColor: '#a0a2a91f'
                 },
                 {
                     const: 'answeredCallCount',
-                    value: (companyStats?.callLogStats?.answeredCallCount || 0).toString(),
-                    title: (companyStats?.callLogStats?.answeredCallCount || 0) <= 1 ? 'answered call' : 'answered calls',
+                    value: (selectedStats?.answeredCallCount ?? 'N/A').toString(),
+                    title: (selectedStats?.answeredCallCount ?? 'N/A') <= 1 ? 'answered call' : 'answered calls',
                     backgroundColor: '#a0a2a91f'
                 },
                 {
                     const: 'answeredCallPercentage',
-                    value: (companyStats?.callLogStats?.answeredCallPercentage || '0%').toString(),
+                    value: (selectedStats?.answeredCallPercentage ?? 'N/A').toString(),
                     title: 'answered rate',
                     backgroundColor: '#a0a2a91f'
                 }
@@ -53,16 +79,16 @@ function getCompanyReportTabRender({ page, companyStats }) {
             oneOf: [
                 {
                     const: 'totalTalkTime',
-                    value: (companyStats?.callLogStats?.totalTalkTime || 0).toString(),
+                    value: (selectedStats?.totalTalkTime ?? 'N/A').toString(),
                     title: 'total talk time',
-                    unit: (companyStats?.callLogStats?.totalTalkTime || 0) <= 1 ? 'minute' : 'minutes',
+                    unit: (selectedStats?.totalTalkTime ?? 'N/A') <= 1 ? 'minute' : 'minutes',
                     backgroundColor: '#a0a2a91f'
                 },
                 {
                     const: 'averageTalkTime',
-                    value: (companyStats?.callLogStats?.averageTalkTime || 0).toString(),
+                    value: (selectedStats?.averageTalkTime ?? 'N/A').toString(),
                     title: 'average talk time',
-                    unit: (companyStats?.callLogStats?.averageTalkTime || 0) <= 1 ? 'minute' : 'minutes',
+                    unit: (selectedStats?.averageTalkTime ?? 'N/A') <= 1 ? 'minute' : 'minutes',
                     backgroundColor: '#a0a2a91f'
                 }
             ]
@@ -95,6 +121,11 @@ function getCompanyReportTabRender({ page, companyStats }) {
             'ui:readonly': true
         }
     }
+    if (selectedItemKey === 'N/A') {
+        uiSchemaToAdd.itemKeyEnums = {
+            'ui:readonly': true
+        }
+    }
 
     let smsSchemaToAdd = {}
     let smsUiSchemaToAdd = {};
@@ -110,13 +141,13 @@ function getCompanyReportTabRender({ page, companyStats }) {
                 oneOf: [
                     {
                         const: 'smsMessageReceivedCount',
-                        value: (companyStats?.smsLogStats?.smsReceivedCount || 0).toString(),
+                        value: (selectedStats?.smsReceivedCount ?? 'N/A').toString(),
                         title: 'received sms',
                         backgroundColor: '#a0a2a91f'
                     },
                     {
                         const: 'smsMessageSentCount',
-                        value: (companyStats?.smsLogStats?.smsSentCount || 0).toString(),
+                        value: (selectedStats?.smsSentCount ?? 'N/A').toString(),
                         title: 'sent sms',
                         backgroundColor: '#a0a2a91f'
                     }
@@ -144,8 +175,11 @@ function getCompanyReportTabRender({ page, companyStats }) {
 
     const formDataToAdd = {
         dateRangeEnums: companyStats?.dateRange || 'Last 24 hours',
+        groupKeyEnums: selectedGroupKey || groupKeys?.[0] || '',
+        itemKeyEnums: selectedItemKey,
         startDate: companyStats?.startDate || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        endDate: companyStats?.endDate || new Date(Date.now()).toISOString().split('T')[0]
+        endDate: companyStats?.endDate || new Date(Date.now()).toISOString().split('T')[0],
+        companyStats
     }
     // eslint-disable-next-line no-param-reassign
     page.schema.properties = { ...page.schema.properties, ...schemaToAdd, ...smsSchemaToAdd };
