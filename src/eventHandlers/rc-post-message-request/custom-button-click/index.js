@@ -21,7 +21,7 @@ import openAboutPageHandler from './openAboutPage';
 import openDeveloperSettingsPageHandler from './openDeveloperSettingsPage';
 import openImplementedInterfacesPageButtonHandler from './openImplementedInterfacesPageButton';
 import factoryResetButtonHandler from './factoryResetButton';
-import generateErrorLogButtonHandler from './generateErrorLogButton';
+import reportIssueButtonHandler from './reportIssueButton';
 import documentationHandler from './documentation';
 import saveServerSideLoggingButtonHandler from './saveServerSideLoggingButton';
 import doNotLogNumbersSubmitButtonHandler from './doNotLogNumbersSubmitButton';
@@ -35,6 +35,7 @@ import contactSearchAdapterButtonMessageLogHandler from './contactSearchAdapterB
 import usermappingEditHandler from './usermappingEdit';
 import usermappingRemoveHandler from './usermappingRemove';
 import selectPlatformHandler from './selectPlatform';
+import errorLogRecordPageStartButtonHandler from './errorLogRecordPageStartButton';
 import generalHandler from './general';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
@@ -97,8 +98,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'factoryResetButton':
             await factoryResetButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
-        case 'generateErrorLogButton':
-            await generateErrorLogButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        case 'reportIssueButton':
+            await reportIssueButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'openCommunityPageButton':
             window.open('https://community.ringcentral.com/groups/app-connect-22', '_blank');
@@ -163,6 +164,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'selectPlatform':
             await selectPlatformHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'errorLogRecordPageStartButton':
+            await errorLogRecordPageStartButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'callAndSMSLoggingSettingPage':
         case 'contactSettingPage':
