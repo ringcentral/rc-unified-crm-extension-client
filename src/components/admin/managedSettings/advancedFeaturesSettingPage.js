@@ -35,34 +35,6 @@ function getAdvancedFeaturesSettingPageRender({ adminUserSettings }) {
                             title: 'Value'
                         }
                     }
-                },
-                showAiAssistantWidget:{
-                    type: 'object',
-                    title: 'AI assistant widget',
-                    properties: {
-                        customizable: {
-                            type: 'boolean',
-                            title: 'Customizable by user'
-                        },
-                        value: {
-                            type: 'boolean',
-                            title: 'Value'
-                        }
-                    }
-                },
-                autoStartAiAssistant: {
-                    type: 'object',
-                    title: 'Auto-start AI assistant',
-                    properties: {
-                        customizable: {
-                            type: 'boolean',
-                            title: 'Customizable by user'
-                        },
-                        value: {
-                            type: 'boolean',
-                            title: 'Value'
-                        }
-                    }
                 }
             }
         },
@@ -71,12 +43,6 @@ function getAdvancedFeaturesSettingPageRender({ adminUserSettings }) {
                 "ui:collapsible": true,
             },
             developerMode: {
-                "ui:collapsible": true,
-            },
-            showAiAssistantWidget: {
-                "ui:collapsible": true,
-            },
-            autoStartAiAssistant: {
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
@@ -93,16 +59,6 @@ function getAdvancedFeaturesSettingPageRender({ adminUserSettings }) {
             {
                 customizable: adminUserSettings?.developerMode?.customizable ?? true,
                 value: adminUserSettings?.developerMode?.value ?? false
-            },
-            showAiAssistantWidget:
-            {
-                customizable: adminUserSettings?.showAiAssistantWidget?.customizable ?? true,
-                value: adminUserSettings?.showAiAssistantWidget?.value ?? false
-            },
-            autoStartAiAssistant:
-            {
-                customizable: adminUserSettings?.autoStartAiAssistant?.customizable ?? true,
-                value: adminUserSettings?.autoStartAiAssistant?.value ?? false
             }
         }
     }
