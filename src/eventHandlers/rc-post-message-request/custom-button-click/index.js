@@ -178,6 +178,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             await generalHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
             break;
     }
+    if (data.body.button.id.startsWith('link-button-')) {
+        window.open(data.body.button.formData[data.body.button.id], '_blank');
+    }
     responseMessage(data.requestId, { data: 'ok' });
 }
 
