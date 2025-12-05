@@ -34,9 +34,9 @@ function getSupportPageRender({ manifest, isOnline }) {
                     type: "string",
                     description: `Version: v${manifest.version}`
                 },
-                generateErrorLogButton: {
+                reportIssueButton: {
                     type: "string",
-                    title: "Download error log",
+                    title: "Report issue",
                 },
                 clearLogConflictsButton:{
                     type: "string",
@@ -87,7 +87,7 @@ function getSupportPageRender({ manifest, isOnline }) {
                 "ui:field": "typography",
                 "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
             },
-            generateErrorLogButton: {
+            reportIssueButton: {
                 "ui:field": "button",
                 "ui:variant": "outlined", // "text", "outlined", "contained", "plain"
                 "ui:fullWidth": false
