@@ -2761,6 +2761,10 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
               }
+              if(data.body.button.id.startsWith('link-button-')){
+                window.open(data.body.button.formData[data.body.button.id], '_blank');
+                break;
+              }
               const listButtonActionId = data.body.button.id.split('-')[0];
               const listButtonItemId = data.body.button.id.split('-')[1];
               switch (listButtonActionId) {

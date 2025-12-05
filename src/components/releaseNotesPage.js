@@ -14,28 +14,52 @@ async function getReleaseNotesPageRender({ manifest, platformName, registeredVer
             const platformNotes = releaseNotes[manifest.version][platformName] ?? [];
             const allNotes = globalNotes.concat(platformNotes);
             const allTypes = allNotes.map(n => { return n.type }).filter((value, index, array) => { return array.indexOf(value) === index; });
-            let notesRender = [];
-            let notesUiSchema = [];
+            let notesRender = {};
+            let notesUiSchema = {};
+            let noteFormData = {};
             for (const t of allTypes) {
                 const targetNotes = allNotes.filter(n => { return n.type === t });
-                notesRender.push({
+                notesRender[t] = {
                     type: 'string',
                     description: t
-                });
-                notesUiSchema.push({
+                };
+                notesUiSchema[t] = {
                     "ui:field": "typography",
                     "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
-                });
+                };
                 for (const n of targetNotes) {
-                    notesRender.push({
+                    // check for link button render
+                    let description = n.description;
+                    let buttonText = '';
+                    let buttonUrl = '';
+                    if (n.description.includes('[Button]')) {
+                        description = n.description.split('[Button]')[0];
+                        const buttonInfo = n.description.split('[Button]')[1];
+                        buttonText = buttonInfo.split('|')[0];
+                        buttonUrl = buttonInfo.split('|')[1];
+                    }
+                    notesRender[`${t}-${targetNotes.indexOf(n)}`] = {
                         type: 'string',
-                        description: n.description
-                    })
-                    notesUiSchema.push({
+                        description
+                    };
+                    notesUiSchema[`${t}-${targetNotes.indexOf(n)}`] = {
                         "ui:field": "typography",
                         "ui:variant": "body1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
                         "ui:style": { margin: '-15px 0px 0px 20px' }
-                    });
+                    };
+                    if (buttonText && buttonUrl) {
+                        notesRender[`link-button-${buttonText}`] = {
+                            type: 'string',
+                            title: buttonText
+                        };
+                        notesUiSchema[`link-button-${buttonText}`] = {
+                            "ui:field": "button",
+                            "ui:variant": "contained",
+                            // "text", "outlined", "contained", "plain"
+                            "ui:fullWidth": false
+                        };
+                        noteFormData[`link-button-${buttonText}`] = buttonUrl;
+                    }
                 }
             }
             return {
@@ -46,7 +70,7 @@ async function getReleaseNotesPageRender({ manifest, platformName, registeredVer
                     properties: notesRender
                 },
                 uiSchema: notesUiSchema,
-                formData: {}
+                formData: noteFormData
             }
         }
         else {
