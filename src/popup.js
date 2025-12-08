@@ -5,6 +5,7 @@ import { saveManifestUrl } from './service/manifestService';
 import { getPlatformInfo } from './service/platformService';
 import { setAuthor } from './lib/analytics';
 import { showNotification } from './lib/util';
+import { isRecordingLogs, logAction } from './lib/logRecorder';
 
 // event handlers
 import rcTelephonySessionNotifyHandler from './eventHandlers/rc-telephony-session-notify';
@@ -41,6 +42,66 @@ import ringsenseRefTrackHandler from './messageHandlers/ringsenseRefTrack';
 
 
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
+// Add request interceptor
+axios.interceptors.request.use(
+  async (config) => {
+    if (await isRecordingLogs()) {
+      logAction({
+        name: 'API_REQUEST',
+        data: {
+          method: config.method,
+          url: config.url,
+          params: config.params,
+          data: config.data,
+          headers: config.headers
+        }
+      });
+    }
+    return config;
+  },
+  async (error) => {
+    if (await isRecordingLogs()) {
+      logAction({
+        name: 'API_REQUEST_ERROR',
+        data: { error: error.message }
+      });
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor
+axios.interceptors.response.use(
+  async (response) => {
+    if (await isRecordingLogs()) {
+      logAction({
+        name: 'API_RESPONSE',
+        data: {
+          url: response.config.url,
+          status: response.status,
+          statusText: response.statusText,
+          data: response.data
+        }
+      });
+    }
+    return response;
+  },
+  async (error) => {
+    if (await isRecordingLogs()) {
+      logAction({
+        name: 'API_RESPONSE_ERROR',
+        data: {
+          url: error.config?.url,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        }
+      });
+    }
+    return Promise.reject(error);
+  }
+);
 
 window.__ON_RC_POPUP_WINDOW = 1;
 
@@ -106,6 +167,9 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-login-status-notify':
           await rcLoginStatusNotifyHandler.onEvent({ data });
+          if (await isRecordingLogs()) {
+            logAction({ name: data.type, data });
+          }
           break;
         case 'rc-login-popup-notify':
           await rcLoginPopupNotifyHandler.onEvent({ data });
@@ -124,27 +188,48 @@ window.addEventListener('message', async (e) => {
           break;
         case "rc-active-call-notify":
           await rcActiveCallNotifyHandler.onEvent({ data });
+          if (await isRecordingLogs()) {
+            logAction({ name: data.type, data });
+          }
           break;
         case 'rc-analytics-track':
           await rcAnalyticsTrackNotifyHandler.onEvent({ data });
+          if (await isRecordingLogs()) {
+            logAction({ name: data.type, data });
+          }
           break;
         case 'rc-callLogger-auto-log-notify':
           await rcCallLoggerAutoLogNotifyHandler.onEvent({ data });
+          if (await isRecordingLogs()) {
+            logAction({ name: data.type, data });
+          }
           break;
         case 'rc-messageLogger-auto-log-notify':
           await rcMessageLoggerAutoLogNotifyHandler.onEvent({ data });
+          if (await isRecordingLogs()) {
+            logAction({ name: data.type, data });
+          }
           break;
         case 'rc-route-changed-notify':
           await rcRouteChangedNotifyHandler.onEvent({ data });
+          if (await isRecordingLogs()) {
+            logAction({ name: data.type, data });
+          }
           break;
         case 'rc-adapter-ai-assistant-settings-notify':
           await rcAdapterAiAssistantSettingsNotifyHandler.onEvent({ data });
           break;
         case 'rc-post-message-request':
           await rcPostMessageRequestHandler.onEvent({ data });
+          if (data.path != '/callLogger/inputChanged' && await isRecordingLogs()) {
+            logAction({ name: data.type, data });
+          }
           break;
         case "rc-adapter-phone-number-format-settings-notify":
           await rcAdapterPhoneNumberFormatSettingsNotifyHandler.onEvent({ data });
+          if (await isRecordingLogs()) {
+            logAction({ name: data.type, data });
+          }
           break;
         default:
           break;
@@ -172,24 +257,45 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     switch (request.type) {
       case 'oauthCallBack':
         await oauthCallBackHandler.onMessage({ request, sendResponse });
+        if (await isRecordingLogs()) {
+          logAction({ name: request.type, data: request });
+        }
         break;
       case 'pipedriveCallbackUri':
         await pipedriveCallbackUriHandler.onMessage({ request, sendResponse });
+        if (await isRecordingLogs()) {
+          logAction({ name: request.type, data: request });
+        }
         break;
       case 'c2sms':
         await c2smsHandler.onMessage({ request, sendResponse });
+        if (await isRecordingLogs()) {
+          logAction({ name: request.type, data: request });
+        }
         break;
       case 'c2d':
         await c2dHandler.onMessage({ request, sendResponse });
+        if (await isRecordingLogs()) {
+          logAction({ name: request.type, data: request });
+        }
         break;
       case 'c2schedule':
         await c2scheduleHandler.onMessage({ request, sendResponse });
+        if (await isRecordingLogs()) {
+          logAction({ name: request.type, data: request });
+        }
         break;
       case 'navigate':
         await navigateHandler.onMessage({ request, sendResponse });
+        if (await isRecordingLogs()) {
+          logAction({ name: request.type, data: request });
+        }
         break;
       case 'insightlyAuth':
         await insightlyAuthHandler.onMessage({ request, sendResponse });
+        if (await isRecordingLogs()) {
+          logAction({ name: request.type, data: request });
+        }
         break;
       case 'ringsenseRefTrack':
         await ringsenseRefTrackHandler.onMessage({ request, sendResponse });
