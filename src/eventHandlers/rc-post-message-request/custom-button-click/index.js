@@ -38,7 +38,25 @@ import selectPlatformHandler from './selectPlatform';
 import errorLogRecordPageStartButtonHandler from './errorLogRecordPageStartButton';
 import generalHandler from './general';
 
+import axios from 'axios';
+
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+    switch (data.body.button.type) {
+        case 'customizedBanner':
+            if (!data.body.button.dismissed) {
+                await chrome.storage.local.remove('errorLogRecordingStatus');
+                axios.defaults.headers.common['is-debug'] = false;
+
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-update-customized-banner',
+                    banner: {
+                      id: 'log-recording-banner',
+                      hidden: true
+                    }
+                  }, '*');
+            }
+            break;
+    }
     // button id is: {actionId}-{itemId}-action
     const listButtonActionIdAndItemId = data.body.button.id.split('-action')[0]; // {actionId}-{itemId}
     const listButtonActionId = listButtonActionIdAndItemId.split('-')[0]; // {actionId}
