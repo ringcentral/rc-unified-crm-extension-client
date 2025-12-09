@@ -27,7 +27,7 @@ import callLogDetailsSettingHandler from './callLogDetailsSetting';
 import autoLogPreferencesHandler from './autoLogPreferences';
 import userMappingHandler from './userMapping';
 import developerSettingsPageHandler from './developerSettingsPage';
-import getErrorLogRecrodPageHandler from './getErrorLogRecrodPage';
+import getErrorLogRecrodPageHandler from './getErrorLogRecordPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

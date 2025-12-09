@@ -1,30 +1,79 @@
-const ERROR_LOG_RECORDING_STATUS = {
-    RECORDING: 'recording',
-    STOPPED: 'stopped'
+import axios from 'axios';
+
+const log = [];
+
+async function startRecordingLogs() {
+    await chrome.storage.local.set({ errorLogRecordingStatus: 'recording' });
+    axios.defaults.headers.common['is-debug'] = true;
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-update-customized-banner',
+        banner: {
+            id: 'log-recording-banner', // banner id, required
+            message: 'Recording actions...', // banner message, required
+            severity: 'warning', // 'info' | 'warning' | 'error' | 'success', default: 'info'
+            action: { // optional, show action button
+                label: 'Stop', // action button label, required
+                color: 'danger.b04'
+            }
+        }
+    }, '*');
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-navigate-to',
+        path: 'goBack', // go back to previous page
+    }, '*');
 }
 
-const errorLog = [];
+async function stopRecordingLogs() {
+    log.length = 0;
+    // close recording banner
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-update-customized-banner',
+        banner: {
+            id: 'log-recording-banner',
+            hidden: true
+        }
+    }, '*');
+    await chrome.storage.local.remove('errorLogRecordingStatus');
+    axios.defaults.headers.common['is-debug'] = false;
+}
 
-async function isRecordingLogs(){
-    const errorLogRecordingStatus = await chrome.storage.local.get('errorLogRecordingStatus');
-    return errorLogRecordingStatus.errorLogRecordingStatus === ERROR_LOG_RECORDING_STATUS.RECORDING;
+async function uploadLogs({ serverUrl }) {
+    // update banner to uploading
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-update-customized-banner',
+        banner: {
+            id: 'log-recording-banner', // banner id, required
+            message: 'Uploading...please don not close the window', // banner message, required
+            severity: 'warning', // 'info' | 'warning' | 'error' | 'success', default: 'info'
+
+        },
+        closable: false
+    }, '*');
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const presignedUrlResponse = await axios.get(`${serverUrl}/debug/report/url?jwtToken=${rcUnifiedCrmExtJwt}`);
+    const presignedUrl = presignedUrlResponse.data.presignedUrl;
+    const logs = getLog();
+    const uploadResponse = await axios.put(presignedUrl, JSON.stringify(logs, null, 2));
+    return uploadResponse.status === 200;
+}
+
+async function isRecordingLogs() {
+    const { errorLogRecordingStatus } = await chrome.storage.local.get('errorLogRecordingStatus');
+    return errorLogRecordingStatus === 'recording';
 }
 
 function logAction({ name, data }) {
     const timestamp = new Date().toISOString();
-    errorLog.push({ timestamp, name, data });
-    console.log('errorLog', errorLog);
+    log.push({ timestamp, name, data });
 }
 
-function getErrorLog(){
-    return errorLog;
+function getLog() {
+    return log;
 }
 
-function clearErrorLog(){
-    errorLog.length = 0;
-}
-
+exports.startRecordingLogs = startRecordingLogs;
+exports.stopRecordingLogs = stopRecordingLogs;
+exports.uploadLogs = uploadLogs;
 exports.isRecordingLogs = isRecordingLogs;
 exports.logAction = logAction;
-exports.getErrorLog = getErrorLog;
-exports.clearErrorLog = clearErrorLog;
+exports.getLog = getLog;

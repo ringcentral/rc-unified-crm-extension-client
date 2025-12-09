@@ -38,22 +38,22 @@ import selectPlatformHandler from './selectPlatform';
 import errorLogRecordPageStartButtonHandler from './errorLogRecordPageStartButton';
 import generalHandler from './general';
 
+import logRecorder from '../../../lib/logRecorder';
+
 import axios from 'axios';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     switch (data.body.button.type) {
         case 'customizedBanner':
             if (!data.body.button.dismissed) {
-                await chrome.storage.local.remove('errorLogRecordingStatus');
-                axios.defaults.headers.common['is-debug'] = false;
-
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-update-customized-banner',
-                    banner: {
-                      id: 'log-recording-banner',
-                      hidden: true
-                    }
-                  }, '*');
+                try {
+                    await logRecorder.uploadLogs({ serverUrl: manifest.serverUrl });
+                    showNotification({ level: 'success', message: 'Successfully uploaded.', ttl: 3000 });
+                } catch (error) {
+                    console.error('Error uploading logs:', error);
+                    showNotification({ level: 'error', message: 'Failed to upload logs. Please try again.', ttl: 3000 });
+                }
+                await logRecorder.stopRecordingLogs();
             }
             break;
     }

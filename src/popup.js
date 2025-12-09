@@ -5,7 +5,7 @@ import { saveManifestUrl } from './service/manifestService';
 import { getPlatformInfo } from './service/platformService';
 import { setAuthor } from './lib/analytics';
 import { showNotification } from './lib/util';
-import { isRecordingLogs, logAction } from './lib/logRecorder';
+import logRecorder from './lib/logRecorder';
 
 // event handlers
 import rcTelephonySessionNotifyHandler from './eventHandlers/rc-telephony-session-notify';
@@ -45,8 +45,8 @@ axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be ove
 // Add request interceptor
 axios.interceptors.request.use(
   async (config) => {
-    if (await isRecordingLogs()) {
-      logAction({
+    if (await logRecorder.isRecordingLogs()) {
+      logRecorder.logAction({
         name: 'API_REQUEST',
         data: {
           method: config.method,
@@ -60,8 +60,8 @@ axios.interceptors.request.use(
     return config;
   },
   async (error) => {
-    if (await isRecordingLogs()) {
-      logAction({
+    if (await logRecorder.isRecordingLogs()) {
+      logRecorder.logAction({
         name: 'API_REQUEST_ERROR',
         data: { error: error.message }
       });
@@ -73,8 +73,8 @@ axios.interceptors.request.use(
 // Add response interceptor
 axios.interceptors.response.use(
   async (response) => {
-    if (await isRecordingLogs()) {
-      logAction({
+    if (await logRecorder.isRecordingLogs()) {
+      logRecorder.logAction({
         name: 'API_RESPONSE',
         data: {
           url: response.config.url,
@@ -87,8 +87,8 @@ axios.interceptors.response.use(
     return response;
   },
   async (error) => {
-    if (await isRecordingLogs()) {
-      logAction({
+    if (await logRecorder.isRecordingLogs()) {
+      logRecorder.logAction({
         name: 'API_RESPONSE_ERROR',
         data: {
           url: error.config?.url,
@@ -167,8 +167,8 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-login-status-notify':
           await rcLoginStatusNotifyHandler.onEvent({ data });
-          if (await isRecordingLogs()) {
-            logAction({ name: data.type, data });
+          if (await logRecorder.isRecordingLogs()) {
+            logRecorder.logAction({ name: data.type, data });
           }
           break;
         case 'rc-login-popup-notify':
@@ -188,32 +188,32 @@ window.addEventListener('message', async (e) => {
           break;
         case "rc-active-call-notify":
           await rcActiveCallNotifyHandler.onEvent({ data });
-          if (await isRecordingLogs()) {
-            logAction({ name: data.type, data });
+          if (await logRecorder.isRecordingLogs()) {
+            logRecorder.logAction({ name: data.type, data });
           }
           break;
         case 'rc-analytics-track':
           await rcAnalyticsTrackNotifyHandler.onEvent({ data });
-          if (await isRecordingLogs()) {
-            logAction({ name: data.type, data });
+          if (await logRecorder.isRecordingLogs()) {
+            logRecorder.logAction({ name: data.type, data });
           }
           break;
         case 'rc-callLogger-auto-log-notify':
           await rcCallLoggerAutoLogNotifyHandler.onEvent({ data });
-          if (await isRecordingLogs()) {
-            logAction({ name: data.type, data });
+          if (await logRecorder.isRecordingLogs()) {
+            logRecorder.logAction({ name: data.type, data });
           }
           break;
         case 'rc-messageLogger-auto-log-notify':
           await rcMessageLoggerAutoLogNotifyHandler.onEvent({ data });
-          if (await isRecordingLogs()) {
-            logAction({ name: data.type, data });
+          if (await logRecorder.isRecordingLogs()) {
+            logRecorder.logAction({ name: data.type, data });
           }
           break;
         case 'rc-route-changed-notify':
           await rcRouteChangedNotifyHandler.onEvent({ data });
-          if (await isRecordingLogs()) {
-            logAction({ name: data.type, data });
+          if (await logRecorder.isRecordingLogs()) {
+            logRecorder.logAction({ name: data.type, data });
           }
           break;
         case 'rc-adapter-ai-assistant-settings-notify':
@@ -221,14 +221,14 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-post-message-request':
           await rcPostMessageRequestHandler.onEvent({ data });
-          if (data.path != '/callLogger/inputChanged' && await isRecordingLogs()) {
-            logAction({ name: data.type, data });
+          if (data.path != '/callLogger/inputChanged' && await logRecorder.isRecordingLogs()) {
+            logRecorder.logAction({ name: data.type, data });
           }
           break;
         case "rc-adapter-phone-number-format-settings-notify":
           await rcAdapterPhoneNumberFormatSettingsNotifyHandler.onEvent({ data });
-          if (await isRecordingLogs()) {
-            logAction({ name: data.type, data });
+          if (await logRecorder.isRecordingLogs()) {
+            logRecorder.logAction({ name: data.type, data });
           }
           break;
         default:
@@ -257,44 +257,44 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     switch (request.type) {
       case 'oauthCallBack':
         await oauthCallBackHandler.onMessage({ request, sendResponse });
-        if (await isRecordingLogs()) {
-          logAction({ name: request.type, data: request });
+        if (await logRecorder.isRecordingLogs()) {
+          logRecorder.logAction({ name: request.type, data: request });
         }
         break;
       case 'pipedriveCallbackUri':
         await pipedriveCallbackUriHandler.onMessage({ request, sendResponse });
-        if (await isRecordingLogs()) {
-          logAction({ name: request.type, data: request });
+        if (await logRecorder.isRecordingLogs()) {
+          logRecorder.logAction({ name: request.type, data: request });
         }
         break;
       case 'c2sms':
         await c2smsHandler.onMessage({ request, sendResponse });
-        if (await isRecordingLogs()) {
-          logAction({ name: request.type, data: request });
+        if (await logRecorder.isRecordingLogs()) {
+          logRecorder.logAction({ name: request.type, data: request });
         }
         break;
       case 'c2d':
         await c2dHandler.onMessage({ request, sendResponse });
-        if (await isRecordingLogs()) {
-          logAction({ name: request.type, data: request });
+        if (await logRecorder.isRecordingLogs()) {
+          logRecorder.logAction({ name: request.type, data: request });
         }
         break;
       case 'c2schedule':
         await c2scheduleHandler.onMessage({ request, sendResponse });
-        if (await isRecordingLogs()) {
-          logAction({ name: request.type, data: request });
+        if (await logRecorder.isRecordingLogs()) {
+          logRecorder.logAction({ name: request.type, data: request });
         }
         break;
       case 'navigate':
         await navigateHandler.onMessage({ request, sendResponse });
-        if (await isRecordingLogs()) {
-          logAction({ name: request.type, data: request });
+        if (await logRecorder.isRecordingLogs()) {
+          logRecorder.logAction({ name: request.type, data: request });
         }
         break;
       case 'insightlyAuth':
         await insightlyAuthHandler.onMessage({ request, sendResponse });
-        if (await isRecordingLogs()) {
-          logAction({ name: request.type, data: request });
+        if (await logRecorder.isRecordingLogs()) {
+          logRecorder.logAction({ name: request.type, data: request });
         }
         break;
       case 'ringsenseRefTrack':

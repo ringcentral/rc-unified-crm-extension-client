@@ -1,4 +1,4 @@
-function getSupportPageRender({ manifest, isOnline }) {
+function getSupportPageRender({ manifest, platformName, isOnline }) {
     const supportPage = {
         id: 'supportPage',
         title: 'Support',
@@ -34,11 +34,13 @@ function getSupportPageRender({ manifest, isOnline }) {
                     type: "string",
                     description: `Version: v${manifest.version}`
                 },
-                reportIssueButton: {
-                    type: "string",
-                    title: "Report issue",
-                },
-                clearLogConflictsButton:{
+                ...(manifest.platforms[platformName].supportReportIssue ? {
+                    reportIssueButton: {
+                        type: "string",
+                        title: "Report issue",
+                    }
+                } : {}),
+                clearLogConflictsButton: {
                     type: "string",
                     title: "Clear log conflicts",
                 },

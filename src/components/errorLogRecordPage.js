@@ -27,10 +27,6 @@ function getErrorLogRecordPageRender({ consent }) {
                     title: ' ',
                     description: 'I consent to the collection and use of my personal information for issue resolving purposes'
                 },
-                warning:{
-                    type: 'string',
-                    description: 'Please avoid recording too many actions as the generated error report could be large.'
-                },
                 errorLogRecordPageStartButton: {
                     type: 'string',
                     title: 'Start'
@@ -60,10 +56,6 @@ function getErrorLogRecordPageRender({ consent }) {
             piiConsent: {
                 "ui:field": "checkbox",
                 "ui:variant": "body1"
-            },
-            warning: {
-                "ui:field": "admonition",
-                "ui:severity": "warning",  // "warning", "info", "error", "success"
             },
             errorLogRecordPageStartButton: {
                 "ui:field": "button",

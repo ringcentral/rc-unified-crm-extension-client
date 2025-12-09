@@ -31,7 +31,7 @@ async function onMessage({ request, sendResponse }) {
     catch (e) {
       isOnline = false;
     }
-    const supportPageRender = supportPage.getSupportPageRender({ manifest, isOnline });
+    const supportPageRender = supportPage.getSupportPageRender({ manifest, platformName, isOnline });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
       type: 'rc-adapter-register-customized-page',
       page: supportPageRender
