@@ -333,8 +333,8 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'adminGoogleSheetsPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                  if (data.body.keys && data.body.keys.includes('managedToggle')) {
-                    const isManaged = data.body.formData.managedToggle || false;
+                  if (data.body.keys && data.body.keys.includes('forceGoogleSheets')) {
+                    const isManaged = !(data.body.formData.forceGoogleSheets?.customizable ?? true);
                     if (adminSettings?.userSettings?.googleSheetsName) {
                       adminSettings.userSettings.googleSheetsName.customizable = !isManaged;
                     }
@@ -2273,7 +2273,7 @@ window.addEventListener('message', async (e) => {
                   );
                   if (adminNewSheetResponse.status === 200) {
                     // Set admin settings for Google Sheets
-                    const isManaged = data.body.button.formData.managedToggle || false;
+                    const isManaged = !(data.body.button.formData.forceGoogleSheets?.customizable ?? true);
                     adminSettings.userSettings.googleSheetsName = {
                       value: adminNewSheetResponse.data.name,
                       customizable: !isManaged
@@ -2307,10 +2307,10 @@ window.addEventListener('message', async (e) => {
                 case 'adminSelectExistingSheetButton':
                   const rcAccessToken = getRcAccessToken();
                   const { rcUnifiedCrmExtJwt: adminTokenForExistingSheet } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                  // Store current form data to preserve managedToggle state
+                  // Store current form data to preserve forceGoogleSheets state
                   await chrome.storage.local.set({ 
                     pendingAdminGoogleSheetsSelection: {
-                      managedToggle: data.body.button.formData.managedToggle || false,
+                      forceGoogleSheets: !(data.body.button.formData.forceGoogleSheets?.customizable ?? true),
                       timestamp: Date.now()
                     }
                   });
@@ -2368,7 +2368,7 @@ window.addEventListener('message', async (e) => {
                       (Date.now() - pendingAdminGoogleSheetsSelection.timestamp < 300000);
                     
                     if (isRecentSelection) {
-                      const isManaged = pendingAdminGoogleSheetsSelection.managedToggle || false;
+                      const isManaged = pendingAdminGoogleSheetsSelection.forceGoogleSheets || false;
                       
                       // Set admin settings for selected Google Sheet
                       adminSettings.userSettings.googleSheetsName = {
@@ -2411,10 +2411,10 @@ window.addEventListener('message', async (e) => {
                   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 case 'adminGoogleSheetsPage':
-                  // Handle managedToggle updates from admin Google Sheets page
-                  if (data.body.keys && data.body.keys.includes('managedToggle')) {
+                  // Handle forceGoogleSheets updates from admin Google Sheets page
+                  if (data.body.keys && data.body.keys.includes('forceGoogleSheets')) {
                     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-                    const isManaged = data.body.formData.managedToggle || false;
+                    const isManaged = !(data.body.formData.forceGoogleSheets?.customizable ?? true);
                     if (adminSettings?.userSettings?.googleSheetsName) {
                       adminSettings.userSettings.googleSheetsName.customizable = !isManaged;
                     }

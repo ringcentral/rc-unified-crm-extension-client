@@ -37,12 +37,19 @@ function renderAdminGoogleSheetsPage({ manifest, adminSettings }) {
             "ui:variant": "outlined", // "text", "outlined", "contained", "plain"
             "ui:fullWidth": true
         }
-        page.schema.properties.managedToggle = {
-            type: "boolean",
-            title: "Force this sheet for all users"
+        page.schema.properties.forceGoogleSheets = {
+            type: 'object',
+            title: 'Google Sheets Customizable',
+            properties: {
+                customizable: {
+                    type: 'boolean',
+                    title: 'Customizable by user',
+                    description: 'When disabled, users will be forced to use this sheet and cannot change Google Sheets settings'
+                }
+            }
         }
-        page.uiSchema.managedToggle = {
-            "ui:description": "When enabled, users cannot change Google Sheets settings"
+        page.uiSchema.forceGoogleSheets = {
+            "ui:collapsible": true,
         }
         page.schema.properties.adminRemoveSheetButton = {
             type: "string",
@@ -55,7 +62,9 @@ function renderAdminGoogleSheetsPage({ manifest, adminSettings }) {
             "ui:color": "danger.b03"
         }
         page.formData.sheetUrl = existingGoogleSheetsUrl;
-        page.formData.managedToggle = !isManaged ? false : true;
+        page.formData.forceGoogleSheets = {
+            customizable: !isManaged
+        };
     }
     else {
         page.schema.properties.newSheetName = {
@@ -63,12 +72,19 @@ function renderAdminGoogleSheetsPage({ manifest, adminSettings }) {
             title: "New sheet name"
         }
         page.schema.required = ["newSheetName"];
-        page.schema.properties.managedToggle = {
-            type: "boolean",
-            title: "Force this sheet for all users"
+        page.schema.properties.forceGoogleSheets = {
+            type: 'object',
+            title: 'Google Sheets Customizable',
+            properties: {
+                customizable: {
+                    type: 'boolean',
+                    title: 'Customizable by user',
+                    description: 'When disabled, users will be forced to use this sheet and cannot change Google Sheets settings'
+                }
+            }
         }
-        page.uiSchema.managedToggle = {
-            "ui:description": "When enabled, users cannot change Google Sheets settings"
+        page.uiSchema.forceGoogleSheets = {
+            "ui:collapsible": true,
         }
         page.schema.properties.adminNewSheetButton = {
             type: "string",
@@ -92,7 +108,9 @@ function renderAdminGoogleSheetsPage({ manifest, adminSettings }) {
             "ui:variant": "contained", // "text", "outlined", "contained", "plain"
             "ui:fullWidth": true
         }
-        page.formData.managedToggle = false;
+        page.formData.forceGoogleSheets = {
+            customizable: true
+        };
     }
     return page;
 }
