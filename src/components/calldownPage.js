@@ -175,6 +175,7 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                     { id: 'calldownActionCall', title: 'Call', icon: 'phone' },
                     { id: 'calldownActionText', title: 'Text', icon: 'sms' },
                     { id: 'calldownActionOpen', title: 'View contact', icon: 'view' },
+                    { id: 'calldownActionEdit', title: 'Edit', icon: 'edit' },
                     { id: 'calldownActionComplete', title: 'Mark as complete', icon: completeIcon },
                     { id: 'calldownActionRemove', title: 'Delete', icon: 'delete', color: 'danger.b03' }
                 ],
@@ -185,7 +186,8 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
                     phoneNumber: i.phoneNumber,
                     contactName: i.contactName,
                     statusText,
-                    whenText
+                    whenText,
+                    scheduledAt: i.scheduledAt
                 }
             };
         });

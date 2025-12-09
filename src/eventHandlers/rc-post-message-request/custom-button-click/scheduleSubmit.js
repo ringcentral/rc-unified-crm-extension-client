@@ -5,10 +5,12 @@ import calldownPage from '../../../components/calldownPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     const btn = data.body.button || {};
-    const { phone, callbackDateTime, note, contact, newContactName } = btn.formData || {};
+    const { phone, callbackDateTime, note, contact, newContactName, editingRecordId } = btn.formData || {};
     if (!callbackDateTime || !phone) {
         return;
     }
+    
+    const isEditMode = !!editingRecordId;
     // show spinner while scheduling
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
@@ -23,7 +25,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         if (created?.contactInfo?.id) {
             contactIdToUse = created.contactInfo.id;
             showNotification({ level: 'success', message: 'Contact created', ttl: 3000 });
-            await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
+            
+            if (isEditMode) {
+                await axios.patch(`${manifest.serverUrl}/calldown/${editingRecordId}?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType: selectedType, note });
+            } else {
+                await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType: selectedType, note });
+            }
 
             // Cache contact information for call-down list display
             await cacheCalldownContact({
@@ -33,7 +40,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 contactType: selectedType
             });
 
-            showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
+            showNotification({ level: 'success', message: isEditMode ? 'Schedule updated successfully' : 'Added to call-down list', ttl: 3000 });
             document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
                 type: 'rc-adapter-trigger-contact-match',
                 phoneNumbers: [phone]
@@ -43,10 +50,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         }
     }
     else {
-        await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, note });
-
-        // Cache contact information for existing contact
-        // Get contact info from CRM since page data is not available in submit handler
+        // Get contact info from CRM to get contactType
+        let contactType = 'Contact'; // default
+        let selectedContact = null;
         if (contactIdToUse && contactIdToUse !== 'newContact') {
             const { matched, contactInfo } = await contactCore.getContact({
                 serverUrl: manifest.serverUrl,
@@ -58,19 +64,30 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
 
             if (matched && contactInfo && contactInfo.length > 0) {
                 // Find the specific contact by ID
-                const selectedContact = contactInfo.find(c => c.id === contactIdToUse);
+                selectedContact = contactInfo.find(c => c.id === contactIdToUse);
                 if (selectedContact) {
-                    await cacheCalldownContact({
-                        contactId: contactIdToUse,
-                        contactName: selectedContact.name,
-                        phoneNumber: phone,
-                        contactType: selectedContact.type || 'Contact'
-                    });
+                    contactType = selectedContact.type || 'Contact';
                 }
             }
+        }
+
+        if (isEditMode) {
+            await axios.patch(`${manifest.serverUrl}/calldown/${editingRecordId}?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType, note });
+        } else {
+            await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType, note });
+        }
+
+        // Cache contact information for existing contact
+        if (contactIdToUse && contactIdToUse !== 'newContact') {
+            await cacheCalldownContact({
+                contactId: contactIdToUse,
+                contactName: selectedContact?.name || '',
+                phoneNumber: phone,
+                contactType
+            });
 
             // Notify user on success
-            showNotification({ level: 'success', message: 'Added to call-down list', ttl: 3000 });
+            showNotification({ level: 'success', message: isEditMode ? 'Schedule updated successfully' : 'Added to call-down list', ttl: 3000 });
         }
         const { userSettings } = await chrome.storage.local.get('userSettings');
         const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
