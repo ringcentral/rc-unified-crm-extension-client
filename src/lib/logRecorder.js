@@ -24,7 +24,6 @@ async function startRecordingLogs() {
 }
 
 async function stopRecordingLogs() {
-    log.length = 0;
     await chrome.storage.local.remove('errorLogRecordingStatus');
     axios.defaults.headers.common['is-debug'] = false;
 }
@@ -35,6 +34,7 @@ async function uploadLogs({ serverUrl }) {
     const presignedUrl = presignedUrlResponse.data.presignedUrl;
     const logs = getLog();
     const uploadResponse = await axios.put(presignedUrl, JSON.stringify(logs, null, 2));
+    clearLog();
     return uploadResponse.status === 200;
 }
 
@@ -50,6 +50,10 @@ function logAction({ name, data }) {
 
 function getLog() {
     return log;
+}
+
+function clearLog(){
+    log.length = 0;
 }
 
 exports.startRecordingLogs = startRecordingLogs;
