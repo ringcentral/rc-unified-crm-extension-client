@@ -9,7 +9,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
-    await axios.patch(`${manifest.serverUrl}/calldown/${rowId}?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { lastCallAt: new Date().toISOString() });
+    await axios.patch(`${manifest.serverUrl}/calldown/${rowId}?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`, { status:"called",lastCallAt: new Date().toISOString() });
     const refreshed = await calldownPage.getCalldownPageWithRecords({
         manifest,
         jwtToken: rcUnifiedCrmExtJwt,
