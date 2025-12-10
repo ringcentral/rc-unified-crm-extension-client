@@ -28,6 +28,7 @@ import autoLogPreferencesHandler from './autoLogPreferences';
 import userMappingHandler from './userMapping';
 import developerSettingsPageHandler from './developerSettingsPage';
 import getErrorLogRecrodPageHandler from './getErrorLogRecordPage';
+import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -79,6 +80,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'errorLogRecordPage':
             await getErrorLogRecrodPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'logRecordSubmissionPage':
+            await logRecordSubmissionPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
     }
     // Page render update from section change input

@@ -25,30 +25,11 @@ async function startRecordingLogs() {
 
 async function stopRecordingLogs() {
     log.length = 0;
-    // close recording banner
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-        type: 'rc-adapter-update-customized-banner',
-        banner: {
-            id: 'log-recording-banner',
-            hidden: true
-        }
-    }, '*');
     await chrome.storage.local.remove('errorLogRecordingStatus');
     axios.defaults.headers.common['is-debug'] = false;
 }
 
 async function uploadLogs({ serverUrl }) {
-    // update banner to uploading
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-        type: 'rc-adapter-update-customized-banner',
-        banner: {
-            id: 'log-recording-banner', // banner id, required
-            message: 'Uploading...please don not close the window', // banner message, required
-            severity: 'warning', // 'info' | 'warning' | 'error' | 'success', default: 'info'
-
-        },
-        closable: false
-    }, '*');
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const presignedUrlResponse = await axios.get(`${serverUrl}/debug/report/url?jwtToken=${rcUnifiedCrmExtJwt}`);
     const presignedUrl = presignedUrlResponse.data.presignedUrl;

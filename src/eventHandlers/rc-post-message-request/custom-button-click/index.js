@@ -3,6 +3,8 @@ import authCore from '../../../core/auth';
 import { responseMessage } from '../../../lib/util';
 import { clearPlatformInfo } from '../../../service/platformService';
 
+import customizedBannerHandler from './customizedBanner';
+
 import callLaterHandler from './callLater';
 import callLaterInMessageHandler from './callLaterInMessage';
 import callLaterInContactHandler from './callLaterInContact';
@@ -36,25 +38,13 @@ import usermappingEditHandler from './usermappingEdit';
 import usermappingRemoveHandler from './usermappingRemove';
 import selectPlatformHandler from './selectPlatform';
 import errorLogRecordPageStartButtonHandler from './errorLogRecordPageStartButton';
+import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
 import generalHandler from './general';
-
-import logRecorder from '../../../lib/logRecorder';
-
-import axios from 'axios';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     switch (data.body.button.type) {
         case 'customizedBanner':
-            if (!data.body.button.dismissed) {
-                try {
-                    await logRecorder.uploadLogs({ serverUrl: manifest.serverUrl });
-                    showNotification({ level: 'success', message: 'Successfully uploaded.', ttl: 3000 });
-                } catch (error) {
-                    console.error('Error uploading logs:', error);
-                    showNotification({ level: 'error', message: 'Failed to upload logs. Please try again.', ttl: 3000 });
-                }
-                await logRecorder.stopRecordingLogs();
-            }
+            await customizedBannerHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
     }
     // button id is: {actionId}-{itemId}-action
@@ -185,6 +175,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'errorLogRecordPageStartButton':
             await errorLogRecordPageStartButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'logRecordSubmitButton':
+            await logRecordSubmissionPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'callAndSMSLoggingSettingPage':
         case 'contactSettingPage':
