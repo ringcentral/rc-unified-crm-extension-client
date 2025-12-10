@@ -10,6 +10,7 @@ import scheduleSubmitHandler from './scheduleSubmit';
 import calldownActionCallHandler from './calldownActionCall';
 import calldownActionOpenHandler from './calldownActionOpen';
 import calldownActionTextHandler from './calldownActionText';
+import calldownActionEditHandler from './calldownActionEdit';
 import calldownActionCompleteHandler from './calldownActionComplete';
 import calldownActionRemoveHandler from './calldownActionRemove';
 import editUserMappingPageHandler from './editUserMappingPage';
@@ -63,6 +64,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'calldownActionText':
             await calldownActionTextHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'calldownActionEdit':
+            await calldownActionEditHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
             break;
         case 'calldownActionComplete':
             await calldownActionCompleteHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
