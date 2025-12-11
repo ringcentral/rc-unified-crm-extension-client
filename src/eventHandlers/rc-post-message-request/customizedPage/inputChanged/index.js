@@ -27,6 +27,8 @@ import callLogDetailsSettingHandler from './callLogDetailsSetting';
 import autoLogPreferencesHandler from './autoLogPreferences';
 import userMappingHandler from './userMapping';
 import developerSettingsPageHandler from './developerSettingsPage';
+import adminGoogleSheetsPageHandler from './adminGoogleSheetsPage';
+import googleSheetsAdminConfigHandler from './googleSheetsAdminConfig';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -75,6 +77,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'developerSettingsPage':
             await developerSettingsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'adminGoogleSheetsPage':
+            await adminGoogleSheetsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
     }
     // Page render update from section change input
@@ -126,6 +131,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'userMapping':
             await userMappingHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'googleSheetsAdminConfig':
+            await googleSheetsAdminConfigHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         default:
             break;

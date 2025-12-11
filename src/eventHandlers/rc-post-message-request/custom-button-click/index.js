@@ -31,6 +31,11 @@ import googleSheetsConfigHandler from './googleSheetsConfig';
 import newSheetButtonHandler from './newSheetButton';
 import selectExistingSheetButtonHandler from './selectExistingSheetButton';
 import removeSheetButtonHandler from './removeSheetButton';
+import adminNewSheetButtonHandler from './adminNewSheetButton';
+import adminSelectExistingSheetButtonHandler from './adminSelectExistingSheetButton';
+import adminGoogleSheetSelectedHandler from './adminGoogleSheetSelected';
+import userGoogleSheetSelectedHandler from './userGoogleSheetSelected';
+import adminRemoveSheetButtonHandler from './adminRemoveSheetButton';
 import contactSearchAdapterButtonCallLogHandler from './contactSearchAdapterButtonCallLog';
 import contactSearchAdapterButtonMessageLogHandler from './contactSearchAdapterButtonMessageLog';
 import usermappingEditHandler from './usermappingEdit';
@@ -149,6 +154,24 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'removeSheetButton':
             await removeSheetButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'adminNewSheetButton':
+            await adminNewSheetButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'adminSelectExistingSheetButton':
+            await adminSelectExistingSheetButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'adminGoogleSheetSelected':
+            await adminGoogleSheetSelectedHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'userGoogleSheetSelected':
+            await userGoogleSheetSelectedHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'adminRemoveSheetButton':
+            await adminRemoveSheetButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'adminSheetInfoButton':
+            window.open(data.body.button.formData.sheetUrl, '_blank');
             break;
         case 'contactSearchAdapterButtonCallLog':
             await contactSearchAdapterButtonCallLogHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

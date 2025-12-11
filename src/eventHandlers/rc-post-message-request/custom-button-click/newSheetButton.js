@@ -13,7 +13,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     );
     let userSettings;
     if (newSheetResponse.status === 200) {
-        userSettings = (await userCore.refreshUserSettings({
+        userSettings = await userCore.refreshUserSettings({
             changedSettings: {
                 googleSheetsName: {
                     value: newSheetResponse.data.name
@@ -22,7 +22,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                     value: newSheetResponse.data.url
                 }
             }
-        })).userSettings;
+        });
         showNotification({ level: 'success', message: 'New sheet created successfully', ttl: 5000 });
     }
     else {

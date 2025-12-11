@@ -34,14 +34,13 @@ function getAdminPageRender({ platform }) {
         }
     }
 
-
-
     if (platform.serverSideLogging) {
         page.schema.properties.section.oneOf.push({
             const: "serverSideLoggingSetting",
             title: "Server side logging (Beta)",
         })
     };
+    
     return page;
 }
 

@@ -1,10 +1,9 @@
+import { checkC2DCollision, showNotification } from './lib/util';
+import { setAuthor } from './lib/analytics';
 import axios from 'axios';
-import { checkC2DCollision } from './lib/util';
 import { getManifest } from './service/manifestService';
 import { saveManifestUrl } from './service/manifestService';
 import { getPlatformInfo } from './service/platformService';
-import { setAuthor } from './lib/analytics';
-import { showNotification } from './lib/util';
 
 // event handlers
 import rcTelephonySessionNotifyHandler from './eventHandlers/rc-telephony-session-notify';
