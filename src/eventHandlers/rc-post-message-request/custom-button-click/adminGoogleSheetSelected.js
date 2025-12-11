@@ -30,23 +30,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             await chrome.storage.local.set({ adminSettings });
             await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
             
-            // Update user settings with admin settings if managed
-            const changedSettings = {};
-            if (!isManaged) {
-                // If not managed, users can customize, so don't force the values
-                // But still refresh to get the latest from server
-                await userCore.refreshUserSettings({});
-            } else {
-                // If managed, force the admin values to user settings
-                changedSettings.googleSheetsName = {
-                    value: data.body.sheetName
-                };
-                changedSettings.googleSheetsUrl = {
-                    value: data.body.sheetUrl
-                };
-                await userCore.refreshUserSettings({ changedSettings });
-            }
-            
             // Clear pending selection
             await chrome.storage.local.remove('pendingAdminGoogleSheetsSelection');
             

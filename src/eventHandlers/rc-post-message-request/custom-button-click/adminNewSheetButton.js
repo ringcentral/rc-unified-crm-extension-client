@@ -28,24 +28,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         };
         await chrome.storage.local.set({ adminSettings });
         await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
-        
-        // Update user settings with admin settings if managed
-        if (isManaged) {
-            // If managed, force the admin values to user settings
-            await userCore.refreshUserSettings({
-                changedSettings: {
-                    googleSheetsName: {
-                        value: adminNewSheetResponse.data.name
-                    },
-                    googleSheetsUrl: {
-                        value: adminNewSheetResponse.data.url
-                    }
-                }
-            });
-        } else {
-            // If not managed, users can customize, so just refresh to get latest from server
-            await userCore.refreshUserSettings({});
-        }        
+              
         showNotification({ 
             level: 'success', 
             message: `Admin Google Sheet "${adminNewSheetResponse.data.name}" created successfully${isManaged ? ' and enforced for all users' : ''}`, 
