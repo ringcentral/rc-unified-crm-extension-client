@@ -34,6 +34,10 @@ function renderAdminGoogleSheetsPage({ manifest, adminSettings }) {
                 type: "string",
                 title: `Current sheet: ${existingGoogleSheetsName}`
             },
+            adminRemoveSheetButton: {
+                type: "string",
+                title: "Remove sheet"
+            },
             forceGoogleSheets: {
                 type: 'object',
                 title: 'Google Sheets Customizable',
@@ -44,10 +48,6 @@ function renderAdminGoogleSheetsPage({ manifest, adminSettings }) {
                         description: 'When disabled, users will be forced to use this sheet and cannot change Google Sheets settings'
                     }
                 }
-            },
-            adminRemoveSheetButton: {
-                type: "string",
-                title: "Remove sheet"
             }
         };
         page.uiSchema = {
@@ -57,14 +57,14 @@ function renderAdminGoogleSheetsPage({ manifest, adminSettings }) {
                 "ui:variant": "outlined", // "text", "outlined", "contained", "plain"
                 "ui:fullWidth": true
             },
-            forceGoogleSheets: {
-                "ui:collapsible": true,
-            },
             adminRemoveSheetButton: {
                 "ui:field": "button",
                 "ui:variant": "contained", // "text", "outlined", "contained", "plain"
                 "ui:fullWidth": true,
                 "ui:color": "danger.b03"
+            },
+            forceGoogleSheets: {
+                "ui:collapsible": false,
             }
         };
         page.formData.sheetUrl = existingGoogleSheetsUrl;
@@ -79,6 +79,14 @@ function renderAdminGoogleSheetsPage({ manifest, adminSettings }) {
                 type: "string",
                 title: "New sheet name"
             },
+            adminNewSheetButton: {
+                type: "string",
+                title: "Create new sheet"
+            },
+            adminSelectExistingSheetButton: {
+                type: "string",
+                title: "Select existing sheet"
+            },
             forceGoogleSheets: {
                 type: 'object',
                 title: 'Google Sheets Customizable',
@@ -89,22 +97,11 @@ function renderAdminGoogleSheetsPage({ manifest, adminSettings }) {
                         description: 'When disabled, users will be forced to use this sheet and cannot change Google Sheets settings'
                     }
                 }
-            },
-            adminNewSheetButton: {
-                type: "string",
-                title: "Create new sheet"
-            },
-            adminSelectExistingSheetButton: {
-                type: "string",
-                title: "Select existing sheet"
             }
         };
         page.schema.required = ["newSheetName"];
         page.uiSchema = {
             ...page.uiSchema,
-            forceGoogleSheets: {
-                "ui:collapsible": true,
-            },
             newSheetName: {
                 "ui:placeholder": 'Enter name...',
             },
@@ -118,6 +115,9 @@ function renderAdminGoogleSheetsPage({ manifest, adminSettings }) {
                 "ui:field": "button",
                 "ui:variant": "contained", // "text", "outlined", "contained", "plain"
                 "ui:fullWidth": true
+            },
+            forceGoogleSheets: {
+                "ui:collapsible": false,
             }
         };
         page.formData.forceGoogleSheets = {
