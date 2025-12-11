@@ -10,13 +10,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const { rcUnifiedCrmExtJwt: adminTokenForNewSheet } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { adminSettings } = await chrome.storage.local.get('adminSettings');
     
+    try{
     const adminNewSheetResponse = await axios.post(`${manifest.serverUrl}/admin/googleSheets/sheet?jwtToken=${adminTokenForNewSheet}&rcAccessToken=${rcAccessTokenNewSheet}`,
         {
             name: data.body.button.formData.newSheetName
         }
     );
-    
-    if (adminNewSheetResponse.status === 200) {
         // Set admin settings for Google Sheets
         const isManaged = !(data.body.button.formData.forceGoogleSheets?.customizable ?? true);
         adminSettings.userSettings.googleSheetsName = {
@@ -46,18 +45,15 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         } else {
             // If not managed, users can customize, so just refresh to get latest from server
             await userCore.refreshUserSettings({});
-        }
-        
+        }        
         showNotification({ 
             level: 'success', 
             message: `Admin Google Sheet "${adminNewSheetResponse.data.name}" created successfully${isManaged ? ' and enforced for all users' : ''}`, 
             ttl: 5000 
         });
-    }
-    else {
+    } catch (error) {
         showNotification({ level: 'warning', message: 'Failed to create new sheet', ttl: 5000 });
     }
-    
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: adminGoogleSheetsPage.renderAdminGoogleSheetsPage({ manifest, adminSettings })
