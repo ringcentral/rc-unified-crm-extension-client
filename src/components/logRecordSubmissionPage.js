@@ -1,4 +1,4 @@
-function getLogRecordSubmissionPageRender({ issueDescription, piiConsent, email }) {
+function getLogRecordSubmissionPageRender({ piiConsent }) {
     return {
         id: 'logRecordSubmissionPage',
         title: 'Log Record Submission',
@@ -9,19 +9,11 @@ function getLogRecordSubmissionPageRender({ issueDescription, piiConsent, email 
                 piiConsent: {
                     type: 'boolean',
                     title: ' ',
-                    description: 'I consent to the collection and use of my personal information for issue resolving purposes'
-                },
-                email: {
-                    type: 'string',
-                    title: 'Email',
-                },
-                issueDescription: {
-                    type: 'string',
-                    title: 'Issue Description',
+                    description: 'I consent to sharing my App Connect session, which may contain sensitive information.'
                 },
                 logRecordSubmitButton: {
                     type: 'string',
-                    title: 'Submit'
+                    title: 'Send error report'
                 }
             }
         },
@@ -30,24 +22,15 @@ function getLogRecordSubmissionPageRender({ issueDescription, piiConsent, email 
                 "ui:field": "checkbox",
                 "ui:variant": "body1"
             },
-            email: {
-                "ui:placeholder": 'Enter email here...',
-            },
-            issueDescription: {
-                "ui:placeholder": 'Enter issue description here...',
-                "ui:widget": "textarea",
-            },
             logRecordSubmitButton: {
                 "ui:field": "button",
                 "ui:variant": "contained",
                 "ui:fullWidth": true,
-                "ui:disabled": !issueDescription || !piiConsent || !email
+                "ui:disabled": !piiConsent
             }
         },
         formData: {
-            issueDescription: issueDescription ?? '',
-            piiConsent: piiConsent ?? false,
-            email: email ?? ''
+            piiConsent: piiConsent ?? false
         }
     }
 }

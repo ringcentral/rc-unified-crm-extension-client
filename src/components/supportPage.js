@@ -37,7 +37,7 @@ function getSupportPageRender({ manifest, platformName, isOnline }) {
                 ...(manifest.platforms[platformName].supportReportIssue ? {
                     reportIssueButton: {
                         type: "string",
-                        title: "Report issue",
+                        title: "Send error report",
                     }
                 } : {}),
                 clearLogConflictsButton: {

@@ -2,9 +2,7 @@ import { getLogRecordSubmissionPageRender } from '../../../../components/logReco
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     const logRecordSubmissionPageRender = getLogRecordSubmissionPageRender({
-        issueDescription: data.body.formData.issueDescription,
-        piiConsent: data.body.formData.piiConsent,
-        email: data.body.formData.email
+        piiConsent: data.body.formData.piiConsent
     });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',

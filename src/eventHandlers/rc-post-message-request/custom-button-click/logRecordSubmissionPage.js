@@ -2,9 +2,10 @@ import logRecorder from '../../../lib/logRecorder';
 import { showNotification } from '../../../lib/util';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+    const { issueDescription } = await chrome.storage.local.get('issueDescription');
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     try {
-        logRecorder.logAction({ name: 'user description', data: data.body.button.formData.issueDescription });
+        logRecorder.logAction({ name: 'user description', data: issueDescription });
         await logRecorder.stopRecordingLogs();
         await logRecorder.uploadLogs({ serverUrl: manifest.serverUrl });
         showNotification({ level: 'success', message: 'Successfully uploaded.', ttl: 3000 });

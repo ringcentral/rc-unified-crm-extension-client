@@ -38,6 +38,7 @@ import contactSearchAdapterButtonMessageLogHandler from './contactSearchAdapterB
 import usermappingEditHandler from './usermappingEdit';
 import usermappingRemoveHandler from './usermappingRemove';
 import selectPlatformHandler from './selectPlatform';
+import getErrorLogRecordPageNextStepButtonHandler from './getErrorLogRecordPageNextStepButton';
 import errorLogRecordPageStartButtonHandler from './errorLogRecordPageStartButton';
 import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
 import generalHandler from './general';
@@ -176,6 +177,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'selectPlatform':
             await selectPlatformHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'getErrorLogRecordPageNextStepButton':
+            await getErrorLogRecordPageNextStepButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'errorLogRecordPageStartButton':
             await errorLogRecordPageStartButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

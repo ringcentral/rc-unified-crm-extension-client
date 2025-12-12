@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { downloadTextFile } from './util';
 
 const log = [];
 
@@ -17,10 +18,6 @@ async function startRecordingLogs() {
             }
         }
     }, '*');
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-        type: 'rc-adapter-navigate-to',
-        path: 'goBack', // go back to previous page
-    }, '*');
 }
 
 async function stopRecordingLogs() {
@@ -34,6 +31,8 @@ async function uploadLogs({ serverUrl }) {
     const presignedUrl = presignedUrlResponse.data.presignedUrl;
     const logs = getLog();
     const uploadResponse = await axios.put(presignedUrl, JSON.stringify(logs, null, 2));
+    // download the report as json file to local as well
+    downloadTextFile({ filename: 'error-log-report.json', text: JSON.stringify(logs, null, 2) });
     clearLog();
     return uploadResponse.status === 200;
 }

@@ -1,16 +1,19 @@
 import { getErrorLogRecordPageRender } from '../../../components/errorLogRecordPage';
-import { getRcInfo } from '../../../lib/util';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
-    const rcUserInfo = await getRcInfo();
-    const errorLogRecordPageRender = getErrorLogRecordPageRender({ email: rcUserInfo?.value?.cachedData?.extensionInfo?.contact?.email ?? '' });
+    await chrome.storage.local.set({ issueDescription: data.body.button.formData.issueDescription });
+    const page = getErrorLogRecordPageRender({
+        step: 2,
+        email: data.body.button.formData.email,
+        issueDescription: data.body.button.formData.issueDescription
+    });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
-        page: errorLogRecordPageRender
+        page
     });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-navigate-to',
-        path: `/customized/${errorLogRecordPageRender.id}`, // page id
+        path: `/customized/${page.id}`, // page id
     }, '*');
 }
 

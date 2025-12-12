@@ -1,72 +1,107 @@
-function getErrorLogRecordPageRender({ consent }) {
-    return {
-        id: 'errorLogRecordPage',
-        title: `Error Log Record`,
-        description: `Error Log Record`,
-        schema: {
-            type: 'object',
-            properties: {
-                instructionTitle: {
-                    type: 'string',
-                    description: 'Please follow instructions below to report an issue:'
+function getErrorLogRecordPageRender({ step = 1, email, issueDescription = '' }) {
+    let page = {};
+    switch (step) {
+        case 1:
+            return {
+                id: 'errorLogRecordPage',
+                title: `Error Log Record`,
+                description: `Error Log Record`,
+                schema: {
+                    type: 'object',
+                    properties: {
+                        userEmailTitle: {
+                            type: 'string',
+                            description: 'Email',
+                        },
+                        userEmail: {
+                            type: 'string',
+                            title: 'Email',
+                            description: email ?? ''
+                        },
+                        issueDescription: {
+                            type: 'string',
+                            title: 'Issue Description',
+                        },
+                        getErrorLogRecordPageNextStepButton: {
+                            type: 'string',
+                            title: 'Next',
+                        }
+                    }
                 },
-                instruction1: {
-                    type: 'string',
-                    description: '1. Fill in the form below and press "Start" button'
+                uiSchema: {
+                    userEmailTitle: {
+                        "ui:field": "typography"
+                    },
+                    userEmail: {
+                        "ui:field": "typography",
+                        "ui:variant": "body2",
+                        "ui:style": { marginTop: "-10px" }
+                    },
+                    issueDescription: {
+                        "ui:placeholder": 'Enter issue description here...',
+                        "ui:widget": "textarea",
+                    },
+                    getErrorLogRecordPageNextStepButton: {
+                        "ui:field": "button",
+                        "ui:variant": "contained",
+                        "ui:fullWidth": true,
+                        "ui:disabled": !issueDescription
+                    }
                 },
-                instruction2: {
-                    type: 'string',
-                    description: '2. Reproduce the issue inside App Connect extension'
-                },
-                instruction3: {
-                    type: 'string',
-                    description: '3. Click "Stop" button and submit the form'
-                },
-                piiConsent: {
-                    type: 'boolean',
-                    title: ' ',
-                    description: 'I consent to the collection and use of my personal information for issue resolving purposes'
-                },
-                errorLogRecordPageStartButton: {
-                    type: 'string',
-                    title: 'Start'
+                formData: {
+                    issueDescription: issueDescription ?? '',
+                    email: email ?? '',
                 }
             }
-        },
-        uiSchema: {
-            instructionTitle: {
-                "ui:field": "typography",
-                "ui:variant": "body2"
-            },
-            instruction1: {
-                "ui:field": "typography",
-                "ui:variant": "body1",
-                "ui:style": { margin: '-15px 0px 0px 20px' }
-            },
-            instruction2: {
-                "ui:field": "typography",
-                "ui:variant": "body1",
-                "ui:style": { margin: '-15px 0px 0px 20px' }
-            },
-            instruction3: {
-                "ui:field": "typography",
-                "ui:variant": "body1",
-                "ui:style": { margin: '-15px 0px 0px 20px' }
-            },
-            piiConsent: {
-                "ui:field": "checkbox",
-                "ui:variant": "body1"
-            },
-            errorLogRecordPageStartButton: {
-                "ui:field": "button",
-                "ui:variant": "contained",
-                "ui:fullWidth": false,
-                "ui:disabled": !consent
+        case 2:
+            return {
+                id: 'errorLogRecordPage',
+                title: `Reproduce issue`,
+                description: `Reproduce issue`,
+                schema: {
+                    type: 'object',
+                    properties: {
+                        instructionTitle: {
+                            type: 'string',
+                            description: 'To complete your problem report, click the "Record session" button below and reproduce the problem described in the previous step. While recording we will capture key details to help us resolve your issue.'
+                        },
+                        errorLogRecordPageStartButton: {
+                            type: 'string',
+                            title: 'Record session',
+                        }
+                    }
+                },
+                uiSchema: {
+                    instructionTitle: {
+                        "ui:field": "typography"
+                    },
+                    errorLogRecordPageStartButton: {
+                        "ui:field": "button",
+                        "ui:variant": "contained",
+                        "ui:fullWidth": true
+                    }
+                }
             }
-        },
-        formData: {
-            piiConsent: consent
-        }
+        case 3:
+            return {
+                id: 'errorLogRecordPage',
+                title: `Recording in process`,
+                description: `Recording in process`,
+                schema: {
+                    type: 'object',
+                    properties: {
+                        instructionTitle: {
+                            type: 'string',
+                            description: 'You can safely navigate away from this page. Reproduce your problem and click "Stop" when you are done.'
+                        },
+                    }
+                },
+                uiSchema: {
+                    instructionTitle: {
+                        "ui:field": "typography"
+                    }
+                }
+            }
     }
 }
 
