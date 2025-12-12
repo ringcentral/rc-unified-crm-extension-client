@@ -7,10 +7,10 @@ async function preconfigureServiceManifest() {
     const manifest = await getManifest();
     const services = {
         name: 'placeholder',
-        displayName: 'Require to connect',
+        displayName: 'No CRM selected',
         authorizationPath: '/platform-selection',
         authorizedTitle: 'Logout',
-        unauthorizedTitle: 'Connect',
+        unauthorizedTitle: 'Select',
         showAuthRedDot: true,
         authorized: false,
         customizedPageInputChangedEventPath: '/customizedPage/inputChanged',
