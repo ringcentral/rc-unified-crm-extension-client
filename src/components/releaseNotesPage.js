@@ -77,7 +77,7 @@ async function getReleaseNotesPageRender({ manifest, platformName, registeredVer
                     type: 'string',
                     description: 'Be a Beta Tester'
                 },
-                betaInstallationButton: {
+                ['link-button-betaInstallationButton']: {
                     type: 'string',
                     title: 'Install Now'
                 },
@@ -104,7 +104,7 @@ async function getReleaseNotesPageRender({ manifest, platformName, registeredVer
                         "ui:field": "typography",
                         "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
                     },
-                    betaInstallationButton: {
+                    ['link-button-betaInstallationButton']: {
                         "ui:field": "button",
                         "ui:variant": "contained", // "text", "outlined", "contained", "plain"
                         "ui:fullWidth": false
@@ -122,7 +122,7 @@ async function getReleaseNotesPageRender({ manifest, platformName, registeredVer
                 },
                 noteFormData = {
                     ...noteFormData,
-                    betaInstallationButton: 'https://chromewebstore.google.com/detail/ringcentral-app-connect-b/bgpkbcidaabaeioilooghlffdcmlimgk'
+                    ['link-button-betaInstallationButton']: 'https://chromewebstore.google.com/detail/ringcentral-app-connect-b/bgpkbcidaabaeioilooghlffdcmlimgk'
                 }
             return {
                 id: 'releaseNotesPage',
