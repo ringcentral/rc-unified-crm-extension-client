@@ -62,6 +62,68 @@ async function getReleaseNotesPageRender({ manifest, platformName, registeredVer
                     }
                 }
             }
+            // add Beta promotion content
+            notesRender = {
+                ...notesRender,
+                betaPromotionTitle: {
+                    type: 'string',
+                    description: 'Introducing App Connect 2.0 Beta!'
+                },
+                betaPromotionBody: {
+                    type: 'string',
+                    description: 'Get an **exclusive first look** at the future of App Connect. Check out the new voicemail drop, improved metrics, and tons of other new features!'
+                },
+                betaPromotionTitle2: {
+                    type: 'string',
+                    description: 'Be a Beta Tester'
+                },
+                betaInstallationButton: {
+                    type: 'string',
+                    title: 'Install Now'
+                },
+                betaPromotionTrail: {
+                    type: 'string',
+                    description: 'App Connect 2.0 is 100% backwards-compatible'
+                },
+                betaPromotionTrail2: {
+                    type: 'string',
+                    description: 'Run App Connect 1.6 and 2.0 side-by-side'
+                }
+            },
+                notesUiSchema = {
+                    ...notesUiSchema,
+                    betaPromotionTitle: {
+                        "ui:field": "typography",
+                        "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                    },
+                    betaPromotionBody: {
+                        "ui:field": "typography",
+                        "ui:variant": "body1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                    },
+                    betaPromotionTitle2: {
+                        "ui:field": "typography",
+                        "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                    },
+                    betaInstallationButton: {
+                        "ui:field": "button",
+                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                        "ui:fullWidth": false
+                    },
+                    betaPromotionTrail: {
+                        "ui:field": "typography",
+                        "ui:variant": "caption1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                        "ui:style": { marginTop: '-10px' }
+                    },
+                    betaPromotionTrail2: {
+                        "ui:field": "typography",
+                        "ui:variant": "caption1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                        "ui:style": { marginTop: '-20px' }
+                    }
+                },
+                noteFormData = {
+                    ...noteFormData,
+                    betaInstallationButton: 'https://chromewebstore.google.com/detail/ringcentral-app-connect-b/bgpkbcidaabaeioilooghlffdcmlimgk'
+                }
             return {
                 id: 'releaseNotesPage',
                 title: `Release Notes (v${manifest.version})`,
