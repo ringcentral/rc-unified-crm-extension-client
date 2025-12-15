@@ -29,6 +29,8 @@ import userMappingHandler from './userMapping';
 import developerSettingsPageHandler from './developerSettingsPage';
 import adminGoogleSheetsPageHandler from './adminGoogleSheetsPage';
 import googleSheetsAdminConfigHandler from './googleSheetsAdminConfig';
+import getErrorLogRecrodPageHandler from './getErrorLogRecordPage';
+import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -77,6 +79,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'developerSettingsPage':
             await developerSettingsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'errorLogRecordPage':
+            await getErrorLogRecrodPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'logRecordSubmissionPage':
+            await logRecordSubmissionPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'adminGoogleSheetsPage':
             await adminGoogleSheetsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

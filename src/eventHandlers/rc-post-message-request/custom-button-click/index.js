@@ -3,6 +3,8 @@ import authCore from '../../../core/auth';
 import { responseMessage } from '../../../lib/util';
 import { clearPlatformInfo } from '../../../service/platformService';
 
+import customizedBannerHandler from './customizedBanner';
+
 import callLaterHandler from './callLater';
 import callLaterInMessageHandler from './callLaterInMessage';
 import callLaterInContactHandler from './callLaterInContact';
@@ -22,7 +24,7 @@ import openAboutPageHandler from './openAboutPage';
 import openDeveloperSettingsPageHandler from './openDeveloperSettingsPage';
 import openImplementedInterfacesPageButtonHandler from './openImplementedInterfacesPageButton';
 import factoryResetButtonHandler from './factoryResetButton';
-import generateErrorLogButtonHandler from './generateErrorLogButton';
+import reportIssueButtonHandler from './reportIssueButton';
 import documentationHandler from './documentation';
 import saveServerSideLoggingButtonHandler from './saveServerSideLoggingButton';
 import doNotLogNumbersSubmitButtonHandler from './doNotLogNumbersSubmitButton';
@@ -41,9 +43,17 @@ import contactSearchAdapterButtonMessageLogHandler from './contactSearchAdapterB
 import usermappingEditHandler from './usermappingEdit';
 import usermappingRemoveHandler from './usermappingRemove';
 import selectPlatformHandler from './selectPlatform';
+import getErrorLogRecordPageNextStepButtonHandler from './getErrorLogRecordPageNextStepButton';
+import errorLogRecordPageStartButtonHandler from './errorLogRecordPageStartButton';
+import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
 import generalHandler from './general';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+    switch (data.body.button.type) {
+        case 'customizedBanner':
+            await customizedBannerHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+    }
     // button id is: {actionId}-{itemId}-action
     const listButtonActionIdAndItemId = data.body.button.id.split('-action')[0]; // {actionId}-{itemId}
     const listButtonActionId = listButtonActionIdAndItemId.split('-')[0]; // {actionId}
@@ -106,8 +116,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'factoryResetButton':
             await factoryResetButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
-        case 'generateErrorLogButton':
-            await generateErrorLogButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        case 'reportIssueButton':
+            await reportIssueButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'openCommunityPageButton':
             window.open('https://community.ringcentral.com/groups/app-connect-22', '_blank');
@@ -190,6 +200,15 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'selectPlatform':
             await selectPlatformHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'getErrorLogRecordPageNextStepButton':
+            await getErrorLogRecordPageNextStepButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'errorLogRecordPageStartButton':
+            await errorLogRecordPageStartButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'logRecordSubmitButton':
+            await logRecordSubmissionPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'callAndSMSLoggingSettingPage':
         case 'contactSettingPage':

@@ -27,7 +27,16 @@ async function runBuild() {
         const manifestPath = './public/manifest.json';
         const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
         
-        if (currentBranch === 'beta') {
+        // Check if current branch is branched from 'beta'
+        let isBranchedFromBeta = false;
+        try {
+            execSync('git merge-base --is-ancestor beta HEAD', { encoding: 'utf8' });
+            isBranchedFromBeta = true;
+        } catch {
+            // beta is not an ancestor of current branch
+        }
+        
+        if (currentBranch === 'beta' || isBranchedFromBeta) {
             // Add BETA suffix if not already present
             if (!manifest.name.includes(' - BETA')) {
                 manifest.name += ' - BETA';

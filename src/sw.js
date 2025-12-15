@@ -70,6 +70,7 @@ chrome.windows.onRemoved.addListener(async (windowId) => {
   if (popupWindowId === windowId) {
     console.log('close popup');
     await chrome.storage.local.remove('popupWindowId');
+    await chrome.storage.local.remove('errorLogRecordingStatus');
   }
 });
 
