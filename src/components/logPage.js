@@ -51,7 +51,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 title: 'Callback time',
                 type: 'string',
                 format: 'date-time',
-                minimum: new Date().toISOString()
+                minimum: new Date(new Date().setHours(0, 0, 0, 0)).toISOString()
             }
         }
         callUISchemas = {
@@ -66,7 +66,10 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 "ui:help": 'Add this contact to the call-down list'
             },
             callbackDateTime: {
-                "ui:widget": "datetime"
+                "ui:widget": "datetime",
+                "ui:options": {
+                    minimum: new Date(new Date().setHours(0, 0, 0, 0)).toISOString()
+                }
             },
             submitButtonOptions: {
                 "ui:disabled": false
@@ -354,7 +357,10 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         "ui:widget": "textarea",
                     },
                     callbackDateTime: {
-                        "ui:widget": "datetime"
+                        "ui:widget": "datetime",
+                        "ui:options": {
+                            minimum: new Date(new Date().setHours(0, 0, 0, 0)).toISOString()
+                        }
                     },
                     submitButtonOptions: {
                         submitText: 'Update',
@@ -389,11 +395,17 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
     switch (updatedFieldKey) {
         case 'scheduleCallback':
             if (page.formData.scheduleCallback) {
-                // show and set minimum to now
-                page.uiSchema.callbackDateTime = { "ui:widget": "datetime" };
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                page.uiSchema.callbackDateTime = {
+                    "ui:widget": "datetime",
+                    "ui:options": {
+                        minimum: todayStart.toISOString()
+                    }
+                };
                 page.schema.properties.callbackDateTime = {
                     ...(page.schema.properties.callbackDateTime || { title: 'Callback time', type: 'string', format: 'date-time' }),
-                    minimum: new Date().toISOString()
+                    minimum: todayStart.toISOString()
                 };
                 // mark callback time as required so Save disables until provided
                 if (!Array.isArray(page.schema.required)) {
@@ -422,7 +434,28 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             }
             break;
         case 'callbackDateTime':
-            // if scheduling is enabled, enable Save only when time is set
+            if (page.formData.callbackDateTime) {
+                const selectedDate = new Date(page.formData.callbackDateTime);
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                if (selectedDate < todayStart) {
+                    page.formData.callbackDateTime = '';
+                }
+            }
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            if (page.uiSchema.callbackDateTime && page.uiSchema.callbackDateTime["ui:widget"] === "datetime") {
+                page.uiSchema.callbackDateTime = {
+                    "ui:widget": "datetime",
+                    "ui:options": {
+                        minimum: todayStart.toISOString()
+                    }
+                };
+            }
+            page.schema.properties.callbackDateTime = {
+                ...page.schema.properties.callbackDateTime,
+                minimum: todayStart.toISOString()
+            };
             page.uiSchema.submitButtonOptions = {
                 ...page.uiSchema.submitButtonOptions,
                 "ui:disabled": (page.formData.scheduleCallback === true) && !page.formData.callbackDateTime
