@@ -62,7 +62,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         // If not a direct number, but allow extension number logging, go ahead as well
         if (contactPhoneNumber.startsWith('+') || allowExtensionNumberLogging) {
             // query on 3rd party API to get the matched contact info and return
-            const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber: !contactPhoneNumber.startsWith('+'), isForceRefresh: true, isToTriggerContactMatch: false });
+            const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isFromManual: data.body.triggerFrom === 'manual', isExtensionNumber: !contactPhoneNumber.startsWith('+'), isForceRefresh: true, isToTriggerContactMatch: false });
             if (contactMatched) {
                 if (!matchedContacts[contactPhoneNumber]) {
                     matchedContacts[contactPhoneNumber] = [];
