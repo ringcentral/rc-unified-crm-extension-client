@@ -17,7 +17,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
         const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
         const rcAccountId = rcUserInfo?.rcAccountId ?? '';
         await axios.patch(`${manifest.serverUrl}/calldown/${rowId}?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`,
-            { lastCallAt: new Date().toISOString() });
+            {status:"called", lastCallAt: new Date().toISOString() });
         // Refresh Call-down list and pill (preserve current filter)
         // Get current filter from form data to preserve user's view
         const currentFilter = data.body?.page?.formData?.searchWithFilters?.filter ||

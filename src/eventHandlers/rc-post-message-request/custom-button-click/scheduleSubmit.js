@@ -45,6 +45,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 type: 'rc-adapter-trigger-contact-match',
                 phoneNumbers: [phone]
             }, '*');
+            
+            const { userSettings } = await chrome.storage.local.get('userSettings');
+            const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
+            document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: calldownPageRender }, '*');
+            document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: 'goBack' }, '*');
         } else {
             showNotification({ level: 'warning', message: 'Contact creation failed', ttl: 3000 });
         }

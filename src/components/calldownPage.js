@@ -165,20 +165,25 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
             const meta = whenText;
             const isCalled = (statusText || '').toLowerCase() === 'called';
             const completeIcon = isCalled ? 'read' : 'unread';
+            const actions = [
+                { id: 'calldownActionCall', title: 'Call', icon: 'phone' },
+                { id: 'calldownActionText', title: 'Text', icon: 'sms' },
+                { id: 'calldownActionOpen', title: 'View contact', icon: 'view' }
+            ];
+            if (!isCalled) {
+                actions.push({ id: 'calldownActionEdit', title: 'Edit', icon: 'edit' });
+            }
+            actions.push(
+                { id: 'calldownActionComplete', title: 'Mark as complete', icon: completeIcon },
+                { id: 'calldownActionRemove', title: 'Delete', icon: 'delete', color: 'danger.b03' }
+            );
             return {
                 const: i.id,
                 title: displayName,
                 description: i.phoneNumber ?? '',
                 authorName: statusText,
                 meta,
-                actions: [
-                    { id: 'calldownActionCall', title: 'Call', icon: 'phone' },
-                    { id: 'calldownActionText', title: 'Text', icon: 'sms' },
-                    { id: 'calldownActionOpen', title: 'View contact', icon: 'view' },
-                    { id: 'calldownActionEdit', title: 'Edit', icon: 'edit' },
-                    { id: 'calldownActionComplete', title: 'Mark as complete', icon: completeIcon },
-                    { id: 'calldownActionRemove', title: 'Delete', icon: 'delete', color: 'danger.b03' }
-                ],
+                actions,
                 additionalInfo: {
                     recordId: i.id,
                     contactId: i.contactId,
