@@ -33,8 +33,8 @@ function getSchedulePageRender({ phoneNumber, listOneOf, isDefaultNew, preselect
         callbackDateTime: { 
           type: 'string', 
           title: 'Schedule time', 
-          format: 'date-time', 
-          minimum: new Date().toISOString() 
+          format: 'date-time',
+          minimum: new Date(new Date().setHours(0, 0, 0, 0)).toISOString()
         },
         scheduleSubmit: { type: 'string', title: 'Schedule' },
       }
@@ -51,7 +51,12 @@ function getSchedulePageRender({ phoneNumber, listOneOf, isDefaultNew, preselect
       ...(contactTypes.length > 0 ? { 
         newContactType: isDefaultNew ? {} : { 'ui:widget': 'hidden' } 
       } : {}),
-      callbackDateTime: { 'ui:widget': 'datetime' },
+      callbackDateTime: { 
+        'ui:widget': 'datetime',
+        'ui:options': {
+          minimum: new Date(new Date().setHours(0, 0, 0, 0)).toISOString()
+        }
+      },
       scheduleSubmit: { 
         'ui:field': 'button', 
         'ui:variant': 'contained', 
