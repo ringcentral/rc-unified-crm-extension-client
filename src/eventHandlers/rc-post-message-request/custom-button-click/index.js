@@ -46,6 +46,8 @@ import selectPlatformHandler from './selectPlatform';
 import getErrorLogRecordPageNextStepButtonHandler from './getErrorLogRecordPageNextStepButton';
 import errorLogRecordPageStartButtonHandler from './errorLogRecordPageStartButton';
 import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
+import openProcessorListPageHandler from './processorListPage';
+import selectProcessorHandler from './selectProcessor';
 import generalHandler from './general';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
@@ -103,6 +105,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'feedbackPage':
             await feedbackPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'openProcessorListPage':
+            await openProcessorListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'openSupportPage':
             chrome.runtime.sendMessage({ type: "openPopupWindow", navigationPath: "/support" });
@@ -209,6 +214,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'logRecordSubmitButton':
             await logRecordSubmissionPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'selectProcessor':
+            await selectProcessorHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
             break;
         case 'callAndSMSLoggingSettingPage':
         case 'contactSettingPage':

@@ -5,7 +5,7 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
     // if there's no same developer, put it at the last of the array
     for (const platform of platformList) {
         let meta = '';
-        switch (platform.type) {
+        switch (platform.access) {
             case 'public':
                 meta = '';
                 break;
@@ -17,7 +17,7 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
                 break;
         }
         const newPlatform = {
-            const: `${platform.id}=${platform.type}`,
+            const: `${platform.id}=${platform.access}`,
             title: platform.displayName ?? platform.name,
             icon: platform.iconUrl ? platform.iconUrl : 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
             description: `by ${platform.developer.name}`,

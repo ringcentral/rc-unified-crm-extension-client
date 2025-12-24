@@ -7,21 +7,42 @@ let sessionManifest = null;
 
 async function getPlatformList() {
     const result = [];
-    const platformPublicListResponse = await axios.get(baseManifest.platformPublicListUrl);
+    const platformPublicListResponse = await axios.get(`${baseManifest.platformPublicListUrl}?type=connector`);
     for (const platform of platformPublicListResponse.data.connectors) {
-        platform.type = 'public';
+        platform.access = 'public';
         result.push(platform);
     }
     const rcInfo = await getRcInfo();
     const rcAccountId = rcInfo.value.cachedData.accountInfo.id;
-    const platformInternalListResponse = await axios.get(`${baseManifest.platformInternalListUrl}?accountId=${rcAccountId}`);
+    const platformInternalListResponse = await axios.get(`${baseManifest.platformInternalListUrl}?access=internal&type=connector&accountId=${rcAccountId}`);
     for (const platform of platformInternalListResponse.data.sharedConnectors) {
-        platform.type = 'shared';
+        platform.access = 'shared';
         result.push(platform);
     }
     for (const platform of platformInternalListResponse.data.privateConnectors) {
-        platform.type = 'private';
+        platform.access = 'private';
         result.push(platform);
+    }
+    return result;
+}
+
+async function getProcessorList() {
+    const result = [];
+    const processorPublicListResponse = await axios.get(`${baseManifest.platformPublicListUrl}?type=processor`);
+    for (const processor of processorPublicListResponse.data.connectors) {
+        processor.access = 'public';
+        result.push(processor);
+    }
+    const rcInfo = await getRcInfo();
+    const rcAccountId = rcInfo.value.cachedData.accountInfo.id;
+    const processorInternalListResponse = await axios.get(`${baseManifest.platformInternalListUrl}?access=internal&type=processor&accountId=${rcAccountId}`);
+    for (const processor of processorInternalListResponse.data.sharedConnectors) {
+        processor.access = 'shared';
+        result.push(processor);
+    }
+    for (const processor of processorInternalListResponse.data.privateConnectors) {
+        processor.access = 'private';
+        result.push(processor);
     }
     return result;
 }
@@ -131,6 +152,7 @@ function setValueByPath(obj, path, value) {
 
 exports.getManifest = getManifest;
 exports.getPlatformList = getPlatformList;
+exports.getProcessorList = getProcessorList;
 exports.saveManifest = saveManifest;
 exports.saveManifestUrl = saveManifestUrl;
 exports.refreshManifest = refreshManifest;
