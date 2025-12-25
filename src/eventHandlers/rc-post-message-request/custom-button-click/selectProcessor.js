@@ -2,6 +2,7 @@ import axios from 'axios';
 import baseManifest from '../../../manifest.json';
 import { getRcInfo } from '../../../lib/util';
 import { getProcessorConfigurePageRender } from '../../../components/processorConfigurePage';
+import { getUserSettingsOnline } from '../../../core/user';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -21,7 +22,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             processorManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedProcessorId}/manifest?access=internal&type=processor&accountId=${rcInfo.value.cachedData.accountInfo.id}`);
             break;
     }
-    const processorConfigurePageRender = getProcessorConfigurePageRender({ processor: processorManifestResponse.data?.platforms?.[selectedProcessor.name] });
+    const userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl });
+    const processorSetting = userSettings?.[`processor_${selectedProcessor.name}`];
+    const activated = processorSetting?.value?.activated ?? false;
+    const selectedLogTypes = processorSetting?.value?.supportedLogTypes ?? [];
+    const processorConfigurePageRender = getProcessorConfigurePageRender({ processor: processorManifestResponse.data?.platforms?.[selectedProcessor.name], activated, selectedLogTypes });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: processorConfigurePageRender

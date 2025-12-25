@@ -48,6 +48,7 @@ import errorLogRecordPageStartButtonHandler from './errorLogRecordPageStartButto
 import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
 import openProcessorListPageHandler from './processorListPage';
 import selectProcessorHandler from './selectProcessor';
+import processorConfigurePageSubmitHandler from './processorConfigurePageSubmit';
 import generalHandler from './general';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
@@ -217,6 +218,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'selectProcessor':
             await selectProcessorHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'processorConfigurePage':
+            if (data.body.button.type === 'submit') {
+                await processorConfigurePageSubmitHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            }
             break;
         case 'callAndSMSLoggingSettingPage':
         case 'contactSettingPage':
