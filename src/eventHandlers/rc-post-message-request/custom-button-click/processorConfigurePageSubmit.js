@@ -5,10 +5,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     const form = data.body.button.formData;
     const changedSettings = {
-        [`processor_${form.processorName}`]: {
+        [`processor_${form.processorId}`]: {
             value: {
+                name: form.processorName,
                 activated: form.activated,
-                supportedLogTypes: form.supportedLogTypes
+                supportedLogTypes: form.supportedLogTypes,
+                IsAsync: form.IsAsync,
+                phase: form.phase
             }
         }
     }

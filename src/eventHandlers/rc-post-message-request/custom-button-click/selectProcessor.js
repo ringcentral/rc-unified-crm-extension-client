@@ -23,10 +23,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             break;
     }
     const userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl });
-    const processorSetting = userSettings?.[`processor_${selectedProcessor.name}`];
+    const processorSetting = userSettings?.[`processor_${selectedProcessorId}`];
     const activated = processorSetting?.value?.activated ?? false;
     const selectedLogTypes = processorSetting?.value?.supportedLogTypes ?? [];
-    const processorConfigurePageRender = getProcessorConfigurePageRender({ processor: processorManifestResponse.data?.platforms?.[selectedProcessor.name], activated, selectedLogTypes });
+    const processorConfigurePageRender = getProcessorConfigurePageRender({ processorId: selectedProcessorId, processor: processorManifestResponse.data?.platforms?.[selectedProcessor.name], activated, selectedLogTypes });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: processorConfigurePageRender

@@ -1,4 +1,4 @@
-function getProcessorConfigurePageRender({ processor, activated, selectedLogTypes }) {
+function getProcessorConfigurePageRender({ processorId, processor, activated, selectedLogTypes }) {
     return {
         id: 'processorConfigurePage',
         title: 'Configure processor',
@@ -51,7 +51,10 @@ function getProcessorConfigurePageRender({ processor, activated, selectedLogType
         formData: {
             activated: activated ?? false,
             supportedLogTypes: selectedLogTypes ?? [],
-            processorName: processor.name
+            processorId,
+            processorName: processor.name,
+            IsAsync: processor.isAsync,
+            phase: processor.phase,
         }
     }
 }
