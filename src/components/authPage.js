@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 function getAuthPageRender({ manifest, platformName }) {
     const authPage = manifest.platforms[platformName].auth.apiKey.page;
     const pageTitle = authPage.title;
@@ -18,7 +20,7 @@ function getAuthPageRender({ manifest, platformName }) {
     }
     let uiSchema = {
         submitButtonOptions: { // optional if you don't want to show submit button
-            submitText: 'Connect',
+            submitText: t('common.buttons.connect'),
         },
         warning: {
             "ui:field": "admonition",

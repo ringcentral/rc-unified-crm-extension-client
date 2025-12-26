@@ -1,0 +1,384 @@
+{
+  "common": {
+    "buttons": {
+      "save": "Tallenna",
+      "cancel": "Peruuta",
+      "submit": "Lähetä",
+      "update": "Päivitä",
+      "connect": "Yhdistä",
+      "open": "Avaa",
+      "logout": "Kirjaudu ulos",
+      "select": "Valitse",
+      "schedule": "Ajasta"
+    },
+    "labels": {
+      "admin": "(Ylläpitäjä)",
+      "version": "Versio",
+      "author": "Tekijä",
+      "license": "Lisenssi",
+      "warning": "Varoitus",
+      "search": "Haku",
+      "filter": "Suodata",
+      "contact": "Yhteystieto",
+      "none": "Ei mitään",
+      "disabled": "Poistettu käytöstä",
+      "private": "Yksityinen",
+      "sharedWithYou": "Jaettu kanssasi",
+      "all": "Kaikki",
+      "value": "Arvo",
+      "customizableByUser": "Käyttäjän muokattavissa"
+    },
+    "status": {
+      "online": "Online",
+      "offline": "Offline"
+    }
+  },
+  "pages": {
+    "hostname": {
+      "setup": "Asetukset",
+      "select": "Valitse",
+      "inputHostname": "Syötä isäntänimi",
+      "next": "Seuraava",
+      "instructionTitle": "Noudata alla olevia ohjeita {platform}-tilin määrittämiseksi:",
+      "url": "{platform} URL",
+      "urlPlaceholder": "URL...",
+      "invalidUrl": "Virheellinen URL! Syötä se muodossa: \"{format}\""
+    },
+    "about": {
+      "title": "Tietoja",
+      "introduction": "RingCentral App Connect integroi täysin toimivan verkkopuhelimen tuettuihin CRM-alustoihin.",
+      "chromeExtension": "Chrome-laajennus",
+      "extensionAuthor": "Tekijä: RingCentral, Inc.",
+      "versionLabel": "Versio: {version}",
+      "eula": "Loppukäyttäjän lisenssisopimus",
+      "adapter": "Sovitin",
+      "adapterAuthor": "Tekijä: {author}",
+      "website": "Verkkosivusto",
+      "support": "Tuki"
+    },
+    "support": {
+      "title": "Tuki",
+      "documentation": "Dokumentaatio",
+      "releaseNotes": "Julkaisutiedot",
+      "getSupport": "Hanki tukea",
+      "writeReview": "Kirjoita arvostelu",
+      "communityForums": "Yhteisöfoorumit",
+      "serverStatus": "Palvelimen tila: {status}",
+      "versionLabel": "Versio: v{version}",
+      "sendErrorReport": "Lähetä virheraportti",
+      "clearLogConflicts": "Tyhjennä lokikonfliktit",
+      "factoryResetWarning": "Tehdasasetusten palautus katkaisee yhteyden sekä CRM- että RingCentral-tileihin ja kirjaa sinut ulos.",
+      "factoryReset": "Tehdasasetusten palautus"
+    },
+    "admin": {
+      "title": "Ylläpitäjä",
+      "managedSettings": "Hallitut asetukset",
+      "serverSideLogging": "Palvelinpuolen lokitus (Beta)"
+    },
+    "managedSettings": {
+      "title": "Hallitut asetukset",
+      "general": "Yleinen",
+      "googleSheetsConfig": "Google Sheets -määritys",
+      "activityLogging": "Aktiviteettilokitus",
+      "callPop": "Puhelun ponnahdusikkuna",
+      "advancedFeatures": "Edistyneet ominaisuudet",
+      "customSettings": "Mukautetut asetukset"
+    },
+    "generalSettings": {
+      "title": "Yleinen",
+      "appearance": "Ulkoasu",
+      "enabledDomains": "Käytössä olevat verkkotunnukset"
+    },
+    "platformSelection": {
+      "title": "Valitse alusta",
+      "searchPlaceholder": "Hae suodattimilla..."
+    },
+    "log": {
+      "saveTo": "Tallenna kohteeseen {platform}",
+      "editLog": "Muokkaa lokia",
+      "activityTitle": "Aktiviteetin otsikko",
+      "note": "Muistiinpano",
+      "scheduleCallback": "Ajasta takaisinsoitto",
+      "callbackTime": "Takaisinsoittoaika",
+      "newContactName": "Uuden yhteystiedon nimi",
+      "contactType": "Yhteystietotyyppi",
+      "searchContacts": "Hae yhteystietoja",
+      "multipleContactsWarning": "Useita yhteystietoja löytyi. Valitse yhteystieto, johon tämä aktiviteetti liitetään.",
+      "noContactWarning": "Yhteystietoa ei löytynyt. Syötä nimi luodaksesi väliaikaisen yhteystiedon.",
+      "inboundCallFrom": "Saapuva {type} lähettäjältä {name}",
+      "outboundCallTo": "Lähtevä {type} vastaanottajalle {name}",
+      "enterTitle": "Syötä otsikko...",
+      "enterNote": "Syötä muistiinpano...",
+      "enterName": "Syötä nimi...",
+      "addToCalldownList": "Lisää tämä yhteystieto soittolistaan"
+    },
+    "unloggedCalls": {
+      "title": "Lokittamattomat puhelut"
+    },
+    "feedback": {
+      "title": "Palaute"
+    },
+    "reports": {
+      "title": "Raportit",
+      "userStats": "Käyttäjätilastot",
+      "companyStats": "Yritystilastot"
+    },
+    "schedule": {
+      "title": "Lisää soittolistaan",
+      "phoneNumber": "Puhelinnumero",
+      "scheduleTime": "Ajoitettu aika"
+    },
+    "calldown": {
+      "title": "Soittolista",
+      "contacts": "Yhteystiedot",
+      "filterByName": "Suodata nimen mukaan",
+      "all": "Kaikki",
+      "notCalled": "Ei soitettu",
+      "called": "Soitettu",
+      "scheduled": "Ajoitettu",
+      "call": "Soita",
+      "text": "Viesti",
+      "viewContact": "Näytä yhteystieto",
+      "edit": "Muokkaa",
+      "markComplete": "Merkitse valmiiksi",
+      "delete": "Poista"
+    },
+    "developerSettings": {
+      "title": "Kehittäjäasetukset",
+      "clearPlatformInfoWarning": "Tämä tyhjentää nykyiset CRM-alustatiedot uudelleenalustusta varten uudella CRM-alustalla.",
+      "clearPlatformInfo": "Tyhjennä alustatiedot",
+      "checkInterfaceImplementations": "Tarkista rajapintatoteutukset"
+    },
+    "multiContactPrompt": {
+      "title": "Napsauta yhteystietoa avataksesi",
+      "contacts": "Yhteystiedot"
+    }
+  },
+  "settings": {
+    "preconfigure": {
+      "noCrmSelected": "CRM:ää ei valittu"
+    },
+    "auth": {
+      "authorizedTitle": "Kirjaudu ulos",
+      "unauthorizedTitle": "Yhdistä",
+      "developedBy": "Kehittäjä: {author}"
+    },
+    "buttons": {
+      "callLater": "Soita myöhemmin"
+    },
+    "logging": {
+      "groupName": "Aktiviteettilokitus",
+      "autoLogCall": "Kirjaa puhelut automaattisesti",
+      "autoLogCallDesc": "Kirjaa puhelut automaattisesti, kun ne päättyvät tässä sovelluksessa",
+      "autoLogSMS": "Kirjaa tekstiviestikeskustelut automaattisesti",
+      "autoLogSMSDesc": "Kirjaa tekstiviestit automaattisesti, kun ne lähetetään tai vastaanotetaan tässä sovelluksessa",
+      "autoLogVoicemail": "Kirjaa vastaajaviestit automaattisesti",
+      "autoLogVoicemailDesc": "Kirjaa vastaajaviestit automaattisesti, kun ne vastaanotetaan tässä sovelluksessa",
+      "autoLogInboundFax": "Kirjaa saapuvat faksit automaattisesti",
+      "autoLogInboundFaxDesc": "Kirjaa saapuvat faksit automaattisesti, kun ne vastaanotetaan tässä sovelluksessa",
+      "autoLogOutboundFax": "Kirjaa lähtevät faksit automaattisesti",
+      "autoLogOutboundFaxDesc": "Kirjaa lähtevät faksit automaattisesti, kun ne lähetetään tässä sovelluksessa",
+      "retroCallLogSync": "Takautuva puhelulokin synkronointi",
+      "retroCallLogSyncDesc": "Skannaa säännöllisesti ja kirjaa puuttuvat aktiviteetit",
+      "disableRetroCallLogSync": "Poista takautuva puhelulokin synkronointi käytöstä",
+      "oneTimeLog": "Kertaluonteinen puhelulokitus",
+      "oneTimeLogDesc": "Viivästyttää lokitusta, kunnes täydelliset puhelutiedot ovat saatavilla",
+      "enableOneTimeLog": "Ota kertaluonteinen puhelulokitus käyttöön",
+      "popupLogPageAfterCall": "(Manuaalinen loki) Avaa lokitussivu puhelun jälkeen",
+      "popupLogPageAfterCallDesc": "Avaa lokituslomake automaattisesti jokaisen puhelun jälkeen",
+      "popupLogPageAfterSMS": "(Manuaalinen loki) Avaa tekstiviestilokitussivu viestin jälkeen",
+      "popupLogPageAfterSMSDesc": "Avaa lokituslomake automaattisesti jokaisen viestin jälkeen"
+    },
+    "callLogDetails": {
+      "groupName": "Puhelulokin tiedot",
+      "agentNotes": "Agentin syöttämät muistiinpanot",
+      "agentNotesDesc": "Kirjaa itse manuaalisesti syöttämäsi muistiinpanot",
+      "agentNotesDescAdmin": "Kirjaa agentin manuaalisesti syöttämät muistiinpanot",
+      "callSessionId": "Puheluistunnon ID",
+      "callSessionIdDesc": "Kirjaa RingCentral-puheluistunnon ID",
+      "rcUserName": "RingCentral-käyttäjänimi",
+      "rcUserNameDesc": "Kirjaa RingCentral-käyttäjänimi",
+      "rcNumber": "RingCentral-puhelinnumero",
+      "rcNumberDesc": "Kirjaa RingCentral-puhelinnumero",
+      "callSubject": "Puhelun aihe",
+      "callSubjectDesc": "Kirjaa lyhyt lause puhelun tiivistämiseksi, esim. 'Saapuva puhelu...'",
+      "contactNumber": "Yhteystiedon puhelinnumero",
+      "contactNumberDesc": "Kirjaa toisen osapuolen yhteystiedot",
+      "dateTime": "Päivämäärä ja aika",
+      "dateTimeDesc": "Kirjaa puhelun tarkat alkamis- ja päättymispäivämäärät/-ajat",
+      "dateFormat": "Päivämäärämuoto",
+      "dateFormatDesc": "Puhelulokin päivämäärän ja ajan muoto",
+      "callDuration": "Puhelun kesto",
+      "callDurationDesc": "Kirjaa puhelun kesto minuutteina ja sekunteina",
+      "callResult": "Puhelun tulos",
+      "callResultDesc": "Kirjaa puhelun tulos, esim. Puhelu yhdistetty",
+      "recordingLink": "Linkki tallenteeseen",
+      "recordingLinkDesc": "Tarjoa linkki puhelun tallenteeseen, jos sellainen on",
+      "smartSummary": "Älykäs yhteenveto",
+      "smartSummaryDesc": "Kirjaa tekoälyn luoma puhelun yhteenveto, jos sellainen on",
+      "transcript": "Puhelun litteraatio",
+      "transcriptDesc": "Kirjaa tekoälyn luoma puhelun litteraatio, jos sellainen on",
+      "aiAssistantRequired": "AI-avustaja vaaditaan",
+      "ringSenseTranscript": "RingSense-litteraatio",
+      "ringSenseTranscriptDesc": "[RingSense-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
+      "ringSenseCallScore": "RingSense-puhelupisteet",
+      "ringSenseCallScoreDesc": "[RingSense-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
+      "ringSenseSummary": "RingSense-yhteenveto",
+      "ringSenseSummaryDesc": "[RingSense-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
+      "ringSenseBulletedSummary": "RingSense-luetteloyhteenveto",
+      "ringSenseBulletedSummaryDesc": "[RingSense-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
+      "ringSenseRecordingLink": "RingSense-tallennelinkki",
+      "ringSenseRecordingLinkDesc": "[RingSense-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
+      "callJourney": "Puhelupolku",
+      "callJourneyDesc": "Vain palvelinpuolen lokitus.",
+      "dateFormatGlobal24H": "Globaali - 24 h (esim. 2024-01-15 14:30:45)",
+      "dateFormatGlobal12H": "Globaali - 12 h (esim. 2024-01-15 02:30:45 PM)",
+      "dateFormatUS12H": "US - 12 h (esim. 01/15/2024 02:30:45 PM)",
+      "dateFormatUS24H": "US - 24 h (esim. 01/15/2024 14:30:45)",
+      "dateFormatEU24H": "EU - 24 h (esim. 15/01/2024 14:30:45)",
+      "dateFormatEU12H": "EU - 12 h (esim. 15/01/2024 02:30:45 PM)"
+    },
+    "autoLogPreferences": {
+      "groupName": "Automaattisen lokituksen asetukset",
+      "groupDesc": "Määritä automaattisten lokitusskenaarioiden asetukset",
+      "unknownContact": "Tuntematon yhteystieto",
+      "unknownContactHelper": "Mitä tehdä, kun puhelinnumero ei vastaa mitään yhteystietoa",
+      "skipLogging": "Ohita lokitus",
+      "createNewPlaceholder": "Luo uusi väliaikainen yhteystieto",
+      "newContactType": "Uuden yhteystiedon tyyppi (pätee uutta yhteystietoa luotaessa)",
+      "newContactTypeHelper": "Väliaikaista yhteystietoa luotaessa, mikä yhteystietotyyppi sen tulisi olla",
+      "newContactNamePrefix": "Uuden yhteystiedon nimen etuliite (pätee uutta yhteystietoa luotaessa)",
+      "newContactNamePrefixHelper": "Nimi sisältää soittajan tunnuksen (jos saatavilla) + puhelinnumeron",
+      "multipleContacts": "Useita yhteystietoja",
+      "multipleContactsHelper": "Mitä tehdä, kun useita yhteystietoja vastaa puhelinnumeroa",
+      "firstAlphabetical": "Ensimmäinen aakkosjärjestyksessä",
+      "mostRecentActivity": "Viimeisin aktiviteetti"
+    },
+    "appearance": {
+      "groupName": "Ulkoasu",
+      "groupDesc": "Muokkaa näyttö- ja teema-asetuksia",
+      "customizeTabs": "Mukauta välilehtiä",
+      "customizeTabsDesc": "Hallitse, mitkä välilehdet näkyvät laajennuksen käyttöliittymässä",
+      "showChatTab": "Näytä chat-välilehti",
+      "showMeetingsTab": "Näytä kokoukset-välilehti",
+      "showTextTab": "Näytä viestit-välilehti",
+      "showFaxTab": "Näytä faksi-välilehti",
+      "showVoicemailTab": "Näytä vastaaja-välilehti",
+      "showRecordingsTab": "Näytä tallenteet-välilehti",
+      "showContactsTab": "Näytä yhteystiedot-välilehti",
+      "showUserReportTab": "Näytä käyttäjäraportti-välilehti",
+      "showCalldownTab": "Näytä soittolista-välilehti",
+      "notificationLevel": "Ilmoitustaso",
+      "notificationLevelDesc": "Valitse laajennuksessa näytettävä ilmoitustaso.",
+      "notificationLevelSelectDesc": "Valitse näytettävät ilmoitustyypit",
+      "success": "Onnistui",
+      "warning": "Varoitus",
+      "error": "Virhe",
+      "widgetSettings": "Widget-asetukset",
+      "widgetSettingsDesc": "Muokkaa widget-asetuksia",
+      "quickAccessButtonSize": "Pikakäyttöpainikkeen koko",
+      "small": "Pieni",
+      "medium": "Keskikokoinen",
+      "large": "Suuri",
+      "extraLarge": "Erittäin suuri",
+      "phoneNumberFormat": "Puhelinnumeromuoto"
+    },
+    "callPop": {
+      "groupName": "Puhelun ponnahdusikkuna",
+      "incomingCallPop": "Saapuvan puhelun ponnahdusikkuna",
+      "incomingCallPopHelper": "Valitse, milloin saapuvien puheluiden ponnahdusikkuna laukaistaan.",
+      "outgoingCallPop": "Lähtevän puhelun ponnahdusikkuna",
+      "outgoingCallPopHelper": "Valitse, milloin lähtevien puheluiden ponnahdusikkuna laukaistaan.",
+      "onFirstRing": "Ensimmäisellä soitolla",
+      "onAnswer": "Vastaamishetkellä",
+      "multiContactBehavior": "Usean yhteystiedon käyttäytyminen",
+      "multiContactBehaviorHelper": "Valitse, mitä tehdä, kun useita yhteystietoja vastaa puhelinnumeroa.",
+      "openAllMatches": "Avaa kaikki osumat",
+      "promptToSelect": "Pyydä valitsemaan",
+      "allowExtensionLogging": "Salli alanumerolokitus",
+      "managedByAdmin": "Tätä asetusta hallinnoi ylläpitäjä",
+      "contactCreatedCallPop": "Yhteystieto luotu -ponnahdusikkuna",
+      "contactCreatedCallPopDesc": "Avaa yhteystieto heti luomisen jälkeen",
+      "openContactFromIncoming": "Avaa yhteystieto saapuvasta puhelusta",
+      "openContactFromOutgoing": "Avaa yhteystieto lähtevästä puhelusta",
+      "openContactAfterCreating": "Avaa yhteystieto luomisen jälkeen",
+      "overridingNumberFormat": "Ohittava numeromuoto",
+      "overridingNumberFormatWarning": "Syötä ohittava puhelinnumeromuoto: (käytä # merkitsemään numeroa, esim. (###) ###-###)"
+    },
+    "enabledDomains": {
+      "groupName": "Käytössä olevat verkkotunnukset",
+      "groupDesc": "Hallitse URL-osoitteita, joille App Connect on käytössä",
+      "clickToDialWarning": "Click-to-dial on ponnahduswidget, joka näytetään, kun käyttäjä vie hiiren puhelinnumeron päälle.",
+      "clickToDialMode": "Click-to-dial-käyttöönottotila",
+      "crmOnly": "Ota käyttöön vain yhdistetyssä CRM:ssä",
+      "whitelist": "Estä oletusarvoisesti (hallitse sitten sallittavien sivustojen luetteloa)",
+      "blacklist": "Salli oletusarvoisesti (hallitse sitten estettävien sivustojen luetteloa)",
+      "clickToDialUrls": "Click-to-dial URL:t",
+      "clickToDialUrlsHelper": "Syötä sallittujen sivujen URL-osoitteet. Erota useita URL-osoitteita pilkuilla. Käytä * jokerimerkkina.",
+      "quickAccessWarning": "Pikakäyttöpainike näytetään näytön oikeassa alakulmassa.",
+      "quickAccessMode": "Pikakäyttöpainikkeen käyttöönottotila",
+      "quickAccessUrls": "Pikakäyttöpainikkeen URL:t"
+    },
+    "advanced": {
+      "groupName": "Edistyneet ominaisuudet",
+      "developerMode": "Kehittäjätila",
+      "developerModeDesc": "Ota kehittäjätila käyttöön päästäksesi kehittäjäasetuksiin.",
+      "autoOpenExtension": "Avaa laajennus automaattisesti",
+      "autoOpenExtensionDesc": "Laajennus avataan, kun CRM-sivu ladataan."
+    },
+    "numberFormatter": {
+      "title": "Numeromuotoilija",
+      "phoneNumberAlternatives": "Vaihtoehtoiset puhelinnumeromuodot",
+      "info": "Syötä ohittava puhelinnumeromuoto: (käytä # merkitsemään numeroa, esim. (###) ###-###) [Miten se toimii](https://appconnect.labs.ringcentral.com/users/phone-number-formats/#how-it-works)",
+      "format1": "Muoto 1",
+      "format2": "Muoto 2",
+      "format3": "Muoto 3"
+    },
+    "googleSheets": {
+      "config": "Google Sheets -määritys"
+    }
+  },
+  "notifications": {
+    "success": {
+      "callLogAdded": "Puheluloki lisätty",
+      "messageLogAdded": "Viestiloki lisätty",
+      "callLogUpdated": "Puheluloki päivitetty",
+      "authorized": "Valtuutus onnistui.",
+      "unauthorized": "Uloskirjautuminen onnistui.",
+      "openingContactPage": "Yritetään löytää ja avata yhteystietosivu..."
+    },
+    "warning": {
+      "callLogFailed": "Puhelulokin tallennus epäonnistui",
+      "callLogUpdateFailed": "Puhelulokin päivitys epäonnistui",
+      "connectToCrm": "Siirry asetuksiin ja yhdistä CRM-alustaan",
+      "apiKeyFailed": "API-avaimen rekisteröinti epäonnistui.",
+      "noContactFound": "Yhteystietoa ei löytynyt"
+    },
+    "error": {
+      "wrongFormat": "Väärä muoto: {field}"
+    }
+  },
+  "conflicts": {
+    "multipleContacts": "Useita yhteystietoja",
+    "noMatchedContact": "Vastaavaa yhteystietoa ei ole",
+    "multipleMatchedContacts": "Useita vastaavia yhteystietoja",
+    "multipleAssociations": "Useita liitettyjä kohteita \"{associations}\"."
+  },
+  "dateFormats": {
+    "general12H": "2024-01-15 02:30:45 PM - Yleinen 12 h",
+    "general24H": "2024-01-15 14:30:45 - Yleinen 24 h",
+    "us12H": "01/15/2024 02:30:45 PM - US 12 h",
+    "us24H": "01/15/2024 14:30:45 - US 24 h",
+    "eu12H": "15/01/2024 02:30:45 PM - EU 12 h",
+    "eu24H": "15/01/2024 14:30:45 - EU 24 h"
+  },
+  "misc": {
+    "clickToDialCollision": "RingCentral Google Chrome -laajennus havaittu. Voit halutessasi mukauttaa click-to-dial-asetuksiasi haluamallesi toiminnalle.",
+    "clickToDialCollisionTitle": "Click-to-dial ei ehkä toimi",
+    "configure": "Määritä",
+    "pipedriveStep2": "(2/3) Kirjaudu laajennukseen RingCentral-tililläsi. Jos mitään ei tapahdu, päivitä tämä sivu ja odota muutama sekunti.",
+    "pipedriveStep3": "(3/3) Asennus valmis. Voit nyt sulkea tämän sivun.",
+    "setup": "Asetukset"
+  }
+}
+

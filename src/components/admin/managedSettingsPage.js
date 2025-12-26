@@ -1,7 +1,9 @@
+import { t } from '../../i18n';
+
 function getManagedSettingsPageRender({ crmManifest }) {
     let page = {
         id: 'managedSettings',
-        title: 'Managed settings',
+        title: t('pages.managedSettings.title'),
         type: 'page',
         schema: {
             type: 'object',
@@ -11,23 +13,23 @@ function getManagedSettingsPageRender({ crmManifest }) {
                     type: "string",
                     oneOf: [{
                         const: "generalSettings",
-                        title: "General"
+                        title: t('pages.managedSettings.general')
                     },
                         ...(crmManifest.name === 'googleSheets' ? [{
                             const: "googleSheetsAdminConfig",
-                            title: "Google Sheets Configuration",
+                            title: t('pages.managedSettings.googleSheetsConfig'),
                         }] : []),
                     {
                         const: "callAndSMSLogging",
-                        title: "Activity logging"
+                        title: t('pages.managedSettings.activityLogging')
                     },
                     {
                         const: "contactSetting",
-                        title: "Call-pop"
+                        title: t('pages.managedSettings.callPop')
                     },
                     {
                         const: "advancedFeaturesSetting",
-                        title: "Advanced features"
+                        title: t('pages.managedSettings.advancedFeatures')
                     }]
                 }
             }
@@ -43,7 +45,7 @@ function getManagedSettingsPageRender({ crmManifest }) {
     if (crmManifest?.settings) {
         page.schema.properties.section.oneOf.push({
             const: "customSettings",
-            title: "Custom settings"
+            title: t('pages.managedSettings.customSettings')
         });
     }
     return page;

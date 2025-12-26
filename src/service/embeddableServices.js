@@ -2,15 +2,16 @@ import userCore from '../core/user';
 import authCore from '../core/auth';
 import { getPlatformInfo } from './platformService';
 import { getManifest } from './manifestService';
+import { t } from '../i18n';
 
 async function preconfigureServiceManifest() {
     const manifest = await getManifest();
     const services = {
         name: 'placeholder',
-        displayName: 'No CRM selected',
+        displayName: t('settings.preconfigure.noCrmSelected'),
         authorizationPath: '/platform-selection',
-        authorizedTitle: 'Logout',
-        unauthorizedTitle: 'Select',
+        authorizedTitle: t('settings.auth.authorizedTitle'),
+        unauthorizedTitle: t('common.buttons.select'),
         showAuthRedDot: true,
         authorized: false,
         customizedPageInputChangedEventPath: '/customizedPage/inputChanged',
@@ -51,22 +52,22 @@ async function getServiceManifest() {
         buttonEventPath: '/custom-button-click',
         // Direct button registration (older/newer builds may read this)
         buttons: [
-            { id: 'callLater', type: 'callAction', label: 'Call later', icon: 'calendar' },
-            { id: 'callLaterInMessage', type: 'messageAction', label: 'Call later', icon: 'calendar' },
-            { id: 'callLaterInContact', type: 'contactAction', label: 'Call later', icon: 'calendar' }
+            { id: 'callLater', type: 'callAction', label: t('settings.buttons.callLater'), icon: 'calendar' },
+            { id: 'callLaterInMessage', type: 'messageAction', label: t('settings.buttons.callLater'), icon: 'calendar' },
+            { id: 'callLaterInContact', type: 'contactAction', label: t('settings.buttons.callLater'), icon: 'calendar' }
         ],
         contactMatchTtl: 7 * 24 * 60 * 60 * 1000, // contact match cache time in seconds, set as 7 days
         contactNoMatchTtl: 7 * 24 * 60 * 60 * 1000, // contact no match cache time in seconds, default is 5 minutes, from v1.10.2
 
         // show auth/unauth button in ringcentral widgets
         authorizationPath: '/authorize',
-        authorizedTitle: 'Logout',
-        unauthorizedTitle: 'Connect',
+        authorizedTitle: t('settings.auth.authorizedTitle'),
+        unauthorizedTitle: t('settings.auth.unauthorizedTitle'),
         authorizationLogo: platform?.logoUrl ?? '',
         showAuthRedDot: true,
         authorized: crmAuthed,
-        authorizedAccount: `${crmUserInfo?.name ?? ''} ${isAdmin ? '(Admin)' : ''}`,
-        info: `Developed by ${manifest?.author?.name ?? 'Unknown'}`,
+        authorizedAccount: `${crmUserInfo?.name ?? ''} ${isAdmin ? t('common.labels.admin') : ''}`,
+        info: t('settings.auth.developedBy', { author: manifest?.author?.name ?? 'Unknown' }),
 
         // Enable call log sync feature
         callLoggerPath: '/callLogger',
@@ -77,7 +78,7 @@ async function getServiceManifest() {
         messageLoggerPath: '/messageLogger',
         messagesLogPageInputChangedEventPath: '/messageLogger/inputChanged',
         messageLogEntityMatcherPath: '/messageLogger/match',
-        messageLoggerAutoSettingLabel: 'Log SMS conversations automatically',
+        messageLoggerAutoSettingLabel: t('settings.logging.autoLogSMS'),
         messageLoggerAutoSettingReadOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
         messageLoggerAutoSettingReadOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
         messageLoggerAutoSettingReadOnlyValue: userCore.getAutoLogSMSSetting(userSettings).value,
@@ -90,13 +91,13 @@ async function getServiceManifest() {
             {
                 id: 'logging',
                 type: 'group',
-                name: 'Activity logging',
+                name: t('settings.logging.groupName'),
                 items: [
                     {
                         id: 'autoLogCall',
                         type: 'boolean',
-                        name: 'Log phone calls automatically',
-                        description: 'Automatically log calls when they end in this app',
+                        name: t('settings.logging.autoLogCall'),
+                        description: t('settings.logging.autoLogCallDesc'),
                         readOnly: userCore.getAutoLogCallSetting(userSettings, isAdmin).readOnly,
                         readOnlyReason: userCore.getAutoLogCallSetting(userSettings, isAdmin).warning ?? userCore.getAutoLogCallSetting(userSettings, isAdmin).readOnlyReason,
                         value: userCore.getAutoLogCallSetting(userSettings, isAdmin).value,
@@ -104,8 +105,8 @@ async function getServiceManifest() {
                     {
                         id: 'autoLogSMS',
                         type: 'boolean',
-                        name: 'Log SMS conversations automatically',
-                        description: 'Automatically log SMS when they are sent or received in this app',
+                        name: t('settings.logging.autoLogSMS'),
+                        description: t('settings.logging.autoLogSMSDesc'),
                         readOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
                         value: userCore.getAutoLogSMSSetting(userSettings).value,
@@ -113,8 +114,8 @@ async function getServiceManifest() {
                     {
                         id: 'autoLogVoicemail',
                         type: 'boolean',
-                        name: 'Log voicemail messages automatically',
-                        description: 'Automatically log voicemail messages when they are received in this app',
+                        name: t('settings.logging.autoLogVoicemail'),
+                        description: t('settings.logging.autoLogVoicemailDesc'),
                         readOnly: userCore.getAutoLogVoicemailSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoLogVoicemailSetting(userSettings).readOnlyReason,
                         value: userCore.getAutoLogVoicemailSetting(userSettings).value,
@@ -122,8 +123,8 @@ async function getServiceManifest() {
                     {
                         id: 'autoLogInboundFax',
                         type: 'boolean',
-                        name: 'Log inbound faxes automatically',
-                        description: 'Automatically log inbound faxes when they are received in this app',
+                        name: t('settings.logging.autoLogInboundFax'),
+                        description: t('settings.logging.autoLogInboundFaxDesc'),
                         readOnly: userCore.getAutoLogInboundFaxSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoLogInboundFaxSetting(userSettings).readOnlyReason,
                         value: userCore.getAutoLogInboundFaxSetting(userSettings).value,
@@ -131,8 +132,8 @@ async function getServiceManifest() {
                     {
                         id: 'autoLogOutboundFax',
                         type: 'boolean',
-                        name: 'Log outbound faxes automatically',
-                        description: 'Automatically log outbound faxes when they are sent in this app',
+                        name: t('settings.logging.autoLogOutboundFax'),
+                        description: t('settings.logging.autoLogOutboundFaxDesc'),
                         readOnly: userCore.getAutoLogOutboundFaxSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoLogOutboundFaxSetting(userSettings).readOnlyReason,
                         value: userCore.getAutoLogOutboundFaxSetting(userSettings).value,
@@ -140,8 +141,8 @@ async function getServiceManifest() {
                     {
                         id: "enableRetroCallLogSync",
                         type: "boolean",
-                        name: 'Retroactive call log sync',
-                        description: 'Periodically scans for and logs any missed activity',
+                        name: t('settings.logging.retroCallLogSync'),
+                        description: t('settings.logging.retroCallLogSyncDesc'),
                         readOnly: userCore.getEnableRetroCallLogSync(userSettings).readOnly,
                         readOnlyReason: userCore.getEnableRetroCallLogSync(userSettings).readOnlyReason,
                         value: userCore.getEnableRetroCallLogSync(userSettings).value
@@ -149,8 +150,8 @@ async function getServiceManifest() {
                     {
                         id: "oneTimeLog",
                         type: "boolean",
-                        name: 'One-time call logging',
-                        description: 'Delays logging until full call details are available',
+                        name: t('settings.logging.oneTimeLog'),
+                        description: t('settings.logging.oneTimeLogDesc'),
                         readOnly: userCore.getOneTimeLogSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getOneTimeLogSetting(userSettings).readOnlyReason,
                         value: userCore.getOneTimeLogSetting(userSettings).value
@@ -158,8 +159,8 @@ async function getServiceManifest() {
                     {
                         id: "popupLogPageAfterCall",
                         type: "boolean",
-                        name: '(Manual log) Open call logging page after call',
-                        description: 'Automatically open the logging form after each call',
+                        name: t('settings.logging.popupLogPageAfterCall'),
+                        description: t('settings.logging.popupLogPageAfterCallDesc'),
                         readOnly: userCore.getCallPopSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getCallPopSetting(userSettings).readOnlyReason,
                         value: userCore.getCallPopSetting(userSettings).value
@@ -167,8 +168,8 @@ async function getServiceManifest() {
                     {
                         id: "popupLogPageAfterSMS",
                         type: "boolean",
-                        name: '(Manual log) Open SMS logging page after message',
-                        description: 'Automatically open the logging form after each message',
+                        name: t('settings.logging.popupLogPageAfterSMS'),
+                        description: t('settings.logging.popupLogPageAfterSMSDesc'),
                         readOnly: userCore.getSMSPopSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason,
                         value: userCore.getSMSPopSetting(userSettings).value
@@ -178,20 +179,20 @@ async function getServiceManifest() {
             {
                 id: 'appearance',
                 type: 'group',
-                name: 'Appearance',
-                description: 'Modify the display and theme preferences',
+                name: t('settings.appearance.groupName'),
+                description: t('settings.appearance.groupDesc'),
                 items: [
                     {
                         id: 'tabs',
                         type: 'section',
-                        name: 'Customize tabs',
+                        name: t('settings.appearance.customizeTabs'),
                         groupId: 'appearance',
-                        description: 'Control which tabs are visible in the extension interface',
+                        description: t('settings.appearance.customizeTabsDesc'),
                         items: [
                             {
                                 id: 'showChatTab',
                                 type: 'boolean',
-                                name: 'Show chat tab',
+                                name: t('settings.appearance.showChatTab'),
                                 value: userCore.getShowChatTabSetting(userSettings).value,
                                 readOnly: userCore.getShowChatTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowChatTabSetting(userSettings).readOnlyReason
@@ -199,7 +200,7 @@ async function getServiceManifest() {
                             {
                                 id: 'showMeetingsTab',
                                 type: 'boolean',
-                                name: 'Show meetings tab',
+                                name: t('settings.appearance.showMeetingsTab'),
                                 value: userCore.getShowMeetingsTabSetting(userSettings).value,
                                 readOnly: userCore.getShowMeetingsTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowMeetingsTabSetting(userSettings).readOnlyReason
@@ -207,7 +208,7 @@ async function getServiceManifest() {
                             {
                                 id: 'showTextTab',
                                 type: 'boolean',
-                                name: 'Show text tab',
+                                name: t('settings.appearance.showTextTab'),
                                 value: userCore.getShowTextTabSetting(userSettings).value,
                                 readOnly: userCore.getShowTextTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowTextTabSetting(userSettings).readOnlyReason
@@ -215,7 +216,7 @@ async function getServiceManifest() {
                             {
                                 id: 'showFaxTab',
                                 type: 'boolean',
-                                name: 'Show fax tab',
+                                name: t('settings.appearance.showFaxTab'),
                                 value: userCore.getShowFaxTabSetting(userSettings).value,
                                 readOnly: userCore.getShowFaxTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowFaxTabSetting(userSettings).readOnlyReason
@@ -223,7 +224,7 @@ async function getServiceManifest() {
                             {
                                 id: 'showVoicemailTab',
                                 type: 'boolean',
-                                name: 'Show voicemail tab',
+                                name: t('settings.appearance.showVoicemailTab'),
                                 value: userCore.getShowVoicemailTabSetting(userSettings).value,
                                 readOnly: userCore.getShowVoicemailTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowVoicemailTabSetting(userSettings).readOnlyReason
@@ -231,7 +232,7 @@ async function getServiceManifest() {
                             {
                                 id: 'showRecordingsTab',
                                 type: 'boolean',
-                                name: 'Show recordings tab',
+                                name: t('settings.appearance.showRecordingsTab'),
                                 value: userCore.getShowRecordingsTabSetting(userSettings).value,
                                 readOnly: userCore.getShowRecordingsTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowRecordingsTabSetting(userSettings).readOnlyReason
@@ -239,7 +240,7 @@ async function getServiceManifest() {
                             {
                                 id: 'showContactsTab',
                                 type: 'boolean',
-                                name: 'Show contacts tab',
+                                name: t('settings.appearance.showContactsTab'),
                                 value: userCore.getShowContactsTabSetting(userSettings).value,
                                 readOnly: userCore.getShowContactsTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowContactsTabSetting(userSettings).readOnlyReason
@@ -247,7 +248,7 @@ async function getServiceManifest() {
                             {
                                 id: 'showUserReportTab',
                                 type: 'boolean',
-                                name: 'Show user report tab',
+                                name: t('settings.appearance.showUserReportTab'),
                                 value: userCore.getShowUserReportTabSetting(userSettings).value,
                                 readOnly: userCore.getShowUserReportTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowUserReportTabSetting(userSettings).readOnlyReason
@@ -255,7 +256,7 @@ async function getServiceManifest() {
                             {
                                 id: 'showCalldownTab',
                                 type: 'boolean',
-                                name: 'Show Call-down tab',
+                                name: t('settings.appearance.showCalldownTab'),
                                 value: userCore.getShowCalldownTabSetting(userSettings).value,
                                 readOnly: userCore.getShowCalldownTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowCalldownTabSetting(userSettings).readOnlyReason
@@ -265,29 +266,29 @@ async function getServiceManifest() {
                     {
                         id: 'notificationLevel',
                         type: 'section',
-                        name: 'Notification level',
+                        name: t('settings.appearance.notificationLevel'),
                         groupId: 'appearance',
-                        description: 'Choose which types of notifications to display',
+                        description: t('settings.appearance.notificationLevelSelectDesc'),
                         items: [
                             {
                                 id: 'notificationLevelSetting',
                                 type: 'option',
-                                name: 'Notification level',
-                                description: 'Select the notification level to be displayed in the extension.',
+                                name: t('settings.appearance.notificationLevel'),
+                                description: t('settings.appearance.notificationLevelDesc'),
                                 multiple: true,
                                 checkbox: true,
                                 options: [
                                     {
                                         id: 'success',
-                                        name: 'Success'
+                                        name: t('settings.appearance.success')
                                     },
                                     {
                                         id: 'warning',
-                                        name: 'Warning'
+                                        name: t('settings.appearance.warning')
                                     },
                                     {
                                         id: 'error',
-                                        name: 'Error'
+                                        name: t('settings.appearance.error')
                                     }
                                 ],
                                 value: userCore.getNotificationLevelSetting(userSettings).value,
@@ -299,19 +300,19 @@ async function getServiceManifest() {
                     {
                         id: 'widgetSettings',
                         type: 'section',
-                        name: 'Widget settings',
+                        name: t('settings.appearance.widgetSettings'),
                         groupId: 'appearance',
-                        description: 'Modify the widget settings',
+                        description: t('settings.appearance.widgetSettingsDesc'),
                         items: [
                             {
                                 id: 'quickAccessButtonSize',
                                 type: 'option',
-                                name: 'Quick access button size',
+                                name: t('settings.appearance.quickAccessButtonSize'),
                                 options: [
-                                    { id: 'small', name: 'Small' },
-                                    { id: 'medium', name: 'Medium' },
-                                    { id: 'large', name: 'Large' },
-                                    { id: 'xlarge', name: 'Extra Large' }
+                                    { id: 'small', name: t('settings.appearance.small') },
+                                    { id: 'medium', name: t('settings.appearance.medium') },
+                                    { id: 'large', name: t('settings.appearance.large') },
+                                    { id: 'xlarge', name: t('settings.appearance.extraLarge') }
                                 ],
                                 value: userCore.getQuickAccessButtonSizeSetting(userSettings).value,
                                 readOnly: userCore.getQuickAccessButtonSizeSetting(userSettings).readOnly,
@@ -324,25 +325,25 @@ async function getServiceManifest() {
             {
                 id: 'contacts',
                 type: 'section',
-                name: 'Call-pop',
+                name: t('settings.callPop.groupName'),
                 items: [
                     {
                         id: 'openContactPageFromIncomingCall',
                         type: 'option',
-                        name: 'Incoming call pop',
-                        helper: 'Select when to trigger call pop for incoming calls.',
+                        name: t('settings.callPop.incomingCallPop'),
+                        helper: t('settings.callPop.incomingCallPopHelper'),
                         options: [
                             {
                                 id: 'disabled',
-                                name: 'Disabled'
+                                name: t('common.labels.disabled')
                             },
                             {
                                 id: 'onFirstRing',
-                                name: 'On first ring'
+                                name: t('settings.callPop.onFirstRing')
                             },
                             {
                                 id: 'onAnswer',
-                                name: 'On answer'
+                                name: t('settings.callPop.onAnswer')
                             }
                         ],
                         value: userCore.getIncomingCallPop(userSettings).value,
@@ -352,20 +353,20 @@ async function getServiceManifest() {
                     {
                         id: 'openContactPageFromOutgoingCall',
                         type: 'option',
-                        name: 'Outgoing call pop',
-                        helper: 'Select when to trigger call pop for outgoing calls.',
+                        name: t('settings.callPop.outgoingCallPop'),
+                        helper: t('settings.callPop.outgoingCallPopHelper'),
                         options: [
                             {
                                 id: 'disabled',
-                                name: 'Disabled'
+                                name: t('common.labels.disabled')
                             },
                             {
                                 id: 'onFirstRing',
-                                name: 'On first ring'
+                                name: t('settings.callPop.onFirstRing')
                             },
                             {
                                 id: 'onAnswer',
-                                name: 'On answer'
+                                name: t('settings.callPop.onAnswer')
                             }
                         ],
                         value: userCore.getOutgoingCallPop(userSettings).value,
@@ -375,31 +376,31 @@ async function getServiceManifest() {
                     {
                         id: 'multiContactMatchBehavior',
                         type: 'option',
-                        name: 'Multi-contact match behavior',
-                        helper: 'Select what to do when multiple contacts match a phone number.',
+                        name: t('settings.callPop.multiContactBehavior'),
+                        helper: t('settings.callPop.multiContactBehaviorHelper'),
                         options: platform?.name != 'bullhorn' ?
                             [
                                 {
                                     id: 'disabled',
-                                    name: 'Disabled'
+                                    name: t('common.labels.disabled')
                                 },
                                 {
                                     id: 'openAllMatches',
-                                    name: 'Open all matches'
+                                    name: t('settings.callPop.openAllMatches')
                                 },
                                 {
                                     id: 'promptToSelect',
-                                    name: 'Prompt to select'
+                                    name: t('settings.callPop.promptToSelect')
                                 }
                             ] :
                             [
                                 {
                                     id: 'disabled',
-                                    name: 'Disabled'
+                                    name: t('common.labels.disabled')
                                 },
                                 {
                                     id: 'promptToSelect',
-                                    name: 'Prompt to select'
+                                    name: t('settings.callPop.promptToSelect')
                                 }
                             ],
                         // Hack: Bullhorn doesn't have open all option
@@ -411,16 +412,16 @@ async function getServiceManifest() {
                         [{
                             id: 'allowExtensionNumberLogging',
                             type: 'boolean',
-                            name: 'Allow extension number logging',
+                            name: t('settings.callPop.allowExtensionLogging'),
                             value: userSettings?.allowExtensionNumberLogging?.value ?? false,
                             readOnly: userSettings?.allowExtensionNumberLogging?.customizable === undefined ? false : !userSettings?.allowExtensionNumberLogging?.customizable,
-                            readOnlyReason: 'This setting is managed by admin'
+                            readOnlyReason: t('settings.callPop.managedByAdmin')
                         }] : []),
                     {
                         id: 'openContactPageAfterCreation',
                         type: 'boolean',
-                        name: 'Contact created call pop',
-                        description: 'Open contact immediately after creating it',
+                        name: t('settings.callPop.contactCreatedCallPop'),
+                        description: t('settings.callPop.contactCreatedCallPopDesc'),
                         value: userCore.getOpenContactAfterCreationSetting(userSettings).value,
                         readOnly: userCore.getOpenContactAfterCreationSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getOpenContactAfterCreationSetting(userSettings).readOnlyReason
@@ -430,27 +431,27 @@ async function getServiceManifest() {
             {
                 id: "openSupportPage",
                 type: "button",
-                name: "Support",
-                buttonLabel: "Open",
+                name: t('pages.support.title'),
+                buttonLabel: t('common.buttons.open'),
                 buttonType: "link",
             },
             {
                 id: "openAboutPage",
                 type: "button",
-                name: "About",
-                buttonLabel: "Open",
+                name: t('pages.about.title'),
+                buttonLabel: t('common.buttons.open'),
                 buttonType: "link",
             },
             {
                 id: "advancedFeatures",
                 type: "group",
-                name: "Advanced features",
+                name: t('settings.advanced.groupName'),
                 items: [
                     {
                         id: 'developerMode',
                         type: 'boolean',
-                        name: 'Developer mode',
-                        description: 'Enable developer mode to access developer settings.',
+                        name: t('settings.advanced.developerMode'),
+                        description: t('settings.advanced.developerModeDesc'),
                         value: userCore.getDeveloperModeSetting(userSettings, developerMode).value,
                         readOnly: userCore.getDeveloperModeSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getDeveloperModeSetting(userSettings).readOnlyReason
@@ -458,8 +459,8 @@ async function getServiceManifest() {
                     {
                         id: 'autoOpenExtension',
                         type: 'boolean',
-                        name: 'Auto-open extension',
-                        description: 'The extension will be opened when a CRM page is loaded.',
+                        name: t('settings.advanced.autoOpenExtension'),
+                        description: t('settings.advanced.autoOpenExtensionDesc'),
                         value: userCore.getAutoOpenSetting(userSettings).value,
                         readOnly: userCore.getAutoOpenSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoOpenSetting(userSettings).readOnlyReason
@@ -479,37 +480,37 @@ async function getServiceManifest() {
         {
             id: 'clickToDialEmbed',
             type: 'section',
-            name: 'Enabled domains',
+            name: t('settings.enabledDomains.groupName'),
             groupId: 'general',
-            description: 'Manage the URLs App Connect is enabled for',
+            description: t('settings.enabledDomains.groupDesc'),
             items: [
                 {
                     id: 'clickToDialEmbedWarning',
-                    name: 'Warning',
+                    name: t('common.labels.warning'),
                     type: 'admonition',
                     severity: 'warning',
-                    value: 'Click-to-dial is a pop up widget that will be shown when a user hovers on a phone number.'
+                    value: t('settings.enabledDomains.clickToDialWarning')
                 },
                 {
                     id: 'clickToDialEmbedMode',
                     type: 'option',
-                    name: 'Click-to-dial enable mode',
+                    name: t('settings.enabledDomains.clickToDialMode'),
                     options: [
                         {
                             id: 'disabled',
-                            name: 'Disabled'
+                            name: t('common.labels.disabled')
                         },
                         {
                             id: 'crmOnly',
-                            name: 'Enable for connected CRM only'
+                            name: t('settings.enabledDomains.crmOnly')
                         },
                         {
                             id: 'whitelist',
-                            name: 'Block by default (then manage a list of sites to allow)'
+                            name: t('settings.enabledDomains.whitelist')
                         },
                         {
                             id: 'blacklist',
-                            name: 'Allow by default (then manage a list of sites to block)'
+                            name: t('settings.enabledDomains.blacklist')
                         }
                     ],
                     value: userCore.getClickToDialEmbedMode(userSettings).value,
@@ -519,39 +520,39 @@ async function getServiceManifest() {
                 {
                     id: 'clickToDialUrls',
                     type: 'array',
-                    name: 'Click-to-dial URLs',
-                    helper: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
+                    name: t('settings.enabledDomains.clickToDialUrls'),
+                    helper: t('settings.enabledDomains.clickToDialUrlsHelper'),
                     value: userCore.getClickToDialUrls(userSettings).value,
                     readOnly: userCore.getClickToDialUrls(userSettings).readOnly,
                     readOnlyReason: userCore.getClickToDialUrls(userSettings).readOnlyReason
                 },
                 {
                     id: 'quickAccessButtonEmbedWarning',
-                    name: 'Warning',
+                    name: t('common.labels.warning'),
                     type: 'admonition',
                     severity: 'warning',
-                    value: 'Quick access button is shown at right bottom corner of the screen.'
+                    value: t('settings.enabledDomains.quickAccessWarning')
                 },
                 {
                     id: 'quickAccessButtonEmbedMode',
                     type: 'option',
-                    name: 'Quick access button enable mode',
+                    name: t('settings.enabledDomains.quickAccessMode'),
                     options: [
                         {
                             id: 'disabled',
-                            name: 'Disabled'
+                            name: t('common.labels.disabled')
                         },
                         {
                             id: 'crmOnly',
-                            name: 'Enable for connected CRM only'
+                            name: t('settings.enabledDomains.crmOnly')
                         },
                         {
                             id: 'whitelist',
-                            name: 'Block by default (then manage a list of sites to allow)'
+                            name: t('settings.enabledDomains.whitelist')
                         },
                         {
                             id: 'blacklist',
-                            name: 'Allow by default (then manage a list of sites to block)'
+                            name: t('settings.enabledDomains.blacklist')
                         }
                     ],
                     value: userCore.getQuickAccessButtonEmbedMode(userSettings).value,
@@ -561,8 +562,8 @@ async function getServiceManifest() {
                 {
                     id: 'quickAccessButtonUrls',
                     type: 'array',
-                    name: 'Quick access button URLs',
-                    helper: 'Enter the URLs of the pages to be whitelisted. Separate multiple URLs with commas. Use * as wildcard.',
+                    name: t('settings.enabledDomains.quickAccessUrls'),
+                    helper: t('settings.enabledDomains.clickToDialUrlsHelper'),
                     value: userCore.getQuickAccessButtonUrls(userSettings).value,
                     readOnly: userCore.getQuickAccessButtonUrls(userSettings).readOnly,
                     readOnlyReason: userCore.getQuickAccessButtonUrls(userSettings).readOnlyReason
@@ -573,14 +574,14 @@ async function getServiceManifest() {
     services.settings.push({
         id: "callLogDetails",
         type: "section",
-        name: "Call log details",
+        name: t('settings.callLogDetails.groupName'),
         groupId: "logging",
         items: [
             {
                 id: "addCallLogNote",
                 type: "boolean",
-                name: "Agent-entered notes",
-                description: "Log the notes manually entered by yourself",
+                name: t('settings.callLogDetails.agentNotes'),
+                description: t('settings.callLogDetails.agentNotesDesc'),
                 value: userCore.getAddCallLogNoteSetting(userSettings).value,
                 readOnly: userCore.getAddCallLogNoteSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getAddCallLogNoteSetting(userSettings).readOnlyReason
@@ -588,8 +589,8 @@ async function getServiceManifest() {
             {
                 id: "addCallSessionId",
                 type: "boolean",
-                name: "Call session id",
-                description: "Log RingCentral call session id",
+                name: t('settings.callLogDetails.callSessionId'),
+                description: t('settings.callLogDetails.callSessionIdDesc'),
                 value: userCore.getAddCallSessionIdSetting(userSettings).value,
                 readOnly: userCore.getAddCallSessionIdSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getAddCallSessionIdSetting(userSettings).readOnlyReason
@@ -597,8 +598,8 @@ async function getServiceManifest() {
             {
                 id: "addRingCentralUserName",
                 type: "boolean",
-                name: "RingCentral user name",
-                description: "Log the RingCentral user name",
+                name: t('settings.callLogDetails.rcUserName'),
+                description: t('settings.callLogDetails.rcUserNameDesc'),
                 value: userCore.getAddRingCentralUserNameSetting(userSettings).value,
                 readOnly: userCore.getAddRingCentralUserNameSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getAddRingCentralUserNameSetting(userSettings).readOnlyReason
@@ -606,8 +607,8 @@ async function getServiceManifest() {
             {
                 id: "addRingCentralNumber",
                 type: "boolean",
-                name: "RingCentral phone number",
-                description: "Log the RingCentral phone number",
+                name: t('settings.callLogDetails.rcNumber'),
+                description: t('settings.callLogDetails.rcNumberDesc'),
                 value: userCore.getAddRingCentralNumberSetting(userSettings).value,
                 readOnly: userCore.getAddRingCentralNumberSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getAddRingCentralNumberSetting(userSettings).readOnlyReason
@@ -615,8 +616,8 @@ async function getServiceManifest() {
             {
                 id: "addCallLogSubject",
                 type: "boolean",
-                name: "Call subject",
-                description: "Log a short phrase to summarize call, e.g. 'Inbound call from...'",
+                name: t('settings.callLogDetails.callSubject'),
+                description: t('settings.callLogDetails.callSubjectDesc'),
                 value: userCore.getAddCallLogSubjectSetting(userSettings).value,
                 readOnly: userCore.getAddCallLogSubjectSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getAddCallLogSubjectSetting(userSettings).readOnlyReason
@@ -624,8 +625,8 @@ async function getServiceManifest() {
             {
                 id: "addCallLogContactNumber",
                 type: "boolean",
-                name: "Contact's phone number",
-                description: "Log the contact information of the other participant",
+                name: t('settings.callLogDetails.contactNumber'),
+                description: t('settings.callLogDetails.contactNumberDesc'),
                 value: userCore.getAddCallLogContactNumberSetting(userSettings).value,
                 readOnly: userCore.getAddCallLogContactNumberSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getAddCallLogContactNumberSetting(userSettings).readOnlyReason
@@ -633,8 +634,8 @@ async function getServiceManifest() {
             {
                 id: "addCallLogDateTime",
                 type: "boolean",
-                name: "Date and time",
-                description: "Log the call's explicit start and end date/times",
+                name: t('settings.callLogDetails.dateTime'),
+                description: t('settings.callLogDetails.dateTimeDesc'),
                 value: userCore.getAddCallLogDateTimeSetting(userSettings).value,
                 readOnly: userCore.getAddCallLogDateTimeSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getAddCallLogDateTimeSetting(userSettings).readOnlyReason
@@ -642,35 +643,35 @@ async function getServiceManifest() {
             {
                 id: "logDateFormat",
                 type: "option",
-                name: "Date format",
-                description: "The format of the date and time in the call log",
+                name: t('settings.callLogDetails.dateFormat'),
+                description: t('settings.callLogDetails.dateFormatDesc'),
                 options: [
                     // ISO 8601 and Standard Formats
                     {
                         id: "YYYY-MM-DD hh:mm:ss A",
-                        name: "2024-01-15 02:30:45 PM - General 12H"
+                        name: t('dateFormats.general12H')
                     },
                     {
                         id: "YYYY-MM-DD HH:mm:ss",
-                        name: "2024-01-15 14:30:45 - General 24H"
+                        name: t('dateFormats.general24H')
                     },
                     // US Formats
                     {
                         id: "MM/DD/YYYY hh:mm:ss A",
-                        name: "01/15/2024 02:30:45 PM - US 12H"
+                        name: t('dateFormats.us12H')
                     },
                     {
                         id: "MM/DD/YYYY HH:mm:ss",
-                        name: "01/15/2024 14:30:45 - US 24H"
+                        name: t('dateFormats.us24H')
                     },
                     // European Formats
                     {
                         id: "DD/MM/YYYY hh:mm:ss A",
-                        name: "15/01/2024 02:30:45 PM - EU 12H"
+                        name: t('dateFormats.eu12H')
                     },
                     {
                         id: "DD/MM/YYYY HH:mm:ss",
-                        name: "15/01/2024 14:30:45 - EU 24H"
+                        name: t('dateFormats.eu24H')
                     }
                 ],
                 value: userCore.getLogDateFormatSetting(userSettings).value,
@@ -680,8 +681,8 @@ async function getServiceManifest() {
             {
                 id: "addCallLogDuration",
                 type: "boolean",
-                name: "Call duration",
-                description: "Log the call duration, noted in minutes and seconds",
+                name: t('settings.callLogDetails.callDuration'),
+                description: t('settings.callLogDetails.callDurationDesc'),
                 value: userCore.getAddCallLogDurationSetting(userSettings).value,
                 readOnly: userCore.getAddCallLogDurationSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getAddCallLogDurationSetting(userSettings).readOnlyReason
@@ -689,8 +690,8 @@ async function getServiceManifest() {
             {
                 id: "addCallLogResult",
                 type: "boolean",
-                name: "Call result",
-                description: "Log the result of the call, e.g. Call connected",
+                name: t('settings.callLogDetails.callResult'),
+                description: t('settings.callLogDetails.callResultDesc'),
                 value: userCore.getAddCallLogResultSetting(userSettings).value,
                 readOnly: userCore.getAddCallLogResultSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getAddCallLogResultSetting(userSettings).readOnlyReason
@@ -698,8 +699,8 @@ async function getServiceManifest() {
             {
                 id: "addCallLogRecording",
                 type: "boolean",
-                name: "Link to the recording",
-                description: "Provide a link to the call's recording, if it exists",
+                name: t('settings.callLogDetails.recordingLink'),
+                description: t('settings.callLogDetails.recordingLinkDesc'),
                 value: userCore.getAddCallLogRecordingSetting(userSettings).value,
                 readOnly: userCore.getAddCallLogRecordingSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getAddCallLogRecordingSetting(userSettings).readOnlyReason
@@ -707,8 +708,8 @@ async function getServiceManifest() {
             {
                 id: "addCallLogAiNote",
                 type: "boolean",
-                name: "Smart summary",
-                description: "Log the AI-generated summary of the call, if it exists",
+                name: t('settings.callLogDetails.smartSummary'),
+                description: t('settings.callLogDetails.smartSummaryDesc'),
                 value: userCore.getAddCallLogAiNoteSetting(userSettings).value,
                 readOnly: userCore.getAddCallLogAiNoteSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getAddCallLogAiNoteSetting(userSettings).readOnlyReason
@@ -716,8 +717,8 @@ async function getServiceManifest() {
             {
                 id: "addCallLogTranscript",
                 type: "boolean",
-                name: "Call transcript",
-                description: "Log the AI-generated transcript of the call, if it exists",
+                name: t('settings.callLogDetails.transcript'),
+                description: t('settings.callLogDetails.transcriptDesc'),
                 value: userCore.getAddCallLogTranscriptSetting(userSettings).value,
                 readOnly: userCore.getAddCallLogTranscriptSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getAddCallLogTranscriptSetting(userSettings).readOnlyReason
@@ -727,23 +728,23 @@ async function getServiceManifest() {
     services.settings.push({
         id: "autoLogPreferences",
         type: "section",
-        name: "Auto log preferences",
-        description: "Setup preferences for auto logging scenarios",
+        name: t('settings.autoLogPreferences.groupName'),
+        description: t('settings.autoLogPreferences.groupDesc'),
         groupId: "logging",
         items: [
             {
                 id: "unknownContactPreference",
                 type: "option",
-                name: "Unknown contact",
-                helper: "What to do when the phone number does not match any contact",
+                name: t('settings.autoLogPreferences.unknownContact'),
+                helper: t('settings.autoLogPreferences.unknownContactHelper'),
                 options: [
                     {
                         id: "skipLogging",
-                        name: "Skip logging"
+                        name: t('settings.autoLogPreferences.skipLogging')
                     },
                     {
                         id: "createNewPlaceholderContact",
-                        name: "Create new placeholder contact"
+                        name: t('settings.autoLogPreferences.createNewPlaceholder')
                     }
                 ],
                 value: userCore.getUnknownContactPreferenceSetting(userSettings).value,
@@ -753,15 +754,15 @@ async function getServiceManifest() {
             {
                 id: "newContactType",
                 type: "option",
-                name: "New contact type (applicable when creating new contact)",
-                helper: "When creating a placeholder contact, what contact type it should be",
+                name: t('settings.autoLogPreferences.newContactType'),
+                helper: t('settings.autoLogPreferences.newContactTypeHelper'),
                 options: (platform.contactTypes && platform.contactTypes.length) > 0 ?
                     platform.contactTypes.map(contactType => ({
                         id: contactType.value,
                         name: contactType.display
                     })) : [{
                         id: "contact",
-                        name: "Contact"
+                        name: t('common.labels.contact')
                     }],
                 value: (() => {
                     const userPreferredValue = userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value;
@@ -778,8 +779,8 @@ async function getServiceManifest() {
             {
                 id: "newContactNamePrefix",
                 type: "string",
-                name: "New contact name prefix (applicable when creating new contact)",
-                helper: "Name would have Caller ID (if available) + Phone number",
+                name: t('settings.autoLogPreferences.newContactNamePrefix'),
+                helper: t('settings.autoLogPreferences.newContactNamePrefixHelper'),
                 value: userCore.getNewContactNamePrefixSetting(userSettings).value,
                 readOnly: userCore.getNewContactNamePrefixSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getNewContactNamePrefixSetting(userSettings).readOnlyReason
@@ -787,20 +788,20 @@ async function getServiceManifest() {
             {
                 id: "multipleContactsPreference",
                 type: "option",
-                name: "Multiple contacts",
-                helper: "What to do when multiple contacts match the phone number",
+                name: t('settings.autoLogPreferences.multipleContacts'),
+                helper: t('settings.autoLogPreferences.multipleContactsHelper'),
                 options: [
                     {
                         id: "skipLogging",
-                        name: "Skip logging"
+                        name: t('settings.autoLogPreferences.skipLogging')
                     },
                     {
                         id: "firstAlphabetical",
-                        name: "First alphabetical"
+                        name: t('settings.autoLogPreferences.firstAlphabetical')
                     },
                     {
                         id: "mostRecentActivity",
-                        name: "Most recent activity"
+                        name: t('settings.autoLogPreferences.mostRecentActivity')
                     }
                 ],
                 value: userCore.getMultipleContactsPreferenceSetting(userSettings).value,
@@ -904,41 +905,41 @@ async function getServiceManifest() {
                 name: "info",
                 type: "admonition",
                 severity: "warning",
-                value: "Please input your overriding phone number format: (please use # to represent a number digit, eg. (###) ###-###) [How it works](https://appconnect.labs.ringcentral.com/users/phone-number-formats/#how-it-works)",
+                value: t('settings.numberFormatter.info'),
             },
             {
                 id: "overridingPhoneNumberFormat",
-                name: "Format 1",
+                name: t('settings.numberFormatter.format1'),
                 type: "string",
                 value: userSettings?.overridingPhoneNumberFormat?.value ?? "",
                 readOnly: userSettings?.overridingPhoneNumberFormat?.customizable === undefined ? false : !userSettings?.overridingPhoneNumberFormat?.customizable,
-                readOnlyReason: !userSettings?.overridingPhoneNumberFormat?.customizable ? 'This setting is managed by admin' : ''
+                readOnlyReason: !userSettings?.overridingPhoneNumberFormat?.customizable ? t('settings.callPop.managedByAdmin') : ''
             },
             {
                 id: "overridingPhoneNumberFormat2",
-                name: "Format 2",
+                name: t('settings.numberFormatter.format2'),
                 type: "string",
                 value: userSettings?.overridingPhoneNumberFormat2?.value ?? "",
                 readOnly: userSettings?.overridingPhoneNumberFormat2?.customizable === undefined ? false : !userSettings?.overridingPhoneNumberFormat2?.customizable,
-                readOnlyReason: !userSettings?.overridingPhoneNumberFormat2?.customizable ? 'This setting is managed by admin' : ''
+                readOnlyReason: !userSettings?.overridingPhoneNumberFormat2?.customizable ? t('settings.callPop.managedByAdmin') : ''
             },
             {
                 id: "overridingPhoneNumberFormat3",
-                name: "Format 3",
+                name: t('settings.numberFormatter.format3'),
                 type: "string",
                 value: userSettings?.overridingPhoneNumberFormat3?.value ?? "",
                 readOnly: userSettings?.overridingPhoneNumberFormat3?.customizable === undefined ? false : !userSettings?.overridingPhoneNumberFormat3?.customizable,
-                readOnlyReason: !userSettings?.overridingPhoneNumberFormat3?.customizable ? 'This setting is managed by admin' : ''
+                readOnlyReason: !userSettings?.overridingPhoneNumberFormat3?.customizable ? t('settings.callPop.managedByAdmin') : ''
             }
         ]
         const optionSectionName = platform.name + "Options";
         services.settings.find(s => s.id === optionSectionName).items.push(
             {
                 id: "numberFormatterTitle",
-                name: "Number formatter",
+                name: t('settings.numberFormatter.title'),
                 type: "typography",
                 variant: "title2",
-                value: "Phone number format alternatives",
+                value: t('settings.numberFormatter.phoneNumberAlternatives'),
             });
         services.settings.find(s => s.id === optionSectionName).items.push(...numberFormatterComponent);
     }
@@ -947,8 +948,8 @@ async function getServiceManifest() {
             {
                 id: 'googleSheetsConfig',
                 type: 'button',
-                name: 'Google Sheets Config',
-                buttonLabel: 'Open',
+                name: t('settings.googleSheets.config'),
+                buttonLabel: t('common.buttons.open'),
                 buttonType: 'link',
             }
         )
@@ -959,8 +960,8 @@ async function getServiceManifest() {
             {
                 id: 'openDeveloperSettingsPage',
                 type: 'button',
-                name: 'Developer settings',
-                buttonLabel: 'Open',
+                name: t('pages.developerSettings.title'),
+                buttonLabel: t('common.buttons.open'),
                 buttonType: "link",
             }
         )
