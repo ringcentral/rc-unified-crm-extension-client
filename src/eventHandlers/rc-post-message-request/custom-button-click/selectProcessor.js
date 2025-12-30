@@ -10,7 +10,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     const isAuthorized = await checkAuth();
     if (!isAuthorized) {
-        showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
+        showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 5000 });
         window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
         return;
     }
