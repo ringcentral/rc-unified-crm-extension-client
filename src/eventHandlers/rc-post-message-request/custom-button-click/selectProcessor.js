@@ -3,9 +3,17 @@ import baseManifest from '../../../manifest.json';
 import { getRcInfo } from '../../../lib/util';
 import { getProcessorConfigurePageRender } from '../../../components/processorConfigurePage';
 import { getUserSettingsOnline } from '../../../core/user';
+import { checkAuth } from '../../../core/auth';
+import { showNotification } from '../../../lib/util';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+    const isAuthorized = await checkAuth();
+    if (!isAuthorized) {
+        showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
+        window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+        return;
+    }
     const selectedProcessorId = listButtonItemId.split('=')[0];
     const selectedProcessorType = listButtonItemId.split('=')[1];
     const selectedProcessor = data.body.button.formData.processorList.find(processor => processor.id === selectedProcessorId);
