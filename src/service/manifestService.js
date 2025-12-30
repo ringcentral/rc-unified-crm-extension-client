@@ -4,8 +4,12 @@ import baseManifest from '../manifest.json';
 import { getRcInfo } from '../lib/util';
 
 let sessionManifest = null;
+let platformList = null;
 
 async function getPlatformList() {
+    if (platformList) {
+        return platformList;
+    }
     const result = [];
     const platformPublicListResponse = await axios.get(baseManifest.platformPublicListUrl);
     for (const platform of platformPublicListResponse.data.connectors) {
@@ -23,7 +27,8 @@ async function getPlatformList() {
         platform.type = 'private';
         result.push(platform);
     }
-    return result;
+    platformList = result;
+    return platformList;
 }
 
 async function saveManifestUrl({ manifestUrl }) {
