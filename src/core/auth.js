@@ -134,16 +134,30 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
     const manifest = await getManifest();
     const platform = manifest.platforms[platformInfo['platform-info'].platformName];
     const proxyId = platform.proxyId ? platform.proxyId : '';
-    let oauthCallbackUrl = '';
+    let params;
     // Unique: Bullhorn
     if (platformInfo['platform-info'].platformName === 'bullhorn') {
         const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
         const { crm_extension_bullhornUsername } = await chrome.storage.local.get({ crm_extension_bullhornUsername: null });
-        oauthCallbackUrl = `${serverUrl}/oauth-callback?callbackUri=${callbackUri}&hostname=${hostname}&tokenUrl=${crm_extension_bullhorn_user_urls.oauthUrl}/token&apiUrl=${crm_extension_bullhorn_user_urls.restUrl}&username=${crm_extension_bullhornUsername}&rcAccountId=${rcInfo.value.cachedData.extensionInfo.account.id}`;
+        params = new URLSearchParams({
+            callbackUri,
+            hostname,
+            tokenUrl: crm_extension_bullhorn_user_urls.oauthUrl + '/token',
+            apiUrl: crm_extension_bullhorn_user_urls.restUrl,
+            username: crm_extension_bullhornUsername,
+            rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id
+        });
     }
     else {
-        oauthCallbackUrl = `${serverUrl}/oauth-callback?callbackUri=${callbackUri}&hostname=${hostname}&rcAccountId=${rcInfo.value.cachedData.extensionInfo.account.id}&proxyId=${proxyId}`;
+        params = new URLSearchParams({
+            callbackUri,
+            hostname,
+            rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id,
+            proxyId,
+            userEmail: rcInfo.value.cachedData.extensionInfo.contact.email
+        });
     }
+    const oauthCallbackUrl = `${serverUrl}/oauth-callback?${params.toString()}`;
     const res = await axios.get(oauthCallbackUrl);
     showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully authorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
     if (!res.data.jwtToken) {
