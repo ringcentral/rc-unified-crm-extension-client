@@ -116,14 +116,13 @@ window.addEventListener('message', async (e) => {
             });
             await addPendingRecordingSessionId({ sessionId: data.telephonySession.sessionId });
           }
+          const transferParty = data.telephonySession.parties.find(p => p.status.reason === 'AttendedTransfer' && p.status.code === 'Gone');
+          if (transferParty) {
+            await chrome.storage.local.set({ [`${transferParty.status.peerId.telephonySessionId}-transfer-on-hold`]: true });
+          }
           break;
         case 'rc-calling-settings-notify':
           await chrome.storage.local.set({ callWith: data.callWith, callingMode: data.callingMode });
-          break;
-        case 'rc-call-end-notify':
-          if (data.call.isOnHold) {
-            await chrome.storage.local.set({ [`${data.call.partyData.sessionId}-transfer-on-hold`]: true });
-          }
           break;
         case 'rc-region-settings-notify':
           // get region settings from widget
