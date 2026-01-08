@@ -44,7 +44,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
     }
     catch (e) {
         console.log(e);
-        showNotification({ level: 'warning', message: 'Failed to register api key.', ttl: 3000 });
+        showNotification({ level: e.response?.data?.returnMessage?.messageType ?? 'warning', message: e.response?.data?.returnMessage?.message ?? 'Failed to register api key.', ttl: 3000 });
     }
 }
 
