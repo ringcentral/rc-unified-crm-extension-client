@@ -42,7 +42,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, r
                 platform,
                 subscriptionLevel: serverSideLogging.subscriptionLevel,
                 loggingByAdmin: useAdminAssignedUserToken ? !serverSideLogging.loggingWithUserAssigned : serverSideLogging.loggingByAdmin,
-                silence: true
+                sources: serverSideLogging.sources,
+                silence: true,
             });
         }
     }
