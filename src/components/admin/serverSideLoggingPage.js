@@ -45,7 +45,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
             ],
             enumNames: [
                 'RingEX',
-                'RingCX',
+                'RingCX (Experimental)',
             ],
         };
         sourcesUiSchema.sources = {
@@ -59,7 +59,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                     },
                     {
                         "value": "cx",
-                        "label": "RingCX"
+                        "label": "RingCX (Experimental)"
                     },
                 ]
             },
