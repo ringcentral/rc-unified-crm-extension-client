@@ -1,4 +1,4 @@
-function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin, subscribedByOtherAdmin, enableUserMapping, additionalFields = [], additionalFieldValues = {} }) {
+function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin, subscribedByOtherAdmin, enableUserMapping, additionalFields = [], additionalFieldValues = {}, userPermissions = {}, sources = [] }) {
     const additionalProperties = {};
     additionalFields.forEach(field => {
         additionalProperties[field.const] = {
@@ -27,6 +27,45 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
             "ui:field": "admonition",
             "ui:severity": "warning",  // "warning", "info", "error", "success"
         }
+    }
+    const sourcesProperty = {};
+    const sourcesUiSchema = {};
+    let sourcesFormData = ['ex'];
+    if (userPermissions.ringCX && userPermissions.ringSenseInsights) {
+        sourcesFormData = sources;
+        sourcesProperty.sources = {
+            type: "array",
+            title: "RingSense sources",
+            items: {
+                type: "string",
+            },
+            enum: [
+                'ex',
+                "cx",
+            ],
+            enumNames: [
+                'RingEX',
+                'RingCX (Experimental)',
+            ],
+        };
+        sourcesUiSchema.sources = {
+            "ui:widget": "checkboxes",
+            "ui:options": {
+                inline: true,
+                "enumOptions": [
+                    {
+                        "value": "ex",
+                        "label": "RingEX"
+                    },
+                    {
+                        "value": "cx",
+                        "label": "RingCX (Experimental)"
+                    },
+                ]
+            },
+        };
+    } else {
+        sourcesFormData = ['ex'];
     }
     const pageRender =
     {
@@ -76,6 +115,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                                 }
                             ]
                         },
+                        ...sourcesProperty,
                         ...additionalProperties,
                         saveServerSideLoggingButton: {
                             type: 'string',
@@ -141,7 +181,8 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                     "ui:variant": "contained", // "text", "outlined", "contained", "plain"
                     "ui:fullWidth": true,
                     "ui:disabled": !!subscribedByOtherAdmin
-                }
+                },
+                ...sourcesUiSchema,
             },
             section: {
                 "ui:field": "list",
@@ -154,11 +195,12 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
         formData: {
             serverSideLoggingHolder: {
                 serverSideLogging: subscriptionLevel,
-                activityRecordOwner: loggingByAdmin ? 'admin' : 'user'
+                activityRecordOwner: loggingByAdmin ? 'admin' : 'user',
+                sources: sourcesFormData,
             },
             doNotLogNumbersHolder: {
                 doNotLogNumbers: doNotLogNumbers,
-            }
+            },
         }
     };
     additionalFields.forEach(field => {
