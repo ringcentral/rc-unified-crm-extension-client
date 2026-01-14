@@ -26,6 +26,10 @@ function getProcessorConfigurePageRender({ processorId, processor, activated, se
                 activated: {
                     type: 'boolean',
                     title: 'Activated',
+                },
+                authButton:{
+                    type: 'string',
+                    title: 'Auth',
                 }
             }
         },
@@ -46,6 +50,11 @@ function getProcessorConfigurePageRender({ processorId, processor, activated, se
                 "ui:options": {
                     "inline": false
                 }
+            },
+            authButton: {
+                "ui:field": "button",
+                "ui:variant": "contained",
+                "ui:fullWidth": true,
             }
         },
         formData: {
@@ -53,7 +62,7 @@ function getProcessorConfigurePageRender({ processorId, processor, activated, se
             supportedLogTypes: selectedLogTypes ?? [],
             processorId,
             processorName: processor.name,
-            IsAsync: processor.isAsync,
+            isAsync: processor.isAsync,
             phase: processor.phase,
         }
     }

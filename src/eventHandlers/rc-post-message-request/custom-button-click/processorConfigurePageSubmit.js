@@ -10,7 +10,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 name: form.processorName,
                 activated: form.activated,
                 supportedLogTypes: form.supportedLogTypes,
-                IsAsync: form.IsAsync,
+                isAsync: form.isAsync,
                 phase: form.phase
             }
         }

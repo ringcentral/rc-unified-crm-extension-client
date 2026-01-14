@@ -178,7 +178,6 @@ async function cacheCalldownContact({ contactId, contactName, phoneNumber, conta
   }
 }
 
-
 exports.secondsToHourMinuteSecondString = secondsToHourMinuteSecondString;
 exports.showNotification = showNotification;
 exports.dismissNotification = dismissNotification;
@@ -191,4 +190,4 @@ exports.checkC2DCollision = checkC2DCollision;
 exports.downloadTextFile = downloadTextFile;
 exports.cleanUpExpiredStorage = cleanUpExpiredStorage;
 exports.createDebounceHandler = createDebounceHandler;
-exports.cacheCalldownContact = cacheCalldownContact;
+exports.cacheCalldownContact = cacheCalldownContact;;

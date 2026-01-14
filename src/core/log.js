@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { isObjectEmpty, showNotification, getRcAccessToken } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
+import { upsertPTPAsyncTaskIds } from '../service/ptpService';
 
 // Input {id} = sessionId from RC
 async function addLog({
@@ -60,6 +61,9 @@ async function addLog({
                 addLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addLogRes.data.successful) {
                     trackSyncCallLog({ hasNote: note !== '' });
+                    if(addLogRes.data.ptpAsyncTaskIds?.length > 0){
+                        await upsertPTPAsyncTaskIds({ taskIds: addLogRes.data.ptpAsyncTaskIds });
+                    }
                     if (isShowNotification) {
                         showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'success', message: addLogRes.data.returnMessage?.message ?? 'Call log added', ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
                     }
@@ -138,13 +142,14 @@ function openLog({ manifest, platformName, hostname, logId, contactType, contact
     window.open(logPageUrl);
 }
 
-async function updateLog({ serverUrl, logType, sessionId, recordingLink, recordingDownloadLink, subject, note, startTime, duration, aiNote, transcript, result, direction, from, to, isShowNotification }) {
+async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, recordingLink, recordingDownloadLink, subject, note, startTime, duration, aiNote, transcript, result, direction, from, to, isShowNotification }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
     if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
                 const patchBody = {
+                    telephonySessionId,
                     sessionId,
                     recordingLink,
                     recordingDownloadLink,
@@ -162,6 +167,9 @@ async function updateLog({ serverUrl, logType, sessionId, recordingLink, recordi
                 const callLogRes = await axios.patch(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, patchBody);
                 if (isShowNotification) {
                     if (callLogRes.data.successful) {
+                        if(callLogRes.data.ptpAsyncTaskIds?.length > 0){
+                            await upsertPTPAsyncTaskIds({ taskIds: callLogRes.data.ptpAsyncTaskIds });
+                        }
                         showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'success', message: callLogRes.data.returnMessage?.message ?? 'Call log updated', ttl: callLogRes.data.returnMessage?.ttl ?? 3000, details: callLogRes.data.returnMessage?.details });
                     }
                     else {

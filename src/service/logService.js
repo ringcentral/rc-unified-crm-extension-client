@@ -148,6 +148,7 @@ async function syncCallData({
                 serverUrl,
                 logType: 'Call',
                 rcAdditionalSubmission,
+                telephonySessionId: dataBody.call.telephonySessionId,
                 sessionId: dataBody.call.sessionId,
                 recordingLink: dataBody.call.recording.link,
                 recordingDownloadLink: `${dataBody.call.recording.contentUri}?accessToken=${rcAccessToken}`,

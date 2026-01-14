@@ -47,6 +47,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                             await logCore.updateLog({
                                 serverUrl: manifest.serverUrl,
                                 logType: 'Call',
+                                telephonySessionId: correspondingLog.telephonySessionId,
                                 sessionId,
                                 note: localNote
                             })

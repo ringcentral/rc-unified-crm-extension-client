@@ -5,6 +5,7 @@ import { getManifest } from './service/manifestService';
 import { saveManifestUrl } from './service/manifestService';
 import { getPlatformInfo } from './service/platformService';
 import logRecorder from './lib/logRecorder';
+import { setPTPAsyncTaskCheck } from './service/ptpService';
 
 // event handlers
 import rcTelephonySessionNotifyHandler from './eventHandlers/rc-telephony-session-notify';
@@ -106,6 +107,7 @@ window.__ON_RC_POPUP_WINDOW = 1;
 checkC2DCollision();
 getCustomManifest();
 getImplementedInterfaces();
+setPTPAsyncTaskCheck();
 
 async function getCustomManifest() {
   const customCrmManifest = await getManifest();

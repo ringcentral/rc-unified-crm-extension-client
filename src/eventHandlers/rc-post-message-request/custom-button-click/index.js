@@ -50,6 +50,7 @@ import openProcessorListPageHandler from './processorListPage';
 import selectProcessorHandler from './selectProcessor';
 import processorConfigurePageSubmitHandler from './processorConfigurePageSubmit';
 import generalHandler from './general';
+import processorAuthHandler from './processorAuth';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     switch (data.body.button.type) {
@@ -240,6 +241,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     }
     if (data.body.button.id.startsWith('link-button-')) {
         window.open(data.body.button.formData[data.body.button.id], '_blank');
+    }
+    // PTP auth button
+    const isPTP = !!data.body.button?.formData?.processorId;
+    if(data.body.button.type != 'submit' &&isPTP){
+        await processorAuthHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
     }
     responseMessage(data.requestId, { data: 'ok' });
 }

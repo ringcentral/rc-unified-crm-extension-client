@@ -126,6 +126,19 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
 }
 
 async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
+    // Case: from PTP
+    try {
+        const stateData = JSON.parse(decodeURIComponent(new URLSearchParams(new URL(callbackUri).search).get('state') ?? '{}'));
+        if (stateData?.from === 'ptp' && stateData?.redirectTo) {
+            const ptpCallbackResp = await axios.get(`${stateData.redirectTo}?callbackUri=${callbackUri}`);
+            showNotification({ level: 'success', message: 'Successfully authorized processor.' });
+            return;
+        }
+    }
+    catch (e) {
+        console.warn('Auth callback not from PTP');
+    }
+    // Case: connectors
     const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;
     const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
     const rcInfo = await indexDB.get('keyvaluepairs', 'dataFetcherV2-storageData');
@@ -231,6 +244,7 @@ async function refreshLicenseStatus({ serverUrl }) {
     }, '*');
 }
 
+exports.handleThirdPartyOAuthWindow = handleThirdPartyOAuthWindow;
 exports.onUserClickConnectButton = onUserClickConnectButton;
 exports.checkAndOpenPlatformSelectionPage = checkAndOpenPlatformSelectionPage;
 exports.apiKeyLogin = apiKeyLogin;
