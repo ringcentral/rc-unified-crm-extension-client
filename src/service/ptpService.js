@@ -58,8 +58,7 @@ function setPTPAsyncTaskCheck() {
         if (notificationMessage !== '') {
             showNotification({ level: 'success', message: notificationMessage, ttl: 3000 });
         }
-        // }, 5 * 60 * 1000);
-    }, 1 * 60 * 1000);
+    }, 5 * 60 * 1000);
     return ptpAsyncTaskCheck;
 }
 
