@@ -190,18 +190,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log(sender.tab ?
     "from a content script:" + sender.tab.url :
     "from the extension");
-  if (request.type === "openPopupWindow") {
-    openPopupWindow();
-    sendResponse({ result: 'ok' });
-    if (request.navigationPath) {
-      chrome.runtime.sendMessage({
-        type: 'navigate',
-        path: request.navigationPath
-      })
-    }
-    return true;
-  }
   switch (request.type) {
+    case "openPopupWindow":
+      openPopupWindow();
+      sendResponse({ result: 'ok' });
+      if (request.navigationPath) {
+        chrome.runtime.sendMessage({
+          type: 'navigate',
+          path: request.navigationPath
+        })
+      }
+      break;
     // Unique: Pipedrive
     case "openPopupWindowOnPipedriveDirectPage":
       pipedriveCallbackHandler(request, sender);
@@ -264,7 +263,6 @@ chrome.runtime.onMessageExternal.addListener(
   (request, sender, sendResponse) => {
     if (request.action === "isInstalled") {
       sendResponse({ isInstalled: true });
-      return true;
     }
   }
 );
