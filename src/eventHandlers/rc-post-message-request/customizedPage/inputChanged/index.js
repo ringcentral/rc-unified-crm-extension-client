@@ -25,6 +25,7 @@ import advancedFeaturesSettingHandler from './advancedFeaturesSetting';
 import customSettingsHandler from './customSettings';
 import callLogDetailsSettingHandler from './callLogDetailsSetting';
 import autoLogPreferencesHandler from './autoLogPreferences';
+import smsTimeTrackingSettingHandler from './smsTimeTrackingSetting';
 import userMappingHandler from './userMapping';
 import developerSettingsPageHandler from './developerSettingsPage';
 import adminGoogleSheetsPageHandler from './adminGoogleSheetsPage';
@@ -136,6 +137,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'autoLogPreferences':
             await autoLogPreferencesHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'smsTimeTrackingSetting':
+            await smsTimeTrackingSettingHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'userMapping':
             await userMappingHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

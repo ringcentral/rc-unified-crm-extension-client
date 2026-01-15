@@ -172,6 +172,44 @@ async function getServiceManifest() {
                         readOnly: userCore.getSMSPopSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason,
                         value: userCore.getSMSPopSetting(userSettings).value
+                    },
+                    {
+                        id: "smsTimeTracking",
+                        type: "section",
+                        name: 'SMS Time Tracking',
+                        groupId: 'logging',
+                        description: 'Automatically track time spent composing SMS messages for billing',
+                        items: [
+                            {
+                                id: "smsTimeTrackingEnabled",
+                                type: "boolean",
+                                name: 'Enable SMS Time Tracking',
+                                description: 'Automatically track time spent drafting and sending SMS messages',
+                                readOnly: userCore.getSMSTimeTrackingEnabledSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getSMSTimeTrackingEnabledSetting(userSettings).readOnlyReason,
+                                value: userCore.getSMSTimeTrackingEnabledSetting(userSettings).value
+                            },
+                            {
+                                id: "smsTimeTrackingMinimumDuration",
+                                type: "string",
+                                name: 'Minimum Billable Time Duration (seconds)',
+                                description: 'Minimum time duration in seconds for time entries (e.g., 30 for 30 seconds, 360 for 6 minutes)',
+                                readOnly: userCore.getSMSTimeTrackingMinimumDurationSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getSMSTimeTrackingMinimumDurationSetting(userSettings).readOnlyReason,
+                                value: userCore.getSMSTimeTrackingMinimumDurationSetting(userSettings).value,
+                                min: 1,
+                                max: 3600
+                            },
+                            {
+                                id: "smsTimeTrackingDefaultBillable",
+                                type: "boolean",
+                                name: 'Default Time Entries to Billable',
+                                description: 'Set whether time entries created from SMS tracking default to billable status',
+                                readOnly: userCore.getSMSTimeTrackingDefaultBillableSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getSMSTimeTrackingDefaultBillableSetting(userSettings).readOnlyReason,
+                                value: userCore.getSMSTimeTrackingDefaultBillableSetting(userSettings).value
+                            }
+                        ]
                     }
                 ]
             },

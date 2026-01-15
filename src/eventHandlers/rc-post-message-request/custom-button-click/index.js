@@ -214,6 +214,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'contactSettingPage':
         case 'callLogDetailsSettingPage':
         case 'autoLogPreferenceSettingPage':
+        case 'smsTimeTrackingSettingPage':
         case 'advancedFeaturesSettingPage':
         case 'customSettingsPage':
         case 'customizeTabsSettingPage':
