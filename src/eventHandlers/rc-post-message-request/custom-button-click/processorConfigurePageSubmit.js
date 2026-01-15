@@ -7,7 +7,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const changedSettings = {
         [`processor_${form.processorId}`]: {
             value: {
-                name: form.processorName,
+                name: form.processor.name,
                 activated: form.activated,
                 supportedLogTypes: form.supportedLogTypes,
                 isAsync: form.isAsync,

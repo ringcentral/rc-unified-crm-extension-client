@@ -244,7 +244,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     }
     // PTP auth button
     const isPTP = !!data.body.button?.formData?.processorId;
-    if(data.body.button.type != 'submit' &&isPTP){
+    if (data.body.button.type != 'submit' && isPTP) {
         await processorAuthHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
     }
     responseMessage(data.requestId, { data: 'ok' });

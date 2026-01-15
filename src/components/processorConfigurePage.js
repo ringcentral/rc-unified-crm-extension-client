@@ -1,5 +1,5 @@
-function getProcessorConfigurePageRender({ processorId, processor, activated, selectedLogTypes }) {
-    return {
+function getProcessorConfigurePageRender({ processorId, processor, activated, selectedLogTypes, isLoggedIn }) {
+    const page = {
         id: 'processorConfigurePage',
         title: 'Configure processor',
         type: 'page',
@@ -26,10 +26,6 @@ function getProcessorConfigurePageRender({ processorId, processor, activated, se
                 activated: {
                     type: 'boolean',
                     title: 'Activated',
-                },
-                authButton:{
-                    type: 'string',
-                    title: 'Auth',
                 }
             }
         },
@@ -50,22 +46,43 @@ function getProcessorConfigurePageRender({ processorId, processor, activated, se
                 "ui:options": {
                     "inline": false
                 }
-            },
-            authButton: {
-                "ui:field": "button",
-                "ui:variant": "contained",
-                "ui:fullWidth": true,
             }
         },
         formData: {
             activated: activated ?? false,
             supportedLogTypes: selectedLogTypes ?? [],
             processorId,
-            processorName: processor.name,
+            processor,
             isAsync: processor.isAsync,
             phase: processor.phase,
         }
     }
+    if (processor.showAuthorizationButton) {
+        if (isLoggedIn) {
+            page.schema.properties.logoutButton = {
+                type: 'string',
+                title: 'Logout',
+            }
+            page.uiSchema.logoutButton = {
+                "ui:field": "button",
+                "ui:variant": "contained",
+                "ui:fullWidth": true,
+                "ui:color": "danger.b03",
+            }
+        }
+        else {
+            page.schema.properties.authButton = {
+                type: 'string',
+                title: 'Connect',
+            }
+            page.uiSchema.authButton = {
+                "ui:field": "button",
+                "ui:variant": "contained",
+                "ui:fullWidth": true
+            }
+        }
+    }
+    return page;
 }
 
 exports.getProcessorConfigurePageRender = getProcessorConfigurePageRender;

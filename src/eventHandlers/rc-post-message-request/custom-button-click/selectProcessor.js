@@ -34,7 +34,26 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
     const processorSetting = userSettings?.[`processor_${selectedProcessorId}`];
     const activated = processorSetting?.value?.activated ?? false;
     const selectedLogTypes = processorSetting?.value?.supportedLogTypes ?? [];
-    const processorConfigurePageRender = getProcessorConfigurePageRender({ processorId: selectedProcessorId, processor: processorManifestResponse.data?.platforms?.[selectedProcessor.name], activated, selectedLogTypes });
+    const processor = processorManifestResponse.data?.platforms?.[selectedProcessor.name];
+    let isLoggedIn = false;
+    if (processor?.showAuthorizationButton && processor?.authStateUrl) {
+        try {
+            const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+            const authResponse = await axios.get(`${processor.authStateUrl}?jwtToken=${rcUnifiedCrmExtJwt}`);
+            isLoggedIn = authResponse.data.successful;
+            if (authResponse.data.returnMessage) {
+                showNotification({ level: authResponse.data.returnMessage.messageType, message: authResponse.data.returnMessage.message, ttl: 3000 });
+            }
+        }
+        catch (error) {
+            console.error(error);
+            if (error.response?.data?.returnMessage) {
+                showNotification({ level: error.response.data.returnMessage.messageType, message: error.response.data.returnMessage.message, ttl: 3000 });
+            }
+            isLoggedIn = false;
+        }
+    }
+    const processorConfigurePageRender = getProcessorConfigurePageRender({ processorId: selectedProcessorId, processor, activated, selectedLogTypes, isLoggedIn });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: processorConfigurePageRender
