@@ -268,30 +268,6 @@ function getSMSPopSetting(userSettings) {
     }
 }
 
-function getSMSTimeTrackingEnabledSetting(userSettings) {
-    return {
-        value: userSettings?.smsTimeTrackingEnabled?.value ?? false,
-        readOnly: userSettings?.smsTimeTrackingEnabled?.customizable === undefined ? false : !userSettings?.smsTimeTrackingEnabled?.customizable,
-        readOnlyReason: !userSettings?.smsTimeTrackingEnabled?.customizable ? 'This setting is managed by admin' : ''
-    }
-}
-
-function getSMSTimeTrackingMinimumDurationSetting(userSettings) {
-    return {
-        value: userSettings?.smsTimeTrackingMinimumDuration?.value ?? 30,
-        readOnly: userSettings?.smsTimeTrackingMinimumDuration?.customizable === undefined ? false : !userSettings?.smsTimeTrackingMinimumDuration?.customizable,
-        readOnlyReason: !userSettings?.smsTimeTrackingMinimumDuration?.customizable ? 'This setting is managed by admin' : ''
-    }
-}
-
-function getSMSTimeTrackingDefaultBillableSetting(userSettings) {
-    return {
-        value: userSettings?.smsTimeTrackingDefaultBillable?.value ?? true,
-        readOnly: userSettings?.smsTimeTrackingDefaultBillable?.customizable === undefined ? false : !userSettings?.smsTimeTrackingDefaultBillable?.customizable,
-        readOnlyReason: !userSettings?.smsTimeTrackingDefaultBillable?.customizable ? 'This setting is managed by admin' : ''
-    }
-}
-
 function getIncomingCallPop(userSettings) {
     return {
         value: userSettings?.openContactPageFromIncomingCall?.value ?? 'disabled',
@@ -659,9 +635,6 @@ exports.getEnableRetroCallLogSync = getEnableRetroCallLogSync;
 exports.getOneTimeLogSetting = getOneTimeLogSetting;
 exports.getCallPopSetting = getCallPopSetting;
 exports.getSMSPopSetting = getSMSPopSetting;
-exports.getSMSTimeTrackingEnabledSetting = getSMSTimeTrackingEnabledSetting;
-exports.getSMSTimeTrackingMinimumDurationSetting = getSMSTimeTrackingMinimumDurationSetting;
-exports.getSMSTimeTrackingDefaultBillableSetting = getSMSTimeTrackingDefaultBillableSetting;
 exports.getIncomingCallPop = getIncomingCallPop;
 exports.getOutgoingCallPop = getOutgoingCallPop;
 exports.getCallPopMultiMatchBehavior = getCallPopMultiMatchBehavior;

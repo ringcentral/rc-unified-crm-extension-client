@@ -141,9 +141,6 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                     }, {
                         const: "autoLogPreferences",
                         title: "Auto log preferences"
-                    }, {
-                        const: "smsTimeTrackingSetting",
-                        title: "SMS Time Tracking"
                     }]
                 }
             }
