@@ -28,7 +28,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, r
             serverUrl: manifest.serverUrl,
             platform,
             subscriptionLevel: data.body.button.formData.serverSideLoggingHolder.serverSideLogging,
-            loggingByAdmin: data.body.button.formData.serverSideLoggingHolder.activityRecordOwner === 'admin'
+            loggingByAdmin: data.body.button.formData.serverSideLoggingHolder.activityRecordOwner === 'admin',
+            sources: data.body.button.formData.serverSideLoggingHolder.sources
         });
     }
     else {
