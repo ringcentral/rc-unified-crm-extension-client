@@ -19,7 +19,6 @@ import rcLoginStatusNotifyHandler from './eventHandlers/rc-login-status-notify';
 import rcLoginPopupNotifyHandler from './eventHandlers/rc-login-popup-notify';
 import rcCallInitNotifyHandler from './eventHandlers/rc-call-init-notify';
 import rcCallStartNotifyHandler from './eventHandlers/rc-call-start-notify';
-import rcCallEndNotifyHandler from './eventHandlers/rc-call-end-notify';
 import rcRingoutCallNotifyHandler from './eventHandlers/rc-ringout-call-notify';
 import rcActiveCallNotifyHandler from './eventHandlers/rc-active-call-notify';
 import rcAnalyticsTrackNotifyHandler from './eventHandlers/rc-analytics-track';
@@ -182,9 +181,6 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-call-start-notify':
           await rcCallStartNotifyHandler.onEvent({ data });
-          break;
-        case 'rc-call-end-notify':
-          await rcCallEndNotifyHandler.onEvent({ data });
           break;
         case 'rc-ringout-call-notify':
           await rcRingoutCallNotifyHandler.onEvent({ data });

@@ -150,7 +150,7 @@ async function uploadServerSideLoggingAdditionalFieldValues({ platform, formData
     return uploadResponse.data;
 }
 
-async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel, loggingByAdmin, silence = false }) {
+async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel, loggingByAdmin, sources, silence = false }) {
     if (!platform.serverSideLogging) {
         return;
     }
@@ -188,7 +188,8 @@ async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel,
                     subscriptionLevel,
                     loggingByAdmin,
                     loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false,
-                    detailedCallLog: adminSettings?.userSettings?.addCallLogLegs?.value ?? false
+                    detailedCallLog: adminSettings?.userSettings?.addCallLogLegs?.value ?? false,
+                    sources
                 },
                 {
                     headers: {

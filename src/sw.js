@@ -108,136 +108,161 @@ chrome.alarms.onAlarm.addListener(async () => {
   await chrome.storage.local.remove('loginWindowInfo');
 });
 
-chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+async function pipedriveCallbackHandler(request, sender) {
+  await openPopupWindow();
+  chrome.tabs.sendMessage(sender.tab.id, { action: 'needCallbackUri' })
+  pipedriveInstallationTabId = sender.tab.id;
+  await chrome.storage.local.set({
+    ['platform-info']: { platformName: request.platform, hostname: request.hostname }
+  });
+}
+
+async function rcOAuthWindowHandler(request) {
+  const loginWindow = await chrome.windows.create({
+    url: request.oAuthUri,
+    type: 'popup',
+    width: 600,
+    height: 600,
+  });
+  await chrome.storage.local.set({
+    loginWindowInfo: {
+      platform: 'rc',
+      id: loginWindow.id
+    }
+  });
+  chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
+}
+
+async function thirdPartyOAuthWindowHandler(request) {
+  const loginWindow = await chrome.windows.create({
+    url: request.oAuthUri,
+    type: 'popup',
+    width: 600,
+    height: 600,
+  });
+  await chrome.storage.local.set({
+    loginWindowInfo: {
+      platform: 'thirdParty',
+      id: loginWindow.id
+    }
+  });
+  chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
+}
+
+async function c2xWindowHandler(request) {
+  const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
+  if (popupWindowId) {
+    // Bring the existing popup to front
+    try {
+      const win = await chrome.windows.get(popupWindowId);
+      if (win.state === 'minimized') {
+        await chrome.windows.update(popupWindowId, { state: 'normal' });
+      }
+      await chrome.windows.update(popupWindowId, { focused: true });
+    } catch (e) { /* ignore */ }
+    // Popup already open: forward directly to ensure latest intent wins
+    chrome.runtime.sendMessage({ type: request.type, phoneNumber: request.phoneNumber });
+  } else {
+    // Cold start: cache latest intent (overwrite any previous) and open
+    cachedClickToXRequest = { type: request.type, phoneNumber: request.phoneNumber, at: Date.now() };
+    await openPopupWindow();
+  }
+}
+
+async function sideWidgetOpenHandler(request) {
+  const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
+  if (!popupWindowId) {
+    return;
+  }
+  const popupWindow = await chrome.windows.get(popupWindowId);
+  if (request.opened) {
+    if (popupWindow.width < 600) {
+      await chrome.windows.update(popupWindowId, { width: popupWindow.width + 300 });
+    }
+  } else {
+    if (popupWindow.width >= 600) {
+      await chrome.windows.update(popupWindowId, { width: popupWindow.width - 300 });
+    }
+  }
+}
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log(sender.tab ?
     "from a content script:" + sender.tab.url :
     "from the extension");
-  if (request.type === "openPopupWindow") {
-    openPopupWindow();
-    sendResponse({ result: 'ok' });
-    if (request.navigationPath) {
+  switch (request.type) {
+    case "openPopupWindow":
+      openPopupWindow();
+      sendResponse({ result: 'ok' });
+      if (request.navigationPath) {
+        chrome.runtime.sendMessage({
+          type: 'navigate',
+          path: request.navigationPath
+        })
+      }
+      break;
+    // Unique: Pipedrive
+    case "openPopupWindowOnPipedriveDirectPage":
+      pipedriveCallbackHandler(request, sender);
+      sendResponse({ result: 'ok' });
+      break;
+    // Unique: Pipedrive
+    case "popupWindowRequestPipedriveCallbackUri":
       chrome.runtime.sendMessage({
-        type: 'navigate',
-        path: request.navigationPath
-      })
-    }
-    return true;
-  }
-  // Unique: Pipedrive
-  if (request.type === "openPopupWindowOnPipedriveDirectPage") {
-    await openPopupWindow();
-    chrome.tabs.sendMessage(sender.tab.id, { action: 'needCallbackUri' })
-    pipedriveInstallationTabId = sender.tab.id;
-    await chrome.storage.local.set({
-      ['platform-info']: { platformName: request.platform, hostname: request.hostname }
-    });
-    sendResponse({ result: 'ok' });
-    return;
-  }
-  // Unique: Pipedrive
-  if (request.type === "popupWindowRequestPipedriveCallbackUri") {
-    chrome.runtime.sendMessage({
-      type: 'pipedriveCallbackUri',
-      pipedriveCallbackUri
-    });
-  }
-  // Unique: Pipedrive
-  if (request.type === 'pipedriveAltAuthDone') {
-    chrome.tabs.sendMessage(pipedriveInstallationTabId, { action: 'pipedriveAltAuthDone' });
-    console.log('pipedriveAltAuthDone')
-    sendResponse({ result: 'ok' });
-    return;
-  }
-  if (request.type === 'openRCOAuthWindow' && request.oAuthUri) {
-    const loginWindow = await chrome.windows.create({
-      url: request.oAuthUri,
-      type: 'popup',
-      width: 600,
-      height: 600,
-    });
-    await chrome.storage.local.set({
-      loginWindowInfo: {
-        platform: 'rc',
-        id: loginWindow.id
+        type: 'pipedriveCallbackUri',
+        pipedriveCallbackUri
+      });
+      sendResponse({ result: 'ok' });
+      break;
+    // Unique: Pipedrive
+    case "pipedriveAltAuthDone":
+      chrome.tabs.sendMessage(pipedriveInstallationTabId, { action: 'pipedriveAltAuthDone' });
+      console.log('pipedriveAltAuthDone')
+      sendResponse({ result: 'ok' });
+      break;
+    case "openRCOAuthWindow":
+      if (request.oAuthUri) {
+        rcOAuthWindowHandler(request);
       }
-    });
-    chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
-    sendResponse({ result: 'ok' });
-    return;
-  }
-  if (request.type === 'openThirdPartyAuthWindow' && request.oAuthUri) {
-    const loginWindow = await chrome.windows.create({
-      url: request.oAuthUri,
-      type: 'popup',
-      width: 600,
-      height: 600,
-    });
-    await chrome.storage.local.set({
-      loginWindowInfo: {
-        platform: 'thirdParty',
-        id: loginWindow.id
+      sendResponse({ result: 'ok' });
+      break;
+    case "openThirdPartyAuthWindow":
+      if (request.oAuthUri) {
+        thirdPartyOAuthWindowHandler(request);
       }
-    });
-    chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
-    sendResponse({ result: 'ok' });
-    return;
-  }
-  if (request.type === 'c2d' || request.type === 'c2sms' || request.type === 'c2schedule') {
-    const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
-    if (popupWindowId) {
-      // Bring the existing popup to front
-      try {
-        const win = await chrome.windows.get(popupWindowId);
-        if (win.state === 'minimized') {
-          await chrome.windows.update(popupWindowId, { state: 'normal' });
-        }
-        await chrome.windows.update(popupWindowId, { focused: true });
-      } catch (e) { /* ignore */ }
-      // Popup already open: forward directly to ensure latest intent wins
-      chrome.runtime.sendMessage({ type: request.type, phoneNumber: request.phoneNumber });
-    } else {
-      // Cold start: cache latest intent (overwrite any previous) and open
-      cachedClickToXRequest = { type: request.type, phoneNumber: request.phoneNumber, at: Date.now() };
-      await openPopupWindow();
-    }
-  }
-  if (request.type === 'checkForClickToXCache') {
-    sendResponse(cachedClickToXRequest);
-    cachedClickToXRequest = null;
-  }
-  // Unique: Pipedrive
-  if (request.type === 'pipedriveCallbackUri') {
-    pipedriveCallbackUri = request.callbackUri;
-    console.log('pipedrive callback uri: ', request.callbackUri);
-
-    chrome.runtime.sendMessage({
-      type: 'pipedriveCallbackUri',
-      pipedriveCallbackUri
-    });
-  }
-  if (request.type === 'sideWidgetOpen') {
-    const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
-    if (!popupWindowId) {
-      return;
-    }
-    const popupWindow = await chrome.windows.get(popupWindowId);
-    if (request.opened) {
-      if (popupWindow.width < 600) {
-        await chrome.windows.update(popupWindowId, { width: popupWindow.width + 300 });
-      }
-    } else {
-      if (popupWindow.width >= 600) {
-        await chrome.windows.update(popupWindowId, { width: popupWindow.width - 300 });
-      }
-    }
+      sendResponse({ result: 'ok' });
+      break;
+    case "c2d":
+    case "c2sms":
+    case "c2schedule":
+      c2xWindowHandler(request);
+      sendResponse({ result: 'ok' });
+      break;
+    case "checkForClickToXCache":
+      sendResponse(cachedClickToXRequest);
+      cachedClickToXRequest = null;
+      break;
+    // Unique: Pipedrive
+    case "pipedriveCallbackUri":
+      pipedriveCallbackUri = request.callbackUri;
+      console.log('pipedrive callback uri: ', request.callbackUri);
+      chrome.runtime.sendMessage({
+        type: 'pipedriveCallbackUri',
+        pipedriveCallbackUri
+      });
+      sendResponse({ result: 'ok' });
+      break;
+    case "sideWidgetOpen":
+      sideWidgetOpenHandler(request);
+      sendResponse({ result: 'ok' });
+      break;
   }
 });
 
 chrome.runtime.onMessageExternal.addListener(
   (request, sender, sendResponse) => {
     if (request.action === "isInstalled") {
-      sendResponse({ isInstalled: true }); 
-      return true;
+      sendResponse({ isInstalled: true });
     }
   }
 );
