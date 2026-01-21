@@ -41,6 +41,15 @@ async function getServiceManifest() {
         readOnly: userCore.getPhoneNumberDisplayFormatTypeSetting(userSettings).readOnly, // optional, set to true to disable user change setting
         readOnlyReason: userCore.getPhoneNumberDisplayFormatTypeSetting(userSettings).readOnlyReason, // optional, set to true to disable user change setting
     }, '*');
+    // Enable SMS typing time tracking so outbound messages include typingDurationMs
+    try {
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            type: 'rc-adapter-update-sms-typing-time-tracking',
+            enabled: true,
+        }, '*');
+    } catch (e) {
+        // ignore if frame is not ready; the UI will re-request manifest later
+    }
     const services = {
         name: platformName,
         displayName: platform.displayName,
