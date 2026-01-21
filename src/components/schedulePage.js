@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 /**
  * Creates a schedule page configuration for the call-down list functionality
  * @param {Object} params - Parameters for creating the schedule page
@@ -11,19 +13,19 @@
 function getSchedulePageRender({ phoneNumber, listOneOf, isDefaultNew, preselect, contactTypes = [] }) {
   return {
     id: 'c2dSchedulePage',
-    title: 'Add to call-down list',
+    title: t('pages.schedule.title'),
     type: 'page',
     schema: {
       type: 'object',
       required: ['callbackDateTime'],
       properties: {
-        phone: { type: 'string', title: 'Phone Number' },
-        contact: { type: 'string', title: 'Contact', oneOf: listOneOf },
-        newContactName: { type: 'string', title: 'New contact name' },
+        phone: { type: 'string', title: t('pages.schedule.phoneNumber') },
+        contact: { type: 'string', title: t('common.labels.contact'), oneOf: listOneOf },
+        newContactName: { type: 'string', title: t('pages.log.newContactName') },
         ...(contactTypes.length > 0 ? { 
           newContactType: { 
             type: 'string', 
-            title: 'Contact type', 
+            title: t('pages.log.contactType'), 
             oneOf: contactTypes.map(t => ({ 
               const: t.value, 
               title: t.display 
@@ -32,11 +34,11 @@ function getSchedulePageRender({ phoneNumber, listOneOf, isDefaultNew, preselect
         } : {}),
         callbackDateTime: { 
           type: 'string', 
-          title: 'Schedule time', 
+          title: t('pages.schedule.scheduleTime'), 
           format: 'date-time',
           minimum: new Date(new Date().setHours(0, 0, 0, 0)).toISOString()
         },
-        scheduleSubmit: { type: 'string', title: 'Schedule' },
+        scheduleSubmit: { type: 'string', title: t('common.buttons.schedule') },
       }
     },
     uiSchema: {
@@ -44,7 +46,7 @@ function getSchedulePageRender({ phoneNumber, listOneOf, isDefaultNew, preselect
       contact: {},
       newContactName: isDefaultNew ? { 
         'ui:widget': 'text', 
-        'ui:placeholder': 'Enter name...' 
+        'ui:placeholder': t('pages.log.enterName') 
       } : { 
         'ui:widget': 'hidden' 
       },

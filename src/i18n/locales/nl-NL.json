@@ -1,0 +1,384 @@
+{
+  "common": {
+    "buttons": {
+      "save": "Opslaan",
+      "cancel": "Annuleren",
+      "submit": "Verzenden",
+      "update": "Bijwerken",
+      "connect": "Verbinden",
+      "open": "Openen",
+      "logout": "Uitloggen",
+      "select": "Selecteren",
+      "schedule": "Plannen"
+    },
+    "labels": {
+      "admin": "(Admin)",
+      "version": "Versie",
+      "author": "Auteur",
+      "license": "Licentie",
+      "warning": "Waarschuwing",
+      "search": "Zoeken",
+      "filter": "Filter",
+      "contact": "Contact",
+      "none": "Geen",
+      "disabled": "Uitgeschakeld",
+      "private": "Privé",
+      "sharedWithYou": "Met u gedeeld",
+      "all": "Alle",
+      "value": "Waarde",
+      "customizableByUser": "Aanpasbaar door gebruiker"
+    },
+    "status": {
+      "online": "Online",
+      "offline": "Offline"
+    }
+  },
+  "pages": {
+    "hostname": {
+      "setup": "Instellen",
+      "select": "Selecteren",
+      "inputHostname": "Hostnaam invoeren",
+      "next": "Volgende",
+      "instructionTitle": "Volg de onderstaande instructies om uw {platform} account in te stellen:",
+      "url": "{platform} URL",
+      "urlPlaceholder": "URL...",
+      "invalidUrl": "Ongeldige URL! Voer het in volgens het formaat: \"{format}\""
+    },
+    "about": {
+      "title": "Over",
+      "introduction": "RingCentral App Connect integreert een volledig functionele webtelefoon in een set ondersteunde CRM-platforms.",
+      "chromeExtension": "Chrome-extensie",
+      "extensionAuthor": "Auteur: RingCentral, Inc.",
+      "versionLabel": "Versie: {version}",
+      "eula": "Eindgebruikerslicentieovereenkomst",
+      "adapter": "Adapter",
+      "adapterAuthor": "Auteur: {author}",
+      "website": "Website",
+      "support": "Ondersteuning"
+    },
+    "support": {
+      "title": "Ondersteuning",
+      "documentation": "Documentatie",
+      "releaseNotes": "Releaseopmerkingen",
+      "getSupport": "Ondersteuning krijgen",
+      "writeReview": "Schrijf een beoordeling",
+      "communityForums": "Communityforums",
+      "serverStatus": "Serverstatus: {status}",
+      "versionLabel": "Versie: v{version}",
+      "sendErrorReport": "Foutrapport verzenden",
+      "clearLogConflicts": "Logconflicten wissen",
+      "factoryResetWarning": "Fabrieksinstellingen herstellen zal zowel CRM- als RingCentral-accounts van deze extensie loskoppelen en u uitloggen.",
+      "factoryReset": "Fabrieksinstellingen herstellen"
+    },
+    "admin": {
+      "title": "Admin",
+      "managedSettings": "Beheerde instellingen",
+      "serverSideLogging": "Server-side logging (Beta)"
+    },
+    "managedSettings": {
+      "title": "Beheerde instellingen",
+      "general": "Algemeen",
+      "googleSheetsConfig": "Google Sheets-configuratie",
+      "activityLogging": "Activiteitenregistratie",
+      "callPop": "Oproep-pop",
+      "advancedFeatures": "Geavanceerde functies",
+      "customSettings": "Aangepaste instellingen"
+    },
+    "generalSettings": {
+      "title": "Algemeen",
+      "appearance": "Uiterlijk",
+      "enabledDomains": "Ingeschakelde domeinen"
+    },
+    "platformSelection": {
+      "title": "Platform selecteren",
+      "searchPlaceholder": "Zoeken met filters..."
+    },
+    "log": {
+      "saveTo": "Opslaan in {platform}",
+      "editLog": "Log bewerken",
+      "activityTitle": "Activiteitstitel",
+      "note": "Notitie",
+      "scheduleCallback": "Terugbelafspraak plannen",
+      "callbackTime": "Terugbeltijd",
+      "newContactName": "Nieuwe contactnaam",
+      "contactType": "Contacttype",
+      "searchContacts": "Contacten zoeken",
+      "multipleContactsWarning": "Meerdere contacten gevonden. Selecteer het contact om deze activiteit aan te koppelen.",
+      "noContactWarning": "Geen contact gevonden. Voer een naam in om een tijdelijk contact aan te maken.",
+      "inboundCallFrom": "Inkomende {type} van {name}",
+      "outboundCallTo": "Uitgaande {type} naar {name}",
+      "enterTitle": "Titel invoeren...",
+      "enterNote": "Notitie invoeren...",
+      "enterName": "Naam invoeren...",
+      "addToCalldownList": "Voeg dit contact toe aan de bellijst"
+    },
+    "unloggedCalls": {
+      "title": "Niet-geregistreerde oproepen"
+    },
+    "feedback": {
+      "title": "Feedback"
+    },
+    "reports": {
+      "title": "Rapporten",
+      "userStats": "Gebruikersstatistieken",
+      "companyStats": "Bedrijfsstatistieken"
+    },
+    "schedule": {
+      "title": "Toevoegen aan bellijst",
+      "phoneNumber": "Telefoonnummer",
+      "scheduleTime": "Geplande tijd"
+    },
+    "calldown": {
+      "title": "Bellijst",
+      "contacts": "Contacten",
+      "filterByName": "Filteren op naam",
+      "all": "Alle",
+      "notCalled": "Niet gebeld",
+      "called": "Gebeld",
+      "scheduled": "Gepland",
+      "call": "Bellen",
+      "text": "SMS",
+      "viewContact": "Contact bekijken",
+      "edit": "Bewerken",
+      "markComplete": "Markeren als voltooid",
+      "delete": "Verwijderen"
+    },
+    "developerSettings": {
+      "title": "Ontwikkelaarsinstellingen",
+      "clearPlatformInfoWarning": "Dit zal de huidige CRM-platforminformatie wissen om opnieuw te initialiseren met een nieuw CRM-platform.",
+      "clearPlatformInfo": "Platforminfo wissen",
+      "checkInterfaceImplementations": "Interface-implementaties controleren"
+    },
+    "multiContactPrompt": {
+      "title": "Klik op contact om te openen",
+      "contacts": "Contacten"
+    }
+  },
+  "settings": {
+    "preconfigure": {
+      "noCrmSelected": "Geen CRM geselecteerd"
+    },
+    "auth": {
+      "authorizedTitle": "Uitloggen",
+      "unauthorizedTitle": "Verbinden",
+      "developedBy": "Ontwikkeld door {author}"
+    },
+    "buttons": {
+      "callLater": "Later bellen"
+    },
+    "logging": {
+      "groupName": "Activiteitenregistratie",
+      "autoLogCall": "Telefoongesprekken automatisch registreren",
+      "autoLogCallDesc": "Automatisch oproepen registreren wanneer ze eindigen in deze app",
+      "autoLogSMS": "SMS-gesprekken automatisch registreren",
+      "autoLogSMSDesc": "Automatisch SMS registreren wanneer ze worden verzonden of ontvangen in deze app",
+      "autoLogVoicemail": "Voicemailberichten automatisch registreren",
+      "autoLogVoicemailDesc": "Automatisch voicemailberichten registreren wanneer ze worden ontvangen in deze app",
+      "autoLogInboundFax": "Inkomende faxen automatisch registreren",
+      "autoLogInboundFaxDesc": "Automatisch inkomende faxen registreren wanneer ze worden ontvangen in deze app",
+      "autoLogOutboundFax": "Uitgaande faxen automatisch registreren",
+      "autoLogOutboundFaxDesc": "Automatisch uitgaande faxen registreren wanneer ze worden verzonden in deze app",
+      "retroCallLogSync": "Retroactieve oproeplog-synchronisatie",
+      "retroCallLogSyncDesc": "Scant periodiek en registreert gemiste activiteiten",
+      "disableRetroCallLogSync": "Retroactieve oproeplog-synchronisatie uitschakelen",
+      "oneTimeLog": "Eenmalige oproepregistratie",
+      "oneTimeLogDesc": "Vertraagt registratie totdat volledige oproepdetails beschikbaar zijn",
+      "enableOneTimeLog": "Eenmalige oproepregistratie inschakelen",
+      "popupLogPageAfterCall": "(Handmatige log) Open oproepregistratiepagina na oproep",
+      "popupLogPageAfterCallDesc": "Automatisch het registratieformulier openen na elke oproep",
+      "popupLogPageAfterSMS": "(Handmatige log) Open SMS-registratiepagina na bericht",
+      "popupLogPageAfterSMSDesc": "Automatisch het registratieformulier openen na elk bericht"
+    },
+    "callLogDetails": {
+      "groupName": "Oproeplogdetails",
+      "agentNotes": "Agent-ingevoerde notities",
+      "agentNotesDesc": "Registreer de notities die u handmatig hebt ingevoerd",
+      "agentNotesDescAdmin": "Registreer de notities die handmatig door de agent zijn ingevoerd",
+      "callSessionId": "Oproepsessie-ID",
+      "callSessionIdDesc": "Registreer RingCentral oproepsessie-ID",
+      "rcUserName": "RingCentral-gebruikersnaam",
+      "rcUserNameDesc": "Registreer de RingCentral-gebruikersnaam",
+      "rcNumber": "RingCentral-telefoonnummer",
+      "rcNumberDesc": "Registreer het RingCentral-telefoonnummer",
+      "callSubject": "Oproeponderwerp",
+      "callSubjectDesc": "Registreer een korte zin om de oproep samen te vatten, bijv. 'Inkomende oproep van...'",
+      "contactNumber": "Telefoonnummer van contact",
+      "contactNumberDesc": "Registreer de contactinformatie van de andere deelnemer",
+      "dateTime": "Datum en tijd",
+      "dateTimeDesc": "Registreer de expliciete start- en einddata/tijden van de oproep",
+      "dateFormat": "Datumformaat",
+      "dateFormatDesc": "Het formaat van datum en tijd in het oproeplog",
+      "callDuration": "Oproepduur",
+      "callDurationDesc": "Registreer de oproepduur, in minuten en seconden",
+      "callResult": "Oproepresultaat",
+      "callResultDesc": "Registreer het resultaat van de oproep, bijv. Oproep verbonden",
+      "recordingLink": "Link naar opname",
+      "recordingLinkDesc": "Verstrek een link naar de oproepopname, indien aanwezig",
+      "smartSummary": "Slimme samenvatting",
+      "smartSummaryDesc": "Registreer de AI-gegenereerde samenvatting van de oproep, indien aanwezig",
+      "transcript": "Oproeptranscriptie",
+      "transcriptDesc": "Registreer de AI-gegenereerde transcriptie van de oproep, indien aanwezig",
+      "aiAssistantRequired": "AI-assistent vereist",
+      "ringSenseTranscript": "RingSense-transcriptie",
+      "ringSenseTranscriptDesc": "[RingSense-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
+      "ringSenseCallScore": "RingSense-oproepcijfer",
+      "ringSenseCallScoreDesc": "[RingSense-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
+      "ringSenseSummary": "RingSense-samenvatting",
+      "ringSenseSummaryDesc": "[RingSense-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
+      "ringSenseBulletedSummary": "RingSense-opsommingssamenvatting",
+      "ringSenseBulletedSummaryDesc": "[RingSense-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
+      "ringSenseRecordingLink": "RingSense-opnamelink",
+      "ringSenseRecordingLinkDesc": "[RingSense-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
+      "callJourney": "Oproepreis",
+      "callJourneyDesc": "Alleen server-side logging.",
+      "dateFormatGlobal24H": "Globaal - 24U (bijv. 2024-01-15 14:30:45)",
+      "dateFormatGlobal12H": "Globaal - 12U (bijv. 2024-01-15 02:30:45 PM)",
+      "dateFormatUS12H": "VS - 12U (bijv. 01/15/2024 02:30:45 PM)",
+      "dateFormatUS24H": "VS - 24U (bijv. 01/15/2024 14:30:45)",
+      "dateFormatEU24H": "EU - 24U (bijv. 15/01/2024 14:30:45)",
+      "dateFormatEU12H": "EU - 12U (bijv. 15/01/2024 02:30:45 PM)"
+    },
+    "autoLogPreferences": {
+      "groupName": "Voorkeuren voor automatisch loggen",
+      "groupDesc": "Stel voorkeuren in voor automatische logscenario's",
+      "unknownContact": "Onbekend contact",
+      "unknownContactHelper": "Wat te doen wanneer het telefoonnummer niet overeenkomt met een contact",
+      "skipLogging": "Registratie overslaan",
+      "createNewPlaceholder": "Nieuw tijdelijk contact maken",
+      "newContactType": "Nieuw contacttype (van toepassing bij aanmaken nieuw contact)",
+      "newContactTypeHelper": "Bij het maken van een tijdelijk contact, welk contacttype het moet zijn",
+      "newContactNamePrefix": "Naamprefix nieuw contact (van toepassing bij aanmaken nieuw contact)",
+      "newContactNamePrefixHelper": "Naam bevat beller-ID (indien beschikbaar) + Telefoonnummer",
+      "multipleContacts": "Meerdere contacten",
+      "multipleContactsHelper": "Wat te doen wanneer meerdere contacten overeenkomen met het telefoonnummer",
+      "firstAlphabetical": "Eerst alfabetisch",
+      "mostRecentActivity": "Meest recente activiteit"
+    },
+    "appearance": {
+      "groupName": "Uiterlijk",
+      "groupDesc": "Wijzig weergave- en themavoorkeuren",
+      "customizeTabs": "Tabbladen aanpassen",
+      "customizeTabsDesc": "Bepaal welke tabbladen zichtbaar zijn in de extensie-interface",
+      "showChatTab": "Chattabblad tonen",
+      "showMeetingsTab": "Vergaderingentabblad tonen",
+      "showTextTab": "Teksttabblad tonen",
+      "showFaxTab": "Faxtabblad tonen",
+      "showVoicemailTab": "Voicemailtabblad tonen",
+      "showRecordingsTab": "Opnamentabblad tonen",
+      "showContactsTab": "Contactentabblad tonen",
+      "showUserReportTab": "Gebruikersrapporttabblad tonen",
+      "showCalldownTab": "Bellijsttabblad tonen",
+      "notificationLevel": "Meldingsniveau",
+      "notificationLevelDesc": "Selecteer het meldingsniveau dat in de extensie wordt weergegeven.",
+      "notificationLevelSelectDesc": "Kies welke typen meldingen worden weergegeven",
+      "success": "Succes",
+      "warning": "Waarschuwing",
+      "error": "Fout",
+      "widgetSettings": "Widget-instellingen",
+      "widgetSettingsDesc": "Wijzig de widget-instellingen",
+      "quickAccessButtonSize": "Snelle toegang knopgrootte",
+      "small": "Klein",
+      "medium": "Gemiddeld",
+      "large": "Groot",
+      "extraLarge": "Extra groot",
+      "phoneNumberFormat": "Telefoonnummerformaat"
+    },
+    "callPop": {
+      "groupName": "Oproep-pop",
+      "incomingCallPop": "Inkomende oproep-pop",
+      "incomingCallPopHelper": "Selecteer wanneer oproep-pop voor inkomende oproepen moet worden geactiveerd.",
+      "outgoingCallPop": "Uitgaande oproep-pop",
+      "outgoingCallPopHelper": "Selecteer wanneer oproep-pop voor uitgaande oproepen moet worden geactiveerd.",
+      "onFirstRing": "Bij eerste beltoon",
+      "onAnswer": "Bij beantwoording",
+      "multiContactBehavior": "Gedrag bij meerdere contacten",
+      "multiContactBehaviorHelper": "Selecteer wat te doen wanneer meerdere contacten overeenkomen met een telefoonnummer.",
+      "openAllMatches": "Alle overeenkomsten openen",
+      "promptToSelect": "Vragen om te selecteren",
+      "allowExtensionLogging": "Extensienummer-logging toestaan",
+      "managedByAdmin": "Deze instelling wordt beheerd door de admin",
+      "contactCreatedCallPop": "Contact aangemaakt oproep-pop",
+      "contactCreatedCallPopDesc": "Contact direct openen na aanmaken",
+      "openContactFromIncoming": "Contact openen bij inkomende oproep",
+      "openContactFromOutgoing": "Contact openen bij uitgaande oproep",
+      "openContactAfterCreating": "Contact openen na aanmaken",
+      "overridingNumberFormat": "Overschrijvend nummerformaat",
+      "overridingNumberFormatWarning": "Voer uw overschrijvende telefoonnummerformaat in: (gebruik # om een cijfer weer te geven, bijv. (###) ###-###)"
+    },
+    "enabledDomains": {
+      "groupName": "Ingeschakelde domeinen",
+      "groupDesc": "Beheer de URL's waarvoor App Connect is ingeschakeld",
+      "clickToDialWarning": "Click-to-dial is een pop-upwidget die wordt getoond wanneer een gebruiker over een telefoonnummer beweegt.",
+      "clickToDialMode": "Click-to-dial inschakelmodus",
+      "crmOnly": "Alleen inschakelen voor verbonden CRM",
+      "whitelist": "Standaard blokkeren (beheer dan een lijst van sites om toe te staan)",
+      "blacklist": "Standaard toestaan (beheer dan een lijst van sites om te blokkeren)",
+      "clickToDialUrls": "Click-to-dial URL's",
+      "clickToDialUrlsHelper": "Voer de URL's in van de pagina's die op de whitelist moeten komen. Scheid meerdere URL's met komma's. Gebruik * als jokerteken.",
+      "quickAccessWarning": "De snelle toegang knop wordt rechtsonder op het scherm getoond.",
+      "quickAccessMode": "Snelle toegang knop inschakelmodus",
+      "quickAccessUrls": "Snelle toegang knop URL's"
+    },
+    "advanced": {
+      "groupName": "Geavanceerde functies",
+      "developerMode": "Ontwikkelaarsmodus",
+      "developerModeDesc": "Schakel ontwikkelaarsmodus in om toegang te krijgen tot ontwikkelaarsinstellingen.",
+      "autoOpenExtension": "Extensie automatisch openen",
+      "autoOpenExtensionDesc": "De extensie wordt geopend wanneer een CRM-pagina wordt geladen."
+    },
+    "numberFormatter": {
+      "title": "Nummerformattering",
+      "phoneNumberAlternatives": "Alternatieve telefoonnummerformaten",
+      "info": "Voer uw overschrijvende telefoonnummerformaat in: (gebruik # om een cijfer weer te geven, bijv. (###) ###-###) [Hoe het werkt](https://appconnect.labs.ringcentral.com/users/phone-number-formats/#how-it-works)",
+      "format1": "Formaat 1",
+      "format2": "Formaat 2",
+      "format3": "Formaat 3"
+    },
+    "googleSheets": {
+      "config": "Google Sheets-configuratie"
+    }
+  },
+  "notifications": {
+    "success": {
+      "callLogAdded": "Oproeplog toegevoegd",
+      "messageLogAdded": "Berichtlog toegevoegd",
+      "callLogUpdated": "Oproeplog bijgewerkt",
+      "authorized": "Succesvol geautoriseerd.",
+      "unauthorized": "Succesvol uitgelogd.",
+      "openingContactPage": "Proberen contactpagina te vinden en te openen..."
+    },
+    "warning": {
+      "callLogFailed": "Opslaan van oproeplog mislukt",
+      "callLogUpdateFailed": "Bijwerken van oproeplog mislukt",
+      "connectToCrm": "Ga naar Instellingen en maak verbinding met het CRM-platform",
+      "apiKeyFailed": "Registreren van API-sleutel mislukt.",
+      "noContactFound": "Geen contact gevonden"
+    },
+    "error": {
+      "wrongFormat": "Verkeerd formaat: {field}"
+    }
+  },
+  "conflicts": {
+    "multipleContacts": "Meerdere contacten",
+    "noMatchedContact": "Er is geen overeenkomend contact",
+    "multipleMatchedContacts": "Er zijn meerdere overeenkomende contacten",
+    "multipleAssociations": "Er zijn meerdere gekoppelde \"{associations}\"."
+  },
+  "dateFormats": {
+    "general12H": "2024-01-15 02:30:45 PM - Algemeen 12U",
+    "general24H": "2024-01-15 14:30:45 - Algemeen 24U",
+    "us12H": "01/15/2024 02:30:45 PM - VS 12U",
+    "us24H": "01/15/2024 14:30:45 - VS 24U",
+    "eu12H": "15/01/2024 02:30:45 PM - EU 12U",
+    "eu24H": "15/01/2024 14:30:45 - EU 24U"
+  },
+  "misc": {
+    "clickToDialCollision": "De RingCentral voor Google Chrome-extensie is gedetecteerd. U kunt uw click-to-dial-voorkeuren aanpassen voor het gewenste gedrag.",
+    "clickToDialCollisionTitle": "Click-to-dial werkt mogelijk niet",
+    "configure": "Configureren",
+    "pipedriveStep2": "(2/3) Log in op de extensie met uw RingCentral-account. Als er niets gebeurt, ververs dan deze pagina en wacht een paar seconden.",
+    "pipedriveStep3": "(3/3) Instelling voltooid. U kunt deze pagina nu sluiten.",
+    "setup": "Instellen"
+  }
+}
+

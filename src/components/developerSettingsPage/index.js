@@ -1,22 +1,24 @@
+import { t } from '../../i18n';
+
 function getDeveloperSettingsPageRender() {
     const developerSettingsPage = {
         id: 'developerSettingsPage',
-        title: 'Developer settings',
+        title: t('pages.developerSettings.title'),
         type: 'page',
         schema: {
             type: 'object',
             properties: {
                 clearPlatformInfoWarning: {
                     type: "string",
-                    description: "This will clear current CRM platform information so to be re-initialized with a new CRM platform."
+                    description: t('pages.developerSettings.clearPlatformInfoWarning')
                 },
                 clearPlatformInfoButton: {
                     type: "string",
-                    title: "Clear platform info"
+                    title: t('pages.developerSettings.clearPlatformInfo')
                 },
                 openImplementedInterfacesPageButton: {
                     type: "string",
-                    title: "Check interface implementations"
+                    title: t('pages.developerSettings.checkInterfaceImplementations')
                 }
             }
         },

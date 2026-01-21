@@ -33,6 +33,7 @@ async function onEvent({ data }) {
         userPermissions.aiNote = data.features && data.features.smartNote;
         userPermissions.ringSenseInsights = data.features && data.features.ringSenseInsights;
         userPermissions.ringCX = data.features && data.features.ringCX;
+        userPermissions.sms = data.features && data.features.sms;
         await chrome.storage.local.set({ userPermissions });
     }
     console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);

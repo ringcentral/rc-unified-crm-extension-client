@@ -1,56 +1,58 @@
+import { t } from '../i18n';
+
 function getSupportPageRender({ manifest, platformName, isOnline }) {
     const supportPage = {
         id: 'supportPage',
-        title: 'Support',
+        title: t('pages.support.title'),
         type: 'page',
         schema: {
             type: 'object',
             properties: {
                 documentation: {
                     type: "string",
-                    description: "Documentation"
+                    description: t('pages.support.documentation')
                 },
                 releaseNotes: {
                     type: "string",
-                    description: "Release notes"
+                    description: t('pages.support.releaseNotes')
                 },
                 getSupport: {
                     type: "string",
-                    description: "Get support"
+                    description: t('pages.support.getSupport')
                 },
                 writeReview: {
                     type: "string",
-                    description: "Write a review"
+                    description: t('pages.support.writeReview')
                 },
                 openCommunityPageButton: {
                     type: "string",
-                    description: "Community forums",
+                    description: t('pages.support.communityForums'),
                 },
                 isServiceOnline: {
                     type: "string",
-                    description: `Server status: ${isOnline ? 'Online' : 'Offline'}`
+                    description: t('pages.support.serverStatus', { status: isOnline ? t('common.status.online') : t('common.status.offline') })
                 },
                 version: {
                     type: "string",
-                    description: `Version: v${manifest.version}`
+                    description: t('pages.support.versionLabel', { version: manifest.version })
                 },
                 ...(manifest.platforms[platformName].supportReportIssue ? {
                     reportIssueButton: {
                         type: "string",
-                        title: "Send error report",
+                        title: t('pages.support.sendErrorReport'),
                     }
                 } : {}),
                 clearLogConflictsButton: {
                     type: "string",
-                    title: "Clear log conflicts",
+                    title: t('pages.support.clearLogConflicts'),
                 },
                 factoryResetWarning: {
                     type: "string",
-                    description: "Factory reset will disconnect both CRM and RingCentral accounts from this extension and log you out."
+                    description: t('pages.support.factoryResetWarning')
                 },
                 factoryResetButton: {
                     type: "string",
-                    title: "Factory reset",
+                    title: t('pages.support.factoryReset'),
                 }
             }
         },

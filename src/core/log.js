@@ -2,6 +2,7 @@ import axios from 'axios';
 import { isObjectEmpty, showNotification, getRcAccessToken } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 import { upsertPTPAsyncTaskIds } from '../service/ptpService';
+import { t } from '../i18n';
 
 // Input {id} = sessionId from RC
 async function addLog({
@@ -65,7 +66,7 @@ async function addLog({
                         await upsertPTPAsyncTaskIds({ taskIds: addLogRes.data.ptpAsyncTaskIds });
                     }
                     if (isShowNotification) {
-                        showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'success', message: addLogRes.data.returnMessage?.message ?? 'Call log added', ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
+                        showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'success', message: addLogRes.data.returnMessage?.message ?? t('notifications.success.callLogAdded'), ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
                     }
                     await chrome.storage.local.set({
                         [`rc-crm-call-log-${logInfo.sessionId}`]: {
@@ -76,7 +77,7 @@ async function addLog({
                 }
                 else {
                     if (isShowNotification) {
-                        showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'warning', message: addLogRes.data.returnMessage?.message ?? 'Failed to save call log', ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
+                        showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'warning', message: addLogRes.data.returnMessage?.message ?? t('notifications.warning.callLogFailed'), ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
                     }
                 }
                 // force call log matcher check
@@ -106,7 +107,7 @@ async function addLog({
                         await chrome.storage.local.set(messageLogPrefCache);
                     }
                     if (addLogRes.data.logIds?.length > 0 && isShowNotification) {
-                        showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'success', message: addLogRes.data.returnMessage?.message ?? 'Message log added', ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
+                        showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'success', message: addLogRes.data.returnMessage?.message ?? t('notifications.success.messageLogAdded'), ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
                     }
                     await chrome.storage.local.set({ [`rc-crm-conversation-log-${logInfo.conversationLogId}`]: { logged: true } });
                 }
@@ -114,7 +115,7 @@ async function addLog({
         }
     }
     else {
-        showNotification({ level: 'warning', message: 'Please go to Settings and connect to CRM platform', ttl: 3000 });
+        showNotification({ level: 'warning', message: t('notifications.warning.connectToCrm'), ttl: 3000 });
     }
 }
 
@@ -129,7 +130,7 @@ async function getLog({ serverUrl, logType, sessionIds, requireDetails }) {
         }
     }
     else {
-        return { successful: false, message: 'Please go to Settings and connect to CRM platform' };
+        return { successful: false, message: t('notifications.warning.connectToCrm') };
     }
 }
 
@@ -170,10 +171,9 @@ async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, re
                         if(callLogRes.data.ptpAsyncTaskIds?.length > 0){
                             await upsertPTPAsyncTaskIds({ taskIds: callLogRes.data.ptpAsyncTaskIds });
                         }
-                        showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'success', message: callLogRes.data.returnMessage?.message ?? 'Call log updated', ttl: callLogRes.data.returnMessage?.ttl ?? 3000, details: callLogRes.data.returnMessage?.details });
                     }
                     else {
-                        showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'warning', message: callLogRes.data.returnMessage?.message ?? 'Call log update failed', ttl: callLogRes.data.returnMessage?.ttl ?? 3000, details: callLogRes.data.returnMessage?.details });
+                        showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'warning', message: callLogRes.data.returnMessage?.message ?? t('notifications.warning.callLogUpdateFailed'), ttl: callLogRes.data.returnMessage?.ttl ?? 3000, details: callLogRes.data.returnMessage?.details });
                     }
                 }
         }
@@ -211,11 +211,11 @@ async function uploadCacheNote({ serverUrl, sessionId }) {
 function getConflictContentFromUnresolvedLog(log) {
     const isMultipleContact = log.contactInfo?.filter(c => !c.isNewContact)?.length > 1;
     const isNoContact = log.contactInfo?.filter(c => !c.isNewContact)?.length === 0 && log.contactInfo?.some(c => c.isNewContact);
-    const contactName = isMultipleContact ? 'Multiple contacts' : log.contactInfo.find(c => !c.isNewContact)?.name;
+    const contactName = isMultipleContact ? t('conflicts.multipleContacts') : log.contactInfo.find(c => !c.isNewContact)?.name;
     if (isMultipleContact || isNoContact) {
         return {
             title: contactName ? `${contactName} ${log?.phoneNumber ? `(${log?.phoneNumber})` : ''}` : log?.phoneNumber,
-            description: isNoContact ? 'There is no matched contact' : 'There are multiple matched contacts'
+            description: isNoContact ? t('conflicts.noMatchedContact') : t('conflicts.multipleMatchedContacts')
         }
     }
     else {
@@ -233,7 +233,7 @@ function getConflictContentFromUnresolvedLog(log) {
         }
         return {
             title: `${contactName} ${log?.phoneNumber ? `(${log?.phoneNumber})` : ''}`,
-            description: `There are multiple associated "${multiplAssociations.toString()}".`,
+            description: t('conflicts.multipleAssociations', { associations: multiplAssociations.toString() }),
             type: log.type
         }
     }

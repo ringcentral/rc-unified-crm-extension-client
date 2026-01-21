@@ -1,0 +1,384 @@
+{
+  "common": {
+    "buttons": {
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "submit": "Enviar",
+      "update": "Actualizar",
+      "connect": "Conectar",
+      "open": "Abrir",
+      "logout": "Cerrar sesión",
+      "select": "Seleccionar",
+      "schedule": "Programar"
+    },
+    "labels": {
+      "admin": "(Admin)",
+      "version": "Versión",
+      "author": "Autor",
+      "license": "Licencia",
+      "warning": "Advertencia",
+      "search": "Buscar",
+      "filter": "Filtrar",
+      "contact": "Contacto",
+      "none": "Ninguno",
+      "disabled": "Deshabilitado",
+      "private": "Privado",
+      "sharedWithYou": "Compartido contigo",
+      "all": "Todos",
+      "value": "Valor",
+      "customizableByUser": "Personalizable por el usuario"
+    },
+    "status": {
+      "online": "En línea",
+      "offline": "Desconectado"
+    }
+  },
+  "pages": {
+    "hostname": {
+      "setup": "Configuración",
+      "select": "Seleccionar",
+      "inputHostname": "Ingresar nombre de host",
+      "next": "Siguiente",
+      "instructionTitle": "Por favor siga las instrucciones a continuación para configurar su cuenta de {platform}:",
+      "url": "URL de {platform}",
+      "urlPlaceholder": "URL...",
+      "invalidUrl": "¡URL inválida! Por favor ingrésela siguiendo el formato: \"{format}\""
+    },
+    "about": {
+      "title": "Acerca de",
+      "introduction": "RingCentral App Connect integra un teléfono web completamente funcional en un conjunto de plataformas CRM compatibles.",
+      "chromeExtension": "Extensión de Chrome",
+      "extensionAuthor": "Autor: RingCentral, Inc.",
+      "versionLabel": "Versión: {version}",
+      "eula": "Acuerdo de licencia de usuario final",
+      "adapter": "Adaptador",
+      "adapterAuthor": "Autor: {author}",
+      "website": "Sitio web",
+      "support": "Soporte"
+    },
+    "support": {
+      "title": "Soporte",
+      "documentation": "Documentación",
+      "releaseNotes": "Notas de la versión",
+      "getSupport": "Obtener soporte",
+      "writeReview": "Escribir una reseña",
+      "communityForums": "Foros de la comunidad",
+      "serverStatus": "Estado del servidor: {status}",
+      "versionLabel": "Versión: v{version}",
+      "sendErrorReport": "Enviar informe de error",
+      "clearLogConflicts": "Borrar conflictos de registro",
+      "factoryResetWarning": "El restablecimiento de fábrica desconectará las cuentas CRM y RingCentral de esta extensión y cerrará su sesión.",
+      "factoryReset": "Restablecimiento de fábrica"
+    },
+    "admin": {
+      "title": "Admin",
+      "managedSettings": "Configuración administrada",
+      "serverSideLogging": "Registro del lado del servidor (Beta)"
+    },
+    "managedSettings": {
+      "title": "Configuración administrada",
+      "general": "General",
+      "googleSheetsConfig": "Configuración de Google Sheets",
+      "activityLogging": "Registro de actividades",
+      "callPop": "Pop de llamada",
+      "advancedFeatures": "Funciones avanzadas",
+      "customSettings": "Configuración personalizada"
+    },
+    "generalSettings": {
+      "title": "General",
+      "appearance": "Apariencia",
+      "enabledDomains": "Dominios habilitados"
+    },
+    "platformSelection": {
+      "title": "Seleccionar plataforma",
+      "searchPlaceholder": "Buscar con filtros..."
+    },
+    "log": {
+      "saveTo": "Guardar en {platform}",
+      "editLog": "Editar registro",
+      "activityTitle": "Título de la actividad",
+      "note": "Nota",
+      "scheduleCallback": "Programar devolución de llamada",
+      "callbackTime": "Hora de devolución de llamada",
+      "newContactName": "Nombre del nuevo contacto",
+      "contactType": "Tipo de contacto",
+      "searchContacts": "Buscar contactos",
+      "multipleContactsWarning": "Se encontraron múltiples contactos. Por favor seleccione el contacto para asociar esta actividad.",
+      "noContactWarning": "No se encontró ningún contacto. Ingrese un nombre para crear un contacto provisional.",
+      "inboundCallFrom": "{type} entrante de {name}",
+      "outboundCallTo": "{type} saliente a {name}",
+      "enterTitle": "Ingrese el título...",
+      "enterNote": "Ingrese la nota...",
+      "enterName": "Ingrese el nombre...",
+      "addToCalldownList": "Agregar este contacto a la lista de llamadas"
+    },
+    "unloggedCalls": {
+      "title": "Llamadas no registradas"
+    },
+    "feedback": {
+      "title": "Comentarios"
+    },
+    "reports": {
+      "title": "Informes",
+      "userStats": "Estadísticas del usuario",
+      "companyStats": "Estadísticas de la empresa"
+    },
+    "schedule": {
+      "title": "Agregar a la lista de llamadas",
+      "phoneNumber": "Número de teléfono",
+      "scheduleTime": "Hora programada"
+    },
+    "calldown": {
+      "title": "Lista de llamadas",
+      "contacts": "Contactos",
+      "filterByName": "Filtrar por nombre",
+      "all": "Todos",
+      "notCalled": "No llamado",
+      "called": "Llamado",
+      "scheduled": "Programado",
+      "call": "Llamar",
+      "text": "SMS",
+      "viewContact": "Ver contacto",
+      "edit": "Editar",
+      "markComplete": "Marcar como completado",
+      "delete": "Eliminar"
+    },
+    "developerSettings": {
+      "title": "Configuración del desarrollador",
+      "clearPlatformInfoWarning": "Esto borrará la información actual de la plataforma CRM para reinicializarla con una nueva plataforma CRM.",
+      "clearPlatformInfo": "Borrar info de plataforma",
+      "checkInterfaceImplementations": "Verificar implementaciones de interfaz"
+    },
+    "multiContactPrompt": {
+      "title": "Haga clic en el contacto para abrir",
+      "contacts": "Contactos"
+    }
+  },
+  "settings": {
+    "preconfigure": {
+      "noCrmSelected": "Ningún CRM seleccionado"
+    },
+    "auth": {
+      "authorizedTitle": "Cerrar sesión",
+      "unauthorizedTitle": "Conectar",
+      "developedBy": "Desarrollado por {author}"
+    },
+    "buttons": {
+      "callLater": "Llamar después"
+    },
+    "logging": {
+      "groupName": "Registro de actividades",
+      "autoLogCall": "Registrar llamadas telefónicas automáticamente",
+      "autoLogCallDesc": "Registrar automáticamente las llamadas cuando terminen en esta aplicación",
+      "autoLogSMS": "Registrar conversaciones SMS automáticamente",
+      "autoLogSMSDesc": "Registrar automáticamente los SMS cuando se envíen o reciban en esta aplicación",
+      "autoLogVoicemail": "Registrar mensajes de correo de voz automáticamente",
+      "autoLogVoicemailDesc": "Registrar automáticamente los mensajes de correo de voz cuando se reciban en esta aplicación",
+      "autoLogInboundFax": "Registrar faxes entrantes automáticamente",
+      "autoLogInboundFaxDesc": "Registrar automáticamente los faxes entrantes cuando se reciban en esta aplicación",
+      "autoLogOutboundFax": "Registrar faxes salientes automáticamente",
+      "autoLogOutboundFaxDesc": "Registrar automáticamente los faxes salientes cuando se envíen en esta aplicación",
+      "retroCallLogSync": "Sincronización retroactiva del registro de llamadas",
+      "retroCallLogSyncDesc": "Escanea periódicamente y registra cualquier actividad perdida",
+      "disableRetroCallLogSync": "Deshabilitar sincronización retroactiva del registro de llamadas",
+      "oneTimeLog": "Registro de llamada único",
+      "oneTimeLogDesc": "Retrasa el registro hasta que los detalles completos de la llamada estén disponibles",
+      "enableOneTimeLog": "Habilitar registro de llamada único",
+      "popupLogPageAfterCall": "(Registro manual) Abrir página de registro después de la llamada",
+      "popupLogPageAfterCallDesc": "Abrir automáticamente el formulario de registro después de cada llamada",
+      "popupLogPageAfterSMS": "(Registro manual) Abrir página de registro SMS después del mensaje",
+      "popupLogPageAfterSMSDesc": "Abrir automáticamente el formulario de registro después de cada mensaje"
+    },
+    "callLogDetails": {
+      "groupName": "Detalles del registro de llamadas",
+      "agentNotes": "Notas del agente",
+      "agentNotesDesc": "Registrar las notas ingresadas manualmente por usted",
+      "agentNotesDescAdmin": "Registrar las notas ingresadas manualmente por el agente",
+      "callSessionId": "ID de sesión de llamada",
+      "callSessionIdDesc": "Registrar el ID de sesión de llamada de RingCentral",
+      "rcUserName": "Nombre de usuario de RingCentral",
+      "rcUserNameDesc": "Registrar el nombre de usuario de RingCentral",
+      "rcNumber": "Número de teléfono de RingCentral",
+      "rcNumberDesc": "Registrar el número de teléfono de RingCentral",
+      "callSubject": "Asunto de la llamada",
+      "callSubjectDesc": "Registrar una frase corta para resumir la llamada, ej. 'Llamada entrante de...'",
+      "contactNumber": "Número de teléfono del contacto",
+      "contactNumberDesc": "Registrar la información de contacto del otro participante",
+      "dateTime": "Fecha y hora",
+      "dateTimeDesc": "Registrar las fechas/horas explícitas de inicio y fin de la llamada",
+      "dateFormat": "Formato de fecha",
+      "dateFormatDesc": "El formato de fecha y hora en el registro de llamadas",
+      "callDuration": "Duración de la llamada",
+      "callDurationDesc": "Registrar la duración de la llamada, en minutos y segundos",
+      "callResult": "Resultado de la llamada",
+      "callResultDesc": "Registrar el resultado de la llamada, ej. Llamada conectada",
+      "recordingLink": "Enlace a la grabación",
+      "recordingLinkDesc": "Proporcionar un enlace a la grabación de la llamada, si existe",
+      "smartSummary": "Resumen inteligente",
+      "smartSummaryDesc": "Registrar el resumen generado por IA de la llamada, si existe",
+      "transcript": "Transcripción de la llamada",
+      "transcriptDesc": "Registrar la transcripción generada por IA de la llamada, si existe",
+      "aiAssistantRequired": "Asistente de IA requerido",
+      "ringSenseTranscript": "Transcripción RingSense",
+      "ringSenseTranscriptDesc": "[Licencia RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
+      "ringSenseCallScore": "Puntuación de llamada RingSense",
+      "ringSenseCallScoreDesc": "[Licencia RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
+      "ringSenseSummary": "Resumen RingSense",
+      "ringSenseSummaryDesc": "[Licencia RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
+      "ringSenseBulletedSummary": "Resumen RingSense (viñetas)",
+      "ringSenseBulletedSummaryDesc": "[Licencia RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
+      "ringSenseRecordingLink": "Enlace de grabación RingSense",
+      "ringSenseRecordingLinkDesc": "[Licencia RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
+      "callJourney": "Recorrido de la llamada",
+      "callJourneyDesc": "Solo registro del lado del servidor.",
+      "dateFormatGlobal24H": "Global - 24H (ej. 2024-01-15 14:30:45)",
+      "dateFormatGlobal12H": "Global - 12H (ej. 2024-01-15 02:30:45 PM)",
+      "dateFormatUS12H": "US - 12H (ej. 01/15/2024 02:30:45 PM)",
+      "dateFormatUS24H": "US - 24H (ej. 01/15/2024 14:30:45)",
+      "dateFormatEU24H": "EU - 24H (ej. 15/01/2024 14:30:45)",
+      "dateFormatEU12H": "EU - 12H (ej. 15/01/2024 02:30:45 PM)"
+    },
+    "autoLogPreferences": {
+      "groupName": "Preferencias de registro automático",
+      "groupDesc": "Configurar preferencias para escenarios de registro automático",
+      "unknownContact": "Contacto desconocido",
+      "unknownContactHelper": "Qué hacer cuando el número de teléfono no coincide con ningún contacto",
+      "skipLogging": "Omitir registro",
+      "createNewPlaceholder": "Crear nuevo contacto provisional",
+      "newContactType": "Tipo de nuevo contacto (aplicable al crear un nuevo contacto)",
+      "newContactTypeHelper": "Al crear un contacto provisional, qué tipo de contacto debe ser",
+      "newContactNamePrefix": "Prefijo del nombre del nuevo contacto (aplicable al crear un nuevo contacto)",
+      "newContactNamePrefixHelper": "El nombre tendrá ID de llamante (si está disponible) + Número de teléfono",
+      "multipleContacts": "Múltiples contactos",
+      "multipleContactsHelper": "Qué hacer cuando múltiples contactos coinciden con el número de teléfono",
+      "firstAlphabetical": "Primero alfabéticamente",
+      "mostRecentActivity": "Actividad más reciente"
+    },
+    "appearance": {
+      "groupName": "Apariencia",
+      "groupDesc": "Modificar las preferencias de visualización y tema",
+      "customizeTabs": "Personalizar pestañas",
+      "customizeTabsDesc": "Controlar qué pestañas son visibles en la interfaz de la extensión",
+      "showChatTab": "Mostrar pestaña de chat",
+      "showMeetingsTab": "Mostrar pestaña de reuniones",
+      "showTextTab": "Mostrar pestaña de texto",
+      "showFaxTab": "Mostrar pestaña de fax",
+      "showVoicemailTab": "Mostrar pestaña de correo de voz",
+      "showRecordingsTab": "Mostrar pestaña de grabaciones",
+      "showContactsTab": "Mostrar pestaña de contactos",
+      "showUserReportTab": "Mostrar pestaña de informe de usuario",
+      "showCalldownTab": "Mostrar pestaña de lista de llamadas",
+      "notificationLevel": "Nivel de notificación",
+      "notificationLevelDesc": "Seleccionar el nivel de notificación que se mostrará en la extensión.",
+      "notificationLevelSelectDesc": "Elegir qué tipos de notificaciones mostrar",
+      "success": "Éxito",
+      "warning": "Advertencia",
+      "error": "Error",
+      "widgetSettings": "Configuración del widget",
+      "widgetSettingsDesc": "Modificar la configuración del widget",
+      "quickAccessButtonSize": "Tamaño del botón de acceso rápido",
+      "small": "Pequeño",
+      "medium": "Mediano",
+      "large": "Grande",
+      "extraLarge": "Extra grande",
+      "phoneNumberFormat": "Formato de número de teléfono"
+    },
+    "callPop": {
+      "groupName": "Pop de llamada",
+      "incomingCallPop": "Pop de llamada entrante",
+      "incomingCallPopHelper": "Seleccionar cuándo activar el pop de llamada para llamadas entrantes.",
+      "outgoingCallPop": "Pop de llamada saliente",
+      "outgoingCallPopHelper": "Seleccionar cuándo activar el pop de llamada para llamadas salientes.",
+      "onFirstRing": "En el primer timbre",
+      "onAnswer": "Al contestar",
+      "multiContactBehavior": "Comportamiento con múltiples contactos",
+      "multiContactBehaviorHelper": "Seleccionar qué hacer cuando múltiples contactos coinciden con un número de teléfono.",
+      "openAllMatches": "Abrir todas las coincidencias",
+      "promptToSelect": "Solicitar selección",
+      "allowExtensionLogging": "Permitir registro de número de extensión",
+      "managedByAdmin": "Esta configuración es administrada por el administrador",
+      "contactCreatedCallPop": "Pop de llamada al crear contacto",
+      "contactCreatedCallPopDesc": "Abrir el contacto inmediatamente después de crearlo",
+      "openContactFromIncoming": "Abrir contacto desde llamada entrante",
+      "openContactFromOutgoing": "Abrir contacto desde llamada saliente",
+      "openContactAfterCreating": "Abrir contacto después de crearlo",
+      "overridingNumberFormat": "Formato de número prioritario",
+      "overridingNumberFormatWarning": "Por favor ingrese su formato de número de teléfono prioritario: (use # para representar un dígito, ej. (###) ###-###)"
+    },
+    "enabledDomains": {
+      "groupName": "Dominios habilitados",
+      "groupDesc": "Administrar las URLs para las que App Connect está habilitado",
+      "clickToDialWarning": "Click-to-dial es un widget emergente que se muestra cuando un usuario pasa el cursor sobre un número de teléfono.",
+      "clickToDialMode": "Modo de habilitación click-to-dial",
+      "crmOnly": "Habilitar solo para CRM conectado",
+      "whitelist": "Bloquear por defecto (luego administrar una lista de sitios para permitir)",
+      "blacklist": "Permitir por defecto (luego administrar una lista de sitios para bloquear)",
+      "clickToDialUrls": "URLs de click-to-dial",
+      "clickToDialUrlsHelper": "Ingrese las URLs de las páginas a incluir en la lista blanca. Separe múltiples URLs con comas. Use * como comodín.",
+      "quickAccessWarning": "El botón de acceso rápido se muestra en la esquina inferior derecha de la pantalla.",
+      "quickAccessMode": "Modo de habilitación del botón de acceso rápido",
+      "quickAccessUrls": "URLs del botón de acceso rápido"
+    },
+    "advanced": {
+      "groupName": "Funciones avanzadas",
+      "developerMode": "Modo desarrollador",
+      "developerModeDesc": "Habilitar el modo desarrollador para acceder a la configuración del desarrollador.",
+      "autoOpenExtension": "Abrir extensión automáticamente",
+      "autoOpenExtensionDesc": "La extensión se abrirá cuando se cargue una página CRM."
+    },
+    "numberFormatter": {
+      "title": "Formateador de números",
+      "phoneNumberAlternatives": "Formatos alternativos de número de teléfono",
+      "info": "Por favor ingrese su formato de número de teléfono prioritario: (use # para representar un dígito, ej. (###) ###-###) [Cómo funciona](https://appconnect.labs.ringcentral.com/users/phone-number-formats/#how-it-works)",
+      "format1": "Formato 1",
+      "format2": "Formato 2",
+      "format3": "Formato 3"
+    },
+    "googleSheets": {
+      "config": "Configuración de Google Sheets"
+    }
+  },
+  "notifications": {
+    "success": {
+      "callLogAdded": "Registro de llamada agregado",
+      "messageLogAdded": "Registro de mensaje agregado",
+      "callLogUpdated": "Registro de llamada actualizado",
+      "authorized": "Autorizado exitosamente.",
+      "unauthorized": "Sesión cerrada exitosamente.",
+      "openingContactPage": "Intentando encontrar y abrir la página de contacto..."
+    },
+    "warning": {
+      "callLogFailed": "Error al guardar el registro de llamada",
+      "callLogUpdateFailed": "Error al actualizar el registro de llamada",
+      "connectToCrm": "Por favor vaya a Configuración y conéctese a la plataforma CRM",
+      "apiKeyFailed": "Error al registrar la clave API.",
+      "noContactFound": "No se encontró ningún contacto"
+    },
+    "error": {
+      "wrongFormat": "Formato incorrecto: {field}"
+    }
+  },
+  "conflicts": {
+    "multipleContacts": "Múltiples contactos",
+    "noMatchedContact": "No hay contacto coincidente",
+    "multipleMatchedContacts": "Hay múltiples contactos coincidentes",
+    "multipleAssociations": "Hay múltiples \"{associations}\" asociados."
+  },
+  "dateFormats": {
+    "general12H": "2024-01-15 02:30:45 PM - General 12H",
+    "general24H": "2024-01-15 14:30:45 - General 24H",
+    "us12H": "01/15/2024 02:30:45 PM - US 12H",
+    "us24H": "01/15/2024 14:30:45 - US 24H",
+    "eu12H": "15/01/2024 02:30:45 PM - EU 12H",
+    "eu24H": "15/01/2024 14:30:45 - EU 24H"
+  },
+  "misc": {
+    "clickToDialCollision": "Se ha detectado la extensión RingCentral para Google Chrome. Es posible que desee personalizar sus preferencias de click-to-dial para el comportamiento deseado.",
+    "clickToDialCollisionTitle": "Click-to-dial puede no funcionar",
+    "configure": "Configurar",
+    "pipedriveStep2": "(2/3) Por favor inicie sesión en la extensión con su cuenta de RingCentral. Si no pasa nada, actualice esta página y espere unos segundos.",
+    "pipedriveStep3": "(3/3) Configuración terminada. Puede cerrar esta página ahora.",
+    "setup": "Configuración"
+  }
+}
+

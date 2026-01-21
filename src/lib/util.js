@@ -1,4 +1,5 @@
 import { openDB } from 'idb';
+import { t } from '../i18n';
 
 function secondsToHourMinuteSecondString(totalSeconds) {
   const hours = parseInt(totalSeconds / 3600);
@@ -64,12 +65,12 @@ async function checkC2DCollision() {
       chrome.notifications.create({
         type: 'basic',
         iconUrl: '/images/logo32.png',
-        title: `Click-to-dial may not work`,
-        message: "The RingCentral for Google Chrome extension has been detected. You may wish to customize your click-to-dial preferences for your desired behavior",
+        title: t('misc.clickToDialCollisionTitle'),
+        message: t('misc.clickToDialCollision'),
         priority: 1,
         buttons: [
           {
-            title: 'Configure'
+            title: t('misc.configure')
           }
         ]
       });

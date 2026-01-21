@@ -1,46 +1,48 @@
+import { t } from '../i18n';
+
 function getAboutPageRender({ manifest }) {
     const aboutPage = {
         id: 'aboutPage',
-        title: 'About',
+        title: t('pages.about.title'),
         type: 'page',
         schema: {
             type: 'object',
             properties: {
                 introduction: {
                     type: "string",
-                    description: "The RingCentral App Connect embeds a fully-functional web phone into a set of supported CRM platforms.",
+                    description: t('pages.about.introduction'),
                 },
                 extensionInfoTitle: {
                     type: "string",
-                    description: "Chrome extension"
+                    description: t('pages.about.chromeExtension')
                 },
                 extensionAuthorInfo: {
                     type: "string",
-                    description: "Author: RingCentral, Inc."
+                    description: t('pages.about.extensionAuthor')
                 },
                 extensionVersionInfo: {
                     type: "string",
-                    description: `Version: ${manifest.version}`
+                    description: t('pages.about.versionLabel', { version: manifest.version })
                 },
                 endUserLicenseAgreement: {
                     type: "string",
-                    description: "End User License Agreement"
+                    description: t('pages.about.eula')
                 },
                 adapterInfoTitle: {
                     type: "string",
-                    description: "Adapter"
+                    description: t('pages.about.adapter')
                 },
                 adapterAuthorInfo: {
                     type: "string",
-                    description: `Author: ${manifest.author.name}`
+                    description: t('pages.about.adapterAuthor', { author: manifest.author.name })
                 },
                 adapterWebsiteInfo: {
                     type: "string",
-                    description: "Website"
+                    description: t('pages.about.website')
                 },
                 adapterSupportInfo: {
                     type: "string",
-                    description: "Support"
+                    description: t('pages.about.support')
                 }
             }
         },

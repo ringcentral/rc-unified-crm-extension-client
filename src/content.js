@@ -123,6 +123,10 @@ async function initializeC2D() {
       sendMessageToExtension({ type: 'c2schedule', phoneNumber });
     },
   );
+  
+  // Disable the SMS button, keep only click-to-dial
+  const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
+  window.clickToDialInject.widget.update({ enableC2Text: userPermissions?.sms ?? false });
 }
 
 // Listen message from background.js to open app window when user click icon.

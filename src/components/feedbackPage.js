@@ -1,9 +1,10 @@
+import { t } from '../i18n';
 
 function getFeedbackPageRender({ pageConfig, version }) {
     let properties = {};
     let uiSchema = {
         submitButtonOptions: {
-            submitText: 'Submit'
+            submitText: t('common.buttons.submit')
         }
     };
     let required = [];
@@ -50,7 +51,7 @@ function getFeedbackPageRender({ pageConfig, version }) {
     }
     return {
         id: 'feedbackPage',
-        title: 'Feedback',
+        title: t('pages.feedback.title'),
         schema: {
             type: 'object',
             required,

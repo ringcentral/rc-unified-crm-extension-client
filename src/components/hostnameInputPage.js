@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid }) {
     const platformName = platform.displayName ?? platform.name;
     const url = platform.environment.url;
@@ -5,7 +7,7 @@ function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid 
     const page = {
         id: 'hostnameInputPage',
         type: 'page',
-        title: 'Setup',
+        title: t('pages.hostname.setup'),
         schema: {
             type: 'object',
             properties: {},
@@ -13,7 +15,7 @@ function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid 
         },
         uiSchema: {
             submitButtonOptions: { // optional if you don't want to show submit button
-                submitText: 'Next',
+                submitText: t('pages.hostname.next'),
             }
         },
         formData: {
@@ -26,7 +28,7 @@ function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid 
     if (platform.environment?.instructions?.length > 0) {
         page.schema.properties.instructionTitle = {
             type: 'string',
-            description: `Please follow instructions below to setup your ${platformName} account:`
+            description: t('pages.hostname.instructionTitle', { platform: platformName })
         }
         page.uiSchema.instructionTitle = {
             "ui:field": "typography", // or typography to show raw text,
@@ -45,7 +47,7 @@ function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid 
     }
     switch (platform.environment.type) {
         case 'selectable':
-            page.title = 'Select';
+            page.title = t('pages.hostname.select');
             page.schema.properties.selection = {
                 type: 'string',
                 oneOf: platform.environment.selections.map(selection => {
@@ -58,15 +60,15 @@ function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid 
             page.schema.required.push('selection');
             break;
         case 'dynamic':
-            page.title = 'Input hostname';
+            page.title = t('pages.hostname.inputHostname');
             page.schema.properties.url = {
                 type: 'string',
-                title: `${platformName} url`
+                title: t('pages.hostname.url', { platform: platformName })
             }
             page.schema.required.push('url');
             page.uiSchema.url = {
-                "ui:placeholder": 'url...',
-                "ui:help": isUrlValid ? '' : `Invalid url! Please enter it following format: "${url}"`
+                "ui:placeholder": t('pages.hostname.urlPlaceholder'),
+                "ui:help": isUrlValid ? '' : t('pages.hostname.invalidUrl', { format: url })
             }
             break;
     }

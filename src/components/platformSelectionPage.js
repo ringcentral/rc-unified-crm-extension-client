@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 function getPlatformSelectionPageRender({ platformList, searchWord = '', selectedPlatform = '', filter = 'All' }) {
     let platformListToRender = [];
 
@@ -10,10 +12,10 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
                 meta = '';
                 break;
             case 'shared':
-                meta = 'Shared with you';
+                meta = t('common.labels.sharedWithYou');
                 break;
             case 'private':
-                meta = 'Private';
+                meta = t('common.labels.private');
                 break;
         }
         const newPlatform = {
@@ -25,7 +27,7 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
             actions:[
                 {
                     id: 'selectPlatform',
-                    title: 'Connect',
+                    title: t('common.buttons.connect'),
                     icon: 'connect'
                 }
             ]
@@ -35,12 +37,12 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
     if (searchWord) {
         platformListToRender = platformListToRender.filter(um => um.title.toLowerCase().includes(searchWord.toLowerCase()) || um.description.toLowerCase().includes(searchWord.toLowerCase()));
     }
-    if (filter !== 'All') {
+    if (filter !== t('common.labels.all')) {
         platformListToRender = platformListToRender.filter(um => um.meta === filter);
     }
     return {
         id: 'platformSelectionPage',
-        title: 'Select platform',
+        title: t('pages.platformSelection.title'),
         type: 'page',
         // hideBackButton: true,
         schema: {
@@ -51,11 +53,11 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
                     properties: {
                         search: {
                             type: 'string',
-                            title: 'Search'
+                            title: t('common.labels.search')
                         },
                         filter: {
                             type: 'string',
-                            title: 'Filter'
+                            title: t('common.labels.filter')
                         }
                     }
                 },
@@ -69,11 +71,11 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
         uiSchema: {
             platformSearch: {
                 "ui:field": "search",
-                "ui:placeholder": "Search with filters...",
+                "ui:placeholder": t('pages.platformSelection.searchPlaceholder'),
                 "ui:filters": [
-                    "All",
-                    "Private",
-                    "Shared with you"
+                    t('common.labels.all'),
+                    t('common.labels.private'),
+                    t('common.labels.sharedWithYou')
                 ]
             },
             platforms: {

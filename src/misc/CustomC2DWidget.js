@@ -24,6 +24,14 @@ class CustomC2DWidget {
         });
     }
 
+    update(options = {}) {
+        if (typeof options.enableC2Text === 'boolean') {
+            if (this._smsBtn) {
+                this._smsBtn.style.display = options.enableC2Text ? 'flex' : 'none';
+            }
+        }
+    }
+
     _getFullNumber(context) {
         const ctx = context || this._lastContext;
         if (!ctx) return '';
