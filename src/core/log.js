@@ -138,7 +138,7 @@ function openLog({ manifest, platformName, hostname, logId, contactType, contact
     window.open(logPageUrl);
 }
 
-async function updateLog({ serverUrl, logType, sessionId, recordingLink, recordingDownloadLink, subject, note, startTime, duration, aiNote, transcript, result, direction, from, to, isShowNotification,additionalSubmission }) {
+async function updateLog({ serverUrl, logType, sessionId, recordingLink, recordingDownloadLink, subject, note, startTime, duration, aiNote, transcript, result, direction, from, to, isShowNotification }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
     if (rcUnifiedCrmExtJwt) {
@@ -157,8 +157,7 @@ async function updateLog({ serverUrl, logType, sessionId, recordingLink, recordi
                     result,
                     direction,
                     from,
-                    to,
-                    additionalSubmission
+                    to
                 }
                 const callLogRes = await axios.patch(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, patchBody);
                 if (isShowNotification) {
