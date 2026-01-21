@@ -219,6 +219,7 @@ window.addEventListener('message', async (e) => {
           if (data.loggedIn) {
             userPermissions.aiNote = data.features && data.features.smartNote;
             userPermissions.ringSenseInsights = data.features && data.features.ringSenseInsights;
+            userPermissions.sms = data.features && data.features.sms;
             await chrome.storage.local.set({ userPermissions });
           }
           console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
@@ -2247,6 +2248,11 @@ window.addEventListener('message', async (e) => {
               responseMessage(data.requestId, { data: 'ok' });
               break;
             case '/custom-button-click':
+              if (data.body.button.id === 'my-banner' && data.body.button.dismissed) {
+                await chrome.storage.local.set({ 'myBannerDismissedDate': new Date().getDate() });
+                responseMessage(data.requestId, { data: 'ok' });
+                break;
+              }
               switch (data.body.button.id) {
                 case 'editUserMappingPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
