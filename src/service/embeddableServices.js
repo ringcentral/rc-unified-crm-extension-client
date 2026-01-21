@@ -803,6 +803,19 @@ async function getServiceManifest() {
             }
         )
     }
+
+    // TEMP: add banner for webinar info
+    const dateNow = new Date();
+    const { myBannerDismissedDate } = await chrome.storage.local.get({ myBannerDismissedDate: 0 });
+    if (dateNow.getFullYear() === 2026 && dateNow.getMonth() === 0 && dateNow.getDate() <= 29 && dateNow.getDate() > myBannerDismissedDate) {
+        services.banner = {
+            id: 'my-banner',
+            message: '[Learn about App Connect 2.0](https://go.ringcentral.com/Unlock-the-next-version-of-App-Connect.html?BMID=PENDOCCOAPPCONNECT2026)',
+            severity: 'announcement',  // 'info' | 'warning' | 'error' | 'success' | 'announcement', default: 'info'
+            closable: true, // optional, show close button, default: false, only works if no action button is provided
+            closeButtonLabel: 'Close' // optional, close button label, default: 'Close'
+        }
+    }
     return services;
 }
 
