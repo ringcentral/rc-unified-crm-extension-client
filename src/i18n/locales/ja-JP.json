@@ -1,0 +1,384 @@
+{
+  "common": {
+    "buttons": {
+      "save": "保存",
+      "cancel": "キャンセル",
+      "submit": "送信",
+      "update": "更新",
+      "connect": "接続",
+      "open": "開く",
+      "logout": "ログアウト",
+      "select": "選択",
+      "schedule": "スケジュール"
+    },
+    "labels": {
+      "admin": "(管理者)",
+      "version": "バージョン",
+      "author": "作者",
+      "license": "ライセンス",
+      "warning": "警告",
+      "search": "検索",
+      "filter": "フィルター",
+      "contact": "連絡先",
+      "none": "なし",
+      "disabled": "無効",
+      "private": "プライベート",
+      "sharedWithYou": "あなたと共有",
+      "all": "すべて",
+      "value": "値",
+      "customizableByUser": "ユーザーがカスタマイズ可能"
+    },
+    "status": {
+      "online": "オンライン",
+      "offline": "オフライン"
+    }
+  },
+  "pages": {
+    "hostname": {
+      "setup": "セットアップ",
+      "select": "選択",
+      "inputHostname": "ホスト名を入力",
+      "next": "次へ",
+      "instructionTitle": "以下の手順に従って{platform}アカウントを設定してください：",
+      "url": "{platform} URL",
+      "urlPlaceholder": "URL...",
+      "invalidUrl": "無効なURL！次の形式で入力してください：「{format}」"
+    },
+    "about": {
+      "title": "概要",
+      "introduction": "RingCentral App Connectは、サポートされているCRMプラットフォームにフル機能のウェブ電話を統合します。",
+      "chromeExtension": "Chrome拡張機能",
+      "extensionAuthor": "作者：RingCentral, Inc.",
+      "versionLabel": "バージョン：{version}",
+      "eula": "エンドユーザーライセンス契約",
+      "adapter": "アダプター",
+      "adapterAuthor": "作者：{author}",
+      "website": "ウェブサイト",
+      "support": "サポート"
+    },
+    "support": {
+      "title": "サポート",
+      "documentation": "ドキュメント",
+      "releaseNotes": "リリースノート",
+      "getSupport": "サポートを受ける",
+      "writeReview": "レビューを書く",
+      "communityForums": "コミュニティフォーラム",
+      "serverStatus": "サーバーステータス：{status}",
+      "versionLabel": "バージョン：v{version}",
+      "sendErrorReport": "エラーレポートを送信",
+      "clearLogConflicts": "ログの競合をクリア",
+      "factoryResetWarning": "工場出荷時リセットは、この拡張機能からCRMとRingCentralの両方のアカウントを切断し、ログアウトします。",
+      "factoryReset": "工場出荷時リセット"
+    },
+    "admin": {
+      "title": "管理者",
+      "managedSettings": "管理設定",
+      "serverSideLogging": "サーバーサイドロギング（ベータ）"
+    },
+    "managedSettings": {
+      "title": "管理設定",
+      "general": "一般",
+      "googleSheetsConfig": "Google Sheets設定",
+      "activityLogging": "アクティビティログ",
+      "callPop": "通話ポップ",
+      "advancedFeatures": "高度な機能",
+      "customSettings": "カスタム設定"
+    },
+    "generalSettings": {
+      "title": "一般",
+      "appearance": "外観",
+      "enabledDomains": "有効なドメイン"
+    },
+    "platformSelection": {
+      "title": "プラットフォームを選択",
+      "searchPlaceholder": "フィルターで検索..."
+    },
+    "log": {
+      "saveTo": "{platform}に保存",
+      "editLog": "ログを編集",
+      "activityTitle": "アクティビティタイトル",
+      "note": "メモ",
+      "scheduleCallback": "コールバックをスケジュール",
+      "callbackTime": "コールバック時間",
+      "newContactName": "新しい連絡先名",
+      "contactType": "連絡先タイプ",
+      "searchContacts": "連絡先を検索",
+      "multipleContactsWarning": "複数の連絡先が見つかりました。このアクティビティを関連付ける連絡先を選択してください。",
+      "noContactWarning": "連絡先が見つかりません。プレースホルダー連絡先を作成する名前を入力してください。",
+      "inboundCallFrom": "{name}からの着信{type}",
+      "outboundCallTo": "{name}への発信{type}",
+      "enterTitle": "タイトルを入力...",
+      "enterNote": "メモを入力...",
+      "enterName": "名前を入力...",
+      "addToCalldownList": "この連絡先をコールリストに追加"
+    },
+    "unloggedCalls": {
+      "title": "未記録の通話"
+    },
+    "feedback": {
+      "title": "フィードバック"
+    },
+    "reports": {
+      "title": "レポート",
+      "userStats": "ユーザー統計",
+      "companyStats": "会社統計"
+    },
+    "schedule": {
+      "title": "コールリストに追加",
+      "phoneNumber": "電話番号",
+      "scheduleTime": "予定時刻"
+    },
+    "calldown": {
+      "title": "コールリスト",
+      "contacts": "連絡先",
+      "filterByName": "名前でフィルター",
+      "all": "すべて",
+      "notCalled": "未通話",
+      "called": "通話済み",
+      "scheduled": "予定",
+      "call": "発信",
+      "text": "SMS",
+      "viewContact": "連絡先を表示",
+      "edit": "編集",
+      "markComplete": "完了としてマーク",
+      "delete": "削除"
+    },
+    "developerSettings": {
+      "title": "開発者設定",
+      "clearPlatformInfoWarning": "これにより現在のCRMプラットフォーム情報がクリアされ、新しいCRMプラットフォームで再初期化されます。",
+      "clearPlatformInfo": "プラットフォーム情報をクリア",
+      "checkInterfaceImplementations": "インターフェース実装を確認"
+    },
+    "multiContactPrompt": {
+      "title": "連絡先をクリックして開く",
+      "contacts": "連絡先"
+    }
+  },
+  "settings": {
+    "preconfigure": {
+      "noCrmSelected": "CRMが選択されていません"
+    },
+    "auth": {
+      "authorizedTitle": "ログアウト",
+      "unauthorizedTitle": "接続",
+      "developedBy": "{author}が開発"
+    },
+    "buttons": {
+      "callLater": "後で電話"
+    },
+    "logging": {
+      "groupName": "アクティビティログ",
+      "autoLogCall": "電話を自動的に記録",
+      "autoLogCallDesc": "このアプリで通話が終了したときに自動的に記録",
+      "autoLogSMS": "SMS会話を自動的に記録",
+      "autoLogSMSDesc": "このアプリでSMSが送受信されたときに自動的に記録",
+      "autoLogVoicemail": "ボイスメールを自動的に記録",
+      "autoLogVoicemailDesc": "このアプリでボイスメールが受信されたときに自動的に記録",
+      "autoLogInboundFax": "受信FAXを自動的に記録",
+      "autoLogInboundFaxDesc": "このアプリで受信FAXが受信されたときに自動的に記録",
+      "autoLogOutboundFax": "送信FAXを自動的に記録",
+      "autoLogOutboundFaxDesc": "このアプリで送信FAXが送信されたときに自動的に記録",
+      "retroCallLogSync": "遡及的通話ログ同期",
+      "retroCallLogSyncDesc": "定期的にスキャンし、見落とされたアクティビティを記録",
+      "disableRetroCallLogSync": "遡及的通話ログ同期を無効化",
+      "oneTimeLog": "ワンタイム通話ログ",
+      "oneTimeLogDesc": "完全な通話詳細が利用可能になるまでログを遅延",
+      "enableOneTimeLog": "ワンタイム通話ログを有効化",
+      "popupLogPageAfterCall": "（手動ログ）通話後にログページを開く",
+      "popupLogPageAfterCallDesc": "各通話後に自動的にログフォームを開く",
+      "popupLogPageAfterSMS": "（手動ログ）メッセージ後にSMSログページを開く",
+      "popupLogPageAfterSMSDesc": "各メッセージ後に自動的にログフォームを開く"
+    },
+    "callLogDetails": {
+      "groupName": "通話ログ詳細",
+      "agentNotes": "エージェント入力メモ",
+      "agentNotesDesc": "自分で手動入力したメモを記録",
+      "agentNotesDescAdmin": "エージェントが手動入力したメモを記録",
+      "callSessionId": "通話セッションID",
+      "callSessionIdDesc": "RingCentral通話セッションIDを記録",
+      "rcUserName": "RingCentralユーザー名",
+      "rcUserNameDesc": "RingCentralユーザー名を記録",
+      "rcNumber": "RingCentral電話番号",
+      "rcNumberDesc": "RingCentral電話番号を記録",
+      "callSubject": "通話件名",
+      "callSubjectDesc": "通話を要約する短いフレーズを記録、例：「着信...」",
+      "contactNumber": "連絡先電話番号",
+      "contactNumberDesc": "相手の連絡先情報を記録",
+      "dateTime": "日時",
+      "dateTimeDesc": "通話の明示的な開始・終了日時を記録",
+      "dateFormat": "日付形式",
+      "dateFormatDesc": "通話ログの日付と時刻の形式",
+      "callDuration": "通話時間",
+      "callDurationDesc": "通話時間を分秒で記録",
+      "callResult": "通話結果",
+      "callResultDesc": "通話の結果を記録、例：通話接続",
+      "recordingLink": "録音リンク",
+      "recordingLinkDesc": "通話録音へのリンクを提供（存在する場合）",
+      "smartSummary": "スマート要約",
+      "smartSummaryDesc": "AI生成の通話要約を記録（存在する場合）",
+      "transcript": "通話文字起こし",
+      "transcriptDesc": "AI生成の通話文字起こしを記録（存在する場合）",
+      "aiAssistantRequired": "AIアシスタントが必要",
+      "ringSenseTranscript": "RingSense文字起こし",
+      "ringSenseTranscriptDesc": "[RingSenseライセンス](https://www.ringcentral.com/ringsense.html?ref=AppConnect)が必要。サーバーサイドログのみ。",
+      "ringSenseCallScore": "RingSense通話スコア",
+      "ringSenseCallScoreDesc": "[RingSenseライセンス](https://www.ringcentral.com/ringsense.html?ref=AppConnect)が必要。サーバーサイドログのみ。",
+      "ringSenseSummary": "RingSense要約",
+      "ringSenseSummaryDesc": "[RingSenseライセンス](https://www.ringcentral.com/ringsense.html?ref=AppConnect)が必要。サーバーサイドログのみ。",
+      "ringSenseBulletedSummary": "RingSense箇条書き要約",
+      "ringSenseBulletedSummaryDesc": "[RingSenseライセンス](https://www.ringcentral.com/ringsense.html?ref=AppConnect)が必要。サーバーサイドログのみ。",
+      "ringSenseRecordingLink": "RingSense録音リンク",
+      "ringSenseRecordingLinkDesc": "[RingSenseライセンス](https://www.ringcentral.com/ringsense.html?ref=AppConnect)が必要。サーバーサイドログのみ。",
+      "callJourney": "通話経路",
+      "callJourneyDesc": "サーバーサイドログのみ。",
+      "dateFormatGlobal24H": "グローバル - 24時間（例：2024-01-15 14:30:45）",
+      "dateFormatGlobal12H": "グローバル - 12時間（例：2024-01-15 02:30:45 PM）",
+      "dateFormatUS12H": "US - 12時間（例：01/15/2024 02:30:45 PM）",
+      "dateFormatUS24H": "US - 24時間（例：01/15/2024 14:30:45）",
+      "dateFormatEU24H": "EU - 24時間（例：15/01/2024 14:30:45）",
+      "dateFormatEU12H": "EU - 12時間（例：15/01/2024 02:30:45 PM）"
+    },
+    "autoLogPreferences": {
+      "groupName": "自動ログ設定",
+      "groupDesc": "自動ログシナリオの設定を構成",
+      "unknownContact": "不明な連絡先",
+      "unknownContactHelper": "電話番号が連絡先と一致しない場合の対応",
+      "skipLogging": "ログをスキップ",
+      "createNewPlaceholder": "新しいプレースホルダー連絡先を作成",
+      "newContactType": "新しい連絡先タイプ（新しい連絡先作成時に適用）",
+      "newContactTypeHelper": "プレースホルダー連絡先を作成するときの連絡先タイプ",
+      "newContactNamePrefix": "新しい連絡先名プレフィックス（新しい連絡先作成時に適用）",
+      "newContactNamePrefixHelper": "名前には発信者ID（利用可能な場合）+電話番号が含まれます",
+      "multipleContacts": "複数の連絡先",
+      "multipleContactsHelper": "複数の連絡先が電話番号と一致する場合の対応",
+      "firstAlphabetical": "アルファベット順の最初",
+      "mostRecentActivity": "最新のアクティビティ"
+    },
+    "appearance": {
+      "groupName": "外観",
+      "groupDesc": "表示とテーマの設定を変更",
+      "customizeTabs": "タブのカスタマイズ",
+      "customizeTabsDesc": "拡張機能インターフェースで表示するタブを制御",
+      "showChatTab": "チャットタブを表示",
+      "showMeetingsTab": "ミーティングタブを表示",
+      "showTextTab": "テキストタブを表示",
+      "showFaxTab": "FAXタブを表示",
+      "showVoicemailTab": "ボイスメールタブを表示",
+      "showRecordingsTab": "録音タブを表示",
+      "showContactsTab": "連絡先タブを表示",
+      "showUserReportTab": "ユーザーレポートタブを表示",
+      "showCalldownTab": "コールリストタブを表示",
+      "notificationLevel": "通知レベル",
+      "notificationLevelDesc": "拡張機能で表示する通知レベルを選択。",
+      "notificationLevelSelectDesc": "表示する通知の種類を選択",
+      "success": "成功",
+      "warning": "警告",
+      "error": "エラー",
+      "widgetSettings": "ウィジェット設定",
+      "widgetSettingsDesc": "ウィジェット設定を変更",
+      "quickAccessButtonSize": "クイックアクセスボタンサイズ",
+      "small": "小",
+      "medium": "中",
+      "large": "大",
+      "extraLarge": "特大",
+      "phoneNumberFormat": "電話番号形式"
+    },
+    "callPop": {
+      "groupName": "通話ポップ",
+      "incomingCallPop": "着信通話ポップ",
+      "incomingCallPopHelper": "着信通話時に通話ポップをトリガーするタイミングを選択。",
+      "outgoingCallPop": "発信通話ポップ",
+      "outgoingCallPopHelper": "発信通話時に通話ポップをトリガーするタイミングを選択。",
+      "onFirstRing": "最初の着信音",
+      "onAnswer": "応答時",
+      "multiContactBehavior": "複数連絡先の動作",
+      "multiContactBehaviorHelper": "複数の連絡先が電話番号と一致する場合の対応を選択。",
+      "openAllMatches": "すべての一致を開く",
+      "promptToSelect": "選択を促す",
+      "allowExtensionLogging": "内線番号のログを許可",
+      "managedByAdmin": "この設定は管理者によって管理されています",
+      "contactCreatedCallPop": "連絡先作成時の通話ポップ",
+      "contactCreatedCallPopDesc": "作成直後に連絡先を開く",
+      "openContactFromIncoming": "着信から連絡先を開く",
+      "openContactFromOutgoing": "発信から連絡先を開く",
+      "openContactAfterCreating": "作成後に連絡先を開く",
+      "overridingNumberFormat": "上書き番号形式",
+      "overridingNumberFormatWarning": "上書き電話番号形式を入力してください：（#を使用して数字を表します、例：(###) ###-###）"
+    },
+    "enabledDomains": {
+      "groupName": "有効なドメイン",
+      "groupDesc": "App Connectが有効なURLを管理",
+      "clickToDialWarning": "クリックダイヤルは、ユーザーが電話番号にホバーしたときに表示されるポップアップウィジェットです。",
+      "clickToDialMode": "クリックダイヤル有効化モード",
+      "crmOnly": "接続されたCRMのみ有効化",
+      "whitelist": "デフォルトでブロック（許可するサイトのリストを管理）",
+      "blacklist": "デフォルトで許可（ブロックするサイトのリストを管理）",
+      "clickToDialUrls": "クリックダイヤルURL",
+      "clickToDialUrlsHelper": "ホワイトリストに追加するページのURLを入力。複数のURLはカンマで区切る。*をワイルドカードとして使用。",
+      "quickAccessWarning": "クイックアクセスボタンは画面の右下に表示されます。",
+      "quickAccessMode": "クイックアクセスボタン有効化モード",
+      "quickAccessUrls": "クイックアクセスボタンURL"
+    },
+    "advanced": {
+      "groupName": "高度な機能",
+      "developerMode": "開発者モード",
+      "developerModeDesc": "開発者設定にアクセスするために開発者モードを有効化。",
+      "autoOpenExtension": "拡張機能を自動的に開く",
+      "autoOpenExtensionDesc": "CRMページが読み込まれたときに拡張機能が開きます。"
+    },
+    "numberFormatter": {
+      "title": "番号フォーマッター",
+      "phoneNumberAlternatives": "代替電話番号形式",
+      "info": "上書き電話番号形式を入力してください：（#を使用して数字を表します、例：(###) ###-###）[仕組み](https://appconnect.labs.ringcentral.com/users/phone-number-formats/#how-it-works)",
+      "format1": "形式1",
+      "format2": "形式2",
+      "format3": "形式3"
+    },
+    "googleSheets": {
+      "config": "Google Sheets設定"
+    }
+  },
+  "notifications": {
+    "success": {
+      "callLogAdded": "通話ログが追加されました",
+      "messageLogAdded": "メッセージログが追加されました",
+      "callLogUpdated": "通話ログが更新されました",
+      "authorized": "認証に成功しました。",
+      "unauthorized": "ログアウトに成功しました。",
+      "openingContactPage": "連絡先ページを検索して開いています..."
+    },
+    "warning": {
+      "callLogFailed": "通話ログの保存に失敗しました",
+      "callLogUpdateFailed": "通話ログの更新に失敗しました",
+      "connectToCrm": "設定に移動してCRMプラットフォームに接続してください",
+      "apiKeyFailed": "APIキーの登録に失敗しました。",
+      "noContactFound": "連絡先が見つかりません"
+    },
+    "error": {
+      "wrongFormat": "形式エラー：{field}"
+    }
+  },
+  "conflicts": {
+    "multipleContacts": "複数の連絡先",
+    "noMatchedContact": "一致する連絡先がありません",
+    "multipleMatchedContacts": "複数の一致する連絡先があります",
+    "multipleAssociations": "複数の関連付けられた「{associations}」があります。"
+  },
+  "dateFormats": {
+    "general12H": "2024-01-15 02:30:45 PM - 一般12時間",
+    "general24H": "2024-01-15 14:30:45 - 一般24時間",
+    "us12H": "01/15/2024 02:30:45 PM - US 12時間",
+    "us24H": "01/15/2024 14:30:45 - US 24時間",
+    "eu12H": "15/01/2024 02:30:45 PM - EU 12時間",
+    "eu24H": "15/01/2024 14:30:45 - EU 24時間"
+  },
+  "misc": {
+    "clickToDialCollision": "RingCentral for Google Chrome拡張機能が検出されました。希望する動作に合わせてクリックダイヤル設定をカスタマイズすることをお勧めします。",
+    "clickToDialCollisionTitle": "クリックダイヤルが機能しない可能性があります",
+    "configure": "設定",
+    "pipedriveStep2": "（2/3）RingCentralアカウントで拡張機能にサインインしてください。何も起こらない場合は、このページを更新して数秒待ってください。",
+    "pipedriveStep3": "（3/3）セットアップ完了。このページを閉じることができます。",
+    "setup": "セットアップ"
+  }
+}
+

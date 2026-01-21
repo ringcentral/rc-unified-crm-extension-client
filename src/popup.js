@@ -5,6 +5,7 @@ import { getManifest } from './service/manifestService';
 import { saveManifestUrl } from './service/manifestService';
 import { getPlatformInfo } from './service/platformService';
 import logRecorder from './lib/logRecorder';
+import i18n from './i18n';
 
 // event handlers
 import rcTelephonySessionNotifyHandler from './eventHandlers/rc-telephony-session-notify';
@@ -102,6 +103,9 @@ axios.interceptors.response.use(
 );
 
 window.__ON_RC_POPUP_WINDOW = 1;
+
+// Initialize i18n with stored locale
+i18n.restoreLocale();
 
 checkC2DCollision();
 getCustomManifest();

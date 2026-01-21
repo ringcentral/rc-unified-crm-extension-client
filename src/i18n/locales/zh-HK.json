@@ -1,0 +1,384 @@
+{
+  "common": {
+    "buttons": {
+      "save": "保存",
+      "cancel": "取消",
+      "submit": "提交",
+      "update": "更新",
+      "connect": "连接",
+      "open": "打开",
+      "logout": "登出",
+      "select": "选择",
+      "schedule": "安排"
+    },
+    "labels": {
+      "admin": "(管理员)",
+      "version": "版本",
+      "author": "作者",
+      "license": "许可证",
+      "warning": "警告",
+      "search": "搜索",
+      "filter": "筛选",
+      "contact": "联系人",
+      "none": "无",
+      "disabled": "已禁用",
+      "private": "私有",
+      "sharedWithYou": "与您共享",
+      "all": "全部",
+      "value": "值",
+      "customizableByUser": "用户可自定义"
+    },
+    "status": {
+      "online": "在线",
+      "offline": "离线"
+    }
+  },
+  "pages": {
+    "hostname": {
+      "setup": "设置",
+      "select": "选择",
+      "inputHostname": "输入主机名",
+      "next": "下一步",
+      "instructionTitle": "请按照以下说明设置您的 {platform} 账户：",
+      "url": "{platform} URL",
+      "urlPlaceholder": "URL...",
+      "invalidUrl": "无效的 URL！请按以下格式输入：\"{format}\""
+    },
+    "about": {
+      "title": "关于",
+      "introduction": "RingCentral App Connect 将功能齐全的网络电话集成到一组支持的 CRM 平台中。",
+      "chromeExtension": "Chrome 扩展程序",
+      "extensionAuthor": "作者：RingCentral, Inc.",
+      "versionLabel": "版本：{version}",
+      "eula": "最终用户许可协议",
+      "adapter": "适配器",
+      "adapterAuthor": "作者：{author}",
+      "website": "网站",
+      "support": "支持"
+    },
+    "support": {
+      "title": "支持",
+      "documentation": "文档",
+      "releaseNotes": "发行说明",
+      "getSupport": "获取支持",
+      "writeReview": "撰写评论",
+      "communityForums": "社区论坛",
+      "serverStatus": "服务器状态：{status}",
+      "versionLabel": "版本：v{version}",
+      "sendErrorReport": "发送错误报告",
+      "clearLogConflicts": "清除日志冲突",
+      "factoryResetWarning": "恢复出厂设置将断开此扩展程序与 CRM 和 RingCentral 账户的连接并退出登录。",
+      "factoryReset": "恢复出厂设置"
+    },
+    "admin": {
+      "title": "管理员",
+      "managedSettings": "托管设置",
+      "serverSideLogging": "服务器端日志记录（测试版）"
+    },
+    "managedSettings": {
+      "title": "托管设置",
+      "general": "常规",
+      "googleSheetsConfig": "Google Sheets 配置",
+      "activityLogging": "活动日志",
+      "callPop": "来电弹窗",
+      "advancedFeatures": "高级功能",
+      "customSettings": "自定义设置"
+    },
+    "generalSettings": {
+      "title": "常规",
+      "appearance": "外观",
+      "enabledDomains": "已启用的域"
+    },
+    "platformSelection": {
+      "title": "选择平台",
+      "searchPlaceholder": "使用筛选器搜索..."
+    },
+    "log": {
+      "saveTo": "保存到 {platform}",
+      "editLog": "编辑日志",
+      "activityTitle": "活动标题",
+      "note": "备注",
+      "scheduleCallback": "安排回拨",
+      "callbackTime": "回拨时间",
+      "newContactName": "新联系人名称",
+      "contactType": "联系人类型",
+      "searchContacts": "搜索联系人",
+      "multipleContactsWarning": "找到多个联系人。请选择要关联此活动的联系人。",
+      "noContactWarning": "未找到联系人。输入名称以创建占位联系人。",
+      "inboundCallFrom": "来自 {name} 的呼入{type}",
+      "outboundCallTo": "呼出{type}至 {name}",
+      "enterTitle": "输入标题...",
+      "enterNote": "输入备注...",
+      "enterName": "输入名称...",
+      "addToCalldownList": "将此联系人添加到呼叫列表"
+    },
+    "unloggedCalls": {
+      "title": "未记录的通话"
+    },
+    "feedback": {
+      "title": "反馈"
+    },
+    "reports": {
+      "title": "报告",
+      "userStats": "用户统计",
+      "companyStats": "公司统计"
+    },
+    "schedule": {
+      "title": "添加到呼叫列表",
+      "phoneNumber": "电话号码",
+      "scheduleTime": "计划时间"
+    },
+    "calldown": {
+      "title": "呼叫列表",
+      "contacts": "联系人",
+      "filterByName": "按名称筛选",
+      "all": "全部",
+      "notCalled": "未呼叫",
+      "called": "已呼叫",
+      "scheduled": "已计划",
+      "call": "呼叫",
+      "text": "短信",
+      "viewContact": "查看联系人",
+      "edit": "编辑",
+      "markComplete": "标记为完成",
+      "delete": "删除"
+    },
+    "developerSettings": {
+      "title": "开发者设置",
+      "clearPlatformInfoWarning": "这将清除当前的 CRM 平台信息，以便使用新的 CRM 平台重新初始化。",
+      "clearPlatformInfo": "清除平台信息",
+      "checkInterfaceImplementations": "检查接口实现"
+    },
+    "multiContactPrompt": {
+      "title": "点击联系人以打开",
+      "contacts": "联系人"
+    }
+  },
+  "settings": {
+    "preconfigure": {
+      "noCrmSelected": "未选择 CRM"
+    },
+    "auth": {
+      "authorizedTitle": "登出",
+      "unauthorizedTitle": "连接",
+      "developedBy": "由 {author} 开发"
+    },
+    "buttons": {
+      "callLater": "稍后呼叫"
+    },
+    "logging": {
+      "groupName": "活动日志",
+      "autoLogCall": "自动记录电话通话",
+      "autoLogCallDesc": "当通话在此应用中结束时自动记录",
+      "autoLogSMS": "自动记录短信对话",
+      "autoLogSMSDesc": "当短信在此应用中发送或接收时自动记录",
+      "autoLogVoicemail": "自动记录语音邮件",
+      "autoLogVoicemailDesc": "当语音邮件在此应用中接收时自动记录",
+      "autoLogInboundFax": "自动记录接收的传真",
+      "autoLogInboundFaxDesc": "当接收传真在此应用中收到时自动记录",
+      "autoLogOutboundFax": "自动记录发送的传真",
+      "autoLogOutboundFaxDesc": "当发送传真在此应用中发出时自动记录",
+      "retroCallLogSync": "追溯通话日志同步",
+      "retroCallLogSyncDesc": "定期扫描并记录任何遗漏的活动",
+      "disableRetroCallLogSync": "禁用追溯通话日志同步",
+      "oneTimeLog": "一次性通话记录",
+      "oneTimeLogDesc": "延迟记录直到完整的通话详情可用",
+      "enableOneTimeLog": "启用一次性通话记录",
+      "popupLogPageAfterCall": "（手动记录）通话后打开记录页面",
+      "popupLogPageAfterCallDesc": "每次通话后自动打开记录表单",
+      "popupLogPageAfterSMS": "（手动记录）消息后打开短信记录页面",
+      "popupLogPageAfterSMSDesc": "每条消息后自动打开记录表单"
+    },
+    "callLogDetails": {
+      "groupName": "通话日志详情",
+      "agentNotes": "坐席输入的备注",
+      "agentNotesDesc": "记录您手动输入的备注",
+      "agentNotesDescAdmin": "记录坐席手动输入的备注",
+      "callSessionId": "通话会话 ID",
+      "callSessionIdDesc": "记录 RingCentral 通话会话 ID",
+      "rcUserName": "RingCentral 用户名",
+      "rcUserNameDesc": "记录 RingCentral 用户名",
+      "rcNumber": "RingCentral 电话号码",
+      "rcNumberDesc": "记录 RingCentral 电话号码",
+      "callSubject": "通话主题",
+      "callSubjectDesc": "记录通话摘要短语，例如'来电...'",
+      "contactNumber": "联系人电话号码",
+      "contactNumberDesc": "记录对方的联系信息",
+      "dateTime": "日期和时间",
+      "dateTimeDesc": "记录通话的明确开始和结束日期/时间",
+      "dateFormat": "日期格式",
+      "dateFormatDesc": "通话日志中日期和时间的格式",
+      "callDuration": "通话时长",
+      "callDurationDesc": "记录通话时长，以分钟和秒为单位",
+      "callResult": "通话结果",
+      "callResultDesc": "记录通话结果，例如通话已连接",
+      "recordingLink": "录音链接",
+      "recordingLinkDesc": "提供通话录音链接（如果存在）",
+      "smartSummary": "智能摘要",
+      "smartSummaryDesc": "记录 AI 生成的通话摘要（如果存在）",
+      "transcript": "通话记录",
+      "transcriptDesc": "记录 AI 生成的通话记录（如果存在）",
+      "aiAssistantRequired": "需要 AI 助手",
+      "ringSenseTranscript": "RingSense 记录",
+      "ringSenseTranscriptDesc": "需要 [RingSense 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
+      "ringSenseCallScore": "RingSense 通话评分",
+      "ringSenseCallScoreDesc": "需要 [RingSense 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
+      "ringSenseSummary": "RingSense 摘要",
+      "ringSenseSummaryDesc": "需要 [RingSense 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
+      "ringSenseBulletedSummary": "RingSense 要点摘要",
+      "ringSenseBulletedSummaryDesc": "需要 [RingSense 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
+      "ringSenseRecordingLink": "RingSense 录音链接",
+      "ringSenseRecordingLinkDesc": "需要 [RingSense 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
+      "callJourney": "通话路径",
+      "callJourneyDesc": "仅服务器端日志记录。",
+      "dateFormatGlobal24H": "全球 - 24 小时（例如 2024-01-15 14:30:45）",
+      "dateFormatGlobal12H": "全球 - 12 小时（例如 2024-01-15 02:30:45 PM）",
+      "dateFormatUS12H": "美国 - 12 小时（例如 01/15/2024 02:30:45 PM）",
+      "dateFormatUS24H": "美国 - 24 小时（例如 01/15/2024 14:30:45）",
+      "dateFormatEU24H": "欧盟 - 24 小时（例如 15/01/2024 14:30:45）",
+      "dateFormatEU12H": "欧盟 - 12 小时（例如 15/01/2024 02:30:45 PM）"
+    },
+    "autoLogPreferences": {
+      "groupName": "自动日志首选项",
+      "groupDesc": "配置自动日志场景的首选项",
+      "unknownContact": "未知联系人",
+      "unknownContactHelper": "当电话号码与任何联系人都不匹配时的操作",
+      "skipLogging": "跳过记录",
+      "createNewPlaceholder": "创建新的占位联系人",
+      "newContactType": "新联系人类型（创建新联系人时适用）",
+      "newContactTypeHelper": "创建占位联系人时的联系人类型",
+      "newContactNamePrefix": "新联系人名称前缀（创建新联系人时适用）",
+      "newContactNamePrefixHelper": "名称将包含来电显示（如果可用）+ 电话号码",
+      "multipleContacts": "多个联系人",
+      "multipleContactsHelper": "当多个联系人匹配电话号码时的操作",
+      "firstAlphabetical": "按字母顺序第一个",
+      "mostRecentActivity": "最近活动"
+    },
+    "appearance": {
+      "groupName": "外观",
+      "groupDesc": "修改显示和主题首选项",
+      "customizeTabs": "自定义标签页",
+      "customizeTabsDesc": "控制扩展程序界面中显示的标签页",
+      "showChatTab": "显示聊天标签页",
+      "showMeetingsTab": "显示会议标签页",
+      "showTextTab": "显示短信标签页",
+      "showFaxTab": "显示传真标签页",
+      "showVoicemailTab": "显示语音邮件标签页",
+      "showRecordingsTab": "显示录音标签页",
+      "showContactsTab": "显示联系人标签页",
+      "showUserReportTab": "显示用户报告标签页",
+      "showCalldownTab": "显示呼叫列表标签页",
+      "notificationLevel": "通知级别",
+      "notificationLevelDesc": "选择在扩展程序中显示的通知级别。",
+      "notificationLevelSelectDesc": "选择要显示的通知类型",
+      "success": "成功",
+      "warning": "警告",
+      "error": "错误",
+      "widgetSettings": "小组件设置",
+      "widgetSettingsDesc": "修改小组件设置",
+      "quickAccessButtonSize": "快速访问按钮大小",
+      "small": "小",
+      "medium": "中",
+      "large": "大",
+      "extraLarge": "超大",
+      "phoneNumberFormat": "电话号码格式"
+    },
+    "callPop": {
+      "groupName": "来电弹窗",
+      "incomingCallPop": "来电弹窗",
+      "incomingCallPopHelper": "选择何时触发来电的来电弹窗。",
+      "outgoingCallPop": "去电弹窗",
+      "outgoingCallPopHelper": "选择何时触发去电的来电弹窗。",
+      "onFirstRing": "第一声响铃时",
+      "onAnswer": "接听时",
+      "multiContactBehavior": "多联系人匹配行为",
+      "multiContactBehaviorHelper": "选择多个联系人匹配电话号码时的操作。",
+      "openAllMatches": "打开所有匹配项",
+      "promptToSelect": "提示选择",
+      "allowExtensionLogging": "允许分机号码记录",
+      "managedByAdmin": "此设置由管理员管理",
+      "contactCreatedCallPop": "联系人创建来电弹窗",
+      "contactCreatedCallPopDesc": "创建后立即打开联系人",
+      "openContactFromIncoming": "从来电打开联系人",
+      "openContactFromOutgoing": "从去电打开联系人",
+      "openContactAfterCreating": "创建后打开联系人",
+      "overridingNumberFormat": "覆盖号码格式",
+      "overridingNumberFormatWarning": "请输入您的覆盖电话号码格式：（使用 # 表示数字，例如 (###) ###-###）"
+    },
+    "enabledDomains": {
+      "groupName": "已启用的域",
+      "groupDesc": "管理 App Connect 已启用的 URL",
+      "clickToDialWarning": "点击拨号是当用户将鼠标悬停在电话号码上时显示的弹出窗口小组件。",
+      "clickToDialMode": "点击拨号启用模式",
+      "crmOnly": "仅为连接的 CRM 启用",
+      "whitelist": "默认阻止（然后管理允许的站点列表）",
+      "blacklist": "默认允许（然后管理阻止的站点列表）",
+      "clickToDialUrls": "点击拨号 URL",
+      "clickToDialUrlsHelper": "输入要加入白名单的页面 URL。多个 URL 用逗号分隔。使用 * 作为通配符。",
+      "quickAccessWarning": "快速访问按钮显示在屏幕右下角。",
+      "quickAccessMode": "快速访问按钮启用模式",
+      "quickAccessUrls": "快速访问按钮 URL"
+    },
+    "advanced": {
+      "groupName": "高级功能",
+      "developerMode": "开发者模式",
+      "developerModeDesc": "启用开发者模式以访问开发者设置。",
+      "autoOpenExtension": "自动打开扩展程序",
+      "autoOpenExtensionDesc": "加载 CRM 页面时将打开扩展程序。"
+    },
+    "numberFormatter": {
+      "title": "号码格式化",
+      "phoneNumberAlternatives": "备选电话号码格式",
+      "info": "请输入您的覆盖电话号码格式：（使用 # 表示数字，例如 (###) ###-###）[工作原理](https://appconnect.labs.ringcentral.com/users/phone-number-formats/#how-it-works)",
+      "format1": "格式 1",
+      "format2": "格式 2",
+      "format3": "格式 3"
+    },
+    "googleSheets": {
+      "config": "Google Sheets 配置"
+    }
+  },
+  "notifications": {
+    "success": {
+      "callLogAdded": "通话日志已添加",
+      "messageLogAdded": "消息日志已添加",
+      "callLogUpdated": "通话日志已更新",
+      "authorized": "授权成功。",
+      "unauthorized": "已成功退出登录。",
+      "openingContactPage": "正在尝试查找并打开联系人页面..."
+    },
+    "warning": {
+      "callLogFailed": "保存通话日志失败",
+      "callLogUpdateFailed": "通话日志更新失败",
+      "connectToCrm": "请前往设置并连接到 CRM 平台",
+      "apiKeyFailed": "注册 API 密钥失败。",
+      "noContactFound": "未找到联系人"
+    },
+    "error": {
+      "wrongFormat": "格式错误：{field}"
+    }
+  },
+  "conflicts": {
+    "multipleContacts": "多个联系人",
+    "noMatchedContact": "没有匹配的联系人",
+    "multipleMatchedContacts": "有多个匹配的联系人",
+    "multipleAssociations": "有多个关联的 \"{associations}\"。"
+  },
+  "dateFormats": {
+    "general12H": "2024-01-15 02:30:45 PM - 通用 12 小时",
+    "general24H": "2024-01-15 14:30:45 - 通用 24 小时",
+    "us12H": "01/15/2024 02:30:45 PM - 美国 12 小时",
+    "us24H": "01/15/2024 14:30:45 - 美国 24 小时",
+    "eu12H": "15/01/2024 02:30:45 PM - 欧盟 12 小时",
+    "eu24H": "15/01/2024 14:30:45 - 欧盟 24 小时"
+  },
+  "misc": {
+    "clickToDialCollision": "检测到适用于 Google Chrome 的 RingCentral 扩展程序。您可能希望自定义点击拨号首选项以获得所需的行为。",
+    "clickToDialCollisionTitle": "点击拨号可能无法正常工作",
+    "configure": "配置",
+    "pipedriveStep2": "(2/3) 请使用您的 RingCentral 账户登录扩展程序。如果没有任何反应，请尝试刷新此页面并等待几秒钟。",
+    "pipedriveStep3": "(3/3) 设置完成。您现在可以关闭此页面。",
+    "setup": "设置"
+  }
+}
+

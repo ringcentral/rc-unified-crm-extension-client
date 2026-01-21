@@ -8,6 +8,7 @@ import platformSelectionPage from '../components/platformSelectionPage';
 import embeddableServices from '../service/embeddableServices';
 import authPage from '../components/authPage';
 import { tryConnectToBullhorn } from '../misc/bullhorn';
+import { t } from '../i18n';
 
 function handleThirdPartyOAuthWindow(oAuthUri) {
     chrome.runtime.sendMessage({
@@ -102,7 +103,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
             }
         });
         setAuth(true);
-        showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully authorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
+        showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? t('notifications.success.authorized'), ttl: res.data.returnMessage?.ttl ?? 3000 });
         await chrome.storage.local.set({
             ['rcUnifiedCrmExtJwt']: res.data.jwtToken
         });
@@ -159,7 +160,7 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
     }
     const oauthCallbackUrl = `${serverUrl}/oauth-callback?${params.toString()}`;
     const res = await axios.get(oauthCallbackUrl);
-    showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully authorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
+    showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? t('notifications.success.authorized'), ttl: res.data.returnMessage?.ttl ?? 3000 });
     if (!res.data.jwtToken) {
         return;
     }
@@ -179,7 +180,7 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
 async function unAuthorize({ serverUrl, platformName, rcUnifiedCrmExtJwt }) {
     try {
         const res = await axios.post(`${serverUrl}/unAuthorize?jwtToken=${rcUnifiedCrmExtJwt}`);
-        showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully unauthorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
+        showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? t('notifications.success.unauthorized'), ttl: res.data.returnMessage?.ttl ?? 3000 });
         trackCrmLogout()
     }
     catch (e) {

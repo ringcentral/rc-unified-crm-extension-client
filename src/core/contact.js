@@ -2,6 +2,7 @@ import axios from 'axios';
 import analytics from '../lib/analytics';
 import { showNotification } from '../lib/util';
 import multiContactPopPromptPage from '../components/multiContactPopPromptPage';
+import { t } from '../i18n';
 
 function getLocalCachedContact({ phoneNumber, platformName }) {
     const allCachedContacts = document.querySelector("#rc-widget-adapter-frame").contentWindow.phone.contactMatcher.data;
@@ -61,7 +62,7 @@ async function getContact({ serverUrl, phoneNumber, platformName, isFromManual =
             return {
                 matched: false,
                 returnMessage: contactRes.data.returnMessage ?? {
-                    message: 'No contact found',
+                    message: t('notifications.warning.noContactFound'),
                     messageType: 'warning',
                     ttl: 3000
                 },
@@ -97,7 +98,7 @@ async function getContact({ serverUrl, phoneNumber, platformName, isFromManual =
             matched: false,
             returnMessage:
             {
-                message: 'Please go to Settings and connect to CRM platform',
+                message: t('notifications.warning.connectToCrm'),
                 messageType: 'warning',
                 ttl: 3000
             },
@@ -144,7 +145,7 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
         return {
             matched: false,
             returnMessage: {
-                message: 'Please go to Settings and connect to CRM platform',
+                message: t('notifications.warning.connectToCrm'),
                 messageType: 'warning',
                 ttl: 3000
             },
@@ -176,7 +177,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
     }
     // case: single contact with id
     if (isContactIdProvidedDirectly || (cachedContacts.length == 1 && !!contactIdInUse)) {
-        showNotification({ level: 'success', message: 'Trying to find and open contact page...', ttl: 5000 });
+        showNotification({ level: 'success', message: t('notifications.success.openingContactPage'), ttl: 5000 });
         // Unique: Bullhorn 
         if (platformName === 'bullhorn') {
             const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
@@ -294,7 +295,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                 }
             }
         }
-        showNotification({ level: 'success', message: 'Trying to find and open contact page...', ttl: 5000 });
+        showNotification({ level: 'success', message: t('notifications.success.openingContactPage'), ttl: 5000 });
     }
 }
 

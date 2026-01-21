@@ -1,0 +1,384 @@
+{
+  "common": {
+    "buttons": {
+      "save": "저장",
+      "cancel": "취소",
+      "submit": "제출",
+      "update": "업데이트",
+      "connect": "연결",
+      "open": "열기",
+      "logout": "로그아웃",
+      "select": "선택",
+      "schedule": "예약"
+    },
+    "labels": {
+      "admin": "(관리자)",
+      "version": "버전",
+      "author": "작성자",
+      "license": "라이선스",
+      "warning": "경고",
+      "search": "검색",
+      "filter": "필터",
+      "contact": "연락처",
+      "none": "없음",
+      "disabled": "비활성화",
+      "private": "비공개",
+      "sharedWithYou": "나와 공유됨",
+      "all": "모두",
+      "value": "값",
+      "customizableByUser": "사용자 정의 가능"
+    },
+    "status": {
+      "online": "온라인",
+      "offline": "오프라인"
+    }
+  },
+  "pages": {
+    "hostname": {
+      "setup": "설정",
+      "select": "선택",
+      "inputHostname": "호스트명 입력",
+      "next": "다음",
+      "instructionTitle": "{platform} 계정을 설정하려면 아래 지침을 따르세요:",
+      "url": "{platform} URL",
+      "urlPlaceholder": "URL...",
+      "invalidUrl": "잘못된 URL! 다음 형식으로 입력하세요: \"{format}\""
+    },
+    "about": {
+      "title": "정보",
+      "introduction": "RingCentral App Connect는 지원되는 CRM 플랫폼에 완전한 기능의 웹 전화를 통합합니다.",
+      "chromeExtension": "Chrome 확장 프로그램",
+      "extensionAuthor": "작성자: RingCentral, Inc.",
+      "versionLabel": "버전: {version}",
+      "eula": "최종 사용자 라이선스 계약",
+      "adapter": "어댑터",
+      "adapterAuthor": "작성자: {author}",
+      "website": "웹사이트",
+      "support": "지원"
+    },
+    "support": {
+      "title": "지원",
+      "documentation": "문서",
+      "releaseNotes": "릴리스 노트",
+      "getSupport": "지원 받기",
+      "writeReview": "리뷰 작성",
+      "communityForums": "커뮤니티 포럼",
+      "serverStatus": "서버 상태: {status}",
+      "versionLabel": "버전: v{version}",
+      "sendErrorReport": "오류 보고서 보내기",
+      "clearLogConflicts": "로그 충돌 지우기",
+      "factoryResetWarning": "공장 초기화는 이 확장 프로그램에서 CRM과 RingCentral 계정을 모두 연결 해제하고 로그아웃합니다.",
+      "factoryReset": "공장 초기화"
+    },
+    "admin": {
+      "title": "관리자",
+      "managedSettings": "관리 설정",
+      "serverSideLogging": "서버 측 로깅 (베타)"
+    },
+    "managedSettings": {
+      "title": "관리 설정",
+      "general": "일반",
+      "googleSheetsConfig": "Google Sheets 구성",
+      "activityLogging": "활동 로깅",
+      "callPop": "통화 팝업",
+      "advancedFeatures": "고급 기능",
+      "customSettings": "사용자 정의 설정"
+    },
+    "generalSettings": {
+      "title": "일반",
+      "appearance": "외관",
+      "enabledDomains": "활성화된 도메인"
+    },
+    "platformSelection": {
+      "title": "플랫폼 선택",
+      "searchPlaceholder": "필터로 검색..."
+    },
+    "log": {
+      "saveTo": "{platform}에 저장",
+      "editLog": "로그 편집",
+      "activityTitle": "활동 제목",
+      "note": "메모",
+      "scheduleCallback": "콜백 예약",
+      "callbackTime": "콜백 시간",
+      "newContactName": "새 연락처 이름",
+      "contactType": "연락처 유형",
+      "searchContacts": "연락처 검색",
+      "multipleContactsWarning": "여러 연락처가 발견되었습니다. 이 활동을 연결할 연락처를 선택하세요.",
+      "noContactWarning": "연락처를 찾을 수 없습니다. 임시 연락처를 만들 이름을 입력하세요.",
+      "inboundCallFrom": "{name}에서 수신 {type}",
+      "outboundCallTo": "{name}으로 발신 {type}",
+      "enterTitle": "제목 입력...",
+      "enterNote": "메모 입력...",
+      "enterName": "이름 입력...",
+      "addToCalldownList": "이 연락처를 통화 목록에 추가"
+    },
+    "unloggedCalls": {
+      "title": "기록되지 않은 통화"
+    },
+    "feedback": {
+      "title": "피드백"
+    },
+    "reports": {
+      "title": "보고서",
+      "userStats": "사용자 통계",
+      "companyStats": "회사 통계"
+    },
+    "schedule": {
+      "title": "통화 목록에 추가",
+      "phoneNumber": "전화번호",
+      "scheduleTime": "예정 시간"
+    },
+    "calldown": {
+      "title": "통화 목록",
+      "contacts": "연락처",
+      "filterByName": "이름으로 필터",
+      "all": "모두",
+      "notCalled": "미통화",
+      "called": "통화 완료",
+      "scheduled": "예정됨",
+      "call": "통화",
+      "text": "문자",
+      "viewContact": "연락처 보기",
+      "edit": "편집",
+      "markComplete": "완료로 표시",
+      "delete": "삭제"
+    },
+    "developerSettings": {
+      "title": "개발자 설정",
+      "clearPlatformInfoWarning": "현재 CRM 플랫폼 정보를 지우고 새 CRM 플랫폼으로 다시 초기화합니다.",
+      "clearPlatformInfo": "플랫폼 정보 지우기",
+      "checkInterfaceImplementations": "인터페이스 구현 확인"
+    },
+    "multiContactPrompt": {
+      "title": "연락처를 클릭하여 열기",
+      "contacts": "연락처"
+    }
+  },
+  "settings": {
+    "preconfigure": {
+      "noCrmSelected": "CRM이 선택되지 않음"
+    },
+    "auth": {
+      "authorizedTitle": "로그아웃",
+      "unauthorizedTitle": "연결",
+      "developedBy": "{author}이(가) 개발"
+    },
+    "buttons": {
+      "callLater": "나중에 전화"
+    },
+    "logging": {
+      "groupName": "활동 로깅",
+      "autoLogCall": "전화 통화 자동 기록",
+      "autoLogCallDesc": "이 앱에서 통화가 종료되면 자동으로 기록",
+      "autoLogSMS": "SMS 대화 자동 기록",
+      "autoLogSMSDesc": "이 앱에서 SMS가 송수신되면 자동으로 기록",
+      "autoLogVoicemail": "음성 메일 자동 기록",
+      "autoLogVoicemailDesc": "이 앱에서 음성 메일이 수신되면 자동으로 기록",
+      "autoLogInboundFax": "수신 팩스 자동 기록",
+      "autoLogInboundFaxDesc": "이 앱에서 수신 팩스가 수신되면 자동으로 기록",
+      "autoLogOutboundFax": "발신 팩스 자동 기록",
+      "autoLogOutboundFaxDesc": "이 앱에서 발신 팩스가 전송되면 자동으로 기록",
+      "retroCallLogSync": "소급 통화 로그 동기화",
+      "retroCallLogSyncDesc": "주기적으로 스캔하여 누락된 활동을 기록",
+      "disableRetroCallLogSync": "소급 통화 로그 동기화 비활성화",
+      "oneTimeLog": "일회성 통화 로깅",
+      "oneTimeLogDesc": "전체 통화 세부 정보를 사용할 수 있을 때까지 로깅 지연",
+      "enableOneTimeLog": "일회성 통화 로깅 활성화",
+      "popupLogPageAfterCall": "(수동 로그) 통화 후 로그 페이지 열기",
+      "popupLogPageAfterCallDesc": "각 통화 후 자동으로 로그 양식 열기",
+      "popupLogPageAfterSMS": "(수동 로그) 메시지 후 SMS 로그 페이지 열기",
+      "popupLogPageAfterSMSDesc": "각 메시지 후 자동으로 로그 양식 열기"
+    },
+    "callLogDetails": {
+      "groupName": "통화 로그 세부 정보",
+      "agentNotes": "상담원 입력 메모",
+      "agentNotesDesc": "직접 수동으로 입력한 메모 기록",
+      "agentNotesDescAdmin": "상담원이 수동으로 입력한 메모 기록",
+      "callSessionId": "통화 세션 ID",
+      "callSessionIdDesc": "RingCentral 통화 세션 ID 기록",
+      "rcUserName": "RingCentral 사용자 이름",
+      "rcUserNameDesc": "RingCentral 사용자 이름 기록",
+      "rcNumber": "RingCentral 전화번호",
+      "rcNumberDesc": "RingCentral 전화번호 기록",
+      "callSubject": "통화 제목",
+      "callSubjectDesc": "통화를 요약하는 짧은 문구 기록, 예: '수신 통화...'",
+      "contactNumber": "연락처 전화번호",
+      "contactNumberDesc": "상대방의 연락처 정보 기록",
+      "dateTime": "날짜 및 시간",
+      "dateTimeDesc": "통화의 명시적 시작 및 종료 날짜/시간 기록",
+      "dateFormat": "날짜 형식",
+      "dateFormatDesc": "통화 로그의 날짜 및 시간 형식",
+      "callDuration": "통화 시간",
+      "callDurationDesc": "통화 시간을 분과 초로 기록",
+      "callResult": "통화 결과",
+      "callResultDesc": "통화 결과 기록, 예: 통화 연결됨",
+      "recordingLink": "녹음 링크",
+      "recordingLinkDesc": "통화 녹음 링크 제공 (있는 경우)",
+      "smartSummary": "스마트 요약",
+      "smartSummaryDesc": "AI 생성 통화 요약 기록 (있는 경우)",
+      "transcript": "통화 녹취록",
+      "transcriptDesc": "AI 생성 통화 녹취록 기록 (있는 경우)",
+      "aiAssistantRequired": "AI 어시스턴트 필요",
+      "ringSenseTranscript": "RingSense 녹취록",
+      "ringSenseTranscriptDesc": "[RingSense 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
+      "ringSenseCallScore": "RingSense 통화 점수",
+      "ringSenseCallScoreDesc": "[RingSense 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
+      "ringSenseSummary": "RingSense 요약",
+      "ringSenseSummaryDesc": "[RingSense 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
+      "ringSenseBulletedSummary": "RingSense 글머리 기호 요약",
+      "ringSenseBulletedSummaryDesc": "[RingSense 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
+      "ringSenseRecordingLink": "RingSense 녹음 링크",
+      "ringSenseRecordingLinkDesc": "[RingSense 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
+      "callJourney": "통화 여정",
+      "callJourneyDesc": "서버 측 로깅만.",
+      "dateFormatGlobal24H": "글로벌 - 24시간 (예: 2024-01-15 14:30:45)",
+      "dateFormatGlobal12H": "글로벌 - 12시간 (예: 2024-01-15 02:30:45 PM)",
+      "dateFormatUS12H": "미국 - 12시간 (예: 01/15/2024 02:30:45 PM)",
+      "dateFormatUS24H": "미국 - 24시간 (예: 01/15/2024 14:30:45)",
+      "dateFormatEU24H": "EU - 24시간 (예: 15/01/2024 14:30:45)",
+      "dateFormatEU12H": "EU - 12시간 (예: 15/01/2024 02:30:45 PM)"
+    },
+    "autoLogPreferences": {
+      "groupName": "자동 로그 기본 설정",
+      "groupDesc": "자동 로깅 시나리오에 대한 기본 설정 구성",
+      "unknownContact": "알 수 없는 연락처",
+      "unknownContactHelper": "전화번호가 연락처와 일치하지 않을 때 수행할 작업",
+      "skipLogging": "로깅 건너뛰기",
+      "createNewPlaceholder": "새 임시 연락처 만들기",
+      "newContactType": "새 연락처 유형 (새 연락처 생성 시 적용)",
+      "newContactTypeHelper": "임시 연락처 생성 시 연락처 유형",
+      "newContactNamePrefix": "새 연락처 이름 접두사 (새 연락처 생성 시 적용)",
+      "newContactNamePrefixHelper": "이름에 발신자 ID (가능한 경우) + 전화번호 포함",
+      "multipleContacts": "여러 연락처",
+      "multipleContactsHelper": "여러 연락처가 전화번호와 일치할 때 수행할 작업",
+      "firstAlphabetical": "알파벳순 첫 번째",
+      "mostRecentActivity": "가장 최근 활동"
+    },
+    "appearance": {
+      "groupName": "외관",
+      "groupDesc": "표시 및 테마 기본 설정 수정",
+      "customizeTabs": "탭 사용자 정의",
+      "customizeTabsDesc": "확장 프로그램 인터페이스에서 표시할 탭 제어",
+      "showChatTab": "채팅 탭 표시",
+      "showMeetingsTab": "미팅 탭 표시",
+      "showTextTab": "문자 탭 표시",
+      "showFaxTab": "팩스 탭 표시",
+      "showVoicemailTab": "음성 메일 탭 표시",
+      "showRecordingsTab": "녹음 탭 표시",
+      "showContactsTab": "연락처 탭 표시",
+      "showUserReportTab": "사용자 보고서 탭 표시",
+      "showCalldownTab": "통화 목록 탭 표시",
+      "notificationLevel": "알림 수준",
+      "notificationLevelDesc": "확장 프로그램에 표시할 알림 수준을 선택하세요.",
+      "notificationLevelSelectDesc": "표시할 알림 유형 선택",
+      "success": "성공",
+      "warning": "경고",
+      "error": "오류",
+      "widgetSettings": "위젯 설정",
+      "widgetSettingsDesc": "위젯 설정 수정",
+      "quickAccessButtonSize": "빠른 액세스 버튼 크기",
+      "small": "작게",
+      "medium": "중간",
+      "large": "크게",
+      "extraLarge": "매우 크게",
+      "phoneNumberFormat": "전화번호 형식"
+    },
+    "callPop": {
+      "groupName": "통화 팝업",
+      "incomingCallPop": "수신 통화 팝업",
+      "incomingCallPopHelper": "수신 통화에 대해 통화 팝업을 트리거할 시기를 선택하세요.",
+      "outgoingCallPop": "발신 통화 팝업",
+      "outgoingCallPopHelper": "발신 통화에 대해 통화 팝업을 트리거할 시기를 선택하세요.",
+      "onFirstRing": "첫 번째 벨소리",
+      "onAnswer": "응답 시",
+      "multiContactBehavior": "다중 연락처 동작",
+      "multiContactBehaviorHelper": "여러 연락처가 전화번호와 일치할 때 수행할 작업을 선택하세요.",
+      "openAllMatches": "모든 일치 항목 열기",
+      "promptToSelect": "선택 요청",
+      "allowExtensionLogging": "내선 번호 로깅 허용",
+      "managedByAdmin": "이 설정은 관리자가 관리합니다",
+      "contactCreatedCallPop": "연락처 생성 통화 팝업",
+      "contactCreatedCallPopDesc": "생성 직후 연락처 열기",
+      "openContactFromIncoming": "수신 통화에서 연락처 열기",
+      "openContactFromOutgoing": "발신 통화에서 연락처 열기",
+      "openContactAfterCreating": "생성 후 연락처 열기",
+      "overridingNumberFormat": "재정의 번호 형식",
+      "overridingNumberFormatWarning": "재정의 전화번호 형식을 입력하세요: (#을 사용하여 숫자 표시, 예: (###) ###-###)"
+    },
+    "enabledDomains": {
+      "groupName": "활성화된 도메인",
+      "groupDesc": "App Connect가 활성화된 URL 관리",
+      "clickToDialWarning": "클릭 투 다이얼은 사용자가 전화번호 위에 마우스를 올렸을 때 표시되는 팝업 위젯입니다.",
+      "clickToDialMode": "클릭 투 다이얼 활성화 모드",
+      "crmOnly": "연결된 CRM에만 활성화",
+      "whitelist": "기본적으로 차단 (허용할 사이트 목록 관리)",
+      "blacklist": "기본적으로 허용 (차단할 사이트 목록 관리)",
+      "clickToDialUrls": "클릭 투 다이얼 URL",
+      "clickToDialUrlsHelper": "화이트리스트에 추가할 페이지 URL을 입력하세요. 여러 URL은 쉼표로 구분하세요. *를 와일드카드로 사용하세요.",
+      "quickAccessWarning": "빠른 액세스 버튼은 화면 오른쪽 하단에 표시됩니다.",
+      "quickAccessMode": "빠른 액세스 버튼 활성화 모드",
+      "quickAccessUrls": "빠른 액세스 버튼 URL"
+    },
+    "advanced": {
+      "groupName": "고급 기능",
+      "developerMode": "개발자 모드",
+      "developerModeDesc": "개발자 설정에 액세스하려면 개발자 모드를 활성화하세요.",
+      "autoOpenExtension": "확장 프로그램 자동 열기",
+      "autoOpenExtensionDesc": "CRM 페이지가 로드되면 확장 프로그램이 열립니다."
+    },
+    "numberFormatter": {
+      "title": "번호 포맷터",
+      "phoneNumberAlternatives": "대체 전화번호 형식",
+      "info": "재정의 전화번호 형식을 입력하세요: (#을 사용하여 숫자 표시, 예: (###) ###-###) [작동 방식](https://appconnect.labs.ringcentral.com/users/phone-number-formats/#how-it-works)",
+      "format1": "형식 1",
+      "format2": "형식 2",
+      "format3": "형식 3"
+    },
+    "googleSheets": {
+      "config": "Google Sheets 구성"
+    }
+  },
+  "notifications": {
+    "success": {
+      "callLogAdded": "통화 로그가 추가되었습니다",
+      "messageLogAdded": "메시지 로그가 추가되었습니다",
+      "callLogUpdated": "통화 로그가 업데이트되었습니다",
+      "authorized": "인증에 성공했습니다.",
+      "unauthorized": "로그아웃에 성공했습니다.",
+      "openingContactPage": "연락처 페이지를 찾아 열고 있습니다..."
+    },
+    "warning": {
+      "callLogFailed": "통화 로그 저장 실패",
+      "callLogUpdateFailed": "통화 로그 업데이트 실패",
+      "connectToCrm": "설정으로 이동하여 CRM 플랫폼에 연결하세요",
+      "apiKeyFailed": "API 키 등록 실패.",
+      "noContactFound": "연락처를 찾을 수 없습니다"
+    },
+    "error": {
+      "wrongFormat": "잘못된 형식: {field}"
+    }
+  },
+  "conflicts": {
+    "multipleContacts": "여러 연락처",
+    "noMatchedContact": "일치하는 연락처가 없습니다",
+    "multipleMatchedContacts": "일치하는 연락처가 여러 개 있습니다",
+    "multipleAssociations": "연결된 \"{associations}\"이(가) 여러 개 있습니다."
+  },
+  "dateFormats": {
+    "general12H": "2024-01-15 02:30:45 PM - 일반 12시간",
+    "general24H": "2024-01-15 14:30:45 - 일반 24시간",
+    "us12H": "01/15/2024 02:30:45 PM - 미국 12시간",
+    "us24H": "01/15/2024 14:30:45 - 미국 24시간",
+    "eu12H": "15/01/2024 02:30:45 PM - EU 12시간",
+    "eu24H": "15/01/2024 14:30:45 - EU 24시간"
+  },
+  "misc": {
+    "clickToDialCollision": "Google Chrome용 RingCentral 확장 프로그램이 감지되었습니다. 원하는 동작에 맞게 클릭 투 다이얼 기본 설정을 사용자 정의할 수 있습니다.",
+    "clickToDialCollisionTitle": "클릭 투 다이얼이 작동하지 않을 수 있습니다",
+    "configure": "구성",
+    "pipedriveStep2": "(2/3) RingCentral 계정으로 확장 프로그램에 로그인하세요. 아무 일도 일어나지 않으면 이 페이지를 새로 고침하고 몇 초 기다리세요.",
+    "pipedriveStep3": "(3/3) 설정이 완료되었습니다. 이제 이 페이지를 닫을 수 있습니다.",
+    "setup": "설정"
+  }
+}
+
