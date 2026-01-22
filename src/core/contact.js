@@ -44,14 +44,26 @@ async function getContact({ serverUrl, phoneNumber, platformName, isFromManual =
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const overridingFormats = [];
     const { userSettings } = await chrome.storage.local.get('userSettings');
-    if (userSettings?.overridingPhoneNumberFormat?.value) {
-        overridingFormats.push(userSettings.overridingPhoneNumberFormat.value);
+    // Prefer admin-managed overridingNumberFormat if present, otherwise fall back to per-user fields
+    if (userSettings?.overridingNumberFormat?.numberFormatter1) {
+        overridingFormats.push(userSettings.overridingNumberFormat.numberFormatter1);
     }
-    if (userSettings?.overridingPhoneNumberFormat2?.value) {
-        overridingFormats.push(userSettings.overridingPhoneNumberFormat2.value);
+    if (userSettings?.overridingNumberFormat?.numberFormatter2) {
+        overridingFormats.push(userSettings.overridingNumberFormat.numberFormatter2);
     }
-    if (userSettings?.overridingPhoneNumberFormat3?.value) {
-        overridingFormats.push(userSettings.overridingPhoneNumberFormat3.value);
+    if (userSettings?.overridingNumberFormat?.numberFormatter3) {
+        overridingFormats.push(userSettings.overridingNumberFormat.numberFormatter3);
+    }
+    if (overridingFormats.length === 0) {
+        if (userSettings?.overridingPhoneNumberFormat?.value) {
+            overridingFormats.push(userSettings.overridingPhoneNumberFormat.value);
+        }
+        if (userSettings?.overridingPhoneNumberFormat2?.value) {
+            overridingFormats.push(userSettings.overridingPhoneNumberFormat2.value);
+        }
+        if (userSettings?.overridingPhoneNumberFormat3?.value) {
+            overridingFormats.push(userSettings.overridingPhoneNumberFormat3.value);
+        }
     }
 
     if (rcUnifiedCrmExtJwt) {
