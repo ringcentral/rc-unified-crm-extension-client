@@ -126,8 +126,8 @@ chrome.action.onClicked.addListener(async function (tab) {
       chrome.notifications.create({
         type: 'basic',
         iconUrl: '/images/logo32.png',
-        title: `Please open the extension from a CRM page`,
-        message: "For first time setup, please open it from a CRM page. RingCentral App Connect requires initial setup and match to your CRM platform.",
+        title: `Please open the extension from A CRM dashboard page`,
+        message: "For first time setup, please open it from A CRM dashboard page. RingCentral App Connect requires initial setup and match to your CRM platform.",
         priority: 1
       });
     }
@@ -200,8 +200,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         chrome.notifications.create({
           type: 'basic',
           iconUrl: '/images/logo32.png',
-          title: `Please open the extension from a CRM page`,
-          message: "For first time setup, please open it from a CRM page. RingCentral App Connect requires initial setup and match to your CRM platform.",
+          title: `Please open the extension from A CRM dashboard page`,
+          message: "For first time setup, please open it from A CRM dashboard page. RingCentral App Connect requires initial setup and match to your CRM platform.",
           priority: 1
         });
       }
@@ -324,4 +324,15 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   //     priority: 1
   //   });
   // }
+});
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.url && changeInfo.url.includes('ringcentral.com/ringsense.html') && changeInfo.url.includes('ref=AppConnect')) {
+    chrome.runtime.sendMessage({
+      type: 'trackRingSensePage'
+    }).catch(e => {
+      // popup might be closed, ignore error
+      console.log('Could not send trackRingSensePage message', e);
+    });
+  }
 });

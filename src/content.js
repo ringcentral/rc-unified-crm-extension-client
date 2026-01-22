@@ -20,7 +20,7 @@ async function checkUrlMatch({ type = 'quickAccessButton' }) {
     const platformInfo = await chrome.storage.local.get('platform-info');
     if (!isObjectEmpty(platformInfo)) {
       const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
-      const embedUrls = customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.embedUrls;
+      const embedUrls = customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.embedUrls?.length > 0 ? customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.embedUrls : ['*'];
       const { userSettings } = await chrome.storage.local.get('userSettings');
       let clickToDialEmbedMode = null;
       switch (type) {
@@ -108,6 +108,9 @@ async function initializeC2D() {
       });
     },
   );
+  // Disable the SMS button, keep only click-to-dial
+  const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
+  window.clickToDialInject.widget.update({ enableC2Text: userPermissions?.sms ?? false });
 }
 
 // Listen message from background.js to open app window when user click icon.
@@ -207,6 +210,7 @@ async function Initialize() {
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/fast-add')
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/actions/compose-message')
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/tools/template')
+    && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/actions/publish-job')
     && window.self === window.top
     && renderQuickAccessButton) {
     await RenderQuickAccessButton();
@@ -221,6 +225,7 @@ async function Initialize() {
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/fast-add')
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/actions/compose-message')
     && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/tools/template')
+    && !window.location.href.startsWith('https://app.bullhornstaffing.com/content/actions/publish-job')
   ) {
     await initializeC2D();
   }

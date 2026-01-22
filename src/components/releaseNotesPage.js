@@ -7,38 +7,123 @@ async function getReleaseNotesPageRender({ manifest, platformName, registeredVer
         const registeredVersionNumbers = registeredVersion.split('.').map(v => parseInt(v));
         const currentVersionNumbers = manifest.version.split('.').map(v => parseInt(v));
         if (!!releaseNotes[manifest.version] &&
-            (currentVersionNumbers[0] > registeredVersionNumbers[0] ||
-                currentVersionNumbers[0] === registeredVersionNumbers[0] && currentVersionNumbers[1] > registeredVersionNumbers[1] ||
+            (
                 currentVersionNumbers[0] === registeredVersionNumbers[0] && currentVersionNumbers[1] === registeredVersionNumbers[1] && currentVersionNumbers[2] > registeredVersionNumbers[2])
         ) {
             const globalNotes = releaseNotes[manifest.version].global ?? [];
             const platformNotes = releaseNotes[manifest.version][platformName] ?? [];
             const allNotes = globalNotes.concat(platformNotes);
             const allTypes = allNotes.map(n => { return n.type }).filter((value, index, array) => { return array.indexOf(value) === index; });
-            let notesRender = [];
-            let notesUiSchema = [];
+            let notesRender = {};
+            let notesUiSchema = {};
+            let noteFormData = {};
             for (const t of allTypes) {
                 const targetNotes = allNotes.filter(n => { return n.type === t });
-                notesRender.push({
+                notesRender[t] = {
                     type: 'string',
                     description: t
-                });
-                notesUiSchema.push({
+                };
+                notesUiSchema[t] = {
                     "ui:field": "typography",
                     "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
-                });
+                };
                 for (const n of targetNotes) {
-                    notesRender.push({
+                    // check for link button render
+                    let description = n.description;
+                    let buttonText = '';
+                    let buttonUrl = '';
+                    if (n.description.includes('[Button]')) {
+                        description = n.description.split('[Button]')[0];
+                        const buttonInfo = n.description.split('[Button]')[1];
+                        buttonText = buttonInfo.split('|')[0];
+                        buttonUrl = buttonInfo.split('|')[1];
+                    }
+                    notesRender[`${t}-${targetNotes.indexOf(n)}`] = {
                         type: 'string',
-                        description: n.description
-                    })
-                    notesUiSchema.push({
+                        description
+                    };
+                    notesUiSchema[`${t}-${targetNotes.indexOf(n)}`] = {
                         "ui:field": "typography",
                         "ui:variant": "body1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
                         "ui:style": { margin: '-15px 0px 0px 20px' }
-                    });
+                    };
+                    if (buttonText && buttonUrl) {
+                        notesRender[`link-button-${buttonText}`] = {
+                            type: 'string',
+                            title: buttonText
+                        };
+                        notesUiSchema[`link-button-${buttonText}`] = {
+                            "ui:field": "button",
+                            "ui:variant": "contained",
+                            // "text", "outlined", "contained", "plain"
+                            "ui:fullWidth": false
+                        };
+                        noteFormData[`link-button-${buttonText}`] = buttonUrl;
+                    }
                 }
             }
+            // add Beta promotion content
+            notesRender = {
+                ...notesRender,
+                betaPromotionTitle: {
+                    type: 'string',
+                    description: 'Introducing App Connect 2.0 Beta!'
+                },
+                betaPromotionBody: {
+                    type: 'string',
+                    description: 'Get an **exclusive first look** at the future of App Connect. Check out the new voicemail drop, improved metrics, and tons of other new features!'
+                },
+                betaPromotionTitle2: {
+                    type: 'string',
+                    description: 'Be a Beta Tester'
+                },
+                ['link-button-betaInstallationButton']: {
+                    type: 'string',
+                    title: 'Install Now'
+                },
+                betaPromotionTrail: {
+                    type: 'string',
+                    description: 'App Connect 2.0 is 100% backwards-compatible'
+                },
+                betaPromotionTrail2: {
+                    type: 'string',
+                    description: 'Run App Connect 1.6 and 2.0 side-by-side'
+                }
+            },
+                notesUiSchema = {
+                    ...notesUiSchema,
+                    betaPromotionTitle: {
+                        "ui:field": "typography",
+                        "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                    },
+                    betaPromotionBody: {
+                        "ui:field": "typography",
+                        "ui:variant": "body1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                    },
+                    betaPromotionTitle2: {
+                        "ui:field": "typography",
+                        "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                    },
+                    ['link-button-betaInstallationButton']: {
+                        "ui:field": "button",
+                        "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                        "ui:fullWidth": false
+                    },
+                    betaPromotionTrail: {
+                        "ui:field": "typography",
+                        "ui:variant": "caption1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                        "ui:style": { marginTop: '-10px' }
+                    },
+                    betaPromotionTrail2: {
+                        "ui:field": "typography",
+                        "ui:variant": "caption1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                        "ui:style": { marginTop: '-20px' }
+                    }
+                },
+                noteFormData = {
+                    ...noteFormData,
+                    ['link-button-betaInstallationButton']: 'https://chromewebstore.google.com/detail/ringcentral-app-connect-b/bgpkbcidaabaeioilooghlffdcmlimgk'
+                }
             return {
                 id: 'releaseNotesPage',
                 title: `Release Notes (v${manifest.version})`,
@@ -47,7 +132,7 @@ async function getReleaseNotesPageRender({ manifest, platformName, registeredVer
                     properties: notesRender
                 },
                 uiSchema: notesUiSchema,
-                formData: {}
+                formData: noteFormData
             }
         }
         else {

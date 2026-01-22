@@ -35,6 +35,20 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
+                autoLogVoicemail: {
+                    type: 'object',
+                    title: 'Log voicemail messages automatically',
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
+                },
                 autoLogInboundFax: {
                     type: 'object',
                     title: 'Log inbound faxes automatically',
@@ -139,6 +153,9 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             autoLogSMS: {
                 "ui:collapsible": true,
             },
+            autoLogVoicemail: {
+                "ui:collapsible": true,
+            },
             autoLogInboundFax: {
                 "ui:collapsible": true,
             },
@@ -171,6 +188,11 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             {
                 customizable: adminUserSettings?.autoLogSMS?.customizable ?? true,
                 value: adminUserSettings?.autoLogSMS?.value ?? false
+            },
+            autoLogVoicemail:
+            {
+                customizable: adminUserSettings?.autoLogVoicemail?.customizable ?? true,
+                value: adminUserSettings?.autoLogVoicemail?.value ?? false
             },
             autoLogInboundFax:
             {

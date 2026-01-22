@@ -85,6 +85,15 @@ async function getServiceManifest() {
                         value: userCore.getAutoLogSMSSetting(userSettings).value,
                     },
                     {
+                        id: 'autoLogVoicemail',
+                        type: 'boolean',
+                        name: 'Log voicemail messages automatically',
+                        description: 'Automatically log voicemail messages when they are received in this app',
+                        readOnly: userCore.getAutoLogVoicemailSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getAutoLogVoicemailSetting(userSettings).readOnlyReason,
+                        value: userCore.getAutoLogVoicemailSetting(userSettings).value,
+                    },
+                    {
                         id: 'autoLogInboundFax',
                         type: 'boolean',
                         name: 'Log inbound faxes automatically',
@@ -311,21 +320,33 @@ async function getServiceManifest() {
                         type: 'option',
                         name: 'Multi-contact match behavior',
                         helper: 'Select what to do when multiple contacts match a phone number.',
-                        options: [
-                            {
-                                id: 'disabled',
-                                name: 'Disabled'
-                            },
-                            {
-                                id: 'openAllMatches',
-                                name: 'Open all matches'
-                            },
-                            {
-                                id: 'promptToSelect',
-                                name: 'Prompt to select'
-                            }
-                        ],
-                        value: userCore.getCallPopMultiMatchBehavior(userSettings).value,
+                        options: platform?.name != 'bullhorn' ?
+                            [
+                                {
+                                    id: 'disabled',
+                                    name: 'Disabled'
+                                },
+                                {
+                                    id: 'openAllMatches',
+                                    name: 'Open all matches'
+                                },
+                                {
+                                    id: 'promptToSelect',
+                                    name: 'Prompt to select'
+                                }
+                            ] :
+                            [
+                                {
+                                    id: 'disabled',
+                                    name: 'Disabled'
+                                },
+                                {
+                                    id: 'promptToSelect',
+                                    name: 'Prompt to select'
+                                }
+                            ],
+                        // Hack: Bullhorn doesn't have open all option
+                        value: userCore.getCallPopMultiMatchBehavior(userSettings, platform?.name == 'bullhorn' && userSettings?.multiContactMatchBehavior?.value == 'openAllMatches').value,
                         readOnly: userCore.getCallPopMultiMatchBehavior(userSettings).readOnly,
                         readOnlyReason: userCore.getCallPopMultiMatchBehavior(userSettings).readOnlyReason,
                     },
@@ -381,7 +402,7 @@ async function getServiceManifest() {
                         id: 'autoOpenExtension',
                         type: 'boolean',
                         name: 'Auto-open extension',
-                        description: 'The extension will be opened when a CRM page is loaded.',
+                        description: 'The extension will be opened when A CRM dashboard page is loaded.',
                         value: userCore.getAutoOpenSetting(userSettings).value,
                         readOnly: userCore.getAutoOpenSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoOpenSetting(userSettings).readOnlyReason
@@ -571,11 +592,11 @@ async function getServiceManifest() {
                     {
                         id: "YYYY-MM-DD hh:mm:ss A",
                         name: "2024-01-15 02:30:45 PM - General 12H"
-                    }, 
+                    },
                     {
                         id: "YYYY-MM-DD HH:mm:ss",
                         name: "2024-01-15 14:30:45 - General 24H"
-                    },                   
+                    },
                     // US Formats
                     {
                         id: "MM/DD/YYYY hh:mm:ss A",
@@ -733,7 +754,7 @@ async function getServiceManifest() {
                 name: "info",
                 type: "admonition",
                 severity: "warning",
-                value: "Please input your overriding phone number format: (please use # to represent a number digit, eg. (###) ###-###)",
+                value: "Please input your overriding phone number format: (please use # to represent a number digit, eg. (###) ###-###) [How it works](https://appconnect.labs.ringcentral.com/users/phone-number-formats/#how-it-works)",
             },
             {
                 id: "overridingPhoneNumberFormat",
@@ -793,6 +814,19 @@ async function getServiceManifest() {
                 buttonType: "link",
             }
         )
+    }
+
+    // TEMP: add banner for webinar info
+    const dateNow = new Date();
+    const { myBannerDismissedDate } = await chrome.storage.local.get({ myBannerDismissedDate: 0 });
+    if (dateNow.getFullYear() === 2026 && dateNow.getMonth() === 0 && dateNow.getDate() <= 29 && dateNow.getDate() > myBannerDismissedDate) {
+        services.banner = {
+            id: 'my-banner',
+            message: '[Learn about App Connect 2.0](https://go.ringcentral.com/Unlock-the-next-version-of-App-Connect.html?BMID=PENDOCCOAPPCONNECT2026)',
+            severity: 'announcement',  // 'info' | 'warning' | 'error' | 'success' | 'announcement', default: 'info'
+            closable: true, // optional, show close button, default: false, only works if no action button is provided
+            closeButtonLabel: 'Close' // optional, close button label, default: 'Close'
+        }
     }
     return services;
 }

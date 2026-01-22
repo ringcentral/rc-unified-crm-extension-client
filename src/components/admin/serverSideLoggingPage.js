@@ -1,4 +1,4 @@
-function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin, additionalFields = [], additionalFieldValues = {} }) {
+function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin, subscribedByOtherAdmin, enableUserMapping, additionalFields = [], additionalFieldValues = {} }) {
     const additionalProperties = {};
     additionalFields.forEach(field => {
         additionalProperties[field.const] = {
@@ -16,6 +16,18 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
             additionalProperties[field.const].enumNames = field.enumNames;
         }
     });
+    const warningProperty = {};
+    const warningUiSchema = {};
+    if (subscribedByOtherAdmin) {
+        warningProperty.warning = {
+            type: 'string',
+            description: `Server side logging is currently managed by ${subscribedByOtherAdmin.name}`
+        }
+        warningUiSchema.warning = {
+            "ui:field": "admonition",
+            "ui:severity": "warning",  // "warning", "info", "error", "success"
+        }
+    }
     const pageRender =
     {
         id: 'serverSideLoggingSetting',
@@ -25,6 +37,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
             type: 'object',
             required: [],
             properties: {
+                ...warningProperty,
                 serverSideLoggingHolder: {
                     type: 'object',
                     title: 'Server side logging',
@@ -32,6 +45,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                         serverSideLogging: {
                             type: 'string',
                             title: 'Enable server side logging',
+                            readOnly: !!subscribedByOtherAdmin,
                             oneOf: [
                                 {
                                     const: 'Account',
@@ -48,6 +62,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                             ]
                         },
                         activityRecordOwner: {
+                            readOnly: !!subscribedByOtherAdmin,
                             title: 'Activity record owner (Who should be the owner of the activity record?)',
                             type: 'string',
                             oneOf: [
@@ -69,6 +84,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                     }
                 },
                 doNotLogNumbersHolder: {
+                    readOnly: !!subscribedByOtherAdmin,
                     type: 'object',
                     title: 'Do not log numbers',
                     properties: {
@@ -86,18 +102,21 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                         }
                     }
                 },
-                section: {
-                    type: 'string',
-                    oneOf: [
-                        {
-                            const: "userMapping",
-                            title: "User mapping",
-                        }
-                    ]
-                }
+                ...(enableUserMapping ? {
+                    section: {
+                        type: 'string',
+                        oneOf: [
+                            {
+                                const: "userMapping",
+                                title: "User mapping",
+                            }
+                        ]
+                    }
+                } : {})
             }
         },
         uiSchema: {
+            ...warningUiSchema,
             doNotLogNumbersHolder: {
                 "ui:collapsible": true,
                 doNotLogNumbers: {
@@ -111,7 +130,8 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                 doNotLogNumbersSubmitButton: {
                     "ui:field": "button",
                     "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                    "ui:fullWidth": true
+                    "ui:fullWidth": true,
+                    "ui:disabled": !!subscribedByOtherAdmin
                 }
             },
             serverSideLoggingHolder: {
@@ -119,7 +139,8 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                 saveServerSideLoggingButton: {
                     "ui:field": "button",
                     "ui:variant": "contained", // "text", "outlined", "contained", "plain"
-                    "ui:fullWidth": true
+                    "ui:fullWidth": true,
+                    "ui:disabled": !!subscribedByOtherAdmin
                 }
             },
             section: {

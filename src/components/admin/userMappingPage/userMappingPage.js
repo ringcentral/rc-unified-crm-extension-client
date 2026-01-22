@@ -1,11 +1,12 @@
 function getUserMappingPageRender({ userMapping, platformDisplayName, searchWord = '', filter = 'All' }) {
     let userMappingList = [];
     for (const um of userMapping) {
-        if (um.rcUser?.extensionId && um.rcUser.extensionId !== 'none') {
+        if (um.rcUser?.length > 0) {
+            const description = `${um.rcUser[0].name} - ext: ${um.rcUser[0].extensionNumber}` + (um.rcUser.length > 1 ? ` (+${um.rcUser.length - 1} others)` : '');
             userMappingList.push({
                 const: um.crmUser.id,
                 title: um.crmUser.name,
-                description: `${um.rcUser.email || um.rcUser.name}${um.rcUser.extensionNumber ? `, ext: ${um.rcUser.extensionNumber}` : ''}`,
+                description,
                 meta: 'Mapped',
                 actions: [
                     {

@@ -45,7 +45,7 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
 }
 
 
-async function refreshUserSettings({ changedSettings, isAvoidForceChange = false }) {
+async function refreshUserSettings({ changedSettings, platformName, isAvoidForceChange = false }) {
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
     if (!crmAuthed) {
         return;
@@ -63,6 +63,9 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
             }
         }
     }
+    if (platformName === 'bullhorn' && userSettings?.multiContactMatchBehavior?.value == 'openAllMatches') { 
+        userSettings.multiContactMatchBehavior.value = 'promptToSelect';
+    }
     userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
     await chrome.storage.local.set({ userSettings });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -75,7 +78,7 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
         recordings: getShowRecordingsTabSetting(userSettings).value,
         contacts: getShowContactsTabSetting(userSettings).value
     }, '*');
-    const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false);
+    const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false) || (userSettings?.autoLogVoicemail?.value ?? false);
     const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
     RCAdapter.setAutoLog({ call: (userSettings.autoLogCall?.value && !isServerSideLoggingEnabledForEndUsers) ?? false, message: autoLogMessagesGroupTrigger })
     if (!isAvoidForceChange) {
@@ -153,6 +156,14 @@ function getAutoLogSMSSetting(userSettings) {
     }
 }
 
+function getAutoLogVoicemailSetting(userSettings) {
+    return {
+        value: userSettings?.autoLogVoicemail?.value ?? false,
+        readOnly: userSettings?.autoLogVoicemail?.customizable === undefined ? false : !userSettings?.autoLogVoicemail?.customizable,
+        readOnlyReason: !userSettings?.autoLogVoicemail?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getAutoLogInboundFaxSetting(userSettings) {
     return {
         value: userSettings?.autoLogInboundFax?.value ?? false,
@@ -219,7 +230,7 @@ function getOutgoingCallPop(userSettings) {
 
 function getCallPopMultiMatchBehavior(userSettings) {
     return {
-        value: userSettings?.multiContactMatchBehavior?.value ?? 'openAllMatches',
+        value: userSettings?.multiContactMatchBehavior?.value ?? 'promptToSelect',
         readOnly: userSettings?.multiContactMatchBehavior?.customizable === undefined ? false : !userSettings?.multiContactMatchBehavior?.customizable,
         readOnlyReason: !userSettings?.multiContactMatchBehavior?.customizable ? 'This setting is managed by admin' : ''
     }
@@ -496,6 +507,7 @@ exports.updateSSCLToken = updateSSCLToken;
 
 exports.getAutoLogCallSetting = getAutoLogCallSetting;
 exports.getAutoLogSMSSetting = getAutoLogSMSSetting;
+exports.getAutoLogVoicemailSetting = getAutoLogVoicemailSetting;
 exports.getAutoLogInboundFaxSetting = getAutoLogInboundFaxSetting;
 exports.getAutoLogOutboundFaxSetting = getAutoLogOutboundFaxSetting;
 exports.getEnableRetroCallLogSync = getEnableRetroCallLogSync;
