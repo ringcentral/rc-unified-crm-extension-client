@@ -22,6 +22,7 @@ import authPageHandler from './authPage';
 import feedbackPageHandler from './feedbackPage';
 import openAboutPageHandler from './openAboutPage';
 import openDeveloperSettingsPageHandler from './openDeveloperSettingsPage';
+import reinitializeUserMappingButtonHandler from './reinitializeUserMappingButton';
 import openImplementedInterfacesPageButtonHandler from './openImplementedInterfacesPageButton';
 import factoryResetButtonHandler from './factoryResetButton';
 import reportIssueButtonHandler from './reportIssueButton';
@@ -119,6 +120,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'openDeveloperSettingsPage':
             await openDeveloperSettingsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'reinitializeUserMappingButton':
+            await reinitializeUserMappingButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'factoryResetButton':
             await factoryResetButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

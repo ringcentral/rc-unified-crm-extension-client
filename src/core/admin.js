@@ -471,6 +471,22 @@ async function getUserMapping({ serverUrl }) {
     return userMappingResp.data;
 }
 
+async function reinitializeUserMapping({ serverUrl }) {
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
+    const rcAccessToken = getRcAccessToken();
+    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
+    const manifest = await getManifest();
+    const rcExtensionList = (await getRcContactInfo()).filter(rc => rc.type == 'User' || rc.type == 'Department');
+    const reinitializeUserMappingResp = await axios.post(
+        `${manifest.serverUrl}/admin/reinitializeUserMapping?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}&rcAccessToken=${rcAccessToken}`,
+        {
+            rcExtensionList
+        }
+    );
+    return reinitializeUserMappingResp.data;
+}
+
 exports.getAdminSettings = getAdminSettings;
 exports.uploadAdminSettings = uploadAdminSettings;
 exports.refreshAdminSettings = refreshAdminSettings;
@@ -485,3 +501,4 @@ exports.authAppConnectServer = authAppConnectServer;
 exports.getUserMapping = getUserMapping;
 exports.getUserExtensionReportStats = getUserExtensionReportStats;
 exports.getAdminReportStats = getAdminReportStats;
+exports.reinitializeUserMapping = reinitializeUserMapping;
