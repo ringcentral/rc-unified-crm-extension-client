@@ -1,6 +1,6 @@
 import { t } from '../../i18n';
 
-function getDeveloperSettingsPageRender() {
+function getDeveloperSettingsPageRender({ isAdmin }) {
     const developerSettingsPage = {
         id: 'developerSettingsPage',
         title: t('pages.developerSettings.title'),
@@ -42,6 +42,25 @@ function getDeveloperSettingsPageRender() {
             }
         },
         formData: {
+        }
+    }
+    if (isAdmin) {
+        developerSettingsPage.schema.properties.reinitializeUserMappingWarning = {
+            type: "string",
+            description: "This will clear all user mapping and initialize them by user profile name match between RingCentral and CRM platform."
+        }
+        developerSettingsPage.schema.properties.reinitializeUserMappingButton = {
+            type: "string",
+            title: "Re-initialize user mapping"
+        }
+        developerSettingsPage.uiSchema.reinitializeUserMappingWarning = {
+            "ui:field": "admonition",
+            "ui:severity": "warning",  // "warning", "info", "error", "success"
+        }
+        developerSettingsPage.uiSchema.reinitializeUserMappingButton = {
+            "ui:field": "button",
+            "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+            "ui:fullWidth": false
         }
     }
     return developerSettingsPage;
