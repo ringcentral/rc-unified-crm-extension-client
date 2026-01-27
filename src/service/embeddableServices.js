@@ -44,23 +44,15 @@ async function getServiceManifest() {
     }, '*');
     // Enable SMS typing time tracking so outbound messages include typingDurationMs (only if enabled in server manifest)
     if (platform?.trackSmsTypingDuration) {
-        try {
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-update-sms-typing-time-tracking',
                 enabled: true,
             }, '*');
-        } catch (e) {
-            // ignore if frame is not ready; the UI will re-request manifest later
-        }
     } else {
-        try {
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-update-sms-typing-time-tracking',
                 enabled: false,
             }, '*');
-        } catch (e) {
-            // ignore if frame is not ready; the UI will re-request manifest later
-        }
     }
     const services = {
         name: platformName,
