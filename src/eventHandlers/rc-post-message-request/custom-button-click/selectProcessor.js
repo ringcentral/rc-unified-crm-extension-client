@@ -5,6 +5,7 @@ import { getProcessorConfigurePageRender } from '../../../components/processorCo
 import { getUserSettingsOnline } from '../../../core/user';
 import { checkAuth } from '../../../core/auth';
 import { showNotification } from '../../../lib/util';
+import { getProcessorDetails } from '../../../service/manifestService';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -15,26 +16,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
         return;
     }
     const selectedProcessorId = listButtonItemId.split('=')[0];
-    const selectedProcessorType = listButtonItemId.split('=')[1];
+    const selectedProcessorAccess = listButtonItemId.split('=')[1];
     const selectedProcessor = data.body.button.formData.processorList.find(processor => processor.id === selectedProcessorId);
-    const rcInfo = await getRcInfo();
-    let processorManifestResponse;
-    switch (selectedProcessorType) {
-        case 'public':
-            processorManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedProcessorId}/manifest?type=processor`);
-            break;
-        case 'shared':
-            processorManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedProcessorId}/manifest?access=internal&type=processor&accountId=${selectedProcessor.accountId}`);
-            break;
-        case 'private':
-            processorManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedProcessorId}/manifest?access=internal&type=processor&accountId=${rcInfo.value.cachedData.accountInfo.id}`);
-            break;
-    }
     const userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl });
+    const processor = await getProcessorDetails({ selectedProcessor});
     const processorSetting = userSettings?.[`processor_${selectedProcessorId}`];
     const activated = processorSetting?.value?.activated ?? false;
-    const selectedLogTypes = processorSetting?.value?.supportedLogTypes ?? [];
-    const processor = processorManifestResponse.data?.platforms?.[selectedProcessor.name];
+    const selectedLogTypes = processorSetting?.value?.supportedLogType ?? [];
     let isLoggedIn = false;
     if (processor?.showAuthorizationButton && processor?.authStateUrl) {
         try {

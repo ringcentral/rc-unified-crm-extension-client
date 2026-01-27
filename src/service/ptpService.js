@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { getManifest } from './manifestService';
+import { getManifest, getProcessorList, getProcessorDetails } from './manifestService';
 import { showNotification } from '../lib/util';
+import baseManifest from '../manifest.json';
 
 async function upsertPTPAsyncTaskIds({ taskIds }) {
     const { ptpAsyncTaskIds } = await chrome.storage.local.get({ ptpAsyncTaskIds: [] });
@@ -62,6 +63,38 @@ function setPTPAsyncTaskCheck() {
     return ptpAsyncTaskCheck;
 }
 
+async function checkAndUpdatePTPVersion() {
+    const { userSettings } = await chrome.storage.local.get('userSettings');
+    const ptpSettingKeys = Object.keys(userSettings)?.filter(key => key.startsWith('processor_'));
+    const processorList = await getProcessorList();
+    let notificationMessage = '';
+    const changedSettings = {};
+    for (const ptpSettingKey of ptpSettingKeys) {
+        const matchedProcessor = processorList.find(processor => processor.id === ptpSettingKey.split('_')[1]);
+        
+        // CASE: has version diff -> update user settings and notify user
+        if (matchedProcessor && matchedProcessor.version && matchedProcessor.version !== userSettings[ptpSettingKey]?.value?.version) {
+            notificationMessage += `${matchedProcessor.name} upgraded to ${matchedProcessor.version}\n`;
+            const processorDetails = await getProcessorDetails({ selectedProcessor: matchedProcessor });
+            changedSettings[ptpSettingKey] = {
+                value: {
+                    name: matchedProcessor.name,
+                    version: matchedProcessor.version,
+                    activated: userSettings[ptpSettingKey]?.value?.activated,
+                    supportedLogType: processorDetails.supportedLogType ?? '',
+                    isAsync: processorDetails.isAsync,
+                    phase: processorDetails.phase,
+                }
+            };
+        }
+    }
+    if (notificationMessage !== '') {
+        showNotification({ level: 'success', message: notificationMessage, ttl: 5000 });
+    }
+    return changedSettings;
+}
+
 exports.upsertPTPAsyncTaskIds = upsertPTPAsyncTaskIds;
 exports.getPTPAsyncTaskIds = getPTPAsyncTaskIds;
 exports.setPTPAsyncTaskCheck = setPTPAsyncTaskCheck;
+exports.checkAndUpdatePTPVersion = checkAndUpdatePTPVersion;

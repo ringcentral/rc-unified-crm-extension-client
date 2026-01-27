@@ -13,6 +13,7 @@ import releaseNotesPage from '../components/releaseNotesPage';
 import adminCore from '../core/admin';
 import logService from '../service/logService';
 import { RcAPI } from '../lib/rcAPI';
+import ptpService from '../service/ptpService';
 
 let firstTimeLogoutAbsorbed = false;
 
@@ -233,9 +234,10 @@ async function onEvent({ data }) {
     // --------Sync settings---------
     // ------------------------------
 
-    if (crmAuthed) {
+    if (crmAuthed && data.loggedIn) {
         await adminCore.refreshAdminSettings();
-        await userCore.refreshUserSettings({});
+        const changedSettings = await ptpService.checkAndUpdatePTPVersion();
+        await userCore.refreshUserSettings({ changedSettings });
         await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: rcUnifiedCrmExtJwt });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-update-authorization-status',

@@ -6,6 +6,23 @@ import { getRcInfo } from '../lib/util';
 let sessionManifest = null;
 let platformList = null;
 
+async function getProcessorDetails({ selectedProcessor }) {
+    let processorManifestResponse;
+    switch (selectedProcessor.access) {
+        case 'public':
+            processorManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedProcessor.id}/manifest?type=processor`);
+            break;
+        case 'shared':
+            processorManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedProcessor.id}/manifest?access=internal&type=processor&accountId=${selectedProcessor.accountId}`);
+            break;
+        case 'private':
+            const rcInfo = await getRcInfo();
+            processorManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedProcessor.id}/manifest?access=internal&type=processor&accountId=${rcInfo.value.cachedData.accountInfo.id}`);
+            break;
+    }
+    return processorManifestResponse.data?.platforms?.[selectedProcessor.name];
+}
+
 async function getPlatformList() {
     if (platformList) {
         return platformList;
@@ -155,6 +172,7 @@ function setValueByPath(obj, path, value) {
     current[keys[keys.length - 1]] = value;
 }
 
+exports.getProcessorDetails = getProcessorDetails;
 exports.getManifest = getManifest;
 exports.getPlatformList = getPlatformList;
 exports.getProcessorList = getProcessorList;

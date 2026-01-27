@@ -14,12 +14,12 @@ function getProcessorConfigurePageRender({ processorId, processor, activated, se
                     type: 'string',
                     description: processor.description,
                 },
-                supportedLogTypes: {
+                supportedLogType: {
                     type: 'array',
                     title: 'Supported log types',
                     items: {
                         type: 'string',
-                        enum: processor.supportedLogTypes,
+                        enum: processor.supportedLogType,
                     },
                     uniqueItems: true
                 },
@@ -41,7 +41,7 @@ function getProcessorConfigurePageRender({ processorId, processor, activated, se
                 "ui:field": "typography",
                 "ui:variant": "body1",
             },
-            supportedLogTypes: {
+            supportedLogType: {
                 "ui:widget": "checkboxes",
                 "ui:options": {
                     "inline": false
@@ -50,7 +50,7 @@ function getProcessorConfigurePageRender({ processorId, processor, activated, se
         },
         formData: {
             activated: activated ?? false,
-            supportedLogTypes: selectedLogTypes ?? [],
+            supportedLogType: selectedLogTypes ?? '',
             processorId,
             processor,
             isAsync: processor.isAsync,
