@@ -3,6 +3,7 @@ import inboundCallIcon from '../images/inboundCallIcon.png';
 import conflictLogIcon from '../images/conflictLogIcon.png';
 import smsMessageIcon from '../images/smsMessageIcon.png';
 import logCore from '../core/log';
+import { t } from '../i18n';
 
 function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved, contactPhoneNumber, useContactSearch }) {
     // format contact list
@@ -20,35 +21,35 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
     if (useContactSearch) {
         contactList.push({
             const: 'searchContact',
-            title: `Search contacts`,
+            title: t('pages.log.searchContacts'),
             additionalInfo: null,
             ignoreAdditionalFields: true
         });
     }
     const defaultContact = contactList.some(c => c.toNumberEntity) ? contactList.find(c => c.toNumberEntity) : (contactList[0] ?? null);
     const defaultActivityTitle = direction === 'Inbound' ?
-        `Inbound ${logType} from ${defaultContact?.title ?? ''}` :
-        `Outbound ${logType} to ${defaultContact?.title ?? ''}`;
+        t('pages.log.inboundCallFrom', { type: logType, name: defaultContact?.title ?? '' }) :
+        t('pages.log.outboundCallTo', { type: logType, name: defaultContact?.title ?? '' });
     let callSchemas = {};
     let callUISchemas = {};
     let callFormData = {};
     if (logType === 'Call') {
         callSchemas = {
             activityTitle: {
-                title: 'Activity title',
+                title: t('pages.log.activityTitle'),
                 type: 'string',
                 manuallyEdited: false
             },
             note: {
-                title: 'Note',
+                title: t('pages.log.note'),
                 type: 'string'
             },
             scheduleCallback: {
-                title: 'Schedule callback',
+                title: t('pages.log.scheduleCallback'),
                 type: 'boolean'
             },
             callbackDateTime: {
-                title: 'Callback time',
+                title: t('pages.log.callbackTime'),
                 type: 'string',
                 format: 'date-time',
                 minimum: new Date(new Date().setHours(0, 0, 0, 0)).toISOString()
@@ -56,14 +57,14 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
         }
         callUISchemas = {
             activityTitle: {
-                "ui:placeholder": 'Enter title...',
+                "ui:placeholder": t('pages.log.enterTitle'),
             },
             note: {
-                "ui:placeholder": 'Enter note...',
+                "ui:placeholder": t('pages.log.enterNote'),
                 "ui:widget": "textarea",
             },
             scheduleCallback: {
-                "ui:help": 'Add this contact to the call-down list'
+                "ui:help": t('pages.log.addToCalldownList')
             },
             callbackDateTime: {
                 "ui:widget": "datetime",
@@ -104,7 +105,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         additionalFields[f.const] = {
                             title: f.title,
                             type: 'string',
-                            oneOf: includeNoneOption ? [...baseOptions, { const: 'none', title: 'None' }] : baseOptions,
+                            oneOf: includeNoneOption ? [...baseOptions, { const: 'none', title: t('common.labels.none') }] : baseOptions,
                             associationField: !!f.contactDependent
                         }
                     }
@@ -117,7 +118,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         additionalFields[f.const] = {
                             title: f.title,
                             type: 'string',
-                            oneOf: includeNoneOption ? [...baseOptions, { const: 'none', title: 'None' }] : baseOptions,
+                            oneOf: includeNoneOption ? [...baseOptions, { const: 'none', title: t('common.labels.none') }] : baseOptions,
                             associationField: !!f.contactDependent
                         }
                     }
@@ -195,7 +196,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     warningField = {
                         warning: {
                             type: 'string',
-                            description: "Multiple contacts found. Please select the contact to associate this activity with.",
+                            description: t('pages.log.multipleContactsWarning'),
                         }
                     };
                 }
@@ -204,7 +205,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 warningField = {
                     warning: {
                         type: 'string',
-                        description: "No contact found. Enter a name to have a placeholder contact made for you.",
+                        description: t('pages.log.noContactWarning'),
                     }
                 };
             }
@@ -222,11 +223,11 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     newContactWidget.newContactType = {};
                 }
                 newContactWidget.newContactName = {
-                    "ui:placeholder": 'Enter name...',
+                    "ui:placeholder": t('pages.log.enterName'),
                 };
             }
             page = {
-                title: `Save to ${manifest.platforms[platformName].displayName}`, // optional
+                title: t('pages.log.saveTo', { platform: manifest.platforms[platformName].displayName }), // optional
                 schema: {
                     type: 'object',
                     required: requiredFieldNames,
@@ -236,12 +237,12 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                             type: 'string'
                         },
                         contact: {
-                            title: 'Contact',
+                            title: t('common.labels.contact'),
                             type: 'string',
                             oneOf: contactList
                         },
                         newContactName: {
-                            title: 'New contact name',
+                            title: t('pages.log.newContactName'),
                             type: 'string',
                         },
                         contactType: {
@@ -265,9 +266,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                             type: 'string'
                         },
                         newContactType: {
-                            title: 'Contact type',
+                            title: t('pages.log.contactType'),
                             type: 'string',
-                            oneOf: manifest.platforms[platformName].contactTypes?.map(t => { return { const: t.value, title: t.display } }) ?? [],
+                            oneOf: manifest.platforms[platformName].contactTypes?.map(ct => { return { const: ct.value, title: ct.display } }) ?? [],
                         },
                         ...callSchemas,
                         ...additionalFields
@@ -297,7 +298,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         "ui:widget": "hidden",
                     },
                     submitButtonOptions: {
-                        submitText: 'Save',
+                        submitText: t('common.buttons.save'),
                     },
                     ...callUISchemas,
                     ...newContactWidget,
@@ -327,7 +328,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             break;
         case 'editLog':
             page = {
-                title: `Edit log`, // optional
+                title: t('pages.log.editLog'), // optional
                 schema: {
                     type: 'object',
                     required: ['activityTitle'],
@@ -336,17 +337,17 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                             type: 'string'
                         },
                         contact: {
-                            title: 'Contact',
+                            title: t('common.labels.contact'),
                             type: 'string',
                             oneOf: contactList,
                             readOnly: true
                         },
                         activityTitle: {
-                            title: 'Activity title',
+                            title: t('pages.log.activityTitle'),
                             type: 'string'
                         },
                         note: {
-                            title: 'Note',
+                            title: t('pages.log.note'),
                             type: 'string'
                         },
                         ...additionalFields
@@ -357,7 +358,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         "ui:widget": "hidden",
                     },
                     note: {
-                        "ui:placeholder": 'Enter note...',
+                        "ui:placeholder": t('pages.log.enterNote'),
                         "ui:widget": "textarea",
                     },
                     callbackDateTime: {
@@ -367,7 +368,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         }
                     },
                     submitButtonOptions: {
-                        submitText: 'Update',
+                        submitText: t('common.buttons.update'),
                     },
                     ...addiitionalWarningUISchemas,
                     // Always render scheduling fields at the end
@@ -407,10 +408,10 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                         minimum: todayStart.toISOString()
                     }
                 };
-                page.schema.properties.callbackDateTime = {
-                    ...(page.schema.properties.callbackDateTime || { title: 'Callback time', type: 'string', format: 'date-time' }),
-                    minimum: todayStart.toISOString()
-                };
+page.schema.properties.callbackDateTime = {
+                ...(page.schema.properties.callbackDateTime || { title: t('pages.log.callbackTime'), type: 'string', format: 'date-time' }),
+                minimum: todayStart.toISOString()
+            };
                 // mark callback time as required so Save disables until provided
                 if (!Array.isArray(page.schema.required)) {
                     page.schema.required = [];
@@ -472,15 +473,15 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                     page.uiSchema.newContactType = {};
                 }
                 page.uiSchema.newContactName = {
-                    "ui:placeholder": 'Enter name...',
+                    "ui:placeholder": t('pages.log.enterName'),
                 };
                 if (!page.schema.required.includes('newContactName')) {
                     page.schema.required.push('newContactName');
                 }
                 if (!!page.schema.properties.activityTitle && !page.schema.properties.activityTitle?.manuallyEdited) {
                     page.formData.activityTitle = page.formData.activityTitle.startsWith('Inbound') ?
-                        'Inbound call from ' :
-                        'Outbound call to ';
+                        t('pages.log.inboundCallFrom', { type: 'call', name: '' }) :
+                        t('pages.log.outboundCallTo', { type: 'call', name: '' });
                 }
                 page.formData.newContactType = manifest.platforms[platformName].contactTypes?.length > 0 ? manifest.platforms[platformName].contactTypes[0].value : '';
             }
@@ -496,8 +497,8 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                 page.schema.required = [];
                 if (!!page.schema.properties.activityTitle && !page.schema.properties.activityTitle?.manuallyEdited) {
                     page.formData.activityTitle = page.formData.activityTitle.startsWith('Inbound') ?
-                        `Inbound call from ${contact.title}` :
-                        `Outbound call to ${contact.title}`;
+                        t('pages.log.inboundCallFrom', { type: 'call', name: contact.title }) :
+                        t('pages.log.outboundCallTo', { type: 'call', name: contact.title });
                 }
             }
             page.formData.contactType = contact.type;
@@ -535,7 +536,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                             additionalFields[f.const] = {
                                 title: f.title,
                                 type: 'string',
-                                oneOf: includeNoneOption ? [...baseOptions, { const: 'none', title: 'None' }] : baseOptions,
+                                oneOf: includeNoneOption ? [...baseOptions, { const: 'none', title: t('common.labels.none') }] : baseOptions,
                                 associationField: f.contactDependent
                             }
                             additionalFieldsValue[f.const] = f.contactDependent ?
@@ -613,15 +614,15 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             for (const f of contactTypeDependentFields) {
                 page.schema.properties[f.const].oneOf = [
                     ...contact.additionalInfo[page.formData.newContactType][f.const],
-                    { const: 'none', title: 'None' }
+                    { const: 'none', title: t('common.labels.none') }
                 ]
             }
             break;
         case 'newContactName':
             if (!!page.schema.properties.activityTitle && !page.schema.properties.activityTitle.manuallyEdited) {
                 page.formData.activityTitle = page.formData.activityTitle.startsWith('Inbound') ?
-                    `Inbound call from ${page.formData.newContactName}` :
-                    `Outbound call to ${page.formData.newContactName}`;
+                    t('pages.log.inboundCallFrom', { type: 'call', name: page.formData.newContactName }) :
+                    t('pages.log.outboundCallTo', { type: 'call', name: page.formData.newContactName });
             }
             break;
         case 'activityTitle':
@@ -638,7 +639,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
         else {
             page.schema.properties[`${updatedFieldKey}-error`] = {
                 type: 'string',
-                description: `Wrong format: ${page.schema.properties[updatedFieldKey].title ?? updatedFieldKey}`
+                description: t('notifications.error.wrongFormat', { field: page.schema.properties[updatedFieldKey].title ?? updatedFieldKey })
             };
             page.uiSchema[`${updatedFieldKey}-error`] = {
                 "ui:field": "admonition", // or typography to show raw text
@@ -674,7 +675,7 @@ function getUnloggedCallPageRender({ unloggedCalls }) {
     }
     return {
         id: 'unloggedCallPage',
-        title: 'Unlogged Calls',
+        title: t('pages.unloggedCalls.title'),
         type: 'page',
         unreadCount: Object.keys(unloggedCalls).length,
         // schema and uiSchema are used to customize page, api is the same as [react-jsonschema-form](https://rjsf-team.github.io/react-jsonschema-form)

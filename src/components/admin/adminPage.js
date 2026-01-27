@@ -1,11 +1,12 @@
 import adminIcon from '../../images/adminIcon.png';
 import adminIconActive from '../../images/adminIcon_active.png';
 import adminIconDark from '../../images/adminIcon_dark.png';
+import { t } from '../../i18n';
 
 function getAdminPageRender({ platform }) {
     const page = {
         id: 'adminPage',
-        title: 'Admin',
+        title: t('pages.admin.title'),
         type: 'tab',
         priority: 65,
         iconUri: adminIcon, // icon for tab, 24x24
@@ -20,7 +21,7 @@ function getAdminPageRender({ platform }) {
                     oneOf: [
                         {
                             const: "managedSettings",
-                            title: "Managed settings",
+                            title: t('pages.admin.managedSettings'),
                         }
                     ]
                 }
@@ -37,7 +38,7 @@ function getAdminPageRender({ platform }) {
     if (platform.serverSideLogging) {
         page.schema.properties.section.oneOf.push({
             const: "serverSideLoggingSetting",
-            title: "Server side logging (Beta)",
+            title: t('pages.admin.serverSideLogging'),
         })
     };
     

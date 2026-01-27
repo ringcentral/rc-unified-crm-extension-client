@@ -1,5 +1,5 @@
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
-    const hostname = platformInfo['platform-info'].hostname;
+    const hostname = platformInfo.hostname;
     window.open(`https://${hostname}/Users/UserSettings`);
 }
 

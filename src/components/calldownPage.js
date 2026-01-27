@@ -1,11 +1,12 @@
 import callIcon from '../images/outboundCallIcon.png';
 import axios from 'axios';
 import userCore from '../core/user';
+import { t } from '../i18n';
 
 function getCalldownPageRender() {
     const page = {
         id: 'calldownPage',
-        title: 'Call-down',
+        title: t('pages.calldown.title'),
         type: 'tab',
         priority: 67,
         iconUri: callIcon,
@@ -19,17 +20,17 @@ function getCalldownPageRender() {
                     "properties": {
                         "search": {
                             "type": "string",
-                            "title": "Search"
+                            "title": t('common.labels.search')
                         },
                         "filter": {
                             "type": "string",
-                            "title": "Filter"
+                            "title": t('common.labels.filter')
                         }
                     }
                 },
                 records: {
                     type: 'string',
-                    title: 'Contacts',
+                    title: t('pages.calldown.contacts'),
                     oneOf: [] // backend-fed later
                 }
             }
@@ -37,12 +38,12 @@ function getCalldownPageRender() {
         uiSchema: {
             "searchWithFilters": {
                 "ui:field": "search",
-                "ui:placeholder": "Filter by name",
+                "ui:placeholder": t('pages.calldown.filterByName'),
                 "ui:filters": [
-                    "All",
-                    "Not Called",
-                    "Called",
-                    "Scheduled"
+                    t('pages.calldown.all'),
+                    t('pages.calldown.notCalled'),
+                    t('pages.calldown.called'),
+                    t('pages.calldown.scheduled')
                 ]
             },
             records: { 'ui:field': 'list', 'ui:showIconAsAvatar': false }
@@ -166,16 +167,16 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
             const isCalled = (statusText || '').toLowerCase() === 'called';
             const completeIcon = isCalled ? 'read' : 'unread';
             const actions = [
-                { id: 'calldownActionCall', title: 'Call', icon: 'phone' },
-                { id: 'calldownActionText', title: 'Text', icon: 'sms' },
-                { id: 'calldownActionOpen', title: 'View contact', icon: 'view' }
+                { id: 'calldownActionCall', title: t('pages.calldown.call'), icon: 'phone' },
+                { id: 'calldownActionText', title: t('pages.calldown.text'), icon: 'sms' },
+                { id: 'calldownActionOpen', title: t('pages.calldown.viewContact'), icon: 'view' }
             ];
             if (!isCalled) {
-                actions.push({ id: 'calldownActionEdit', title: 'Edit', icon: 'edit' });
+                actions.push({ id: 'calldownActionEdit', title: t('pages.calldown.edit'), icon: 'edit' });
             }
             actions.push(
-                { id: 'calldownActionComplete', title: 'Mark as complete', icon: completeIcon },
-                { id: 'calldownActionRemove', title: 'Delete', icon: 'delete', color: 'danger.b03' }
+                { id: 'calldownActionComplete', title: t('pages.calldown.markComplete'), icon: completeIcon },
+                { id: 'calldownActionRemove', title: t('pages.calldown.delete'), icon: 'delete', color: 'danger.b03' }
             );
             return {
                 const: i.id,

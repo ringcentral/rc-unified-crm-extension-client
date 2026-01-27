@@ -1,6 +1,7 @@
 import React from 'react';
 import { RcButton, RcIcon } from '@ringcentral/juno';
 import { People, RcCloudContact } from '@ringcentral/juno-icon';
+import { t } from '../../i18n';
 
 function SetupButton({
     setIsSetup,
@@ -25,7 +26,7 @@ function SetupButton({
                 }
                 onPointerLeave={() => { setState('quick_access'); }}
             >
-                Setup
+                {t('misc.setup')}
             </RcButton>
         </div>
     )

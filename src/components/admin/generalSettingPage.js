@@ -1,7 +1,9 @@
+import { t } from '../../i18n';
+
 function getGeneralSettingPageRender() {
     return {
         id: 'generalSettings',
-        title: 'General',
+        title: t('pages.generalSettings.title'),
         type: 'page',
         schema: {
             type: 'object',
@@ -12,11 +14,11 @@ function getGeneralSettingPageRender() {
                     oneOf: [
                         {
                             const: "appearance",
-                            title: "Appearance"
+                            title: t('pages.generalSettings.appearance')
                         },
                         {
                             const: "clickToDialEmbed",
-                            title: "Enabled domains"
+                            title: t('pages.generalSettings.enabledDomains')
                         }
                     ]
                 }

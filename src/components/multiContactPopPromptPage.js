@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 function getMultiContactPopPromptPageRender({ contactInfo, searchWord }) {
     const filteredContactInfo = searchWord ? contactInfo.filter(c => c.name.toLowerCase().includes(searchWord.toLowerCase()) || c.id.toString().toLowerCase().includes(searchWord.toLowerCase())) : contactInfo;
     const filteredContactList = [];
@@ -10,7 +12,7 @@ function getMultiContactPopPromptPageRender({ contactInfo, searchWord }) {
     }
     return {
         id: 'getMultiContactPopPromptPage',
-        title: 'Click contact to open',
+        title: t('pages.multiContactPrompt.title'),
         type: 'page',
         schema: {
             type: 'object',
@@ -20,14 +22,14 @@ function getMultiContactPopPromptPageRender({ contactInfo, searchWord }) {
                 },
                 contactList: {
                     type: 'string',
-                    title: 'Contacts',
+                    title: t('pages.multiContactPrompt.contacts'),
                     oneOf: filteredContactList
                 }
             }
         },
         uiSchema: {
             search: {
-                "ui:placeholder": 'Search',
+                "ui:placeholder": t('common.labels.search'),
                 "ui:label": false,
             },
             contactList: {
