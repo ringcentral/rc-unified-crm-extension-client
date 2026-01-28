@@ -14,6 +14,11 @@ async function getServiceManifest() {
     const platform = manifest.platforms[platformInfo.platformName];
     const platformName = platform.name;
     const customSettings = platform.settings;
+    // Enable SMS typing time tracking so outbound messages include typingDurationMs (only if enabled in server manifest)
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-update-sms-typing-time-tracking',
+        enabled: !!platform?.trackSmsTypingDuration,
+    }, '*');
     const services = {
         name: platformName,
         displayName: platform.displayName,
@@ -676,6 +681,7 @@ async function getServiceManifest() {
                             type: 'string',
                             name: item.name,
                             description: item.description,
+                            helper: item.helper,
                             placeHolder: item.placeHolder ?? "",
                             value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
                             readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
@@ -688,6 +694,7 @@ async function getServiceManifest() {
                             type: item.type,
                             name: item.name,
                             description: item.description,
+                            helper: item.helper,
                             value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
                             readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
                             readOnlyReason: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnlyReason
@@ -711,6 +718,7 @@ async function getServiceManifest() {
                                 type: "option",
                                 name: item.name,
                                 description: item.description,
+                                helper: item.helper,
                                 options: item.dynamicOptions ? userCore.getCustomSetting(userSettings, item.id, item.defaultValue).options : item.options,
                                 multiple: item.multiple ?? false,
                                 checkbox: item.checkbox ?? false,

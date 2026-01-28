@@ -1530,7 +1530,8 @@ window.addEventListener('message', async (e) => {
                         direction: data.body.call.direction,
                         from: data.body.call.from,
                         to: data.body.call.to,
-                        isShowNotification: true
+                        isShowNotification: true,
+                        additionalSubmission
                       });
                       if (!platform.disableDisposition) {
                         await dispositionCore.upsertDisposition({
@@ -2440,7 +2441,8 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'openDeveloperSettingsPage':
                   const { customCrmManifestUrl } = await chrome.storage.local.get({ customCrmManifestUrl: '' });
-                  const developerSettingsPageRender = developerSettingsPage.getDeveloperSettingsPageRender({ customUrl: customCrmManifestUrl });
+                  const { isAdmin } = await chrome.storage.local.get({ isAdmin: false });
+                  const developerSettingsPageRender = developerSettingsPage.getDeveloperSettingsPageRender({ customUrl: customCrmManifestUrl, isAdmin });
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: developerSettingsPageRender
@@ -2661,6 +2663,12 @@ window.addEventListener('message', async (e) => {
                 case 'clearPlatformInfoButton':
                   await chrome.storage.local.remove('platform-info');
                   showNotification({ level: 'success', message: 'Platform info cleared. Please close the extension and open from CRM page.', ttl: 5000 });
+                  break;
+                case 'reinitializeUserMappingButton':
+                  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+                  await adminCore.reinitializeUserMapping({ serverUrl: manifest.serverUrl });
+                  showNotification({ level: 'success', message: 'User mapping reinitialized.', ttl: 5000 });
+                  window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                   break;
                 case 'saveTempNoteButton':
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

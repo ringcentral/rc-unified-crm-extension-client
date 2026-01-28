@@ -1,4 +1,4 @@
-function getDeveloperSettingsPageRender({ customUrl }) {
+function getDeveloperSettingsPageRender({ customUrl, isAdmin }) {
     const developerSettingsPage = {
         id: 'developerSettingsPage',
         title: 'Developer settings',
@@ -6,7 +6,7 @@ function getDeveloperSettingsPageRender({ customUrl }) {
         schema: {
             type: 'object',
             properties: {
-                customManifestWarning:{
+                customManifestWarning: {
                     type: "string",
                     description: "Please be careful that a custom url is not trusted by RingCentral."
                 },
@@ -14,7 +14,7 @@ function getDeveloperSettingsPageRender({ customUrl }) {
                     type: "string",
                     title: "Custom manifest URL"
                 },
-                clearPlatformInfoWarning:{
+                clearPlatformInfoWarning: {
                     type: "string",
                     description: "This will clear current CRM platform information so to be re-initialized with a new CRM platform."
                 },
@@ -25,7 +25,7 @@ function getDeveloperSettingsPageRender({ customUrl }) {
             }
         },
         uiSchema: {
-            customManifestWarning:{
+            customManifestWarning: {
                 "ui:field": "admonition",
                 "ui:severity": "warning",  // "warning", "info", "error", "success"
             },
@@ -35,7 +35,7 @@ function getDeveloperSettingsPageRender({ customUrl }) {
             customManifestUrl: {
                 "ui:placeholder": 'Enter url...',
             },
-            clearPlatformInfoWarning:{
+            clearPlatformInfoWarning: {
                 "ui:field": "admonition",
                 "ui:severity": "warning",  // "warning", "info", "error", "success"
             },
@@ -43,10 +43,29 @@ function getDeveloperSettingsPageRender({ customUrl }) {
                 "ui:field": "button",
                 "ui:variant": "contained", // "text", "outlined", "contained", "plain"
                 "ui:fullWidth": false
-            },
+            }
         },
         formData: {
             customManifestUrl: customUrl
+        }
+    }
+    if (isAdmin) {
+        developerSettingsPage.schema.properties.reinitializeUserMappingWarning = {
+            type: "string",
+            description: "This will clear all user mapping and initialize them by user profile name match between RingCentral and CRM platform."
+        }
+        developerSettingsPage.schema.properties.reinitializeUserMappingButton = {
+            type: "string",
+            title: "Re-initialize user mapping"
+        }
+        developerSettingsPage.uiSchema.reinitializeUserMappingWarning = {
+            "ui:field": "admonition",
+            "ui:severity": "warning",  // "warning", "info", "error", "success"
+        }
+        developerSettingsPage.uiSchema.reinitializeUserMappingButton = {
+            "ui:field": "button",
+            "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+            "ui:fullWidth": false
         }
     }
     return developerSettingsPage;
