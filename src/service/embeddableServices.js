@@ -42,6 +42,12 @@ async function getServiceManifest() {
         readOnly: userCore.getPhoneNumberDisplayFormatTypeSetting(userSettings).readOnly, // optional, set to true to disable user change setting
         readOnlyReason: userCore.getPhoneNumberDisplayFormatTypeSetting(userSettings).readOnlyReason, // optional, set to true to disable user change setting
     }, '*');
+
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-update-sms-typing-time-tracking',
+        enabled: !!platform?.trackSmsTypingDuration,
+    }, '*');
+   
     const services = {
         name: platformName,
         displayName: platform.displayName,
@@ -827,6 +833,7 @@ async function getServiceManifest() {
                             id: item.id,
                             type: 'string',
                             name: item.name,
+                            helper: item.helper,
                             description: item.description,
                             placeHolder: item.placeHolder ?? "",
                             value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
@@ -839,6 +846,7 @@ async function getServiceManifest() {
                             id: item.id,
                             type: item.type,
                             name: item.name,
+                            helper: item.helper,
                             description: item.description,
                             value: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).value,
                             readOnly: userCore.getCustomSetting(userSettings, item.id, item.defaultValue).readOnly,
@@ -862,6 +870,7 @@ async function getServiceManifest() {
                                 id: item.id,
                                 type: "option",
                                 name: item.name,
+                                helper: item.helper,
                                 description: item.description,
                                 options: item.dynamicOptions ? userCore.getCustomSetting(userSettings, item.id, item.defaultValue).options : item.options,
                                 multiple: item.multiple ?? false,
