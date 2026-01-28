@@ -2,6 +2,11 @@ import { getLogRecordSubmissionPageRender } from '../../../components/logRecordS
 import logRecorder from '../../../lib/logRecorder';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+    // TEMP: add banner for webinar info
+    if (data.body.button.id === 'temp-webinar-banner' && data.body.button.dismissed) {
+        await chrome.storage.local.set({ 'myBannerDismissedDate': new Date().getDate() });
+        return;
+    }
     if (!data.body.button.dismissed) {
         // close recording banner
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
