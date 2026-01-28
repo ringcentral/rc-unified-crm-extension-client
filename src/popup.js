@@ -1530,7 +1530,8 @@ window.addEventListener('message', async (e) => {
                         direction: data.body.call.direction,
                         from: data.body.call.from,
                         to: data.body.call.to,
-                        isShowNotification: true
+                        isShowNotification: true,
+                        additionalSubmission
                       });
                       if (!platform.disableDisposition) {
                         await dispositionCore.upsertDisposition({
