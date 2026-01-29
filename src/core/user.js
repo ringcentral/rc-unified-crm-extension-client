@@ -81,6 +81,9 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' });
     let userSettingsToUpload = userSettings;
+    // TODO: Remove this legacy migration once all environments have fully switched to
+    // `userSettings.overridingNumberFormat` as the single source of truth (and older per-user
+    // `overridingPhoneNumberFormat/2/3` are no longer sent/stored).
     // Backward-compatible migration: if per-user overridingPhoneNumberFormat* exist, ensure overridingNumberFormat exists too
     if (userSettingsToUpload && !userSettingsToUpload.overridingNumberFormat) {
         const format1 = userSettingsToUpload?.overridingPhoneNumberFormat?.value;
@@ -118,6 +121,8 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     const rcAccessToken = getRcAccessToken();
     const manifest = await getManifest();
     let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
+    // TODO: Remove this mirroring once all UI/logic reads `overridingNumberFormat` directly and we no longer
+    // need to support the legacy per-user `overridingPhoneNumberFormat/2/3` fields.
     // Backward-compatible migration: reflect overridingNumberFormat into overridingPhoneNumberFormat* for older UI and tools
     if (userSettings?.overridingNumberFormat) {
         const customizable = userSettings.overridingNumberFormat.customizable ?? true;
