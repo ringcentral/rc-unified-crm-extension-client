@@ -748,6 +748,8 @@ async function getServiceManifest() {
         const adminFormat1 = userSettings?.overridingNumberFormat?.numberFormatter1;
         const adminFormat2 = userSettings?.overridingNumberFormat?.numberFormatter2;
         const adminFormat3 = userSettings?.overridingNumberFormat?.numberFormatter3;
+        // TODO: Remove legacy `overridingPhoneNumberFormat/2/3` usage once all clients/backend
+        // have fully migrated to `overridingNumberFormat` (single source of truth).
         const numberFormatterComponent = [
             {
                 id: "info",

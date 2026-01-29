@@ -45,6 +45,8 @@ async function getContact({ serverUrl, phoneNumber, platformName, isFromManual =
     const overridingFormats = [];
     const { userSettings } = await chrome.storage.local.get('userSettings');
     // Prefer admin-managed overridingNumberFormat if present, otherwise fall back to per-user fields
+    // TODO: Remove the fallback to legacy per-user fields (`overridingPhoneNumberFormat/2/3`) once all clients
+    // and backend data have fully migrated to `userSettings.overridingNumberFormat` (single source of truth).
     if (userSettings?.overridingNumberFormat?.numberFormatter1) {
         overridingFormats.push(userSettings.overridingNumberFormat.numberFormatter1);
     }
