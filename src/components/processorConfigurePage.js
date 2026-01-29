@@ -1,4 +1,4 @@
-function getProcessorConfigurePageRender({ processorId, processorAccess, processor, activated, selectedLogTypes, isLoggedIn }) {
+function getProcessorConfigurePageRender({ processorId, processorAccess, processor, activated, isLoggedIn }) {
     const page = {
         id: 'processorConfigurePage',
         title: 'Configure processor',
@@ -13,15 +13,6 @@ function getProcessorConfigurePageRender({ processorId, processorAccess, process
                 description: {
                     type: 'string',
                     description: processor.description,
-                },
-                supportedLogType: {
-                    type: 'array',
-                    title: 'Supported log type',
-                    items: {
-                        type: 'string',
-                        enum: processor.supportedLogType,
-                    },
-                    uniqueItems: true
                 },
                 activated: {
                     type: 'boolean',
@@ -40,17 +31,10 @@ function getProcessorConfigurePageRender({ processorId, processorAccess, process
             description: {
                 "ui:field": "typography",
                 "ui:variant": "body1",
-            },
-            supportedLogType: {
-                "ui:widget": "checkboxes",
-                "ui:options": {
-                    "inline": false
-                }
             }
         },
         formData: {
             activated: activated ?? false,
-            supportedLogType: selectedLogTypes ?? '',
             access: processorAccess,
             processorId,
             processor,

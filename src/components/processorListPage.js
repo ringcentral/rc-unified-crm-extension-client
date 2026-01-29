@@ -1,4 +1,4 @@
-function getProcessorListPageRender({processorList, searchWord = '', filter = 'All'}) {
+function getProcessorListPageRender({ processorList, searchWord = '', filter = 'All' }) {
     let processorListToRender = [];
     for (const processor of processorList) {
         let meta = '';
@@ -19,7 +19,8 @@ function getProcessorListPageRender({processorList, searchWord = '', filter = 'A
             icon: processor.iconUrl ? processor.iconUrl : 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
             description: `by ${processor.developer.name}`,
             meta: meta,
-            actions:[
+            authorAvatar: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg',
+            actions: [
                 {
                     id: 'selectProcessor',
                     title: 'Configure',

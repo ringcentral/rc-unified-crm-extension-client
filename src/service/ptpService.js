@@ -83,9 +83,9 @@ async function checkAndUpdatePTPVersion() {
                     name: matchedProcessor.name,
                     version: matchedProcessor.version,
                     activated: userSettings[ptpSettingKey]?.value?.activated,
-                    supportedLogType: processorDetails.supportedLogType ?? '',
                     isAsync: processorDetails.isAsync,
                     phase: processorDetails.phase,
+                    access: userSettings[ptpSettingKey]?.value?.access,
                 }
             };
         }

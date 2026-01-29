@@ -22,7 +22,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
     const processor = await getProcessorDetails({ selectedProcessor});
     const processorSetting = userSettings?.[`processor_${selectedProcessorId}`];
     const activated = processorSetting?.value?.activated ?? false;
-    const selectedLogTypes = processorSetting?.value?.supportedLogType ?? [];
     let isLoggedIn = false;
     if (processor?.showAuthorizationButton && processor?.authStateUrl) {
         try {
@@ -41,7 +40,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             isLoggedIn = false;
         }
     }
-    const processorConfigurePageRender = getProcessorConfigurePageRender({ processorId: selectedProcessorId, processorAccess: selectedProcessorAccess, processor, activated, selectedLogTypes, isLoggedIn });
+    const processorConfigurePageRender = getProcessorConfigurePageRender({ processorId: selectedProcessorId, processorAccess: selectedProcessorAccess, processor, activated, isLoggedIn });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: processorConfigurePageRender

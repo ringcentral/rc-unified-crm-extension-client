@@ -142,7 +142,6 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
                 const activated = processorSetting?.value?.activated ?? false;
                 const processorAccess = processorSetting?.value?.access ?? '';
                 const processorName = processorSetting?.value?.name ?? '';
-                const selectedLogTypes = processorSetting?.value?.supportedLogType ?? '';
                 const processor = await getProcessorDetails({
                     selectedProcessor: {
                         id: processorId,
@@ -150,7 +149,7 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
                         access: processorAccess
                     }
                 });
-                const processorConfigurePageRender = getProcessorConfigurePageRender({ processorId, processorAccess, processor, activated, selectedLogTypes, isLoggedIn: true });
+                const processorConfigurePageRender = getProcessorConfigurePageRender({ processorId, processorAccess, processor, activated, isLoggedIn: true });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: processorConfigurePageRender

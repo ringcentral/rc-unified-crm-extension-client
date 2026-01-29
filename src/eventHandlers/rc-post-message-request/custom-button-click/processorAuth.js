@@ -20,23 +20,22 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 showNotification({ level: 'success', message: 'Successfully logged out.', ttl: 3000 });
                 const processor = data.body.button.formData.processor;
                 const changedSettings = {
-                    [`processor_${processor.id}`]: {
+                    [`processor_${data.body.button.formData.processorId}`]: {
                         value: {
                             name: processor.name,
                             version: processor.version,
                             activated: false,
-                            supportedLogType: processor.supportedLogType,
                             isAsync: processor.isAsync,
                             phase: processor.phase,
+                            access: data.body.button.formData.access,
                         }
                     }
                 }
                 const userSettings = await refreshUserSettings({ changedSettings });
-                const processorSetting = userSettings?.[`processor_${processor.id}`];
+                const processorSetting = userSettings?.[`processor_${data.body.button.formData.processorId}`];
                 const activated = processorSetting?.value?.activated ?? false;
-                const processorAccess = processorSetting?.value?.access;
-                const selectedLogTypes = processorSetting?.value?.supportedLogType ?? '';
-                const processorConfigurePageRender = getProcessorConfigurePageRender({ processorId: processor.id, processorAccess, processor, activated, selectedLogTypes, isLoggedIn: false });
+                const processorAccess = data.body.button.formData.access;
+                const processorConfigurePageRender = getProcessorConfigurePageRender({ processorId: data.body.button.formData.processorId, processorAccess, processor, activated, isLoggedIn: false });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: processorConfigurePageRender
