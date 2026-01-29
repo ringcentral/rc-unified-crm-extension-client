@@ -153,47 +153,7 @@ function getContactSettingPageRender({ adminUserSettings, renderOverridingNumber
             }
         }
     }
-    if (renderOverridingNumberFormat) {
-        page.schema.properties.overridingNumberFormat = {
-            type: 'object',
-            title: 'Overriding number format',
-            properties: {
-                warning: {
-                    type: "string",
-                    description: "Please input your overriding phone number format: (please use # to represent a number digit, eg. (###) ###-###)",
-                },
-                customizable: {
-                    type: 'boolean',
-                    title: 'Customizable by user'
-                },
-                numberFormatter1: {
-                    type: 'string',
-                    title: 'Format 1'
-                },
-                numberFormatter2: {
-                    type: 'string',
-                    title: 'Format 2'
-                },
-                numberFormatter3: {
-                    type: 'string',
-                    title: 'Format 3'
-                }
-            }
-        }
-        page.uiSchema.overridingNumberFormat = {
-            "ui:collapsible": true,
-        }
-        page.uiSchema.overridingNumberFormat.warning = {
-            "ui:field": "admonition",
-            "ui:severity": "warning",  // "warning", "info", "error", "success"
-        }
-        page.formData.overridingNumberFormat = {
-            customizable: adminUserSettings?.overridingNumberFormat?.customizable ?? true,
-            numberFormatter1: adminUserSettings?.overridingNumberFormat?.numberFormatter1 ?? '',
-            numberFormatter2: adminUserSettings?.overridingNumberFormat?.numberFormatter2 ?? '',
-            numberFormatter3: adminUserSettings?.overridingNumberFormat?.numberFormatter3 ?? ''
-        }
-    }
+    // Overriding number format moved to Managed settings -> Custom settings
     if(renderAllowExtensionNumberLogging)
     {
         page.schema.properties.allowExtensionNumberLogging = {

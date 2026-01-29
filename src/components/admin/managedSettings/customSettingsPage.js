@@ -132,6 +132,44 @@ function getCustomSettingsPageRender({ crmManifest, adminUserSettings, userSetti
             }
         }
     }
+
+    // Also surface overriding number format here (previously under Managed settings -> Call-pop)
+    if (adminUserSettings?.overridingNumberFormat) {
+        page.schema.properties.overridingNumberFormatTitle = {
+            type: 'string',
+            description: 'Overriding number format'
+        }
+        page.uiSchema.overridingNumberFormatTitle = {
+            "ui:field": "typography",
+            "ui:variant": "title2"
+        }
+        page.schema.properties.overridingNumberFormatWarning = {
+            type: 'string',
+            description: "Please input your overriding phone number format: (please use # to represent a number digit, eg. (###) ###-###)",
+        };
+        page.uiSchema.overridingNumberFormatWarning = {
+            "ui:field": "admonition",
+            "ui:severity": "warning"
+        }
+
+        page.schema.properties.overridingNumberFormatCustomizable = {
+            type: 'boolean',
+            title: 'Customizable by user'
+        }
+        page.formData.overridingNumberFormatCustomizable = adminUserSettings?.overridingNumberFormat?.customizable ?? true;
+
+        const buildFormatterField = (id, title, value) => {
+            page.schema.properties[id] = {
+                type: 'string',
+                title,
+            };
+            page.formData[id] = value ?? '';
+        }
+
+        buildFormatterField('overridingNumberFormat1', 'Format 1', adminUserSettings?.overridingNumberFormat?.numberFormatter1);
+        buildFormatterField('overridingNumberFormat2', 'Format 2', adminUserSettings?.overridingNumberFormat?.numberFormatter2);
+        buildFormatterField('overridingNumberFormat3', 'Format 3', adminUserSettings?.overridingNumberFormat?.numberFormatter3);
+    }
     return page;
 }
 exports.getCustomSettingsPageRender = getCustomSettingsPageRender;

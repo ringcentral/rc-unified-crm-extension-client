@@ -744,6 +744,12 @@ async function getServiceManifest() {
         }
     };
     if (platformName === 'clio' || platformName === 'insightly' || platformName === 'netsuite') {
+        const adminOverrideCustomizable = userSettings?.overridingNumberFormat?.customizable;
+        const adminFormat1 = userSettings?.overridingNumberFormat?.numberFormatter1;
+        const adminFormat2 = userSettings?.overridingNumberFormat?.numberFormatter2;
+        const adminFormat3 = userSettings?.overridingNumberFormat?.numberFormatter3;
+        // TODO: Remove legacy `overridingPhoneNumberFormat/2/3` usage once all clients/backend
+        // have fully migrated to `overridingNumberFormat` (single source of truth).
         const numberFormatterComponent = [
             {
                 id: "info",
@@ -756,25 +762,37 @@ async function getServiceManifest() {
                 id: "overridingPhoneNumberFormat",
                 name: "Format 1",
                 type: "string",
-                value: userSettings?.overridingPhoneNumberFormat?.value ?? "",
-                readOnly: userSettings?.overridingPhoneNumberFormat?.customizable === undefined ? false : !userSettings?.overridingPhoneNumberFormat?.customizable,
-                readOnlyReason: !userSettings?.overridingPhoneNumberFormat?.customizable ? 'This setting is managed by admin' : ''
+                value: adminFormat1 ?? userSettings?.overridingPhoneNumberFormat?.value ?? "",
+                readOnly: adminOverrideCustomizable === undefined
+                    ? (userSettings?.overridingPhoneNumberFormat?.customizable === undefined ? false : !userSettings?.overridingPhoneNumberFormat?.customizable)
+                    : !adminOverrideCustomizable,
+                readOnlyReason: adminOverrideCustomizable === undefined
+                    ? (!userSettings?.overridingPhoneNumberFormat?.customizable ? 'This setting is managed by admin' : '')
+                    : (!adminOverrideCustomizable ? 'This setting is managed by admin' : '')
             },
             {
                 id: "overridingPhoneNumberFormat2",
                 name: "Format 2",
                 type: "string",
-                value: userSettings?.overridingPhoneNumberFormat2?.value ?? "",
-                readOnly: userSettings?.overridingPhoneNumberFormat2?.customizable === undefined ? false : !userSettings?.overridingPhoneNumberFormat2?.customizable,
-                readOnlyReason: !userSettings?.overridingPhoneNumberFormat2?.customizable ? 'This setting is managed by admin' : ''
+                value: adminFormat2 ?? userSettings?.overridingPhoneNumberFormat2?.value ?? "",
+                readOnly: adminOverrideCustomizable === undefined
+                    ? (userSettings?.overridingPhoneNumberFormat2?.customizable === undefined ? false : !userSettings?.overridingPhoneNumberFormat2?.customizable)
+                    : !adminOverrideCustomizable,
+                readOnlyReason: adminOverrideCustomizable === undefined
+                    ? (!userSettings?.overridingPhoneNumberFormat2?.customizable ? 'This setting is managed by admin' : '')
+                    : (!adminOverrideCustomizable ? 'This setting is managed by admin' : '')
             },
             {
                 id: "overridingPhoneNumberFormat3",
                 name: "Format 3",
                 type: "string",
-                value: userSettings?.overridingPhoneNumberFormat3?.value ?? "",
-                readOnly: userSettings?.overridingPhoneNumberFormat3?.customizable === undefined ? false : !userSettings?.overridingPhoneNumberFormat3?.customizable,
-                readOnlyReason: !userSettings?.overridingPhoneNumberFormat3?.customizable ? 'This setting is managed by admin' : ''
+                value: adminFormat3 ?? userSettings?.overridingPhoneNumberFormat3?.value ?? "",
+                readOnly: adminOverrideCustomizable === undefined
+                    ? (userSettings?.overridingPhoneNumberFormat3?.customizable === undefined ? false : !userSettings?.overridingPhoneNumberFormat3?.customizable)
+                    : !adminOverrideCustomizable,
+                readOnlyReason: adminOverrideCustomizable === undefined
+                    ? (!userSettings?.overridingPhoneNumberFormat3?.customizable ? 'This setting is managed by admin' : '')
+                    : (!adminOverrideCustomizable ? 'This setting is managed by admin' : '')
             }
         ]
         const optionSectionName = platform.displayName + " options";

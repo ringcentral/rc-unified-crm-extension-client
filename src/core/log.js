@@ -25,14 +25,14 @@ async function addLog({
     // eslint-disable-next-line no-param-reassign
     additionalSubmission = { ...additionalSubmission, ...rcAdditionalSubmission };
     const overridingPhoneNumberFormat = [];
-    if (userSettings?.overridingPhoneNumberFormat?.value) {
-        overridingPhoneNumberFormat.push(userSettings.overridingPhoneNumberFormat.value);
+    if (userSettings.overridingNumberFormat?.numberFormatter1) {
+        overridingPhoneNumberFormat.push(userSettings.overridingNumberFormat?.numberFormatter1);
     }
-    if (userSettings?.overridingPhoneNumberFormat2?.value) {
-        overridingPhoneNumberFormat.push(userSettings.overridingPhoneNumberFormat2.value);
+    if (userSettings.overridingNumberFormat?.numberFormatter2) {
+        overridingPhoneNumberFormat.push(userSettings.overridingNumberFormat?.numberFormatter2);
     }
-    if (userSettings?.overridingPhoneNumberFormat3?.value) {
-        overridingPhoneNumberFormat.push(userSettings.overridingPhoneNumberFormat3.value);
+    if (userSettings.overridingNumberFormat?.numberFormatter3) {
+        overridingPhoneNumberFormat.push(userSettings.overridingNumberFormat?.numberFormatter3);
     }
 
     if (subject) {
