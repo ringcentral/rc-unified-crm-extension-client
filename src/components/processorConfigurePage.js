@@ -1,4 +1,4 @@
-function getProcessorConfigurePageRender({ processorId, processor, activated, selectedLogTypes, isLoggedIn }) {
+function getProcessorConfigurePageRender({ processorId, processorAccess, processor, activated, selectedLogTypes, isLoggedIn }) {
     const page = {
         id: 'processorConfigurePage',
         title: 'Configure processor',
@@ -16,7 +16,7 @@ function getProcessorConfigurePageRender({ processorId, processor, activated, se
                 },
                 supportedLogType: {
                     type: 'array',
-                    title: 'Supported log types',
+                    title: 'Supported log type',
                     items: {
                         type: 'string',
                         enum: processor.supportedLogType,
@@ -51,6 +51,7 @@ function getProcessorConfigurePageRender({ processorId, processor, activated, se
         formData: {
             activated: activated ?? false,
             supportedLogType: selectedLogTypes ?? '',
+            access: processorAccess,
             processorId,
             processor,
             isAsync: processor.isAsync,
@@ -80,6 +81,11 @@ function getProcessorConfigurePageRender({ processorId, processor, activated, se
                 "ui:variant": "contained",
                 "ui:fullWidth": true
             }
+            page.formData.activated = false;
+        }
+
+        page.uiSchema.activated = {
+            "ui:disabled": !isLoggedIn
         }
     }
     return page;

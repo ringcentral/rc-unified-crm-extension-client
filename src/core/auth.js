@@ -9,6 +9,8 @@ import embeddableServices from '../service/embeddableServices';
 import authPage from '../components/authPage';
 import { tryConnectToBullhorn } from '../misc/bullhorn';
 import { t } from '../i18n';
+import { getProcessorConfigurePageRender } from '../components/processorConfigurePage';
+import { getProcessorDetails } from '../service/manifestService';
 
 function handleThirdPartyOAuthWindow(oAuthUri) {
     chrome.runtime.sendMessage({
@@ -132,7 +134,36 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
         const stateData = JSON.parse(decodeURIComponent(new URLSearchParams(new URL(callbackUri).search).get('state') ?? '{}'));
         if (stateData?.from === 'ptp' && stateData?.redirectTo) {
             const ptpCallbackResp = await axios.get(`${stateData.redirectTo}?callbackUri=${callbackUri}`);
-            showNotification({ level: 'success', message: 'Successfully authorized processor.' });
+            const processorId = ptpCallbackResp?.data?.processorId;
+            if (processorId) {
+                showNotification({ level: 'success', message: 'Successfully authorized processor.' });
+                const { userSettings } = await chrome.storage.local.get('userSettings');
+                const processorSetting = userSettings?.[`processor_${processorId}`];
+                const activated = processorSetting?.value?.activated ?? false;
+                const processorAccess = processorSetting?.value?.access ?? '';
+                const processorName = processorSetting?.value?.name ?? '';
+                const selectedLogTypes = processorSetting?.value?.supportedLogType ?? '';
+                const processor = await getProcessorDetails({
+                    selectedProcessor: {
+                        id: processorId,
+                        name: processorName,
+                        access: processorAccess
+                    }
+                });
+                const processorConfigurePageRender = getProcessorConfigurePageRender({ processorId, processorAccess, processor, activated, selectedLogTypes, isLoggedIn: true });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: processorConfigurePageRender
+                });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${processorConfigurePageRender.id}`
+                }, '*');
+            }
+            else {
+                showNotification({ level: 'success', message: 'Successfully authorized processor. But status on this page is not refresh, please exit and re-open.' });
+            }
+
             return;
         }
     }
