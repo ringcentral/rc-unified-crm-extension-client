@@ -1,6 +1,7 @@
 import { trackPage } from '../lib/analytics';
 import userCore from '../core/user';
 import calldownPage from '../components/calldownPage';
+import appointmentsPage from '../components/appointmentsPage/appointmentsPage';
 import { getManifest } from '../service/manifestService';
 
 async function onEvent({ data }) {
@@ -44,6 +45,26 @@ async function onEvent({ data }) {
                 page: emptyCalldownPage
               }, '*');
             }
+          }
+        } catch (e) { /* ignore */ }
+      }
+      // Refresh Appointments tab when user navigates to it
+      if (data.path === '/customizedTabs/appointmentsPage') {
+        try {
+          const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+          if (rcUnifiedCrmExtJwt && crmAuthed) {
+            const { appointmentsListState = { tab: 'upcoming', scope: 'mine' } } = await chrome.storage.local.get('appointmentsListState');
+            const refreshedAppointments = await appointmentsPage.getAppointmentsPageWithRecords({
+              manifest,
+              jwtToken: rcUnifiedCrmExtJwt,
+              tab: appointmentsListState.tab,
+              scope: appointmentsListState.scope,
+              forceSync: false
+            });
+            document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+              type: 'rc-adapter-register-customized-page',
+              page: refreshedAppointments
+            }, '*');
           }
         } catch (e) { /* ignore */ }
       }

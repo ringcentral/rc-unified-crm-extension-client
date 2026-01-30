@@ -5,6 +5,7 @@ import userCore from '../core/user';
 import { showNotification, getRcAccessToken, getRcInfo } from '../lib/util';
 import reportPage from '../components/reportPage/reportPage';
 import calldownPage from '../components/calldownPage';
+import appointmentsPage from '../components/appointmentsPage/appointmentsPage';
 import { triggerPendingRecordingCheck } from '../lib/logUtil';
 import { bullhornHeartbeat } from '../misc/bullhorn';
 import axios from 'axios';
@@ -90,6 +91,22 @@ async function onEvent({ data }) {
                     page: calldownPageRender,
                 }, '*');
             }
+
+            // 2.3.3.b init appointments tab (Automotive Connect)
+            try {
+                const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                const appointmentsTab = await appointmentsPage.getAppointmentsPageWithRecords({
+                    manifest,
+                    jwtToken: rcUnifiedCrmExtJwt,
+                    tab: 'upcoming',
+                    scope: 'mine',
+                    forceSync: false
+                });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: appointmentsTab,
+                }, '*');
+            } catch (e) { /* ignore */ }
 
             // 2.3.4. Set every 5min, check if there's any pending recording link
             setInterval(async function () {

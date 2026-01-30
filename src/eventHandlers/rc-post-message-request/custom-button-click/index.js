@@ -48,6 +48,16 @@ import getErrorLogRecordPageNextStepButtonHandler from './getErrorLogRecordPageN
 import errorLogRecordPageStartButtonHandler from './errorLogRecordPageStartButton';
 import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
 import generalHandler from './general';
+import appointmentRefreshListHandler from './appointmentRefreshList';
+import appointmentRefreshHandler from './appointmentRefresh';
+import appointmentConfirmHandler from './appointmentConfirm';
+import appointmentCancelHandler from './appointmentCancel';
+import appointmentEditHandler from './appointmentEdit';
+import appointmentSaveHandler from './appointmentSave';
+import appointmentOpenContactHandler from './appointmentOpenContact';
+import appointmentOpenAppointmentHandler from './appointmentOpenAppointment';
+import appointmentCreateHandler from './appointmentCreate';
+import appointmentCreateSaveHandler from './appointmentCreateSave';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     switch (data.body.button.type) {
@@ -60,6 +70,36 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const listButtonActionId = listButtonActionIdAndItemId.split('-')[0]; // {actionId}
     const listButtonItemId = listButtonActionIdAndItemId.split(`${listButtonActionId}-`)[1]; // {itemId}
     switch (listButtonActionId) {
+        case 'appointmentCreateButton':
+            await appointmentCreateHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'appointmentsRefreshButton':
+            await appointmentRefreshListHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'appointmentRefresh':
+            await appointmentRefreshHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'appointmentConfirm':
+            await appointmentConfirmHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'appointmentCancel':
+            await appointmentCancelHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'appointmentEdit':
+            await appointmentEditHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'appointmentOpenContact':
+            await appointmentOpenContactHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'appointmentSaveButton':
+            await appointmentSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+            break;
+        case 'appointmentCreateSaveButton':
+            await appointmentCreateSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+            break;
+        case 'appointmentOpenAppointment':
+            await appointmentOpenAppointmentHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
         case 'callLater':
             await callLaterHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;

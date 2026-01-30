@@ -3,6 +3,7 @@ import userCore from '../core/user';
 import adminCore from '../core/admin';
 import reportPage from '../components/reportPage/reportPage';
 import calldownPage from '../components/calldownPage';
+import appointmentsPage from '../components/appointmentsPage/appointmentsPage';
 import adminPage from '../components/admin/adminPage';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest } from '../service/manifestService';
@@ -51,6 +52,24 @@ async function onMessage({ request, sendResponse }) {
                         type: 'rc-adapter-register-customized-page',
                         page: calldownPageRender,
                     }, '*');
+                }
+
+                // Appointments tab (Automotive Connect)
+                try {
+                    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+                    const appointmentsTab = await appointmentsPage.getAppointmentsPageWithRecords({
+                        manifest,
+                        jwtToken: rcUnifiedCrmExtJwt,
+                        tab: 'upcoming',
+                        scope: 'mine',
+                        forceSync: false
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: appointmentsTab,
+                    }, '*');
+                } catch (e) {
+                    // ignore if appointments backend is not available yet
                 }
 
                 // admin tab

@@ -31,6 +31,7 @@ import adminGoogleSheetsPageHandler from './adminGoogleSheetsPage';
 import googleSheetsAdminConfigHandler from './googleSheetsAdminConfig';
 import getErrorLogRecrodPageHandler from './getErrorLogRecordPage';
 import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
+import appointmentsPageHandler from './appointmentsPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -88,6 +89,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'adminGoogleSheetsPage':
             await adminGoogleSheetsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'appointmentsPage':
+            await appointmentsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
     }
     // Page render update from section change input
