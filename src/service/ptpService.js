@@ -86,6 +86,7 @@ async function checkAndUpdatePTPVersion() {
                     isAsync: processorDetails.isAsync,
                     phase: processorDetails.phase,
                     access: userSettings[ptpSettingKey]?.value?.access,
+                    logType: processorDetails.supportedLogType,
                 }
             };
         }

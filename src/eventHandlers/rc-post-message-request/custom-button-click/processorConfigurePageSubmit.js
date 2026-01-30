@@ -13,6 +13,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 isAsync: form.isAsync,
                 phase: form.phase,
                 access: form.access,
+                logType: form.logType,
             }
         }
     }

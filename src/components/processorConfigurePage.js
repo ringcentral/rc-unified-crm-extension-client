@@ -40,6 +40,7 @@ function getProcessorConfigurePageRender({ processorId, processorAccess, process
             processor,
             isAsync: processor.isAsync,
             phase: processor.phase,
+            logType: processor.supportedLogType
         }
     }
     if (processor.showAuthorizationButton) {

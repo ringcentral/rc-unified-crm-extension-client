@@ -27,6 +27,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                             activated: false,
                             isAsync: processor.isAsync,
                             phase: processor.phase,
+                            logType: processor.supportedLogType,
                             access: data.body.button.formData.access,
                         }
                     }
