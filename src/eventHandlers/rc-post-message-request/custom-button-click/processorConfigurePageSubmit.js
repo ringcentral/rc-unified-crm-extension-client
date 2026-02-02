@@ -1,8 +1,10 @@
 import { refreshUserSettings } from '../../../core/user';
-import { showNotification } from '../../../lib/util';
+import { getRcInfo, showNotification } from '../../../lib/util';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+    const rcInfo = await getRcInfo();
+    const rcAccountId = rcInfo.value.cachedData.extensionInfo.account.id;
     const form = data.body.button.formData;
     const changedSettings = {
         [`processor_${form.processorId}`]: {
@@ -14,6 +16,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 phase: form.phase,
                 access: form.access,
                 logType: form.logType,
+                rcAccountId,
             }
         }
     }
