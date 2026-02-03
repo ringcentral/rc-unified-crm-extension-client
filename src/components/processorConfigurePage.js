@@ -1,7 +1,7 @@
-function getProcessorConfigurePageRender({ processorId, processorAccess, processor, activated, isLoggedIn }) {
+function getProcessorConfigurePageRender({ viewType, processorId, processorAccess, processor, activated, isLoggedIn }) {
     const page = {
         id: 'processorConfigurePage',
-        title: 'Configure processor',
+        title: 'Config',
         type: 'page',
         schema: {
             type: 'object',
@@ -22,7 +22,7 @@ function getProcessorConfigurePageRender({ processorId, processorAccess, process
         },
         uiSchema: {
             submitButtonOptions: {
-                submitText: 'Save',
+                submitText: viewType === 'new' ? 'Install' : 'Save',
             },
             name: {
                 "ui:field": "typography",
@@ -40,7 +40,8 @@ function getProcessorConfigurePageRender({ processorId, processorAccess, process
             processor,
             isAsync: processor.isAsync,
             phase: processor.phase,
-            logType: processor.supportedLogType
+            logType: processor.supportedLogType,
+            viewType
         }
     }
     if (processor.showAuthorizationButton) {
@@ -71,6 +72,18 @@ function getProcessorConfigurePageRender({ processorId, processorAccess, process
 
         page.uiSchema.activated = {
             "ui:disabled": !isLoggedIn
+        }
+    }
+    if (viewType === 'installed') {
+        page.schema.properties.removeButton = {
+            type: 'string',
+            title: 'Remove',
+        }
+        page.uiSchema.removeButton = {
+            "ui:field": "button",
+            "ui:variant": "outlined",
+            "ui:color": "danger.b03",
+            "ui:fullWidth": true,
         }
     }
     return page;

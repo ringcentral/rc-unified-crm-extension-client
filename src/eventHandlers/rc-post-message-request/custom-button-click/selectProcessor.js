@@ -40,7 +40,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             isLoggedIn = false;
         }
     }
-    const processorConfigurePageRender = getProcessorConfigurePageRender({ processorId: selectedProcessorId, processorAccess: selectedProcessorAccess, processor, activated, isLoggedIn });
+    const processorConfigurePageRender = getProcessorConfigurePageRender({ viewType: data.body.button.formData.viewType, processorId: selectedProcessorId, processorAccess: selectedProcessorAccess, processor, activated, isLoggedIn });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: processorConfigurePageRender

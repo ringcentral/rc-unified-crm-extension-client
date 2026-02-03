@@ -1,4 +1,4 @@
-function getProcessorListPageRender({ processorList, searchWord = '', filter = 'All' }) {
+function getProcessorListPageRender({ viewType, processorList, searchWord = '', filter = 'All' }) {
     let processorListToRender = [];
     for (const processor of processorList) {
         let meta = '';
@@ -23,8 +23,8 @@ function getProcessorListPageRender({ processorList, searchWord = '', filter = '
             actions: [
                 {
                     id: 'selectProcessor',
-                    title: 'Configure',
-                    icon: 'connect'
+                    title: viewType === 'installed' ? 'Configure' : 'Install',
+                    icon: viewType === 'installed' ? 'connect' : 'newAction'
                 }
             ]
         };
@@ -36,9 +36,9 @@ function getProcessorListPageRender({ processorList, searchWord = '', filter = '
     if (filter !== 'All') {
         processorListToRender = processorListToRender.filter(um => um.meta === filter);
     }
-    return {
+    const page = {
         id: 'processorListPage',
-        title: 'Select processor',
+        title: viewType === 'installed' ? 'My processors' : 'Install processor',
         type: 'page',
         schema: {
             type: 'object',
@@ -83,8 +83,29 @@ function getProcessorListPageRender({ processorList, searchWord = '', filter = '
                 search: searchWord,
                 filter: filter
             },
-            processorList
+            processorList,
+            viewType
         }
     }
+    if (viewType === 'installed') {
+        if (processorList?.length === 0) {
+            page.schema.properties.helperText = {
+                type: 'string',
+                description: "Click 'Add' to install a processor"
+            }
+            page.uiSchema.helperText = {
+                "ui:field": "typography",
+                "ui:variant": "h5",
+                "ui:style": {
+                    marginTop: '80px',
+                    textAlign: 'center'
+                },
+            }
+        }
+        page.uiSchema.submitButtonOptions = {
+            submitText: 'Add'
+        }
+    }
+    return page;
 }
 exports.getProcessorListPageRender = getProcessorListPageRender;

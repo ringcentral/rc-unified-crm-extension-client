@@ -4,6 +4,8 @@ import authCore from '../../../core/auth';
 import { showNotification } from '../../../lib/util';
 import { refreshUserSettings } from '../../../core/user';
 import { getProcessorConfigurePageRender } from '../../../components/processorConfigurePage';
+import { getProcessorList } from '../../../service/manifestService';
+import { getProcessorListPageRender } from '../../../components/processorListPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -49,6 +51,31 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             else {
                 showNotification({ level: 'error', message: 'Failed to log out.', ttl: 3000 });
             }
+            break;
+        case 'removeButton':
+            const settingKeysToRemove = [`processor_${data.body.button.formData.processorId}`];
+            const userSettings = await refreshUserSettings({ settingKeysToRemove });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-navigate-to',
+                path: 'goBack'
+            }, '*');
+            const processorList = await getProcessorList();
+            const processorListToRender = [];
+            for (const settingsKey in userSettings) {
+                if (settingsKey.startsWith('processor_')) {
+                    const targetProcessor = processorList.find(processor => processor.id === settingsKey.split('processor_')[1]);
+                    processorListToRender.push(targetProcessor);
+                }
+            }
+            const processorListPageRender = getProcessorListPageRender({ viewType: 'installed', processorList: processorListToRender });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-customized-page',
+                page: processorListPageRender
+            });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-navigate-to',
+                path: `/customized/${processorListPageRender.id}`
+            }, '*');
             break;
     }
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');

@@ -1,5 +1,7 @@
 import { refreshUserSettings } from '../../../core/user';
 import { getRcInfo, showNotification } from '../../../lib/util';
+import { getProcessorList } from '../../../service/manifestService';
+import { getProcessorListPageRender } from '../../../components/processorListPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -20,13 +22,30 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             }
         }
     }
-    await refreshUserSettings({ changedSettings });
+    const userSettings = await refreshUserSettings({ changedSettings });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-navigate-to',
         path: 'goBack'
     }, '*');
+    const processorList = await getProcessorList();
+    const processorListToRender = [];
+    for (const settingsKey in userSettings) {
+        if (settingsKey.startsWith('processor_')) {
+            const targetProcessor = processorList.find(processor => processor.id === settingsKey.split('processor_')[1]);
+            processorListToRender.push(targetProcessor);
+        }
+    }
+    const processorListPageRender = getProcessorListPageRender({ viewType: 'installed', processorList: processorListToRender });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: processorListPageRender
+    });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-navigate-to',
+        path: `/customized/${processorListPageRender.id}`
+    }, '*');
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-    showNotification({ level: 'success', message: `Process is ${form.activated ? 'activated' : 'deactivated'}.`, ttl: 3000 });
+    showNotification({ level: 'success', message: `Process is ${form.viewType === 'installed' ? 'updated' : 'installed'}.`, ttl: 3000 });
 }
 
 exports.onEvent = onEvent;

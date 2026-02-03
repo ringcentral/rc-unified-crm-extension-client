@@ -51,7 +51,7 @@ import openProcessorListPageHandler from './processorListPage';
 import selectProcessorHandler from './selectProcessor';
 import processorConfigurePageSubmitHandler from './processorConfigurePageSubmit';
 import generalHandler from './general';
-import processorAuthHandler from './processorAuth';
+import processorConfigButtonsHandler from './processorConfigButtons';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     switch (data.body.button.type) {
@@ -109,8 +109,14 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'feedbackPage':
             await feedbackPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
+        case 'processorListPage':
+            // Re-worded as 'Add', which is to open available processors list page for installation
+            if (data.body.button.type === 'submit') {
+                await openProcessorListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, viewType: 'new' });
+            }
+            break;
         case 'openProcessorListPage':
-            await openProcessorListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await openProcessorListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, viewType: 'installed' });
             break;
         case 'openSupportPage':
             chrome.runtime.sendMessage({ type: "openPopupWindow", navigationPath: "/support" });
@@ -246,10 +252,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     if (data.body.button.id.startsWith('link-button-')) {
         window.open(data.body.button.formData[data.body.button.id], '_blank');
     }
-    // PTP auth button
+    // PTP configure buttons
     const isPTP = !!data.body.button?.formData?.processorId;
     if (data.body.button.type != 'submit' && isPTP) {
-        await processorAuthHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        await processorConfigButtonsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
     }
     responseMessage(data.requestId, { data: 'ok' });
 }
