@@ -68,6 +68,49 @@ async function checkUrlMatch({ type = 'quickAccessButton' }) {
   }
 }
 
+// Create a C2D instance for a specific root node
+// If sharedWidget is provided, it will be reused instead of creating a new one
+function createC2DInstance({ rootNode, countryCode, matchAllNumbers, sharedWidget }) {
+  const options = {
+    observer: new RangeObserver({
+      node: rootNode,
+      matcher: new LibPhoneNumberMatcher({
+        countryCode,
+        matchAllNumbers,
+      })
+    })
+  };
+
+  // Pass the shared widget if provided (for shadow root instances)
+  if (sharedWidget) {
+    options.widget = sharedWidget;
+  }
+
+  const c2dInstance = new window.RingCentralC2D(options);
+
+  // Only attach event listeners if this is the primary instance (no shared widget)
+  // Otherwise events would be duplicated since all instances share the same widget
+  if (!sharedWidget) {
+    c2dInstance.widget.on('call', function (phoneNumber) {
+      console.log('Click To Dial:', phoneNumber);
+      sendMessageToExtension({
+        type: 'c2d',
+        phoneNumber,
+      });
+    });
+
+    c2dInstance.widget.on('text', function (phoneNumber) {
+      console.log('Click To SMS:', phoneNumber);
+      sendMessageToExtension({
+        type: 'c2sms',
+        phoneNumber,
+      });
+    });
+  }
+
+  return c2dInstance;
+}
+
 async function initializeC2D() {
   const isUrlMatched = await checkUrlMatch({ type: 'c2d' });
   if (!isUrlMatched) {
@@ -76,41 +119,109 @@ async function initializeC2D() {
   }
   const countryCode = await chrome.storage.local.get({ selectedRegion: 'US' });
   const { matchAllNumbers } = await chrome.storage.local.get({ matchAllNumbers: false });
-
-  window.clickToDialInject = new window.RingCentralC2D({
-    observer: new RangeObserver({
-      matcher: new LibPhoneNumberMatcher({
-        countryCode: countryCode.selectedRegion,
-        matchAllNumbers,
-      })
-    })
-  });
-
-  window.clickToDialInject.widget.on(
-    'call',
-    function (phoneNumber) {
-      console.log('Click To Dial:', phoneNumber);
-      // alert('Click To Dial:' + phoneNumber);
-      sendMessageToExtension({
-        type: 'c2d',
-        phoneNumber,
-      });
-    },
-  );
-  window.clickToDialInject.widget.on(
-    'text',
-    function (phoneNumber) {
-      console.log('Click To SMS:', phoneNumber);
-      // alert('Click To SMS:' + phoneNumber);
-      sendMessageToExtension({
-        type: 'c2sms',
-        phoneNumber,
-      });
-    },
-  );
-  // Disable the SMS button, keep only click-to-dial
   const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
+
+  // Store all C2D instances and observers
+  window.clickToDialInstances = window.clickToDialInstances || [];
+  window.clickToDialObservers = window.clickToDialObservers || [];
+  const processedShadowRoots = new WeakSet();
+  const observedRoots = new WeakSet();
+
+  // Initialize main document C2D first (this creates the widget)
+  window.clickToDialInject = createC2DInstance({
+    rootNode: document.body,
+    countryCode: countryCode.selectedRegion,
+    matchAllNumbers,
+  });
   window.clickToDialInject.widget.update({ enableC2Text: userPermissions?.sms ?? false });
+  window.clickToDialInstances.push(window.clickToDialInject);
+  console.log(`[App Connect] C2D initialized for document.body`);
+
+  // Get the shared widget from the main instance
+  const sharedWidget = window.clickToDialInject.widget;
+
+  // Process a single element - check if it has a shadow root and handle it
+  const processElement = (element) => {
+    if (element.shadowRoot && !processedShadowRoots.has(element.shadowRoot)) {
+      processShadowRoot(element.shadowRoot);
+    }
+  };
+
+  // Process a shadow root - create C2D instance and set up observer
+  const processShadowRoot = (shadowRoot) => {
+    if (processedShadowRoots.has(shadowRoot)) return;
+    
+    processedShadowRoots.add(shadowRoot);
+    
+    // Create C2D instance for this shadow root
+    const c2dInstance = createC2DInstance({
+      rootNode: shadowRoot,
+      countryCode: countryCode.selectedRegion,
+      matchAllNumbers,
+      sharedWidget,
+    });
+    window.clickToDialInstances.push(c2dInstance);
+    console.log(`[App Connect] C2D initialized for shadowRoot`);
+
+    // Scan for existing elements with shadow roots inside this shadow root
+    scanForShadowRoots(shadowRoot);
+
+    // Set up observer for this shadow root to detect new shadow roots inside it
+    observeRoot(shadowRoot);
+  };
+
+  // Scan a root for all elements that have shadow roots
+  const scanForShadowRoots = (root) => {
+    const walker = document.createTreeWalker(
+      root,
+      NodeFilter.SHOW_ELEMENT,
+      null,
+      false
+    );
+
+    let node = walker.currentNode;
+    while (node) {
+      if (node.shadowRoot && !processedShadowRoots.has(node.shadowRoot)) {
+        processShadowRoot(node.shadowRoot);
+      }
+      node = walker.nextNode();
+    }
+  };
+
+  // Set up MutationObserver on a root (document.body or shadow root)
+  const observeRoot = (root) => {
+    if (observedRoots.has(root)) return;
+    observedRoots.add(root);
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        // Handle added nodes
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            // Check the added node itself
+            processElement(node);
+            // Scan the subtree for shadow roots
+            scanForShadowRoots(node);
+          }
+        }
+      }
+    });
+
+    observer.observe(root, {
+      childList: true,
+      subtree: true,
+    });
+
+    window.clickToDialObservers.push(observer);
+  };
+
+  // Initial scan of document.body for existing shadow roots
+  scanForShadowRoots(document.body);
+
+  // Set up observer on document.body
+  observeRoot(document.body);
+
+  console.log(`[App Connect] C2D initialization complete. Found ${window.clickToDialInstances.length} roots.`);
 }
 
 // Listen message from background.js to open app window when user click icon.
