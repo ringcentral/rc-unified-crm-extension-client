@@ -47,7 +47,8 @@ import selectPlatformHandler from './selectPlatform';
 import getErrorLogRecordPageNextStepButtonHandler from './getErrorLogRecordPageNextStepButton';
 import errorLogRecordPageStartButtonHandler from './errorLogRecordPageStartButton';
 import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
-import openProcessorListPageHandler from './processorListPage';
+import openProcessorMarketListPageHandler from './processorMarketListPage';
+import openInstalledProcessorListPageHandler from './installedProcessorListPage';
 import selectProcessorHandler from './selectProcessor';
 import processorConfigurePageSubmitHandler from './processorConfigurePageSubmit';
 import generalHandler from './general';
@@ -109,14 +110,14 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'feedbackPage':
             await feedbackPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
-        case 'processorListPage':
-            // Re-worded as 'Add', which is to open available processors list page for installation
+        case 'installedProcessorListPage':
+            // Re-worded as 'Explore', which is to open available processors list page for installation
             if (data.body.button.type === 'submit') {
-                await openProcessorListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, viewType: 'new' });
+                await openProcessorMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, viewType: 'explore' });
             }
             break;
-        case 'openProcessorListPage':
-            await openProcessorListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, viewType: 'installed' });
+        case 'openInstalledProcessorListPage':
+            await openInstalledProcessorListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'openSupportPage':
             chrome.runtime.sendMessage({ type: "openPopupWindow", navigationPath: "/support" });

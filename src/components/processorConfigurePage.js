@@ -22,7 +22,7 @@ function getProcessorConfigurePageRender({ viewType, processorId, processorAcces
         },
         uiSchema: {
             submitButtonOptions: {
-                submitText: viewType === 'new' ? 'Install' : 'Save',
+                submitText: viewType === 'explore' ? 'Install' : 'Save',
             },
             name: {
                 "ui:field": "typography",

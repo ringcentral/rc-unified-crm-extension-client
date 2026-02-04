@@ -5,7 +5,7 @@ import { showNotification } from '../../../lib/util';
 import { refreshUserSettings } from '../../../core/user';
 import { getProcessorConfigurePageRender } from '../../../components/processorConfigurePage';
 import { getProcessorList } from '../../../service/manifestService';
-import { getProcessorListPageRender } from '../../../components/processorListPage';
+import { getInstalledProcessorListPageRender } from '../../../components/installedProcessorListPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -67,7 +67,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                     processorListToRender.push(targetProcessor);
                 }
             }
-            const processorListPageRender = getProcessorListPageRender({ viewType: 'installed', processorList: processorListToRender });
+            const processorListPageRender = getInstalledProcessorListPageRender({ viewType: 'installed', processorList: processorListToRender });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
                 page: processorListPageRender

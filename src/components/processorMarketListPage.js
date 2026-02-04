@@ -1,4 +1,4 @@
-function getProcessorListPageRender({ viewType, processorList, searchWord = '', filter = 'All' }) {
+function getProcessorMarketListPageRender({ viewType, processorList, searchWord = '', filter = 'All' }) {
     let processorListToRender = [];
     for (const processor of processorList) {
         let meta = '';
@@ -23,8 +23,8 @@ function getProcessorListPageRender({ viewType, processorList, searchWord = '', 
             actions: [
                 {
                     id: 'selectProcessor',
-                    title: viewType === 'installed' ? 'Configure' : 'Install',
-                    icon: viewType === 'installed' ? 'connect' : 'newAction'
+                    title: 'Install',
+                    icon: 'newAction'
                 }
             ]
         };
@@ -37,8 +37,8 @@ function getProcessorListPageRender({ viewType, processorList, searchWord = '', 
         processorListToRender = processorListToRender.filter(um => um.meta === filter);
     }
     const page = {
-        id: 'processorListPage',
-        title: viewType === 'installed' ? 'My processors' : 'Install processor',
+        id: 'processorMarketListPage',
+        title: 'Processor market',
         type: 'page',
         schema: {
             type: 'object',
@@ -87,25 +87,6 @@ function getProcessorListPageRender({ viewType, processorList, searchWord = '', 
             viewType
         }
     }
-    if (viewType === 'installed') {
-        if (processorList?.length === 0) {
-            page.schema.properties.helperText = {
-                type: 'string',
-                description: "Click 'Add' to install a processor"
-            }
-            page.uiSchema.helperText = {
-                "ui:field": "typography",
-                "ui:variant": "h5",
-                "ui:style": {
-                    marginTop: '80px',
-                    textAlign: 'center'
-                },
-            }
-        }
-        page.uiSchema.submitButtonOptions = {
-            submitText: 'Add'
-        }
-    }
     return page;
 }
-exports.getProcessorListPageRender = getProcessorListPageRender;
+exports.getProcessorMarketListPageRender = getProcessorMarketListPageRender;

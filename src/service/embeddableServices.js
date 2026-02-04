@@ -429,7 +429,7 @@ async function getServiceManifest() {
                 ]
             },
             {
-                id: "openProcessorListPage",
+                id: "openInstalledProcessorListPage",
                 type: "button",
                 name: "Processor",
                 buttonLabel: "Open",
