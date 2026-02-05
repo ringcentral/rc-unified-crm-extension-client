@@ -47,12 +47,12 @@ import selectPlatformHandler from './selectPlatform';
 import getErrorLogRecordPageNextStepButtonHandler from './getErrorLogRecordPageNextStepButton';
 import errorLogRecordPageStartButtonHandler from './errorLogRecordPageStartButton';
 import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
-import openProcessorMarketListPageHandler from './processorMarketListPage';
-import openInstalledProcessorListPageHandler from './installedProcessorListPage';
-import selectProcessorHandler from './selectProcessor';
-import processorConfigurePageSubmitHandler from './processorConfigurePageSubmit';
+import openPluginMarketListPageHandler from './pluginMarketListPage';
+import openInstalledPluginListPageHandler from './installedPluginListPage';
+import selectPluginHandler from './selectPlugin';
+import pluginConfigurePageSubmitHandler from './pluginConfigurePageSubmit';
 import generalHandler from './general';
-import processorConfigButtonsHandler from './processorConfigButtons';
+import pluginConfigButtonsHandler from './pluginConfigButtons';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     switch (data.body.button.type) {
@@ -110,14 +110,17 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'feedbackPage':
             await feedbackPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
-        case 'installedProcessorListPage':
-            // Re-worded as 'Explore', which is to open available processors list page for installation
+        case 'installedPluginListPage':
+            // Re-worded as 'Explore', which is to open available plugins list page for installation
             if (data.body.button.type === 'submit') {
-                await openProcessorMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, viewType: 'explore' });
+                await openPluginMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, viewType: 'explore' });
             }
             break;
-        case 'openInstalledProcessorListPage':
-            await openInstalledProcessorListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        case 'explorePluginButton':
+            await openPluginMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, viewType: 'explore' });
+            break;
+        case 'openInstalledPluginListPage':
+            await openInstalledPluginListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'openSupportPage':
             chrome.runtime.sendMessage({ type: "openPopupWindow", navigationPath: "/support" });
@@ -228,12 +231,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'logRecordSubmitButton':
             await logRecordSubmissionPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
-        case 'selectProcessor':
-            await selectProcessorHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+        case 'selectPlugin':
+            await selectPluginHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
             break;
-        case 'processorConfigurePage':
+        case 'pluginConfigurePage':
             if (data.body.button.type === 'submit') {
-                await processorConfigurePageSubmitHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+                await pluginConfigurePageSubmitHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             }
             break;
         case 'callAndSMSLoggingSettingPage':
@@ -253,10 +256,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     if (data.body.button.id.startsWith('link-button-')) {
         window.open(data.body.button.formData[data.body.button.id], '_blank');
     }
-    // PTP configure buttons
-    const isPTP = !!data.body.button?.formData?.processorId;
-    if (data.body.button.type != 'submit' && isPTP) {
-        await processorConfigButtonsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+    // plugin configure buttons
+    const isPlugin = !!data.body.button?.formData?.pluginId;
+    if (data.body.button.type != 'submit' && isPlugin) {
+        await pluginConfigButtonsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
     }
     responseMessage(data.requestId, { data: 'ok' });
 }

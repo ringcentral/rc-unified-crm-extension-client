@@ -13,7 +13,7 @@ import releaseNotesPage from '../components/releaseNotesPage';
 import adminCore from '../core/admin';
 import logService from '../service/logService';
 import { RcAPI } from '../lib/rcAPI';
-import ptpService from '../service/ptpService';
+import pluginService from '../service/pluginService';
 
 let firstTimeLogoutAbsorbed = false;
 
@@ -236,7 +236,7 @@ async function onEvent({ data }) {
 
     if (crmAuthed && data.loggedIn) {
         await adminCore.refreshAdminSettings();
-        const changedSettings = await ptpService.checkAndUpdatePTPVersion();
+        const changedSettings = await pluginService.checkAndUpdatePluginVersion();
         await userCore.refreshUserSettings({ changedSettings });
         await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: rcUnifiedCrmExtJwt });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

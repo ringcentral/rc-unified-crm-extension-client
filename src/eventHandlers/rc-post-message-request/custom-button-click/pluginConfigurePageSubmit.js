@@ -1,7 +1,7 @@
 import { refreshUserSettings } from '../../../core/user';
 import { getRcInfo, showNotification } from '../../../lib/util';
-import { getProcessorList } from '../../../service/manifestService';
-import { getProcessorListPageRender } from '../../../components/processorMarketListPage';
+import { getPluginList } from '../../../service/manifestService';
+import { getPluginListPageRender } from '../../../components/pluginMarketListPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -9,10 +9,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const rcAccountId = rcInfo.value.cachedData.extensionInfo.account.id;
     const form = data.body.button.formData;
     const changedSettings = {
-        [`processor_${form.processorId}`]: {
+        [`plugin_${form.pluginId}`]: {
             value: {
-                name: form.processor.name,
-                version: form.processor.version,
+                name: form.plugin.name,
+                version: form.plugin.version,
                 activated: form.activated,
                 isAsync: form.isAsync,
                 phase: form.phase,
@@ -27,25 +27,26 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         type: 'rc-adapter-navigate-to',
         path: 'goBack'
     }, '*');
-    // const processorList = await getProcessorList();
-    // const processorListToRender = [];
+    // const pluginList = await getPluginList();
+    // const pluginListToRender = [];
     // for (const settingsKey in userSettings) {
-    //     if (settingsKey.startsWith('processor_')) {
-    //         const targetProcessor = processorList.find(processor => processor.id === settingsKey.split('processor_')[1]);
-    //         processorListToRender.push(targetProcessor);
+    //     if (settingsKey.startsWith('plugin_')) {
+    //         const targetPlugin = pluginList.find(plugin => plugin.id === settingsKey.split('plugin_')[1]);
+    //         pluginListToRender.push(targetPlugin);
     //     }
     // }
-    // const processorListPageRender = getProcessorListPageRender({ viewType: 'installed', processorList: processorListToRender });
+    // const pluginListPageRender = getPluginListPageRender({ viewType: 'installed', pluginList: pluginListToRender });
     // document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
     //     type: 'rc-adapter-register-customized-page',
-    //     page: processorListPageRender
+    //     page: pluginListPageRender
     // });
     // document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
     //     type: 'rc-adapter-navigate-to',
-    //     path: `/customized/${processorListPageRender.id}`
+    //     path: `/customized/${pluginListPageRender.id}`
     // }, '*');
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
     showNotification({ level: 'success', message: `Process is ${form.viewType === 'installed' ? 'updated' : 'installed'}.`, ttl: 3000 });
 }
 
 exports.onEvent = onEvent;
+

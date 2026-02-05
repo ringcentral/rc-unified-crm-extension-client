@@ -9,8 +9,8 @@ import embeddableServices from '../service/embeddableServices';
 import authPage from '../components/authPage';
 import { tryConnectToBullhorn } from '../misc/bullhorn';
 import { t } from '../i18n';
-import { getProcessorConfigurePageRender } from '../components/processorConfigurePage';
-import { getProcessorDetails } from '../service/manifestService';
+import { getPluginConfigurePageRender } from '../components/pluginConfigurePage';
+import { getPluginDetails } from '../service/manifestService';
 
 function handleThirdPartyOAuthWindow(oAuthUri) {
     chrome.runtime.sendMessage({
@@ -129,45 +129,46 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
 }
 
 async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
-    // Case: from PTP
+    // Case: from plugin
     try {
         const stateData = JSON.parse(decodeURIComponent(new URLSearchParams(new URL(callbackUri).search).get('state') ?? '{}'));
-        if (stateData?.from === 'ptp' && stateData?.redirectTo) {
-            const ptpCallbackResp = await axios.get(`${stateData.redirectTo}?callbackUri=${callbackUri}`);
-            const processorId = ptpCallbackResp?.data?.processorId;
-            if (processorId) {
-                showNotification({ level: 'success', message: 'Successfully authorized processor.' });
+        if (stateData?.from === 'plugin' && stateData?.redirectTo) {
+            const pluginCallbackResp = await axios.get(`${stateData.redirectTo}?callbackUri=${callbackUri}`);
+            const pluginId = pluginCallbackResp?.data?.pluginId;
+            if (pluginId) {
+                showNotification({ level: 'success', message: 'Successfully authorized plugin.' });
                 const { userSettings } = await chrome.storage.local.get('userSettings');
-                const processorSetting = userSettings?.[`processor_${processorId}`];
-                const activated = processorSetting?.value?.activated ?? false;
-                const processorAccess = processorSetting?.value?.access ?? '';
-                const processorName = processorSetting?.value?.name ?? '';
-                const processor = await getProcessorDetails({
-                    selectedProcessor: {
-                        id: processorId,
-                        name: processorName,
-                        access: processorAccess
+                const pluginSetting = userSettings?.[`plugin_${pluginId}`];
+                const activated = pluginSetting?.value?.activated ?? false;
+                const pluginAccess = pluginSetting?.value?.access ?? '';
+                const pluginName = pluginSetting?.value?.name ?? '';
+                const isAdminOnly = pluginSetting?.value?.isAdminOnly ?? false;
+                const plugin = await getPluginDetails({
+                    selectedPlugin: {
+                        id: pluginId,
+                        name: pluginName,
+                        access: pluginAccess
                     }
                 });
-                const processorConfigurePageRender = getProcessorConfigurePageRender({ processorId, processorAccess, processor, activated, isLoggedIn: true });
+                const pluginConfigurePageRender = getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, isAdminOnly, activated, isLoggedIn: true });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
-                    page: processorConfigurePageRender
+                    page: pluginConfigurePageRender
                 });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
-                    path: `/customized/${processorConfigurePageRender.id}`
+                    path: `/customized/${pluginConfigurePageRender.id}`
                 }, '*');
             }
             else {
-                showNotification({ level: 'success', message: 'Successfully authorized processor. But status on this page is not refresh, please exit and re-open.' });
+                showNotification({ level: 'success', message: 'Successfully authorized plugin. But status on this page is not refresh, please exit and re-open.' });
             }
 
             return;
         }
     }
     catch (e) {
-        console.warn('Auth callback not from PTP');
+        console.warn('Auth callback not from plugin');
     }
     // Case: connectors
     const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;

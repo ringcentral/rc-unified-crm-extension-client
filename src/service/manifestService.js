@@ -6,21 +6,21 @@ import { getRcInfo } from '../lib/util';
 let sessionManifest = null;
 let platformList = null;
 
-async function getProcessorDetails({ selectedProcessor }) {
-    let processorManifestResponse;
-    switch (selectedProcessor.access) {
+async function getPluginDetails({ selectedPlugin }) {
+    let pluginManifestResponse;
+    switch (selectedPlugin.access) {
         case 'public':
-            processorManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedProcessor.id}/manifest?type=processor`);
+            pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlugin.id}/manifest?type=plugin`);
             break;
         case 'shared':
-            processorManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedProcessor.id}/manifest?access=internal&type=processor&accountId=${selectedProcessor.accountId}`);
+            pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlugin.id}/manifest?access=internal&type=plugin&accountId=${selectedPlugin.accountId}`);
             break;
         case 'private':
             const rcInfo = await getRcInfo();
-            processorManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedProcessor.id}/manifest?access=internal&type=processor&accountId=${rcInfo.value.cachedData.accountInfo.id}`);
+            pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlugin.id}/manifest?access=internal&type=plugin&accountId=${rcInfo.value.cachedData.accountInfo.id}`);
             break;
     }
-    return processorManifestResponse.data?.platforms?.[selectedProcessor.name];
+    return pluginManifestResponse.data?.platforms?.[selectedPlugin.name];
 }
 
 async function getPlatformList() {
@@ -48,23 +48,23 @@ async function getPlatformList() {
     return platformList;
 }
 
-async function getProcessorList() {
+async function getPluginList() {
     const result = [];
-    const processorPublicListResponse = await axios.get(`${baseManifest.platformPublicListUrl}?type=processor`);
-    for (const processor of processorPublicListResponse.data.connectors) {
-        processor.access = 'public';
-        result.push(processor);
+    const pluginPublicListResponse = await axios.get(`${baseManifest.platformPublicListUrl}?type=plugin`);
+    for (const plugin of pluginPublicListResponse.data.connectors) {
+        plugin.access = 'public';
+        result.push(plugin);
     }
     const rcInfo = await getRcInfo();
     const rcAccountId = rcInfo.value.cachedData.accountInfo.id;
-    const processorInternalListResponse = await axios.get(`${baseManifest.platformInternalListUrl}?access=internal&type=processor&accountId=${rcAccountId}`);
-    for (const processor of processorInternalListResponse.data.sharedConnectors) {
-        processor.access = 'shared';
-        result.push(processor);
+    const pluginInternalListResponse = await axios.get(`${baseManifest.platformInternalListUrl}?access=internal&type=plugin&accountId=${rcAccountId}`);
+    for (const plugin of pluginInternalListResponse.data.sharedConnectors) {
+        plugin.access = 'shared';
+        result.push(plugin);
     }
-    for (const processor of processorInternalListResponse.data.privateConnectors) {
-        processor.access = 'private';
-        result.push(processor);
+    for (const plugin of pluginInternalListResponse.data.privateConnectors) {
+        plugin.access = 'private';
+        result.push(plugin);
     }
     return result;
 }
@@ -172,10 +172,10 @@ function setValueByPath(obj, path, value) {
     current[keys[keys.length - 1]] = value;
 }
 
-exports.getProcessorDetails = getProcessorDetails;
+exports.getPluginDetails = getPluginDetails;
 exports.getManifest = getManifest;
 exports.getPlatformList = getPlatformList;
-exports.getProcessorList = getProcessorList;
+exports.getPluginList = getPluginList;
 exports.saveManifest = saveManifest;
 exports.saveManifestUrl = saveManifestUrl;
 exports.refreshManifest = refreshManifest;

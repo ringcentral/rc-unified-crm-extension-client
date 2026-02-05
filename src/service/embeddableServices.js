@@ -429,9 +429,9 @@ async function getServiceManifest() {
                 ]
             },
             {
-                id: "openInstalledProcessorListPage",
+                id: "openInstalledPluginListPage",
                 type: "button",
-                name: "Processor",
+                name: "Plugins",
                 buttonLabel: "Open",
                 buttonType: "link",
             },

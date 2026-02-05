@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { isObjectEmpty, showNotification, getRcAccessToken } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
-import { upsertPTPAsyncTaskIds } from '../service/ptpService';
+import { upsertPluginAsyncTaskIds } from '../service/pluginService';
 import { t } from '../i18n';
 
 // Input {id} = sessionId from RC
@@ -62,8 +62,8 @@ async function addLog({
                 addLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addLogRes.data.successful) {
                     trackSyncCallLog({ hasNote: note !== '' });
-                    if(addLogRes.data.ptpAsyncTaskIds?.length > 0){
-                        await upsertPTPAsyncTaskIds({ taskIds: addLogRes.data.ptpAsyncTaskIds });
+                    if(addLogRes.data.pluginAsyncTaskIds?.length > 0){
+                        await upsertPluginAsyncTaskIds({ taskIds: addLogRes.data.pluginAsyncTaskIds });
                     }
                     if (isShowNotification) {
                         showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'success', message: addLogRes.data.returnMessage?.message ?? t('notifications.success.callLogAdded'), ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
@@ -168,8 +168,8 @@ async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, re
                 const callLogRes = await axios.patch(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, patchBody);
                 if (isShowNotification) {
                     if (callLogRes.data.successful) {
-                        if(callLogRes.data.ptpAsyncTaskIds?.length > 0){
-                            await upsertPTPAsyncTaskIds({ taskIds: callLogRes.data.ptpAsyncTaskIds });
+                        if(callLogRes.data.pluginAsyncTaskIds?.length > 0){
+                            await upsertPluginAsyncTaskIds({ taskIds: callLogRes.data.pluginAsyncTaskIds });
                         }
                     }
                     else {

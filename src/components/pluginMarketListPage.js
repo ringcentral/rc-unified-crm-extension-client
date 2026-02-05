@@ -1,8 +1,8 @@
-function getProcessorMarketListPageRender({ viewType, processorList, searchWord = '', filter = 'All' }) {
-    let processorListToRender = [];
-    for (const processor of processorList) {
+function getPluginMarketListPageRender({ viewType, pluginList, searchWord = '', filter = 'All' }) {
+    let pluginListToRender = [];
+    for (const plugin of pluginList) {
         let meta = '';
-        switch (processor.access) {
+        switch (plugin.access) {
             case 'public':
                 meta = '';
                 break;
@@ -13,37 +13,37 @@ function getProcessorMarketListPageRender({ viewType, processorList, searchWord 
                 meta = 'Private';
                 break;
         }
-        const newProcessor = {
-            const: `${processor.id}=${processor.access}`,
-            title: processor.displayName ?? processor.name,
-            icon: processor.iconUrl ? processor.iconUrl : 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
-            description: `by ${processor.developer.name}`,
+        const newPlugin = {
+            const: `${plugin.id}=${plugin.access}`,
+            title: plugin.displayName ?? plugin.name,
+            icon: plugin.iconUrl ? plugin.iconUrl : 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
+            description: `by ${plugin.developer.name}`,
             meta: meta,
             authorAvatar: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg',
             actions: [
                 {
-                    id: 'selectProcessor',
+                    id: 'selectPlugin',
                     title: 'Install',
-                    icon: 'newAction'
+                    icon: 'info'
                 }
             ]
         };
-        processorListToRender.push(newProcessor);
+        pluginListToRender.push(newPlugin);
     }
     if (searchWord) {
-        processorListToRender = processorListToRender.filter(um => um.title.toLowerCase().includes(searchWord.toLowerCase()) || um.description.toLowerCase().includes(searchWord.toLowerCase()));
+        pluginListToRender = pluginListToRender.filter(um => um.title.toLowerCase().includes(searchWord.toLowerCase()) || um.description.toLowerCase().includes(searchWord.toLowerCase()));
     }
     if (filter !== 'All') {
-        processorListToRender = processorListToRender.filter(um => um.meta === filter);
+        pluginListToRender = pluginListToRender.filter(um => um.meta === filter);
     }
     const page = {
-        id: 'processorMarketListPage',
-        title: 'Processor market',
+        id: 'pluginMarketListPage',
+        title: 'Plugin market',
         type: 'page',
         schema: {
             type: 'object',
             properties: {
-                processorSearch: {
+                pluginSearch: {
                     type: 'object',
                     properties: {
                         search: {
@@ -56,15 +56,15 @@ function getProcessorMarketListPageRender({ viewType, processorList, searchWord 
                         }
                     }
                 },
-                processors: {
+                plugins: {
                     type: 'string',
-                    title: 'Processors',
-                    oneOf: processorListToRender
+                    title: 'Plugins',
+                    oneOf: pluginListToRender
                 }
             }
         },
         uiSchema: {
-            processorSearch: {
+            pluginSearch: {
                 "ui:field": "search",
                 "ui:placeholder": "Search with filters...",
                 "ui:filters": [
@@ -73,20 +73,21 @@ function getProcessorMarketListPageRender({ viewType, processorList, searchWord 
                     "Shared with you"
                 ]
             },
-            processors: {
+            plugins: {
                 "ui:field": "list",
                 "ui:showIconAsAvatar": false
             }
         },
         formData: {
-            processorSearch: {
+            pluginSearch: {
                 search: searchWord,
                 filter: filter
             },
-            processorList,
+            pluginList,
             viewType
         }
     }
     return page;
 }
-exports.getProcessorMarketListPageRender = getProcessorMarketListPageRender;
+exports.getPluginMarketListPageRender = getPluginMarketListPageRender;
+
