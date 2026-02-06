@@ -25,7 +25,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 value: {
                     name: data.body.button.formData.plugin.name,
                     version: data.body.button.formData.plugin.version,
-                    activated: true,
+                    activated: false,
                     isAsync: data.body.button.formData.plugin.isAsync,
                     phase: data.body.button.formData.plugin.phase,
                     logType: data.body.button.formData.plugin.supportedLogType,
@@ -35,6 +35,24 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             }
             await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings: adminSettingsForInstall });
             await refreshUserSettings({});
+            // Refresh detial config page to installed state
+            const pluginConfigurePageRender = getPluginConfigurePageRender({
+                viewType: 'installed',
+                pluginId: data.body.button.formData.pluginId,
+                pluginAccess: data.body.button.formData.access,
+                plugin: data.body.button.formData.plugin,
+                isAdminOnly: data.body.button.formData.isAdminOnly,
+                activated: false,
+                isLoggedIn: false
+            });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-customized-page',
+                page: pluginConfigurePageRender
+            });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-navigate-to',
+                path: `/customized/${pluginConfigurePageRender.id}`
+            }, '*');
             break;
         case 'authButton':
             const getAuthUriResponse = await axios.get(`${data.body.button.formData.plugin.authorizationUrl}?jwtToken=${rcUnifiedCrmExtJwt}&pluginId=${data.body.button.formData.pluginId}`);

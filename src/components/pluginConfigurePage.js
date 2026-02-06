@@ -72,9 +72,14 @@ function getPluginConfigurePageRender({ viewType, pluginId, pluginAccess, plugin
             };
             break;
         case 'installed':
+            page.schema.properties.activateToggle = {
+                type: 'boolean',
+                title: 'Enable',
+                default: activated ?? false,
+            }
             page.schema.properties.removeButton = {
                 type: 'string',
-                title: 'Remove',
+                title: 'Uninstall',
             }
             page.uiSchema.removeButton = {
                 "ui:field": "button",

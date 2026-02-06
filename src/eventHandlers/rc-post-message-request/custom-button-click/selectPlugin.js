@@ -20,7 +20,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
     const selectedPlugin = data.body.button.formData.pluginList.find(plugin => plugin.id === selectedPluginId);
     const userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl });
     const plugin = await getPluginDetails({ selectedPlugin});
-    const pluginSetting = userSettings?.[`plugin_${selectedPluginId}`];
+    const pluginSetting = userSettings?.plugins?.[`plugin_${selectedPluginId}`];
     const activated = pluginSetting?.value?.activated ?? false;
     const isAdminOnly = pluginSetting?.value?.isAdminOnly ?? false;
     let isLoggedIn = false;
