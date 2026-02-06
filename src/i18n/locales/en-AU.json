@@ -47,11 +47,11 @@
     "about": {
       "title": "About",
       "introduction": "The RingCentral App Connect embeds a fully-functional web phone into a set of supported CRM platforms.",
-      "chromeExtension": "Chrome extension",
+      "chromeExtension": "Browser extension",
       "extensionAuthor": "Author: RingCentral, Inc.",
       "versionLabel": "Version: {version}",
       "eula": "End User License Agreement",
-      "adapter": "Adapter",
+      "adapter": "Connector",
       "adapterAuthor": "Author: {author}",
       "website": "Website",
       "support": "Support"
@@ -373,7 +373,7 @@
     "eu24H": "15/01/2024 14:30:45 - EU 24H"
   },
   "misc": {
-    "clickToDialCollision": "The RingCentral for Google Chrome extension has been detected. You may wish to customize your click-to-dial preferences for your desired behavior",
+    "clickToDialCollision": "The RingCentral for Google Browser extension has been detected. You may wish to customize your click-to-dial preferences for your desired behavior",
     "clickToDialCollisionTitle": "Click-to-dial may not work",
     "configure": "Configure",
     "pipedriveStep2": "(2/3) Please sign in on the extension with your RingCentral account. If nothing happens, please try refreshing this page and wait for a few seconds.",

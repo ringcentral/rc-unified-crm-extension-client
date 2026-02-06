@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 
-function getAboutPageRender({ manifest }) {
+function getAboutPageRender({ platformName, manifest }) {
     const aboutPage = {
         id: 'aboutPage',
         title: t('pages.about.title'),
@@ -34,7 +34,14 @@ function getAboutPageRender({ manifest }) {
                 },
                 adapterAuthorInfo: {
                     type: "string",
-                    description: t('pages.about.adapterAuthor', { author: manifest.author.name })
+                    oneOf: [
+                        {
+                            const: 'adapterAuthorInfo',
+                            title: t('pages.about.adapterAuthor', { author: manifest.platforms[platformName].displayName }),
+                            icon: manifest.platforms[platformName].logoUrl,
+                            description: `Developed by ${manifest.author.name}`
+                        }
+                    ]
                 },
                 adapterWebsiteInfo: {
                     type: "string",
@@ -74,8 +81,10 @@ function getAboutPageRender({ manifest }) {
                 "ui:variant": "body2"
             },
             adapterAuthorInfo: {
-                "ui:field": "typography",
-                "ui:bulletedList": true,
+                "ui:field": "list",
+                "ui:showIconAsAvatar": false,
+                "ui:readonly": true,
+                "ui:showSelected": false,
             },
             adapterWebsiteInfo: {
                 "ui:field": "link",
