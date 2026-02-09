@@ -81,6 +81,23 @@ async function uploadUserSettings({ serverUrl, userSettings, settingKeysToRemove
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' });
     let userSettingsToUpload = userSettings;
+    // TODO: Remove this legacy migration once all environments have fully switched to
+    // `userSettings.overridingNumberFormat` as the single source of truth (and older per-user
+    // `overridingPhoneNumberFormat/2/3` are no longer sent/stored).
+    // Backward-compatible migration: if per-user overridingPhoneNumberFormat* exist, ensure overridingNumberFormat exists too
+    if (userSettingsToUpload && !userSettingsToUpload.overridingNumberFormat) {
+        const format1 = userSettingsToUpload?.overridingPhoneNumberFormat?.value;
+        const format2 = userSettingsToUpload?.overridingPhoneNumberFormat2?.value;
+        const format3 = userSettingsToUpload?.overridingPhoneNumberFormat3?.value;
+        if (format1 || format2 || format3) {
+            userSettingsToUpload.overridingNumberFormat = {
+                customizable: userSettingsToUpload?.overridingPhoneNumberFormat?.customizable ?? true,
+                numberFormatter1: format1 ?? '',
+                numberFormatter2: format2 ?? '',
+                numberFormatter3: format3 ?? '',
+            }
+        }
+    }
     if (userSettingsToUpload.selectedRegion) {
         userSettingsToUpload.selectedRegion.value = selectedRegion;
     }
@@ -105,6 +122,24 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
     const rcAccessToken = getRcAccessToken();
     const manifest = await getManifest();
     let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
+    // TODO: Remove this mirroring once all UI/logic reads `overridingNumberFormat` directly and we no longer
+    // need to support the legacy per-user `overridingPhoneNumberFormat/2/3` fields.
+    // Backward-compatible migration: reflect overridingNumberFormat into overridingPhoneNumberFormat* for older UI and tools
+    if (userSettings?.overridingNumberFormat) {
+        const customizable = userSettings.overridingNumberFormat.customizable ?? true;
+        userSettings.overridingPhoneNumberFormat = {
+            customizable,
+            value: userSettings.overridingNumberFormat.numberFormatter1 ?? '',
+        };
+        userSettings.overridingPhoneNumberFormat2 = {
+            customizable,
+            value: userSettings.overridingNumberFormat.numberFormatter2 ?? '',
+        };
+        userSettings.overridingPhoneNumberFormat3 = {
+            customizable,
+            value: userSettings.overridingNumberFormat.numberFormatter3 ?? '',
+        };
+    }
     if (changedSettings) {
         for (const k of Object.keys(changedSettings)) {
             if (userSettings[k] === undefined || !userSettings[k].value) {

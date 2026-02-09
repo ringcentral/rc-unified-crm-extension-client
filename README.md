@@ -14,7 +14,7 @@ Assuming you have already setup your local server, let's then start setting up y
 
 ## Add your CRM
 
-This client app is a Chrome extension which has url matcher to control its accessibilities. To add your CRM urls:
+This client app is a Browser extension which has url matcher to control its accessibilities. To add your CRM urls:
 
 1. Open `public/manifest.json`
 2. Under `content_scripts.matches`, add your CRM's url

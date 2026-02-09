@@ -100,10 +100,12 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             switch (f.type) {
                 case 'selection':
                     if (defaultContact.isNewContact && f.contactTypeDependent) {
+                        const baseOptions = [...defaultContact.additionalInfo[defaultContact.defaultContactType][f.const]];
+                        const includeNoneOption = f.includeNoneOption !== false;
                         additionalFields[f.const] = {
                             title: f.title,
                             type: 'string',
-                            oneOf: [...defaultContact.additionalInfo[defaultContact.defaultContactType][f.const], { const: 'none', title: t('common.labels.none') }],
+                            oneOf: includeNoneOption ? [...baseOptions, { const: 'none', title: t('common.labels.none') }] : baseOptions,
                             associationField: !!f.contactDependent
                         }
                     }
@@ -111,10 +113,12 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         if (defaultContact?.additionalInfo?.[f.const] === undefined) {
                             continue;
                         }
+                        const baseOptions = [...defaultContact.additionalInfo[f.const]];
+                        const includeNoneOption = f.includeNoneOption !== false;
                         additionalFields[f.const] = {
                             title: f.title,
                             type: 'string',
-                            oneOf: [...defaultContact.additionalInfo[f.const], { const: 'none', title: t('common.labels.none') }],
+                            oneOf: includeNoneOption ? [...baseOptions, { const: 'none', title: t('common.labels.none') }] : baseOptions,
                             associationField: !!f.contactDependent
                         }
                     }
@@ -527,10 +531,12 @@ page.schema.properties.callbackDateTime = {
                             if (f.contactDependent && (contact?.additionalInfo?.[f.const] === undefined)) {
                                 continue;
                             }
+                            const baseOptions = [...contact.additionalInfo[f.const]];
+                            const includeNoneOption = f.includeNoneOption !== false;
                             additionalFields[f.const] = {
                                 title: f.title,
                                 type: 'string',
-                                oneOf: [...contact.additionalInfo[f.const], { const: 'none', title: t('common.labels.none') }],
+                                oneOf: includeNoneOption ? [...baseOptions, { const: 'none', title: t('common.labels.none') }] : baseOptions,
                                 associationField: f.contactDependent
                             }
                             additionalFieldsValue[f.const] = f.contactDependent ?

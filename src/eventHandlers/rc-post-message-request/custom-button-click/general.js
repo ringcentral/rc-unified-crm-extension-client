@@ -12,6 +12,26 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, r
     for (const k of settingDataKeys) {
         adminSettings.userSettings[k] = data.body.button.formData[k];
     }
+
+    // Map custom settings override format fields back into overridingNumberFormat object
+    if (data.body.button.id === 'customSettingsPage') {
+        const f = data.body.button.formData;
+        if (f.overridingNumberFormatCustomizable !== undefined || f.overridingNumberFormat1 || f.overridingNumberFormat2 || f.overridingNumberFormat3) {
+            adminSettings.userSettings.overridingNumberFormat = {
+                customizable: f.overridingNumberFormatCustomizable ?? adminSettings.userSettings?.overridingNumberFormat?.customizable ?? true,
+                numberFormatter1: f.overridingNumberFormat1 ?? adminSettings.userSettings?.overridingNumberFormat?.numberFormatter1 ?? '',
+                numberFormatter2: f.overridingNumberFormat2 ?? adminSettings.userSettings?.overridingNumberFormat?.numberFormatter2 ?? '',
+                numberFormatter3: f.overridingNumberFormat3 ?? adminSettings.userSettings?.overridingNumberFormat?.numberFormatter3 ?? '',
+            }
+            delete adminSettings.userSettings.overridingNumberFormatCustomizable;
+            delete adminSettings.userSettings.overridingNumberFormat1;
+            delete adminSettings.userSettings.overridingNumberFormat2;
+            delete adminSettings.userSettings.overridingNumberFormat3;
+            delete adminSettings.userSettings.overridingNumberFormatTitle;
+            delete adminSettings.userSettings.overridingNumberFormatWarning;
+        }
+    }
+
     await chrome.storage.local.set({ adminSettings });
     try {
         await adminCore.uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
