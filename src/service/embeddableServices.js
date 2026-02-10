@@ -15,7 +15,11 @@ async function preconfigureServiceManifest() {
         showAuthRedDot: true,
         authorized: false,
         customizedPageInputChangedEventPath: '/customizedPage/inputChanged',
-        buttonEventPath: '/custom-button-click'
+        buttonEventPath: '/custom-button-click',
+        authorizationLinks: [
+            { label: 'Support', uri: 'https://community.ringcentral.com/groups/unified-crm-extension-22' },
+            { label: 'Terms of use', uri: 'https://www.ringcentral.com/ca/en/a/legal/eulatos.html' },
+        ]
     }
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',
@@ -47,7 +51,7 @@ async function getServiceManifest() {
         type: 'rc-adapter-update-sms-typing-time-tracking',
         enabled: !!platform?.trackSmsTypingDuration,
     }, '*');
-   
+
     const services = {
         name: platformName,
         displayName: platform.displayName,
