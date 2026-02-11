@@ -51,7 +51,7 @@
       "extensionAuthor": "Auteur: RingCentral, Inc.",
       "versionLabel": "Versie: {version}",
       "eula": "Eindgebruikerslicentieovereenkomst",
-      "adapter": "Adapter",
+      "adapter": "Connector",
       "adapterAuthor": "Auteur: {author}",
       "website": "Website",
       "support": "Ondersteuning"
