@@ -125,7 +125,6 @@ async function getAppointmentsPageWithRecords({ manifest, jwtToken, tab = 'upcom
       title: participantName,
       description: `${date}${date && time ? ' ' : ''}${time}`,
       authorName: statusText,
-      meta: tab === 'upcoming' ? 'Upcoming' : 'Past',
       actions,
       additionalInfo: {
         thirdPartyAppointmentId: String(id),
