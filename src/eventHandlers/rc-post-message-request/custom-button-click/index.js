@@ -65,6 +65,21 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             await customizedBannerHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
     }
+    // Embeddable v3 tab header actions (top-right icons)
+    if (data.body.button.type === 'customizedTabAction') {
+        // Only handle our Appointments tab actions here.
+        if (data.body.button.tabId === 'appointmentsPage') {
+            switch (data.body.button.id) {
+                case 'appointmentsHeaderNew':
+                    await appointmentCreateHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+                    break;
+                case 'appointmentsHeaderRefresh':
+                    await appointmentRefreshListHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+                    break;
+            }
+        }
+        return;
+    }
     // button id is: {actionId}-{itemId}-action
     const listButtonActionIdAndItemId = data.body.button.id.split('-action')[0]; // {actionId}-{itemId}
     const listButtonActionId = listButtonActionIdAndItemId.split('-')[0]; // {actionId}

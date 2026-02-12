@@ -30,6 +30,11 @@ function getAppointmentsPageRender({ selectedTab = 'upcoming', scope = 'mine' } 
     iconUri: userReportIcon,
     activeIconUri: userReportIconActive,
     darkIconUri: userReportIconDark,
+    // Tab header actions (Embeddable v3.x). These show as icon buttons on top-right.
+    actions: [
+      { id: 'appointmentsHeaderNew', icon: 'new', title: 'New appointment' },
+      { id: 'appointmentsHeaderRefresh', icon: 'refresh', title: 'Refresh' },
+    ],
     schema: {
       type: 'object',
       properties: {
@@ -44,14 +49,6 @@ function getAppointmentsPageRender({ selectedTab = 'upcoming', scope = 'mine' } 
           title: 'Show',
           enum: ['mine', 'all'],
           enumNames: ['My appointments', 'All appointments'],
-        },
-        appointmentCreateButton: {
-          type: 'string',
-          title: '+ New',
-        },
-        appointmentsRefreshButton: {
-          type: 'string',
-          title: 'Refresh',
         },
         appointments: {
           type: 'string',
@@ -69,18 +66,6 @@ function getAppointmentsPageRender({ selectedTab = 'upcoming', scope = 'mine' } 
       scope: {
         // Use a dropdown to keep the UI compact and consistent with other filters (e.g. Calldown)
         'ui:widget': 'select',
-      },
-      appointmentCreateButton: {
-        'ui:field': 'button',
-        'ui:variant': 'contained',
-        'ui:fullWidth': false,
-        'ui:options': { grid: { xs: 6, sm: 6 } },
-      },
-      appointmentsRefreshButton: {
-        'ui:field': 'button',
-        'ui:variant': 'outlined',
-        'ui:fullWidth': false,
-        'ui:options': { grid: { xs: 6, sm: 6 } },
       },
       appointments: { 'ui:field': 'list', 'ui:showIconAsAvatar': false },
     },
@@ -152,7 +137,8 @@ async function getAppointmentsPageWithRecords({ manifest, jwtToken, tab = 'upcom
       {
         const: 'noAppointments',
         title: 'No appointments',
-        description: 'Try changing filters or press Refresh.',
+        description: 'Try changing filters or use Refresh.',
+        // Keep list-level refresh as a fallback action in empty state.
         actions: [{ id: 'appointmentsRefreshButton', title: 'Refresh', icon: 'refresh' }],
         additionalInfo: {},
       },
