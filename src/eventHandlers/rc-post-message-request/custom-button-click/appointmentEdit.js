@@ -4,7 +4,7 @@ async function onEvent({ data, manifest, listButtonItemId }) {
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
   try {
     const { appointmentsListCache = [] } = await chrome.storage.local.get('appointmentsListCache');
-    const appt = (appointmentsListCache || []).find(a => String(a.id ?? a.appointmentId ?? a.externalId ?? '') === String(listButtonItemId));
+    const appt = (appointmentsListCache || []).find(a => String(a.thirdPartyAppointmentId ?? a.id ?? a.externalId ?? '') === String(listButtonItemId));
     if (!appt) {
       return;
     }

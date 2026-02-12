@@ -92,7 +92,14 @@ async function getAppointmentsPageWithRecords({ manifest, jwtToken, tab = 'upcom
   await chrome.storage.local.set({ appointmentsListCache: items, appointmentsListState: { tab, scope } });
 
   page.schema.properties.appointments.oneOf = (items || []).map((a) => {
-    const id = a.id ?? a.appointmentId ?? a.externalId ?? '';
+    // Canonical appointment key: thirdPartyAppointmentId (matches create response appointmentId/thirdPartyAppointmentId)
+    // Backend may return `id: null` but `thirdPartyAppointmentId: "16053"` for newly created appointments.
+    const thirdPartyAppointmentIdRaw = a.thirdPartyAppointmentId ?? '';
+    const thirdPartyAppointmentId =
+      thirdPartyAppointmentIdRaw && String(thirdPartyAppointmentIdRaw).toUpperCase() !== 'N/A'
+        ? String(thirdPartyAppointmentIdRaw)
+        : '';
+    const id = thirdPartyAppointmentId || String(a.id ?? a.externalId ?? '');
     const participantName =
       a.participantName ??
       a.customerName ??
@@ -105,12 +112,12 @@ async function getAppointmentsPageWithRecords({ manifest, jwtToken, tab = 'upcom
     const statusText = normalizeStatus(a.status);
 
     const actions = [
-      { id: 'appointmentConfirm', title: 'Confirm', icon: 'check' },
-      { id: 'appointmentCancel', title: 'Cancel', icon: 'close', color: 'danger.b03' },
       { id: 'appointmentEdit', title: 'Edit', icon: 'edit' },
-      { id: 'appointmentOpenContact', title: 'Open Contact Info', icon: 'view' },
+      { id: 'appointmentConfirm', title: 'Confirm', icon: 'check' },
       { id: 'appointmentOpenAppointment', title: 'Open Appointment Info', icon: 'externalLink' },
+      { id: 'appointmentOpenContact', title: 'Open Contact Info', icon: 'view' },
       { id: 'appointmentRefresh', title: 'Refresh', icon: 'refresh' },
+      { id: 'appointmentCancel', title: 'Cancel', icon: 'close', color: 'danger.b03' },
     ];
 
     return {
@@ -121,7 +128,7 @@ async function getAppointmentsPageWithRecords({ manifest, jwtToken, tab = 'upcom
       meta: tab === 'upcoming' ? 'Upcoming' : 'Past',
       actions,
       additionalInfo: {
-        appointmentId: String(id),
+        thirdPartyAppointmentId: String(id),
         contactId: a.contactId ?? a.customerId ?? '',
         contactType: a.contactType ?? 'contact',
         phoneNumber: a.phoneNumber ?? a.customerPhone ?? '',

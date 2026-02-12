@@ -41,7 +41,12 @@ function toUtcIsoFromLocalDateTime({ date, time }) {
 }
 
 function getAppointmentEditPageRender({ appointment }) {
-  const id = appointment?.id ?? appointment?.appointmentId ?? appointment?.externalId ?? '';
+  const thirdPartyAppointmentIdRaw = appointment?.thirdPartyAppointmentId ?? '';
+  const thirdPartyAppointmentId =
+    thirdPartyAppointmentIdRaw && String(thirdPartyAppointmentIdRaw).toUpperCase() !== 'N/A'
+      ? String(thirdPartyAppointmentIdRaw)
+      : '';
+  const id = thirdPartyAppointmentId || String(appointment?.id ?? appointment?.externalId ?? '');
   const participantName =
     appointment?.participantName ??
     appointment?.customerName ??
@@ -63,7 +68,7 @@ function getAppointmentEditPageRender({ appointment }) {
       type: 'object',
       required: [],
       properties: {
-        appointmentId: { type: 'string', title: 'Appointment ID' },
+        thirdPartyAppointmentId: { type: 'string', title: 'Appointment ID' },
         participantName: { type: 'string', title: 'Participant' },
         summary: { type: 'string', title: 'Summary' },
         appointmentDate: { type: 'string', title: 'Date', format: 'date' },
@@ -83,10 +88,10 @@ function getAppointmentEditPageRender({ appointment }) {
       },
     },
     uiSchema: {
-      appointmentId: { 'ui:readonly': true },
+      thirdPartyAppointmentId: { 'ui:readonly': true },
       participantName: { 'ui:readonly': true },
       'ui:order': [
-        'appointmentId',
+        'thirdPartyAppointmentId',
         'participantName',
         'appointmentDate',
         'appointmentTime',
@@ -103,7 +108,7 @@ function getAppointmentEditPageRender({ appointment }) {
       appointmentSaveButton: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:fullWidth': true },
     },
     formData: {
-      appointmentId: String(id),
+      thirdPartyAppointmentId: String(id),
       participantName,
       summary: appointment?.summary ?? appointment?.description ?? '',
       appointmentDate: start ? toLocalDateValue(start) : '',
@@ -116,7 +121,7 @@ function getAppointmentEditPageRender({ appointment }) {
 }
 
 async function saveAppointmentEdits({ manifest, jwtToken, formData }) {
-  const appointmentId = formData?.appointmentId;
+  const appointmentId = formData?.thirdPartyAppointmentId;
   if (!appointmentId) return null;
 
   const startTime = toUtcIsoFromLocalDateTime({

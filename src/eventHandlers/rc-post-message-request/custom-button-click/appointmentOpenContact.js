@@ -7,14 +7,14 @@ async function onEvent({ data, manifest, platformName, listButtonItemId }) {
     const { appointmentsListCache } = await chrome.storage.local.get({ appointmentsListCache: [] });
 
     const rowId =
-      (btn?.additionalInfo?.appointmentId) ||
+      (btn?.additionalInfo?.thirdPartyAppointmentId) ||
       listButtonItemId ||
       btn?.listItem?.const ||
       btn?.value ||
       '';
 
     const cached = (appointmentsListCache || []).find((a) => {
-      const id = a?.id ?? a?.appointmentId ?? a?.externalId ?? '';
+      const id = a?.thirdPartyAppointmentId ?? a?.id ?? a?.externalId ?? '';
       return String(id) === String(rowId);
     });
 

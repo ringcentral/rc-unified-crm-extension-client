@@ -9,7 +9,7 @@ async function onEvent({ data, listButtonItemId }) {
   }
   // Attempt to resolve from cache
   const { appointmentsListCache = [] } = await chrome.storage.local.get('appointmentsListCache');
-  const appt = (appointmentsListCache || []).find(a => String(a.id ?? a.appointmentId ?? a.externalId ?? '') === String(listButtonItemId));
+  const appt = (appointmentsListCache || []).find(a => String(a.thirdPartyAppointmentId ?? a.id ?? a.externalId ?? '') === String(listButtonItemId));
   const cachedUrl = appt?.appointmentUrl ?? appt?.externalUrl ?? appt?.url ?? '';
   if (cachedUrl) {
     window.open(cachedUrl, '_blank');
