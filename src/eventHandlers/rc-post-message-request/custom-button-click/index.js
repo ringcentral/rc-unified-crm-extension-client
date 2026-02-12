@@ -80,6 +80,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         }
         return;
     }
+    // Form submit button (page header submit): button id is the page id
+    // https://github.com/ringcentral/ringcentral-embeddable/blob/3.x/docs/integration/custom-tab.md#handle-button-clicked-and-input-changed-event
+    if (data.body.button.id === 'appointmentEditPage') {
+        await appointmentSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+        return;
+    }
+
     // button id is: {actionId}-{itemId}-action
     const listButtonActionIdAndItemId = data.body.button.id.split('-action')[0]; // {actionId}-{itemId}
     const listButtonActionId = listButtonActionIdAndItemId.split('-')[0]; // {actionId}

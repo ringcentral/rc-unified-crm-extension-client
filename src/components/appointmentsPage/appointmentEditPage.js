@@ -58,7 +58,6 @@ function getAppointmentEditPageRender({ appointment }) {
   const durationHours = Math.floor(durationMinutes / 60);
   const durationRemainderMinutes = durationMinutes % 60;
   const roundedMinutes = [0, 15, 30, 45].includes(durationRemainderMinutes) ? durationRemainderMinutes : 0;
-  const status = String(appointment?.status ?? 'scheduled').toLowerCase();
 
   return {
     id: 'appointmentEditPage',
@@ -75,19 +74,13 @@ function getAppointmentEditPageRender({ appointment }) {
         appointmentTime: { type: 'string', title: 'Time', format: 'time' },
         durationHours: { type: 'string', title: 'Duration', oneOf: buildDurationOptionsHours(8) },
         durationMinutes: { type: 'string', title: ' ', oneOf: buildDurationOptionsMinutes() },
-        status: {
-          type: 'string',
-          title: 'Status',
-          oneOf: [
-            { const: 'scheduled', title: 'Scheduled' },
-            { const: 'confirmed', title: 'Confirmed' },
-            { const: 'canceled', title: 'Canceled' },
-          ],
-        },
-        appointmentSaveButton: { type: 'string', title: 'Save' },
       },
     },
     uiSchema: {
+      // Use the embeddable page header submit button (top-right) like the call log page.
+      submitButtonOptions: {
+        submitText: 'Update',
+      },
       thirdPartyAppointmentId: { 'ui:readonly': true },
       participantName: { 'ui:readonly': true },
       'ui:order': [
@@ -98,14 +91,11 @@ function getAppointmentEditPageRender({ appointment }) {
         'durationHours',
         'durationMinutes',
         'summary',
-        'status',
-        'appointmentSaveButton',
       ],
       appointmentDate: { 'ui:widget': 'date' },
       appointmentTime: { 'ui:widget': 'time' },
       durationHours: { 'ui:widget': 'select' },
       durationMinutes: { 'ui:widget': 'select' },
-      appointmentSaveButton: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:fullWidth': true },
     },
     formData: {
       thirdPartyAppointmentId: String(id),
@@ -115,7 +105,6 @@ function getAppointmentEditPageRender({ appointment }) {
       appointmentTime: start ? toLocalTimeValue(start) : '',
       durationHours: String(durationHours),
       durationMinutes: String(roundedMinutes),
-      status,
     },
   };
 }
@@ -131,10 +120,10 @@ async function saveAppointmentEdits({ manifest, jwtToken, formData }) {
   const durationMinutesTotal =
     (Number(formData?.durationHours ?? 0) * 60) + (Number(formData?.durationMinutes ?? 0));
   const patch = {
+    participantName: formData?.participantName ?? '',
     summary: formData?.summary ?? '',
     startTime,
     durationMinutes: Number.isFinite(durationMinutesTotal) ? durationMinutesTotal : 60,
-    status: formData?.status ?? 'scheduled',
   };
   return await updateAppointment({
     serverUrl: manifest.serverUrl,
