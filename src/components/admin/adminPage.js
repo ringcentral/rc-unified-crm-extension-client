@@ -22,6 +22,10 @@ function getAdminPageRender({ platform }) {
                         {
                             const: "managedSettings",
                             title: t('pages.admin.managedSettings'),
+                        },
+                        {
+                            const: "plugins",
+                            title: t('pages.admin.plugins'),
                         }
                     ]
                 }

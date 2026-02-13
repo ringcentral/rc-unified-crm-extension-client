@@ -73,6 +73,7 @@
     "admin": {
       "title": "管理者",
       "managedSettings": "管理設定",
+      "plugins": "プラグイン",
       "serverSideLogging": "サーバーサイドロギング（ベータ）"
     },
     "managedSettings": {
@@ -82,7 +83,8 @@
       "activityLogging": "アクティビティログ",
       "callPop": "通話ポップ",
       "advancedFeatures": "高度な機能",
-      "customSettings": "カスタム設定"
+      "customSettings": "カスタム設定",
+      "plugins": "プラグイン"
     },
     "generalSettings": {
       "title": "一般",

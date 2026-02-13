@@ -73,6 +73,7 @@
     "admin": {
       "title": "Admin",
       "managedSettings": "Managed settings",
+      "plugins": "Plugins",
       "serverSideLogging": "Server side logging (Beta)"
     },
     "managedSettings": {
@@ -82,7 +83,8 @@
       "activityLogging": "Activity logging",
       "callPop": "Call-pop",
       "advancedFeatures": "Advanced features",
-      "customSettings": "Custom settings"
+      "customSettings": "Custom settings",
+      "plugins": "Plugins"
     },
     "generalSettings": {
       "title": "General",

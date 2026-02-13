@@ -73,6 +73,7 @@
     "admin": {
       "title": "Admin",
       "managedSettings": "Verwaltete Einstellungen",
+      "plugins": "Plugins",
       "serverSideLogging": "Serverseitige Protokollierung (Beta)"
     },
     "managedSettings": {
@@ -82,7 +83,8 @@
       "activityLogging": "Aktivitätsprotokollierung",
       "callPop": "Anruf-Pop",
       "advancedFeatures": "Erweiterte Funktionen",
-      "customSettings": "Benutzerdefinierte Einstellungen"
+      "customSettings": "Benutzerdefinierte Einstellungen",
+      "plugins": "Plugins"
     },
     "generalSettings": {
       "title": "Allgemein",

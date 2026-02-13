@@ -47,7 +47,6 @@ import selectPlatformHandler from './selectPlatform';
 import getErrorLogRecordPageNextStepButtonHandler from './getErrorLogRecordPageNextStepButton';
 import errorLogRecordPageStartButtonHandler from './errorLogRecordPageStartButton';
 import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
-import openPluginMarketListPageHandler from './pluginMarketListPage';
 import openInstalledPluginListPageHandler from './installedPluginListPage';
 import selectPluginHandler from './selectPlugin';
 import pluginConfigurePageSubmitHandler from './pluginConfigurePageSubmit';
@@ -109,15 +108,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'feedbackPage':
             await feedbackPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
-            break;
-        case 'installedPluginListPage':
-            // Re-worded as 'Explore', which is to open available plugins list page for installation
-            if (data.body.button.type === 'submit') {
-                await openPluginMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, viewType: 'explore' });
-            }
-            break;
-        case 'explorePluginButton':
-            await openPluginMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, viewType: 'explore' });
             break;
         case 'openInstalledPluginListPage':
             await openInstalledPluginListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

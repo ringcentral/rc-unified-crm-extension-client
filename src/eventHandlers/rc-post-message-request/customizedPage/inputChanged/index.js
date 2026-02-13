@@ -31,6 +31,7 @@ import adminGoogleSheetsPageHandler from './adminGoogleSheetsPage';
 import googleSheetsAdminConfigHandler from './googleSheetsAdminConfig';
 import getErrorLogRecrodPageHandler from './getErrorLogRecordPage';
 import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
+import openPluginMarketListPageHandler from './pluginMarketListPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -97,6 +98,16 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'managedSettings':
             await managedSettingsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'plugins':
+            switch (data.body.page.id) {
+                case 'adminPage':
+                    await openPluginMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, viewType: 'explore' });
+                    break;
+                case 'managedSettings':
+                    // TODO: configure plugin fields
+                    break;
+            }
             break;
         case 'appearance':
             await appearanceHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

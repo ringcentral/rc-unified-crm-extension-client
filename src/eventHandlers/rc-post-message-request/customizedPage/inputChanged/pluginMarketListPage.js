@@ -1,6 +1,6 @@
-import { getPluginMarketListPageRender } from '../../../components/pluginMarketListPage';
-import { getPluginList } from '../../../service/manifestService';
-import { getUserSettingsOnline } from '../../../core/user';
+import { getPluginMarketListPageRender } from '../../../../components/pluginMarketListPage';
+import { getPluginList } from '../../../../service/manifestService';
+import { getUserSettingsOnline } from '../../../../core/user';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform, viewType }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');

@@ -73,6 +73,7 @@
     "admin": {
       "title": "管理员",
       "managedSettings": "托管设置",
+      "plugins": "插件",
       "serverSideLogging": "服务器端日志记录（测试版）"
     },
     "managedSettings": {
@@ -82,7 +83,8 @@
       "activityLogging": "活动日志",
       "callPop": "来电弹窗",
       "advancedFeatures": "高级功能",
-      "customSettings": "自定义设置"
+      "customSettings": "自定义设置",
+      "plugins": "插件"
     },
     "generalSettings": {
       "title": "常规",

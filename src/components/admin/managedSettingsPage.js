@@ -15,10 +15,10 @@ function getManagedSettingsPageRender({ crmManifest }) {
                         const: "generalSettings",
                         title: t('pages.managedSettings.general')
                     },
-                        ...(crmManifest.name === 'googleSheets' ? [{
-                            const: "googleSheetsAdminConfig",
-                            title: t('pages.managedSettings.googleSheetsConfig'),
-                        }] : []),
+                    ...(crmManifest.name === 'googleSheets' ? [{
+                        const: "googleSheetsAdminConfig",
+                        title: t('pages.managedSettings.googleSheetsConfig'),
+                    }] : []),
                     {
                         const: "callAndSMSLogging",
                         title: t('pages.managedSettings.activityLogging')
@@ -26,6 +26,10 @@ function getManagedSettingsPageRender({ crmManifest }) {
                     {
                         const: "contactSetting",
                         title: t('pages.managedSettings.callPop')
+                    },
+                    {
+                        const: "plugins",
+                        title: t('pages.managedSettings.plugins'),
                     },
                     {
                         const: "advancedFeaturesSetting",

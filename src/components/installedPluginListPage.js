@@ -37,9 +37,6 @@ function getInstalledPluginListPageRender({ viewType, pluginList }) {
             plugins: {
                 "ui:field": "list",
                 "ui:showIconAsAvatar": false
-            },
-            submitButtonOptions: {
-                submitText: 'Explore'
             }
         },
         formData: {
@@ -51,19 +48,10 @@ function getInstalledPluginListPageRender({ viewType, pluginList }) {
         page.schema.properties.helperText = {
             type: 'string',
             description: 'No plugin installed'
-        },
-            page.uiSchema.helperText = {
-                "ui:field": "typography",
-                "ui:variant": "body1",
-            }
-        page.schema.properties.explorePluginButton = {
-            type: 'string',
-            title: 'Explore plugins'
-        }
-        page.uiSchema.explorePluginButton = {
-            "ui:field": "button",
-            "ui:variant": "outlined",
-            "ui:fullWidth": true
+        };
+        page.uiSchema.helperText = {
+            "ui:field": "typography",
+            "ui:variant": "body1",
         }
     }
     return page;
