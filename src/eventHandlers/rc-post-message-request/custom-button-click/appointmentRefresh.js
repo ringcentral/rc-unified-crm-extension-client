@@ -9,12 +9,12 @@ async function onEvent({ data, manifest, listButtonItemId }) {
     if (appointmentId) {
       await refreshAppointment({ serverUrl: manifest.serverUrl, jwtToken: rcUnifiedCrmExtJwt, appointmentId });
     }
-    const { appointmentsListState = { tab: 'upcoming', scope: 'mine' } } = await chrome.storage.local.get('appointmentsListState');
+    const { appointmentsListState = { tab: 'upcoming', searchWithFilters: { search: '', filter: 'All' } } } = await chrome.storage.local.get('appointmentsListState');
     const updated = await appointmentsPage.getAppointmentsPageWithRecords({
       manifest,
       jwtToken: rcUnifiedCrmExtJwt,
       tab: appointmentsListState.tab,
-      scope: appointmentsListState.scope,
+      searchWithFilters: appointmentsListState.searchWithFilters ?? {},
       forceSync: false,
     });
     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({

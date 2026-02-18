@@ -20,7 +20,23 @@ function normalizeStatus(s) {
   return v.charAt(0).toUpperCase() + v.slice(1);
 }
 
-function getAppointmentsPageRender({ selectedTab = 'upcoming', scope = 'mine' } = {}) {
+function normalizeStatusKey(s) {
+  const v = String(s || '').toLowerCase();
+  if (v === 'cancelled') return 'canceled';
+  return v || 'scheduled';
+}
+
+function matchesStatusFilter(statusKey, filterLabel) {
+  const f = String(filterLabel || 'All');
+  if (f === 'All') return true;
+  if (f === 'Scheduled') return statusKey === 'scheduled' || statusKey === 'confirmed';
+  if (f === 'Canceled') return statusKey === 'canceled';
+  return true;
+}
+
+function getAppointmentsPageRender({ selectedTab = 'upcoming', searchWithFilters = {} } = {}) {
+  const resolvedSearch = String(searchWithFilters?.search ?? '');
+  const resolvedFilter = String(searchWithFilters?.filter ?? 'All');
   return {
     id: 'appointmentsPage',
     title: 'Appointments',
@@ -44,11 +60,12 @@ function getAppointmentsPageRender({ selectedTab = 'upcoming', scope = 'mine' } 
           enum: ['upcoming', 'past'],
           enumNames: ['Upcoming', 'Past'],
         },
-        scope: {
-          type: 'string',
-          title: 'Show',
-          enum: ['mine', 'all'],
-          enumNames: ['My appointments', 'All appointments'],
+        searchWithFilters: {
+          type: 'object',
+          properties: {
+            search: { type: 'string', title: 'Search' },
+            filter: { type: 'string', title: 'Filter' },
+          },
         },
         appointments: {
           type: 'string',
@@ -63,35 +80,73 @@ function getAppointmentsPageRender({ selectedTab = 'upcoming', scope = 'mine' } 
         'ui:inline': true,
         'ui:tab': true,
       },
-      scope: {
-        // Use a dropdown to keep the UI compact and consistent with other filters (e.g. Calldown)
-        'ui:widget': 'select',
+      searchWithFilters: {
+        'ui:field': 'search',
+        'ui:placeholder': 'Search...',
+        'ui:filters': ['All', 'Scheduled', 'Canceled'],
+        'ui:previewLength': 2,
       },
       appointments: { 'ui:field': 'list', 'ui:showIconAsAvatar': false },
     },
     formData: {
       tab: selectedTab,
-      scope,
+      searchWithFilters: {
+        search: resolvedSearch,
+        filter: resolvedFilter,
+      },
     },
   };
 }
 
-async function getAppointmentsPageWithRecords({ manifest, jwtToken, tab = 'upcoming', scope = 'mine', forceSync = false }) {
-  const page = getAppointmentsPageRender({ selectedTab: tab, scope });
-  const mineOnly = scope === 'mine';
+async function getAppointmentsPageWithRecords({ manifest, jwtToken, tab = 'upcoming', searchWithFilters = {}, forceSync = false }) {
+  const page = getAppointmentsPageRender({ selectedTab: tab, searchWithFilters });
+  const resolvedSearch = String(searchWithFilters?.search ?? '').trim().toLowerCase();
+  const resolvedFilter = String(searchWithFilters?.filter ?? 'All');
 
   const items = await listAppointments({
     serverUrl: manifest.serverUrl,
     jwtToken,
     range: tab,
-    mineOnly,
+    mineOnly: false,
     forceSync,
   });
 
-  // Cache for action handlers (confirm/cancel/edit/open/refresh)
-  await chrome.storage.local.set({ appointmentsListCache: items, appointmentsListState: { tab, scope } });
+  // Apply client-side filters (fallback in case backend doesn't filter reliably yet)
+  const nowTs = Date.now();
+  const filtered = (items || []).filter((a) => {
+    const start = a.startTimeUtc ?? a.startTime ?? a.start ?? a.when ?? null;
+    const dt = start ? new Date(start) : null;
+    const ts = dt && !Number.isNaN(dt.getTime()) ? dt.getTime() : null;
+    if (tab === 'upcoming' && ts !== null && ts < nowTs) return false;
+    if (tab === 'past' && ts !== null && ts >= nowTs) return false;
 
-  page.schema.properties.appointments.oneOf = (items || []).map((a) => {
+    const statusKey = normalizeStatusKey(a.status);
+    if (!matchesStatusFilter(statusKey, resolvedFilter)) return false;
+
+    if (resolvedSearch) {
+      const hay = [
+        a.participantName,
+        a.customerName,
+        a.attendeeName,
+        a.contactName,
+        a.summary,
+        a.description,
+        a.phoneNumber,
+        a.customerPhone,
+        a.thirdPartyAppointmentId,
+      ].filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(resolvedSearch)) return false;
+    }
+    return true;
+  });
+
+  // Cache for action handlers (confirm/cancel/edit/open/refresh)
+  await chrome.storage.local.set({
+    appointmentsListCache: filtered,
+    appointmentsListState: { tab, searchWithFilters: { search: searchWithFilters?.search ?? '', filter: resolvedFilter } },
+  });
+
+  page.schema.properties.appointments.oneOf = (filtered || []).map((a) => {
     // Canonical appointment key: thirdPartyAppointmentId (matches create response appointmentId/thirdPartyAppointmentId)
     // Backend may return `id: null` but `thirdPartyAppointmentId: "16053"` for newly created appointments.
     const thirdPartyAppointmentIdRaw = a.thirdPartyAppointmentId ?? '';

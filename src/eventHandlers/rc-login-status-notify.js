@@ -93,13 +93,22 @@ async function onEvent({ data }) {
             }
 
             // 2.3.3.b init appointments tab (Automotive Connect)
+            // Register a placeholder tab immediately so it shows up without requiring reload,
+            // then attempt to load records (which may fail transiently right after login).
+            try {
+                const placeholder = appointmentsPage.getAppointmentsPageRender({ selectedTab: 'upcoming' });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: placeholder,
+                }, '*');
+            } catch (e) { /* ignore */ }
             try {
                 const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                 const appointmentsTab = await appointmentsPage.getAppointmentsPageWithRecords({
                     manifest,
                     jwtToken: rcUnifiedCrmExtJwt,
                     tab: 'upcoming',
-                    scope: 'mine',
+                    searchWithFilters: { search: '', filter: 'All' },
                     forceSync: false
                 });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

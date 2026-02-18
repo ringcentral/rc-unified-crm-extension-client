@@ -57,7 +57,7 @@ async function onMessage({ request, sendResponse }) {
                 manifest,
                 jwtToken: rcUnifiedCrmExtJwt,
                 tab: 'upcoming',
-                scope: 'mine',
+                searchWithFilters: { search: '', filter: 'All' },
                 forceSync: false
             });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

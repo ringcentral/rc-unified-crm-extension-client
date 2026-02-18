@@ -18,12 +18,12 @@ async function onEvent({ data, manifest }) {
     showNotification({ level: 'success', message: 'Appointment created.', ttl: 3000 });
 
     // Return to list
-    const { appointmentsListState = { tab: 'upcoming', scope: 'mine' } } = await chrome.storage.local.get('appointmentsListState');
+    const { appointmentsListState = { tab: 'upcoming', searchWithFilters: { search: '', filter: 'All' } } } = await chrome.storage.local.get('appointmentsListState');
     const updatedList = await appointmentsPage.getAppointmentsPageWithRecords({
       manifest,
       jwtToken: rcUnifiedCrmExtJwt,
       tab: appointmentsListState.tab,
-      scope: appointmentsListState.scope,
+      searchWithFilters: appointmentsListState.searchWithFilters ?? {},
       forceSync: true,
     });
     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
