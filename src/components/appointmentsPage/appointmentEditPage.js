@@ -67,7 +67,6 @@ function getAppointmentEditPageRender({ appointment }) {
       type: 'object',
       required: [],
       properties: {
-        thirdPartyAppointmentId: { type: 'string', title: 'Appointment ID' },
         participantName: { type: 'string', title: 'Participant' },
         summary: { type: 'string', title: 'Summary' },
         appointmentDate: { type: 'string', title: 'Date', format: 'date' },
@@ -81,7 +80,6 @@ function getAppointmentEditPageRender({ appointment }) {
       submitButtonOptions: {
         submitText: 'Update',
       },
-      thirdPartyAppointmentId: { 'ui:readonly': true },
       participantName: { 'ui:readonly': true },
       'ui:order': [
         'thirdPartyAppointmentId',

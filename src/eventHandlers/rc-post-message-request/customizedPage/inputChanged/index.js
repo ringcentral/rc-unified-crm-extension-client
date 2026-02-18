@@ -8,6 +8,7 @@ import calldownPageHandler from './calldownPage';
 import googleSheetsPageHandler from './googleSheetsPage';
 import contactSearchResultCallLogHandler from './contactSearchResultCallLog';
 import contactSearchResultMessageLogHandler from './contactSearchResultMessageLog';
+import contactSearchResultAppointmentHandler from './contactSearchResultAppointment';
 import reportPageHandler from './reportPage';
 import unloggedCallPageHandler from './unloggedCallPage';
 import generalSettingsHandler from './generalSettings';
@@ -71,6 +72,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'contactSearchResultMessageLog':
             await contactSearchResultMessageLogHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'contactSearchResultAppointment':
+            await contactSearchResultAppointmentHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'reportPage':
             await reportPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

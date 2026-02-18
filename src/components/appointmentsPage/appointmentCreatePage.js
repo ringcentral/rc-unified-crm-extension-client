@@ -40,21 +40,46 @@ function toUtcIsoFromLocalDateTime({ date, time }) {
   return d.toISOString();
 }
 
-function getAppointmentCreatePageRender() {
+function getAppointmentCreatePageRender({ initialFormData = {} } = {}) {
   const nowPlus30 = Date.now() + 30 * 60 * 1000;
+  const defaults = {
+    appointmentDate: toLocalDateValue(nowPlus30),
+    appointmentTime: toLocalTimeValue(nowPlus30),
+    durationHours: '1',
+    durationMinutes: '0',
+    participantName: '',
+    participantContactId: '',
+    participantContactType: '',
+    summary: '',
+    status: 'scheduled',
+  };
+  const merged = { ...defaults, ...(initialFormData || {}) };
   return {
     id: 'appointmentCreatePage',
     title: 'Create appointment',
     type: 'page',
     schema: {
       type: 'object',
-      required: [],
+      // Required fields so "Create" stays disabled until form is complete.
+      required: [
+        'appointmentDate',
+        'appointmentTime',
+        'durationHours',
+        'durationMinutes',
+        'participantName',
+        'summary',
+        'status',
+      ],
       properties: {
         appointmentDate: { type: 'string', title: 'Date', format: 'date' },
         appointmentTime: { type: 'string', title: 'Time', format: 'time' },
         durationHours: { type: 'string', title: 'Duration', oneOf: buildDurationOptionsHours(8) },
         durationMinutes: { type: 'string', title: ' ', oneOf: buildDurationOptionsMinutes() },
-        participantName: { type: 'string', title: 'Participant name' },
+        participantName: { type: 'string', title: 'Participant' },
+        // Hidden fields: selected contact identity
+        participantContactId: { type: 'string', title: '' },
+        participantContactType: { type: 'string', title: '' },
+        appointmentSelectParticipantButton: { type: 'string', title: 'Search' },
         summary: { type: 'string', title: 'Summary/Description' },
         status: {
           type: 'string',
@@ -65,10 +90,13 @@ function getAppointmentCreatePageRender() {
             { const: 'canceled', title: 'Canceled' },
           ],
         },
-        appointmentCreateSaveButton: { type: 'string', title: 'Create' },
       },
     },
     uiSchema: {
+      // Use the embeddable page header submit button so it can be disabled until required fields are filled.
+      submitButtonOptions: {
+        submitText: 'Create',
+      },
       // keep date/time at top like Meetings
       'ui:order': [
         'appointmentDate',
@@ -76,25 +104,33 @@ function getAppointmentCreatePageRender() {
         'durationHours',
         'durationMinutes',
         'participantName',
+        'appointmentSelectParticipantButton',
+        'participantContactId',
+        'participantContactType',
         'summary',
         'status',
-        'appointmentCreateSaveButton',
       ],
       appointmentDate: { 'ui:widget': 'date' },
       appointmentTime: { 'ui:widget': 'time' },
       durationHours: { 'ui:widget': 'select' },
       durationMinutes: { 'ui:widget': 'select' },
-      appointmentCreateSaveButton: { 'ui:field': 'button', 'ui:variant': 'contained', 'ui:fullWidth': true },
+      participantContactId: { 'ui:widget': 'hidden' },
+      participantContactType: { 'ui:widget': 'hidden' },
+      // Try to render a compact "Search" button inline to the right of Participant.
+      // If the embeddable build ignores grid hints, it will still render as a smaller button.
+      participantName: {
+        'ui:readonly': true,
+        'ui:placeholder': 'Select a contact',
+        'ui:options': { grid: { xs: 8, sm: 8 } },
+      },
+      appointmentSelectParticipantButton: {
+        'ui:field': 'button',
+        'ui:variant': 'plain',
+        'ui:fullWidth': false,
+        'ui:options': { grid: { xs: 4, sm: 4 } },
+      },
     },
-    formData: {
-      appointmentDate: toLocalDateValue(nowPlus30),
-      appointmentTime: toLocalTimeValue(nowPlus30),
-      durationHours: '1',
-      durationMinutes: '0',
-      participantName: '',
-      summary: '',
-      status: 'scheduled',
-    },
+    formData: merged,
   };
 }
 
@@ -107,6 +143,8 @@ async function submitAppointmentCreate({ manifest, jwtToken, formData }) {
     (Number(formData?.durationHours ?? 0) * 60) + (Number(formData?.durationMinutes ?? 0));
   const payload = {
     participantName: formData?.participantName ?? '',
+    contactId: formData?.participantContactId ?? '',
+    contactType: formData?.participantContactType ?? '',
     summary: formData?.summary ?? '',
     startTimeUtc,
     durationMinutes: Number.isFinite(durationMinutesTotal) ? durationMinutesTotal : 60,

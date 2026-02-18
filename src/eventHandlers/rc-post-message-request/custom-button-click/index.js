@@ -41,6 +41,7 @@ import userGoogleSheetSelectedHandler from './userGoogleSheetSelected';
 import adminRemoveSheetButtonHandler from './adminRemoveSheetButton';
 import contactSearchAdapterButtonCallLogHandler from './contactSearchAdapterButtonCallLog';
 import contactSearchAdapterButtonMessageLogHandler from './contactSearchAdapterButtonMessageLog';
+import contactSearchAdapterButtonAppointmentHandler from './contactSearchAdapterButtonAppointment';
 import usermappingEditHandler from './usermappingEdit';
 import usermappingRemoveHandler from './usermappingRemove';
 import selectPlatformHandler from './selectPlatform';
@@ -58,6 +59,7 @@ import appointmentOpenContactHandler from './appointmentOpenContact';
 import appointmentOpenAppointmentHandler from './appointmentOpenAppointment';
 import appointmentCreateHandler from './appointmentCreate';
 import appointmentCreateSaveHandler from './appointmentCreateSave';
+import appointmentSelectParticipantHandler from './appointmentSelectParticipant';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     switch (data.body.button.type) {
@@ -84,6 +86,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     // https://github.com/ringcentral/ringcentral-embeddable/blob/3.x/docs/integration/custom-tab.md#handle-button-clicked-and-input-changed-event
     if (data.body.button.id === 'appointmentEditPage') {
         await appointmentSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+        return;
+    }
+    if (data.body.button.id === 'appointmentCreatePage') {
+        await appointmentCreateSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
         return;
     }
 
@@ -121,6 +127,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'appointmentOpenAppointment':
             await appointmentOpenAppointmentHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'appointmentSelectParticipantButton':
+            await appointmentSelectParticipantHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'callLater':
             await callLaterHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
@@ -254,6 +263,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'contactSearchAdapterButtonMessageLog':
             await contactSearchAdapterButtonMessageLogHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'contactSearchAdapterButtonAppointment':
+            await contactSearchAdapterButtonAppointmentHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'refreshLicense':
             if (platform.useLicense) { await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl }); }
