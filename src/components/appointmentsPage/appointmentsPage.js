@@ -35,6 +35,14 @@ function matchesStatusFilter(statusKey, filterLabel) {
   return true;
 }
 
+function singularizeAppointmentTitle(title) {
+  const t = String(title || '').trim();
+  if (!t) return 'Appointment';
+  if (/appointments$/i.test(t)) return t.replace(/appointments$/i, 'Appointment');
+  if (t.length > 1 && /s$/i.test(t)) return t.slice(0, -1);
+  return t;
+}
+
 function getAppointmentsPageRender({
   selectedTab = 'upcoming',
   searchWithFilters = {},
@@ -124,6 +132,7 @@ async function getAppointmentsPageWithRecords({
   const appointmentCfg = manifest?.platforms?.[resolvedPlatformName]?.page?.appointment ?? {};
   const appointmentTitle = appointmentCfg?.title ?? 'Appointments';
   const showConfirm = appointmentCfg?.showConfirm !== false;
+  const entityTitle = singularizeAppointmentTitle(appointmentTitle);
 
   const page = getAppointmentsPageRender({ selectedTab: tab, searchWithFilters, appointmentTitle, showConfirm });
   const resolvedSearch = String(searchWithFilters?.search ?? '').trim().toLowerCase();
@@ -195,7 +204,7 @@ async function getAppointmentsPageWithRecords({
     const actions = [
       { id: 'appointmentEdit', title: 'Edit', icon: 'edit' },
       ...(showConfirm ? [{ id: 'appointmentConfirm', title: 'Confirm', icon: 'check' }] : []),
-      { id: 'appointmentOpenAppointment', title: 'Open Appointment Info', icon: 'externalLink' },
+      { id: 'appointmentOpenAppointment', title: `Open ${entityTitle} Info`, icon: 'externalLink' },
       { id: 'appointmentOpenContact', title: 'Open Contact Info', icon: 'view' },
       { id: 'appointmentRefresh', title: 'Refresh', icon: 'refresh' },
       { id: 'appointmentCancel', title: 'Cancel', icon: 'close', color: 'danger.b03' },
