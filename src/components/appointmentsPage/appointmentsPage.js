@@ -2,6 +2,7 @@ import userReportIcon from '../../images/reportIcon.png';
 import userReportIconActive from '../../images/reportIcon_active.png';
 import userReportIconDark from '../../images/reportIcon_dark.png';
 import { listAppointments } from '../../service/appointmentService';
+import { getPlatformInfo } from '../../service/platformService';
 
 function formatDateTime(dt) {
   if (!dt) return { date: '', time: '' };
@@ -34,12 +35,17 @@ function matchesStatusFilter(statusKey, filterLabel) {
   return true;
 }
 
-function getAppointmentsPageRender({ selectedTab = 'upcoming', searchWithFilters = {} } = {}) {
+function getAppointmentsPageRender({
+  selectedTab = 'upcoming',
+  searchWithFilters = {},
+  appointmentTitle = 'Appointments',
+  showConfirm = true,
+} = {}) {
   const resolvedSearch = String(searchWithFilters?.search ?? '');
   const resolvedFilter = String(searchWithFilters?.filter ?? 'All');
   return {
     id: 'appointmentsPage',
-    title: 'Appointments',
+    title: appointmentTitle,
     type: 'tab',
     priority: 65,
     // TODO: Replace with a real calendar/appointment icon asset
@@ -69,7 +75,7 @@ function getAppointmentsPageRender({ selectedTab = 'upcoming', searchWithFilters
         },
         appointments: {
           type: 'string',
-          title: 'Appointments',
+          title: appointmentTitle,
           oneOf: [],
         },
       },
@@ -95,11 +101,31 @@ function getAppointmentsPageRender({ selectedTab = 'upcoming', searchWithFilters
         filter: resolvedFilter,
       },
     },
+    // Pass-through so downstream renderers/handlers can use it if needed.
+    _appointmentConfig: { appointmentTitle, showConfirm },
   };
 }
 
-async function getAppointmentsPageWithRecords({ manifest, jwtToken, tab = 'upcoming', searchWithFilters = {}, forceSync = false }) {
-  const page = getAppointmentsPageRender({ selectedTab: tab, searchWithFilters });
+async function getAppointmentsPageWithRecords({
+  manifest,
+  jwtToken,
+  tab = 'upcoming',
+  searchWithFilters = {},
+  forceSync = false,
+  platformName = '',
+} = {}) {
+  let resolvedPlatformName = platformName;
+  if (!resolvedPlatformName) {
+    try {
+      const platformInfo = await getPlatformInfo();
+      resolvedPlatformName = platformInfo?.platformName ?? '';
+    } catch (e) { /* ignore */ }
+  }
+  const appointmentCfg = manifest?.platforms?.[resolvedPlatformName]?.page?.appointment ?? {};
+  const appointmentTitle = appointmentCfg?.title ?? 'Appointments';
+  const showConfirm = appointmentCfg?.showConfirm !== false;
+
+  const page = getAppointmentsPageRender({ selectedTab: tab, searchWithFilters, appointmentTitle, showConfirm });
   const resolvedSearch = String(searchWithFilters?.search ?? '').trim().toLowerCase();
   const resolvedFilter = String(searchWithFilters?.filter ?? 'All');
 
@@ -168,7 +194,7 @@ async function getAppointmentsPageWithRecords({ manifest, jwtToken, tab = 'upcom
 
     const actions = [
       { id: 'appointmentEdit', title: 'Edit', icon: 'edit' },
-      { id: 'appointmentConfirm', title: 'Confirm', icon: 'check' },
+      ...(showConfirm ? [{ id: 'appointmentConfirm', title: 'Confirm', icon: 'check' }] : []),
       { id: 'appointmentOpenAppointment', title: 'Open Appointment Info', icon: 'externalLink' },
       { id: 'appointmentOpenContact', title: 'Open Contact Info', icon: 'view' },
       { id: 'appointmentRefresh', title: 'Refresh', icon: 'refresh' },

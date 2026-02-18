@@ -96,7 +96,12 @@ async function onEvent({ data }) {
             // Register a placeholder tab immediately so it shows up without requiring reload,
             // then attempt to load records (which may fail transiently right after login).
             try {
-                const placeholder = appointmentsPage.getAppointmentsPageRender({ selectedTab: 'upcoming' });
+                const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+                const placeholder = appointmentsPage.getAppointmentsPageRender({
+                    selectedTab: 'upcoming',
+                    appointmentTitle: apptCfg?.title ?? 'Appointments',
+                    showConfirm: apptCfg?.showConfirm !== false,
+                });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: placeholder,
@@ -109,6 +114,7 @@ async function onEvent({ data }) {
                     jwtToken: rcUnifiedCrmExtJwt,
                     tab: 'upcoming',
                     searchWithFilters: { search: '', filter: 'All' },
+                    platformName,
                     forceSync: false
                 });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

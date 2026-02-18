@@ -1,5 +1,13 @@
 import { createAppointment } from '../../service/appointmentService';
 
+function singularizeAppointmentTitle(title) {
+  const t = String(title || '').trim();
+  if (!t) return 'Appointment';
+  if (/appointments$/i.test(t)) return t.replace(/appointments$/i, 'Appointment');
+  if (t.length > 1 && /s$/i.test(t)) return t.slice(0, -1);
+  return t;
+}
+
 function pad2(n) {
   return String(n).padStart(2, '0');
 }
@@ -40,7 +48,7 @@ function toUtcIsoFromLocalDateTime({ date, time }) {
   return d.toISOString();
 }
 
-function getAppointmentCreatePageRender({ initialFormData = {} } = {}) {
+function getAppointmentCreatePageRender({ initialFormData = {}, appointmentTitle = 'Appointments' } = {}) {
   const nowPlus30 = Date.now() + 30 * 60 * 1000;
   const defaults = {
     appointmentDate: toLocalDateValue(nowPlus30),
@@ -54,9 +62,10 @@ function getAppointmentCreatePageRender({ initialFormData = {} } = {}) {
     status: 'scheduled',
   };
   const merged = { ...defaults, ...(initialFormData || {}) };
+  const entityTitle = singularizeAppointmentTitle(appointmentTitle);
   return {
     id: 'appointmentCreatePage',
-    title: 'Create appointment',
+    title: `Create ${entityTitle}`,
     type: 'page',
     schema: {
       type: 'object',

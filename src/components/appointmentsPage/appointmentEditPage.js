@@ -1,5 +1,13 @@
 import { updateAppointment } from '../../service/appointmentService';
 
+function singularizeAppointmentTitle(title) {
+  const t = String(title || '').trim();
+  if (!t) return 'Appointment';
+  if (/appointments$/i.test(t)) return t.replace(/appointments$/i, 'Appointment');
+  if (t.length > 1 && /s$/i.test(t)) return t.slice(0, -1);
+  return t;
+}
+
 function pad2(n) {
   return String(n).padStart(2, '0');
 }
@@ -40,7 +48,7 @@ function toUtcIsoFromLocalDateTime({ date, time }) {
   return d.toISOString();
 }
 
-function getAppointmentEditPageRender({ appointment }) {
+function getAppointmentEditPageRender({ appointment, appointmentTitle = 'Appointments' } = {}) {
   const thirdPartyAppointmentIdRaw = appointment?.thirdPartyAppointmentId ?? '';
   const thirdPartyAppointmentId =
     thirdPartyAppointmentIdRaw && String(thirdPartyAppointmentIdRaw).toUpperCase() !== 'N/A'
@@ -59,9 +67,10 @@ function getAppointmentEditPageRender({ appointment }) {
   const durationRemainderMinutes = durationMinutes % 60;
   const roundedMinutes = [0, 15, 30, 45].includes(durationRemainderMinutes) ? durationRemainderMinutes : 0;
 
+  const entityTitle = singularizeAppointmentTitle(appointmentTitle);
   return {
     id: 'appointmentEditPage',
-    title: 'Edit appointment',
+    title: `Edit ${entityTitle}`,
     type: 'page',
     schema: {
       type: 'object',

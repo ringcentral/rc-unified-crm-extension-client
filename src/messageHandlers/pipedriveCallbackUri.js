@@ -47,7 +47,6 @@ async function onMessage({ request, sendResponse }) {
       }
     }
     catch (e) { /* ignore */ }
-    // Appointments tab (Automotive Connect)
     try {
       const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
       const appointmentsTab = await appointmentsPage.getAppointmentsPageWithRecords({

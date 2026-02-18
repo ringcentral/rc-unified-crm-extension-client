@@ -1,6 +1,6 @@
 import appointmentEditPage from '../../../components/appointmentsPage/appointmentEditPage';
 
-async function onEvent({ data, manifest, listButtonItemId }) {
+async function onEvent({ data, manifest, platformName, listButtonItemId }) {
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
   try {
     const { appointmentsListCache = [] } = await chrome.storage.local.get('appointmentsListCache');
@@ -9,7 +9,9 @@ async function onEvent({ data, manifest, listButtonItemId }) {
       return;
     }
     await chrome.storage.local.set({ appointmentEditCache: appt });
-    const editPage = appointmentEditPage.getAppointmentEditPageRender({ appointment: appt });
+    const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+    const appointmentTitle = apptCfg?.title ?? 'Appointments';
+    const editPage = appointmentEditPage.getAppointmentEditPageRender({ appointment: appt, appointmentTitle });
     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
       type: 'rc-adapter-register-customized-page',
       page: editPage,

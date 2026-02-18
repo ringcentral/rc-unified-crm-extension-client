@@ -54,11 +54,16 @@ async function onMessage({ request, sendResponse }) {
                     }, '*');
                 }
 
-                // Appointments tab (Automotive Connect)
                 // Register a placeholder tab immediately so it shows up without requiring reload,
                 // then attempt to load records (which may fail transiently right after auth).
                 try {
-                    const placeholder = appointmentsPage.getAppointmentsPageRender({ selectedTab: 'upcoming' });
+                    const platformName = platformInfo?.platformName ?? '';
+                    const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+                    const placeholder = appointmentsPage.getAppointmentsPageRender({
+                        selectedTab: 'upcoming',
+                        appointmentTitle: apptCfg?.title ?? 'Appointments',
+                        showConfirm: apptCfg?.showConfirm !== false,
+                    });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                         type: 'rc-adapter-register-customized-page',
                         page: placeholder,
@@ -71,6 +76,7 @@ async function onMessage({ request, sendResponse }) {
                         jwtToken: rcUnifiedCrmExtJwt,
                         tab: 'upcoming',
                         searchWithFilters: { search: '', filter: 'All' },
+                        platformName: platformInfo?.platformName ?? '',
                         forceSync: false
                     });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

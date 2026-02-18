@@ -1,6 +1,6 @@
 import appointmentCreatePage from '../../../../components/appointmentsPage/appointmentCreatePage';
 
-async function onEvent({ data }) {
+async function onEvent({ data, manifest, platformName }) {
   const selectedId = data?.body?.formData?.contactList;
   const contactInfo = data?.body?.page?.formData?.contactInfo ?? [];
   const selected = (contactInfo || []).find((c) => String(c.id) === String(selectedId));
@@ -15,7 +15,12 @@ async function onEvent({ data }) {
   };
   await chrome.storage.local.set({ appointmentCreateDraft: updatedDraft });
 
-  const page = appointmentCreatePage.getAppointmentCreatePageRender({ initialFormData: updatedDraft });
+  const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+  const appointmentTitle = apptCfg?.title ?? 'Appointments';
+  const page = appointmentCreatePage.getAppointmentCreatePageRender({
+    initialFormData: updatedDraft,
+    appointmentTitle,
+  });
   document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
     type: 'rc-adapter-register-customized-page',
     page,

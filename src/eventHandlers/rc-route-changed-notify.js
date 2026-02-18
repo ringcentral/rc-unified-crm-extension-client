@@ -48,7 +48,6 @@ async function onEvent({ data }) {
           }
         } catch (e) { /* ignore */ }
       }
-      // Refresh Appointments tab when user navigates to it
       if (data.path === '/customizedTabs/appointmentsPage') {
         try {
           const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
