@@ -70,8 +70,9 @@ async function updateAppointment({ serverUrl, jwtToken, appointmentId, patch }) 
 }
 
 async function refreshAppointment({ serverUrl, jwtToken, appointmentId }) {
+  console.log('refreshAppointment', serverUrl, jwtToken, appointmentId);
   try {
-    const { data } = await axios.post(`${serverUrl}/appointments/${appointmentId}/refresh`, null, { params: { jwtToken } });
+    const { data } = await axios.get(`${serverUrl}/appointments/${appointmentId}/refresh`, { params: { jwtToken } });
     return data;
   } catch (e) {
     return null;

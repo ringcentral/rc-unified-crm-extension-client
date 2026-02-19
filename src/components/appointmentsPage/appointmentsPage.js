@@ -232,7 +232,7 @@ async function getAppointmentsPageWithRecords({
     page.schema.properties.appointments.oneOf = [
       {
         const: 'noAppointments',
-        title: 'No appointments',
+        title: `No ${appointmentTitle}`,
         description: 'Try changing filters or use Refresh.',
         // Keep list-level refresh as a fallback action in empty state.
         actions: [{ id: 'appointmentsRefreshButton', title: 'Refresh', icon: 'refresh' }],
