@@ -3,7 +3,10 @@ import appointmentCreatePage from '../../../components/appointmentsPage/appointm
 async function onEvent({ manifest, platformName }) {
   const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
   const appointmentTitle = apptCfg?.title ?? 'Appointments';
-  const page = appointmentCreatePage.getAppointmentCreatePageRender({ appointmentTitle });
+  const page = appointmentCreatePage.getAppointmentCreatePageRender({
+    appointmentTitle,
+    statusConfig: apptCfg?.status,
+  });
   document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
     type: 'rc-adapter-register-customized-page',
     page,

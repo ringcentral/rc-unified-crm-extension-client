@@ -8,6 +8,41 @@ function singularizeAppointmentTitle(title) {
   return t;
 }
 
+function normalizeStatusKey(s) {
+  const v = String(s || '').trim().toLowerCase();
+  if (!v) return '';
+  if (v === 'cancelled') return 'canceled';
+  return v;
+}
+
+function toTitleCaseStatusLabel(s) {
+  const raw = String(s || '').trim();
+  if (!raw) return '';
+  // Prefer human-provided label when it already looks like a label.
+  if (/[A-Z]/.test(raw) || raw.includes(' ')) return raw;
+  return raw
+    .replaceAll('_', ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+function buildStatusOneOf(statusConfig) {
+  const configured = Array.isArray(statusConfig?.value) ? statusConfig.value : [];
+  const values = configured.length > 0 ? configured : ['Scheduled', 'Confirmed', 'Canceled'];
+
+  const seen = new Set();
+  const oneOf = [];
+  for (const v of values) {
+    const key = normalizeStatusKey(v);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    oneOf.push({ const: key, title: toTitleCaseStatusLabel(v) });
+  }
+  return oneOf.length > 0 ? oneOf : [{ const: 'scheduled', title: 'Scheduled' }];
+}
+
 function pad2(n) {
   return String(n).padStart(2, '0');
 }
@@ -48,7 +83,11 @@ function toUtcIsoFromLocalDateTime({ date, time }) {
   return d.toISOString();
 }
 
-function getAppointmentCreatePageRender({ initialFormData = {}, appointmentTitle = 'Appointments' } = {}) {
+function getAppointmentCreatePageRender({ initialFormData = {}, appointmentTitle = 'Appointments', statusConfig } = {}) {
+  const statusVisible = statusConfig?.isVisible !== false;
+  const statusOneOf = buildStatusOneOf(statusConfig);
+  const defaultStatus = statusOneOf?.[0]?.const || 'scheduled';
+
   const nowPlus30 = Date.now() + 30 * 60 * 1000;
   const defaults = {
     appointmentDate: toLocalDateValue(nowPlus30),
@@ -59,10 +98,60 @@ function getAppointmentCreatePageRender({ initialFormData = {}, appointmentTitle
     participantContactId: '',
     participantContactType: '',
     summary: '',
-    status: 'scheduled',
+    ...(statusVisible ? { status: defaultStatus } : {}),
   };
   const merged = { ...defaults, ...(initialFormData || {}) };
+  if (statusVisible) {
+    const normalized = normalizeStatusKey(merged.status);
+    merged.status = normalized || defaultStatus;
+  }
   const entityTitle = singularizeAppointmentTitle(appointmentTitle);
+
+  const required = [
+    'appointmentDate',
+    'appointmentTime',
+    'durationHours',
+    'durationMinutes',
+    'participantName',
+    'summary',
+    ...(statusVisible ? ['status'] : []),
+  ];
+
+  const properties = {
+    appointmentDate: { type: 'string', title: 'Date', format: 'date' },
+    appointmentTime: { type: 'string', title: 'Time', format: 'time' },
+    durationHours: { type: 'string', title: 'Duration', oneOf: buildDurationOptionsHours(8) },
+    durationMinutes: { type: 'string', title: ' ', oneOf: buildDurationOptionsMinutes() },
+    participantName: { type: 'string', title: 'Participant' },
+    // Hidden fields: selected contact identity
+    participantContactId: { type: 'string', title: '' },
+    participantContactType: { type: 'string', title: '' },
+    appointmentSelectParticipantButton: { type: 'string', title: 'Search' },
+    summary: { type: 'string', title: 'Summary/Description' },
+    ...(statusVisible
+      ? {
+        status: {
+          type: 'string',
+          title: 'Status',
+          oneOf: statusOneOf,
+        },
+      }
+      : {}),
+  };
+
+  const uiOrder = [
+    'appointmentDate',
+    'appointmentTime',
+    'durationHours',
+    'durationMinutes',
+    'participantName',
+    'appointmentSelectParticipantButton',
+    'participantContactId',
+    'participantContactType',
+    'summary',
+    ...(statusVisible ? ['status'] : []),
+  ];
+
   return {
     id: 'appointmentCreatePage',
     title: `Create ${entityTitle}`,
@@ -70,36 +159,8 @@ function getAppointmentCreatePageRender({ initialFormData = {}, appointmentTitle
     schema: {
       type: 'object',
       // Required fields so "Create" stays disabled until form is complete.
-      required: [
-        'appointmentDate',
-        'appointmentTime',
-        'durationHours',
-        'durationMinutes',
-        'participantName',
-        'summary',
-        'status',
-      ],
-      properties: {
-        appointmentDate: { type: 'string', title: 'Date', format: 'date' },
-        appointmentTime: { type: 'string', title: 'Time', format: 'time' },
-        durationHours: { type: 'string', title: 'Duration', oneOf: buildDurationOptionsHours(8) },
-        durationMinutes: { type: 'string', title: ' ', oneOf: buildDurationOptionsMinutes() },
-        participantName: { type: 'string', title: 'Participant' },
-        // Hidden fields: selected contact identity
-        participantContactId: { type: 'string', title: '' },
-        participantContactType: { type: 'string', title: '' },
-        appointmentSelectParticipantButton: { type: 'string', title: 'Search' },
-        summary: { type: 'string', title: 'Summary/Description' },
-        status: {
-          type: 'string',
-          title: 'Status',
-          oneOf: [
-            { const: 'scheduled', title: 'Scheduled' },
-            { const: 'confirmed', title: 'Confirmed' },
-            { const: 'canceled', title: 'Canceled' },
-          ],
-        },
-      },
+      required,
+      properties,
     },
     uiSchema: {
       // Use the embeddable page header submit button so it can be disabled until required fields are filled.
@@ -107,18 +168,7 @@ function getAppointmentCreatePageRender({ initialFormData = {}, appointmentTitle
         submitText: 'Create',
       },
       // keep date/time at top like Meetings
-      'ui:order': [
-        'appointmentDate',
-        'appointmentTime',
-        'durationHours',
-        'durationMinutes',
-        'participantName',
-        'appointmentSelectParticipantButton',
-        'participantContactId',
-        'participantContactType',
-        'summary',
-        'status',
-      ],
+      'ui:order': uiOrder,
       appointmentDate: { 'ui:widget': 'date' },
       appointmentTime: { 'ui:widget': 'time' },
       durationHours: { 'ui:widget': 'select' },

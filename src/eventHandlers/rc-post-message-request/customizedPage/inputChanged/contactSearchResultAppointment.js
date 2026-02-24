@@ -20,6 +20,7 @@ async function onEvent({ data, manifest, platformName }) {
   const page = appointmentCreatePage.getAppointmentCreatePageRender({
     initialFormData: updatedDraft,
     appointmentTitle,
+    statusConfig: apptCfg?.status,
   });
   document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
     type: 'rc-adapter-register-customized-page',
