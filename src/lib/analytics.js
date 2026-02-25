@@ -6,7 +6,7 @@ let useAnalytics = !!process.env.MIXPANEL_TOKEN;
 if (useAnalytics) {
     try {
         // eslint-disable-next-line no-undef
-        mixpanel.init(process.env.MIXPANEL_TOKEN);
+        mixpanel.init(process.env.MIXPANEL_TOKEN, { persistence: 'localStorage' });
     }
     catch (e) {
         useAnalytics = false;
