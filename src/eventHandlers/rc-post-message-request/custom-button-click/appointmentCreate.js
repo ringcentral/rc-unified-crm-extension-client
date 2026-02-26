@@ -6,6 +6,7 @@ async function onEvent({ manifest, platformName }) {
   const page = appointmentCreatePage.getAppointmentCreatePageRender({
     appointmentTitle,
     statusConfig: apptCfg?.status,
+    titleFieldConfig: apptCfg?.titleField,
   });
   document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
     type: 'rc-adapter-register-customized-page',

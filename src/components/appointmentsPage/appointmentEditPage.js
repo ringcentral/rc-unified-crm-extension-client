@@ -48,13 +48,19 @@ function toUtcIsoFromLocalDateTime({ date, time }) {
   return d.toISOString();
 }
 
-function getAppointmentEditPageRender({ appointment, appointmentTitle = 'Appointments' } = {}) {
+function getAppointmentEditPageRender({
+  appointment,
+  appointmentTitle = 'Appointments',
+  titleFieldConfig,
+} = {}) {
   const thirdPartyAppointmentIdRaw = appointment?.thirdPartyAppointmentId ?? '';
   const thirdPartyAppointmentId =
     thirdPartyAppointmentIdRaw && String(thirdPartyAppointmentIdRaw).toUpperCase() !== 'N/A'
       ? String(thirdPartyAppointmentIdRaw)
       : '';
   const id = thirdPartyAppointmentId || String(appointment?.id ?? appointment?.externalId ?? '');
+  const titleFieldVisible = titleFieldConfig?.isVisible;
+  const titleFieldTitle = String(titleFieldConfig?.value || 'Title');
   const participantName =
     appointment?.participantName ??
     appointment?.customerName ??
@@ -76,6 +82,9 @@ function getAppointmentEditPageRender({ appointment, appointmentTitle = 'Appoint
       type: 'object',
       required: [],
       properties: {
+        // Hidden but required for save.
+        thirdPartyAppointmentId: { type: 'string', title: '' },
+        ...(titleFieldVisible ? { title: { type: 'string', title: titleFieldTitle } } : {}),
         participantName: { type: 'string', title: 'Participant' },
         summary: { type: 'string', title: 'Summary' },
         appointmentDate: { type: 'string', title: 'Date', format: 'date' },
@@ -89,15 +98,27 @@ function getAppointmentEditPageRender({ appointment, appointmentTitle = 'Appoint
       submitButtonOptions: {
         submitText: 'Update',
       },
+      thirdPartyAppointmentId: { 'ui:widget': 'hidden' },
+      ...(titleFieldVisible
+        ? {
+          title: {
+            'ui:placeholder': titleFieldTitle,
+          },
+        }
+        : {}),
       participantName: { 'ui:readonly': true },
+      summary: {
+        'ui:widget': 'textarea',
+      },
       'ui:order': [
         'thirdPartyAppointmentId',
-        'participantName',
+        ...(titleFieldVisible ? ['title'] : []),
         'appointmentDate',
         'appointmentTime',
         'durationHours',
         'durationMinutes',
         'summary',
+        'participantName',
       ],
       appointmentDate: { 'ui:widget': 'date' },
       appointmentTime: { 'ui:widget': 'time' },
@@ -106,6 +127,7 @@ function getAppointmentEditPageRender({ appointment, appointmentTitle = 'Appoint
     },
     formData: {
       thirdPartyAppointmentId: String(id),
+      ...(titleFieldVisible ? { title: appointment?.title ?? appointment?.subject ?? '' } : {}),
       participantName,
       summary: appointment?.summary ?? appointment?.description ?? '',
       appointmentDate: start ? toLocalDateValue(start) : '',
@@ -132,6 +154,8 @@ async function saveAppointmentEdits({ manifest, jwtToken, formData }) {
     startTime,
     durationMinutes: Number.isFinite(durationMinutesTotal) ? durationMinutesTotal : 60,
   };
+  const title = String(formData?.title ?? '').trim();
+  if (title) patch.title = title;
   return await updateAppointment({
     serverUrl: manifest.serverUrl,
     jwtToken,

@@ -83,13 +83,21 @@ function toUtcIsoFromLocalDateTime({ date, time }) {
   return d.toISOString();
 }
 
-function getAppointmentCreatePageRender({ initialFormData = {}, appointmentTitle = 'Appointments', statusConfig } = {}) {
+function getAppointmentCreatePageRender({
+  initialFormData = {},
+  appointmentTitle = 'Appointments',
+  statusConfig,
+  titleFieldConfig,
+} = {}) {
   const statusVisible = statusConfig?.isVisible !== false;
   const statusOneOf = buildStatusOneOf(statusConfig);
   const defaultStatus = statusOneOf?.[0]?.const || 'scheduled';
+  const titleFieldVisible = titleFieldConfig?.isVisible;
+  const titleFieldTitle = String(titleFieldConfig?.value || 'Title');
 
   const nowPlus30 = Date.now() + 30 * 60 * 1000;
   const defaults = {
+    ...(titleFieldVisible ? { title: '' } : {}),
     appointmentDate: toLocalDateValue(nowPlus30),
     appointmentTime: toLocalTimeValue(nowPlus30),
     durationHours: '1',
@@ -108,6 +116,7 @@ function getAppointmentCreatePageRender({ initialFormData = {}, appointmentTitle
   const entityTitle = singularizeAppointmentTitle(appointmentTitle);
 
   const required = [
+    ...(titleFieldVisible ? ['title'] : []),
     'appointmentDate',
     'appointmentTime',
     'durationHours',
@@ -118,6 +127,7 @@ function getAppointmentCreatePageRender({ initialFormData = {}, appointmentTitle
   ];
 
   const properties = {
+    ...(titleFieldVisible ? { title: { type: 'string', title: titleFieldTitle } } : {}),
     appointmentDate: { type: 'string', title: 'Date', format: 'date' },
     appointmentTime: { type: 'string', title: 'Time', format: 'time' },
     durationHours: { type: 'string', title: 'Duration', oneOf: buildDurationOptionsHours(8) },
@@ -140,15 +150,16 @@ function getAppointmentCreatePageRender({ initialFormData = {}, appointmentTitle
   };
 
   const uiOrder = [
+    ...(titleFieldVisible ? ['title'] : []),
     'appointmentDate',
     'appointmentTime',
     'durationHours',
     'durationMinutes',
+    'summary',
     'participantName',
     'appointmentSelectParticipantButton',
     'participantContactId',
     'participantContactType',
-    'summary',
     ...(statusVisible ? ['status'] : []),
   ];
 
@@ -173,6 +184,18 @@ function getAppointmentCreatePageRender({ initialFormData = {}, appointmentTitle
       appointmentTime: { 'ui:widget': 'time' },
       durationHours: { 'ui:widget': 'select' },
       durationMinutes: { 'ui:widget': 'select' },
+      ...(titleFieldVisible
+        ? {
+          title: {
+            'ui:placeholder': titleFieldTitle,
+          },
+        }
+        : {}),
+      ...(statusVisible
+        ? {
+          status: { 'ui:widget': 'select' },
+        }
+        : {}),
       participantContactId: { 'ui:widget': 'hidden' },
       participantContactType: { 'ui:widget': 'hidden' },
       // Try to render a compact "Search" button inline to the right of Participant.
@@ -187,6 +210,10 @@ function getAppointmentCreatePageRender({ initialFormData = {}, appointmentTitle
         'ui:variant': 'plain',
         'ui:fullWidth': false,
         'ui:options': { grid: { xs: 4, sm: 4 } },
+      },
+      summary: {
+        'ui:widget': 'textarea',
+        'ui:help': 'Description',
       },
     },
     formData: merged,
@@ -209,6 +236,8 @@ async function submitAppointmentCreate({ manifest, jwtToken, formData }) {
     durationMinutes: Number.isFinite(durationMinutesTotal) ? durationMinutesTotal : 60,
     status: formData?.status ?? 'scheduled',
   };
+  const title = String(formData?.title ?? '').trim();
+  if (title) payload.title = title;
   return await createAppointment({
     serverUrl: manifest.serverUrl,
     jwtToken,

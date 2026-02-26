@@ -43,6 +43,27 @@ function singularizeAppointmentTitle(title) {
   return t;
 }
 
+function extractAppointmentTitle(a) {
+  return String(a?.title ?? a?.subject ?? a?.summary ?? a?.description ?? '').trim();
+}
+
+function parseAppointmentStartTs(a) {
+  const startUtc = a?.startTimeUtc;
+  if (startUtc) {
+    const s = String(startUtc).trim();
+    if (!s) return null;
+    const looksIso = /^\d{4}-\d{2}-\d{2}T/.test(s);
+    const hasTz = /([zZ]|[+-]\d{2}:?\d{2})$/.test(s);
+    const d = new Date(looksIso && !hasTz ? `${s}Z` : s);
+    return Number.isNaN(d.getTime()) ? null : d.getTime();
+  }
+
+  const start = a?.startTime ?? a?.start ?? a?.when ?? null;
+  if (!start) return null;
+  const d = new Date(start);
+  return Number.isNaN(d.getTime()) ? null : d.getTime();
+}
+
 function getAppointmentsPageRender({
   selectedTab = 'upcoming',
   searchWithFilters = {},
@@ -149,9 +170,7 @@ async function getAppointmentsPageWithRecords({
   // Apply client-side filters (fallback in case backend doesn't filter reliably yet)
   const nowTs = Date.now();
   const filtered = (items || []).filter((a) => {
-    const start = a.startTimeUtc ?? a.startTime ?? a.start ?? a.when ?? null;
-    const dt = start ? new Date(start) : null;
-    const ts = dt && !Number.isNaN(dt.getTime()) ? dt.getTime() : null;
+    const ts = parseAppointmentStartTs(a);
     if (tab === 'upcoming' && ts !== null && ts < nowTs) return false;
     if (tab === 'past' && ts !== null && ts >= nowTs) return false;
 
@@ -160,6 +179,8 @@ async function getAppointmentsPageWithRecords({
 
     if (resolvedSearch) {
       const hay = [
+        a.title,
+        a.subject,
         a.participantName,
         a.customerName,
         a.attendeeName,
@@ -199,7 +220,11 @@ async function getAppointmentsPageWithRecords({
 
     const start = a.startTimeUtc ?? a.startTime ?? a.start ?? a.when ?? null;
     const { date, time } = formatDateTime(start);
-    const statusText = normalizeStatus(a.status);
+    const apptTitleRaw = extractAppointmentTitle(a);
+    const apptTitle =
+      apptTitleRaw && apptTitleRaw.toLowerCase() !== String(participantName).toLowerCase()
+        ? apptTitleRaw
+        : '';
 
     const actions = [
       { id: 'appointmentEdit', title: 'Edit', icon: 'edit' },
@@ -212,9 +237,10 @@ async function getAppointmentsPageWithRecords({
 
     return {
       const: String(id),
-      title: participantName,
-      description: `${date}${date && time ? ' ' : ''}${time}`,
-      authorName: statusText,
+      title: apptTitle || participantName,
+      description: participantName,
+      authorName: date,
+      meta: time,
       actions,
       additionalInfo: {
         thirdPartyAppointmentId: String(id),

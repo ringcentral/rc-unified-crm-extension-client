@@ -21,6 +21,7 @@ async function onEvent({ data, manifest, platformName }) {
     initialFormData: updatedDraft,
     appointmentTitle,
     statusConfig: apptCfg?.status,
+    titleFieldConfig: apptCfg?.titleField,
   });
   document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
     type: 'rc-adapter-register-customized-page',

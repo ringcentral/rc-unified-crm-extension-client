@@ -11,7 +11,11 @@ async function onEvent({ data, manifest, platformName, listButtonItemId }) {
     await chrome.storage.local.set({ appointmentEditCache: appt });
     const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
     const appointmentTitle = apptCfg?.title ?? 'Appointments';
-    const editPage = appointmentEditPage.getAppointmentEditPageRender({ appointment: appt, appointmentTitle });
+    const editPage = appointmentEditPage.getAppointmentEditPageRender({
+      appointment: appt,
+      appointmentTitle,
+      titleFieldConfig: apptCfg?.titleField,
+    });
     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
       type: 'rc-adapter-register-customized-page',
       page: editPage,
