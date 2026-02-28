@@ -39,6 +39,9 @@ import navigateHandler from './messageHandlers/navigate';
 import insightlyAuthHandler from './messageHandlers/insightlyAuth';
 import ringsenseRefTrackHandler from './messageHandlers/ringsenseRefTrack';
 
+const popupContext = {
+  transferOnHold: ''
+}
 
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
 // Add request interceptor
@@ -147,85 +150,85 @@ window.addEventListener('message', async (e) => {
     if (data) {
       switch (data.type) {
         case 'rc-telephony-session-notify':
-          await rcTelephonySessionNotifyHandler.onEvent({ data });
+          await rcTelephonySessionNotifyHandler.onEvent({ data, popupContext });
           break;
         case 'rc-calling-settings-notify':
-          await rcCallingSettingsNotifyHandler.onEvent({ data });
+          await rcCallingSettingsNotifyHandler.onEvent({ data, popupContext });
           break;
         case 'rc-region-settings-notify':
-          await rcRegionSettingsNotifyHandler.onEvent({ data });
+          await rcRegionSettingsNotifyHandler.onEvent({ data, popupContext });
           break;
         case 'rc-adapter-side-drawer-open-notify':
-          await rcAdapterSideDrawerOpenNotifyHandler.onEvent({ data });
+          await rcAdapterSideDrawerOpenNotifyHandler.onEvent({ data, popupContext });
           break;
         case 'rc-dialer-status-notify':
-          await rcDialerStatusNotifyHandler.onEvent({ data });
+          await rcDialerStatusNotifyHandler.onEvent({ data, popupContext });
           break;
         case 'rc-webphone-connection-status-notify':
-          await rcWebphoneConnectionStatusNotifyHandler.onEvent({ data });
+          await rcWebphoneConnectionStatusNotifyHandler.onEvent({ data, popupContext });
           break;
         case 'rc-adapter-pushAdapterState':
-          await rcAdapterPushAdapterStateHandler.onEvent({ data });
+          await rcAdapterPushAdapterStateHandler.onEvent({ data, popupContext });
           break;
         case 'rc-login-status-notify':
-          await rcLoginStatusNotifyHandler.onEvent({ data });
+          await rcLoginStatusNotifyHandler.onEvent({ data, popupContext });
           if (await logRecorder.isRecordingLogs()) {
             logRecorder.logAction({ name: data.type, data });
           }
           break;
         case 'rc-login-popup-notify':
-          await rcLoginPopupNotifyHandler.onEvent({ data });
+          await rcLoginPopupNotifyHandler.onEvent({ data, popupContext });
           break;
         case 'rc-call-init-notify':
-          await rcCallInitNotifyHandler.onEvent({ data });
+          await rcCallInitNotifyHandler.onEvent({ data, popupContext });
           break;
         case 'rc-call-start-notify':
-          await rcCallStartNotifyHandler.onEvent({ data });
+          await rcCallStartNotifyHandler.onEvent({ data, popupContext });
           break;
         case 'rc-ringout-call-notify':
-          await rcRingoutCallNotifyHandler.onEvent({ data });
+          await rcRingoutCallNotifyHandler.onEvent({ data, popupContext });
           break;
         case "rc-active-call-notify":
-          await rcActiveCallNotifyHandler.onEvent({ data });
+          await rcActiveCallNotifyHandler.onEvent({ data, popupContext });
           if (await logRecorder.isRecordingLogs()) {
             logRecorder.logAction({ name: data.type, data });
           }
           break;
         case 'rc-analytics-track':
-          await rcAnalyticsTrackNotifyHandler.onEvent({ data });
+          await rcAnalyticsTrackNotifyHandler.onEvent({ data, popupContext });
           if (await logRecorder.isRecordingLogs()) {
             logRecorder.logAction({ name: data.type, data });
           }
           break;
         case 'rc-callLogger-auto-log-notify':
-          await rcCallLoggerAutoLogNotifyHandler.onEvent({ data });
+          await rcCallLoggerAutoLogNotifyHandler.onEvent({ data, popupContext });
           if (await logRecorder.isRecordingLogs()) {
             logRecorder.logAction({ name: data.type, data });
           }
           break;
         case 'rc-messageLogger-auto-log-notify':
-          await rcMessageLoggerAutoLogNotifyHandler.onEvent({ data });
+          await rcMessageLoggerAutoLogNotifyHandler.onEvent({ data, popupContext });
           if (await logRecorder.isRecordingLogs()) {
             logRecorder.logAction({ name: data.type, data });
           }
           break;
         case 'rc-route-changed-notify':
-          await rcRouteChangedNotifyHandler.onEvent({ data });
+          await rcRouteChangedNotifyHandler.onEvent({ data, popupContext });
           if (await logRecorder.isRecordingLogs()) {
             logRecorder.logAction({ name: data.type, data });
           }
           break;
         case 'rc-adapter-ai-assistant-settings-notify':
-          await rcAdapterAiAssistantSettingsNotifyHandler.onEvent({ data });
+          await rcAdapterAiAssistantSettingsNotifyHandler.onEvent({ data, popupContext });
           break;
         case 'rc-post-message-request':
-          await rcPostMessageRequestHandler.onEvent({ data });
+          await rcPostMessageRequestHandler.onEvent({ data, popupContext });
           if (data.path != '/callLogger/inputChanged' && await logRecorder.isRecordingLogs()) {
             logRecorder.logAction({ name: data.type, data });
           }
           break;
         case "rc-adapter-phone-number-format-settings-notify":
-          await rcAdapterPhoneNumberFormatSettingsNotifyHandler.onEvent({ data });
+          await rcAdapterPhoneNumberFormatSettingsNotifyHandler.onEvent({ data, popupContext });
           if (await logRecorder.isRecordingLogs()) {
             logRecorder.logAction({ name: data.type, data });
           }
