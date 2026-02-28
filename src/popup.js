@@ -94,6 +94,7 @@ async function getCustomManifest() {
 }
 
 let errorLogs = [];
+let transferOnHold = '';
 window.onerror = (event, source, lineno, colno, error) => {
   errorLogs.push({ event, source, lineno, colno, error })
 };
@@ -118,7 +119,7 @@ window.addEventListener('message', async (e) => {
           }
           const transferParty = data.telephonySession.parties.find(p => p.status.reason === 'AttendedTransfer' && p.status.code === 'Gone');
           if (transferParty) {
-            await chrome.storage.local.set({ [`${transferParty.status.peerId.telephonySessionId}-transfer-on-hold`]: true });
+            transferOnHold = transferParty.status.peerId.telephonySessionId;
           }
           break;
         case 'rc-calling-settings-notify':
@@ -221,6 +222,7 @@ window.addEventListener('message', async (e) => {
             userPermissions.ringSenseInsights = data.features && data.features.ringSenseInsights;
             userPermissions.sms = data.features && data.features.sms;
             await chrome.storage.local.set({ userPermissions });
+            await chrome.storage.local.set({ userFeatures: data.features });
           }
           console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
 
@@ -453,9 +455,8 @@ window.addEventListener('message', async (e) => {
                     type: 'openPopupWindow'
                   });
                   if (userCore.getIncomingCallPop(userSettings).value === 'onAnswer') {
-                    const isOnHoldFromTransfer = await chrome.storage.local.get(`${data.call.telephonySessionId}-transfer-on-hold`);
-                    if (isOnHoldFromTransfer?.[`${data.call.telephonySessionId}-transfer-on-hold`]) {
-                      await chrome.storage.local.remove(`${data.call.telephonySessionId}-transfer-on-hold`);
+                    if (transferOnHold === data.call.telephonySessionId) {
+                      transferOnHold = '';
                       break;
                     }
                     await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
@@ -463,9 +464,8 @@ window.addEventListener('message', async (e) => {
                   break;
                 case 'Outbound':
                   if (userCore.getOutgoingCallPop(userSettings).value === 'onAnswer') {
-                    const isOnHoldFromTransfer = await chrome.storage.local.get(`${data.call.telephonySessionId}-transfer-on-hold`);
-                    if (isOnHoldFromTransfer?.[`${data.call.telephonySessionId}-transfer-on-hold`]) {
-                      await chrome.storage.local.remove(`${data.call.telephonySessionId}-transfer-on-hold`);
+                    if (transferOnHold === data.call.telephonySessionId) {
+                      transferOnHold = '';
                       break;
                     }
                     await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
