@@ -11,7 +11,7 @@ async function onEvent({ data, popupContext }) {
     });
     await addPendingRecordingSessionId({ sessionId: data.telephonySession.sessionId });
   }
-  const transferParty = data.telephonySession.parties.find(p => p.status.reason === 'AttendedTransfer' && p.status.code === 'Gone');
+  const transferParty = data.telephonySession.parties.find(p => p.status.reason === 'AttendedTransfer' && p.status.code === 'Gone' && p.direction === 'Outbound');
   if (transferParty) {
     // eslint-disable-next-line no-param-reassign
     popupContext.transferOnHold = transferParty.status.peerId.telephonySessionId;  }
