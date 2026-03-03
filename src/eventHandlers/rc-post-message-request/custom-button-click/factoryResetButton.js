@@ -12,7 +12,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     if (rcUnifiedCrmExtJwt) {
         await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
-        await authCore.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
+        await authCore.unAuthorize({ serverUrl: manifest.serverUrl, rcUnifiedCrmExtJwt });
         if (platform.useLicense) {
             await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl });
         }

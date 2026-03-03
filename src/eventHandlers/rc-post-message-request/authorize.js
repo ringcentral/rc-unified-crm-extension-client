@@ -14,7 +14,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     else {
         window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
         await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
-        await authCore.unAuthorize({ serverUrl: manifest.serverUrl, platformName, rcUnifiedCrmExtJwt });
+        await authCore.unAuthorize({ serverUrl: manifest.serverUrl, rcUnifiedCrmExtJwt });
 
         // Clear call-down page after CRM disconnect
         const { userSettings } = await chrome.storage.local.get('userSettings');

@@ -177,10 +177,12 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
     return res.data.jwtToken;
 }
 
-async function unAuthorize({ serverUrl, platformName, rcUnifiedCrmExtJwt }) {
+async function unAuthorize({ serverUrl, rcUnifiedCrmExtJwt, isShowNotification = true }) {
     try {
         const res = await axios.post(`${serverUrl}/unAuthorize?jwtToken=${rcUnifiedCrmExtJwt}`);
-        showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? t('notifications.success.unauthorized'), ttl: res.data.returnMessage?.ttl ?? 3000 });
+        if (isShowNotification) {
+            showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? t('notifications.success.unauthorized'), ttl: res.data.returnMessage?.ttl ?? 3000 });
+        }
         trackCrmLogout()
     }
     catch (e) {

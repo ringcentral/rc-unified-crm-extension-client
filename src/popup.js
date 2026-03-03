@@ -1,6 +1,7 @@
 import { checkC2DCollision, showNotification } from './lib/util';
 import { setAuthor } from './lib/analytics';
 import axios from 'axios';
+import authCore from './core/auth';
 import { getManifest } from './service/manifestService';
 import { saveManifestUrl } from './service/manifestService';
 import { getPlatformInfo } from './service/platformService';
@@ -41,7 +42,9 @@ import ringsenseRefTrackHandler from './messageHandlers/ringsenseRefTrack';
 
 const popupContext = {
   transferOnHold: ''
-}
+};
+
+let isLoggingOut = false;
 
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
 // Add request interceptor
@@ -100,6 +103,22 @@ axios.interceptors.response.use(
           message: error.message
         }
       });
+    }
+    if (error.response?.status === 401 && !isLoggingOut) {
+      const url = error.config?.baseURL ? `${error.config.baseURL}${error.config.url}` : error.config?.url || '';
+      if (url.includes('jwtToken=') && !url.includes('/unAuthorize')) {
+        isLoggingOut = true;
+        try {
+          const manifest = await getManifest();
+          const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get({ rcUnifiedCrmExtJwt: null });
+          const serverUrl = manifest?.serverUrl;
+          if (rcUnifiedCrmExtJwt && serverUrl) {
+            await authCore.unAuthorize({ serverUrl, rcUnifiedCrmExtJwt, isShowNotification: false });
+          }
+        } finally {
+          isLoggingOut = false;
+        }
+      }
     }
     return Promise.reject(error);
   }
@@ -241,8 +260,8 @@ window.addEventListener('message', async (e) => {
   catch (e) {
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
     console.log(e);
-    if (e.response && e.response.data && e.response?.status !== 404 && !noShowNotification && typeof e.response.data === 'string') {
-      showNotification({ level: 'warning', message: e.response.data, ttl: 5000 });
+    if (e.response && e.response.data?.returnMessage && e.response?.status !== 404 && !noShowNotification) {
+      showNotification(e.response.data.returnMessage);
     }
     else if (e.message.includes('timeout')) {
       showNotification({ level: 'warning', message: 'Timeout', ttl: 5000 });
@@ -251,6 +270,12 @@ window.addEventListener('message', async (e) => {
       console.error(e);
     }
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+    if (e?.response?.status === 401) {
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-navigate-to',
+        path: '/settings',
+      }, '*');
+    }
   }
 });
 
