@@ -1,14 +1,33 @@
 import { t } from '../i18n';
 import { buildSingleContactSection } from './logPageUtils';
 
+// Normalizes correspondentsData to array format.
+// Accepts: [{ phoneNumber, displayName, contactInfo, logInfo? }] or { [phoneNumber]: contactInfo }
+// (messageLogger passes the latter when correspondents.length > 1)
+function normalizeCorrespondentsData(correspondentsData) {
+    if (!correspondentsData) {
+        return [];
+    }
+    if (Array.isArray(correspondentsData)) {
+        return correspondentsData;
+    }
+    return Object.entries(correspondentsData).map(([phoneNumber, contactInfo]) => ({
+        phoneNumber,
+        displayName: contactInfo?.[0]?.name ?? phoneNumber,
+        contactInfo: contactInfo ?? []
+    }));
+}
+
 // Builds a group message log page with one collapsible section per correspondent.
-// correspondentsData: [{ phoneNumber, displayName, contactInfo, logInfo? }]
+// correspondentsData: [{ phoneNumber, displayName, contactInfo, logInfo? }] or { [phoneNumber]: contactInfo }
 function getGroupLogPageRender({ id, manifest, platformName, correspondentsData, useContactSearch }) {
     const schemaProperties = {};
     const uiSchemaProperties = {};
     const formDataProperties = {};
 
-    correspondentsData.forEach((correspondent, index) => {
+    const correspondents = normalizeCorrespondentsData(correspondentsData);
+
+    correspondents.forEach((correspondent, index) => {
         const sectionKey = `section_${index}`;
         const { sectionSchema, sectionUISchema, sectionFormData } = buildSingleContactSection({
             contactInfo: correspondent.contactInfo,
@@ -22,7 +41,7 @@ function getGroupLogPageRender({ id, manifest, platformName, correspondentsData,
 
         schemaProperties[sectionKey] = {
             ...sectionSchema,
-            title: correspondent.displayName || correspondent.phoneNumber
+            title: correspondent.phoneNumber
         };
 
         uiSchemaProperties[sectionKey] = {
