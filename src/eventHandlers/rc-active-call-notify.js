@@ -7,7 +7,7 @@ import logPage from '../components/logPage';
 import { logPageFormDataDefaulting, cacheLogPageData } from '../lib/logUtil';
 import { responseMessage } from '../lib/util';
 
-async function onEvent({ data }) {
+async function onEvent({ data, popupContext }) {
   const manifest = await getManifest();
   const platformInfo = await getPlatformInfo();
   const platformName = platformInfo?.platformName ?? '';;
@@ -41,9 +41,9 @@ async function onEvent({ data }) {
             type: 'openPopupWindow'
           });
           if (userCore.getIncomingCallPop(userSettings).value === 'onAnswer') {
-            const isOnHoldFromTransfer = await chrome.storage.local.get(`${data.call.telephonySessionId}-transfer-on-hold`);
-            if (isOnHoldFromTransfer?.[`${data.call.telephonySessionId}-transfer-on-hold`]) {
-              await chrome.storage.local.remove(`${data.call.telephonySessionId}-transfer-on-hold`);
+            if (popupContext.transferOnHold === data.call.telephonySessionId) {
+              // eslint-disable-next-line no-param-reassign
+              popupContext.transferOnHold = '';
               break;
             }
             await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });
@@ -51,9 +51,9 @@ async function onEvent({ data }) {
           break;
         case 'Outbound':
           if (userCore.getOutgoingCallPop(userSettings).value === 'onAnswer') {
-            const isOnHoldFromTransfer = await chrome.storage.local.get(`${data.call.telephonySessionId}-transfer-on-hold`);
-            if (isOnHoldFromTransfer?.[`${data.call.telephonySessionId}-transfer-on-hold`]) {
-              await chrome.storage.local.remove(`${data.call.telephonySessionId}-transfer-on-hold`);
+            if (popupContext.transferOnHold === data.call.telephonySessionId) {
+              // eslint-disable-next-line no-param-reassign
+              popupContext.transferOnHold = '';
               break;
             }
             await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.call.to.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });

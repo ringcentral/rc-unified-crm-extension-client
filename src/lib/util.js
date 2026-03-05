@@ -9,8 +9,12 @@ function secondsToHourMinuteSecondString(totalSeconds) {
 }
 
 async function showNotification({ level, message, ttl, details = null }) {
-  if (!level || !message || isObjectEmpty(message)) {
+  if (!message || isObjectEmpty(message)) {
     return;
+  }
+  if(!level) {
+    // eslint-disable-next-line no-param-reassign
+    level = 'warning';
   }
   const { notificationLevelSetting } = await chrome.storage.local.get({ notificationLevelSetting: ['success', 'warning', 'error'] });
   if (!notificationLevelSetting.includes(level)) {
