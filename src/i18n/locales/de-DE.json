@@ -154,7 +154,26 @@
     "multiContactPrompt": {
       "title": "Kontakt zum Öffnen anklicken",
       "contacts": "Kontakte"
+    },
+    "pluginsManage": {
+      "title": "Plug-ins",
+      "installedPlugins": "Installierte Plug-ins",
+      "pluginMarket": "Plug-in-Markt"
     }
+  },
+  "plugins": {
+    "title": "Plug-ins",
+    "configure": "Konfigurieren",
+    "configurePage": "Plug-in konfigurieren",
+    "install": "Installieren",
+    "uninstall": "Deinstallieren",
+    "enable": "Aktivieren",
+    "enablePlugin": "Plug-in aktivieren",
+    "basicInfo": "Grundinformationen",
+    "noPluginInstalled": "Kein Plug-in installiert",
+    "by": "von {author}",
+    "pluginMarket": "Plug-in-Markt",
+    "searchPlaceholder": "Mit Filtern suchen..."
   },
   "settings": {
     "preconfigure": {
@@ -347,7 +366,8 @@
       "callLogUpdated": "Anrufprotokoll aktualisiert",
       "authorized": "Erfolgreich autorisiert.",
       "unauthorized": "Erfolgreich abgemeldet.",
-      "openingContactPage": "Versuche, die Kontaktseite zu finden und zu öffnen..."
+      "openingContactPage": "Versuche, die Kontaktseite zu finden und zu öffnen...",
+      "loggedOut": "Erfolgreich abgemeldet."
     },
     "warning": {
       "callLogFailed": "Anrufprotokoll konnte nicht gespeichert werden",
@@ -357,7 +377,8 @@
       "noContactFound": "Kein Kontakt gefunden"
     },
     "error": {
-      "wrongFormat": "Falsches Format: {field}"
+      "wrongFormat": "Falsches Format: {field}",
+      "logoutFailed": "Abmeldung fehlgeschlagen."
     }
   },
   "conflicts": {

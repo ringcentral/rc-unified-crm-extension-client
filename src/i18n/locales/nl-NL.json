@@ -154,7 +154,26 @@
     "multiContactPrompt": {
       "title": "Klik op contact om te openen",
       "contacts": "Contacten"
+    },
+    "pluginsManage": {
+      "title": "Plug-ins",
+      "installedPlugins": "Geïnstalleerde plug-ins",
+      "pluginMarket": "Plug-in markt"
     }
+  },
+  "plugins": {
+    "title": "Plug-ins",
+    "configure": "Configureren",
+    "configurePage": "Plug-in configureren",
+    "install": "Installeren",
+    "uninstall": "Verwijderen",
+    "enable": "Inschakelen",
+    "enablePlugin": "Plug-in inschakelen",
+    "basicInfo": "Basisinformatie",
+    "noPluginInstalled": "Geen plug-in geïnstalleerd",
+    "by": "door {author}",
+    "pluginMarket": "Plug-in markt",
+    "searchPlaceholder": "Zoeken met filters..."
   },
   "settings": {
     "preconfigure": {
@@ -347,7 +366,8 @@
       "callLogUpdated": "Oproeplog bijgewerkt",
       "authorized": "Succesvol geautoriseerd.",
       "unauthorized": "Succesvol uitgelogd.",
-      "openingContactPage": "Proberen contactpagina te vinden en te openen..."
+      "openingContactPage": "Proberen contactpagina te vinden en te openen...",
+      "loggedOut": "Succesvol uitgelogd."
     },
     "warning": {
       "callLogFailed": "Opslaan van oproeplog mislukt",
@@ -357,7 +377,8 @@
       "noContactFound": "Geen contact gevonden"
     },
     "error": {
-      "wrongFormat": "Verkeerd formaat: {field}"
+      "wrongFormat": "Verkeerd formaat: {field}",
+      "logoutFailed": "Uitloggen mislukt."
     }
   },
   "conflicts": {

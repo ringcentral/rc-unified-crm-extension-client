@@ -154,7 +154,26 @@
     "multiContactPrompt": {
       "title": "Napsauta yhteystietoa avataksesi",
       "contacts": "Yhteystiedot"
+    },
+    "pluginsManage": {
+      "title": "Lisäosat",
+      "installedPlugins": "Asennetut lisäosat",
+      "pluginMarket": "Lisäosamarkkina"
     }
+  },
+  "plugins": {
+    "title": "Lisäosat",
+    "configure": "Määritä",
+    "configurePage": "Määritä lisäosa",
+    "install": "Asenna",
+    "uninstall": "Poista",
+    "enable": "Ota käyttöön",
+    "enablePlugin": "Ota lisäosa käyttöön",
+    "basicInfo": "Perustiedot",
+    "noPluginInstalled": "Ei asennettuja lisäosia",
+    "by": "tekijä: {author}",
+    "pluginMarket": "Lisäosamarkkina",
+    "searchPlaceholder": "Hae suodattimilla..."
   },
   "settings": {
     "preconfigure": {
@@ -347,7 +366,8 @@
       "callLogUpdated": "Puheluloki päivitetty",
       "authorized": "Valtuutus onnistui.",
       "unauthorized": "Uloskirjautuminen onnistui.",
-      "openingContactPage": "Yritetään löytää ja avata yhteystietosivu..."
+      "openingContactPage": "Yritetään löytää ja avata yhteystietosivu...",
+      "loggedOut": "Uloskirjautuminen onnistui."
     },
     "warning": {
       "callLogFailed": "Puhelulokin tallennus epäonnistui",
@@ -357,7 +377,8 @@
       "noContactFound": "Yhteystietoa ei löytynyt"
     },
     "error": {
-      "wrongFormat": "Väärä muoto: {field}"
+      "wrongFormat": "Väärä muoto: {field}",
+      "logoutFailed": "Uloskirjautuminen epäonnistui."
     }
   },
   "conflicts": {

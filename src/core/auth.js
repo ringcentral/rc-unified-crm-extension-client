@@ -134,36 +134,7 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
         const stateData = JSON.parse(decodeURIComponent(new URLSearchParams(new URL(callbackUri).search).get('state') ?? '{}'));
         if (stateData?.from === 'plugin' && stateData?.redirectTo) {
             const pluginCallbackResp = await axios.get(`${stateData.redirectTo}?callbackUri=${callbackUri}`);
-            const pluginId = pluginCallbackResp?.data?.pluginId;
-            if (pluginId) {
-                showNotification({ level: 'success', message: 'Successfully authorized plugin.' });
-                const { userSettings } = await chrome.storage.local.get('userSettings');
-                const pluginSetting = userSettings?.[`plugin_${pluginId}`];
-                const activated = pluginSetting?.value?.activated ?? false;
-                const pluginAccess = pluginSetting?.value?.access ?? '';
-                const pluginName = pluginSetting?.value?.name ?? '';
-                const isAdminOnly = pluginSetting?.value?.isAdminOnly ?? false;
-                const plugin = await getPluginDetails({
-                    selectedPlugin: {
-                        id: pluginId,
-                        name: pluginName,
-                        access: pluginAccess
-                    }
-                });
-                const pluginConfigurePageRender = getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, isAdminOnly, activated, isLoggedIn: true });
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-register-customized-page',
-                    page: pluginConfigurePageRender
-                });
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: `/customized/${pluginConfigurePageRender.id}`
-                }, '*');
-            }
-            else {
-                showNotification({ level: 'success', message: 'Successfully authorized plugin. But status on this page is not refresh, please exit and re-open.' });
-            }
-
+            showNotification({ level: 'success', message: 'Successfully authorized plugin. Please exit and re-open this page to refresh the status.' });
             return;
         }
     }

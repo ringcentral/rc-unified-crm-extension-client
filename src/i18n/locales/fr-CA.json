@@ -154,7 +154,26 @@
     "multiContactPrompt": {
       "title": "Cliquer sur le contact pour ouvrir",
       "contacts": "Contacts"
+    },
+    "pluginsManage": {
+      "title": "Plugiciels",
+      "installedPlugins": "Plugiciels installés",
+      "pluginMarket": "Marché des plugiciels"
     }
+  },
+  "plugins": {
+    "title": "Plugiciels",
+    "configure": "Configurer",
+    "configurePage": "Configurer le plugiciel",
+    "install": "Installer",
+    "uninstall": "Désinstaller",
+    "enable": "Activer",
+    "enablePlugin": "Activer le plugiciel",
+    "basicInfo": "Informations de base",
+    "noPluginInstalled": "Aucun plugiciel installé",
+    "by": "par {author}",
+    "pluginMarket": "Marché des plugiciels",
+    "searchPlaceholder": "Rechercher avec des filtres..."
   },
   "settings": {
     "preconfigure": {
@@ -347,7 +366,8 @@
       "callLogUpdated": "Journal d'appel mis à jour",
       "authorized": "Autorisé avec succès.",
       "unauthorized": "Déconnecté avec succès.",
-      "openingContactPage": "Tentative de recherche et d'ouverture de la page de contact..."
+      "openingContactPage": "Tentative de recherche et d'ouverture de la page de contact...",
+      "loggedOut": "Déconnexion réussie."
     },
     "warning": {
       "callLogFailed": "Échec de l'enregistrement du journal d'appel",
@@ -357,7 +377,8 @@
       "noContactFound": "Aucun contact trouvé"
     },
     "error": {
-      "wrongFormat": "Mauvais format : {field}"
+      "wrongFormat": "Mauvais format : {field}",
+      "logoutFailed": "Échec de la déconnexion."
     }
   },
   "conflicts": {

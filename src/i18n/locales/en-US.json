@@ -154,7 +154,26 @@
     "multiContactPrompt": {
       "title": "Click contact to open",
       "contacts": "Contacts"
+    },
+    "pluginsManage": {
+      "title": "Plugins",
+      "installedPlugins": "Installed plugins",
+      "pluginMarket": "Plugin market"
     }
+  },
+  "plugins": {
+    "title": "Plugins",
+    "configure": "Configure",
+    "configurePage": "Configure plugin",
+    "install": "Install",
+    "uninstall": "Uninstall",
+    "enable": "Enable",
+    "enablePlugin": "Enable plugin",
+    "basicInfo": "Basic info",
+    "noPluginInstalled": "No plugin installed",
+    "by": "by {author}",
+    "pluginMarket": "Plugin market",
+    "searchPlaceholder": "Search with filters..."
   },
   "settings": {
     "preconfigure": {
@@ -347,7 +366,8 @@
       "callLogUpdated": "Call log updated",
       "authorized": "Successfully authorized.",
       "unauthorized": "Successfully unauthorized.",
-      "openingContactPage": "Trying to find and open contact page..."
+      "openingContactPage": "Trying to find and open contact page...",
+      "loggedOut": "Successfully logged out."
     },
     "warning": {
       "callLogFailed": "Failed to save call log",
@@ -357,7 +377,8 @@
       "noContactFound": "No contact found"
     },
     "error": {
-      "wrongFormat": "Wrong format: {field}"
+      "wrongFormat": "Wrong format: {field}",
+      "logoutFailed": "Failed to log out."
     }
   },
   "conflicts": {

@@ -154,7 +154,26 @@
     "multiContactPrompt": {
       "title": "Clicca contatto per aprire",
       "contacts": "Contatti"
+    },
+    "pluginsManage": {
+      "title": "Plugin",
+      "installedPlugins": "Plugin installati",
+      "pluginMarket": "Mercato plugin"
     }
+  },
+  "plugins": {
+    "title": "Plugin",
+    "configure": "Configura",
+    "configurePage": "Configura plug-in",
+    "install": "Installa",
+    "uninstall": "Disinstalla",
+    "enable": "Abilita",
+    "enablePlugin": "Abilita plug-in",
+    "basicInfo": "Informazioni di base",
+    "noPluginInstalled": "Nessun plugin installato",
+    "by": "di {author}",
+    "pluginMarket": "Mercato plugin",
+    "searchPlaceholder": "Cerca con filtri..."
   },
   "settings": {
     "preconfigure": {
@@ -357,7 +376,8 @@
       "noContactFound": "Nessun contatto trovato"
     },
     "error": {
-      "wrongFormat": "Formato errato: {field}"
+      "wrongFormat": "Formato errato: {field}",
+      "logoutFailed": "Disconnessione non riuscita."
     }
   },
   "conflicts": {

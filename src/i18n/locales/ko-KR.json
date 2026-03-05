@@ -154,7 +154,26 @@
     "multiContactPrompt": {
       "title": "연락처를 클릭하여 열기",
       "contacts": "연락처"
+    },
+    "pluginsManage": {
+      "title": "플러그인",
+      "installedPlugins": "설치된 플러그인",
+      "pluginMarket": "플러그인 마켓"
     }
+  },
+  "plugins": {
+    "title": "플러그인",
+    "configure": "구성",
+    "configurePage": "플러그인 구성",
+    "install": "설치",
+    "uninstall": "제거",
+    "enable": "사용",
+    "enablePlugin": "플러그인 사용",
+    "basicInfo": "기본 정보",
+    "noPluginInstalled": "설치된 플러그인 없음",
+    "by": "{author} 제작",
+    "pluginMarket": "플러그인 마켓",
+    "searchPlaceholder": "필터로 검색..."
   },
   "settings": {
     "preconfigure": {
@@ -347,7 +366,8 @@
       "callLogUpdated": "통화 로그가 업데이트되었습니다",
       "authorized": "인증에 성공했습니다.",
       "unauthorized": "로그아웃에 성공했습니다.",
-      "openingContactPage": "연락처 페이지를 찾아 열고 있습니다..."
+      "openingContactPage": "연락처 페이지를 찾아 열고 있습니다...",
+      "loggedOut": "로그아웃되었습니다."
     },
     "warning": {
       "callLogFailed": "통화 로그 저장 실패",
@@ -357,7 +377,8 @@
       "noContactFound": "연락처를 찾을 수 없습니다"
     },
     "error": {
-      "wrongFormat": "잘못된 형식: {field}"
+      "wrongFormat": "잘못된 형식: {field}",
+      "logoutFailed": "로그아웃에 실패했습니다."
     }
   },
   "conflicts": {

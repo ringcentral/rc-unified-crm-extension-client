@@ -1,16 +1,18 @@
-function getInstalledPluginListPageRender({ viewType, pluginList }) {
+import { t } from '../i18n';
+
+function getInstalledPluginListPageRender({ pluginList, isFromAdmin }) {
     let pluginListToRender = [];
     for (const plugin of pluginList) {
         const newPlugin = {
             const: `${plugin.id}=${plugin.access}`,
             title: plugin.displayName ?? plugin.name,
             icon: plugin.iconUrl ? plugin.iconUrl : 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
-            description: `by ${plugin.developer.name}`,
+            description: t('plugins.by', { author: plugin.developer.name }),
             authorAvatar: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg',
             actions: [
                 {
                     id: 'selectPlugin',
-                    title: 'Configure',
+                    title: t('plugins.configure'),
                     icon: 'connect'
                 }
             ]
@@ -19,7 +21,7 @@ function getInstalledPluginListPageRender({ viewType, pluginList }) {
     }
     const page = {
         id: 'installedPluginListPage',
-        title: 'Plugins',
+        title: t('plugins.title'),
         type: 'page',
         schema: {
             type: 'object',
@@ -27,7 +29,7 @@ function getInstalledPluginListPageRender({ viewType, pluginList }) {
                 ...(pluginListToRender.length > 0 ? {
                     plugins: {
                         type: 'string',
-                        title: 'Plugins',
+                        title: t('plugins.title'),
                         oneOf: pluginListToRender
                     }
                 } : {})
@@ -41,13 +43,13 @@ function getInstalledPluginListPageRender({ viewType, pluginList }) {
         },
         formData: {
             pluginList,
-            viewType
+            isFromAdmin
         }
     }
     if (pluginList?.length === 0) {
         page.schema.properties.helperText = {
             type: 'string',
-            description: 'No plugin installed'
+            description: t('plugins.noPluginInstalled')
         };
         page.uiSchema.helperText = {
             "ui:field": "typography",

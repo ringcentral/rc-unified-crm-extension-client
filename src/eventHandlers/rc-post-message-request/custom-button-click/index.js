@@ -52,6 +52,7 @@ import selectPluginHandler from './selectPlugin';
 import pluginConfigurePageSubmitHandler from './pluginConfigurePageSubmit';
 import generalHandler from './general';
 import pluginConfigButtonsHandler from './pluginConfigButtons';
+import pluginAdminConfigButtonsHandler from './pluginAdminConfigButtonsHandler';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     switch (data.body.button.type) {
@@ -249,7 +250,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     // plugin configure buttons
     const isPlugin = !!data.body.button?.formData?.pluginId;
     if (data.body.button.type != 'submit' && isPlugin) {
-        await pluginConfigButtonsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        if (data.body.button.formData.isFromAdmin) {
+            await pluginAdminConfigButtonsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        }
+        else {
+            await pluginConfigButtonsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        }
     }
     responseMessage(data.requestId, { data: 'ok' });
 }

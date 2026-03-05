@@ -31,7 +31,10 @@ import adminGoogleSheetsPageHandler from './adminGoogleSheetsPage';
 import googleSheetsAdminConfigHandler from './googleSheetsAdminConfig';
 import getErrorLogRecrodPageHandler from './getErrorLogRecordPage';
 import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
-import openPluginMarketListPageHandler from './pluginMarketListPage';
+import pluginsAdminConfigHandler from './pluginsAdminConfig';
+import pluginsAdminManageHandler from './pluginsAdminManage';
+import installedPluginsHandler from './installedPlugins';
+import pluginMarketListPageHandler from './pluginMarketListPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -102,12 +105,18 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'plugins':
             switch (data.body.page.id) {
                 case 'adminPage':
-                    await openPluginMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, viewType: 'explore' });
+                    await pluginsAdminManageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
                     break;
                 case 'managedSettings':
-                    // TODO: configure plugin fields
+                    await pluginsAdminConfigHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
                     break;
             }
+            break;
+        case 'installedPlugins':
+            await installedPluginsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'pluginMarket':
+            await pluginMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'appearance':
             await appearanceHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

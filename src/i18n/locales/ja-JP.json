@@ -154,7 +154,26 @@
     "multiContactPrompt": {
       "title": "連絡先をクリックして開く",
       "contacts": "連絡先"
+    },
+    "pluginsManage": {
+      "title": "プラグイン",
+      "installedPlugins": "インストール済みプラグイン",
+      "pluginMarket": "プラグインマーケット"
     }
+  },
+  "plugins": {
+    "title": "プラグイン",
+    "configure": "設定",
+    "configurePage": "プラグインを設定",
+    "install": "インストール",
+    "uninstall": "アンインストール",
+    "enable": "有効にする",
+    "enablePlugin": "プラグインを有効にする",
+    "basicInfo": "基本情報",
+    "noPluginInstalled": "プラグインがインストールされていません",
+    "by": "{author} 作",
+    "pluginMarket": "プラグインマーケット",
+    "searchPlaceholder": "フィルターで検索..."
   },
   "settings": {
     "preconfigure": {
@@ -347,7 +366,8 @@
       "callLogUpdated": "通話ログが更新されました",
       "authorized": "認証に成功しました。",
       "unauthorized": "ログアウトに成功しました。",
-      "openingContactPage": "連絡先ページを検索して開いています..."
+      "openingContactPage": "連絡先ページを検索して開いています...",
+      "loggedOut": "ログアウトしました。"
     },
     "warning": {
       "callLogFailed": "通話ログの保存に失敗しました",
@@ -357,7 +377,8 @@
       "noContactFound": "連絡先が見つかりません"
     },
     "error": {
-      "wrongFormat": "形式エラー：{field}"
+      "wrongFormat": "形式エラー：{field}",
+      "logoutFailed": "ログアウトに失敗しました。"
     }
   },
   "conflicts": {

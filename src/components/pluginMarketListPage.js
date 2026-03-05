@@ -1,4 +1,8 @@
-function getPluginMarketListPageRender({ viewType, pluginList, searchWord = '', filter = 'All' }) {
+import { t } from '../i18n';
+
+function getPluginMarketListPageRender({ pluginList, searchWord = '', filter = null }) {
+    const allLabel = t('common.labels.all');
+    const filterValue = filter ?? allLabel;
     let pluginListToRender = [];
     for (const plugin of pluginList) {
         let meta = '';
@@ -7,23 +11,23 @@ function getPluginMarketListPageRender({ viewType, pluginList, searchWord = '', 
                 meta = '';
                 break;
             case 'shared':
-                meta = 'Shared with you';
+                meta = t('common.labels.sharedWithYou');
                 break;
             case 'private':
-                meta = 'Private';
+                meta = t('common.labels.private');
                 break;
         }
         const newPlugin = {
             const: `${plugin.id}=${plugin.access}`,
             title: plugin.displayName ?? plugin.name,
             icon: plugin.iconUrl ? plugin.iconUrl : 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
-            description: `by ${plugin.developer.name}`,
+            description: t('plugins.by', { author: plugin.developer.name }),
             meta: meta,
             authorAvatar: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg',
             actions: [
                 {
                     id: 'selectPlugin',
-                    title: 'Install',
+                    title: t('plugins.install'),
                     icon: 'info'
                 }
             ]
@@ -33,12 +37,12 @@ function getPluginMarketListPageRender({ viewType, pluginList, searchWord = '', 
     if (searchWord) {
         pluginListToRender = pluginListToRender.filter(um => um.title.toLowerCase().includes(searchWord.toLowerCase()) || um.description.toLowerCase().includes(searchWord.toLowerCase()));
     }
-    if (filter !== 'All') {
-        pluginListToRender = pluginListToRender.filter(um => um.meta === filter);
+    if (filterValue !== allLabel) {
+        pluginListToRender = pluginListToRender.filter(um => um.meta === filterValue);
     }
     const page = {
         id: 'pluginMarketListPage',
-        title: 'Plugin market',
+        title: t('plugins.pluginMarket'),
         type: 'page',
         schema: {
             type: 'object',
@@ -48,17 +52,17 @@ function getPluginMarketListPageRender({ viewType, pluginList, searchWord = '', 
                     properties: {
                         search: {
                             type: 'string',
-                            title: 'Search'
+                            title: t('common.labels.search')
                         },
                         filter: {
                             type: 'string',
-                            title: 'Filter'
+                            title: t('common.labels.filter')
                         }
                     }
                 },
                 plugins: {
                     type: 'string',
-                    title: 'Plugins',
+                    title: t('plugins.title'),
                     oneOf: pluginListToRender
                 }
             }
@@ -66,11 +70,11 @@ function getPluginMarketListPageRender({ viewType, pluginList, searchWord = '', 
         uiSchema: {
             pluginSearch: {
                 "ui:field": "search",
-                "ui:placeholder": "Search with filters...",
+                "ui:placeholder": t('plugins.searchPlaceholder'),
                 "ui:filters": [
-                    "All",
-                    "Private",
-                    "Shared with you"
+                    allLabel,
+                    t('common.labels.private'),
+                    t('common.labels.sharedWithYou')
                 ]
             },
             plugins: {
@@ -79,12 +83,12 @@ function getPluginMarketListPageRender({ viewType, pluginList, searchWord = '', 
             }
         },
         formData: {
+            isFromAdmin: true,
             pluginSearch: {
                 search: searchWord,
-                filter: filter
+                filter: filterValue
             },
             pluginList,
-            viewType
         }
     }
     return page;

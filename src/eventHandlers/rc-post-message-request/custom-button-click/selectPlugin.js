@@ -1,6 +1,7 @@
 import axios from 'axios';
 import baseManifest from '../../../manifest.json';
 import { getRcInfo } from '../../../lib/util';
+import { getPluginAdminConfigurePageRender } from '../../../components/pluginAdminConfigurePage';
 import { getPluginConfigurePageRender } from '../../../components/pluginConfigurePage';
 import { getUserSettingsOnline } from '../../../core/user';
 import { checkAuth } from '../../../core/auth';
@@ -19,10 +20,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
     const selectedPluginAccess = listButtonItemId.split('=')[1];
     const selectedPlugin = data.body.button.formData.pluginList.find(plugin => plugin.id === selectedPluginId);
     const userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl });
-    const plugin = await getPluginDetails({ selectedPlugin});
+    const installed = Object.keys(userSettings?.plugins ?? {}).includes(`plugin_${selectedPluginId}`);
+    const plugin = await getPluginDetails({ selectedPlugin });
     const pluginSetting = userSettings?.plugins?.[`plugin_${selectedPluginId}`];
     const activated = pluginSetting?.value?.activated ?? false;
-    const isAdminOnly = pluginSetting?.value?.isAdminOnly ?? false;
     let isLoggedIn = false;
     if (plugin?.showAuthorizationButton && plugin?.authStateUrl) {
         try {
@@ -41,7 +42,20 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             isLoggedIn = false;
         }
     }
-    const pluginConfigurePageRender = getPluginConfigurePageRender({ viewType: data.body.button.formData.viewType, pluginId: selectedPluginId, pluginAccess: selectedPluginAccess, plugin, isAdminOnly, activated, isLoggedIn });
+    const pluginConfigurePageRender = data.body.button.formData.isFromAdmin ?
+        getPluginAdminConfigurePageRender({
+            pluginId: selectedPluginId,
+            pluginAccess: selectedPluginAccess,
+            plugin,
+            installed,
+        }) :
+        getPluginConfigurePageRender({
+            pluginId: selectedPluginId,
+            pluginAccess: selectedPluginAccess,
+            plugin,
+            activated,
+            isLoggedIn
+        });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: pluginConfigurePageRender

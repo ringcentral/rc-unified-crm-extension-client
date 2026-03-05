@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 
-function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, activated, isLoggedIn }) {
+function getPluginAdminConfigurePageRender({ pluginId, pluginAccess, plugin, installed}) {
     const page = {
         id: 'pluginConfigurePage',
         title: t('plugins.configurePage'),
@@ -23,11 +23,6 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, activate
                 description: {
                     type: 'string',
                     description: plugin.description,
-                },
-                activated: {
-                    type: 'boolean',
-                    title: t('plugins.enablePlugin'),
-                    default: activated ?? false,
                 }
             }
         },
@@ -41,14 +36,11 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, activate
             description: {
                 "ui:field": "typography",
                 "ui:variant": "body1",
-            },
-            activated: {
-                "ui:disabled": false
             }
         },
         formData: {
-            isFromAdmin: false,
-            activated: activated ?? false,
+            isFromAdmin: true,
+            installed: installed ?? false,
             access: pluginAccess,
             pluginId,
             plugin,
@@ -57,34 +49,30 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, activate
             logType: plugin.supportedLogType,
         }
     }
-    if (plugin.showAuthorizationButton) {
-        if (isLoggedIn) {
-            page.schema.properties.logoutButton = {
-                type: 'string',
-                title: t('common.buttons.logout'),
-            }
-            page.uiSchema.logoutButton = {
-                "ui:field": "button",
-                "ui:variant": "contained",
-                "ui:fullWidth": true,
-                "ui:color": "danger.b03",
-            }
+    if (installed) {
+        page.schema.properties.removeButton = {
+            type: 'string',
+            title: t('plugins.uninstall'),
         }
-        else {
-            page.schema.properties.authButton = {
-                type: 'string',
-                title: t('common.buttons.connect'),
-            }
-            page.uiSchema.authButton = {
-                "ui:field": "button",
-                "ui:variant": "contained",
-                "ui:fullWidth": true
-            }
-            page.formData.activated = false;
+        page.uiSchema.removeButton = {
+            "ui:field": "button",
+            "ui:variant": "outlined",
+            "ui:color": "danger.b03",
+            "ui:fullWidth": true,
+        }
+    }
+    else {
+        page.schema.properties.installButton = {
+            type: 'string',
+            title: t('plugins.install'),
+        }
+        page.uiSchema.installButton = {
+            "ui:field": "button",
+            "ui:variant": "contained",
+            "ui:fullWidth": true,
         }
     }
     return page;
 }
 
-exports.getPluginConfigurePageRender = getPluginConfigurePageRender;
-
+exports.getPluginAdminConfigurePageRender = getPluginAdminConfigurePageRender;

@@ -154,7 +154,26 @@
     "multiContactPrompt": {
       "title": "点击联系人以打开",
       "contacts": "联系人"
+    },
+    "pluginsManage": {
+      "title": "插件",
+      "installedPlugins": "已安装插件",
+      "pluginMarket": "插件市场"
     }
+  },
+  "plugins": {
+    "title": "插件",
+    "configure": "配置",
+    "configurePage": "配置插件",
+    "install": "安装",
+    "uninstall": "卸载",
+    "enable": "启用",
+    "enablePlugin": "启用插件",
+    "basicInfo": "基本信息",
+    "noPluginInstalled": "未安装插件",
+    "by": "由 {author}",
+    "pluginMarket": "插件市场",
+    "searchPlaceholder": "使用筛选条件搜索..."
   },
   "settings": {
     "preconfigure": {
@@ -347,7 +366,8 @@
       "callLogUpdated": "通话日志已更新",
       "authorized": "授权成功。",
       "unauthorized": "已成功退出登录。",
-      "openingContactPage": "正在尝试查找并打开联系人页面..."
+      "openingContactPage": "正在尝试查找并打开联系人页面...",
+      "loggedOut": "已成功退出登录。"
     },
     "warning": {
       "callLogFailed": "保存通话日志失败",
@@ -357,7 +377,8 @@
       "noContactFound": "未找到联系人"
     },
     "error": {
-      "wrongFormat": "格式错误：{field}"
+      "wrongFormat": "格式错误：{field}",
+      "logoutFailed": "退出登录失败。"
     }
   },
   "conflicts": {
