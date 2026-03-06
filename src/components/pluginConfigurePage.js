@@ -1,12 +1,43 @@
 import { t } from '../i18n';
 
-function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, activated, isLoggedIn }) {
+function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, isLoggedIn }) {
+    const customForm = plugin.pageContent;
+    let customFormProperties = {};
+    let customFormUiSchema = {};
+    let customFormRequired = [];
+    if(customForm) {
+        for (const field of customForm) {
+            const key = field.const;
+            const schemaProp = {
+                type: field.type === 'selection' ? 'string' : field.type,
+                title: field.title,
+            };
+            if (field.description) {
+                schemaProp.description = field.description;
+            }
+            if (field.type === 'selection' && field.oneOf) {
+                schemaProp.oneOf = field.oneOf;
+            }
+            customFormProperties[key] = schemaProp;
+
+            if (field.required) {
+                customFormRequired.push(key);
+            }
+
+            const uiEntry = { ...(field.uiSchema ?? {}) };
+            if (field.type === 'selection') {
+                uiEntry['ui:widget'] = 'select';
+            }
+            customFormUiSchema[key] = uiEntry;
+        }
+    }
     const page = {
         id: 'pluginConfigurePage',
         title: t('plugins.configurePage'),
         type: 'page',
         schema: {
             type: 'object',
+            required: customFormRequired,
             properties: {
                 basicInfo: {
                     type: 'string',
@@ -24,14 +55,18 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, activate
                     type: 'string',
                     description: plugin.description,
                 },
+                ...customFormProperties,
                 activated: {
                     type: 'boolean',
                     title: t('plugins.enablePlugin'),
-                    default: activated ?? false,
+                    default: config?.activated?.value ?? false,
                 }
             }
         },
         uiSchema: {
+            submitButtonOptions:{
+                submitText: t('common.buttons.save'),
+            },
             basicInfo: {
                 "ui:field": "list",
                 "ui:showIconAsAvatar": false,
@@ -42,13 +77,14 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, activate
                 "ui:field": "typography",
                 "ui:variant": "body1",
             },
+            ...customFormUiSchema,
             activated: {
-                "ui:disabled": false
+                "ui:disabled": config?.activated?.isCustomizable ?? false
             }
         },
         formData: {
             isFromAdmin: false,
-            activated: activated ?? false,
+            config,
             access: pluginAccess,
             pluginId,
             plugin,
@@ -80,7 +116,6 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, activate
                 "ui:variant": "contained",
                 "ui:fullWidth": true
             }
-            page.formData.activated = false;
         }
     }
     return page;

@@ -23,7 +23,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
     const installed = Object.keys(userSettings?.plugins ?? {}).includes(`plugin_${selectedPluginId}`);
     const plugin = await getPluginDetails({ selectedPlugin });
     const pluginSetting = userSettings?.plugins?.[`plugin_${selectedPluginId}`];
-    const activated = pluginSetting?.value?.activated ?? false;
+    const configSetting = pluginSetting?.value?.config ?? {};
     let isLoggedIn = false;
     if (plugin?.showAuthorizationButton && plugin?.authStateUrl) {
         try {
@@ -53,7 +53,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             pluginId: selectedPluginId,
             pluginAccess: selectedPluginAccess,
             plugin,
-            activated,
+            config: configSetting,
             isLoggedIn
         });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

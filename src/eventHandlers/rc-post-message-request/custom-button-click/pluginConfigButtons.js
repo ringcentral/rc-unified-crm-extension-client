@@ -22,7 +22,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                     pluginId: data.body.button.formData.pluginId,
                     pluginAccess: data.body.button.formData.access,
                     plugin: data.body.button.formData.plugin,
-                    activated: data.body.button.formData.activated,
+                    config: data.body.button.formData.config,
                     isLoggedIn: false
                 });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
