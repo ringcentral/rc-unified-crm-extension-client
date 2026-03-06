@@ -35,6 +35,7 @@ import pluginsAdminConfigHandler from './pluginsAdminConfig';
 import pluginsAdminManageHandler from './pluginsAdminManage';
 import installedPluginsHandler from './installedPlugins';
 import pluginMarketListPageHandler from './pluginMarketListPage';
+import pluginAdminSettingsPageHandler from './pluginAdminSettingsPageHandler';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -92,6 +93,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'adminGoogleSheetsPage':
             await adminGoogleSheetsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'pluginAdminSettingsPage':
+            const pluginId = data.body?.formData?.section;
+            await pluginAdminSettingsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, pluginId });
             break;
     }
     // Page render update from section change input
