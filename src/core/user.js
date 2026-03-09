@@ -181,9 +181,10 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     }
     const notificationLevelSetting = getNotificationLevelSetting(userSettings).value;
     await chrome.storage.local.set({ notificationLevelSetting });
+    const serviceManifest = await getServiceManifest();
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',
-        service: (await getServiceManifest())
+        service: serviceManifest
     }, '*');
     // custom tabs
     const reportPageRender = reportPage.getReportsPageRender({ userStats: null, adminStats: null, userSettings });
