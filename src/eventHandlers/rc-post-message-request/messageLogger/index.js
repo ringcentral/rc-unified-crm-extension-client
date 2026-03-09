@@ -5,6 +5,7 @@ import contactCore from '../../../core/contact';
 import { getLogConflictInfo, logPageFormDataDefaulting, cacheLogPageData } from '../../../lib/logUtil';
 import moment from 'moment';
 import logPage from '../../../components/logPage';
+import groupLogPage from '../../../components/groupLogPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
   const { userSettings } = await chrome.storage.local.get('userSettings');
@@ -33,6 +34,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
   let requireManualDisposition = false;
   // Case: auto log
   if (data.body.triggerType === 'auto' && !messageAutoPopup) {
+    // Case: group SMS
+    if(data.body.conversation.correspondents.length > 1){
+      showNotification({ level: 'warning', message: 'Group SMS is not supported for auto log. Please log manually.', ttl: 3000 });
+      // response to widget
+      responseMessage(data.requestId, { data: 'ok' });
+      return;
+    }
     // Sub-case: has existing pref setup, log directly
     if (existingConversationLogPref[messageLogPrefId]) {
       // auto log - has existing pref
@@ -179,57 +187,108 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
   }
   // Case: manual log, submit
   else if (data.body.triggerType === 'logForm') {
-    let additionalSubmission = {};
-    const additionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
-    const newContactAdditionalFields = manifest.platforms[platformName].page?.newContact?.additionalFields ?? [];
-    for (const f of additionalFields.concat(newContactAdditionalFields)) {
-      if (data.body.formData[f.const] != "none") {
-        additionalSubmission[f.const] = data.body.formData[f.const];
-      }
-    }
-    let newContactInfo = {};
-    if (data.body.formData.contact === 'createNewContact' && data.body.redirect) {
-      const newContactResp = await contactCore.createContact({
-        serverUrl: manifest.serverUrl,
-        phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
-        newContactName: data.body.formData.newContactName,
-        newContactType: data.body.formData.newContactType,
-        additionalSubmission
-      });
-      newContactInfo = newContactResp.contactInfo;
-      if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
-        await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
-      }
-    }
     // user manaully submit message log form
-    await logCore.addLog({
-      serverUrl: manifest.serverUrl,
-      logType: 'Message',
-      logInfo: data.body.conversation,
-      isMain: true,
-      note: '',
-      additionalSubmission,
-      contactId: newContactInfo?.id ?? data.body.formData.contact,
-      contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
-      contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
-      returnToHistoryPage: !!data.body.redirect
-    });
+    // Case: single form
+    if (data.body.formData.contact) {
+      let additionalSubmission = {};
+      const additionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
+      const newContactAdditionalFields = manifest.platforms[platformName].page?.newContact?.additionalFields ?? [];
+      for (const f of additionalFields.concat(newContactAdditionalFields)) {
+        if (data.body.formData[f.const] != "none") {
+          additionalSubmission[f.const] = data.body.formData[f.const];
+        }
+      }
+      let newContactInfo = {};
+      if (data.body.formData.contact === 'createNewContact' && data.body.redirect) {
+        const newContactResp = await contactCore.createContact({
+          serverUrl: manifest.serverUrl,
+          phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
+          newContactName: data.body.formData.newContactName,
+          newContactType: data.body.formData.newContactType,
+          additionalSubmission
+        });
+        newContactInfo = newContactResp.contactInfo;
+        if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
+          await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
+        }
+      }
+      await logCore.addLog({
+        serverUrl: manifest.serverUrl,
+        logType: 'Message',
+        logInfo: data.body.conversation,
+        isMain: true,
+        note: '',
+        additionalSubmission,
+        contactId: newContactInfo?.id ?? data.body.formData.contact,
+        contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
+        contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
+        returnToHistoryPage: !!data.body.redirect
+      });
+    }
+    // Case: group form
+    else{
+      for(const form in data.body.formData){
+        const formData = data.body.formData[form];
+        let additionalSubmission = {};
+        const additionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
+        const newContactAdditionalFields = manifest.platforms[platformName].page?.newContact?.additionalFields ?? [];
+        for (const f of additionalFields.concat(newContactAdditionalFields)) {
+          if (form[f.const] != "none") {
+            additionalSubmission[f.const] = formData[f.const];
+          }
+        }
+        let newContactInfo = {};
+        if (formData.contact === 'createNewContact' && data.body.redirect) {
+          const newContactResp = await contactCore.createContact({
+            serverUrl: manifest.serverUrl,
+            phoneNumber: formData.contactPhoneNumber,
+            newContactName: formData.newContactName,
+            newContactType: formData.newContactType,
+            additionalSubmission
+          });
+          newContactInfo = newContactResp.contactInfo;
+          if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
+            await contactCore.openContactPage({ manifest, platformName, phoneNumber: formData.contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
+          }
+        }
+        await logCore.addLog({
+          serverUrl: manifest.serverUrl,
+          logType: 'Message',
+          logInfo: data.body.conversation,
+          isMain: true,
+          note: '',
+          additionalSubmission,
+          contactId: newContactInfo?.id ?? formData.contact,
+          contactType: formData.newContactType === '' ? formData.contactType : formData.newContactType,
+          contactName: formData.newContactName === '' ? formData.contactName : formData.newContactName,
+          returnToHistoryPage: !!data.body.redirect,
+          contactPhoneNumber: formData.contactPhoneNumber
+        });
+      }
+    }
   }
   // Case: Open page OR auto pop up log page
   else {
     if (data.body.redirect || messageAutoPopup) {
-      getContactMatchResult = await contactCore.getContact({
-        serverUrl: manifest.serverUrl,
-        phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
-        platformName
-      });
-      const cachedSearchContactKey = `rc-crm-search-contact-${data.body.conversation.correspondents[0].phoneNumber}`;
-      const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
-      const cachedContacts = storageObj[cachedSearchContactKey] || [];
+      getContactMatchResult = {};
+      for (const correspondent of data.body.conversation.correspondents) {
+        const singleContactMatchResult = await contactCore.getContact({
+          serverUrl: manifest.serverUrl,
+          phoneNumber: correspondent.phoneNumber,
+          platformName
+        });
+        const cachedSearchContactKey = `rc-crm-search-contact-${data.body.conversation.correspondents[0].phoneNumber}`;
+        const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
+        const cachedContacts = storageObj[cachedSearchContactKey] || [];
 
-      for (const cachedContact of cachedContacts) {
-        if (!getContactMatchResult?.contactInfo?.some(c => c.id === cachedContact.id)) {
-          getContactMatchResult?.contactInfo?.unshift(cachedContact);
+        for (const cachedContact of cachedContacts) {
+          if (!singleContactMatchResult?.contactInfo?.some(c => c.id === cachedContact.id)) {
+            singleContactMatchResult?.contactInfo?.unshift(cachedContact);
+          }
+        }
+
+        if (singleContactMatchResult?.contactInfo) {
+          getContactMatchResult[correspondent.phoneNumber] = singleContactMatchResult?.contactInfo;
         }
       }
       // add your codes here to log call to your service
@@ -240,21 +299,35 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         triggerType: data.body.triggerType,
         platformName,
         direction: '',
-        contactInfo: getContactMatchResult.contactInfo ?? []
+        contactInfo: getContactMatchResult.contactInfo ?? [],
+        getContactMatchResult
       });
       const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
       const useContactSearch = implementedInterfaces?.findContactWithName;
-      let messagePage = logPage.getLogPageRender({
-        id: data.body.conversation.conversationId,
-        manifest,
-        logType: 'Message',
-        triggerType: data.body.triggerType,
-        platformName,
-        direction: '',
-        contactInfo: getContactMatchResult.contactInfo ?? [],
-        contactPhoneNumber: data.body?.conversation?.correspondents[0]?.phoneNumber,
-        useContactSearch
-      });
+      let messagePage = null;
+      if (data.body.conversation.correspondents.length > 1) {
+        messagePage = groupLogPage.getGroupLogPageRender({
+          id: data.body.conversation.conversationId,
+          manifest,
+          platformName,
+          correspondentsData: getContactMatchResult,
+          useContactSearch
+        });
+      }
+      else {
+        const contactInfo = getContactMatchResult[data.body.conversation.correspondents[0].phoneNumber];
+        messagePage = logPage.getLogPageRender({
+          id: data.body.conversation.conversationId,
+          manifest,
+          logType: 'Message',
+          triggerType: data.body.triggerType,
+          platformName,
+          direction: '',
+          contactInfo: contactInfo ?? [],
+          contactPhoneNumber: data.body?.conversation?.correspondents[0]?.phoneNumber,
+          useContactSearch
+        });
+      }
       switch (data.body.conversation.type) {
         case 'SMS':
         case 'Thread':
