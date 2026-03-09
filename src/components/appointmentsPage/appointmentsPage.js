@@ -114,14 +114,20 @@ function getAppointmentsPageRender({
         'ui:widget': 'radio',
         'ui:inline': true,
         'ui:tab': true,
+        'ui:style': { marginTop: '-10px' }
       },
       searchWithFilters: {
         'ui:field': 'search',
         'ui:placeholder': 'Search...',
         'ui:filters': ['All', 'Scheduled', 'Canceled'],
         'ui:previewLength': 2,
+        'ui:style': { marginTop: '-10px' }
       },
-      appointments: { 'ui:field': 'list', 'ui:showIconAsAvatar': false },
+      appointments: {
+        'ui:field': 'list',
+        'ui:showIconAsAvatar': false,
+        'ui:style': { marginTop: '-10px' },
+      },
     },
     formData: {
       tab: selectedTab,
