@@ -173,7 +173,8 @@
     "noPluginInstalled": "Geen plug-in geïnstalleerd",
     "by": "door {author}",
     "pluginMarket": "Plug-in markt",
-    "searchPlaceholder": "Zoeken met filters..."
+    "searchPlaceholder": "Zoeken met filters...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {

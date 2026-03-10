@@ -13,7 +13,7 @@ function getInstalledPluginListPageRender({ pluginList, isFromAdmin }) {
                 {
                     id: 'selectPlugin',
                     title: t('plugins.configure'),
-                    icon: 'connect'
+                    icon: 'settings'
                 }
             ]
         };
@@ -44,6 +44,11 @@ function getInstalledPluginListPageRender({ pluginList, isFromAdmin }) {
         formData: {
             pluginList,
             isFromAdmin
+        }
+    }
+    if (isFromAdmin) {
+        page.uiSchema.submitButtonOptions = {
+            submitText: t('plugins.explore'),
         }
     }
     if (pluginList?.length === 0) {

@@ -82,7 +82,6 @@ async function checkAndUpdatePluginVersion() {
                 value: {
                     name: matchedPlugin.name,
                     version: matchedPlugin.version,
-                    activated: userSettings[pluginSettingKey]?.value?.activated,
                     isAsync: pluginDetails.isAsync,
                     phase: pluginDetails.phase,
                     access: userSettings[pluginSettingKey]?.value?.access,

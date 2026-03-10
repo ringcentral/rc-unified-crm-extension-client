@@ -1,9 +1,7 @@
 import axios from 'axios';
-import baseManifest from '../../../manifest.json';
-import { getRcInfo } from '../../../lib/util';
 import { getPluginAdminConfigurePageRender } from '../../../components/pluginAdminConfigurePage';
 import { getPluginConfigurePageRender } from '../../../components/pluginConfigurePage';
-import { getUserSettingsOnline } from '../../../core/user';
+import { getUserSettingsOnline, getPluginSetting } from '../../../core/user';
 import { checkAuth } from '../../../core/auth';
 import { showNotification } from '../../../lib/util';
 import { getPluginDetails } from '../../../service/manifestService';
@@ -20,10 +18,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
     const selectedPluginAccess = listButtonItemId.split('=')[1];
     const selectedPlugin = data.body.button.formData.pluginList.find(plugin => plugin.id === selectedPluginId);
     const userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl });
-    const installed = Object.keys(userSettings?.plugins ?? {}).includes(`plugin_${selectedPluginId}`);
+    const pluginSetting = getPluginSetting(userSettings, selectedPluginId);
+    const installed = !!pluginSetting;
     const plugin = await getPluginDetails({ selectedPlugin });
-    const pluginSetting = userSettings?.plugins?.[`plugin_${selectedPluginId}`];
-    const configSetting = pluginSetting?.value?.config ?? {};
+    const configSetting = pluginSetting?.config ?? {};
     let isLoggedIn = false;
     if (plugin?.showAuthorizationButton && plugin?.authStateUrl) {
         try {

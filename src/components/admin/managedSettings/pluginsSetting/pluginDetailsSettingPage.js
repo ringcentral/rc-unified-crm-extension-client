@@ -1,7 +1,10 @@
-function getPluginDetailsSettingPageRender({ pluginId, pluginDetails }) {
+function getPluginDetailsSettingPageRender({ pluginId, pluginDetails, pluginSetting }) {
     const customForm = pluginDetails.pageContent;
     let customFormProperties = {};
     let customFormUiSchema = {};
+    const formData = {
+        pluginId
+    };
     if (customForm) {
         for (const field of customForm) {
             const key = field.const;
@@ -11,25 +14,31 @@ function getPluginDetailsSettingPageRender({ pluginId, pluginDetails }) {
                 properties: {
                     value: {
                         type: field.type === 'selection' ? 'string' : field.type,
-                        title: field.title
+                        title: field.title,
+                        defaultValue: null
                     },
                     customizable: {
                         type: 'boolean',
-                        title: 'Customizable by user'
+                        title: 'Customizable by user',
+                        defaultValue: true
                     }
                 }
             }
             if (field.type === 'selection' && field.oneOf) {
                 schemaProp.properties.value.oneOf = field.oneOf;
             }
-            customFormProperties[`${pluginId}_${key}Setting`] = schemaProp;
-            customFormUiSchema[`${pluginId}_${key}Setting`] = {
+            customFormProperties[key] = schemaProp;
+            customFormUiSchema[key] = {
                 "ui:collapsible": true,
             }
             if (field.type === 'selection') {
-                customFormUiSchema[`${pluginId}_${key}Setting`].value = {
+                customFormUiSchema[key].value = {
                     "ui:widget": "select",
                 }
+            }
+            formData[key] = {
+                customizable: pluginSetting?.config?.[key]?.customizable ?? true,
+                value: pluginSetting?.config?.[key]?.value ?? null
             }
         }
     }
@@ -48,7 +57,8 @@ function getPluginDetailsSettingPageRender({ pluginId, pluginDetails }) {
                 submitText: 'Save',
             },
             ...customFormUiSchema
-        }
+        },
+        formData
     }
 }
 

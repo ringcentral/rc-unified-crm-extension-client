@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 
-function getPluginAdminConfigurePageRender({ pluginId, pluginAccess, plugin, installed}) {
+function getPluginAdminConfigurePageRender({ pluginId, pluginAccess, plugin, installed }) {
     const page = {
         id: 'pluginConfigurePage',
         title: t('plugins.configurePage'),
@@ -17,6 +17,11 @@ function getPluginAdminConfigurePageRender({ pluginId, pluginAccess, plugin, ins
                             title: plugin.displayName ?? plugin.name,
                             icon: plugin.iconUrl ?? 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
                             description: `by ${plugin.name.split('.')[0]}`,
+                            actions: installed ? [
+                                { id: 'removeButton', type: 'button', title: t('plugins.uninstall'), variant: 'contained', color: 'danger.b03' }
+                            ] : [
+                                { id: 'installButton', type: 'button', title: t('plugins.install'), variant: 'contained', color: 'primary' }
+                            ]
                         }
                     ]
                 },
@@ -47,29 +52,6 @@ function getPluginAdminConfigurePageRender({ pluginId, pluginAccess, plugin, ins
             isAsync: plugin.isAsync,
             phase: plugin.phase,
             logType: plugin.supportedLogType,
-        }
-    }
-    if (installed) {
-        page.schema.properties.removeButton = {
-            type: 'string',
-            title: t('plugins.uninstall'),
-        }
-        page.uiSchema.removeButton = {
-            "ui:field": "button",
-            "ui:variant": "outlined",
-            "ui:color": "danger.b03",
-            "ui:fullWidth": true,
-        }
-    }
-    else {
-        page.schema.properties.installButton = {
-            type: 'string',
-            title: t('plugins.install'),
-        }
-        page.uiSchema.installButton = {
-            "ui:field": "button",
-            "ui:variant": "contained",
-            "ui:fullWidth": true,
         }
     }
     return page;

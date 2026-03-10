@@ -173,7 +173,8 @@
     "noPluginInstalled": "プラグインがインストールされていません",
     "by": "{author} 作",
     "pluginMarket": "プラグインマーケット",
-    "searchPlaceholder": "フィルターで検索..."
+    "searchPlaceholder": "フィルターで検索...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {

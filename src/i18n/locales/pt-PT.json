@@ -173,7 +173,8 @@
     "noPluginInstalled": "Nenhum plugin instalado",
     "by": "por {author}",
     "pluginMarket": "Mercado de plugins",
-    "searchPlaceholder": "Pesquisar com filtros..."
+    "searchPlaceholder": "Pesquisar com filtros...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {

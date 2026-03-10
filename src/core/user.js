@@ -656,6 +656,24 @@ function getCustomSetting(userSettings, id, defaultValue) {
     }
 }
 
+function getAllPluginSettings(userSettings) {
+    const result = {};
+    for (const settingsKey in userSettings) {
+        if (settingsKey.startsWith('plugin_')) {
+            const pluginId = settingsKey.split('plugin_')[1];
+            if (userSettings[settingsKey]?.isRemoved) {
+                continue;
+            }
+            result[pluginId] = userSettings[settingsKey]?.value ?? null;
+        }
+    }
+    return result;
+}
+
+function getPluginSetting(userSettings, pluginId) {
+    return userSettings[`plugin_${pluginId}`]?.value;
+}
+
 exports.getUserReportStats = getUserReportStats;
 exports.preloadUserSettingsFromAdmin = preloadUserSettingsFromAdmin;
 exports.getUserSettingsOnline = getUserSettingsOnline;
@@ -717,3 +735,6 @@ exports.getPhoneNumberDisplayFormatTemplateSetting = getPhoneNumberDisplayFormat
 exports.getQuickAccessButtonSizeSetting = getQuickAccessButtonSizeSetting;
 
 exports.getCustomSetting = getCustomSetting;
+
+exports.getAllPluginSettings = getAllPluginSettings;
+exports.getPluginSetting = getPluginSetting;

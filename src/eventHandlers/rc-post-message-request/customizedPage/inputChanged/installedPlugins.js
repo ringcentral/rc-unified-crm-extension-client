@@ -1,14 +1,16 @@
 import { getInstalledPluginListPageRender } from '../../../../components/installedPluginListPage';
 import { getPluginList } from '../../../../service/manifestService';
+import { getAllPluginSettings } from '../../../../core/user';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     const pluginList = await getPluginList();
     const pluginListToRender = [];
     const { adminSettings } = await chrome.storage.local.get('adminSettings');
-    for (const settingsKey in (adminSettings.userSettings.plugins ?? {})) {
-        if (settingsKey.startsWith('plugin_')) {
-            const targetPlugin = pluginList.find(plugin => plugin.id === settingsKey.split('plugin_')[1]);
+    const installedPlugins = getAllPluginSettings(adminSettings.userSettings);
+    for (const pluginId in installedPlugins) {
+        const targetPlugin = pluginList.find(plugin => plugin.id === pluginId);
+        if (targetPlugin) {
             pluginListToRender.push(targetPlugin);
         }
     }

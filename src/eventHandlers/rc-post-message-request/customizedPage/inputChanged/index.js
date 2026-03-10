@@ -32,9 +32,8 @@ import googleSheetsAdminConfigHandler from './googleSheetsAdminConfig';
 import getErrorLogRecrodPageHandler from './getErrorLogRecordPage';
 import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
 import pluginsAdminConfigHandler from './pluginsAdminConfig';
-import pluginsAdminManageHandler from './pluginsAdminManage';
 import installedPluginsHandler from './installedPlugins';
-import pluginMarketListPageHandler from './pluginMarketListPage';
+import pluginMarketListPageHandler from '../../pluginMarketListPage';
 import pluginAdminSettingsPageHandler from './pluginAdminSettingsPageHandler';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
@@ -110,15 +109,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'plugins':
             switch (data.body.page.id) {
                 case 'adminPage':
-                    await pluginsAdminManageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+                    await installedPluginsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
                     break;
                 case 'managedSettings':
                     await pluginsAdminConfigHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
                     break;
             }
-            break;
-        case 'installedPlugins':
-            await installedPluginsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'pluginMarket':
             await pluginMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

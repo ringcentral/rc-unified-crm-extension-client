@@ -173,7 +173,8 @@
     "noPluginInstalled": "未安裝插件",
     "by": "由 {author}",
     "pluginMarket": "插件市場",
-    "searchPlaceholder": "使用篩選條件搜索..."
+    "searchPlaceholder": "使用篩選條件搜索...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {

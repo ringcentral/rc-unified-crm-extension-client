@@ -1,17 +1,16 @@
 import { getPluginList } from '../../../service/manifestService';
-import { refreshUserSettings } from '../../../core/user';
+import { getPluginSetting, refreshUserSettings, getAllPluginSettings } from '../../../core/user';
 import { getAdminSettings, uploadAdminSettings } from '../../../core/admin';
 import { getPluginAdminConfigurePageRender } from '../../../components/pluginAdminConfigurePage';
 import { getInstalledPluginListPageRender } from '../../../components/installedPluginListPage';
 import { getPluginMarketListPageRender } from '../../../components/pluginMarketListPage';
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+async function onEvent({ data, manifest, platformInfo, platformName, platform, buttonId }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const pluginList = await getPluginList();
     const pluginListToRender = [];
     let userSettings;
-    switch (data.body.button.id) {
+    switch (buttonId) {
         case 'installButton':
             const adminSettingsForInstall = await getAdminSettings({ serverUrl: manifest.serverUrl });
             if (!adminSettingsForInstall?.userSettings) {
@@ -20,20 +19,25 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             if (!adminSettingsForInstall?.userSettings?.plugins) {
                 adminSettingsForInstall.userSettings.plugins = {};
             }
-            adminSettingsForInstall.userSettings.plugins[`plugin_${data.body.button.formData.pluginId}`] =
+            const config = {};
+            for (const c of data.body.button.formData.plugin.pageContent) {
+                config[c.const] = {
+                    value: null,
+                    customizable: true
+                };
+            }
+            adminSettingsForInstall.userSettings[`plugin_${data.body.button.formData.pluginId}`] =
             {
                 value: {
                     name: data.body.button.formData.plugin.name,
                     version: data.body.button.formData.plugin.version,
-                    activated: {
-                        value: false,
-                        isCustomized: true,
-                    },
                     isAsync: data.body.button.formData.plugin.isAsync,
                     phase: data.body.button.formData.plugin.phase,
                     logType: data.body.button.formData.plugin.supportedLogType,
-                    access: data.body.button.formData.access
-                }
+                    access: data.body.button.formData.access,
+                    config
+                },
+                customizable: true
             }
             await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings: adminSettingsForInstall });
             userSettings = await refreshUserSettings({});
@@ -54,7 +58,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             }, '*');
             // Refresh market page
             for (const plugin of pluginList) {
-                if (Object.keys(userSettings.plugins ?? {}).includes(`plugin_${plugin.id}`)) {
+                if (getPluginSetting(userSettings, plugin.id)) {
                     continue;
                 }
                 pluginListToRender.push(plugin);
@@ -68,22 +72,38 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 type: 'rc-adapter-register-customized-page',
                 page: pluginMarketPageRender
             });
+
+            // Refresh installed plugin list page
+            const installedPlugins = getAllPluginSettings(userSettings);
+            const installedPluginsToRender = [];
+            for (const pluginId in installedPlugins) {
+                const targetPlugin = pluginList.find(plugin => plugin.id === pluginId);
+                if (targetPlugin) {
+                    installedPluginsToRender.push(targetPlugin);
+                }
+            }
+            const installedPluginListPageRender = getInstalledPluginListPageRender({ pluginList: installedPluginsToRender, isFromAdmin: true });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-customized-page',
+                page: installedPluginListPageRender
+            });
             break;
         case 'removeButton':
             const adminSettingsForRemove = await getAdminSettings({ serverUrl: manifest.serverUrl });
-            delete adminSettingsForRemove.userSettings.plugins[`plugin_${data.body.button.formData.pluginId}`];
+            adminSettingsForRemove.userSettings[`plugin_${data.body.button.formData.pluginId}`].isRemoved = true;
             await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings: adminSettingsForRemove });
-            userSettings = await refreshUserSettings({});
+            userSettings = await refreshUserSettings({ settingKeysToRemove: [`plugin_${data.body.button.formData.pluginId}`] });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-navigate-to',
                 path: 'goBack'
             }, '*');
-            for (const settingsKey in (userSettings.plugins ?? {})) {
-                if (settingsKey.startsWith('plugin_')) {
-                    const targetPlugin = pluginList.find(plugin => plugin.id === settingsKey.split('plugin_')[1]);
+            for (const pluginId in getAllPluginSettings(userSettings)) {
+                const targetPlugin = pluginList.find(plugin => plugin.id === pluginId);
+                if (targetPlugin) {
                     pluginListToRender.push(targetPlugin);
                 }
             }
+            // Refresh installed plugin list page
             const pluginListPageRender = getInstalledPluginListPageRender({ pluginList: pluginListToRender, isFromAdmin: true });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',

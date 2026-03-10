@@ -1,5 +1,4 @@
 import axios from 'axios';
-import baseManifest from '../../../manifest.json';
 import authCore from '../../../core/auth';
 import { showNotification } from '../../../lib/util';
 import { t } from '../../../i18n';

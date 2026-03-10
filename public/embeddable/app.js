@@ -144,9 +144,31 @@
     display: none;
   }
 
-  ${({$hoverOnMoreMenu:$hoverOnMoreMenu})=>$hoverOnMoreMenu&&"\n    .list-item-action-menu {\n      display: flex;\n    }\n\n    .list-item-meta {\n      display: none;\n    }\n  "}
+  ${({$hoverOnMoreMenu:$hoverOnMoreMenu,$hideMetaOnActionHover:$hideMetaOnActionHover})=>$hoverOnMoreMenu&&styled_components.AH`
+      .list-item-action-menu {
+        display: flex;
+      }
 
-  ${({$hasActions:$hasActions,$readOnly:$readOnly})=>$hasActions&&!$readOnly&&"\n    &:hover {\n      .list-item-action-menu {\n        display: flex;\n      }\n\n      .list-item-meta {\n        display: none;\n      }\n    }\n  "}
+      ${$hideMetaOnActionHover&&styled_components.AH`
+        .list-item-meta {
+          display: none;
+        }
+      `}
+    `}
+
+  ${({$hasActions:$hasActions,$readOnly:$readOnly,$hideMetaOnActionHover:$hideMetaOnActionHover})=>$hasActions&&!$readOnly&&styled_components.AH`
+      &:hover {
+        .list-item-action-menu {
+          display: flex;
+        }
+
+        ${$hideMetaOnActionHover&&styled_components.AH`
+          .list-item-meta {
+            display: none;
+          }
+        `}
+      }
+    `}
 `,StyledAvatar=(0,styled_components.Ay)(Avatar.L)`
   .RcAvatar-avatarContainer {
     ${({$round:$round})=>$round?"":styled_components.AH`
@@ -169,15 +191,15 @@
     line-height: 22px;
   }
 `,StyledActionMenu=(0,styled_components.Ay)(ActionMenu)`
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  margin-top: -16px;
-
   .RcIconButton-root {
     margin-left: 6px;
   }
-`,ICONS_MAP={edit:Edit.A,delete:Delete.A,view:ViewBorder.A,copy:Copy.A,share:Share.A,download:Download.A,phone:PhoneBorder.A,sms:SmsBorder.A,people:People.A,refresh:Refresh.A,newAction:NewAction.A,info:InfoBorder.A,insertLink:InsertLink.A,connect:Connect.A,viewLog:ViewLogBorder.A,read:Read.A,unread:Unread.A,settings:SettingsBorder.A};function List_ListItem({item:item,disabled:disabled,selected:selected,onClick:onClick,showIconAsAvatar:showIconAsAvatar,showAsNavigation:showAsNavigation,actions:actions=[],onClickAction:onClickAction,readOnly:readOnly}){const[hoverOnMoreMenu,setHoverOnMoreMenu]=(0,react.useState)(!1),formattedActions=actions.map(action=>{const icon=ICONS_MAP[action.icon];return{title:action.title,icon:icon||ICONS_MAP.info,onClick:e=>{e&&e.stopPropagation(),onClickAction(action)},id:action.id,color:action.color,disabled:action.disabled}});return react.createElement(StyledItem,{key:item.const,disabled:disabled,selected:!readOnly&&selected,onClick:readOnly?void 0:onClick,canHover:!readOnly,disableRipple:readOnly,$hoverOnMoreMenu:hoverOnMoreMenu,$hasActions:actions.length>0,$readOnly:readOnly},item.icon?react.createElement(ListItemAvatar.w,null,react.createElement(StyledAvatar,{size:"xsmall",src:item.icon||item.authorAvatar,title:item.authorName,$round:showIconAsAvatar})):null,react.createElement(ListItemText.a,{primary:item.title,secondary:item.description}),item.meta||item.authorName||showAsNavigation?react.createElement(ListItemSecondaryAction.D,null,react.createElement(MetaContainer,{className:"list-item-meta"},item.authorName&&react.createElement("span",null,item.authorName),item.meta&&react.createElement("span",null,item.meta)),showAsNavigation?react.createElement(NavigationIcon,{symbol:ArrowRight.A,size:"large"}):null):null,actions.length>0&&react.createElement(StyledActionMenu,{actions:formattedActions,size:"small",maxActions:3,className:"list-item-action-menu",iconVariant:"contained",color:"neutral.b01",onMoreMenuOpen:open=>{setHoverOnMoreMenu(open)}}))}const CardTitle=(0,styled_components.Ay)(Typography.J)`
+`,SecondaryActionContainer=styled_components.Ay.div`
+  display: flex;
+  align-items: center;
+`,StyledActionButton=(0,styled_components.Ay)(Button.aL)`
+  margin-left: 8px;
+`,ICONS_MAP={edit:Edit.A,delete:Delete.A,view:ViewBorder.A,copy:Copy.A,share:Share.A,download:Download.A,phone:PhoneBorder.A,sms:SmsBorder.A,people:People.A,refresh:Refresh.A,newAction:NewAction.A,info:InfoBorder.A,insertLink:InsertLink.A,connect:Connect.A,viewLog:ViewLogBorder.A,read:Read.A,unread:Unread.A,settings:SettingsBorder.A},isButtonAction=action=>"button"===(null==action?void 0:action.type);function List_ListItem({item:item,disabled:disabled,selected:selected,onClick:onClick,showIconAsAvatar:showIconAsAvatar,showAsNavigation:showAsNavigation,actions:actions=[],onClickAction:onClickAction,readOnly:readOnly}){const[hoverOnMoreMenu,setHoverOnMoreMenu]=(0,react.useState)(!1),buttonAction=actions.find(isButtonAction),iconActions=actions.filter(action=>!isButtonAction(action)),formattedActions=iconActions.map(action=>{const icon=ICONS_MAP[action.icon];return{title:action.title,icon:icon||ICONS_MAP.info,onClick:e=>{e&&e.stopPropagation(),onClickAction(action)},id:action.id,color:action.color,disabled:action.disabled}}),actionMenuMaxActions=buttonAction?1:3,hasSecondaryAction=item.meta||item.authorName||showAsNavigation||buttonAction||iconActions.length>0,hideMetaOnActionHover=iconActions.length>0&&!buttonAction;return react.createElement(StyledItem,{key:item.const,disabled:disabled,selected:!readOnly&&selected,onClick:readOnly?void 0:onClick,canHover:!readOnly,disableRipple:readOnly,$hoverOnMoreMenu:hoverOnMoreMenu,$hasActions:iconActions.length>0,$readOnly:readOnly,$hideMetaOnActionHover:hideMetaOnActionHover},item.icon?react.createElement(ListItemAvatar.w,null,react.createElement(StyledAvatar,{size:"xsmall",src:item.icon||item.authorAvatar,title:item.authorName,$round:showIconAsAvatar})):null,react.createElement(ListItemText.a,{primary:item.title,secondary:item.description}),hasSecondaryAction?react.createElement(ListItemSecondaryAction.D,null,react.createElement(SecondaryActionContainer,null,item.meta||item.authorName?react.createElement(MetaContainer,{className:"list-item-meta"},item.authorName&&react.createElement("span",null,item.authorName),item.meta&&react.createElement("span",null,item.meta)):null,showAsNavigation?react.createElement(NavigationIcon,{symbol:ArrowRight.A,size:"large"}):null,buttonAction?react.createElement(StyledActionButton,{size:"small",variant:buttonAction.variant||"contained",color:buttonAction.color||"primary",disabled:buttonAction.disabled,onClick:e=>{e.stopPropagation(),onClickAction(buttonAction)}},buttonAction.title):null,iconActions.length>0&&react.createElement(StyledActionMenu,{actions:formattedActions,size:"small",maxActions:actionMenuMaxActions,className:"list-item-action-menu",iconVariant:"contained",color:"neutral.b01",onMoreMenuOpen:open=>{setHoverOnMoreMenu(open)}}))):null)}const CardTitle=(0,styled_components.Ay)(Typography.J)`
   height: 22px;
   ${ellipsis.g}
 `,StyledCardBody=(0,styled_components.Ay)(Typography.J)`

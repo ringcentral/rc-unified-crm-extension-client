@@ -5,12 +5,14 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
     let customFormProperties = {};
     let customFormUiSchema = {};
     let customFormRequired = [];
-    if(customForm) {
+    if (customForm) {
         for (const field of customForm) {
             const key = field.const;
             const schemaProp = {
                 type: field.type === 'selection' ? 'string' : field.type,
                 title: field.title,
+                default: config[key]?.value ?? '',
+                readOnly: config[key]?.customizable === undefined ? false : !config[key]?.customizable,
             };
             if (field.description) {
                 schemaProp.description = field.description;
@@ -55,16 +57,11 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
                     type: 'string',
                     description: plugin.description,
                 },
-                ...customFormProperties,
-                activated: {
-                    type: 'boolean',
-                    title: t('plugins.enablePlugin'),
-                    default: config?.activated?.value ?? false,
-                }
+                ...customFormProperties
             }
         },
         uiSchema: {
-            submitButtonOptions:{
+            submitButtonOptions: {
                 submitText: t('common.buttons.save'),
             },
             basicInfo: {
@@ -77,10 +74,7 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
                 "ui:field": "typography",
                 "ui:variant": "body1",
             },
-            ...customFormUiSchema,
-            activated: {
-                "ui:disabled": config?.activated?.isCustomizable ?? false
-            }
+            ...customFormUiSchema
         },
         formData: {
             isFromAdmin: false,
@@ -95,27 +89,22 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
     }
     if (plugin.showAuthorizationButton) {
         if (isLoggedIn) {
-            page.schema.properties.logoutButton = {
-                type: 'string',
+            page.schema.properties.basicInfo.oneOf[0].actions = [{
+                id: 'pluginLogoutButton',
+                type: 'button',
+                variant: 'contained',
+                color: 'danger',
                 title: t('common.buttons.logout'),
-            }
-            page.uiSchema.logoutButton = {
-                "ui:field": "button",
-                "ui:variant": "contained",
-                "ui:fullWidth": true,
-                "ui:color": "danger.b03",
-            }
+            }]
         }
         else {
-            page.schema.properties.authButton = {
-                type: 'string',
+            page.schema.properties.basicInfo.oneOf[0].actions = [{
+                id: 'pluginAuthButton',
+                type: 'button',
                 title: t('common.buttons.connect'),
-            }
-            page.uiSchema.authButton = {
-                "ui:field": "button",
-                "ui:variant": "contained",
-                "ui:fullWidth": true
-            }
+                variant: 'contained',
+                color: 'primary'
+            }]
         }
     }
     return page;

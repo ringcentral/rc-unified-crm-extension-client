@@ -1,4 +1,4 @@
-function getPluginsSettingPageRender({ adminUserSettings, installedPluginList }) {
+function getPluginsSettingPageRender({ installedPluginList }) {
     const pluginListToRender = installedPluginList.map(plugin => { return { const: plugin.id, title: plugin.displayName } });
     const page = {
         id: 'pluginAdminSettingsPage',

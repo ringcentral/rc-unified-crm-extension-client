@@ -6,18 +6,18 @@ import { getRcInfo } from '../lib/util';
 let sessionManifest = null;
 let platformList = null;
 
-async function getPluginDetails({ selectedPlugin }) {
+async function getPluginDetails({ pluginId, selectedPlugin }) {
     let pluginManifestResponse;
     switch (selectedPlugin.access) {
         case 'public':
-            pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlugin.id}/manifest?type=plugin`);
+            pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${pluginId ?? selectedPlugin.id}/manifest?type=plugin`);
             break;
         case 'shared':
-            pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlugin.id}/manifest?access=internal&type=plugin&accountId=${selectedPlugin.accountId}`);
+            pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${pluginId ?? selectedPlugin.id}/manifest?access=internal&type=plugin&accountId=${selectedPlugin.accountId}`);
             break;
         case 'private':
             const rcInfo = await getRcInfo();
-            pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlugin.id}/manifest?access=internal&type=plugin&accountId=${rcInfo.value.cachedData.accountInfo.id}`);
+            pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${pluginId ?? selectedPlugin.id}/manifest?access=internal&type=plugin&accountId=${rcInfo.value.cachedData.accountInfo.id}`);
             break;
     }
     return pluginManifestResponse.data?.platforms?.[selectedPlugin.name];

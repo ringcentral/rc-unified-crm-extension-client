@@ -1,14 +1,15 @@
-import { getPluginMarketListPageRender } from '../../../../components/pluginMarketListPage';
-import { getPluginList } from '../../../../service/manifestService';
-import { getUserSettingsOnline } from '../../../../core/user';
+import { getPluginMarketListPageRender } from '../../components/pluginMarketListPage';
+import { getPluginList } from '../../service/manifestService';
+import { getAllPluginSettings, getUserSettingsOnline } from '../../core/user';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     const userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl });
     const pluginList = await getPluginList();
     const pluginListToRender = [];
+    const installedPlugins = getAllPluginSettings(userSettings);
     for (const plugin of pluginList) {
-        if (Object.keys(userSettings.plugins ?? {}).includes(`plugin_${plugin.id}`)) {
+        if (installedPlugins[plugin.id]) {
             continue;
         }
         pluginListToRender.push(plugin);

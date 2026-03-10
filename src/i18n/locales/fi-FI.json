@@ -173,7 +173,8 @@
     "noPluginInstalled": "Ei asennettuja lisäosia",
     "by": "tekijä: {author}",
     "pluginMarket": "Lisäosamarkkina",
-    "searchPlaceholder": "Hae suodattimilla..."
+    "searchPlaceholder": "Hae suodattimilla...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {

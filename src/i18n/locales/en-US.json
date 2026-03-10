@@ -173,7 +173,8 @@
     "noPluginInstalled": "No plugin installed",
     "by": "by {author}",
     "pluginMarket": "Plugin market",
-    "searchPlaceholder": "Search with filters..."
+    "searchPlaceholder": "Search with filters...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {
@@ -404,4 +405,3 @@
     "setup": "Setup"
   }
 }
-

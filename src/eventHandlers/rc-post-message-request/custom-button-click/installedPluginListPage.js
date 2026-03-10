@@ -1,15 +1,16 @@
 import { getPluginList } from '../../../service/manifestService';
 import { getInstalledPluginListPageRender } from '../../../components/installedPluginListPage';
-import { getUserSettingsOnline } from '../../../core/user';
+import { getAllPluginSettings, getUserSettingsOnline } from '../../../core/user';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     const userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl });
     const pluginList = await getPluginList();
     const pluginListToRender = [];
-    for (const settingsKey in (userSettings.plugins ?? {})) {
-        if (settingsKey.startsWith('plugin_')) {
-            const targetPlugin = pluginList.find(plugin => plugin.id === settingsKey.split('plugin_')[1]);
+    const installedPlugins = getAllPluginSettings(userSettings);
+    for (const pluginId in installedPlugins) {
+        const targetPlugin = pluginList.find(plugin => plugin.id === pluginId);
+        if (targetPlugin) {
             pluginListToRender.push(targetPlugin);
         }
     }

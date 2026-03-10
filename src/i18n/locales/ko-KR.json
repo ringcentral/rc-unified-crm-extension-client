@@ -173,7 +173,8 @@
     "noPluginInstalled": "설치된 플러그인 없음",
     "by": "{author} 제작",
     "pluginMarket": "플러그인 마켓",
-    "searchPlaceholder": "필터로 검색..."
+    "searchPlaceholder": "필터로 검색...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {

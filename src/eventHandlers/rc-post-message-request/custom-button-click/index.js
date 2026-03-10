@@ -53,6 +53,8 @@ import pluginConfigurePageSubmitHandler from './pluginConfigurePageSubmit';
 import generalHandler from './general';
 import pluginConfigButtonsHandler from './pluginConfigButtons';
 import pluginAdminConfigButtonsHandler from './pluginAdminConfigButtonsHandler';
+import pluginMarketListPageHandler from '../pluginMarketListPage';
+import pluginDetailsSettingPageHandler from './pluginDetailsSettingPageHandler';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     switch (data.body.button.type) {
@@ -230,6 +232,16 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 await pluginConfigurePageSubmitHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             }
             break;
+        case 'installedPluginListPage':
+            if (data.body.button.type === 'submit') {
+                await pluginMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            }
+            break;
+        case 'pluginDetailsSettingPage':
+            if (data.body.button.type === 'submit') {
+                await pluginDetailsSettingPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            }
+            break;
         case 'callAndSMSLoggingSettingPage':
         case 'contactSettingPage':
         case 'callLogDetailsSettingPage':
@@ -251,7 +263,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const isPlugin = !!data.body.button?.formData?.pluginId;
     if (data.body.button.type != 'submit' && isPlugin) {
         if (data.body.button.formData.isFromAdmin) {
-            await pluginAdminConfigButtonsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await pluginAdminConfigButtonsHandler.onEvent({ data, manifest, platformInfo, platformName, platform, buttonId: listButtonActionId });
         }
         else {
             await pluginConfigButtonsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
