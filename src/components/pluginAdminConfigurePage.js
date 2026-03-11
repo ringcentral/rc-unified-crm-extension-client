@@ -51,7 +51,7 @@ function getPluginAdminConfigurePageRender({ pluginId, pluginAccess, plugin, ins
             plugin,
             isAsync: plugin.isAsync,
             phase: plugin.phase,
-            logType: plugin.supportedLogType,
+            logTypes: plugin.supportedLogTypes,
         }
     }
     return page;

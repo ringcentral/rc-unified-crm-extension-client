@@ -84,7 +84,7 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
             plugin,
             isAsync: plugin.isAsync,
             phase: plugin.phase,
-            logType: plugin.supportedLogType,
+            logTypes: plugin.supportedLogTypes,
         }
     }
     if (plugin.showAuthorizationButton) {

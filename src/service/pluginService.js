@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getManifest, getPluginList, getPluginDetails } from './manifestService';
 import { showNotification } from '../lib/util';
-import baseManifest from '../manifest.json';
+
 
 async function upsertPluginAsyncTaskIds({ taskIds }) {
     const { pluginAsyncTaskIds } = await chrome.storage.local.get({ pluginAsyncTaskIds: [] });
@@ -85,7 +85,7 @@ async function checkAndUpdatePluginVersion() {
                     isAsync: pluginDetails.isAsync,
                     phase: pluginDetails.phase,
                     access: userSettings[pluginSettingKey]?.value?.access,
-                    logType: pluginDetails.supportedLogType,
+                    logTypes: pluginDetails.supportedLogTypes,
                 }
             };
         }
