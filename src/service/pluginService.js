@@ -2,6 +2,12 @@ import axios from 'axios';
 import { getManifest, getPluginList, getPluginDetails } from './manifestService';
 import { showNotification } from '../lib/util';
 
+async function getPluginLicenseStatus({ plugin }) {
+    const pluginId = plugin.id;
+    const licenseEndpoint = plugin.licenseEndpoint;
+    const license = await axios.get(`${licenseEndpoint}/pluginId=${pluginId}`);
+    return license.data;
+}
 
 async function upsertPluginAsyncTaskIds({ taskIds }) {
     const { pluginAsyncTaskIds } = await chrome.storage.local.get({ pluginAsyncTaskIds: [] });
