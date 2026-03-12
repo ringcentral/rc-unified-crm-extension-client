@@ -4,16 +4,16 @@ import { showNotification } from '../../../../lib/util';
 import { t } from '../../../../i18n';
 import { getPluginConfigurePageRender } from '../../../../components/pluginConfigurePage';
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+async function onEvent({ data, buttonId, manifest, platformInfo, platformName, platform }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    switch (data.body.button.id) {
-        case 'authButton':
+    switch (buttonId) {
+        case 'pluginAuthButton':
             const getAuthUriResponse = await axios.get(`${data.body.button.formData.plugin.authorizationUrl}?jwtToken=${rcUnifiedCrmExtJwt}&pluginId=${data.body.button.formData.pluginId}`);
             const authUri = getAuthUriResponse.data;
             authCore.handleThirdPartyOAuthWindow(authUri);
             break;
-        case 'logoutButton':
+        case 'pluginLogoutButton':
             const logoutResponse = await axios.post(`${data.body.button.formData.plugin.logoutUrl}?jwtToken=${rcUnifiedCrmExtJwt}`);
             if (logoutResponse.data.successful) {
                 showNotification({ level: 'success', message: t('notifications.success.loggedOut'), ttl: 3000 });

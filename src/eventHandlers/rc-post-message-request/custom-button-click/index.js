@@ -275,7 +275,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             await pluginAdminConfigButtonsHandler.onEvent({ data, manifest, platformInfo, platformName, platform, buttonId: listButtonActionId });
         }
         else {
-            await pluginConfigButtonsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await pluginConfigButtonsHandler.onEvent({ data, buttonId: listButtonActionId, manifest, platformInfo, platformName, platform });
         }
     }
     responseMessage(data.requestId, { data: 'ok' });

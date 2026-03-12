@@ -18,7 +18,18 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
                 schemaProp.description = field.description;
             }
             if (field.type === 'selection' && field.oneOf) {
-                schemaProp.oneOf = field.oneOf;
+                if (field.multiSelect) {
+                    schemaProp.type = 'array';
+                    schemaProp.items = {
+                        type: 'string',
+                        enum: field.oneOf.map(option => option.const),
+                        enumNames: field.oneOf.map(option => option.title)
+                    };
+                    schemaProp.uniqueItems = true;
+                }
+                else {
+                    schemaProp.oneOf = field.oneOf;
+                }
             }
             customFormProperties[key] = schemaProp;
 
@@ -28,7 +39,11 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
 
             const uiEntry = { ...(field.uiSchema ?? {}) };
             if (field.type === 'selection') {
-                uiEntry['ui:widget'] = 'select';
+                if (field.multiSelect) {
+                    uiEntry['ui:widget'] = 'checkboxes';
+                } else {
+                    uiEntry['ui:widget'] = 'select';
+                }
             }
             customFormUiSchema[key] = uiEntry;
         }
@@ -93,7 +108,7 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
                 id: 'pluginLogoutButton',
                 type: 'button',
                 variant: 'contained',
-                color: 'danger',
+                color: 'danger.b03',
                 title: t('common.buttons.logout'),
             }]
         }

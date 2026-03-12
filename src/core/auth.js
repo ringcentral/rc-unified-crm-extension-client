@@ -134,7 +134,7 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
         const stateData = JSON.parse(decodeURIComponent(new URLSearchParams(new URL(callbackUri).search).get('state') ?? '{}'));
         if (stateData?.from === 'plugin' && stateData?.redirectTo) {
             const pluginCallbackResp = await axios.get(`${stateData.redirectTo}?callbackUri=${callbackUri}`);
-            showNotification({ level: 'success', message: 'Successfully authorized plugin. Please exit and re-open this page to refresh the status.' });
+            showNotification({ level: 'success', message: 'Successfully authorized plugin.' });
             return;
         }
     }
