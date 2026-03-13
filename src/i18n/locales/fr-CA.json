@@ -158,7 +158,7 @@
     "pluginsManage": {
       "title": "Plugiciels",
       "installedPlugins": "Plugiciels installés",
-      "pluginMarket": "Marché des plugiciels"
+      "pluginMarket": "Plugiciels disponibles"
     }
   },
   "plugins": {
@@ -172,7 +172,7 @@
     "basicInfo": "Informations de base",
     "noPluginInstalled": "Aucun plugiciel installé",
     "by": "par {author}",
-    "pluginMarket": "Marché des plugiciels",
+    "pluginMarket": "Plugiciels disponibles",
     "searchPlaceholder": "Rechercher avec des filtres...",
     "explore": "Explore"
   },

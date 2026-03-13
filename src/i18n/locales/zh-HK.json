@@ -158,7 +158,7 @@
     "pluginsManage": {
       "title": "插件",
       "installedPlugins": "已安裝插件",
-      "pluginMarket": "插件市場"
+      "pluginMarket": "可用插件"
     }
   },
   "plugins": {
@@ -172,7 +172,7 @@
     "basicInfo": "基本信息",
     "noPluginInstalled": "未安裝插件",
     "by": "由 {author}",
-    "pluginMarket": "插件市場",
+    "pluginMarket": "可用插件",
     "searchPlaceholder": "使用篩選條件搜索...",
     "explore": "Explore"
   },

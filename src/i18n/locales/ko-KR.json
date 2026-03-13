@@ -158,7 +158,7 @@
     "pluginsManage": {
       "title": "플러그인",
       "installedPlugins": "설치된 플러그인",
-      "pluginMarket": "플러그인 마켓"
+      "pluginMarket": "사용 가능한 플러그인"
     }
   },
   "plugins": {
@@ -172,7 +172,7 @@
     "basicInfo": "기본 정보",
     "noPluginInstalled": "설치된 플러그인 없음",
     "by": "{author} 제작",
-    "pluginMarket": "플러그인 마켓",
+    "pluginMarket": "사용 가능한 플러그인",
     "searchPlaceholder": "필터로 검색...",
     "explore": "Explore"
   },

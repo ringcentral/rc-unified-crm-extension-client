@@ -158,7 +158,7 @@
     "pluginsManage": {
       "title": "Lisäosat",
       "installedPlugins": "Asennetut lisäosat",
-      "pluginMarket": "Lisäosamarkkina"
+      "pluginMarket": "Saatavilla olevat lisäosat"
     }
   },
   "plugins": {
@@ -172,7 +172,7 @@
     "basicInfo": "Perustiedot",
     "noPluginInstalled": "Ei asennettuja lisäosia",
     "by": "tekijä: {author}",
-    "pluginMarket": "Lisäosamarkkina",
+    "pluginMarket": "Saatavilla olevat lisäosat",
     "searchPlaceholder": "Hae suodattimilla...",
     "explore": "Explore"
   },
