@@ -1,5 +1,6 @@
 import appointmentsPage from '../../../components/appointmentsPage/appointmentsPage';
 import { updateAppointmentStatus } from '../../../service/appointmentService';
+import { extractAppointmentsListContext } from '../../../lib/appointmentUtils';
 
 async function onEvent({ data, manifest, listButtonItemId }) {
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -9,12 +10,12 @@ async function onEvent({ data, manifest, listButtonItemId }) {
     if (appointmentId) {
       await updateAppointmentStatus({ serverUrl: manifest.serverUrl, jwtToken: rcUnifiedCrmExtJwt, appointmentId, status: 'canceled' });
     }
-    const { appointmentsListState = { tab: 'upcoming', searchWithFilters: { search: '', filter: 'All' } } } = await chrome.storage.local.get('appointmentsListState');
+    const { tab, searchWithFilters } = extractAppointmentsListContext(data);
     const updated = await appointmentsPage.getAppointmentsPageWithRecords({
       manifest,
       jwtToken: rcUnifiedCrmExtJwt,
-      tab: appointmentsListState.tab,
-      searchWithFilters: appointmentsListState.searchWithFilters ?? {},
+      tab,
+      searchWithFilters,
       forceSync: false,
     });
     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({

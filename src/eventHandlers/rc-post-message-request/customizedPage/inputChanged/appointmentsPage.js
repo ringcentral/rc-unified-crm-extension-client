@@ -19,22 +19,8 @@ async function onEvent({ data, manifest }) {
     const tab = data?.body?.formData?.tab ?? 'upcoming';
     const searchWithFilters = data?.body?.formData?.searchWithFilters ?? {};
 
-    const { appointmentsListState = { tab: 'upcoming', searchWithFilters: { search: '', filter: 'All' } } } = await chrome.storage.local.get('appointmentsListState');
-    const prevSearch = String(appointmentsListState?.searchWithFilters?.search ?? '');
-    const prevFilter = String(appointmentsListState?.searchWithFilters?.filter ?? 'All');
-    const nextSearch = String(searchWithFilters?.search ?? '');
-    const nextFilter = String(searchWithFilters?.filter ?? 'All');
-
-    const tabUnchanged = appointmentsListState.tab === tab;
-    const filterUnchanged = prevFilter === nextFilter;
-    const searchUnchanged = prevSearch === nextSearch;
-
-    if (tabUnchanged && filterUnchanged && searchUnchanged) {
-      return;
-    }
-
     // Search typing: debounce and avoid spinner (prevents characters jumping).
-    if (isSearchChange && !isTabChange && filterUnchanged && !searchUnchanged) {
+    if (isSearchChange && !isTabChange) {
       debounceAppointmentsSearch(data.requestId, async (requestId) => {
         const updated = await appointmentsPage.getAppointmentsPageWithRecords({
           manifest,

@@ -1,6 +1,14 @@
 import axios from 'axios';
 import { showNotification } from '../lib/util';
-function getCustomContactSearch({ contactSearchAdapterButton = "contactSearchAdapterButton", contactPhoneNumber }) {
+
+function getCustomContactSearch({
+    contactSearchAdapterButton = "contactSearchAdapterButton",
+    contactPhoneNumber,
+    appointment = false,
+    formData = {},
+}) {
+    const warningFieldName = 'appointmentContactSearchWarning';
+    const warningText = 'Only contacts with an email address will be shown in search results.';
     return {
         id: 'searchContact',
         type: 'page',
@@ -8,6 +16,15 @@ function getCustomContactSearch({ contactSearchAdapterButton = "contactSearchAda
             type: 'object',
             required: [],
             properties: {
+                ...(appointment
+                    ? {
+                        [warningFieldName]: {
+                            type: 'string',
+                            title: '',
+                            description: warningText,
+                        },
+                    }
+                    : {}),
                 contactNameToSearch: {
                     type: 'string',
                     title: 'Contact Search'
@@ -19,6 +36,14 @@ function getCustomContactSearch({ contactSearchAdapterButton = "contactSearchAda
             }
         },
         uiSchema: {
+            ...(appointment
+                ? {
+                    [warningFieldName]: {
+                        "ui:field": "admonition",
+                        "ui:severity": "warning",
+                    },
+                }
+                : {}),
             contactNameToSearch: {
                 "ui:placeholder": 'enter contact name to search',
             },
@@ -26,17 +51,36 @@ function getCustomContactSearch({ contactSearchAdapterButton = "contactSearchAda
                 "ui:field": "button",
                 "ui:variant": "contained", // "text", "outlined", "contained", "plain"
                 "ui:fullWidth": true
-            }
+            },
+            "ui:order": appointment
+                ? [warningFieldName, "contactNameToSearch", contactSearchAdapterButton]
+                : ["contactNameToSearch", contactSearchAdapterButton],
         },
         formData: {
-            contactPhoneNumber
-        }
+            contactPhoneNumber,
+            appointment,
+            ...(formData || {}),
+        },
     }
 }
 
-async function getCustomContactSearchData({ serverUrl, platform, contactSearch, pageId, contactPhoneNumber }) {
+async function getCustomContactSearchData({
+    serverUrl,
+    platform,
+    contactSearch,
+    pageId,
+    contactPhoneNumber,
+    appointment = false,
+    formData = {},
+}) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const contactRes = await axios.get(`${serverUrl}/custom/contact/search?jwtToken=${rcUnifiedCrmExtJwt}&name=${contactSearch}`);
+    const contactRes = await axios.get(`${serverUrl}/custom/contact/search`, {
+        params: {
+            jwtToken: rcUnifiedCrmExtJwt,
+            name: contactSearch ?? '',
+            ...(appointment ? { appointment: true } : {}),
+        },
+    });
     if (contactRes.data.contact.length === 0) {
         showNotification({
             level: contactRes.data.returnMessage.messageType, message: contactRes.data.returnMessage.message, ttl: contactRes.data.returnMessage.ttl
@@ -51,6 +95,10 @@ async function getCustomContactSearchData({ serverUrl, platform, contactSearch, 
                 description: `${c.type} - ${c.id}`
             })
         }
+        const warningFieldName = 'appointmentContactSearchWarning';
+        const warningText = 'Only contacts with an email address will be shown in search results.';
+        const filteredContactIds = filteredContactList.map((c) => String(c.const));
+        const filteredContactNames = filteredContactList.map((c) => String(c.title));
         return {
             id: pageId,
             title: 'Select Contact to Add',
@@ -58,23 +106,69 @@ async function getCustomContactSearchData({ serverUrl, platform, contactSearch, 
             schema: {
                 type: 'object',
                 properties: {
+                    ...(appointment
+                        ? {
+                            [warningFieldName]: {
+                                type: 'string',
+                                title: '',
+                                description: warningText,
+                            },
+                        }
+                        : {}),
                     contactList: {
-                        type: 'string',
-                        title: 'Contacts',
-                        oneOf: filteredContactList
+                        ...(appointment
+                            ? {
+                                type: 'array',
+                                title: 'Contacts',
+                                items: {
+                                    type: 'string',
+                                    enum: filteredContactIds,
+                                    enumNames: filteredContactNames,
+                                },
+                                uniqueItems: true,
+                                minItems: 1,
+                            }
+                            : {
+                                type: 'string',
+                                title: 'Contacts',
+                                oneOf: filteredContactList,
+                            })
                     }
                 }
             },
             uiSchema: {
+                ...(appointment
+                    ? {
+                        submitButtonOptions: {
+                            submitText: 'Add',
+                        },
+                    }
+                    : {}),
+                ...(appointment
+                    ? {
+                        [warningFieldName]: {
+                            "ui:field": "admonition",
+                            "ui:severity": "warning",
+                        },
+                        "ui:order": [warningFieldName, "contactList"],
+                    }
+                    : {}),
                 contactList: {
-                    "ui:field": "list",
-                    // "ui:showIconAsAvatar": true, // optional, default true. show icon as avatar (round) in list
+                    ...(appointment
+                        ? {
+                            "ui:widget": "checkboxes",
+                        }
+                        : {
+                            "ui:field": "list",
+                            // "ui:showIconAsAvatar": true, // optional, default true. show icon as avatar (round) in list
+                        }),
                 }
             },
             formData: {
                 search: contactSearch ?? '',
                 contactPhoneNumber,
-                contactInfo
+                contactInfo,
+                ...(formData || {}),
             }
         }
     }

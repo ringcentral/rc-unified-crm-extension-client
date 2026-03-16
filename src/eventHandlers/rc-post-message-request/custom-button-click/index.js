@@ -60,6 +60,7 @@ import appointmentOpenAppointmentHandler from './appointmentOpenAppointment';
 import appointmentCreateHandler from './appointmentCreate';
 import appointmentCreateSaveHandler from './appointmentCreateSave';
 import appointmentSelectParticipantHandler from './appointmentSelectParticipant';
+import contactSearchResultAppointmentSubmitHandler from './contactSearchResultAppointmentSubmit';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     switch (data.body.button.type) {
@@ -90,6 +91,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     }
     if (data.body.button.id === 'appointmentCreatePage') {
         await appointmentCreateSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+        return;
+    }
+    if (data.body.button.id === 'contactSearchResultAppointment') {
+        await contactSearchResultAppointmentSubmitHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
         return;
     }
 

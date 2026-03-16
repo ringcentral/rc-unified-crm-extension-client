@@ -18,12 +18,14 @@ async function onEvent({ data, manifest }) {
     showNotification({ level: 'success', message: 'Appointment updated.', ttl: 3000 });
 
     // After save, refresh list and go back to tab
-    const { appointmentsListState = { tab: 'upcoming', searchWithFilters: { search: '', filter: 'All' } } } = await chrome.storage.local.get('appointmentsListState');
+    const returnTab = data?.body?.button?.formData?.returnTab ?? 'upcoming';
+    const returnSearch = data?.body?.button?.formData?.returnSearch ?? '';
+    const returnFilter = data?.body?.button?.formData?.returnFilter ?? 'All';
     const updatedList = await appointmentsPage.getAppointmentsPageWithRecords({
       manifest,
       jwtToken: rcUnifiedCrmExtJwt,
-      tab: appointmentsListState.tab,
-      searchWithFilters: appointmentsListState.searchWithFilters ?? {},
+      tab: returnTab,
+      searchWithFilters: { search: returnSearch, filter: returnFilter },
       forceSync: false,
     });
     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({

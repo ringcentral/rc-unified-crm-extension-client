@@ -102,6 +102,10 @@ function getAppointmentCreatePageRender({
     appointmentTime: toLocalTimeValue(nowPlus30),
     durationHours: '1',
     durationMinutes: '0',
+    // Used to return to the same list view after create (no local cache).
+    returnTab: 'upcoming',
+    returnSearch: '',
+    returnFilter: 'All',
     participantName: '',
     participantContactId: '',
     participantContactType: '',
@@ -132,10 +136,15 @@ function getAppointmentCreatePageRender({
     appointmentTime: { type: 'string', title: 'Time', format: 'time' },
     durationHours: { type: 'string', title: 'Duration', oneOf: buildDurationOptionsHours(8) },
     durationMinutes: { type: 'string', title: ' ', oneOf: buildDurationOptionsMinutes() },
+    returnTab: { type: 'string', title: '' },
+    returnSearch: { type: 'string', title: '' },
+    returnFilter: { type: 'string', title: '' },
     participantName: { type: 'string', title: 'Participant' },
     // Hidden fields: selected contact identity
     participantContactId: { type: 'string', title: '' },
     participantContactType: { type: 'string', title: '' },
+    // Hidden field: multi-selected contacts (normalized list)
+    participantContacts: { type: 'array', title: '' },
     appointmentSelectParticipantButton: { type: 'string', title: 'Search' },
     summary: { type: 'string', title: 'Summary/Description' },
     ...(statusVisible
@@ -158,8 +167,12 @@ function getAppointmentCreatePageRender({
     'summary',
     'participantName',
     'appointmentSelectParticipantButton',
+    'returnTab',
+    'returnSearch',
+    'returnFilter',
     'participantContactId',
     'participantContactType',
+    'participantContacts',
     ...(statusVisible ? ['status'] : []),
   ];
 
@@ -182,8 +195,15 @@ function getAppointmentCreatePageRender({
       'ui:order': uiOrder,
       appointmentDate: { 'ui:widget': 'date' },
       appointmentTime: { 'ui:widget': 'time' },
-      durationHours: { 'ui:widget': 'select' },
-      durationMinutes: { 'ui:widget': 'select' },
+      durationHours: {
+        'ui:widget': 'select',
+        'ui:options': { grid: { xs: 6, sm: 6 } },
+      },
+      durationMinutes: {
+        'ui:widget': 'select',
+        'ui:label': false,
+        'ui:options': { grid: { xs: 6, sm: 6 } },
+      },
       ...(titleFieldVisible
         ? {
           title: {
@@ -196,8 +216,12 @@ function getAppointmentCreatePageRender({
           status: { 'ui:widget': 'select' },
         }
         : {}),
+      returnTab: { 'ui:widget': 'hidden' },
+      returnSearch: { 'ui:widget': 'hidden' },
+      returnFilter: { 'ui:widget': 'hidden' },
       participantContactId: { 'ui:widget': 'hidden' },
       participantContactType: { 'ui:widget': 'hidden' },
+      participantContacts: { 'ui:widget': 'hidden' },
       // Try to render a compact "Search" button inline to the right of Participant.
       // If the embeddable build ignores grid hints, it will still render as a smaller button.
       participantName: {
@@ -227,10 +251,32 @@ async function submitAppointmentCreate({ manifest, jwtToken, formData }) {
   });
   const durationMinutesTotal =
     (Number(formData?.durationHours ?? 0) * 60) + (Number(formData?.durationMinutes ?? 0));
+
+  const participantContactsRaw = Array.isArray(formData?.participantContacts)
+    ? formData.participantContacts
+    : [];
+  const participantContacts = participantContactsRaw
+    .map((c) => ({
+      id: String(c?.id ?? '').trim(),
+      type: String(c?.type ?? '').trim(),
+      name: String(c?.name ?? '').trim(),
+    }))
+    .filter((c) => c.id);
+
   const payload = {
     participantName: formData?.participantName ?? '',
     contactId: formData?.participantContactId ?? '',
     contactType: formData?.participantContactType ?? '',
+    // Always pass contacts as an array (even when only one is selected).
+    contacts: participantContacts.length > 0
+      ? participantContacts
+      : (formData?.participantContactId
+        ? [{
+          id: String(formData?.participantContactId ?? ''),
+          type: String(formData?.participantContactType ?? ''),
+          name: String(formData?.participantName ?? ''),
+        }]
+        : []),
     summary: formData?.summary ?? '',
     startTimeUtc,
     durationMinutes: Number.isFinite(durationMinutesTotal) ? durationMinutesTotal : 60,

@@ -1,9 +1,16 @@
 import appointmentCreatePage from '../../../components/appointmentsPage/appointmentCreatePage';
+import { extractAppointmentsListContext } from '../../../lib/appointmentUtils';
 
-async function onEvent({ manifest, platformName }) {
+async function onEvent({ data, manifest, platformName }) {
   const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
   const appointmentTitle = apptCfg?.title ?? 'Appointments';
+  const { tab, searchWithFilters } = extractAppointmentsListContext(data);
   const page = appointmentCreatePage.getAppointmentCreatePageRender({
+    initialFormData: {
+      returnTab: tab,
+      returnSearch: String(searchWithFilters?.search ?? ''),
+      returnFilter: String(searchWithFilters?.filter ?? 'All'),
+    },
     appointmentTitle,
     statusConfig: apptCfg?.status,
     titleFieldConfig: apptCfg?.titleField,

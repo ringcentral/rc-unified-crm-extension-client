@@ -1,4 +1,5 @@
 import { updateAppointment } from '../../service/appointmentService';
+import { formatAttendeeNames, normalizeAttendees } from '../../lib/appointmentUtils';
 
 function singularizeAppointmentTitle(title) {
   const t = String(title || '').trim();
@@ -61,12 +62,11 @@ function getAppointmentEditPageRender({
   const id = thirdPartyAppointmentId || String(appointment?.id ?? appointment?.externalId ?? '');
   const titleFieldVisible = titleFieldConfig?.isVisible;
   const titleFieldTitle = String(titleFieldConfig?.value || 'Title');
+  const attendees = normalizeAttendees(appointment?.attendees ?? appointment?.attendeeIds);
   const participantName =
-    appointment?.participantName ??
-    appointment?.customerName ??
-    appointment?.attendeeName ??
-    appointment?.contactName ??
-    'Unknown';
+    String(appointment?.participantName ?? '').trim() ||
+    formatAttendeeNames(attendees) ||
+    '';
   const start = appointment?.startTimeUtc ?? appointment?.startTime ?? appointment?.start ?? null;
   const durationMinutes = Number(appointment?.durationMinutes ?? appointment?.duration ?? 30) || 30;
   const durationHours = Math.floor(durationMinutes / 60);
@@ -84,6 +84,10 @@ function getAppointmentEditPageRender({
       properties: {
         // Hidden but required for save.
         thirdPartyAppointmentId: { type: 'string', title: '' },
+        // Used to return to the same list view after update (no local cache).
+        returnTab: { type: 'string', title: '' },
+        returnSearch: { type: 'string', title: '' },
+        returnFilter: { type: 'string', title: '' },
         ...(titleFieldVisible ? { title: { type: 'string', title: titleFieldTitle } } : {}),
         participantName: { type: 'string', title: 'Participant' },
         summary: { type: 'string', title: 'Summary' },
@@ -99,6 +103,9 @@ function getAppointmentEditPageRender({
         submitText: 'Update',
       },
       thirdPartyAppointmentId: { 'ui:widget': 'hidden' },
+      returnTab: { 'ui:widget': 'hidden' },
+      returnSearch: { 'ui:widget': 'hidden' },
+      returnFilter: { 'ui:widget': 'hidden' },
       ...(titleFieldVisible
         ? {
           title: {
@@ -112,6 +119,9 @@ function getAppointmentEditPageRender({
       },
       'ui:order': [
         'thirdPartyAppointmentId',
+        'returnTab',
+        'returnSearch',
+        'returnFilter',
         ...(titleFieldVisible ? ['title'] : []),
         'appointmentDate',
         'appointmentTime',
@@ -122,11 +132,21 @@ function getAppointmentEditPageRender({
       ],
       appointmentDate: { 'ui:widget': 'date' },
       appointmentTime: { 'ui:widget': 'time' },
-      durationHours: { 'ui:widget': 'select' },
-      durationMinutes: { 'ui:widget': 'select' },
+      durationHours: {
+        'ui:widget': 'select',
+        'ui:options': { grid: { xs: 6, sm: 6 } },
+      },
+      durationMinutes: {
+        'ui:widget': 'select',
+        'ui:label': false,
+        'ui:options': { grid: { xs: 6, sm: 6 } },
+      },
     },
     formData: {
       thirdPartyAppointmentId: String(id),
+      returnTab: String(appointment?.returnTab ?? 'upcoming'),
+      returnSearch: String(appointment?.returnSearch ?? ''),
+      returnFilter: String(appointment?.returnFilter ?? 'All'),
       ...(titleFieldVisible ? { title: appointment?.title ?? appointment?.subject ?? '' } : {}),
       participantName,
       summary: appointment?.summary ?? appointment?.description ?? '',

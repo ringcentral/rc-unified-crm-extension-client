@@ -12,8 +12,12 @@ async function onEvent({ data, manifest, platformName, listButtonItemId }) {
   const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment;
   const canOpen = !!apptCfg?.canOpenAppointmentPage;
   const template = apptCfg?.appointmentPageUrl;
-  if (canOpen && template && thirdPartyAppointmentId) {
-    const targetUrl = String(template).replaceAll('{thirdPartyAppointmentId}', encodeURIComponent(String(thirdPartyAppointmentId)));
+  if (canOpen && template) {
+    const tpl = String(template);
+    const needsId = tpl.includes('{thirdPartyAppointmentId}');
+    const targetUrl = (needsId && thirdPartyAppointmentId)
+      ? tpl.replaceAll('{thirdPartyAppointmentId}', encodeURIComponent(String(thirdPartyAppointmentId)))
+      : tpl;
     window.open(targetUrl, '_blank');
     return;
   }
@@ -22,14 +26,6 @@ async function onEvent({ data, manifest, platformName, listButtonItemId }) {
   const url = btn?.additionalInfo?.appointmentUrl || btn?.formData?.appointmentUrl || '';
   if (url) {
     window.open(url, '_blank');
-    return;
-  }
-  // Attempt to resolve from cache
-  const { appointmentsListCache = [] } = await chrome.storage.local.get('appointmentsListCache');
-  const appt = (appointmentsListCache || []).find(a => String(a.thirdPartyAppointmentId ?? a.id ?? a.externalId ?? '') === String(thirdPartyAppointmentId));
-  const cachedUrl = appt?.appointmentUrl ?? appt?.externalUrl ?? appt?.url ?? '';
-  if (cachedUrl) {
-    window.open(cachedUrl, '_blank');
     return;
   }
   showNotification({ level: 'warning', message: 'No appointment link available.', ttl: 3000 });

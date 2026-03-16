@@ -1,18 +1,34 @@
 import appointmentEditPage from '../../../components/appointmentsPage/appointmentEditPage';
+import { listAppointments } from '../../../service/appointmentService';
+import { extractAppointmentsListContext, normalizeAppointmentId, toCanonicalAppointment } from '../../../lib/appointmentUtils';
 
 async function onEvent({ data, manifest, platformName, listButtonItemId }) {
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
   try {
-    const { appointmentsListCache = [] } = await chrome.storage.local.get('appointmentsListCache');
-    const appt = (appointmentsListCache || []).find(a => String(a.thirdPartyAppointmentId ?? a.id ?? a.externalId ?? '') === String(listButtonItemId));
-    if (!appt) {
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const { tab, searchWithFilters } = extractAppointmentsListContext(data);
+
+    const items = await listAppointments({
+      serverUrl: manifest.serverUrl,
+      jwtToken: rcUnifiedCrmExtJwt,
+      range: tab,
+      mineOnly: false,
+      forceSync: false,
+    });
+
+    const appointment = (items || []).find((item) => String(normalizeAppointmentId(item)) === String(listButtonItemId));
+    if (!appointment) {
       return;
     }
-    await chrome.storage.local.set({ appointmentEditCache: appt });
     const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
     const appointmentTitle = apptCfg?.title ?? 'Appointments';
     const editPage = appointmentEditPage.getAppointmentEditPageRender({
-      appointment: appt,
+      appointment: {
+        ...toCanonicalAppointment(appointment),
+        returnTab: tab,
+        returnSearch: String(searchWithFilters?.search ?? ''),
+        returnFilter: String(searchWithFilters?.filter ?? 'All'),
+      },
       appointmentTitle,
       titleFieldConfig: apptCfg?.titleField,
     });

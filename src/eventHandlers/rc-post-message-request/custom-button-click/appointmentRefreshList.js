@@ -1,15 +1,16 @@
 import appointmentsPage from '../../../components/appointmentsPage/appointmentsPage';
+import { extractAppointmentsListContext } from '../../../lib/appointmentUtils';
 
 async function onEvent({ data, manifest }) {
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
   try {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const { appointmentsListState = { tab: 'upcoming', searchWithFilters: { search: '', filter: 'All' } } } = await chrome.storage.local.get('appointmentsListState');
+    const { tab, searchWithFilters } = extractAppointmentsListContext(data);
     const updated = await appointmentsPage.getAppointmentsPageWithRecords({
       manifest,
       jwtToken: rcUnifiedCrmExtJwt,
-      tab: appointmentsListState.tab,
-      searchWithFilters: appointmentsListState.searchWithFilters ?? {},
+      tab,
+      searchWithFilters,
       forceSync: true,
     });
     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({

@@ -3,6 +3,7 @@ import userReportIconActive from '../../images/reportIcon_active.png';
 import userReportIconDark from '../../images/reportIcon_dark.png';
 import { listAppointments } from '../../service/appointmentService';
 import { getPlatformInfo } from '../../service/platformService';
+import { normalizeAppointmentId, toCanonicalAppointment } from '../../lib/appointmentUtils';
 
 function formatDateTime(dt) {
   if (!dt) return { date: '', time: '' };
@@ -173,29 +174,25 @@ async function getAppointmentsPageWithRecords({
     forceSync,
   });
 
+  const canonicalAppointments = (items || []).map(toCanonicalAppointment);
+
   // Apply client-side filters (fallback in case backend doesn't filter reliably yet)
   const nowTs = Date.now();
-  const filtered = (items || []).filter((a) => {
-    const ts = parseAppointmentStartTs(a);
+  const filteredAppointments = (canonicalAppointments || []).filter((appointment) => {
+    const ts = parseAppointmentStartTs(appointment);
     if (tab === 'upcoming' && ts !== null && ts < nowTs) return false;
     if (tab === 'past' && ts !== null && ts >= nowTs) return false;
 
-    const statusKey = normalizeStatusKey(a.status);
+    const statusKey = normalizeStatusKey(appointment.status);
     if (!matchesStatusFilter(statusKey, resolvedFilter)) return false;
 
     if (resolvedSearch) {
       const hay = [
-        a.title,
-        a.subject,
-        a.participantName,
-        a.customerName,
-        a.attendeeName,
-        a.contactName,
-        a.summary,
-        a.description,
-        a.phoneNumber,
-        a.customerPhone,
-        a.thirdPartyAppointmentId,
+        appointment.title,
+        appointment.participantName,
+        appointment.description,
+        ...(Array.isArray(appointment.attendees) ? appointment.attendees.map((t) => t?.name).filter(Boolean) : []),
+        appointment.thirdPartyAppointmentId,
       ].filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(resolvedSearch)) return false;
     }
@@ -203,30 +200,12 @@ async function getAppointmentsPageWithRecords({
   });
 
   // Cache for action handlers (confirm/cancel/edit/open/refresh)
-  await chrome.storage.local.set({
-    appointmentsListCache: filtered,
-    appointmentsListState: { tab, searchWithFilters: { search: searchWithFilters?.search ?? '', filter: resolvedFilter } },
-  });
-
-  page.schema.properties.appointments.oneOf = (filtered || []).map((a) => {
-    // Canonical appointment key: thirdPartyAppointmentId (matches create response appointmentId/thirdPartyAppointmentId)
-    // Backend may return `id: null` but `thirdPartyAppointmentId: "16053"` for newly created appointments.
-    const thirdPartyAppointmentIdRaw = a.thirdPartyAppointmentId ?? '';
-    const thirdPartyAppointmentId =
-      thirdPartyAppointmentIdRaw && String(thirdPartyAppointmentIdRaw).toUpperCase() !== 'N/A'
-        ? String(thirdPartyAppointmentIdRaw)
-        : '';
-    const id = thirdPartyAppointmentId || String(a.id ?? a.externalId ?? '');
-    const participantName =
-      a.participantName ??
-      a.customerName ??
-      a.attendeeName ??
-      a.contactName ??
-      'Unknown';
-
-    const start = a.startTimeUtc ?? a.startTime ?? a.start ?? a.when ?? null;
+  page.schema.properties.appointments.oneOf = (filteredAppointments || []).map((appointment) => {
+    const appointmentId = normalizeAppointmentId(appointment);
+    const participantName = appointment.participantName || '';
+    const start = appointment.startTimeUtc ?? null;
     const { date, time } = formatDateTime(start);
-    const apptTitleRaw = extractAppointmentTitle(a);
+    const apptTitleRaw = extractAppointmentTitle(appointment);
     const apptTitle =
       apptTitleRaw && apptTitleRaw.toLowerCase() !== String(participantName).toLowerCase()
         ? apptTitleRaw
@@ -242,20 +221,16 @@ async function getAppointmentsPageWithRecords({
     ];
 
     return {
-      const: String(id),
-      title: apptTitle || participantName,
+      const: String(appointmentId),
+      // Avoid empty list-row titles (can break list rendering in some embeddable builds).
+      title: apptTitle || participantName || entityTitle,
       description: participantName,
       authorName: date,
       meta: time,
       actions,
       additionalInfo: {
-        thirdPartyAppointmentId: String(id),
-        contactId: a.contactId ?? a.customerId ?? '',
-        contactType: a.contactType ?? 'contact',
-        phoneNumber: a.phoneNumber ?? a.customerPhone ?? '',
-        contactName: participantName,
-        contactUrl: a.contactUrl ?? a.customerUrl ?? a.contactLink ?? '',
-        appointmentUrl: a.appointmentUrl ?? a.externalUrl ?? a.url ?? '',
+        thirdPartyAppointmentId: String(appointmentId),
+        attendees: appointment.attendees ?? [],
       },
     };
   });

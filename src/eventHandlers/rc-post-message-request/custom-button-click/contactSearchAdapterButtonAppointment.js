@@ -4,12 +4,17 @@ async function onEvent({ data, manifest, platform }) {
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
   try {
     const contactNameToBeSearch = data.body.button.formData.contactNameToSearch;
+    const appointmentCreateDraft = data?.body?.button?.formData?.appointmentCreateDraft ?? {};
     const res = await contactSearch.getCustomContactSearchData({
       serverUrl: manifest.serverUrl,
       platform,
       contactSearch: contactNameToBeSearch,
       pageId: 'contactSearchResultAppointment',
       contactPhoneNumber: '',
+      appointment: true,
+      formData: {
+        appointmentCreateDraft,
+      },
     });
     if (!res) {
       return;
