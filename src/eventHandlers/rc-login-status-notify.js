@@ -98,6 +98,8 @@ async function onEvent({ data }) {
             try {
                 const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
                 const placeholder = appointmentsPage.getAppointmentsPageRender({
+                    manifest,
+                    platformName,
                     selectedTab: 'upcoming',
                     appointmentTitle: apptCfg?.title ?? 'Appointments',
                     showConfirm: apptCfg?.showConfirm !== false,

@@ -66,6 +66,8 @@ function parseAppointmentStartTs(a) {
 }
 
 function getAppointmentsPageRender({
+  manifest,
+  platformName,
   selectedTab = 'upcoming',
   searchWithFilters = {},
   appointmentTitle = 'Appointments',
@@ -84,7 +86,7 @@ function getAppointmentsPageRender({
     darkIconUri: userReportIconDark,
     // Tab header actions (Embeddable v3.x). These show as icon buttons on top-right.
     actions: [
-      { id: 'appointmentsHeaderNew', icon: 'new', title: 'New appointment' },
+      { id: 'appointmentsHeaderNew', icon: 'new', title: `New ${manifest?.platforms?.[platformName]?.page?.appointment?.title ?? 'appointment'}` },
       { id: 'appointmentsHeaderRefresh', icon: 'refresh', title: 'Refresh' },
     ],
     schema: {
@@ -162,7 +164,14 @@ async function getAppointmentsPageWithRecords({
   const showConfirm = appointmentCfg?.showConfirm !== false;
   const entityTitle = singularizeAppointmentTitle(appointmentTitle);
 
-  const page = getAppointmentsPageRender({ selectedTab: tab, searchWithFilters, appointmentTitle, showConfirm });
+  const page = getAppointmentsPageRender({
+    selectedTab: tab,
+    searchWithFilters,
+    appointmentTitle,
+    showConfirm,
+    manifest,
+    platformName: resolvedPlatformName,
+  });
   const resolvedSearch = String(searchWithFilters?.search ?? '').trim().toLowerCase();
   const resolvedFilter = String(searchWithFilters?.filter ?? 'All');
 

@@ -60,6 +60,8 @@ async function onMessage({ request, sendResponse }) {
                     const platformName = platformInfo?.platformName ?? '';
                     const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
                     const placeholder = appointmentsPage.getAppointmentsPageRender({
+                        manifest,
+                        platformName: platformInfo?.platformName ?? '',
                         selectedTab: 'upcoming',
                         appointmentTitle: apptCfg?.title ?? 'Appointments',
                         showConfirm: apptCfg?.showConfirm !== false,
