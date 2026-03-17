@@ -21,12 +21,36 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=connector` });
             break;
         case 'shared':
-            platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?access=internal&type=connector&accountId=${selectedPlatform.accountId}`);
-            await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?access=internal&type=connector&accountId=${selectedPlatform.accountId}` });
+            let sharedManifestUrl = `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?access=internal&type=connector&accountId=${selectedPlatform.accountId}`;
+            try {
+                platformManifestResponse = await axios.get(sharedManifestUrl);
+            }
+            catch (e) {
+                if (e.response.status === 404) {
+                    sharedManifestUrl = `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${selectedPlatform.accountId}`;
+                    platformManifestResponse = await axios.get(sharedManifestUrl);
+                }
+                else {
+                    throw e;
+                }
+            }
+            await saveManifestUrl({ manifestUrl: sharedManifestUrl });
             break;
         case 'private':
-            platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?access=internal&type=connector&accountId=${rcInfo.value.cachedData.accountInfo.id}`);
-            await saveManifestUrl({ manifestUrl: `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?access=internal&type=connector&accountId=${rcInfo.value.cachedData.accountInfo.id}` });
+            let privateManifestUrl = `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?access=internal&type=connector&accountId=${rcInfo.value.cachedData.accountInfo.id}`;
+            try {
+                platformManifestResponse = await axios.get(privateManifestUrl);
+            }
+            catch (e) {
+                if (e.response.status === 404) {
+                    privateManifestUrl = `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${rcInfo.value.cachedData.accountInfo.id}`;
+                    platformManifestResponse = await axios.get(privateManifestUrl);
+                }
+                else {
+                    throw e;
+                }
+            }
+            await saveManifestUrl({ manifestUrl: privateManifestUrl });
             break;
     }
     // eslint-disable-next-line no-param-reassign
