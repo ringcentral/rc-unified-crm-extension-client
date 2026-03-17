@@ -12,6 +12,7 @@ async function onEvent({ data, buttonId, manifest, platformInfo, platformName, p
             const getAuthUriResponse = await axios.get(`${data.body.button.formData.plugin.authorizationUrl}?jwtToken=${rcUnifiedCrmExtJwt}&pluginId=${data.body.button.formData.pluginId}`);
             const authUri = getAuthUriResponse.data;
             authCore.handleThirdPartyOAuthWindow(authUri);
+            await chrome.storage.local.set({ 'cachedPluginConfigFormData': data.body.button.formData });
             break;
         case 'pluginLogoutButton':
             const logoutResponse = await axios.post(`${data.body.button.formData.plugin.logoutUrl}?jwtToken=${rcUnifiedCrmExtJwt}`);

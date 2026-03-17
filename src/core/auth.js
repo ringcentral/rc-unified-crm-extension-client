@@ -10,7 +10,6 @@ import authPage from '../components/authPage';
 import { tryConnectToBullhorn } from '../misc/bullhorn';
 import { t } from '../i18n';
 import { getPluginConfigurePageRender } from '../components/pluginConfigurePage';
-import { getPluginDetails } from '../service/manifestService';
 
 function handleThirdPartyOAuthWindow(oAuthUri) {
     chrome.runtime.sendMessage({
@@ -135,6 +134,23 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
         if (stateData?.from === 'plugin' && stateData?.redirectTo) {
             const pluginCallbackResp = await axios.get(`${stateData.redirectTo}?callbackUri=${callbackUri}`);
             showNotification({ level: 'success', message: 'Successfully authorized plugin.' });
+            const { cachedPluginConfigFormData } = await chrome.storage.local.get('cachedPluginConfigFormData');
+            const pluginConfigurePageRender = getPluginConfigurePageRender({
+                pluginId: cachedPluginConfigFormData.pluginId,
+                pluginAccess: cachedPluginConfigFormData.access,
+                plugin: cachedPluginConfigFormData.plugin,
+                config: cachedPluginConfigFormData.config,
+                isLoggedIn: true
+            });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-customized-page',
+                page: pluginConfigurePageRender
+            });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-navigate-to',
+                path: `/customized/${pluginConfigurePageRender.id}`
+            }, '*');
+            await chrome.storage.local.remove('cachedPluginConfigFormData');
             return;
         }
     }
