@@ -34,7 +34,8 @@ function matchesStatusFilter(statusKey, filterLabel) {
   if (f === 'All') return true;
   if (f === 'Scheduled') return statusKey === 'scheduled' || statusKey === 'confirmed';
   if (f === 'Canceled') return statusKey === 'canceled';
-  return true;
+  // Fallback: treat the filter label as a status and compare normalized keys.
+  return statusKey === normalizeStatusKey(f);
 }
 
 function singularizeAppointmentTitle(title) {
@@ -73,10 +74,17 @@ function getAppointmentsPageRender({
   searchWithFilters = {},
   appointmentTitle = 'Appointments',
   showConfirm = true,
+  filterOptions,
   userSettings,
 } = {}) {
   const resolvedSearch = String(searchWithFilters?.search ?? '');
-  const resolvedFilter = String(searchWithFilters?.filter ?? 'All');
+  const fallbackFilters = ['All', 'Scheduled', 'Canceled'];
+  const resolvedFilters = Array.isArray(filterOptions) && filterOptions.length > 0
+    ? filterOptions.map(String)
+    : fallbackFilters;
+  const initialFilter = resolvedFilters.includes('All') ? 'All' : (resolvedFilters[0] ?? 'All');
+  const requestedFilter = String(searchWithFilters?.filter ?? initialFilter);
+  const resolvedFilter = resolvedFilters.includes(requestedFilter) ? requestedFilter : initialFilter;
   const page = {
     id: 'appointmentsPage',
     title: appointmentTitle,
@@ -124,7 +132,7 @@ function getAppointmentsPageRender({
       searchWithFilters: {
         'ui:field': 'search',
         'ui:placeholder': 'Search...',
-        'ui:filters': ['All', 'Scheduled', 'Canceled'],
+        'ui:filters': resolvedFilters,
         'ui:previewLength': 2,
         'ui:style': { marginTop: '-10px' }
       },
@@ -174,6 +182,7 @@ async function getAppointmentsPageWithRecords({
   const appointmentCfg = manifest?.platforms?.[resolvedPlatformName]?.page?.appointment ?? {};
   const appointmentTitle = appointmentCfg?.title ?? 'Appointments';
   const showConfirm = appointmentCfg?.showConfirm !== false;
+  const filterOptions = Array.isArray(appointmentCfg?.filterStatus?.value) ? appointmentCfg.filterStatus.value : undefined;
   const entityTitle = singularizeAppointmentTitle(appointmentTitle);
 
   const page = getAppointmentsPageRender({
@@ -181,6 +190,7 @@ async function getAppointmentsPageWithRecords({
     searchWithFilters,
     appointmentTitle,
     showConfirm,
+    filterOptions,
     manifest,
     platformName: resolvedPlatformName,
     userSettings: resolvedUserSettings,
@@ -190,7 +200,7 @@ async function getAppointmentsPageWithRecords({
     return page;
   }
   const resolvedSearch = String(searchWithFilters?.search ?? '').trim().toLowerCase();
-  const resolvedFilter = String(searchWithFilters?.filter ?? 'All');
+  const resolvedFilter = String(page?.formData?.searchWithFilters?.filter ?? searchWithFilters?.filter ?? 'All');
 
   const items = await listAppointments({
     serverUrl: manifest.serverUrl,
