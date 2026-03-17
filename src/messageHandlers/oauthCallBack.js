@@ -65,29 +65,14 @@ async function onMessage({ request, sendResponse }) {
                         selectedTab: 'upcoming',
                         appointmentTitle: apptCfg?.title ?? 'Appointments',
                         showConfirm: apptCfg?.showConfirm !== false,
+                        userSettings,
                     });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                         type: 'rc-adapter-register-customized-page',
                         page: placeholder,
                     }, '*');
                 } catch (e) { /* ignore */ }
-                try {
-                    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                    const appointmentsTab = await appointmentsPage.getAppointmentsPageWithRecords({
-                        manifest,
-                        jwtToken: rcUnifiedCrmExtJwt,
-                        tab: 'upcoming',
-                        searchWithFilters: { search: '', filter: 'All' },
-                        platformName: platformInfo?.platformName ?? '',
-                        forceSync: false
-                    });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                        type: 'rc-adapter-register-customized-page',
-                        page: appointmentsTab,
-                    }, '*');
-                } catch (e) {
-                    // ignore if appointments backend is not available yet
-                }
+                // Do NOT fetch appointments here. List API will run only when user opens the tab or refreshes.
 
                 // admin tab
                 const adminSettingResults = await adminCore.refreshAdminSettings();

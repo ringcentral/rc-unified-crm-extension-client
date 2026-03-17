@@ -52,12 +52,17 @@ async function onEvent({ data }) {
         try {
           const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
           if (rcUnifiedCrmExtJwt && crmAuthed) {
+            const { userSettings } = await chrome.storage.local.get('userSettings');
+            if (!userCore.getShowAppointmentsTabSetting(userSettings).value) {
+              return;
+            }
             const refreshedAppointments = await appointmentsPage.getAppointmentsPageWithRecords({
               manifest,
               jwtToken: rcUnifiedCrmExtJwt,
               tab: 'upcoming',
               searchWithFilters: { search: '', filter: 'All' },
-              forceSync: false
+              forceSync: false,
+              userSettings,
             });
             document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
               type: 'rc-adapter-register-customized-page',

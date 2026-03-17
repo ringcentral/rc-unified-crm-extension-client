@@ -1,3 +1,4 @@
+import userCore from '../../core/user';
 import userReportIcon from '../../images/reportIcon.png';
 import userReportIconActive from '../../images/reportIcon_active.png';
 import userReportIconDark from '../../images/reportIcon_dark.png';
@@ -72,10 +73,11 @@ function getAppointmentsPageRender({
   searchWithFilters = {},
   appointmentTitle = 'Appointments',
   showConfirm = true,
+  userSettings,
 } = {}) {
   const resolvedSearch = String(searchWithFilters?.search ?? '');
   const resolvedFilter = String(searchWithFilters?.filter ?? 'All');
-  return {
+  const page = {
     id: 'appointmentsPage',
     title: appointmentTitle,
     type: 'tab',
@@ -142,6 +144,8 @@ function getAppointmentsPageRender({
     // Pass-through so downstream renderers/handlers can use it if needed.
     _appointmentConfig: { appointmentTitle, showConfirm },
   };
+  page.hidden = !userCore.getShowAppointmentsTabSetting(userSettings).value;
+  return page;
 }
 
 async function getAppointmentsPageWithRecords({
@@ -151,7 +155,15 @@ async function getAppointmentsPageWithRecords({
   searchWithFilters = {},
   forceSync = false,
   platformName = '',
+  userSettings,
 } = {}) {
+  let resolvedUserSettings = userSettings;
+  if (!resolvedUserSettings || resolvedUserSettings?.showAppointmentsTab === undefined) {
+    try {
+      const fromStorage = await chrome.storage.local.get('userSettings');
+      resolvedUserSettings = fromStorage?.userSettings ?? resolvedUserSettings;
+    } catch (e) { /* ignore */ }
+  }
   let resolvedPlatformName = platformName;
   if (!resolvedPlatformName) {
     try {
@@ -171,7 +183,12 @@ async function getAppointmentsPageWithRecords({
     showConfirm,
     manifest,
     platformName: resolvedPlatformName,
+    userSettings: resolvedUserSettings,
   });
+  if (page.hidden) {
+    page.unreadCount = 0;
+    return page;
+  }
   const resolvedSearch = String(searchWithFilters?.search ?? '').trim().toLowerCase();
   const resolvedFilter = String(searchWithFilters?.filter ?? 'All');
 

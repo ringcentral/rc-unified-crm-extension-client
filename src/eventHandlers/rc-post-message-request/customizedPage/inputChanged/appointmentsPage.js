@@ -1,5 +1,6 @@
 import { createDebounceHandler, responseMessage } from '../../../../lib/util';
 import appointmentsPage from '../../../../components/appointmentsPage/appointmentsPage';
+import userCore from '../../../../core/user';
 
 const debounceAppointmentsSearch = createDebounceHandler('appointmentsSearch', 300);
 
@@ -12,6 +13,11 @@ async function onEvent({ data, manifest }) {
     // Only refresh list when user changes top filters. Clicking list rows or the "..." menu
     // can emit inputChanged with other keys (e.g. "appointments") and should be ignored.
     if (!isTabChange && !isSearchChange) {
+      return;
+    }
+
+    const { userSettings } = await chrome.storage.local.get('userSettings');
+    if (!userCore.getShowAppointmentsTabSetting(userSettings).value) {
       return;
     }
 
@@ -28,6 +34,7 @@ async function onEvent({ data, manifest }) {
           tab,
           searchWithFilters,
           forceSync: false,
+          userSettings,
         });
         document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
           type: 'rc-adapter-register-customized-page',
@@ -46,6 +53,7 @@ async function onEvent({ data, manifest }) {
       tab,
       searchWithFilters,
       forceSync: false,
+      userSettings,
     });
     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
       type: 'rc-adapter-register-customized-page',

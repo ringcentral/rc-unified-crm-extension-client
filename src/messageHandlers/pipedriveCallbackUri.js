@@ -47,21 +47,7 @@ async function onMessage({ request, sendResponse }) {
       }
     }
     catch (e) { /* ignore */ }
-    try {
-      const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-      const appointmentsTab = await appointmentsPage.getAppointmentsPageWithRecords({
-        manifest,
-        jwtToken: rcUnifiedCrmExtJwt,
-        tab: 'upcoming',
-        searchWithFilters: { search: '', filter: 'All' },
-        forceSync: false
-      });
-      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-        type: 'rc-adapter-register-customized-page',
-        page: appointmentsTab,
-      }, '*');
-    }
-    catch (e) { /* ignore */ }
+    // Do NOT fetch appointments here. List API will run only when user opens the tab or refreshes.
     // admin tab
     await chrome.storage.local.set({ crmAuthed });
     const adminSettingResults = await adminCore.refreshAdminSettings();

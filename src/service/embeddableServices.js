@@ -270,6 +270,14 @@ async function getServiceManifest() {
                                 value: userCore.getShowCalldownTabSetting(userSettings).value,
                                 readOnly: userCore.getShowCalldownTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowCalldownTabSetting(userSettings).readOnlyReason
+                            },
+                            {
+                                id: 'showAppointmentsTab',
+                                type: 'boolean',
+                                name: t('settings.appearance.showAppointmentsTab'),
+                                value: userCore.getShowAppointmentsTabSetting(userSettings).value,
+                                readOnly: userCore.getShowAppointmentsTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowAppointmentsTabSetting(userSettings).readOnlyReason
                             }
                         ]
                     },

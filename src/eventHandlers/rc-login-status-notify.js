@@ -103,27 +103,14 @@ async function onEvent({ data }) {
                     selectedTab: 'upcoming',
                     appointmentTitle: apptCfg?.title ?? 'Appointments',
                     showConfirm: apptCfg?.showConfirm !== false,
+                    userSettings,
                 });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: placeholder,
                 }, '*');
             } catch (e) { /* ignore */ }
-            try {
-                const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                const appointmentsTab = await appointmentsPage.getAppointmentsPageWithRecords({
-                    manifest,
-                    jwtToken: rcUnifiedCrmExtJwt,
-                    tab: 'upcoming',
-                    searchWithFilters: { search: '', filter: 'All' },
-                    platformName,
-                    forceSync: false
-                });
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-register-customized-page',
-                    page: appointmentsTab,
-                }, '*');
-            } catch (e) { /* ignore */ }
+            // Do NOT fetch appointments here. List API will run only when user opens the tab or refreshes.
 
             // 2.3.4. Set every 5min, check if there's any pending recording link
             setInterval(async function () {

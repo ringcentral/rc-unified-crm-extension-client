@@ -1,6 +1,7 @@
 import { showNotification } from '../../../lib/util';
 import authCore from '../../../core/auth';
 import { responseMessage } from '../../../lib/util';
+import userCore from '../../../core/user';
 import { clearPlatformInfo } from '../../../service/platformService';
 
 import customizedBannerHandler from './customizedBanner';
@@ -63,6 +64,40 @@ import appointmentSelectParticipantHandler from './appointmentSelectParticipant'
 import contactSearchResultAppointmentSubmitHandler from './contactSearchResultAppointmentSubmit';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+    // If user hides Appointments tab, block all appointment-related actions/APIs.
+    try {
+        const { userSettings } = await chrome.storage.local.get('userSettings');
+        const appointmentsEnabled = userCore.getShowAppointmentsTabSetting(userSettings).value;
+        if (!appointmentsEnabled) {
+            const btn = data?.body?.button ?? {};
+            const isAppointmentsTabAction = btn.type === 'customizedTabAction' && btn.tabId === 'appointmentsPage';
+            const isAppointmentsPageSubmit =
+                btn.id === 'appointmentEditPage' ||
+                btn.id === 'appointmentCreatePage' ||
+                btn.id === 'contactSearchResultAppointment';
+            const actionId = String(btn.id ?? '').split('-action')[0].split('-')[0];
+            const isAppointmentsListAction = new Set([
+                'appointmentCreateButton',
+                'appointmentsRefreshButton',
+                'appointmentRefresh',
+                'appointmentConfirm',
+                'appointmentCancel',
+                'appointmentEdit',
+                'appointmentOpenContact',
+                'appointmentSaveButton',
+                'appointmentCreateSaveButton',
+                'appointmentOpenAppointment',
+                'appointmentSelectParticipantButton',
+                'contactSearchAdapterButtonAppointment',
+            ]).has(actionId);
+            if (isAppointmentsTabAction || isAppointmentsPageSubmit || isAppointmentsListAction) {
+                responseMessage(data.requestId, { data: 'ok' });
+                return;
+            }
+        }
+    } catch (e) {
+        // ignore settings read errors; proceed normally
+    }
     switch (data.body.button.type) {
         case 'customizedBanner':
             await customizedBannerHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
