@@ -4,28 +4,10 @@ import conflictLogIcon from '../images/conflictLogIcon.png';
 import smsMessageIcon from '../images/smsMessageIcon.png';
 import logCore from '../core/log';
 import { t } from '../i18n';
+import { buildContactOptions, buildAdditionalFieldsSchema, buildContactWarningField, buildNewContactWidget } from './logPageUtils';
 
 function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved, contactPhoneNumber, useContactSearch }) {
-    // format contact list
-    const contactList = contactInfo.map(c => {
-        return {
-            const: c.id,
-            title: c.name,
-            type: c.type,
-            description: c.type ? `${c.type} - ${c.id}` : '', toNumberEntity: c.toNumberEntity ?? false,
-            additionalInfo: c.additionalInfo,
-            isNewContact: !!c.isNewContact,
-            defaultContactType: c.defaultContactType
-        }
-    });
-    if (useContactSearch) {
-        contactList.push({
-            const: 'searchContact',
-            title: t('pages.log.searchContacts'),
-            additionalInfo: null,
-            ignoreAdditionalFields: true
-        });
-    }
+    const contactList = buildContactOptions(contactInfo, useContactSearch);
     const defaultContact = contactList.some(c => c.toNumberEntity) ? contactList.find(c => c.toNumberEntity) : (contactList[0] ?? null);
     const defaultActivityTitle = direction === 'Inbound' ?
         t('pages.log.inboundCallFrom', { type: logType, name: defaultContact?.title ?? '' }) :
@@ -84,148 +66,19 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
         }
     }
     let page = {};
-    let requiredFieldNames = [];
-    let additionalFields = {};
-    let additionalFieldsValue = {};
-    const addiitionalWarningUISchemas = {};
     let allAdditionalFields = logType === 'Call' ? manifest.platforms[platformName].page?.callLog?.additionalFields : manifest.platforms[platformName].page?.messageLog?.additionalFields;
     if (defaultContact.isNewContact) {
         allAdditionalFields = allAdditionalFields.concat(manifest.platforms[platformName].page?.newContact?.additionalFields);
     }
-    if (allAdditionalFields) {
-        for (const f of allAdditionalFields) {
-            if (!f) {
-                continue;
-            }
-            switch (f.type) {
-                case 'selection':
-                    if (defaultContact.isNewContact && f.contactTypeDependent) {
-                        const baseOptions = [...defaultContact.additionalInfo[defaultContact.defaultContactType][f.const]];
-                        const includeNoneOption = f.includeNoneOption !== false;
-                        additionalFields[f.const] = {
-                            title: f.title,
-                            type: 'string',
-                            oneOf: includeNoneOption ? [...baseOptions, { const: 'none', title: t('common.labels.none') }] : baseOptions,
-                            associationField: !!f.contactDependent
-                        }
-                    }
-                    else {
-                        if (defaultContact?.additionalInfo?.[f.const] === undefined) {
-                            continue;
-                        }
-                        const baseOptions = [...defaultContact.additionalInfo[f.const]];
-                        const includeNoneOption = f.includeNoneOption !== false;
-                        additionalFields[f.const] = {
-                            title: f.title,
-                            type: 'string',
-                            oneOf: includeNoneOption ? [...baseOptions, { const: 'none', title: t('common.labels.none') }] : baseOptions,
-                            associationField: !!f.contactDependent
-                        }
-                    }
-                    // For EDIT log page, if log already has disposition value, use it
-                    if (logInfo?.dispositions?.[f.const]) {
-                        additionalFieldsValue[f.const] = logInfo.dispositions[f.const];
-                    }
-                    // For CREATE log page, if there is a default disposition, use it
-                    else if (defaultContact.additionalInfo[f.const]?.[0]?.const) {
-                        additionalFieldsValue[f.const] = defaultContact.additionalInfo[f.const][0].const;
-                    }
-                    if (additionalFieldsValue[f.const] && !additionalFields[f.const].oneOf.some(af => af.const === additionalFieldsValue[f.const])) {
-                        additionalFields[f.const].oneOf.push({ const: additionalFieldsValue[f.const], title: additionalFieldsValue[f.const] });
-                    }
-                    if (f.required) {
-                        requiredFieldNames.push(f.const);
-                    }
-                    break;
-                case 'checkbox':
-                    if (defaultContact?.additionalInfo?.[f.const] === undefined) {
-                        continue;
-                    }
-                    additionalFields[f.const] = {
-                        title: f.title,
-                        type: 'boolean',
-                        associationField: !!f.contactDependent
-                    }
-                    additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? (f.defaultValue ?? false);
-                    if (f.required) {
-                        requiredFieldNames.push(f.const);
-                    }
-                    break;
-                case 'inputField':
-                    if (defaultContact?.additionalInfo?.[f.const] ?? false) {
-                        continue;
-                    }
-                    additionalFields[f.const] = {
-                        title: f.title,
-                        type: 'string',
-                        pattern: f.pattern,
-                        associationField: !!f.contactDependent
-                    }
-                    additionalFieldsValue[f.const] = logInfo?.dispositions?.[f.const] ?? (f.defaultValue ?? '');
-                    if (f.required) {
-                        requiredFieldNames.push(f.const);
-                    }
-                    break;
-                case 'warning':
-                    additionalFields[f.const] = {
-                        title: f.title,
-                        type: 'string',
-                        description: f.description
-                    }
-                    addiitionalWarningUISchemas[f.const] = {
-                        "ui:field": "admonition", // or typography to show raw text
-                        "ui:severity": "warning", // "warning", "info", "error", "success"
-                    }
-                    break;
-            }
-        }
-    }
+    const { additionalFields, additionalFieldsValue, additionalWarningUISchemas, requiredFieldNames } =
+        buildAdditionalFieldsSchema({ allAdditionalFields, contact: defaultContact, logInfo });
     switch (triggerType) {
         case 'createLog':
         case 'manual':
         case 'auto':
-            let warningField = {};
-            if (contactList.length > 2) {
-                // Check if we have exactly 3 contacts and one is new contact and another is search contact
-                const hasNewContact = contactList.some(c => c.isNewContact);
-                const hasSearchContact = contactList.some(c => c.const === 'searchContact');
-                if (contactList.length === 3 && hasNewContact && hasSearchContact) {
-                    // Suppress warning for this case
-                    warningField = {};
-                } else {
-                    warningField = {
-                        warning: {
-                            type: 'string',
-                            description: t('pages.log.multipleContactsWarning'),
-                        }
-                    };
-                }
-            }
-            else if (contactList.length === 1 && defaultContact.isNewContact) {
-                warningField = {
-                    warning: {
-                        type: 'string',
-                        description: t('pages.log.noContactWarning'),
-                    }
-                };
-            }
+            const warningField = buildContactWarningField(contactList, defaultContact);
             if (contactList.length === 1 && contactList.some(c => c.isNewContact)) { requiredFieldNames.push('newContactName') };
-            let newContactWidget = {
-                newContactName: {
-                    "ui:widget": "hidden",
-                },
-                newContactType: {
-                    "ui:widget": "hidden",
-                }
-            }
-            if (defaultContact.isNewContact) {
-                if (manifest.platforms[platformName].contactTypes?.length > 0) {
-                    newContactWidget.newContactType = {};
-                }
-                newContactWidget.newContactName = {
-                    "ui:placeholder": t('pages.log.enterName'),
-                };
-            }
+            const newContactWidget = buildNewContactWidget(defaultContact, manifest, platformName);
             page = {
                 title: t('pages.log.saveTo', { platform: manifest.platforms[platformName].displayName }), // optional
                 schema: {
@@ -302,7 +155,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     },
                     ...callUISchemas,
                     ...newContactWidget,
-                    ...addiitionalWarningUISchemas,
+                    ...additionalWarningUISchemas,
                     // Always render scheduling fields at the end
                     "ui:order": ["*", "scheduleCallback", "callbackDateTime"]
                 },
@@ -370,7 +223,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     submitButtonOptions: {
                         submitText: t('common.buttons.update'),
                     },
-                    ...addiitionalWarningUISchemas,
+                    ...additionalWarningUISchemas,
                     // Always render scheduling fields at the end
                     "ui:order": ["*", "scheduleCallback", "callbackDateTime"]
                 },

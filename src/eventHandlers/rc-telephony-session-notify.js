@@ -1,6 +1,6 @@
 import { addPendingRecordingSessionId } from '../lib/logUtil';
 
-async function onEvent({ data }) {
+async function onEvent({ data, popupContext }) {
   const hasRecording = data.telephonySession.parties.some(p => !!p.recordings);
   if (hasRecording) {
     await chrome.storage.local.set({
@@ -11,10 +11,10 @@ async function onEvent({ data }) {
     });
     await addPendingRecordingSessionId({ sessionId: data.telephonySession.sessionId });
   }
-  const transferParty = data.telephonySession.parties.find(p => p.status.reason === 'AttendedTransfer' && p.status.code === 'Gone');
+  const transferParty = data.telephonySession.parties.find(p => p.status.reason === 'AttendedTransfer' && p.status.code === 'Gone' && p.direction === 'Outbound');
   if (transferParty) {
-    await chrome.storage.local.set({ [`${transferParty.status.peerId.telephonySessionId}-transfer-on-hold`]: true });
-  }
+    // eslint-disable-next-line no-param-reassign
+    popupContext.transferOnHold = transferParty.status.peerId.telephonySessionId;  }
 }
 
 exports.onEvent = onEvent;

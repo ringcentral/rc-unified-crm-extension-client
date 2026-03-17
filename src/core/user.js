@@ -3,7 +3,7 @@ import moment from 'moment';
 import { getRcAccessToken } from '../lib/util';
 import { getManifest } from '../service/manifestService';
 import adminCore from './admin';
-import { getServiceManifest } from '../service/embeddableServices';
+import embeddableServices from '../service/embeddableServices';
 import reportPage from '../components/reportPage/reportPage';
 import calldownPage from '../components/calldownPage';
 import { RcAPI } from '../lib/rcAPI';
@@ -182,9 +182,10 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     }
     const notificationLevelSetting = getNotificationLevelSetting(userSettings).value;
     await chrome.storage.local.set({ notificationLevelSetting });
+    const serviceManifest = await embeddableServices.getServiceManifest();
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',
-        service: (await getServiceManifest())
+        service: serviceManifest
     }, '*');
     // custom tabs
     const reportPageRender = reportPage.getReportsPageRender({ userStats: null, adminStats: null, userSettings });

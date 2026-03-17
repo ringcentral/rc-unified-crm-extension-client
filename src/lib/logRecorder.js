@@ -1,9 +1,14 @@
 import axios from 'axios';
 import { downloadTextFile } from './util';
 
-const log = [];
+let log = {};
 
 async function startRecordingLogs() {
+    log = {
+        summary: [],
+        basicInfo: {},
+        details: []
+    };
     await chrome.storage.local.set({ errorLogRecordingStatus: 'recording' });
     axios.defaults.headers.common['is-debug'] = true;
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -42,16 +47,36 @@ async function isRecordingLogs() {
     return errorLogRecordingStatus === 'recording';
 }
 
+function logBasicInfo(data) {
+    log.basicInfo = data;
+}
+
 function logAction({ name, data }) {
     const timestamp = new Date().toISOString();
-    log.push({ timestamp, name, data });
+    let summaryEntry;
+    if (name === 'user description') {
+        summaryEntry = `User description: ${data}`;
+        log.summary.unshift(summaryEntry);
+    } else {
+        if (name === 'API_REQUEST') {
+            const endpoint = data.url?.split('?')[0];
+            summaryEntry = `${name}: ${data.method?.toUpperCase()} ${endpoint}`;
+        } else if (name === 'API_RESPONSE') {
+            const endpoint = data.url?.split('?')[0];
+            summaryEntry = `${name}: ${data.status} ${endpoint}`;
+        } else {
+            summaryEntry = `${name}: ${data.path}`;
+        }
+        log.summary.push(summaryEntry);
+    }
+    log.details.push({ timestamp, name, data });
 }
 
 function getLog() {
     return log;
 }
 
-function clearLog(){
+function clearLog() {
     log.length = 0;
 }
 
@@ -61,3 +86,4 @@ exports.uploadLogs = uploadLogs;
 exports.isRecordingLogs = isRecordingLogs;
 exports.logAction = logAction;
 exports.getLog = getLog;
+exports.logBasicInfo = logBasicInfo;
