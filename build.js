@@ -2,8 +2,10 @@
 const { build } = require('esbuild');
 const copyStaticFiles = require('esbuild-copy-static-files');
 const svgr = require('esbuild-plugin-svgr');
+const { sassPlugin } = require('esbuild-sass-plugin');
 const fs = require('fs');
 const { execSync } = require('child_process');
+const path = require('path');
 require('dotenv').config();
 
 
@@ -26,7 +28,7 @@ async function runBuild() {
         const currentBranch = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
         const manifestPath = './public/manifest.json';
         const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-        
+
         if (currentBranch === 'beta') {
             // Add BETA suffix if not already present
             if (!manifest.name.includes(' - BETA')) {
@@ -42,7 +44,7 @@ async function runBuild() {
                 console.log(`Updated manifest name for ${currentBranch} branch: ${manifest.name}`);
             }
         }
-    } catch (e) { 
+    } catch (e) {
         console.log('Error updating manifest for branch:', e.message);
     }
 
@@ -57,6 +59,9 @@ async function runBuild() {
             'process.env.MIXPANEL_TOKEN': JSON.stringify(process.env?.MIXPANEL_TOKEN ?? "")
         },
         plugins: [
+            sassPlugin({
+                loadPaths: [path.join(__dirname, 'src/lib')],
+            }),
             copyStaticFiles({
                 src: './public',
                 dest: './dist',

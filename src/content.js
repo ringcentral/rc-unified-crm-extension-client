@@ -1,5 +1,4 @@
-import LibPhoneNumberMatcher from './lib/LibPhoneNumberMatcher'
-import RangeObserver from './lib/RangeObserver'
+import { RegExpPhoneNumberMatcher, WrapperObserver } from 'ringcentral-c2d';
 import App from './components/embedded';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -70,14 +69,11 @@ async function checkUrlMatch({ type = 'quickAccessButton' }) {
 
 // Create a C2D instance for a specific root node
 // If sharedWidget is provided, it will be reused instead of creating a new one
-function createC2DInstance({ rootNode, countryCode, matchAllNumbers, sharedWidget }) {
+function createC2DInstance({ rootNode, sharedWidget }) {
   const options = {
-    observer: new RangeObserver({
+    observer: new WrapperObserver({
       node: rootNode,
-      matcher: new LibPhoneNumberMatcher({
-        countryCode,
-        matchAllNumbers,
-      })
+      matcher: new RegExpPhoneNumberMatcher(),
     })
   };
 
@@ -117,8 +113,6 @@ async function initializeC2D() {
     console.log('[App Connect]URL not matched, C2D not initialized');
     return;
   }
-  const countryCode = await chrome.storage.local.get({ selectedRegion: 'US' });
-  const { matchAllNumbers } = await chrome.storage.local.get({ matchAllNumbers: false });
   const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
 
   // Store all C2D instances and observers
@@ -130,8 +124,6 @@ async function initializeC2D() {
   // Initialize main document C2D first (this creates the widget)
   window.clickToDialInject = createC2DInstance({
     rootNode: document.body,
-    countryCode: countryCode.selectedRegion,
-    matchAllNumbers,
   });
   window.clickToDialInject.widget.update({ enableC2Text: userPermissions?.sms ?? false });
   window.clickToDialInstances.push(window.clickToDialInject);
@@ -150,14 +142,12 @@ async function initializeC2D() {
   // Process a shadow root - create C2D instance and set up observer
   const processShadowRoot = (shadowRoot) => {
     if (processedShadowRoots.has(shadowRoot)) return;
-    
+
     processedShadowRoots.add(shadowRoot);
-    
+
     // Create C2D instance for this shadow root
     const c2dInstance = createC2DInstance({
       rootNode: shadowRoot,
-      countryCode: countryCode.selectedRegion,
-      matchAllNumbers,
       sharedWidget,
     });
     window.clickToDialInstances.push(c2dInstance);
