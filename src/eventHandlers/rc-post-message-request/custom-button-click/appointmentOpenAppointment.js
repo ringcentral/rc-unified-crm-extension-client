@@ -1,4 +1,5 @@
 import { showNotification } from '../../../lib/util';
+import axios from 'axios';
 
 async function onEvent({ data, manifest, platformName, listButtonItemId }) {
   const btn = data.body.button || {};
@@ -14,10 +15,25 @@ async function onEvent({ data, manifest, platformName, listButtonItemId }) {
   const template = apptCfg?.appointmentPageUrl;
   if (canOpen && template) {
     const tpl = String(template);
-    const needsId = tpl.includes('{thirdPartyAppointmentId}');
+
+    let resolvedTpl = tpl;
+    if (resolvedTpl.includes('{hostname}')) {
+      const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+      let platformInfo = await chrome.storage.local.get('platform-info');
+      if (platformInfo?.['platform-info']?.hostname === 'temp' && rcUnifiedCrmExtJwt) {
+        const hostnameRes = await axios.get(`${manifest.serverUrl}/hostname?jwtToken=${rcUnifiedCrmExtJwt}`);
+        platformInfo['platform-info'].hostname = hostnameRes.data;
+        await chrome.storage.local.set(platformInfo);
+      }
+      const hostname = platformInfo?.['platform-info']?.hostname ?? '';
+      resolvedTpl = resolvedTpl.replace('{hostname}', hostname);
+    }
+
+    const needsId = resolvedTpl.includes('{thirdPartyAppointmentId}');
     const targetUrl = (needsId && thirdPartyAppointmentId)
-      ? tpl.replaceAll('{thirdPartyAppointmentId}', encodeURIComponent(String(thirdPartyAppointmentId)))
-      : tpl;
+      ? resolvedTpl.replaceAll('{thirdPartyAppointmentId}', encodeURIComponent(String(thirdPartyAppointmentId)))
+      : resolvedTpl;
+
     window.open(targetUrl, '_blank');
     return;
   }

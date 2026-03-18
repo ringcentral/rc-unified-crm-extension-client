@@ -10,6 +10,7 @@ async function onEvent({ data, manifest, platformName }) {
       returnTab: tab,
       returnSearch: String(searchWithFilters?.search ?? ''),
       returnFilter: String(searchWithFilters?.filter ?? 'All'),
+      emailMandatoryInAttendee: apptCfg?.emailMandatoryInAttendee,
     },
     appointmentTitle,
     statusConfig: apptCfg?.status,

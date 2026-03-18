@@ -5,10 +5,14 @@ function getCustomContactSearch({
     contactSearchAdapterButton = "contactSearchAdapterButton",
     contactPhoneNumber,
     appointment = false,
+    emailMandatoryInAttendee,
     formData = {},
 }) {
     const warningFieldName = 'appointmentContactSearchWarning';
     const warningText = 'Only contacts with an email address will be shown in search results.';
+    const resolvedEmailMandatoryInAttendee =
+        emailMandatoryInAttendee ?? formData?.appointmentCreateDraft?.emailMandatoryInAttendee;
+    const showEmailWarning = appointment && resolvedEmailMandatoryInAttendee !== false;
     return {
         id: 'searchContact',
         type: 'page',
@@ -16,7 +20,7 @@ function getCustomContactSearch({
             type: 'object',
             required: [],
             properties: {
-                ...(appointment
+                ...(showEmailWarning
                     ? {
                         [warningFieldName]: {
                             type: 'string',
@@ -36,7 +40,7 @@ function getCustomContactSearch({
             }
         },
         uiSchema: {
-            ...(appointment
+            ...(showEmailWarning
                 ? {
                     [warningFieldName]: {
                         "ui:field": "admonition",
@@ -71,14 +75,18 @@ async function getCustomContactSearchData({
     pageId,
     contactPhoneNumber,
     appointment = false,
+    emailMandatoryInAttendee,
     formData = {},
 }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const resolvedEmailMandatoryInAttendee =
+        emailMandatoryInAttendee ?? formData?.appointmentCreateDraft?.emailMandatoryInAttendee;
+    const appointmentEmailFilter = appointment && resolvedEmailMandatoryInAttendee !== false;
     const contactRes = await axios.get(`${serverUrl}/custom/contact/search`, {
         params: {
             jwtToken: rcUnifiedCrmExtJwt,
             name: contactSearch ?? '',
-            ...(appointment ? { appointment: true } : {}),
+            ...(appointmentEmailFilter ? { appointment: true } : {}),
         },
     });
     if (contactRes.data.contact.length === 0) {
@@ -97,6 +105,7 @@ async function getCustomContactSearchData({
         }
         const warningFieldName = 'appointmentContactSearchWarning';
         const warningText = 'Only contacts with an email address will be shown in search results.';
+        const showEmailWarning = appointment && resolvedEmailMandatoryInAttendee !== false;
         const filteredContactIds = filteredContactList.map((c) => String(c.const));
         const filteredContactNames = filteredContactList.map((c) => String(c.title));
         return {
@@ -106,7 +115,7 @@ async function getCustomContactSearchData({
             schema: {
                 type: 'object',
                 properties: {
-                    ...(appointment
+                    ...(showEmailWarning
                         ? {
                             [warningFieldName]: {
                                 type: 'string',
@@ -144,7 +153,7 @@ async function getCustomContactSearchData({
                         },
                     }
                     : {}),
-                ...(appointment
+                ...(showEmailWarning
                     ? {
                         [warningFieldName]: {
                             "ui:field": "admonition",

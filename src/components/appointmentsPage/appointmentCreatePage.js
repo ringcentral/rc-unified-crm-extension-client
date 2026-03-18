@@ -11,7 +11,6 @@ function singularizeAppointmentTitle(title) {
 function normalizeStatusKey(s) {
   const v = String(s || '').trim().toLowerCase();
   if (!v) return '';
-  if (v === 'cancelled') return 'canceled';
   return v;
 }
 
@@ -106,6 +105,8 @@ function getAppointmentCreatePageRender({
     returnTab: 'upcoming',
     returnSearch: '',
     returnFilter: 'All',
+    // Used by appointment participant search to optionally filter to contacts with email.
+    emailMandatoryInAttendee: undefined,
     participantName: '',
     participantContactId: '',
     participantContactType: '',
@@ -139,6 +140,7 @@ function getAppointmentCreatePageRender({
     returnTab: { type: 'string', title: '' },
     returnSearch: { type: 'string', title: '' },
     returnFilter: { type: 'string', title: '' },
+    emailMandatoryInAttendee: { type: 'boolean', title: '' },
     participantName: { type: 'string', title: 'Participant' },
     // Hidden fields: selected contact identity
     participantContactId: { type: 'string', title: '' },
@@ -170,6 +172,7 @@ function getAppointmentCreatePageRender({
     'returnTab',
     'returnSearch',
     'returnFilter',
+    'emailMandatoryInAttendee',
     'participantContactId',
     'participantContactType',
     'participantContacts',
@@ -219,6 +222,7 @@ function getAppointmentCreatePageRender({
       returnTab: { 'ui:widget': 'hidden' },
       returnSearch: { 'ui:widget': 'hidden' },
       returnFilter: { 'ui:widget': 'hidden' },
+      emailMandatoryInAttendee: { 'ui:widget': 'hidden' },
       participantContactId: { 'ui:widget': 'hidden' },
       participantContactType: { 'ui:widget': 'hidden' },
       participantContacts: { 'ui:widget': 'hidden' },
