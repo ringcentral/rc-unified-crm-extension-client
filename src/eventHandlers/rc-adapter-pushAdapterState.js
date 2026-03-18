@@ -11,13 +11,6 @@ async function onEvent({ data }) {
     }
     const manifest = await refreshManifest();
     const platform = manifest.platforms[platformInfo.platformName];
-    // setup C2D match all numbers
-    if (platform.clickToDialMatchAllNumbers !== undefined) {
-        await chrome.storage.local.set({ matchAllNumbers: platform.clickToDialMatchAllNumbers });
-    }
-    else {
-        await chrome.storage.local.set({ matchAllNumbers: false });
-    }
     if (platform.requestConfig?.timeout) {
         axios.defaults.timeout = platform.requestConfig.timeout * 1000;
     }

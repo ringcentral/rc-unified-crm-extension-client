@@ -2,7 +2,9 @@
 const { build } = require('esbuild');
 const copyStaticFiles = require('esbuild-copy-static-files');
 const svgr = require('esbuild-plugin-svgr');
+const { sassPlugin } = require('esbuild-sass-plugin');
 const fs = require('fs');
+const path = require('path');
 const { execSync } = require('child_process');
 require('dotenv').config();
 
@@ -67,6 +69,9 @@ async function runBuild() {
             'process.env.RC_CLIENT_ID': JSON.stringify(process.env?.RC_CLIENT_ID ?? "")
         },
         plugins: [
+            sassPlugin({
+                loadPaths: [path.join(__dirname, 'src/lib')],
+            }),
             copyStaticFiles({
                 src: './public',
                 dest: './dist',

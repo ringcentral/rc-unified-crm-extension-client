@@ -28,7 +28,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         },
         version
     }
-    logRecorder.logAction({ name: 'basicInfo', data: basicInfo });
+    logRecorder.logBasicInfo(basicInfo);
 }
 
 exports.onEvent = onEvent;
