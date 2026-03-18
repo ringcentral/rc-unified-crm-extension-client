@@ -37,6 +37,7 @@ import pluginsAdminConfigHandler from './sections/pluginsAdminConfig';
 import installedPluginsHandler from './sections/installedPlugins';
 
 import pluginMarketListPageHandler from '../../pluginMarketListPage';
+import selectPluginHandler from '../../custom-button-click/plugins/selectPlugin';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -98,6 +99,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'pluginAdminSettingsPage':
             const pluginId = data.body?.formData?.section;
             await pluginAdminSettingsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, pluginId });
+            break;
+        case 'installedPluginListPage':
+            await selectPluginHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
     }
     // Page render update from section change input

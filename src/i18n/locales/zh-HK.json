@@ -9,7 +9,8 @@
       "open": "打开",
       "logout": "登出",
       "select": "选择",
-      "schedule": "安排"
+      "schedule": "安排",
+      "refresh": "重新整理"
     },
     "labels": {
       "admin": "(管理员)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "与您共享",
       "all": "全部",
       "value": "值",
-      "customizableByUser": "用户可自定义"
+      "customizableByUser": "用户可自定义",
+      "licenseStatus": "授權狀態"
     },
     "status": {
       "online": "在线",

@@ -9,7 +9,8 @@
       "open": "Openen",
       "logout": "Uitloggen",
       "select": "Selecteren",
-      "schedule": "Plannen"
+      "schedule": "Plannen",
+      "refresh": "Vernieuwen"
     },
     "labels": {
       "admin": "(Admin)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "Met u gedeeld",
       "all": "Alle",
       "value": "Waarde",
-      "customizableByUser": "Aanpasbaar door gebruiker"
+      "customizableByUser": "Aanpasbaar door gebruiker",
+      "licenseStatus": "Licentiestatus"
     },
     "status": {
       "online": "Online",

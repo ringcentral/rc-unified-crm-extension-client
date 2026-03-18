@@ -9,7 +9,8 @@
       "open": "Avaa",
       "logout": "Kirjaudu ulos",
       "select": "Valitse",
-      "schedule": "Ajasta"
+      "schedule": "Ajasta",
+      "refresh": "Päivitä"
     },
     "labels": {
       "admin": "(Ylläpitäjä)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "Jaettu kanssasi",
       "all": "Kaikki",
       "value": "Arvo",
-      "customizableByUser": "Käyttäjän muokattavissa"
+      "customizableByUser": "Käyttäjän muokattavissa",
+      "licenseStatus": "Lisenssitila"
     },
     "status": {
       "online": "Online",

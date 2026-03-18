@@ -135,12 +135,15 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
             const pluginCallbackResp = await axios.get(`${stateData.redirectTo}?callbackUri=${callbackUri}`);
             showNotification({ level: 'success', message: 'Successfully authorized plugin.' });
             const { cachedPluginConfigFormData } = await chrome.storage.local.get('cachedPluginConfigFormData');
+            const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ plugin: cachedPluginConfigFormData.plugin });
             const pluginConfigurePageRender = getPluginConfigurePageRender({
                 pluginId: cachedPluginConfigFormData.pluginId,
                 pluginAccess: cachedPluginConfigFormData.access,
                 plugin: cachedPluginConfigFormData.plugin,
                 config: cachedPluginConfigFormData.config,
-                isLoggedIn: true
+                isLoggedIn: true,
+                hasValidLicense: licenseStatus,
+                licenseStatusDescription
             });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',

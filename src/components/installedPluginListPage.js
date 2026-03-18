@@ -8,14 +8,7 @@ function getInstalledPluginListPageRender({ pluginList, isFromAdmin }) {
             title: plugin.displayName ?? plugin.name,
             icon: plugin.iconUrl ? plugin.iconUrl : 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
             description: t('plugins.by', { author: plugin.developer.name }),
-            authorAvatar: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg',
-            actions: [
-                {
-                    id: 'selectPlugin',
-                    title: t('plugins.configure'),
-                    icon: 'settings'
-                }
-            ]
+            authorAvatar: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg'
         };
         pluginListToRender.push(newPlugin);
     }
@@ -38,7 +31,8 @@ function getInstalledPluginListPageRender({ pluginList, isFromAdmin }) {
         uiSchema: {
             plugins: {
                 "ui:field": "list",
-                "ui:showIconAsAvatar": false
+                "ui:showIconAsAvatar": false,
+                "ui:navigation": true,
             }
         },
         formData: {

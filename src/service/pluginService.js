@@ -3,10 +3,16 @@ import { getManifest, getPluginList, getPluginDetails } from './manifestService'
 import { showNotification } from '../lib/util';
 
 async function getPluginLicenseStatus({ plugin }) {
-    const pluginId = plugin.id;
-    const licenseEndpoint = plugin.licenseEndpoint;
-    const license = await axios.get(`${licenseEndpoint}/pluginId=${pluginId}`);
-    return license.data;
+    if (!plugin.requireLicense) {
+        return {
+            licenseStatus: true,
+            licenseStatusDescription: ''
+        }
+    }
+    const licenseStatusUrl = plugin.licenseStatusUrl;
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const licenseStatusResponse = await axios.get(`${licenseStatusUrl}?jwtToken=${rcUnifiedCrmExtJwt}`);
+    return licenseStatusResponse.data;
 }
 
 async function upsertPluginAsyncTaskIds({ taskIds }) {
@@ -106,6 +112,7 @@ exports.upsertPluginAsyncTaskIds = upsertPluginAsyncTaskIds;
 exports.getPluginAsyncTaskIds = getPluginAsyncTaskIds;
 exports.setPluginAsyncTaskCheck = setPluginAsyncTaskCheck;
 exports.checkAndUpdatePluginVersion = checkAndUpdatePluginVersion;
+exports.getPluginLicenseStatus = getPluginLicenseStatus;
 
 // Expose for DevTools debugging
 window.__PLUGIN_DEBUG__ = {

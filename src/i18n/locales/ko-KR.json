@@ -9,7 +9,8 @@
       "open": "열기",
       "logout": "로그아웃",
       "select": "선택",
-      "schedule": "예약"
+      "schedule": "예약",
+      "refresh": "새로고침"
     },
     "labels": {
       "admin": "(관리자)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "나와 공유됨",
       "all": "모두",
       "value": "값",
-      "customizableByUser": "사용자 정의 가능"
+      "customizableByUser": "사용자 정의 가능",
+      "licenseStatus": "라이선스 상태"
     },
     "status": {
       "online": "온라인",

@@ -9,7 +9,8 @@
       "open": "Öffnen",
       "logout": "Abmelden",
       "select": "Auswählen",
-      "schedule": "Planen"
+      "schedule": "Planen",
+      "refresh": "Aktualisieren"
     },
     "labels": {
       "admin": "(Admin)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "Mit Ihnen geteilt",
       "all": "Alle",
       "value": "Wert",
-      "customizableByUser": "Vom Benutzer anpassbar"
+      "customizableByUser": "Vom Benutzer anpassbar",
+      "licenseStatus": "Lizenzstatus"
     },
     "status": {
       "online": "Online",

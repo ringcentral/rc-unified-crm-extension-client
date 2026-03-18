@@ -5,6 +5,7 @@ import { getUserSettingsOnline, getPluginSetting } from '../../../../core/user';
 import { checkAuth } from '../../../../core/auth';
 import { showNotification } from '../../../../lib/util';
 import { getPluginDetails } from '../../../../service/manifestService';
+import pluginService from '../../../../service/pluginService';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -14,9 +15,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
         window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
         return;
     }
+    if (!listButtonItemId) {
+        listButtonItemId = data.body.formData.plugins;
+    }
     const selectedPluginId = listButtonItemId.split('=')[0];
     const selectedPluginAccess = listButtonItemId.split('=')[1];
-    const selectedPlugin = data.body.button.formData.pluginList.find(plugin => plugin.id === selectedPluginId);
+    const formData = data.body?.button?.formData ?? data.body.formData;
+    const selectedPlugin = formData.pluginList.find(plugin => plugin.id === selectedPluginId);
     const userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl });
     const pluginSetting = getPluginSetting(userSettings, selectedPluginId);
     const installed = !!pluginSetting;
@@ -40,7 +45,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             isLoggedIn = false;
         }
     }
-    const pluginConfigurePageRender = data.body.button.formData.isFromAdmin ?
+    const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ plugin });
+    const pluginConfigurePageRender = formData.isFromAdmin ?
         getPluginAdminConfigurePageRender({
             pluginId: selectedPluginId,
             pluginAccess: selectedPluginAccess,
@@ -52,7 +58,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             pluginAccess: selectedPluginAccess,
             plugin,
             config: configSetting,
-            isLoggedIn
+            isLoggedIn,
+            hasValidLicense: licenseStatus,
+            licenseStatusDescription
         });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',

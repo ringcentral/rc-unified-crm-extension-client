@@ -29,9 +29,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, b
                     name: data.body.button.formData.plugin.name,
                     version: data.body.button.formData.plugin.version,
                     isAsync: data.body.button.formData.plugin.isAsync,
-                    phase: data.body.button.formData.plugin.phase,
                     logTypes: data.body.button.formData.plugin.supportedLogTypes,
                     access: data.body.button.formData.access,
+                    requireLicense: data.body.button.formData.plugin.requireLicense,
+                    licenseStatusUrl: data.body.button.formData.plugin.licenseStatusUrl,
                     config
                 },
                 customizable: true

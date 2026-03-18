@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 
-function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, isLoggedIn }) {
+function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, isLoggedIn, hasValidLicense = false, licenseStatusDescription = '' }) {
     const customForm = plugin.pageContent;
     let customFormProperties = {};
     let customFormUiSchema = {};
@@ -120,6 +120,31 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
                 variant: 'contained',
                 color: 'primary'
             }]
+        }
+    }
+    if (plugin.requireLicense) {
+        page.schema.properties.basicInfo.oneOf.push({
+            const: 'licenseStatus',
+            title: t('common.labels.licenseStatus'),
+            description: licenseStatusDescription,
+            descriptionColor: hasValidLicense ? 'success' : 'error',
+            actions: [
+                {
+                    id: 'pluginLicenseRefreshButton',
+                    icon: 'refresh',
+                    title: t('common.buttons.refresh')
+                }
+            ]
+        });
+        if (!hasValidLicense) {
+            page.schema.properties.basicInfo.oneOf[1].iconMeta = [
+                {
+                    icon: 'warning',
+                    color: 'danger.b03',
+                    size: 'large',
+                    description: licenseStatusDescription
+                }
+            ]
         }
     }
     return page;
