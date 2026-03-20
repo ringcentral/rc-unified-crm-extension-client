@@ -84,6 +84,7 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
                 "ui:showIconAsAvatar": false,
                 "ui:readonly": true,
                 "ui:showSelected": false,
+                'ui:alwaysShowActions': true,
             },
             description: {
                 "ui:field": "typography",
@@ -100,6 +101,7 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
             isAsync: plugin.isAsync,
             phase: plugin.phase,
             logTypes: plugin.supportedLogTypes,
+            isLoggedIn
         }
     }
     if (plugin.showAuthorizationButton) {
@@ -136,16 +138,6 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
                 }
             ]
         });
-        if (!hasValidLicense) {
-            page.schema.properties.basicInfo.oneOf[1].iconMeta = [
-                {
-                    icon: 'warning',
-                    color: 'danger.b03',
-                    size: 'large',
-                    description: licenseStatusDescription
-                }
-            ]
-        }
     }
     return page;
 }

@@ -10,6 +10,7 @@ import authPage from '../components/authPage';
 import { tryConnectToBullhorn } from '../misc/bullhorn';
 import { t } from '../i18n';
 import { getPluginConfigurePageRender } from '../components/pluginConfigurePage';
+import pluginService from '../service/pluginService';
 
 function handleThirdPartyOAuthWindow(oAuthUri) {
     chrome.runtime.sendMessage({

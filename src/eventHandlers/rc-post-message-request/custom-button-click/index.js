@@ -62,6 +62,7 @@ import pluginConfigurePageSubmitHandler from './plugins/pluginConfigurePageSubmi
 import pluginConfigButtonsHandler from './plugins/pluginConfigButtons';
 import pluginAdminConfigButtonsHandler from './plugins/pluginAdminConfigButtons';
 import pluginDetailsSettingPageHandler from './plugins/pluginDetailsSettingPage';
+import pluginLicenseRefreshButtonHandler from './plugins/pluginLicenseRefreshButton';
 
 import pluginMarketListPageHandler from '../pluginMarketListPage';
 
@@ -250,6 +251,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             if (data.body.button.type === 'submit') {
                 await pluginDetailsSettingPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             }
+            break;
+        case 'pluginLicenseRefreshButton':
+            await pluginLicenseRefreshButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'callAndSMSLoggingSettingPage':
         case 'contactSettingPage':

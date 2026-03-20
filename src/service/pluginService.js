@@ -5,14 +5,16 @@ import { showNotification } from '../lib/util';
 async function getPluginLicenseStatus({ plugin }) {
     if (!plugin.requireLicense) {
         return {
+            id: plugin.id,
             licenseStatus: true,
             licenseStatusDescription: ''
         }
     }
+    const { isAdmin } = await chrome.storage.local.get('isAdmin');
     const licenseStatusUrl = plugin.licenseStatusUrl;
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const licenseStatusResponse = await axios.get(`${licenseStatusUrl}?jwtToken=${rcUnifiedCrmExtJwt}`);
-    return licenseStatusResponse.data;
+    const licenseStatusResponse = await axios.get(`${licenseStatusUrl}?jwtToken=${rcUnifiedCrmExtJwt}&isAdmin=${isAdmin}`);
+    return { id: plugin.id, ...licenseStatusResponse.data };
 }
 
 async function upsertPluginAsyncTaskIds({ taskIds }) {

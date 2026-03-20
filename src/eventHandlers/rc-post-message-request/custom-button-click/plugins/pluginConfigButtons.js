@@ -16,7 +16,11 @@ async function onEvent({ data, buttonId, manifest, platformInfo, platformName, p
             await chrome.storage.local.set({ 'cachedPluginConfigFormData': data.body.button.formData });
             break;
         case 'pluginLogoutButton':
-            const logoutResponse = await axios.post(`${data.body.button.formData.plugin.logoutUrl}?jwtToken=${rcUnifiedCrmExtJwt}`);
+            const logoutResponse = await axios.post(`${data.body.button.formData.plugin.logoutUrl}`,
+                {
+                    jwtToken: rcUnifiedCrmExtJwt
+                }
+            );
             const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ plugin: data.body.button.formData.plugin });
             if (logoutResponse.data.successful) {
                 showNotification({ level: 'success', message: t('notifications.success.loggedOut'), ttl: 3000 });

@@ -24,18 +24,33 @@ function getPluginDetailsSettingPageRender({ pluginId, pluginDetails, pluginSett
                     }
                 }
             }
-            if (field.type === 'selection' && field.oneOf) {
-                schemaProp.properties.value.oneOf = field.oneOf;
-            }
-            customFormProperties[key] = schemaProp;
             customFormUiSchema[key] = {
                 "ui:collapsible": true,
             }
-            if (field.type === 'selection') {
+            // special case: single selection or multi selection
+            // Multi
+            if (field.type === 'selection' && field.multiSelect) {
+                schemaProp.properties.value.type = 'array';
+                schemaProp.properties.value.items = {
+                    type: 'string',
+                    enum: field.oneOf.map(option => option.const),
+                    enumNames: field.oneOf.map(option => option.title)
+                };
+                schemaProp.properties.value.uniqueItems = true;
+                customFormUiSchema[key].value = {
+                    "ui:widget": "checkboxes",
+                }
+            }
+            // Single
+            else {
+                if (field.oneOf) {
+                    schemaProp.properties.value.oneOf = field.oneOf;
+                }
                 customFormUiSchema[key].value = {
                     "ui:widget": "select",
                 }
             }
+            customFormProperties[key] = schemaProp;
             formData[key] = {
                 customizable: pluginSetting?.config?.[key]?.customizable ?? true,
                 value: pluginSetting?.config?.[key]?.value ?? null

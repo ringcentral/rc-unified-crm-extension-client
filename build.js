@@ -71,6 +71,7 @@ async function runBuild() {
         plugins: [
             sassPlugin({
                 loadPaths: [path.join(__dirname, 'src/lib')],
+                silenceDeprecations: ['import'],
             }),
             copyStaticFiles({
                 src: './public',

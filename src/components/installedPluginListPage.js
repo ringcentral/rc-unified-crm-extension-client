@@ -3,14 +3,22 @@ import { t } from '../i18n';
 function getInstalledPluginListPageRender({ pluginList, isFromAdmin }) {
     let pluginListToRender = [];
     for (const plugin of pluginList) {
-        const newPlugin = {
+        const pluginRender = {
             const: `${plugin.id}=${plugin.access}`,
             title: plugin.displayName ?? plugin.name,
             icon: plugin.iconUrl ? plugin.iconUrl : 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
             description: t('plugins.by', { author: plugin.developer.name }),
             authorAvatar: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg'
         };
-        pluginListToRender.push(newPlugin);
+        if (plugin.requireLicense && !plugin.licenseStatus) {
+            pluginRender.iconMeta = [{
+                icon: 'warning',
+                color: 'danger.b03',
+                size: 'large',
+                message: plugin.errorMessage ?? ""
+            }]
+        }
+        pluginListToRender.push(pluginRender);
     }
     const page = {
         id: 'installedPluginListPage',
