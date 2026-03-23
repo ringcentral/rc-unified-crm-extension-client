@@ -280,9 +280,12 @@ async function RenderQuickAccessButton() {
     console.log('[App Connect] URL not matched, quick access button not initialized');
     return;
   }
-  const rootElement = window.document.createElement('root');
-  rootElement.id = 'rc-crm-extension-quick-access-button';
-  window.document.body.appendChild(rootElement);
+  let rootElement = window.document.getElementById('rc-crm-extension-quick-access-button');
+  if (!rootElement) {
+    rootElement = window.document.createElement('root');
+    rootElement.id = 'rc-crm-extension-quick-access-button';
+    window.document.documentElement.appendChild(rootElement);
+  }
   ReactDOM.render(React.createElement(Root, null), rootElement);
 }
 
@@ -331,6 +334,7 @@ async function Initialize() {
 
   if (!renderQuickAccessButton) {
     localStorage.removeItem('rcQuickAccessButtonTransform');
+    localStorage.removeItem('rcQuickAccessButtonTop');
   }
 
   // Case: C2D renders extra elements inside Bullhorn note section

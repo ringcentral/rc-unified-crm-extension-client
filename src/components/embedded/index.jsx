@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import QuickAccessButton from './quickAccessButton';
 import { RcButton, RcIconButton } from '@ringcentral/juno';
 import SetupButton from './setupButton';
-import Draggable from 'react-draggable';
 import DragImage from '../../images/dragImage_orange.png';
 import { ArrowUp2, ArrowDown2 } from '@ringcentral/juno-icon';
 import { isObjectEmpty } from '../../lib/util';
 import Navigator from './navigator';
 
 const quickAccessButtonContainerStyle = {
-    bottom: '100px',
     right: '0',
     position: 'fixed',
     zIndex: '99999'
@@ -32,12 +30,20 @@ const navigatorBadgeStyle = {
     border: 'solid 2px white'
 }
 
+const QUICK_ACCESS_POSITION_KEY = 'rcQuickAccessButtonTop';
+const QUICK_ACCESS_LEGACY_POSITION_KEY = 'rcQuickAccessButtonTransform';
+const FIXED_BOTTOM_OFFSET = 100;
+const VIEWPORT_THRESHOLD = 80;
+const BUGGY_TOP_SENTINEL = VIEWPORT_THRESHOLD;
+
 function App() {
     const [state, setState] = useState('quick_access');
     const [isSetup, setIsSetup] = useState(false);
-    const [pos, setPos] = useState({ x: 0, y: 0 });
+    const [top, setTop] = useState(null);
     const [showNavigator, setShowNavigator] = useState(false);
     const [buttonSize, setButtonSize] = useState('large');
+    const menuContainerRef = useRef(null);
+    const dragStateRef = useRef(null);
 
     useEffect(() => {
         async function checkSetup() {
@@ -51,7 +57,6 @@ function App() {
         }
         checkSetup();
         loadButtonSize();
-        updatePos();
 
         // Listen for storage changes to update button size in real-time
         const storageListener = (changes, area) => {
@@ -63,74 +68,164 @@ function App() {
         };
         chrome.storage.onChanged.addListener(storageListener);
 
+        const resizeListener = () => {
+            window.requestAnimationFrame(() => {
+                updateTop();
+            });
+        };
+        window.addEventListener('resize', resizeListener);
+
         // Cleanup listener on unmount
         return () => {
             chrome.storage.onChanged.removeListener(storageListener);
+            window.removeEventListener('resize', resizeListener);
         };
     }, []);
 
-    function updatePos() {
-        const yOffset = 100;
-        const threshold = 80;
-        const boundary = document.querySelector('.react-draggable').getBoundingClientRect();
-        const setTransform = localStorage.getItem('rcQuickAccessButtonTransform');
-        if (setTransform) {
-            const xPos = Number(setTransform.split('translate(')[1].split('px,')[0]);
-            let yPos = Number(setTransform.split('px, ')[1].split('px')[0]);
-            if (boundary.y < threshold) {
-                yPos = threshold + yOffset - window.innerHeight;
+    useEffect(() => {
+        const rafId = window.requestAnimationFrame(() => {
+            updateTop();
+        });
+        return () => {
+            window.cancelAnimationFrame(rafId);
+        };
+    }, [buttonSize, showNavigator, state, isSetup]);
+
+    useEffect(() => {
+        function onPointerMove(event) {
+            const dragState = dragStateRef.current;
+            if (!dragState) {
+                return;
             }
-            if (boundary.y > window.innerHeight - threshold) {
-                yPos = threshold;
-            }
-            if (yPos > threshold || yPos < threshold + yOffset - window.innerHeight) {
-                yPos = 0;
-            }
-            setPos({ x: xPos, y: yPos });
+
+            const nextTop = clampTop(dragState.startTop + event.clientY - dragState.startY);
+            setTop(nextTop);
         }
+
+        function onPointerUp() {
+            if (dragStateRef.current === null) {
+                return;
+            }
+
+            dragStateRef.current = null;
+            persistTop(top);
+        }
+
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+
+        return () => {
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+        };
+    }, [top]);
+
+    function getMenuHeight() {
+        return menuContainerRef.current?.getBoundingClientRect().height ?? 0;
     }
 
-    function onDragStop(e) {
-        const newTransform = document.querySelector('.react-draggable-dragged').style.transform;
-        localStorage.setItem('rcQuickAccessButtonTransform', newTransform);
-        updatePos();
+    function getDefaultTop(menuHeight = getMenuHeight()) {
+        return Math.max(VIEWPORT_THRESHOLD, window.innerHeight - FIXED_BOTTOM_OFFSET - menuHeight);
     }
+
+    function getLegacySavedY() {
+        const savedValue = localStorage.getItem(QUICK_ACCESS_LEGACY_POSITION_KEY);
+        if (!savedValue) {
+            return null;
+        }
+
+        const numericValue = Number(savedValue);
+        if (!Number.isNaN(numericValue)) {
+            return numericValue;
+        }
+
+        const matchedValue = savedValue.match(/translate\(\s*[-\d.]+px,\s*([-\d.]+)px\)/);
+        return matchedValue ? Number(matchedValue[1]) : null;
+    }
+
+    function clampTop(nextTop) {
+        const menuHeight = getMenuHeight();
+        const minTop = VIEWPORT_THRESHOLD;
+        const maxTop = window.innerHeight - VIEWPORT_THRESHOLD - menuHeight;
+
+        if (maxTop < minTop) {
+            return minTop;
+        }
+
+        return Math.min(Math.max(nextTop, minTop), maxTop);
+    }
+
+    function getSavedTop() {
+        const storedTop = localStorage.getItem(QUICK_ACCESS_POSITION_KEY);
+        const savedTop = storedTop === null ? null : Number(storedTop);
+        if (savedTop !== null && !Number.isNaN(savedTop) && savedTop !== BUGGY_TOP_SENTINEL) {
+            return clampTop(savedTop);
+        }
+
+        const legacySavedY = getLegacySavedY();
+        if (legacySavedY === null) {
+            return clampTop(getDefaultTop());
+        }
+
+        return clampTop(getDefaultTop() + legacySavedY);
+    }
+
+    function persistTop(nextTop) {
+        localStorage.setItem(QUICK_ACCESS_POSITION_KEY, String(nextTop));
+        localStorage.removeItem(QUICK_ACCESS_LEGACY_POSITION_KEY);
+    }
+
+    function updateTop() {
+        const nextTop = top === null ? getSavedTop() : clampTop(top);
+        setTop(nextTop);
+        persistTop(nextTop);
+    }
+
+    function onDragStart(event) {
+        event.preventDefault();
+        dragStateRef.current = {
+            startY: event.clientY,
+            startTop: top ?? getSavedTop()
+        };
+    }
+
     return (
         <div>
-            <div style={quickAccessButtonContainerStyle}>
-                <Draggable axis='y' handle=".rc-huddle-menu-handle" position={pos} onStop={onDragStop}>
-                    <div style={menuContainerStyle}>
-                        {state === 'quick_access' && <QuickAccessButton
-                            isSetup={isSetup}
-                            setState={setState}
-                            size={buttonSize}
+            <div style={{ ...quickAccessButtonContainerStyle, top: top === null ? VIEWPORT_THRESHOLD : top }}>
+                <div ref={menuContainerRef} style={menuContainerStyle}>
+                    {state === 'quick_access' && <QuickAccessButton
+                        isSetup={isSetup}
+                        setState={setState}
+                        size={buttonSize}
+                    />}
+                    {state === 'setup' && <SetupButton
+                        setIsSetup={setIsSetup}
+                        setState={setState}
+                    />}
+                    {isSetup &&
+                        <RcIconButton
+                            size='small'
+                            symbol={showNavigator ? ArrowDown2 : ArrowUp2}
+                            onClick={() => { setShowNavigator(!showNavigator) }}
+                            style={navigatorBadgeStyle}
                         />}
-                        {state === 'setup' && <SetupButton
-                            setIsSetup={setIsSetup}
-                            setState={setState}
-                        />}
-                        {isSetup &&
-                            <RcIconButton
-                                size='small'
-                                symbol={showNavigator ? ArrowDown2 : ArrowUp2}
-                                onClick={() => { setShowNavigator(!showNavigator) }}
-                                style={navigatorBadgeStyle}
-                            />}
-                        {showNavigator &&
-                            <Navigator size={buttonSize} />
-                        }
-                        <div style={{ cursor: 'grab', display: 'inherit' }}>
-                            <RcButton
-                                className="rc-huddle-menu-handle"
-                                variant="plain"
-                                size='large'
-                                style={{ padding: '0px' }}
-                            >
-                                <img style={{ pointerEvents: 'none', width: '20px', height: '20px' }} src={DragImage} />
-                            </RcButton>
-                        </div>
+                    {showNavigator &&
+                        <Navigator size={buttonSize} />
+                    }
+                    <div
+                        style={{ cursor: 'grab', display: 'inherit' }}
+                        onPointerDown={onDragStart}
+                    >
+                        <RcButton
+                            className="rc-huddle-menu-handle"
+                            variant="plain"
+                            size='large'
+                            style={{ padding: '0px' }}
+                        >
+                            <img style={{ pointerEvents: 'none', width: '20px', height: '20px' }} src={DragImage} />
+                        </RcButton>
                     </div>
-                </Draggable >
+                </div>
             </div>
         </div>
     )
