@@ -11,8 +11,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const installedPlugins = getAllPluginSettings(adminSettings.userSettings);
     for (const pluginId in installedPlugins) {
         const targetPlugin = pluginList.find(plugin => plugin.id === pluginId);
-        targetPlugin.requireLicense = installedPlugins[pluginId].requireLicense;
-        targetPlugin.licenseStatusUrl = installedPlugins[pluginId].licenseStatusUrl;
+        targetPlugin.requireLicense = installedPlugins[pluginId]?.requireLicense ?? false;
+        targetPlugin.licenseStatusUrl = installedPlugins[pluginId]?.licenseStatusUrl ?? '';
         if (targetPlugin) {
             pluginListToRender.push(targetPlugin);
         }
