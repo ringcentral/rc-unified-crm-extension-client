@@ -9,6 +9,8 @@ import embeddableServices from '../service/embeddableServices';
 import authPage from '../components/authPage';
 import { tryConnectToBullhorn } from '../misc/bullhorn';
 import { t } from '../i18n';
+import { getPluginConfigurePageRender } from '../components/pluginConfigurePage';
+import pluginService from '../service/pluginService';
 
 function handleThirdPartyOAuthWindow(oAuthUri) {
     chrome.runtime.sendMessage({
@@ -93,11 +95,17 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
         const manifest = await getManifest();
         const platform = manifest?.platforms[platformName];
         const proxyId = platform.proxyId ? platform.proxyId : '';
+        const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;
+        const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
+        const rcInfo = await indexDB.get('keyvaluepairs', 'dataFetcherV2-storageData');
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
             apiKey: apiKey ?? 'apiKey',
             platform: platformName,
             hostname,
             proxyId,
+            rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id,
+            rcExtensionId: rcInfo.value.cachedData.extensionInfo.id,
+            userEmail: rcInfo.value.cachedData.extensionInfo.contact.email,
             additionalInfo: {
                 ...formData
             }
@@ -127,6 +135,39 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
 }
 
 async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
+    // Case: from plugin
+    try {
+        const stateData = JSON.parse(decodeURIComponent(new URLSearchParams(new URL(callbackUri).search).get('state') ?? '{}'));
+        if (stateData?.from === 'plugin' && stateData?.redirectTo) {
+            const pluginCallbackResp = await axios.get(`${stateData.redirectTo}?callbackUri=${callbackUri}`);
+            showNotification({ level: 'success', message: 'Successfully authorized plugin.' });
+            const { cachedPluginConfigFormData } = await chrome.storage.local.get('cachedPluginConfigFormData');
+            const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ plugin: cachedPluginConfigFormData.plugin });
+            const pluginConfigurePageRender = getPluginConfigurePageRender({
+                pluginId: cachedPluginConfigFormData.pluginId,
+                pluginAccess: cachedPluginConfigFormData.access,
+                plugin: cachedPluginConfigFormData.plugin,
+                config: cachedPluginConfigFormData.config,
+                isLoggedIn: true,
+                hasValidLicense: licenseStatus,
+                licenseStatusDescription
+            });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-customized-page',
+                page: pluginConfigurePageRender
+            });
+            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-navigate-to',
+                path: `/customized/${pluginConfigurePageRender.id}`
+            }, '*');
+            await chrome.storage.local.remove('cachedPluginConfigFormData');
+            return;
+        }
+    }
+    catch (e) {
+        console.warn('Auth callback not from plugin');
+    }
+    // Case: connectors
     const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;
     const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
     const rcInfo = await indexDB.get('keyvaluepairs', 'dataFetcherV2-storageData');
@@ -146,7 +187,8 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
             tokenUrl: crm_extension_bullhorn_user_urls.oauthUrl + '/token',
             apiUrl: crm_extension_bullhorn_user_urls.restUrl,
             username: crm_extension_bullhornUsername,
-            rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id
+            rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id,
+            rcExtensionId: rcInfo.value.cachedData.extensionInfo.id
         });
     }
     else {
@@ -155,7 +197,8 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
             hostname,
             rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id,
             proxyId,
-            userEmail: rcInfo.value.cachedData.extensionInfo.contact.email
+            userEmail: rcInfo.value.cachedData.extensionInfo.contact.email,
+            rcExtensionId: rcInfo.value.cachedData.extensionInfo.id
         });
     }
     const oauthCallbackUrl = `${serverUrl}/oauth-callback?${params.toString()}`;
@@ -234,6 +277,7 @@ async function refreshLicenseStatus({ serverUrl }) {
     }, '*');
 }
 
+exports.handleThirdPartyOAuthWindow = handleThirdPartyOAuthWindow;
 exports.onUserClickConnectButton = onUserClickConnectButton;
 exports.checkAndOpenPlatformSelectionPage = checkAndOpenPlatformSelectionPage;
 exports.apiKeyLogin = apiKeyLogin;

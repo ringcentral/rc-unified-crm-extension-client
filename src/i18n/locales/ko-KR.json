@@ -9,7 +9,8 @@
       "open": "열기",
       "logout": "로그아웃",
       "select": "선택",
-      "schedule": "예약"
+      "schedule": "예약",
+      "refresh": "새로고침"
     },
     "labels": {
       "admin": "(관리자)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "나와 공유됨",
       "all": "모두",
       "value": "값",
-      "customizableByUser": "사용자 정의 가능"
+      "customizableByUser": "사용자 정의 가능",
+      "licenseStatus": "라이선스 상태"
     },
     "status": {
       "online": "온라인",
@@ -73,6 +75,7 @@
     "admin": {
       "title": "관리자",
       "managedSettings": "관리 설정",
+      "plugins": "플러그인",
       "serverSideLogging": "서버 측 로깅 (베타)"
     },
     "managedSettings": {
@@ -82,7 +85,8 @@
       "activityLogging": "활동 로깅",
       "callPop": "통화 팝업",
       "advancedFeatures": "고급 기능",
-      "customSettings": "사용자 정의 설정"
+      "customSettings": "사용자 정의 설정",
+      "plugins": "플러그인"
     },
     "generalSettings": {
       "title": "일반",
@@ -152,7 +156,27 @@
     "multiContactPrompt": {
       "title": "연락처를 클릭하여 열기",
       "contacts": "연락처"
+    },
+    "pluginsManage": {
+      "title": "플러그인",
+      "installedPlugins": "설치된 플러그인",
+      "pluginMarket": "사용 가능한 플러그인"
     }
+  },
+  "plugins": {
+    "title": "플러그인",
+    "configure": "구성",
+    "configurePage": "플러그인 구성",
+    "install": "설치",
+    "uninstall": "제거",
+    "enable": "사용",
+    "enablePlugin": "플러그인 사용",
+    "basicInfo": "기본 정보",
+    "noPluginInstalled": "설치된 플러그인 없음",
+    "by": "{author} 제작",
+    "pluginMarket": "사용 가능한 플러그인",
+    "searchPlaceholder": "필터로 검색...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {
@@ -345,7 +369,8 @@
       "callLogUpdated": "통화 로그가 업데이트되었습니다",
       "authorized": "인증에 성공했습니다.",
       "unauthorized": "로그아웃에 성공했습니다.",
-      "openingContactPage": "연락처 페이지를 찾아 열고 있습니다..."
+      "openingContactPage": "연락처 페이지를 찾아 열고 있습니다...",
+      "loggedOut": "로그아웃되었습니다."
     },
     "warning": {
       "callLogFailed": "통화 로그 저장 실패",
@@ -355,7 +380,8 @@
       "noContactFound": "연락처를 찾을 수 없습니다"
     },
     "error": {
-      "wrongFormat": "잘못된 형식: {field}"
+      "wrongFormat": "잘못된 형식: {field}",
+      "logoutFailed": "로그아웃에 실패했습니다."
     }
   },
   "conflicts": {

@@ -9,7 +9,8 @@
       "open": "Abrir",
       "logout": "Cerrar sesión",
       "select": "Seleccionar",
-      "schedule": "Programar"
+      "schedule": "Programar",
+      "refresh": "Actualizar"
     },
     "labels": {
       "admin": "(Admin)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "Compartido contigo",
       "all": "Todos",
       "value": "Valor",
-      "customizableByUser": "Personalizable por el usuario"
+      "customizableByUser": "Personalizable por el usuario",
+      "licenseStatus": "Estado de la licencia"
     },
     "status": {
       "online": "En línea",
@@ -73,6 +75,7 @@
     "admin": {
       "title": "Admin",
       "managedSettings": "Configuración administrada",
+      "plugins": "Plugins",
       "serverSideLogging": "Registro del lado del servidor (Beta)"
     },
     "managedSettings": {
@@ -82,7 +85,8 @@
       "activityLogging": "Registro de actividades",
       "callPop": "Pop de llamada",
       "advancedFeatures": "Funciones avanzadas",
-      "customSettings": "Configuración personalizada"
+      "customSettings": "Configuración personalizada",
+      "plugins": "Plugins"
     },
     "generalSettings": {
       "title": "General",
@@ -152,7 +156,27 @@
     "multiContactPrompt": {
       "title": "Haga clic en el contacto para abrir",
       "contacts": "Contactos"
+    },
+    "pluginsManage": {
+      "title": "Complementos",
+      "installedPlugins": "Complementos instalados",
+      "pluginMarket": "Complementos disponibles"
     }
+  },
+  "plugins": {
+    "title": "Complementos",
+    "configure": "Configurar",
+    "configurePage": "Configurar complemento",
+    "install": "Instalar",
+    "uninstall": "Desinstalar",
+    "enable": "Activar",
+    "enablePlugin": "Activar complemento",
+    "basicInfo": "Información básica",
+    "noPluginInstalled": "Ningún complemento instalado",
+    "by": "por {author}",
+    "pluginMarket": "Complementos disponibles",
+    "searchPlaceholder": "Buscar con filtros...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {
@@ -345,7 +369,8 @@
       "callLogUpdated": "Registro de llamada actualizado",
       "authorized": "Autorizado exitosamente.",
       "unauthorized": "Sesión cerrada exitosamente.",
-      "openingContactPage": "Intentando encontrar y abrir la página de contacto..."
+      "openingContactPage": "Intentando encontrar y abrir la página de contacto...",
+      "loggedOut": "Sesión cerrada correctamente."
     },
     "warning": {
       "callLogFailed": "Error al guardar el registro de llamada",
@@ -355,7 +380,8 @@
       "noContactFound": "No se encontró ningún contacto"
     },
     "error": {
-      "wrongFormat": "Formato incorrecto: {field}"
+      "wrongFormat": "Formato incorrecto: {field}",
+      "logoutFailed": "Error al cerrar sesión."
     }
   },
   "conflicts": {

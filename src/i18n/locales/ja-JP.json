@@ -9,7 +9,8 @@
       "open": "開く",
       "logout": "ログアウト",
       "select": "選択",
-      "schedule": "スケジュール"
+      "schedule": "スケジュール",
+      "refresh": "更新"
     },
     "labels": {
       "admin": "(管理者)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "あなたと共有",
       "all": "すべて",
       "value": "値",
-      "customizableByUser": "ユーザーがカスタマイズ可能"
+      "customizableByUser": "ユーザーがカスタマイズ可能",
+      "licenseStatus": "ライセンスステータス"
     },
     "status": {
       "online": "オンライン",
@@ -73,6 +75,7 @@
     "admin": {
       "title": "管理者",
       "managedSettings": "管理設定",
+      "plugins": "プラグイン",
       "serverSideLogging": "サーバーサイドロギング（ベータ）"
     },
     "managedSettings": {
@@ -82,7 +85,8 @@
       "activityLogging": "アクティビティログ",
       "callPop": "通話ポップ",
       "advancedFeatures": "高度な機能",
-      "customSettings": "カスタム設定"
+      "customSettings": "カスタム設定",
+      "plugins": "プラグイン"
     },
     "generalSettings": {
       "title": "一般",
@@ -152,7 +156,27 @@
     "multiContactPrompt": {
       "title": "連絡先をクリックして開く",
       "contacts": "連絡先"
+    },
+    "pluginsManage": {
+      "title": "プラグイン",
+      "installedPlugins": "インストール済みプラグイン",
+      "pluginMarket": "利用可能なプラグイン"
     }
+  },
+  "plugins": {
+    "title": "プラグイン",
+    "configure": "設定",
+    "configurePage": "プラグインを設定",
+    "install": "インストール",
+    "uninstall": "アンインストール",
+    "enable": "有効にする",
+    "enablePlugin": "プラグインを有効にする",
+    "basicInfo": "基本情報",
+    "noPluginInstalled": "プラグインがインストールされていません",
+    "by": "{author} 作",
+    "pluginMarket": "利用可能なプラグイン",
+    "searchPlaceholder": "フィルターで検索...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {
@@ -345,7 +369,8 @@
       "callLogUpdated": "通話ログが更新されました",
       "authorized": "認証に成功しました。",
       "unauthorized": "ログアウトに成功しました。",
-      "openingContactPage": "連絡先ページを検索して開いています..."
+      "openingContactPage": "連絡先ページを検索して開いています...",
+      "loggedOut": "ログアウトしました。"
     },
     "warning": {
       "callLogFailed": "通話ログの保存に失敗しました",
@@ -355,7 +380,8 @@
       "noContactFound": "連絡先が見つかりません"
     },
     "error": {
-      "wrongFormat": "形式エラー：{field}"
+      "wrongFormat": "形式エラー：{field}",
+      "logoutFailed": "ログアウトに失敗しました。"
     }
   },
   "conflicts": {

@@ -6,29 +6,67 @@ import { getRcInfo } from '../lib/util';
 let sessionManifest = null;
 let platformList = null;
 
+async function getPluginDetails({ pluginId, selectedPlugin }) {
+    let pluginManifestResponse;
+    switch (selectedPlugin.access) {
+        case 'public':
+            pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${pluginId ?? selectedPlugin.id}/manifest?type=plugin`);
+            break;
+        case 'shared':
+            pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${pluginId ?? selectedPlugin.id}/manifest?access=internal&type=plugin&accountId=${selectedPlugin.accountId}`);
+            break;
+        case 'private':
+            const rcInfo = await getRcInfo();
+            pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${pluginId ?? selectedPlugin.id}/manifest?access=internal&type=plugin&accountId=${rcInfo.value.cachedData.accountInfo.id}`);
+            break;
+    }
+    return pluginManifestResponse.data?.platforms?.[selectedPlugin.name];
+}
+
 async function getPlatformList() {
     if (platformList) {
         return platformList;
     }
     const result = [];
-    const platformPublicListResponse = await axios.get(baseManifest.platformPublicListUrl);
+    const platformPublicListResponse = await axios.get(`${baseManifest.platformPublicListUrl}?type=connector`);
     for (const platform of platformPublicListResponse.data.connectors) {
-        platform.type = 'public';
+        platform.access = 'public';
         result.push(platform);
     }
     const rcInfo = await getRcInfo();
     const rcAccountId = rcInfo.value.cachedData.accountInfo.id;
-    const platformInternalListResponse = await axios.get(`${baseManifest.platformInternalListUrl}?accountId=${rcAccountId}`);
+    const platformInternalListResponse = await axios.get(`${baseManifest.platformInternalListUrl}?access=internal&type=connector&accountId=${rcAccountId}`);
     for (const platform of platformInternalListResponse.data.sharedConnectors) {
-        platform.type = 'shared';
+        platform.access = 'shared';
         result.push(platform);
     }
     for (const platform of platformInternalListResponse.data.privateConnectors) {
-        platform.type = 'private';
+        platform.access = 'private';
         result.push(platform);
     }
     platformList = result;
     return platformList;
+}
+
+async function getPluginList() {
+    const result = [];
+    const pluginPublicListResponse = await axios.get(`${baseManifest.platformPublicListUrl}?type=plugin`);
+    for (const plugin of pluginPublicListResponse.data.connectors) {
+        plugin.access = 'public';
+        result.push(plugin);
+    }
+    const rcInfo = await getRcInfo();
+    const rcAccountId = rcInfo.value.cachedData.accountInfo.id;
+    const pluginInternalListResponse = await axios.get(`${baseManifest.platformInternalListUrl}?access=internal&type=plugin&accountId=${rcAccountId}`);
+    for (const plugin of pluginInternalListResponse.data.sharedConnectors) {
+        plugin.access = 'shared';
+        result.push(plugin);
+    }
+    for (const plugin of pluginInternalListResponse.data.privateConnectors) {
+        plugin.access = 'private';
+        result.push(plugin);
+    }
+    return result;
 }
 
 async function saveManifestUrl({ manifestUrl }) {
@@ -134,8 +172,10 @@ function setValueByPath(obj, path, value) {
     current[keys[keys.length - 1]] = value;
 }
 
+exports.getPluginDetails = getPluginDetails;
 exports.getManifest = getManifest;
 exports.getPlatformList = getPlatformList;
+exports.getPluginList = getPluginList;
 exports.saveManifest = saveManifest;
 exports.saveManifestUrl = saveManifestUrl;
 exports.refreshManifest = refreshManifest;

@@ -1,5 +1,4 @@
-import LibPhoneNumberMatcher from './lib/LibPhoneNumberMatcher'
-import RangeObserver from './lib/RangeObserver'
+import { WrapperObserver } from 'ringcentral-c2d';
 import App from './components/embedded';
 import CustomC2DWidget from './misc/CustomC2DWidget'
 import React from 'react';
@@ -9,6 +8,8 @@ import axios from 'axios';
 import { sendMessageToExtension } from './lib/sendMessage';
 import { isObjectEmpty } from './lib/util';
 import { getManifest } from './service/manifestService';
+import InputAwareRegExpMatcher from './lib/c2d/inputAwareRegExpMatcher';
+import { initializeShadowRootSupport } from './lib/c2d/shadowRootSupport';
 import userCore from './core/user';
 console.log('import content js to web page');
 
@@ -74,16 +75,14 @@ async function checkUrlMatch({ type = 'quickAccessButton' }) {
 
 // Create a C2D instance for a specific root node
 // If sharedWidget is provided, it will be reused instead of creating a new one
-function createC2DInstance({ rootNode, countryCode, matchAllNumbers, sharedWidget }) {
+function createC2DInstance({ rootNode, sharedWidget }) {
+  const observer = new WrapperObserver({
+    node: rootNode,
+    matcher: new InputAwareRegExpMatcher(),
+  });
   const options = {
     widget: new CustomC2DWidget(),
-    observer: new RangeObserver({
-      node: rootNode,
-      matcher: new LibPhoneNumberMatcher({
-        countryCode,
-        matchAllNumbers,
-      })
-    })
+    observer,
   };
 
   // Pass the shared widget if provided (for shadow root instances)
@@ -92,6 +91,17 @@ function createC2DInstance({ rootNode, countryCode, matchAllNumbers, sharedWidge
   }
 
   const c2dInstance = new window.RingCentralC2D(options);
+
+  if (rootNode instanceof ShadowRoot) {
+    try {
+      // ShadowRoot is a DocumentFragment, so manually seed existing child nodes.
+      const initialMatches = observer._processNodes(Array.from(rootNode.childNodes), false);
+      observer._injectMatches(initialMatches);
+    }
+    catch (e) {
+      console.error('[App Connect] Failed to seed C2D matches for shadowRoot', e);
+    }
+  }
 
   // Only attach event listeners if this is the primary instance (no shared widget)
   // Otherwise events would be duplicated since all instances share the same widget
@@ -130,111 +140,30 @@ async function initializeC2D() {
     console.log('[App Connect]URL not matched, C2D not initialized');
     return;
   }
-  const countryCode = await chrome.storage.local.get({ selectedRegion: 'US' });
 
-  const { matchAllNumbers } = await chrome.storage.local.get({ matchAllNumbers: false });
   const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
 
   // Store all C2D instances and observers
   window.clickToDialInstances = window.clickToDialInstances || [];
   window.clickToDialObservers = window.clickToDialObservers || [];
-  const processedShadowRoots = new WeakSet();
-  const observedRoots = new WeakSet();
+  window.clickToDialShadowRootPollers = window.clickToDialShadowRootPollers || [];
 
   // Initialize main document C2D first (this creates the widget)
   window.clickToDialInject = createC2DInstance({
     rootNode: document.body,
-    countryCode: countryCode.selectedRegion,
-    matchAllNumbers,
   });
   // Disable the SMS button, keep only click-to-dial
   window.clickToDialInject.widget.update({ enableC2Text: userPermissions?.sms ?? false });
   window.clickToDialInstances.push(window.clickToDialInject);
   console.log(`[App Connect] C2D initialized for document.body`);
 
-  // Get the shared widget from the main instance
-  const sharedWidget = window.clickToDialInject.widget;
-
-  // Process a single element - check if it has a shadow root and handle it
-  const processElement = (element) => {
-    if (element.shadowRoot && !processedShadowRoots.has(element.shadowRoot)) {
-      processShadowRoot(element.shadowRoot);
-    }
-  };
-
-  // Process a shadow root - create C2D instance and set up observer
-  const processShadowRoot = (shadowRoot) => {
-    if (processedShadowRoots.has(shadowRoot)) return;
-
-    processedShadowRoots.add(shadowRoot);
-
-    // Create C2D instance for this shadow root
-    const c2dInstance = createC2DInstance({
-      rootNode: shadowRoot,
-      countryCode: countryCode.selectedRegion,
-      matchAllNumbers,
-      sharedWidget,
-    });
-    window.clickToDialInstances.push(c2dInstance);
-    console.log(`[App Connect] C2D initialized for shadowRoot`);
-
-    // Scan for existing elements with shadow roots inside this shadow root
-    scanForShadowRoots(shadowRoot);
-
-    // Set up observer for this shadow root to detect new shadow roots inside it
-    observeRoot(shadowRoot);
-  };
-
-  // Scan a root for all elements that have shadow roots
-  const scanForShadowRoots = (root) => {
-    const walker = document.createTreeWalker(
-      root,
-      NodeFilter.SHOW_ELEMENT,
-      null,
-      false
-    );
-
-    let node = walker.currentNode;
-    while (node) {
-      if (node.shadowRoot && !processedShadowRoots.has(node.shadowRoot)) {
-        processShadowRoot(node.shadowRoot);
-      }
-      node = walker.nextNode();
-    }
-  };
-
-  // Set up MutationObserver on a root (document.body or shadow root)
-  const observeRoot = (root) => {
-    if (observedRoots.has(root)) return;
-    observedRoots.add(root);
-
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        // Handle added nodes
-        for (const node of mutation.addedNodes) {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            // Check the added node itself
-            processElement(node);
-            // Scan the subtree for shadow roots
-            scanForShadowRoots(node);
-          }
-        }
-      }
-    });
-
-    observer.observe(root, {
-      childList: true,
-      subtree: true,
-    });
-
-    window.clickToDialObservers.push(observer);
-  };
-
-  // Initial scan of document.body for existing shadow roots
-  scanForShadowRoots(document.body);
-
-  // Set up observer on document.body
-  observeRoot(document.body);
+  initializeShadowRootSupport({
+    createC2DInstance,
+    sharedWidget: window.clickToDialInject.widget,
+    onInstanceCreated: (instance) => window.clickToDialInstances.push(instance),
+    onObserverCreated: (observer) => window.clickToDialObservers.push(observer),
+    pollerStore: window.clickToDialShadowRootPollers,
+  });
 
   console.log(`[App Connect] C2D initialization complete. Found ${window.clickToDialInstances.length} roots.`);
 }
@@ -290,9 +219,12 @@ async function RenderQuickAccessButton() {
     console.log('[App Connect] URL not matched, quick access button not initialized');
     return;
   }
-  const rootElement = window.document.createElement('root');
-  rootElement.id = 'rc-crm-extension-quick-access-button';
-  window.document.body.appendChild(rootElement);
+  let rootElement = window.document.getElementById('rc-crm-extension-quick-access-button');
+  if (!rootElement) {
+    rootElement = window.document.createElement('root');
+    rootElement.id = 'rc-crm-extension-quick-access-button';
+    window.document.documentElement.appendChild(rootElement);
+  }
   ReactDOM.render(React.createElement(Root, null), rootElement);
 }
 
@@ -341,6 +273,7 @@ async function Initialize() {
 
   if (!renderQuickAccessButton) {
     localStorage.removeItem('rcQuickAccessButtonTransform');
+    localStorage.removeItem('rcQuickAccessButtonTop');
   }
 
   // Case: C2D renders extra elements inside Bullhorn note section

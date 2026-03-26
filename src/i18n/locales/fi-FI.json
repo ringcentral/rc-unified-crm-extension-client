@@ -9,7 +9,8 @@
       "open": "Avaa",
       "logout": "Kirjaudu ulos",
       "select": "Valitse",
-      "schedule": "Ajasta"
+      "schedule": "Ajasta",
+      "refresh": "Päivitä"
     },
     "labels": {
       "admin": "(Ylläpitäjä)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "Jaettu kanssasi",
       "all": "Kaikki",
       "value": "Arvo",
-      "customizableByUser": "Käyttäjän muokattavissa"
+      "customizableByUser": "Käyttäjän muokattavissa",
+      "licenseStatus": "Lisenssitila"
     },
     "status": {
       "online": "Online",
@@ -73,6 +75,7 @@
     "admin": {
       "title": "Ylläpitäjä",
       "managedSettings": "Hallitut asetukset",
+      "plugins": "Lisäosat",
       "serverSideLogging": "Palvelinpuolen lokitus (Beta)"
     },
     "managedSettings": {
@@ -82,7 +85,8 @@
       "activityLogging": "Aktiviteettilokitus",
       "callPop": "Puhelun ponnahdusikkuna",
       "advancedFeatures": "Edistyneet ominaisuudet",
-      "customSettings": "Mukautetut asetukset"
+      "customSettings": "Mukautetut asetukset",
+      "plugins": "Lisäosat"
     },
     "generalSettings": {
       "title": "Yleinen",
@@ -152,7 +156,27 @@
     "multiContactPrompt": {
       "title": "Napsauta yhteystietoa avataksesi",
       "contacts": "Yhteystiedot"
+    },
+    "pluginsManage": {
+      "title": "Lisäosat",
+      "installedPlugins": "Asennetut lisäosat",
+      "pluginMarket": "Saatavilla olevat lisäosat"
     }
+  },
+  "plugins": {
+    "title": "Lisäosat",
+    "configure": "Määritä",
+    "configurePage": "Määritä lisäosa",
+    "install": "Asenna",
+    "uninstall": "Poista",
+    "enable": "Ota käyttöön",
+    "enablePlugin": "Ota lisäosa käyttöön",
+    "basicInfo": "Perustiedot",
+    "noPluginInstalled": "Ei asennettuja lisäosia",
+    "by": "tekijä: {author}",
+    "pluginMarket": "Saatavilla olevat lisäosat",
+    "searchPlaceholder": "Hae suodattimilla...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {
@@ -345,7 +369,8 @@
       "callLogUpdated": "Puheluloki päivitetty",
       "authorized": "Valtuutus onnistui.",
       "unauthorized": "Uloskirjautuminen onnistui.",
-      "openingContactPage": "Yritetään löytää ja avata yhteystietosivu..."
+      "openingContactPage": "Yritetään löytää ja avata yhteystietosivu...",
+      "loggedOut": "Uloskirjautuminen onnistui."
     },
     "warning": {
       "callLogFailed": "Puhelulokin tallennus epäonnistui",
@@ -355,7 +380,8 @@
       "noContactFound": "Yhteystietoa ei löytynyt"
     },
     "error": {
-      "wrongFormat": "Väärä muoto: {field}"
+      "wrongFormat": "Väärä muoto: {field}",
+      "logoutFailed": "Uloskirjautuminen epäonnistui."
     }
   },
   "conflicts": {

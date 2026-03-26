@@ -9,7 +9,8 @@
       "open": "Abrir",
       "logout": "Sair",
       "select": "Selecionar",
-      "schedule": "Agendar"
+      "schedule": "Agendar",
+      "refresh": "Atualizar"
     },
     "labels": {
       "admin": "(Admin)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "Compartilhado com você",
       "all": "Todos",
       "value": "Valor",
-      "customizableByUser": "Personalizável pelo usuário"
+      "customizableByUser": "Personalizável pelo usuário",
+      "licenseStatus": "Estado da licença"
     },
     "status": {
       "online": "Online",
@@ -73,6 +75,7 @@
     "admin": {
       "title": "Admin",
       "managedSettings": "Configurações gerenciadas",
+      "plugins": "Plugins",
       "serverSideLogging": "Log do lado do servidor (Beta)"
     },
     "managedSettings": {
@@ -82,7 +85,8 @@
       "activityLogging": "Registro de atividades",
       "callPop": "Pop de chamada",
       "advancedFeatures": "Recursos avançados",
-      "customSettings": "Configurações personalizadas"
+      "customSettings": "Configurações personalizadas",
+      "plugins": "Plugins"
     },
     "generalSettings": {
       "title": "Geral",
@@ -152,7 +156,27 @@
     "multiContactPrompt": {
       "title": "Clique no contato para abrir",
       "contacts": "Contatos"
+    },
+    "pluginsManage": {
+      "title": "Plugins",
+      "installedPlugins": "Plugins instalados",
+      "pluginMarket": "Plugins disponíveis"
     }
+  },
+  "plugins": {
+    "title": "Plugins",
+    "configure": "Configurar",
+    "configurePage": "Configurar plug-in",
+    "install": "Instalar",
+    "uninstall": "Desinstalar",
+    "enable": "Ativar",
+    "enablePlugin": "Ativar plug-in",
+    "basicInfo": "Informações básicas",
+    "noPluginInstalled": "Nenhum plugin instalado",
+    "by": "por {author}",
+    "pluginMarket": "Plugins disponíveis",
+    "searchPlaceholder": "Pesquisar com filtros...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {
@@ -345,7 +369,8 @@
       "callLogUpdated": "Log de chamada atualizado",
       "authorized": "Autorizado com sucesso.",
       "unauthorized": "Desconectado com sucesso.",
-      "openingContactPage": "Tentando encontrar e abrir a página do contato..."
+      "openingContactPage": "Tentando encontrar e abrir a página do contato...",
+      "loggedOut": "Sessão terminada com sucesso."
     },
     "warning": {
       "callLogFailed": "Falha ao salvar o log de chamada",
@@ -355,7 +380,8 @@
       "noContactFound": "Nenhum contato encontrado"
     },
     "error": {
-      "wrongFormat": "Formato incorreto: {field}"
+      "wrongFormat": "Formato incorreto: {field}",
+      "logoutFailed": "Falha ao terminar sessão."
     }
   },
   "conflicts": {

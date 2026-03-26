@@ -4,52 +4,69 @@ import { responseMessage } from '../../../lib/util';
 import userCore from '../../../core/user';
 import { clearPlatformInfo } from '../../../service/platformService';
 
-import customizedBannerHandler from './customizedBanner';
+import customizedBannerHandler from './navigation/customizedBanner';
 
-import callLaterHandler from './callLater';
-import callLaterInMessageHandler from './callLaterInMessage';
-import callLaterInContactHandler from './callLaterInContact';
-import scheduleSubmitHandler from './scheduleSubmit';
-import calldownActionCallHandler from './calldownActionCall';
-import calldownActionOpenHandler from './calldownActionOpen';
-import calldownActionTextHandler from './calldownActionText';
-import calldownActionEditHandler from './calldownActionEdit';
-import calldownActionCompleteHandler from './calldownActionComplete';
-import calldownActionRemoveHandler from './calldownActionRemove';
-import editUserMappingPageHandler from './editUserMappingPage';
-import hostnameInputPageHandler from './hostnameInputPage';
-import insightlyGetApiKeyHandler from './insightlyGetApiKey';
-import authPageHandler from './authPage';
-import feedbackPageHandler from './feedbackPage';
-import openAboutPageHandler from './openAboutPage';
-import openDeveloperSettingsPageHandler from './openDeveloperSettingsPage';
-import reinitializeUserMappingButtonHandler from './reinitializeUserMappingButton';
-import openImplementedInterfacesPageButtonHandler from './openImplementedInterfacesPageButton';
-import factoryResetButtonHandler from './factoryResetButton';
-import reportIssueButtonHandler from './reportIssueButton';
-import documentationHandler from './documentation';
-import saveServerSideLoggingButtonHandler from './saveServerSideLoggingButton';
-import doNotLogNumbersSubmitButtonHandler from './doNotLogNumbersSubmitButton';
-import saveTempNoteButtonHandler from './saveTempNoteButton';
-import googleSheetsConfigHandler from './googleSheetsConfig';
-import newSheetButtonHandler from './newSheetButton';
-import selectExistingSheetButtonHandler from './selectExistingSheetButton';
-import removeSheetButtonHandler from './removeSheetButton';
-import adminNewSheetButtonHandler from './adminNewSheetButton';
-import adminSelectExistingSheetButtonHandler from './adminSelectExistingSheetButton';
-import adminGoogleSheetSelectedHandler from './adminGoogleSheetSelected';
-import userGoogleSheetSelectedHandler from './userGoogleSheetSelected';
-import adminRemoveSheetButtonHandler from './adminRemoveSheetButton';
-import contactSearchAdapterButtonCallLogHandler from './contactSearchAdapterButtonCallLog';
-import contactSearchAdapterButtonMessageLogHandler from './contactSearchAdapterButtonMessageLog';
+import callLaterHandler from './calldown/callLater';
+import callLaterInMessageHandler from './calldown/callLaterInMessage';
+import callLaterInContactHandler from './calldown/callLaterInContact';
+import scheduleSubmitHandler from './calldown/scheduleSubmit';
+import calldownActionCallHandler from './calldown/calldownActionCall';
+import calldownActionOpenHandler from './calldown/calldownActionOpen';
+import calldownActionTextHandler from './calldown/calldownActionText';
+import calldownActionEditHandler from './calldown/calldownActionEdit';
+import calldownActionCompleteHandler from './calldown/calldownActionComplete';
+import calldownActionRemoveHandler from './calldown/calldownActionRemove';
+import saveTempNoteButtonHandler from './calldown/saveTempNoteButton';
+
+import editUserMappingPageHandler from './userMapping/editUserMappingPage';
+import reinitializeUserMappingButtonHandler from './userMapping/reinitializeUserMappingButton';
+import usermappingEditHandler from './userMapping/usermappingEdit';
+import usermappingRemoveHandler from './userMapping/usermappingRemove';
+
+import hostnameInputPageHandler from './auth/hostnameInputPage';
+import insightlyGetApiKeyHandler from './auth/insightlyGetApiKey';
+import authPageHandler from './auth/authPage';
+import factoryResetButtonHandler from './auth/factoryResetButton';
+import selectPlatformHandler from './auth/selectPlatform';
+
+import feedbackPageHandler from './navigation/feedbackPage';
+import openAboutPageHandler from './navigation/openAboutPage';
+import openDeveloperSettingsPageHandler from './navigation/openDeveloperSettingsPage';
+import openImplementedInterfacesPageButtonHandler from './navigation/openImplementedInterfacesPageButton';
+import documentationHandler from './navigation/documentation';
+
+import reportIssueButtonHandler from './errorLogging/reportIssueButton';
+import getErrorLogRecordPageNextStepButtonHandler from './errorLogging/errorLogRecordPageNextStep';
+import errorLogRecordPageStartButtonHandler from './errorLogging/errorLogRecordPageStart';
+import logRecordSubmissionPageHandler from './errorLogging/logRecordSubmit';
+
+import saveServerSideLoggingButtonHandler from './adminSettings/saveServerSideLogging';
+import doNotLogNumbersSubmitButtonHandler from './adminSettings/doNotLogNumbersSubmit';
+import generalHandler from './adminSettings/adminSettingsFormSubmit';
+
+import googleSheetsConfigHandler from './googleSheets/googleSheetsConfig';
+import newSheetButtonHandler from './googleSheets/newSheetButton';
+import selectExistingSheetButtonHandler from './googleSheets/selectExistingSheetButton';
+import removeSheetButtonHandler from './googleSheets/removeSheetButton';
+import adminNewSheetButtonHandler from './googleSheets/adminNewSheetButton';
+import adminSelectExistingSheetButtonHandler from './googleSheets/adminSelectExistingSheetButton';
+import adminGoogleSheetSelectedHandler from './googleSheets/adminGoogleSheetSelected';
+import userGoogleSheetSelectedHandler from './googleSheets/userGoogleSheetSelected';
+import adminRemoveSheetButtonHandler from './googleSheets/adminRemoveSheetButton';
+
+import contactSearchAdapterButtonCallLogHandler from './contactSearch/contactSearchAdapterButtonCallLog';
+import contactSearchAdapterButtonMessageLogHandler from './contactSearch/contactSearchAdapterButtonMessageLog';
+
 import contactSearchAdapterButtonAppointmentHandler from './contactSearchAdapterButtonAppointment';
-import usermappingEditHandler from './usermappingEdit';
-import usermappingRemoveHandler from './usermappingRemove';
-import selectPlatformHandler from './selectPlatform';
-import getErrorLogRecordPageNextStepButtonHandler from './getErrorLogRecordPageNextStepButton';
-import errorLogRecordPageStartButtonHandler from './errorLogRecordPageStartButton';
-import logRecordSubmissionPageHandler from './logRecordSubmissionPage';
-import generalHandler from './general';
+import openInstalledPluginListPageHandler from './plugins/installedPluginListPage';
+import selectPluginHandler from './plugins/selectPlugin';
+import pluginConfigurePageSubmitHandler from './plugins/pluginConfigurePageSubmit';
+import pluginConfigButtonsHandler from './plugins/pluginConfigButtons';
+import pluginAdminConfigButtonsHandler from './plugins/pluginAdminConfigButtons';
+import pluginDetailsSettingPageHandler from './plugins/pluginDetailsSettingPage';
+import pluginLicenseRefreshButtonHandler from './plugins/pluginLicenseRefreshButton';
+
+import pluginMarketListPageHandler from '../pluginMarketListPage';
 import appointmentRefreshListHandler from './appointmentRefreshList';
 import appointmentRefreshHandler from './appointmentRefresh';
 import appointmentConfirmHandler from './appointmentConfirm';
@@ -216,6 +233,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'feedbackPage':
             await feedbackPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
+        case 'openInstalledPluginListPage':
+            await openInstalledPluginListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
         case 'openSupportPage':
             chrome.runtime.sendMessage({ type: "openPopupWindow", navigationPath: "/support" });
             break;
@@ -328,6 +348,27 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'logRecordSubmitButton':
             await logRecordSubmissionPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
+        case 'selectPlugin':
+            await selectPluginHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'pluginConfigurePage':
+            if (data.body.button.type === 'submit') {
+                await pluginConfigurePageSubmitHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            }
+            break;
+        case 'installedPluginListPage':
+            if (data.body.button.type === 'submit') {
+                await pluginMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            }
+            break;
+        case 'pluginDetailsSettingPage':
+            if (data.body.button.type === 'submit') {
+                await pluginDetailsSettingPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            }
+            break;
+        case 'pluginLicenseRefreshButton':
+            await pluginLicenseRefreshButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
         case 'callAndSMSLoggingSettingPage':
         case 'contactSettingPage':
         case 'callLogDetailsSettingPage':
@@ -344,6 +385,16 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     }
     if (data.body.button.id.startsWith('link-button-')) {
         window.open(data.body.button.formData[data.body.button.id], '_blank');
+    }
+    // plugin configure buttons
+    const isPlugin = !!data.body.button?.formData?.pluginId;
+    if (data.body.button.type != 'submit' && isPlugin) {
+        if (data.body.button.formData.isFromAdmin) {
+            await pluginAdminConfigButtonsHandler.onEvent({ data, manifest, platformInfo, platformName, platform, buttonId: listButtonActionId });
+        }
+        else {
+            await pluginConfigButtonsHandler.onEvent({ data, buttonId: listButtonActionId, manifest, platformInfo, platformName, platform });
+        }
     }
     responseMessage(data.requestId, { data: 'ok' });
 }

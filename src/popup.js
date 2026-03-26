@@ -6,6 +6,7 @@ import { getManifest } from './service/manifestService';
 import { saveManifestUrl } from './service/manifestService';
 import { getPlatformInfo } from './service/platformService';
 import logRecorder from './lib/logRecorder';
+import { setPluginAsyncTaskCheck } from './service/pluginService';
 import i18n from './i18n';
 
 // event handlers
@@ -132,6 +133,7 @@ i18n.restoreLocale();
 checkC2DCollision();
 getCustomManifest();
 getImplementedInterfaces();
+setPluginAsyncTaskCheck();
 
 async function getCustomManifest() {
   const customCrmManifest = await getManifest();

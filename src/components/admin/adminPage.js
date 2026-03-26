@@ -22,6 +22,14 @@ function getAdminPageRender({ platform }) {
                         {
                             const: "managedSettings",
                             title: t('pages.admin.managedSettings'),
+                        },
+                        ...platform.serverSideLogging ? [{
+                            const: "serverSideLoggingSetting",
+                            title: t('pages.admin.serverSideLogging'),
+                        }] : [],
+                        {
+                            const: "plugins",
+                            title: t('pages.admin.plugins'),
                         }
                     ]
                 }
@@ -35,13 +43,6 @@ function getAdminPageRender({ platform }) {
         }
     }
 
-    if (platform.serverSideLogging) {
-        page.schema.properties.section.oneOf.push({
-            const: "serverSideLoggingSetting",
-            title: t('pages.admin.serverSideLogging'),
-        })
-    };
-    
     return page;
 }
 

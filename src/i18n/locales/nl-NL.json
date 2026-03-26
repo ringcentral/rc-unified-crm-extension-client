@@ -9,7 +9,8 @@
       "open": "Openen",
       "logout": "Uitloggen",
       "select": "Selecteren",
-      "schedule": "Plannen"
+      "schedule": "Plannen",
+      "refresh": "Vernieuwen"
     },
     "labels": {
       "admin": "(Admin)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "Met u gedeeld",
       "all": "Alle",
       "value": "Waarde",
-      "customizableByUser": "Aanpasbaar door gebruiker"
+      "customizableByUser": "Aanpasbaar door gebruiker",
+      "licenseStatus": "Licentiestatus"
     },
     "status": {
       "online": "Online",
@@ -73,6 +75,7 @@
     "admin": {
       "title": "Admin",
       "managedSettings": "Beheerde instellingen",
+      "plugins": "Plugins",
       "serverSideLogging": "Server-side logging (Beta)"
     },
     "managedSettings": {
@@ -82,7 +85,8 @@
       "activityLogging": "Activiteitenregistratie",
       "callPop": "Oproep-pop",
       "advancedFeatures": "Geavanceerde functies",
-      "customSettings": "Aangepaste instellingen"
+      "customSettings": "Aangepaste instellingen",
+      "plugins": "Plugins"
     },
     "generalSettings": {
       "title": "Algemeen",
@@ -152,7 +156,27 @@
     "multiContactPrompt": {
       "title": "Klik op contact om te openen",
       "contacts": "Contacten"
+    },
+    "pluginsManage": {
+      "title": "Plug-ins",
+      "installedPlugins": "Geïnstalleerde plug-ins",
+      "pluginMarket": "Beschikbare plug-ins"
     }
+  },
+  "plugins": {
+    "title": "Plug-ins",
+    "configure": "Configureren",
+    "configurePage": "Plug-in configureren",
+    "install": "Installeren",
+    "uninstall": "Verwijderen",
+    "enable": "Inschakelen",
+    "enablePlugin": "Plug-in inschakelen",
+    "basicInfo": "Basisinformatie",
+    "noPluginInstalled": "Geen plug-in geïnstalleerd",
+    "by": "door {author}",
+    "pluginMarket": "Beschikbare plug-ins",
+    "searchPlaceholder": "Zoeken met filters...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {
@@ -345,7 +369,8 @@
       "callLogUpdated": "Oproeplog bijgewerkt",
       "authorized": "Succesvol geautoriseerd.",
       "unauthorized": "Succesvol uitgelogd.",
-      "openingContactPage": "Proberen contactpagina te vinden en te openen..."
+      "openingContactPage": "Proberen contactpagina te vinden en te openen...",
+      "loggedOut": "Succesvol uitgelogd."
     },
     "warning": {
       "callLogFailed": "Opslaan van oproeplog mislukt",
@@ -355,7 +380,8 @@
       "noContactFound": "Geen contact gevonden"
     },
     "error": {
-      "wrongFormat": "Verkeerd formaat: {field}"
+      "wrongFormat": "Verkeerd formaat: {field}",
+      "logoutFailed": "Uitloggen mislukt."
     }
   },
   "conflicts": {

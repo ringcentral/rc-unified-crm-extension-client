@@ -9,7 +9,8 @@
       "open": "Ouvrir",
       "logout": "Déconnexion",
       "select": "Sélectionner",
-      "schedule": "Planifier"
+      "schedule": "Planifier",
+      "refresh": "Actualiser"
     },
     "labels": {
       "admin": "(Admin)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "Partagé avec vous",
       "all": "Tous",
       "value": "Valeur",
-      "customizableByUser": "Personnalisable par l'utilisateur"
+      "customizableByUser": "Personnalisable par l'utilisateur",
+      "licenseStatus": "Statut de licence"
     },
     "status": {
       "online": "En ligne",
@@ -73,6 +75,7 @@
     "admin": {
       "title": "Admin",
       "managedSettings": "Paramètres gérés",
+      "plugins": "Plugins",
       "serverSideLogging": "Journalisation côté serveur (Bêta)"
     },
     "managedSettings": {
@@ -82,7 +85,8 @@
       "activityLogging": "Journalisation des activités",
       "callPop": "Pop d'appel",
       "advancedFeatures": "Fonctionnalités avancées",
-      "customSettings": "Paramètres personnalisés"
+      "customSettings": "Paramètres personnalisés",
+      "plugins": "Plugins"
     },
     "generalSettings": {
       "title": "Général",
@@ -152,7 +156,27 @@
     "multiContactPrompt": {
       "title": "Cliquer sur le contact pour ouvrir",
       "contacts": "Contacts"
+    },
+    "pluginsManage": {
+      "title": "Plugins",
+      "installedPlugins": "Plugins installés",
+      "pluginMarket": "Plugins disponibles"
     }
+  },
+  "plugins": {
+    "title": "Plugins",
+    "configure": "Configurer",
+    "configurePage": "Configurer le plug-in",
+    "install": "Installer",
+    "uninstall": "Désinstaller",
+    "enable": "Activer",
+    "enablePlugin": "Activer le plug-in",
+    "basicInfo": "Informations de base",
+    "noPluginInstalled": "Aucun plugin installé",
+    "by": "par {author}",
+    "pluginMarket": "Plugins disponibles",
+    "searchPlaceholder": "Rechercher avec des filtres...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {
@@ -345,7 +369,8 @@
       "callLogUpdated": "Journal d'appel mis à jour",
       "authorized": "Autorisé avec succès.",
       "unauthorized": "Déconnecté avec succès.",
-      "openingContactPage": "Tentative de recherche et d'ouverture de la page de contact..."
+      "openingContactPage": "Tentative de recherche et d'ouverture de la page de contact...",
+      "loggedOut": "Déconnexion réussie."
     },
     "warning": {
       "callLogFailed": "Échec de l'enregistrement du journal d'appel",
@@ -355,7 +380,8 @@
       "noContactFound": "Aucun contact trouvé"
     },
     "error": {
-      "wrongFormat": "Mauvais format : {field}"
+      "wrongFormat": "Mauvais format : {field}",
+      "logoutFailed": "Échec de la déconnexion."
     }
   },
   "conflicts": {

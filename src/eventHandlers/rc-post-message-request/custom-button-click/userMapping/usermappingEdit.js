@@ -1,0 +1,23 @@
+import contactCore from '../../../../core/contact';
+import editUserMappingPage from '../../../../components/admin/userMappingPage/editUserMappingPage';
+import { getRcContactInfo } from '../../../../lib/util';
+
+async function onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId }) {
+    const userMappingToEdit = data.body.button.formData.allUserMapping.find(um => um.crmUser.id == listButtonItemId);
+    const rcExtensions = (await getRcContactInfo()).filter(rc => rc.type == 'User' || rc.type == 'Department');
+    const editUserMappingPageRender = editUserMappingPage.renderEditUserMappingPage({
+        userMapping: userMappingToEdit,
+        platformDisplayName: platform.displayName,
+        rcExtensions
+    });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: editUserMappingPageRender
+    });
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-navigate-to',
+        path: `/customized/${editUserMappingPageRender.id}`, // page id
+    }, '*');
+}
+
+exports.onEvent = onEvent;

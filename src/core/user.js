@@ -77,7 +77,7 @@ async function getUserSettingsOnline({ serverUrl }) {
     return getUserSettingsResponse.data;
 }
 
-async function uploadUserSettings({ serverUrl, userSettings }) {
+async function uploadUserSettings({ serverUrl, userSettings, settingKeysToRemove }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' });
     let userSettingsToUpload = userSettings;
@@ -107,13 +107,14 @@ async function uploadUserSettings({ serverUrl, userSettings }) {
     const uploadUserSettingsResponse = await axios.post(
         `${serverUrl}/user/settings?jwtToken=${rcUnifiedCrmExtJwt}`,
         {
-            userSettings: userSettingsToUpload
+            userSettings: userSettingsToUpload,
+            settingKeysToRemove
         });
     return uploadUserSettingsResponse?.data?.userSettings;
 }
 
 
-async function refreshUserSettings({ changedSettings, isAvoidForceChange = false }) {
+async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], isAvoidForceChange = false }) {
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
     if (!crmAuthed) {
         return;
@@ -149,7 +150,7 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
             }
         }
     }
-    userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings });
+    userSettings = await uploadUserSettings({ serverUrl: manifest.serverUrl, userSettings, settingKeysToRemove });
     await chrome.storage.local.set({ userSettings });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-update-features-flags',
@@ -182,10 +183,10 @@ async function refreshUserSettings({ changedSettings, isAvoidForceChange = false
     }
     const notificationLevelSetting = getNotificationLevelSetting(userSettings).value;
     await chrome.storage.local.set({ notificationLevelSetting });
-    const serviceManifest = await embeddableServices.getServiceManifest();
+    const service = await embeddableServices.getServiceManifest();
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',
-        service: serviceManifest
+        service
     }, '*');
     // custom tabs
     const reportPageRender = reportPage.getReportsPageRender({ userStats: null, adminStats: null, userSettings });
@@ -664,6 +665,24 @@ function getCustomSetting(userSettings, id, defaultValue) {
     }
 }
 
+function getAllPluginSettings(userSettings) {
+    const result = {};
+    for (const settingsKey in userSettings) {
+        if (settingsKey.startsWith('plugin_')) {
+            const pluginId = settingsKey.split('plugin_')[1];
+            if (userSettings[settingsKey]?.isRemoved) {
+                continue;
+            }
+            result[pluginId] = userSettings[settingsKey]?.value ?? null;
+        }
+    }
+    return result;
+}
+
+function getPluginSetting(userSettings, pluginId) {
+    return userSettings[`plugin_${pluginId}`]?.value;
+}
+
 exports.getUserReportStats = getUserReportStats;
 exports.preloadUserSettingsFromAdmin = preloadUserSettingsFromAdmin;
 exports.getUserSettingsOnline = getUserSettingsOnline;
@@ -726,3 +745,6 @@ exports.getPhoneNumberDisplayFormatTemplateSetting = getPhoneNumberDisplayFormat
 exports.getQuickAccessButtonSizeSetting = getQuickAccessButtonSizeSetting;
 
 exports.getCustomSetting = getCustomSetting;
+
+exports.getAllPluginSettings = getAllPluginSettings;
+exports.getPluginSetting = getPluginSetting;

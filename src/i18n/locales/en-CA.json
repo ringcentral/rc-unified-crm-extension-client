@@ -9,7 +9,8 @@
       "open": "Open",
       "logout": "Logout",
       "select": "Select",
-      "schedule": "Schedule"
+      "schedule": "Schedule",
+      "refresh": "Refresh"
     },
     "labels": {
       "admin": "(Admin)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "Shared with you",
       "all": "All",
       "value": "Value",
-      "customizableByUser": "Customizable by user"
+      "customizableByUser": "Customizable by user",
+      "licenseStatus": "License status"
     },
     "status": {
       "online": "Online",
@@ -73,6 +75,7 @@
     "admin": {
       "title": "Admin",
       "managedSettings": "Managed settings",
+      "plugins": "Plugins",
       "serverSideLogging": "Server side logging (Beta)"
     },
     "managedSettings": {
@@ -82,7 +85,8 @@
       "activityLogging": "Activity logging",
       "callPop": "Call-pop",
       "advancedFeatures": "Advanced features",
-      "customSettings": "Custom settings"
+      "customSettings": "Custom settings",
+      "plugins": "Plugins"
     },
     "generalSettings": {
       "title": "General",
@@ -152,7 +156,27 @@
     "multiContactPrompt": {
       "title": "Click contact to open",
       "contacts": "Contacts"
+    },
+    "pluginsManage": {
+      "title": "Plugins",
+      "installedPlugins": "Installed plugins",
+      "pluginMarket": "Available plugins"
     }
+  },
+  "plugins": {
+    "title": "Plugins",
+    "configure": "Configure",
+    "configurePage": "Configure plugin",
+    "install": "Install",
+    "uninstall": "Uninstall",
+    "enable": "Enable",
+    "enablePlugin": "Enable plugin",
+    "basicInfo": "Basic info",
+    "noPluginInstalled": "No plugin installed",
+    "by": "by {author}",
+    "pluginMarket": "Available plugins",
+    "searchPlaceholder": "Search with filters...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {
@@ -346,7 +370,8 @@
       "callLogUpdated": "Call log updated",
       "authorized": "Successfully authorized.",
       "unauthorized": "Successfully unauthorized.",
-      "openingContactPage": "Trying to find and open contact page..."
+      "openingContactPage": "Trying to find and open contact page...",
+      "loggedOut": "Successfully logged out."
     },
     "warning": {
       "callLogFailed": "Failed to save call log",
@@ -356,7 +381,8 @@
       "noContactFound": "No contact found"
     },
     "error": {
-      "wrongFormat": "Wrong format: {field}"
+      "wrongFormat": "Wrong format: {field}",
+      "logoutFailed": "Failed to log out."
     }
   },
   "conflicts": {

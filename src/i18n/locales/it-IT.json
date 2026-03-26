@@ -9,7 +9,8 @@
       "open": "Apri",
       "logout": "Esci",
       "select": "Seleziona",
-      "schedule": "Pianifica"
+      "schedule": "Pianifica",
+      "refresh": "Aggiorna"
     },
     "labels": {
       "admin": "(Admin)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "Condiviso con te",
       "all": "Tutti",
       "value": "Valore",
-      "customizableByUser": "Personalizzabile dall'utente"
+      "customizableByUser": "Personalizzabile dall'utente",
+      "licenseStatus": "Stato della licenza"
     },
     "status": {
       "online": "Online",
@@ -73,6 +75,7 @@
     "admin": {
       "title": "Admin",
       "managedSettings": "Impostazioni gestite",
+      "plugins": "Plugin",
       "serverSideLogging": "Logging lato server (Beta)"
     },
     "managedSettings": {
@@ -82,7 +85,8 @@
       "activityLogging": "Registrazione attività",
       "callPop": "Pop chiamata",
       "advancedFeatures": "Funzionalità avanzate",
-      "customSettings": "Impostazioni personalizzate"
+      "customSettings": "Impostazioni personalizzate",
+      "plugins": "Plugin"
     },
     "generalSettings": {
       "title": "Generale",
@@ -152,7 +156,27 @@
     "multiContactPrompt": {
       "title": "Clicca contatto per aprire",
       "contacts": "Contatti"
+    },
+    "pluginsManage": {
+      "title": "Plugin",
+      "installedPlugins": "Plugin installati",
+      "pluginMarket": "Plugin disponibili"
     }
+  },
+  "plugins": {
+    "title": "Plugin",
+    "configure": "Configura",
+    "configurePage": "Configura plug-in",
+    "install": "Installa",
+    "uninstall": "Disinstalla",
+    "enable": "Abilita",
+    "enablePlugin": "Abilita plug-in",
+    "basicInfo": "Informazioni di base",
+    "noPluginInstalled": "Nessun plugin installato",
+    "by": "di {author}",
+    "pluginMarket": "Plugin disponibili",
+    "searchPlaceholder": "Cerca con filtri...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {
@@ -355,7 +379,8 @@
       "noContactFound": "Nessun contatto trovato"
     },
     "error": {
-      "wrongFormat": "Formato errato: {field}"
+      "wrongFormat": "Formato errato: {field}",
+      "logoutFailed": "Disconnessione non riuscita."
     }
   },
   "conflicts": {

@@ -9,7 +9,8 @@
       "open": "Öffnen",
       "logout": "Abmelden",
       "select": "Auswählen",
-      "schedule": "Planen"
+      "schedule": "Planen",
+      "refresh": "Aktualisieren"
     },
     "labels": {
       "admin": "(Admin)",
@@ -26,7 +27,8 @@
       "sharedWithYou": "Mit Ihnen geteilt",
       "all": "Alle",
       "value": "Wert",
-      "customizableByUser": "Vom Benutzer anpassbar"
+      "customizableByUser": "Vom Benutzer anpassbar",
+      "licenseStatus": "Lizenzstatus"
     },
     "status": {
       "online": "Online",
@@ -73,6 +75,7 @@
     "admin": {
       "title": "Admin",
       "managedSettings": "Verwaltete Einstellungen",
+      "plugins": "Plugins",
       "serverSideLogging": "Serverseitige Protokollierung (Beta)"
     },
     "managedSettings": {
@@ -82,7 +85,8 @@
       "activityLogging": "Aktivitätsprotokollierung",
       "callPop": "Anruf-Pop",
       "advancedFeatures": "Erweiterte Funktionen",
-      "customSettings": "Benutzerdefinierte Einstellungen"
+      "customSettings": "Benutzerdefinierte Einstellungen",
+      "plugins": "Plugins"
     },
     "generalSettings": {
       "title": "Allgemein",
@@ -152,7 +156,27 @@
     "multiContactPrompt": {
       "title": "Kontakt zum Öffnen anklicken",
       "contacts": "Kontakte"
+    },
+    "pluginsManage": {
+      "title": "Plug-ins",
+      "installedPlugins": "Installierte Plug-ins",
+      "pluginMarket": "Verfügbare Plug-ins"
     }
+  },
+  "plugins": {
+    "title": "Plug-ins",
+    "configure": "Konfigurieren",
+    "configurePage": "Plug-in konfigurieren",
+    "install": "Installieren",
+    "uninstall": "Deinstallieren",
+    "enable": "Aktivieren",
+    "enablePlugin": "Plug-in aktivieren",
+    "basicInfo": "Grundinformationen",
+    "noPluginInstalled": "Kein Plug-in installiert",
+    "by": "von {author}",
+    "pluginMarket": "Verfügbare Plug-ins",
+    "searchPlaceholder": "Mit Filtern suchen...",
+    "explore": "Explore"
   },
   "settings": {
     "preconfigure": {
@@ -345,7 +369,8 @@
       "callLogUpdated": "Anrufprotokoll aktualisiert",
       "authorized": "Erfolgreich autorisiert.",
       "unauthorized": "Erfolgreich abgemeldet.",
-      "openingContactPage": "Versuche, die Kontaktseite zu finden und zu öffnen..."
+      "openingContactPage": "Versuche, die Kontaktseite zu finden und zu öffnen...",
+      "loggedOut": "Erfolgreich abgemeldet."
     },
     "warning": {
       "callLogFailed": "Anrufprotokoll konnte nicht gespeichert werden",
@@ -355,7 +380,8 @@
       "noContactFound": "Kein Kontakt gefunden"
     },
     "error": {
-      "wrongFormat": "Falsches Format: {field}"
+      "wrongFormat": "Falsches Format: {field}",
+      "logoutFailed": "Abmeldung fehlgeschlagen."
     }
   },
   "conflicts": {

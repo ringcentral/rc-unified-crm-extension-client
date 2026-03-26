@@ -25,6 +25,10 @@ async function onMessage({ request, sendResponse }) {
             const platform = manifest?.platforms[platformInfo?.platformName ?? ''];
             const returnedToken = await authCore.onAuthCallback({ serverUrl: manifest.serverUrl, callbackUri: request.callbackUri, useLicense: platform.useLicense });
             window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+            if (!returnedToken) {
+                sendResponse({ result: 'error' });
+                break;
+            }
             try {
                 await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
             }

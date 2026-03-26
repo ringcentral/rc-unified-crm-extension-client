@@ -105,6 +105,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
             await logCore.updateLog({
                 serverUrl: manifest.serverUrl,
                 logType: 'Call',
+                telephonySessionId: data.body.call.telephonySessionId,
                 sessionId: data.body.call.sessionId,
                 subject: data.body.formData.activityTitle ?? "",
                 note: data.body.formData.note ?? "",
