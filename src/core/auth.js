@@ -95,11 +95,17 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
         const manifest = await getManifest();
         const platform = manifest?.platforms[platformName];
         const proxyId = platform.proxyId ? platform.proxyId : '';
+        const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;
+        const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
+        const rcInfo = await indexDB.get('keyvaluepairs', 'dataFetcherV2-storageData');
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
             apiKey: apiKey ?? 'apiKey',
             platform: platformName,
             hostname,
             proxyId,
+            rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id,
+            rcExtensionId: rcInfo.value.cachedData.extensionInfo.id,
+            userEmail: rcInfo.value.cachedData.extensionInfo.contact.email,
             additionalInfo: {
                 ...formData
             }
@@ -181,7 +187,8 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
             tokenUrl: crm_extension_bullhorn_user_urls.oauthUrl + '/token',
             apiUrl: crm_extension_bullhorn_user_urls.restUrl,
             username: crm_extension_bullhornUsername,
-            rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id
+            rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id,
+            rcExtensionId: rcInfo.value.cachedData.extensionInfo.id
         });
     }
     else {
@@ -190,7 +197,8 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
             hostname,
             rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id,
             proxyId,
-            userEmail: rcInfo.value.cachedData.extensionInfo.contact.email
+            userEmail: rcInfo.value.cachedData.extensionInfo.contact.email,
+            rcExtensionId: rcInfo.value.cachedData.extensionInfo.id
         });
     }
     const oauthCallbackUrl = `${serverUrl}/oauth-callback?${params.toString()}`;
