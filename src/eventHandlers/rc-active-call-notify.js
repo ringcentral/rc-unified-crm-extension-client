@@ -21,10 +21,13 @@ async function onEvent({ data, popupContext }) {
     });
   }
   const { userSettings } = await chrome.storage.local.get('userSettings');
-  const isExtensionNumber = data.call.direction === 'Inbound' ?
-    (!!data.call.from.extensionNumber && !data.call.from.phoneNumber) :
-    (!!data.call.to.extensionNumber && !data.call.to.phoneNumber);
+  let isExtensionNumber = data.call.direction === 'Inbound' ?
+    ((!!data.call.from.extensionNumber && !data.call.from.phoneNumber) || (data.call.from.phoneNumber && data.call.from.phoneNumber.length <= 6)) :
+    ((!!data.call.to.extensionNumber && !data.call.to.phoneNumber) || (data.call.to.phoneNumber && data.call.to.phoneNumber.length <= 6));
   const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
+  if (allowExtensionNumberLogging) {
+    isExtensionNumber = false;
+  }
   const contactPhoneNumber = data.call.direction === 'Inbound' ?
     (data.call.from.phoneNumber ?? data.call.from.extensionNumber) :
     (data.call.to.phoneNumber ?? data.call.to.extensionNumber);
