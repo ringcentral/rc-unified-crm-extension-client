@@ -253,7 +253,7 @@ async function getAppointmentsPageWithRecords({
       { id: 'appointmentOpenAppointment', title: `Open ${entityTitle} Info`, icon: 'externalLink' },
       { id: 'appointmentOpenContact', title: 'Open Contact Info', icon: 'view' },
       { id: 'appointmentRefresh', title: 'Refresh', icon: 'refresh' },
-      { id: 'appointmentCancel', title: 'Cancel', icon: 'close', color: 'danger.b03' },
+      { id: 'appointmentCancel', title: 'Cancel', icon: 'delete', color: 'danger.b03' },
     ];
 
     return {

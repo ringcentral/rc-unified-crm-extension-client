@@ -25,21 +25,33 @@ function toLocalTimeValue(dt) {
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
-function buildDurationOptionsHours(maxHours = 8) {
-  const opts = [];
-  for (let h = 0; h <= maxHours; h += 1) {
-    opts.push({ const: String(h), title: `${pad2(h)} hr` });
-  }
-  return opts;
+const DURATION_REGEX = /^P(?=\d|T\d)(?:(\d+)D)?(?:T(?=\d)(?:(\d+)H)?(?:(\d+)M)?)?$/i;
+
+function durationIsoFromMinutes(totalMinutesRaw) {
+  const totalMinutes = Number(totalMinutesRaw);
+  if (!Number.isFinite(totalMinutes) || totalMinutes < 0) return 'PT0M';
+  const minutesInt = Math.floor(totalMinutes);
+  const hours = Math.floor(minutesInt / 60);
+  const minutes = minutesInt % 60;
+  const parts = [];
+  if (hours > 0) parts.push(`${hours}H`);
+  if (minutes > 0 || parts.length === 0) parts.push(`${minutes}M`);
+  return `PT${parts.join('')}`;
 }
 
-function buildDurationOptionsMinutes() {
-  return [
-    { const: '0', title: '00 min' },
-    { const: '15', title: '15 min' },
-    { const: '30', title: '30 min' },
-    { const: '45', title: '45 min' },
-  ];
+function durationMinutesFromIso(value) {
+  if (!value) return NaN;
+  const v = String(value).trim();
+  if (!v) return NaN;
+  const match = v.match(DURATION_REGEX);
+  if (!match) return NaN;
+  const [, days, hours, minutes] = match;
+  const d = Number.parseInt(days ?? '0', 10);
+  const h = Number.parseInt(hours ?? '0', 10);
+  const m = Number.parseInt(minutes ?? '0', 10);
+  if (!Number.isFinite(d) || !Number.isFinite(h) || !Number.isFinite(m)) return NaN;
+  if (d < 0 || h < 0 || m < 0) return NaN;
+  return (d * 24 * 60) + (h * 60) + m;
 }
 
 function toUtcIsoFromLocalDateTime({ date, time }) {
@@ -69,9 +81,6 @@ function getAppointmentEditPageRender({
     '';
   const start = appointment?.startTimeUtc ?? appointment?.startTime ?? appointment?.start ?? null;
   const durationMinutes = Number(appointment?.durationMinutes ?? appointment?.duration ?? 30) || 30;
-  const durationHours = Math.floor(durationMinutes / 60);
-  const durationRemainderMinutes = durationMinutes % 60;
-  const roundedMinutes = [0, 15, 30, 45].includes(durationRemainderMinutes) ? durationRemainderMinutes : 0;
 
   const entityTitle = singularizeAppointmentTitle(appointmentTitle);
   return {
@@ -93,8 +102,7 @@ function getAppointmentEditPageRender({
         summary: { type: 'string', title: 'Summary' },
         appointmentDate: { type: 'string', title: 'Date', format: 'date' },
         appointmentTime: { type: 'string', title: 'Time', format: 'time' },
-        durationHours: { type: 'string', title: 'Duration', oneOf: buildDurationOptionsHours(8) },
-        durationMinutes: { type: 'string', title: ' ', oneOf: buildDurationOptionsMinutes() },
+        duration: { type: 'string', title: 'Duration', format: 'duration' },
       },
     },
     uiSchema: {
@@ -125,21 +133,19 @@ function getAppointmentEditPageRender({
         ...(titleFieldVisible ? ['title'] : []),
         'appointmentDate',
         'appointmentTime',
-        'durationHours',
-        'durationMinutes',
+        'duration',
         'summary',
         'participantName',
       ],
       appointmentDate: { 'ui:widget': 'date' },
-      appointmentTime: { 'ui:widget': 'time' },
-      durationHours: {
-        'ui:widget': 'select',
-        'ui:options': { grid: { xs: 6, sm: 6 } },
+      // Render Time + Duration in a single row on desktop.
+      appointmentTime: {
+        'ui:widget': 'time',
+        'ui:options': { grid: { xs: 12, sm: 4 } },
       },
-      durationMinutes: {
-        'ui:widget': 'select',
-        'ui:label': false,
-        'ui:options': { grid: { xs: 6, sm: 6 } },
+      duration: {
+        'ui:widget': 'duration',
+        'ui:options': { grid: { xs: 12, sm: 8 } },
       },
     },
     formData: {
@@ -152,8 +158,7 @@ function getAppointmentEditPageRender({
       summary: appointment?.summary ?? appointment?.description ?? '',
       appointmentDate: start ? toLocalDateValue(start) : '',
       appointmentTime: start ? toLocalTimeValue(start) : '',
-      durationHours: String(durationHours),
-      durationMinutes: String(roundedMinutes),
+      duration: durationIsoFromMinutes(durationMinutes),
     },
   };
 }
@@ -166,13 +171,13 @@ async function saveAppointmentEdits({ manifest, jwtToken, formData }) {
     date: formData?.appointmentDate,
     time: formData?.appointmentTime,
   });
-  const durationMinutesTotal =
-    (Number(formData?.durationHours ?? 0) * 60) + (Number(formData?.durationMinutes ?? 0));
+  const durationMinutesTotal = durationMinutesFromIso(formData?.duration);
+  const safeDurationMinutes = Number.isFinite(durationMinutesTotal) ? durationMinutesTotal : 60;
   const patch = {
     participantName: formData?.participantName ?? '',
     summary: formData?.summary ?? '',
     startTime,
-    durationMinutes: Number.isFinite(durationMinutesTotal) ? durationMinutesTotal : 60,
+    durationMinutes: safeDurationMinutes,
   };
   const title = String(formData?.title ?? '').trim();
   if (title) patch.title = title;
