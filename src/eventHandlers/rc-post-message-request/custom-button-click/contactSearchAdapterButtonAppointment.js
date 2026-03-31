@@ -4,7 +4,9 @@ async function onEvent({ data, manifest, platform }) {
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
   try {
     const contactNameToBeSearch = data.body.button.formData.contactNameToSearch;
-    const appointmentCreateDraft = data?.body?.button?.formData?.appointmentCreateDraft ?? {};
+    const appointmentCreateDraft = data?.body?.button?.formData?.appointmentCreateDraft;
+    const appointmentEditDraft = data?.body?.button?.formData?.appointmentEditDraft;
+    const draft = appointmentEditDraft ?? appointmentCreateDraft ?? {};
     const res = await contactSearch.getCustomContactSearchData({
       serverUrl: manifest.serverUrl,
       platform,
@@ -12,8 +14,10 @@ async function onEvent({ data, manifest, platform }) {
       pageId: 'contactSearchResultAppointment',
       contactPhoneNumber: '',
       appointment: true,
+      emailMandatoryInAttendee: draft?.emailMandatoryInAttendee,
       formData: {
-        appointmentCreateDraft,
+        ...(appointmentCreateDraft ? { appointmentCreateDraft } : {}),
+        ...(appointmentEditDraft ? { appointmentEditDraft } : {}),
       },
     });
     if (!res) {

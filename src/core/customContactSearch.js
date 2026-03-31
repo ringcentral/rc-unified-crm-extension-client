@@ -11,7 +11,9 @@ function getCustomContactSearch({
     const warningFieldName = 'appointmentContactSearchWarning';
     const warningText = 'Only contacts with an email address will be shown in search results.';
     const resolvedEmailMandatoryInAttendee =
-        emailMandatoryInAttendee ?? formData?.appointmentCreateDraft?.emailMandatoryInAttendee;
+        emailMandatoryInAttendee ??
+        formData?.appointmentCreateDraft?.emailMandatoryInAttendee ??
+        formData?.appointmentEditDraft?.emailMandatoryInAttendee;
     const showEmailWarning = appointment && resolvedEmailMandatoryInAttendee !== false;
     return {
         id: 'searchContact',
@@ -80,7 +82,9 @@ async function getCustomContactSearchData({
 }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const resolvedEmailMandatoryInAttendee =
-        emailMandatoryInAttendee ?? formData?.appointmentCreateDraft?.emailMandatoryInAttendee;
+        emailMandatoryInAttendee ??
+        formData?.appointmentCreateDraft?.emailMandatoryInAttendee ??
+        formData?.appointmentEditDraft?.emailMandatoryInAttendee;
     const appointmentEmailFilter = appointment && resolvedEmailMandatoryInAttendee !== false;
     const contactRes = await axios.get(`${serverUrl}/custom/contact/search`, {
         params: {

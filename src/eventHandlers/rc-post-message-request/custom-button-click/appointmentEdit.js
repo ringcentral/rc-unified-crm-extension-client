@@ -28,9 +28,11 @@ async function onEvent({ data, manifest, platformName, listButtonItemId }) {
         returnTab: tab,
         returnSearch: String(searchWithFilters?.search ?? ''),
         returnFilter: String(searchWithFilters?.filter ?? 'All'),
+        emailMandatoryInAttendee: apptCfg?.emailMandatoryInAttendee,
       },
       appointmentTitle,
       titleFieldConfig: apptCfg?.titleField,
+      statusConfig: apptCfg?.status,
     });
     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
       type: 'rc-adapter-register-customized-page',

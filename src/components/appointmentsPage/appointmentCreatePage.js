@@ -94,6 +94,34 @@ function toUtcIsoFromLocalDateTime({ date, time }) {
   return d.toISOString();
 }
 
+function normalizeParticipantNameForSubmit(value) {
+  // Accept multi-line input but submit a single-line value.
+  return String(value ?? '')
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(', ');
+}
+
+function dedupeContactsByIdType(contacts) {
+  const map = new Map();
+  for (const c of contacts || []) {
+    const id = String(c?.id ?? '').trim();
+    const type = String(c?.type ?? '').trim();
+    const name = String(c?.name ?? '').trim();
+    if (!id) continue;
+    // Treat the same contact as unique by id (type is sometimes missing/unstable).
+    const existing = map.get(id);
+    if (!existing) {
+      map.set(id, { id, type, name });
+      continue;
+    }
+    if (!existing.type && type) existing.type = type;
+    if (!existing.name && name) existing.name = name;
+  }
+  return Array.from(map.values());
+}
+
 function getAppointmentCreatePageRender({
   initialFormData = {},
   appointmentTitle = 'Appointments',
@@ -236,9 +264,9 @@ function getAppointmentCreatePageRender({
       // Try to render a compact "Search" button inline to the right of Participant.
       // If the embeddable build ignores grid hints, it will still render as a smaller button.
       participantName: {
-        'ui:readonly': true,
+        'ui:widget': 'textarea',
         'ui:placeholder': 'Select a contact',
-        'ui:options': { grid: { xs: 8, sm: 8 } },
+        'ui:options': { rows: 3, grid: { xs: 8, sm: 8 } },
       },
       appointmentSelectParticipantButton: {
         'ui:field': 'button',
@@ -273,14 +301,15 @@ async function submitAppointmentCreate({ manifest, jwtToken, formData }) {
       name: String(c?.name ?? '').trim(),
     }))
     .filter((c) => c.id);
+  const uniqueParticipantContacts = dedupeContactsByIdType(participantContacts);
 
   const payload = {
-    participantName: formData?.participantName ?? '',
+    participantName: normalizeParticipantNameForSubmit(formData?.participantName),
     contactId: formData?.participantContactId ?? '',
     contactType: formData?.participantContactType ?? '',
     // Always pass contacts as an array (even when only one is selected).
-    contacts: participantContacts.length > 0
-      ? participantContacts
+    contacts: uniqueParticipantContacts.length > 0
+      ? uniqueParticipantContacts
       : (formData?.participantContactId
         ? [{
           id: String(formData?.participantContactId ?? ''),

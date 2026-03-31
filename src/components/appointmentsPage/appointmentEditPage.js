@@ -1,4 +1,4 @@
-import { updateAppointment } from '../../service/appointmentService';
+import { updateAppointment, updateAppointmentStatus } from '../../service/appointmentService';
 import { formatAttendeeNames, normalizeAttendees } from '../../lib/appointmentUtils';
 
 function singularizeAppointmentTitle(title) {
@@ -7,6 +7,40 @@ function singularizeAppointmentTitle(title) {
   if (/appointments$/i.test(t)) return t.replace(/appointments$/i, 'Appointment');
   if (t.length > 1 && /s$/i.test(t)) return t.slice(0, -1);
   return t;
+}
+
+function normalizeStatusKey(s) {
+  const v = String(s || '').trim().toLowerCase();
+  if (!v) return '';
+  return v;
+}
+
+function toTitleCaseStatusLabel(s) {
+  const raw = String(s || '').trim();
+  if (!raw) return '';
+  // Prefer human-provided label when it already looks like a label.
+  if (/[A-Z]/.test(raw) || raw.includes(' ')) return raw;
+  return raw
+    .replaceAll('_', ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+function buildStatusOneOf(statusConfig) {
+  const configured = Array.isArray(statusConfig?.value) ? statusConfig.value : [];
+  const values = configured.length > 0 ? configured : ['Scheduled', 'Confirmed', 'Canceled'];
+
+  const seen = new Set();
+  const oneOf = [];
+  for (const v of values) {
+    const key = normalizeStatusKey(v);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    oneOf.push({ const: key, title: toTitleCaseStatusLabel(v) });
+  }
+  return oneOf.length > 0 ? oneOf : [{ const: 'scheduled', title: 'Scheduled' }];
 }
 
 function pad2(n) {
@@ -61,28 +95,110 @@ function toUtcIsoFromLocalDateTime({ date, time }) {
   return d.toISOString();
 }
 
+function normalizeParticipantNameForSubmit(value) {
+  // Accept multi-line input but submit a single-line value.
+  return String(value ?? '')
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(', ');
+}
+
+function dedupeContactsByIdType(contacts) {
+  const map = new Map();
+  for (const c of contacts || []) {
+    const id = String(c?.id ?? '').trim();
+    const type = String(c?.type ?? '').trim();
+    const name = String(c?.name ?? '').trim();
+    if (!id) continue;
+    // Treat the same contact as unique by id (type is sometimes missing/unstable).
+    const existing = map.get(id);
+    if (!existing) {
+      map.set(id, { id, type, name });
+      continue;
+    }
+    if (!existing.type && type) existing.type = type;
+    if (!existing.name && name) existing.name = name;
+  }
+  return Array.from(map.values());
+}
+
 function getAppointmentEditPageRender({
   appointment,
   appointmentTitle = 'Appointments',
   titleFieldConfig,
+  statusConfig,
+  initialFormData,
 } = {}) {
-  const thirdPartyAppointmentIdRaw = appointment?.thirdPartyAppointmentId ?? '';
+  const titleFieldVisible = titleFieldConfig?.isVisible;
+  const titleFieldTitle = String(titleFieldConfig?.value || 'Title');
+
+  const source = initialFormData || appointment || {};
+  const thirdPartyAppointmentIdRaw = source?.thirdPartyAppointmentId ?? '';
   const thirdPartyAppointmentId =
     thirdPartyAppointmentIdRaw && String(thirdPartyAppointmentIdRaw).toUpperCase() !== 'N/A'
       ? String(thirdPartyAppointmentIdRaw)
       : '';
-  const id = thirdPartyAppointmentId || String(appointment?.id ?? appointment?.externalId ?? '');
-  const titleFieldVisible = titleFieldConfig?.isVisible;
-  const titleFieldTitle = String(titleFieldConfig?.value || 'Title');
-  const attendees = normalizeAttendees(appointment?.attendees ?? appointment?.attendeeIds);
+  const id = thirdPartyAppointmentId || String(source?.id ?? source?.externalId ?? '');
+
+  const statusVisible = statusConfig?.isVisible !== false;
+  const statusOneOf = buildStatusOneOf(statusConfig);
+  const defaultStatus = statusOneOf?.[0]?.const || 'scheduled';
+
+  const attendees = normalizeAttendees(source?.attendees ?? source?.attendeeIds);
+  const participantContactsFromAttendees = dedupeContactsByIdType(attendees.map((a) => ({
+    id: String(a?.id ?? '').trim(),
+    type: String(a?.type ?? '').trim(),
+    name: String(a?.name ?? '').trim(),
+  })).filter((c) => c.id));
+  const first = participantContactsFromAttendees[0] ?? { id: '', type: '', name: '' };
+
+  const participantContactsFromDraft = Array.isArray(source?.participantContacts)
+    ? dedupeContactsByIdType(source.participantContacts
+      .map((c) => ({
+        id: String(c?.id ?? '').trim(),
+        type: String(c?.type ?? '').trim(),
+        name: String(c?.name ?? '').trim(),
+      }))
+      .filter((c) => c.id))
+    : [];
+
   const participantName =
-    String(appointment?.participantName ?? '').trim() ||
+    (participantContactsFromDraft.length > 0
+      ? participantContactsFromDraft.map((c) => c.name).filter(Boolean).join('\n')
+      : '') ||
+    (participantContactsFromAttendees.length > 0
+      ? participantContactsFromAttendees.map((c) => c.name).filter(Boolean).join('\n')
+      : '') ||
+    String(source?.participantName ?? '').trim() ||
     formatAttendeeNames(attendees) ||
     '';
-  const start = appointment?.startTimeUtc ?? appointment?.startTime ?? appointment?.start ?? null;
-  const durationMinutes = Number(appointment?.durationMinutes ?? appointment?.duration ?? 30) || 30;
+  const start = source?.startTimeUtc ?? source?.startTime ?? source?.start ?? null;
+  const durationMinutes = Number(source?.durationMinutes ?? source?.duration ?? 30) || 30;
 
   const entityTitle = singularizeAppointmentTitle(appointmentTitle);
+  const defaults = {
+    thirdPartyAppointmentId: String(id),
+    returnTab: String(source?.returnTab ?? 'upcoming'),
+    returnSearch: String(source?.returnSearch ?? ''),
+    returnFilter: String(source?.returnFilter ?? 'All'),
+    ...(titleFieldVisible ? { title: source?.title ?? source?.subject ?? '' } : {}),
+    participantName,
+    summary: source?.summary ?? source?.description ?? '',
+    appointmentDate: start ? toLocalDateValue(start) : '',
+    appointmentTime: start ? toLocalTimeValue(start) : '',
+    duration: durationIsoFromMinutes(durationMinutes),
+    participantContacts: participantContactsFromDraft.length > 0 ? participantContactsFromDraft : participantContactsFromAttendees,
+    participantContactId: String(source?.participantContactId ?? '').trim() || first.id,
+    participantContactType: String(source?.participantContactType ?? '').trim() || first.type,
+    emailMandatoryInAttendee: source?.emailMandatoryInAttendee,
+    ...(statusVisible ? { status: normalizeStatusKey(source?.status) || defaultStatus } : {}),
+  };
+  const merged = { ...defaults, ...(initialFormData || {}) };
+  if (statusVisible) {
+    merged.status = normalizeStatusKey(merged.status) || defaultStatus;
+  }
+
   return {
     id: 'appointmentEditPage',
     title: `Edit ${entityTitle}`,
@@ -97,12 +213,28 @@ function getAppointmentEditPageRender({
         returnTab: { type: 'string', title: '' },
         returnSearch: { type: 'string', title: '' },
         returnFilter: { type: 'string', title: '' },
+        emailMandatoryInAttendee: { type: 'boolean', title: '' },
         ...(titleFieldVisible ? { title: { type: 'string', title: titleFieldTitle } } : {}),
         participantName: { type: 'string', title: 'Participant' },
+        // Hidden fields: selected contact identity
+        participantContactId: { type: 'string', title: '' },
+        participantContactType: { type: 'string', title: '' },
+        // Hidden field: multi-selected contacts (normalized list)
+        participantContacts: { type: 'array', title: '' },
+        appointmentSelectParticipantButton: { type: 'string', title: 'Search' },
         summary: { type: 'string', title: 'Summary' },
         appointmentDate: { type: 'string', title: 'Date', format: 'date' },
         appointmentTime: { type: 'string', title: 'Time', format: 'time' },
         duration: { type: 'string', title: 'Duration', format: 'duration' },
+        ...(statusVisible
+          ? {
+            status: {
+              type: 'string',
+              title: 'Status',
+              oneOf: statusOneOf,
+            },
+          }
+          : {}),
       },
     },
     uiSchema: {
@@ -114,6 +246,7 @@ function getAppointmentEditPageRender({
       returnTab: { 'ui:widget': 'hidden' },
       returnSearch: { 'ui:widget': 'hidden' },
       returnFilter: { 'ui:widget': 'hidden' },
+      emailMandatoryInAttendee: { 'ui:widget': 'hidden' },
       ...(titleFieldVisible
         ? {
           title: {
@@ -121,7 +254,25 @@ function getAppointmentEditPageRender({
           },
         }
         : {}),
-      participantName: { 'ui:readonly': true },
+      ...(statusVisible
+        ? {
+          status: { 'ui:widget': 'select' },
+        }
+        : {}),
+      participantContactId: { 'ui:widget': 'hidden' },
+      participantContactType: { 'ui:widget': 'hidden' },
+      participantContacts: { 'ui:widget': 'hidden' },
+      participantName: {
+        'ui:widget': 'textarea',
+        'ui:placeholder': 'Select a contact',
+        'ui:options': { rows: 3, grid: { xs: 8, sm: 8 } },
+      },
+      appointmentSelectParticipantButton: {
+        'ui:field': 'button',
+        'ui:variant': 'plain',
+        'ui:fullWidth': false,
+        'ui:options': { grid: { xs: 4, sm: 4 } },
+      },
       summary: {
         'ui:widget': 'textarea',
       },
@@ -130,12 +281,18 @@ function getAppointmentEditPageRender({
         'returnTab',
         'returnSearch',
         'returnFilter',
+        'emailMandatoryInAttendee',
         ...(titleFieldVisible ? ['title'] : []),
         'appointmentDate',
         'appointmentTime',
         'duration',
         'summary',
         'participantName',
+        'appointmentSelectParticipantButton',
+        'participantContactId',
+        'participantContactType',
+        'participantContacts',
+        ...(statusVisible ? ['status'] : []),
       ],
       appointmentDate: { 'ui:widget': 'date' },
       // Render Time + Duration in a single row on desktop.
@@ -148,18 +305,7 @@ function getAppointmentEditPageRender({
         'ui:options': { grid: { xs: 12, sm: 8 } },
       },
     },
-    formData: {
-      thirdPartyAppointmentId: String(id),
-      returnTab: String(appointment?.returnTab ?? 'upcoming'),
-      returnSearch: String(appointment?.returnSearch ?? ''),
-      returnFilter: String(appointment?.returnFilter ?? 'All'),
-      ...(titleFieldVisible ? { title: appointment?.title ?? appointment?.subject ?? '' } : {}),
-      participantName,
-      summary: appointment?.summary ?? appointment?.description ?? '',
-      appointmentDate: start ? toLocalDateValue(start) : '',
-      appointmentTime: start ? toLocalTimeValue(start) : '',
-      duration: durationIsoFromMinutes(durationMinutes),
-    },
+    formData: merged,
   };
 }
 
@@ -173,20 +319,67 @@ async function saveAppointmentEdits({ manifest, jwtToken, formData }) {
   });
   const durationMinutesTotal = durationMinutesFromIso(formData?.duration);
   const safeDurationMinutes = Number.isFinite(durationMinutesTotal) ? durationMinutesTotal : 60;
-  const patch = {
-    participantName: formData?.participantName ?? '',
+  const participantContactsRaw = Array.isArray(formData?.participantContacts)
+    ? formData.participantContacts
+    : [];
+  const participantContacts = participantContactsRaw
+    .map((c) => ({
+      id: String(c?.id ?? '').trim(),
+      type: String(c?.type ?? '').trim(),
+      name: String(c?.name ?? '').trim(),
+    }))
+    .filter((c) => c.id);
+  const uniqueParticipantContacts = dedupeContactsByIdType(participantContacts);
+  const patchBase = {
+    participantName: normalizeParticipantNameForSubmit(formData?.participantName),
     summary: formData?.summary ?? '',
     startTime,
     durationMinutes: safeDurationMinutes,
+    ...(formData?.participantContactId ? { contactId: String(formData.participantContactId) } : {}),
+    ...(formData?.participantContactType ? { contactType: String(formData.participantContactType) } : {}),
+    ...(uniqueParticipantContacts.length > 0
+      ? {
+        // Some backends use "attendees" while others use "contacts".
+        contacts: uniqueParticipantContacts,
+        attendees: uniqueParticipantContacts,
+        attendeeIds: uniqueParticipantContacts.map((c) => c.id),
+      }
+      : {}),
   };
   const title = String(formData?.title ?? '').trim();
-  if (title) patch.title = title;
-  return await updateAppointment({
+  if (title) patchBase.title = title;
+
+  const normalizedStatus = formData?.status ? normalizeStatusKey(formData.status) : '';
+  const patchWithStatus = normalizedStatus ? { ...patchBase, status: normalizedStatus } : patchBase;
+
+  // Try to save everything in a single PATCH first.
+  const saved = await updateAppointment({
     serverUrl: manifest.serverUrl,
     jwtToken,
     appointmentId,
-    patch,
+    patch: patchWithStatus,
   });
+  if (saved) return saved;
+
+  // Fallback: some backends may not accept status in PATCH; try splitting the calls.
+  if (normalizedStatus) {
+    const savedCore = await updateAppointment({
+      serverUrl: manifest.serverUrl,
+      jwtToken,
+      appointmentId,
+      patch: patchBase,
+    });
+    if (!savedCore) return null;
+    const statusSaved = await updateAppointmentStatus({
+      serverUrl: manifest.serverUrl,
+      jwtToken,
+      appointmentId,
+      status: normalizedStatus,
+    });
+    return statusSaved || savedCore;
+  }
+
+  return null;
 }
 
 exports.getAppointmentEditPageRender = getAppointmentEditPageRender;
