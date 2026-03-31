@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { showNotification } from '../lib/util';
+import { getRcInfo, showNotification } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest } from '../service/manifestService';
 import { trackCrmLogin, trackCrmLogout } from '../lib/analytics';
@@ -56,7 +56,22 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
             }
             break;
         case 'apiKey':
-            const authPageRender = authPage.getAuthPageRender({ manifest, platformName });
+            const storedPlatformInfo = await chrome.storage.local.get('platform-info');
+            const sharedAuthState = await getSharedAuthState({
+                serverUrl: manifest.serverUrl,
+                platformName,
+                connectorId: storedPlatformInfo?.['platform-info']?.connectorId ?? null,
+                isPrivate: !!storedPlatformInfo?.['platform-info']?.isPrivate
+            });
+            if (sharedAuthState?.allRequiredFieldsSatisfied) {
+                await apiKeyLogin({ serverUrl: manifest.serverUrl, useLicense: platform.useLicense, formData: {} });
+                break;
+            }
+            const authPageRender = authPage.getAuthPageRender({
+                manifest,
+                platformName,
+                visibleFieldConsts: sharedAuthState?.visibleFieldConsts ?? null
+            });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
                 page: authPageRender
@@ -66,6 +81,21 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
                 path: `/customized/${authPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
             }, '*');
             break;
+    }
+}
+
+async function getSharedAuthState({ serverUrl, platformName, connectorId = null, isPrivate = false, rcInfo = null, rcExtensionId = null, rcAccountId = null }) {
+    try {
+        const resolvedRcInfo = rcInfo ?? await getRcInfo();
+        const resolvedRcAccountId = rcAccountId ?? resolvedRcInfo?.value?.cachedData?.extensionInfo?.account?.id;
+        const resolvedRcExtensionId = rcExtensionId ?? resolvedRcInfo?.value?.cachedData?.extensionInfo?.id;
+        const response = await axios.get(
+            `${serverUrl}/apiKeySharedAuthState?platform=${encodeURIComponent(platformName)}&connectorId=${encodeURIComponent(connectorId ?? '')}&isPrivate=${encodeURIComponent(isPrivate ? 'true' : 'false')}&rcAccountId=${encodeURIComponent(resolvedRcAccountId ?? '')}&rcExtensionId=${encodeURIComponent(resolvedRcExtensionId ?? '')}`
+        );
+        return response.data;
+    }
+    catch (error) {
+        return null;
     }
 }
 
@@ -92,17 +122,19 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
         const platformInfo = await chrome.storage.local.get('platform-info');
         const platformName = platformInfo['platform-info'].platformName;
         const hostname = platformInfo['platform-info'].hostname;
+        const connectorId = platformInfo['platform-info'].connectorId;
+        const isPrivate = !!platformInfo['platform-info'].isPrivate;
         const manifest = await getManifest();
         const platform = manifest?.platforms[platformName];
         const proxyId = platform.proxyId ? platform.proxyId : '';
-        const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;
-        const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
-        const rcInfo = await indexDB.get('keyvaluepairs', 'dataFetcherV2-storageData');
+        const rcInfo = await getRcInfo();
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
-            apiKey: apiKey ?? 'apiKey',
+            apiKey,
             platform: platformName,
             hostname,
             proxyId,
+            connectorId,
+            isPrivate,
             rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id,
             rcExtensionId: rcInfo.value.cachedData.extensionInfo.id,
             userEmail: rcInfo.value.cachedData.extensionInfo.contact.email,
@@ -281,6 +313,7 @@ exports.handleThirdPartyOAuthWindow = handleThirdPartyOAuthWindow;
 exports.onUserClickConnectButton = onUserClickConnectButton;
 exports.checkAndOpenPlatformSelectionPage = checkAndOpenPlatformSelectionPage;
 exports.apiKeyLogin = apiKeyLogin;
+exports.getSharedAuthState = getSharedAuthState;
 exports.onAuthCallback = onAuthCallback;
 exports.unAuthorize = unAuthorize;
 exports.checkAuth = checkAuth;

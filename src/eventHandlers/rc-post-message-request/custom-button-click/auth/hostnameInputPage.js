@@ -17,7 +17,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const inputUrlObj = new URL(inputUrl);
     const inputHostname = inputUrlObj.hostname;
     await chrome.storage.local.set({
-        ['platform-info']: { platformName: data.body.button.formData.platformId, platformDisplayName: data.body.button.formData.platformDisplayName, hostname: inputHostname }
+        ['platform-info']: {
+            platformName: data.body.button.formData.platformId,
+            platformDisplayName: data.body.button.formData.platformDisplayName,
+            hostname: inputHostname,
+            connectorId: data.body.button.formData.connectorId ?? '',
+            isPrivate: !!data.body.button.formData.isPrivate
+        }
     });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',

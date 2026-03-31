@@ -46,6 +46,9 @@ function setPluginAsyncTaskCheck() {
 
 async function pluginAsyncTaskCheck() {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    if (!rcUnifiedCrmExtJwt) {
+        return;
+    }
     const manifest = await getManifest();
     const pluginAsyncTaskIds = await getPluginAsyncTaskIds();
     const pluginTaskRes = await axios.post(`${manifest.serverUrl}/pluginAsyncTask?jwtToken=${rcUnifiedCrmExtJwt}`, {

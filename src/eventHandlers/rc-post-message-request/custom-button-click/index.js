@@ -42,6 +42,8 @@ import logRecordSubmissionPageHandler from './errorLogging/logRecordSubmit';
 import saveServerSideLoggingButtonHandler from './adminSettings/saveServerSideLogging';
 import doNotLogNumbersSubmitButtonHandler from './adminSettings/doNotLogNumbersSubmit';
 import generalHandler from './adminSettings/adminSettingsFormSubmit';
+import sharedAuthOrgPageHandler from './adminSettings/sharedAuthOrgPage';
+import sharedAuthUserPageHandler from './adminSettings/sharedAuthUserPage';
 
 import googleSheetsConfigHandler from './googleSheets/googleSheetsConfig';
 import newSheetButtonHandler from './googleSheets/newSheetButton';
@@ -267,6 +269,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'phoneNumberFormatPage':
         case 'clickToDialEmbedPage':
             await generalHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+            break;
+        case 'sharedAuthOrgPage':
+            await sharedAuthOrgPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'sharedAuthUserPage':
+            await sharedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
     }
     if (data.body.button.id.startsWith('link-button-')) {

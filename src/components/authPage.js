@@ -1,17 +1,21 @@
 import { t } from '../i18n';
 
-function getAuthPageRender({ manifest, platformName }) {
+function getAuthPageRender({ manifest, platformName, visibleFieldConsts = null, warningMessage = '' }) {
     const authPage = manifest.platforms[platformName].auth.apiKey.page;
     const pageTitle = authPage.title;
-    const required = authPage.content.filter(c => c.required).map(c => { return c.const });
-    const warning = authPage.warning ? {
+    const filteredContent = visibleFieldConsts
+        ? authPage.content.filter(c => visibleFieldConsts.includes(c.const))
+        : authPage.content;
+    const required = filteredContent.filter(c => c.required).map(c => { return c.const });
+    const warningText = warningMessage || authPage.warning;
+    const warning = warningText ? {
         warning: {
             type: 'string',
-            description: authPage.warning,
+            description: warningText,
         }
     } : {};
     let content = {};
-    for (const c of authPage.content) {
+    for (const c of filteredContent) {
         content[c.const] = {
             title: c.title,
             type: c.type,
@@ -27,13 +31,13 @@ function getAuthPageRender({ manifest, platformName }) {
             "ui:severity": "warning",  // "warning", "info", "error", "success"
         }
     };
-    for (const c of authPage.content) {
+    for (const c of filteredContent) {
         if (c.uiSchema) {
             uiSchema[c.const] = c.uiSchema;
         }
     }
     let formData = {};
-    for (const c of authPage.content) {
+    for (const c of filteredContent) {
         if (c.defaultValue) {
             formData[c.const] = c.defaultValue;
         }

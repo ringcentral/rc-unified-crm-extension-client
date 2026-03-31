@@ -487,6 +487,35 @@ async function reinitializeUserMapping({ serverUrl }) {
     return reinitializeUserMappingResp.data;
 }
 
+async function getSharedAuthSettings({ serverUrl }) {
+    const rcAccessToken = getRcAccessToken();
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const platformInfo = await getPlatformInfo();
+    const response = await axios.get(
+        `${serverUrl}/admin/sharedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+    );
+    await chrome.storage.local.set({ sharedAuthSettings: response.data });
+    return response.data;
+}
+
+async function saveSharedAuthSettings({ serverUrl, scope, values, rcExtensionId, rcUserName, fieldsToRemove = [] }) {
+    const rcAccessToken = getRcAccessToken();
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const platformInfo = await getPlatformInfo();
+    const response = await axios.post(
+        `${serverUrl}/admin/sharedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        {
+            scope,
+            values,
+            rcExtensionId,
+            rcUserName,
+            fieldsToRemove
+        }
+    );
+    await getSharedAuthSettings({ serverUrl });
+    return response.data;
+}
+
 exports.getAdminSettings = getAdminSettings;
 exports.uploadAdminSettings = uploadAdminSettings;
 exports.refreshAdminSettings = refreshAdminSettings;
@@ -502,3 +531,5 @@ exports.getUserMapping = getUserMapping;
 exports.getUserExtensionReportStats = getUserExtensionReportStats;
 exports.getAdminReportStats = getAdminReportStats;
 exports.reinitializeUserMapping = reinitializeUserMapping;
+exports.getSharedAuthSettings = getSharedAuthSettings;
+exports.saveSharedAuthSettings = saveSharedAuthSettings;
