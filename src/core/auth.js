@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getRcInfo, showNotification } from '../lib/util';
+import { getRcAccessToken, getRcInfo, showNotification } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest } from '../service/manifestService';
 import { trackCrmLogin, trackCrmLogout } from '../lib/analytics';
@@ -104,11 +104,12 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
 
 async function getSharedAuthState({ serverUrl, platformName, connectorId = null, isPrivate = false, rcInfo = null, rcExtensionId = null, rcAccountId = null }) {
     try {
+        const rcAccessToken = getRcAccessToken();
         const resolvedRcInfo = rcInfo ?? await getRcInfo();
         const resolvedRcAccountId = rcAccountId ?? resolvedRcInfo?.value?.cachedData?.extensionInfo?.account?.id;
         const resolvedRcExtensionId = rcExtensionId ?? resolvedRcInfo?.value?.cachedData?.extensionInfo?.id;
         const response = await axios.get(
-            `${serverUrl}/apiKeySharedAuthState?platform=${encodeURIComponent(platformName)}&connectorId=${encodeURIComponent(connectorId ?? '')}&isPrivate=${encodeURIComponent(isPrivate ? 'true' : 'false')}&rcAccountId=${encodeURIComponent(resolvedRcAccountId ?? '')}&rcExtensionId=${encodeURIComponent(resolvedRcExtensionId ?? '')}`
+            `${serverUrl}/apiKeySharedAuthState?platform=${encodeURIComponent(platformName)}&connectorId=${encodeURIComponent(connectorId ?? '')}&isPrivate=${encodeURIComponent(isPrivate ? 'true' : 'false')}&rcAccountId=${encodeURIComponent(resolvedRcAccountId ?? '')}&rcExtensionId=${encodeURIComponent(resolvedRcExtensionId ?? '')}&rcAccessToken=${encodeURIComponent(rcAccessToken ?? '')}`
         );
         return response.data;
     }
@@ -146,11 +147,13 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
         const platform = manifest?.platforms[platformName];
         const proxyId = platform.proxyId ? platform.proxyId : '';
         const rcInfo = await getRcInfo();
+        const rcAccessToken = getRcAccessToken();
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
             apiKey,
             platform: platformName,
             hostname,
             proxyId,
+            rcAccessToken,
             connectorId,
             isPrivate,
             rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id,
