@@ -1,10 +1,11 @@
 import sharedAuthOrgPage from '../../../../../components/admin/sharedAuthOrgPage';
 
-async function onEvent() {
+async function onEvent({ data }) {
     const { sharedAuthSettings } = await chrome.storage.local.get({ sharedAuthSettings: null });
     const page = sharedAuthOrgPage.getSharedAuthOrgPageRender({
         orgFields: sharedAuthSettings?.orgFields ?? [],
-        orgValues: sharedAuthSettings?.orgValues ?? {}
+        orgValues: sharedAuthSettings?.orgValues ?? {},
+        formData: data.body.formData
     });
     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',

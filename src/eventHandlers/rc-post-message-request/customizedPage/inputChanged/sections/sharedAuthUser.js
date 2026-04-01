@@ -8,7 +8,8 @@ async function onEvent() {
         userFields: sharedAuthSettings?.userFields ?? [],
         userValues: sharedAuthSettings?.userValues ?? [],
         rcExtensions,
-        selectedRcExtensionId: rcExtensions[0]?.id ?? ''
+        searchWord: '',
+        filter: 'All'
     });
     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',

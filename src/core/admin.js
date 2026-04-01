@@ -498,7 +498,15 @@ async function getSharedAuthSettings({ serverUrl }) {
     return response.data;
 }
 
-async function saveSharedAuthSettings({ serverUrl, scope, values, rcExtensionId, rcUserName, fieldsToRemove = [] }) {
+async function saveSharedAuthSettings({
+    serverUrl,
+    scope,
+    values,
+    rcExtensionId,
+    rcUserName,
+    fieldsToRemove = [],
+    refreshAfterSave = true
+}) {
     const rcAccessToken = getRcAccessToken();
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
@@ -512,7 +520,9 @@ async function saveSharedAuthSettings({ serverUrl, scope, values, rcExtensionId,
             fieldsToRemove
         }
     );
-    await getSharedAuthSettings({ serverUrl });
+    if (refreshAfterSave) {
+        await getSharedAuthSettings({ serverUrl });
+    }
     return response.data;
 }
 

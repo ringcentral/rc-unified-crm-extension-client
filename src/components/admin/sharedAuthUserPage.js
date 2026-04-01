@@ -1,40 +1,54 @@
-function getSharedAuthUserPageRender({ userFields = [], userValues = [], rcExtensions = [], selectedRcExtensionId = '' }) {
-    const selectedEntry = userValues.find(user => user.rcExtensionId === selectedRcExtensionId) ?? null;
-    const properties = {
-        rcExtensionId: {
-            type: 'string',
-            title: 'RingCentral user',
-            oneOf: rcExtensions.map(extension => ({
-                const: extension.id,
-                title: extension.name || `${extension.firstName ?? ''} ${extension.lastName ?? ''}`.trim() || extension.id
-            }))
-        }
-    };
-    const uiSchema = {
-        submitButtonOptions: {
-            submitText: 'Save'
-        }
-    };
-    const formData = {
-        rcExtensionId: selectedRcExtensionId
-    };
-
-    userFields.forEach(field => {
-        const storedValue = selectedEntry?.fields?.[field.const] ?? {};
-        properties[field.const] = {
-            title: field.title,
-            type: field.type,
-            description: storedValue.hasValue && field.confidential
-                ? `${field.description ?? ''}${field.description ? ' ' : ''}Stored value is hidden. Enter a new value to replace it.`
-                : field.description
+function getSharedAuthUserSummary({ userFields = [], userEntry = null }) {
+    const configuredFields = userFields.filter((field) => userEntry?.fields?.[field.const]?.hasValue);
+    if (configuredFields.length === 0) {
+        return {
+            description: 'No shared auth fields configured',
+            meta: 'Not configured'
         };
-        if (field.uiSchema) {
-            uiSchema[field.const] = field.uiSchema;
-        }
-        if (storedValue.hasValue && !field.confidential) {
-            formData[field.const] = storedValue.value;
-        }
+    }
+    const configuredTitles = configuredFields.map((field) => field.title || field.const);
+    return {
+        description: configuredTitles.join(', '),
+        meta: 'Configured'
+    };
+}
+
+function getSharedAuthUserPageRender({
+    userFields = [],
+    userValues = [],
+    rcExtensions = [],
+    searchWord = '',
+    filter = 'All'
+}) {
+    let sharedAuthUserList = rcExtensions.map((extension) => {
+        const extensionName = extension.name || `${extension.firstName ?? ''} ${extension.lastName ?? ''}`.trim() || extension.id;
+        const userEntry = userValues.find((user) => user.rcExtensionId === extension.id) ?? null;
+        const summary = getSharedAuthUserSummary({ userFields, userEntry });
+        return {
+            const: extension.id,
+            title: extensionName,
+            description: summary.description,
+            meta: summary.meta,
+            actions: [
+                {
+                    id: 'sharedAuthUserEdit',
+                    title: 'Edit',
+                    icon: 'edit'
+                }
+            ]
+        };
     });
+
+    if (searchWord) {
+        const loweredSearchWord = searchWord.toLowerCase();
+        sharedAuthUserList = sharedAuthUserList.filter((item) => (
+            item.title.toLowerCase().includes(loweredSearchWord) ||
+            item.description.toLowerCase().includes(loweredSearchWord)
+        ));
+    }
+    if (filter !== 'All') {
+        sharedAuthUserList = sharedAuthUserList.filter((item) => item.meta === filter);
+    }
 
     return {
         id: 'sharedAuthUserPage',
@@ -42,11 +56,57 @@ function getSharedAuthUserPageRender({ userFields = [], userValues = [], rcExten
         type: 'page',
         schema: {
             type: 'object',
-            required: ['rcExtensionId'],
-            properties
+            properties: {
+                userSearch: {
+                    type: 'object',
+                    properties: {
+                        search: {
+                            type: 'string',
+                            title: 'Search'
+                        },
+                        filter: {
+                            type: 'string',
+                            title: 'Filter'
+                        }
+                    }
+                },
+                sharedAuthUserTitle: {
+                    type: 'string',
+                    description: 'RingCentral users'
+                },
+                sharedAuthUserList: {
+                    type: 'string',
+                    title: 'User shared authentication',
+                    oneOf: sharedAuthUserList
+                }
+            }
         },
-        uiSchema,
-        formData
+        uiSchema: {
+            userSearch: {
+                'ui:field': 'search',
+                'ui:placeholder': 'Search with filters...',
+                'ui:filters': [
+                    'All',
+                    'Configured',
+                    'Not configured'
+                ]
+            },
+            sharedAuthUserList: {
+                'ui:field': 'list'
+            },
+            sharedAuthUserTitle: {
+                'ui:field': 'typography',
+                'ui:variant': 'body2',
+            }
+        },
+        formData: {
+            allRcExtensions: rcExtensions,
+            allUserValues: userValues,
+            userSearch: {
+                search: searchWord,
+                filter
+            }
+        }
     };
 }
 

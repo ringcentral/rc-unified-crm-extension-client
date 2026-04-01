@@ -16,6 +16,7 @@ import logRecordSubmissionPageHandler from './pages/logRecordSubmissionPage';
 import adminGoogleSheetsPageHandler from './pages/adminGoogleSheetsPage';
 import pluginAdminSettingsPageHandler from './pages/pluginAdminSettingsPage';
 import sharedAuthUserPageHandler from './pages/sharedAuthUserPage';
+import sharedAuthUserEditPageHandler from './pages/sharedAuthUserEditPage';
 
 import generalSettingsHandler from './sections/generalSettings';
 import managedSettingsHandler from './sections/managedSettings';
@@ -106,6 +107,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'sharedAuthUserPage':
             await sharedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'sharedAuthUserEditPage':
+            await sharedAuthUserEditPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'installedPluginListPage':
             await selectPluginHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

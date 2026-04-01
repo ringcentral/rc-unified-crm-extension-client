@@ -11,6 +11,8 @@ import { tryConnectToBullhorn } from '../misc/bullhorn';
 import { t } from '../i18n';
 import { getPluginConfigurePageRender } from '../components/pluginConfigurePage';
 import pluginService from '../service/pluginService';
+import adminCore from './admin';
+import userCore from './user';
 
 function handleThirdPartyOAuthWindow(oAuthUri) {
     chrome.runtime.sendMessage({
@@ -56,6 +58,7 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
             }
             break;
         case 'apiKey':
+            window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
             const storedPlatformInfo = await chrome.storage.local.get('platform-info');
             const sharedAuthState = await getSharedAuthState({
                 serverUrl: manifest.serverUrl,
@@ -64,7 +67,21 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
                 isPrivate: !!storedPlatformInfo?.['platform-info']?.isPrivate
             });
             if (sharedAuthState?.allRequiredFieldsSatisfied) {
-                await apiKeyLogin({ serverUrl: manifest.serverUrl, useLicense: platform.useLicense, formData: {} });
+                const returnedToken = await apiKeyLogin({ serverUrl: manifest.serverUrl, useLicense: platform.useLicense, formData: {} });
+                const crmAuthed = !!returnedToken;
+                await chrome.storage.local.set({ crmAuthed });
+                if (crmAuthed) {
+                    await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
+                    const adminSettingResults = await adminCore.refreshAdminSettings();
+                    if (adminSettingResults.adminSettings) {
+                        await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, jwtToken: returnedToken });
+                    }
+                }
+                // exit from platform selection page
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: 'goBack',
+                }, '*');
                 break;
             }
             const authPageRender = authPage.getAuthPageRender({
@@ -80,6 +97,7 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
                 type: 'rc-adapter-navigate-to',
                 path: `/customized/${authPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
             }, '*');
+            window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
             break;
     }
 }

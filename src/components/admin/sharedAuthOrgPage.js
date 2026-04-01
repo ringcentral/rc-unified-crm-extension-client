@@ -1,14 +1,17 @@
-function getSharedAuthOrgPageRender({ orgFields = [], orgValues = {} }) {
+function getSharedAuthOrgPageRender({ orgFields = [], orgValues = {}, formData = {} }) {
     const properties = {};
     const uiSchema = {
         submitButtonOptions: {
             submitText: 'Save'
         }
     };
-    const formData = {};
+    const nextFormData = {
+        ...formData
+    };
 
     orgFields.forEach(field => {
         const storedValue = orgValues[field.const] ?? {};
+        const hasFormValue = Object.prototype.hasOwnProperty.call(formData, field.const);
         properties[field.const] = {
             title: field.title,
             type: field.type,
@@ -16,11 +19,12 @@ function getSharedAuthOrgPageRender({ orgFields = [], orgValues = {} }) {
                 ? `${field.description ?? ''}${field.description ? ' ' : ''}Stored value is hidden. Enter a new value to replace it.`
                 : field.description
         };
-        if (field.uiSchema) {
-            uiSchema[field.const] = field.uiSchema;
+        uiSchema[field.const] = field.uiSchema ?? {};
+        if (field.confidential && storedValue.hasValue) {
+            uiSchema[field.const]['ui:widget'] = 'password';
         }
-        if (storedValue.hasValue && !field.confidential) {
-            formData[field.const] = storedValue.value;
+        if (!hasFormValue && storedValue.hasValue) {
+            nextFormData[field.const] = storedValue.value;
         }
     });
 
@@ -33,7 +37,7 @@ function getSharedAuthOrgPageRender({ orgFields = [], orgValues = {} }) {
             properties
         },
         uiSchema,
-        formData
+        formData: nextFormData
     };
 }
 

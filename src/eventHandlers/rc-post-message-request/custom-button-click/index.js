@@ -44,6 +44,7 @@ import doNotLogNumbersSubmitButtonHandler from './adminSettings/doNotLogNumbersS
 import generalHandler from './adminSettings/adminSettingsFormSubmit';
 import sharedAuthOrgPageHandler from './adminSettings/sharedAuthOrgPage';
 import sharedAuthUserPageHandler from './adminSettings/sharedAuthUserPage';
+import sharedAuthUserEditHandler from './adminSettings/sharedAuthUserEdit';
 
 import googleSheetsConfigHandler from './googleSheets/googleSheetsConfig';
 import newSheetButtonHandler from './googleSheets/newSheetButton';
@@ -273,7 +274,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'sharedAuthOrgPage':
             await sharedAuthOrgPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
+        case 'sharedAuthUserEdit':
+            await sharedAuthUserEditHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
         case 'sharedAuthUserPage':
+            await sharedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'sharedAuthUserEditPage':
             await sharedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
     }
