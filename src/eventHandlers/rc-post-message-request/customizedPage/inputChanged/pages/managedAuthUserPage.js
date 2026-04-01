@@ -1,12 +1,12 @@
-import sharedAuthUserPage from '../../../../../components/admin/sharedAuthUserPage';
+import managedAuthUserPage from '../../../../../components/admin/managedAuthUserPage';
 import { getRcContactInfo } from '../../../../../lib/util';
 
 async function onEvent({ data }) {
-    const { sharedAuthSettings } = await chrome.storage.local.get({ sharedAuthSettings: null });
+    const { managedAuthSettings } = await chrome.storage.local.get({ managedAuthSettings: null });
     const rcExtensions = (await getRcContactInfo()).filter(rc => rc.type === 'User' || rc.type === 'Department');
-    const page = sharedAuthUserPage.getSharedAuthUserPageRender({
-        userFields: sharedAuthSettings?.userFields ?? [],
-        userValues: sharedAuthSettings?.userValues ?? [],
+    const page = managedAuthUserPage.getManagedAuthUserPageRender({
+        userFields: managedAuthSettings?.userFields ?? [],
+        userValues: managedAuthSettings?.userValues ?? [],
         rcExtensions,
         searchWord: data.body.formData?.userSearch?.search ?? '',
         filter: data.body.formData?.userSearch?.filter ?? 'All'

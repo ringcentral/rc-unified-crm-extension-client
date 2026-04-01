@@ -1,8 +1,8 @@
-function getSharedAuthUserSummary({ userFields = [], userEntry = null }) {
+function getManagedAuthUserSummary({ userFields = [], userEntry = null }) {
     const configuredFields = userFields.filter((field) => userEntry?.fields?.[field.const]?.hasValue);
     if (configuredFields.length === 0) {
         return {
-            description: 'No shared auth fields configured',
+            description: 'No managed auth fields configured',
             meta: 'Not configured'
         };
     }
@@ -13,17 +13,17 @@ function getSharedAuthUserSummary({ userFields = [], userEntry = null }) {
     };
 }
 
-function getSharedAuthUserPageRender({
+function getManagedAuthUserPageRender({
     userFields = [],
     userValues = [],
     rcExtensions = [],
     searchWord = '',
     filter = 'All'
 }) {
-    let sharedAuthUserList = rcExtensions.map((extension) => {
+    let managedAuthUserList = rcExtensions.map((extension) => {
         const extensionName = extension.name || `${extension.firstName ?? ''} ${extension.lastName ?? ''}`.trim() || extension.id;
         const userEntry = userValues.find((user) => user.rcExtensionId === extension.id) ?? null;
-        const summary = getSharedAuthUserSummary({ userFields, userEntry });
+        const summary = getManagedAuthUserSummary({ userFields, userEntry });
         return {
             const: extension.id,
             title: extensionName,
@@ -31,7 +31,7 @@ function getSharedAuthUserPageRender({
             meta: summary.meta,
             actions: [
                 {
-                    id: 'sharedAuthUserEdit',
+                    id: 'managedAuthUserEdit',
                     title: 'Edit',
                     icon: 'edit'
                 }
@@ -41,18 +41,18 @@ function getSharedAuthUserPageRender({
 
     if (searchWord) {
         const loweredSearchWord = searchWord.toLowerCase();
-        sharedAuthUserList = sharedAuthUserList.filter((item) => (
+        managedAuthUserList = managedAuthUserList.filter((item) => (
             item.title.toLowerCase().includes(loweredSearchWord) ||
             item.description.toLowerCase().includes(loweredSearchWord)
         ));
     }
     if (filter !== 'All') {
-        sharedAuthUserList = sharedAuthUserList.filter((item) => item.meta === filter);
+        managedAuthUserList = managedAuthUserList.filter((item) => item.meta === filter);
     }
 
     return {
-        id: 'sharedAuthUserPage',
-        title: 'User shared authentication',
+        id: 'managedAuthUserPage',
+        title: 'User managed authentication',
         type: 'page',
         schema: {
             type: 'object',
@@ -70,14 +70,14 @@ function getSharedAuthUserPageRender({
                         }
                     }
                 },
-                sharedAuthUserTitle: {
+                managedAuthUserTitle: {
                     type: 'string',
                     description: 'RingCentral users'
                 },
-                sharedAuthUserList: {
+                managedAuthUserList: {
                     type: 'string',
-                    title: 'User shared authentication',
-                    oneOf: sharedAuthUserList
+                    title: 'User managed authentication',
+                    oneOf: managedAuthUserList
                 }
             }
         },
@@ -91,10 +91,10 @@ function getSharedAuthUserPageRender({
                     'Not configured'
                 ]
             },
-            sharedAuthUserList: {
+            managedAuthUserList: {
                 'ui:field': 'list'
             },
-            sharedAuthUserTitle: {
+            managedAuthUserTitle: {
                 'ui:field': 'typography',
                 'ui:variant': 'body2',
             }
@@ -110,4 +110,4 @@ function getSharedAuthUserPageRender({
     };
 }
 
-exports.getSharedAuthUserPageRender = getSharedAuthUserPageRender;
+exports.getManagedAuthUserPageRender = getManagedAuthUserPageRender;

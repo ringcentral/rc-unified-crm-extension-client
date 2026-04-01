@@ -1,10 +1,10 @@
-import sharedAuthOrgPage from '../../../../../components/admin/sharedAuthOrgPage';
+import managedAuthOrgPage from '../../../../../components/admin/managedAuthOrgPage';
 
 async function onEvent({ data }) {
-    const { sharedAuthSettings } = await chrome.storage.local.get({ sharedAuthSettings: null });
-    const page = sharedAuthOrgPage.getSharedAuthOrgPageRender({
-        orgFields: sharedAuthSettings?.orgFields ?? [],
-        orgValues: sharedAuthSettings?.orgValues ?? {},
+    const { managedAuthSettings } = await chrome.storage.local.get({ managedAuthSettings: null });
+    const page = managedAuthOrgPage.getManagedAuthOrgPageRender({
+        orgFields: managedAuthSettings?.orgFields ?? [],
+        orgValues: managedAuthSettings?.orgValues ?? {},
         formData: data.body.formData
     });
     document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({

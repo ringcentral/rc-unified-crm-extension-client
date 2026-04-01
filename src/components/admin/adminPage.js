@@ -4,7 +4,7 @@ import adminIconDark from '../../images/adminIcon_dark.png';
 import { t } from '../../i18n';
 
 function getAdminPageRender({ platform }) {
-    const hasSharedAuthFields = platform.auth?.type === 'apiKey'
+    const hasManagedAuthFields = platform.auth?.type === 'apiKey'
         && (platform.auth?.apiKey?.page?.content ?? []).some(field => field?.shared);
     const page = {
         id: 'adminPage',
@@ -25,8 +25,8 @@ function getAdminPageRender({ platform }) {
                             const: "managedSettings",
                             title: t('pages.admin.managedSettings'),
                         },
-                        ...hasSharedAuthFields ? [{
-                            const: "sharedAuthentication",
+                        ...hasManagedAuthFields ? [{
+                            const: "managedAuthentication",
                             title: 'Shared authentication',
                         }] : [],
                         ...platform.serverSideLogging ? [{

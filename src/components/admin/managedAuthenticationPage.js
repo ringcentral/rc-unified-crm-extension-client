@@ -1,20 +1,20 @@
-function getSharedAuthenticationPageRender({ hasOrgFields, hasUserFields }) {
+function getManagedAuthenticationPageRender({ hasOrgFields, hasUserFields }) {
     const sections = [];
     if (hasOrgFields) {
         sections.push({
-            const: 'sharedAuthOrg',
-            title: 'Organization shared auth'
+            const: 'managedAuthOrg',
+            title: 'Organization managed auth'
         });
     }
     if (hasUserFields) {
         sections.push({
-            const: 'sharedAuthUser',
-            title: 'User shared auth'
+            const: 'managedAuthUser',
+            title: 'User managed auth'
         });
     }
 
     return {
-        id: 'sharedAuthenticationPage',
+        id: 'managedAuthenticationPage',
         title: 'Shared authentication',
         type: 'page',
         schema: {
@@ -35,4 +35,4 @@ function getSharedAuthenticationPageRender({ hasOrgFields, hasUserFields }) {
     };
 }
 
-exports.getSharedAuthenticationPageRender = getSharedAuthenticationPageRender;
+exports.getManagedAuthenticationPageRender = getManagedAuthenticationPageRender;

@@ -1,13 +1,13 @@
-import sharedAuthUserEditPage from '../../../../components/admin/sharedAuthUserEditPage';
+import managedAuthUserEditPage from '../../../../components/admin/managedAuthUserEditPage';
 import { getRcContactInfo } from '../../../../lib/util';
 
 async function onEvent({ data, listButtonItemId }) {
-    const { sharedAuthSettings } = await chrome.storage.local.get({ sharedAuthSettings: null });
+    const { managedAuthSettings } = await chrome.storage.local.get({ managedAuthSettings: null });
     const rcExtensions = (await getRcContactInfo()).filter(rc => rc.type === 'User' || rc.type === 'Department');
     const selectedExtension = rcExtensions.find((rc) => rc.id === listButtonItemId);
-    const page = sharedAuthUserEditPage.getSharedAuthUserEditPageRender({
-        userFields: sharedAuthSettings?.userFields ?? [],
-        userValues: sharedAuthSettings?.userValues ?? [],
+    const page = managedAuthUserEditPage.getManagedAuthUserEditPageRender({
+        userFields: managedAuthSettings?.userFields ?? [],
+        userValues: managedAuthSettings?.userValues ?? [],
         rcExtension: selectedExtension,
         formData: {
             rcExtensionId: selectedExtension?.id ?? ''

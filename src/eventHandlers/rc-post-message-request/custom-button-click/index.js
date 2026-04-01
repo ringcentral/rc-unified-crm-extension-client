@@ -42,9 +42,9 @@ import logRecordSubmissionPageHandler from './errorLogging/logRecordSubmit';
 import saveServerSideLoggingButtonHandler from './adminSettings/saveServerSideLogging';
 import doNotLogNumbersSubmitButtonHandler from './adminSettings/doNotLogNumbersSubmit';
 import generalHandler from './adminSettings/adminSettingsFormSubmit';
-import sharedAuthOrgPageHandler from './adminSettings/sharedAuthOrgPage';
-import sharedAuthUserPageHandler from './adminSettings/sharedAuthUserPage';
-import sharedAuthUserEditHandler from './adminSettings/sharedAuthUserEdit';
+import managedAuthOrgPageHandler from './adminSettings/managedAuthOrgPage';
+import managedAuthUserPageHandler from './adminSettings/managedAuthUserPage';
+import managedAuthUserEditHandler from './adminSettings/managedAuthUserEdit';
 
 import googleSheetsConfigHandler from './googleSheets/googleSheetsConfig';
 import newSheetButtonHandler from './googleSheets/newSheetButton';
@@ -271,17 +271,17 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'clickToDialEmbedPage':
             await generalHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
             break;
-        case 'sharedAuthOrgPage':
-            await sharedAuthOrgPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        case 'managedAuthOrgPage':
+            await managedAuthOrgPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
-        case 'sharedAuthUserEdit':
-            await sharedAuthUserEditHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+        case 'managedAuthUserEdit':
+            await managedAuthUserEditHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
             break;
-        case 'sharedAuthUserPage':
-            await sharedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        case 'managedAuthUserPage':
+            await managedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
-        case 'sharedAuthUserEditPage':
-            await sharedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        case 'managedAuthUserEditPage':
+            await managedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
     }
     if (data.body.button.id.startsWith('link-button-')) {

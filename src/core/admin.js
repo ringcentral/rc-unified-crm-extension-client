@@ -487,18 +487,18 @@ async function reinitializeUserMapping({ serverUrl }) {
     return reinitializeUserMappingResp.data;
 }
 
-async function getSharedAuthSettings({ serverUrl }) {
+async function getManagedAuthSettings({ serverUrl }) {
     const rcAccessToken = getRcAccessToken();
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
     const response = await axios.get(
-        `${serverUrl}/admin/sharedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        `${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
     );
-    await chrome.storage.local.set({ sharedAuthSettings: response.data });
+    await chrome.storage.local.set({ managedAuthSettings: response.data });
     return response.data;
 }
 
-async function saveSharedAuthSettings({
+async function saveManagedAuthSettings({
     serverUrl,
     scope,
     values,
@@ -511,7 +511,7 @@ async function saveSharedAuthSettings({
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
     const response = await axios.post(
-        `${serverUrl}/admin/sharedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        `${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
         {
             scope,
             values,
@@ -521,7 +521,7 @@ async function saveSharedAuthSettings({
         }
     );
     if (refreshAfterSave) {
-        await getSharedAuthSettings({ serverUrl });
+        await getManagedAuthSettings({ serverUrl });
     }
     return response.data;
 }
@@ -541,5 +541,5 @@ exports.getUserMapping = getUserMapping;
 exports.getUserExtensionReportStats = getUserExtensionReportStats;
 exports.getAdminReportStats = getAdminReportStats;
 exports.reinitializeUserMapping = reinitializeUserMapping;
-exports.getSharedAuthSettings = getSharedAuthSettings;
-exports.saveSharedAuthSettings = saveSharedAuthSettings;
+exports.getManagedAuthSettings = getManagedAuthSettings;
+exports.saveManagedAuthSettings = saveManagedAuthSettings;

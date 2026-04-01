@@ -1,4 +1,4 @@
-function getSharedAuthUserEditPageRender({
+function getManagedAuthUserEditPageRender({
     userFields = [],
     userValues = [],
     rcExtension,
@@ -33,22 +33,17 @@ function getSharedAuthUserEditPageRender({
         properties[field.const] = {
             title: field.title,
             type: field.type,
-            description: storedValue.hasValue && field.confidential
-                ? `${field.description ?? ''}${field.description ? ' ' : ''}Stored value is hidden. Enter a new value to replace it.`
-                : field.description
+            description: field.description
         };
         uiSchema[field.const] = field.uiSchema ?? {};
-        if (field.confidential && storedValue.hasValue) {
-            uiSchema[field.const]['ui:widget'] = 'password';
-        }
         if (!hasFormValue && storedValue.hasValue) {
             nextFormData[field.const] = storedValue.value;
         }
     });
 
     return {
-        id: 'sharedAuthUserEditPage',
-        title: `Edit shared auth for ${properties.rcExtensionId.description}`,
+        id: 'managedAuthUserEditPage',
+        title: `Edit managed auth for ${properties.rcExtensionId.description}`,
         type: 'page',
         schema: {
             type: 'object',
@@ -65,4 +60,4 @@ function getSharedAuthUserEditPageRender({
     };
 }
 
-exports.getSharedAuthUserEditPageRender = getSharedAuthUserEditPageRender;
+exports.getManagedAuthUserEditPageRender = getManagedAuthUserEditPageRender;

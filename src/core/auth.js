@@ -60,13 +60,13 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
         case 'apiKey':
             window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
             const storedPlatformInfo = await chrome.storage.local.get('platform-info');
-            const sharedAuthState = await getSharedAuthState({
+            const managedAuthState = await getManagedAuthState({
                 serverUrl: manifest.serverUrl,
                 platformName,
                 connectorId: storedPlatformInfo?.['platform-info']?.connectorId ?? null,
                 isPrivate: !!storedPlatformInfo?.['platform-info']?.isPrivate
             });
-            if (sharedAuthState?.allRequiredFieldsSatisfied) {
+            if (managedAuthState?.allRequiredFieldsSatisfied) {
                 const returnedToken = await apiKeyLogin({ serverUrl: manifest.serverUrl, useLicense: platform.useLicense, formData: {} });
                 const crmAuthed = !!returnedToken;
                 await chrome.storage.local.set({ crmAuthed });
@@ -87,7 +87,7 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
             const authPageRender = authPage.getAuthPageRender({
                 manifest,
                 platformName,
-                visibleFieldConsts: sharedAuthState?.visibleFieldConsts ?? null
+                visibleFieldConsts: managedAuthState?.visibleFieldConsts ?? null
             });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
@@ -102,14 +102,14 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
     }
 }
 
-async function getSharedAuthState({ serverUrl, platformName, connectorId = null, isPrivate = false, rcInfo = null, rcExtensionId = null, rcAccountId = null }) {
+async function getManagedAuthState({ serverUrl, platformName, connectorId = null, isPrivate = false, rcInfo = null, rcExtensionId = null, rcAccountId = null }) {
     try {
         const rcAccessToken = getRcAccessToken();
         const resolvedRcInfo = rcInfo ?? await getRcInfo();
         const resolvedRcAccountId = rcAccountId ?? resolvedRcInfo?.value?.cachedData?.extensionInfo?.account?.id;
         const resolvedRcExtensionId = rcExtensionId ?? resolvedRcInfo?.value?.cachedData?.extensionInfo?.id;
         const response = await axios.get(
-            `${serverUrl}/apiKeySharedAuthState?platform=${encodeURIComponent(platformName)}&connectorId=${encodeURIComponent(connectorId ?? '')}&isPrivate=${encodeURIComponent(isPrivate ? 'true' : 'false')}&rcAccountId=${encodeURIComponent(resolvedRcAccountId ?? '')}&rcExtensionId=${encodeURIComponent(resolvedRcExtensionId ?? '')}&rcAccessToken=${encodeURIComponent(rcAccessToken ?? '')}`
+            `${serverUrl}/apiKeyManagedAuthState?platform=${encodeURIComponent(platformName)}&connectorId=${encodeURIComponent(connectorId ?? '')}&isPrivate=${encodeURIComponent(isPrivate ? 'true' : 'false')}&rcAccountId=${encodeURIComponent(resolvedRcAccountId ?? '')}&rcExtensionId=${encodeURIComponent(resolvedRcExtensionId ?? '')}&rcAccessToken=${encodeURIComponent(rcAccessToken ?? '')}`
         );
         return response.data;
     }
@@ -334,7 +334,7 @@ exports.handleThirdPartyOAuthWindow = handleThirdPartyOAuthWindow;
 exports.onUserClickConnectButton = onUserClickConnectButton;
 exports.checkAndOpenPlatformSelectionPage = checkAndOpenPlatformSelectionPage;
 exports.apiKeyLogin = apiKeyLogin;
-exports.getSharedAuthState = getSharedAuthState;
+exports.getManagedAuthState = getManagedAuthState;
 exports.onAuthCallback = onAuthCallback;
 exports.unAuthorize = unAuthorize;
 exports.checkAuth = checkAuth;

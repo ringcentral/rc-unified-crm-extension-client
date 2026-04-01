@@ -10,8 +10,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     }
     const rcInfo = await getRcInfo();
     const selectedPlatform = manifest.platforms[data.body.formData.platformId];
-    const sharedAuthState = selectedPlatform?.auth?.type === 'apiKey'
-        ? await authCore.getSharedAuthState({
+    const managedAuthState = selectedPlatform?.auth?.type === 'apiKey'
+        ? await authCore.getManagedAuthState({
             serverUrl: manifest.serverUrl,
             platformName: data.body.formData.platformId,
             connectorId: data.body.formData.connectorId ?? '',
@@ -25,7 +25,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             inputUrl: data.body.formData.url,
             selection: data.body.formData.selection,
             isUrlValid,
-            submitText: sharedAuthState?.allRequiredFieldsSatisfied ? 'Connect' : undefined,
+            submitText: managedAuthState?.allRequiredFieldsSatisfied ? 'Connect' : undefined,
             connectorId: data.body.formData.connectorId ?? '',
             isPrivate: !!data.body.formData.isPrivate
         });

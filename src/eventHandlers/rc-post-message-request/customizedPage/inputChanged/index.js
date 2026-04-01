@@ -15,8 +15,8 @@ import getErrorLogRecrodPageHandler from './pages/getErrorLogRecordPage';
 import logRecordSubmissionPageHandler from './pages/logRecordSubmissionPage';
 import adminGoogleSheetsPageHandler from './pages/adminGoogleSheetsPage';
 import pluginAdminSettingsPageHandler from './pages/pluginAdminSettingsPage';
-import sharedAuthUserPageHandler from './pages/sharedAuthUserPage';
-import sharedAuthUserEditPageHandler from './pages/sharedAuthUserEditPage';
+import managedAuthUserPageHandler from './pages/managedAuthUserPage';
+import managedAuthUserEditPageHandler from './pages/managedAuthUserEditPage';
 
 import generalSettingsHandler from './sections/generalSettings';
 import managedSettingsHandler from './sections/managedSettings';
@@ -37,9 +37,9 @@ import userMappingHandler from './sections/userMapping';
 import googleSheetsAdminConfigHandler from './sections/googleSheetsAdminConfig';
 import pluginsAdminConfigHandler from './sections/pluginsAdminConfig';
 import installedPluginsHandler from './sections/installedPlugins';
-import sharedAuthenticationHandler from './sections/sharedAuthentication';
-import sharedAuthOrgHandler from './sections/sharedAuthOrg';
-import sharedAuthUserHandler from './sections/sharedAuthUser';
+import managedAuthenticationHandler from './sections/managedAuthentication';
+import managedAuthOrgHandler from './sections/managedAuthOrg';
+import managedAuthUserHandler from './sections/managedAuthUser';
 
 import pluginMarketListPageHandler from '../../pluginMarketListPage';
 import selectPluginHandler from '../../custom-button-click/plugins/selectPlugin';
@@ -105,11 +105,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             const pluginId = data.body?.formData?.section;
             await pluginAdminSettingsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, pluginId });
             break;
-        case 'sharedAuthUserPage':
-            await sharedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        case 'managedAuthUserPage':
+            await managedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
-        case 'sharedAuthUserEditPage':
-            await sharedAuthUserEditPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        case 'managedAuthUserEditPage':
+            await managedAuthUserEditPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'installedPluginListPage':
             await selectPluginHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
@@ -133,14 +133,14 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                     break;
             }
             break;
-        case 'sharedAuthentication':
-            await sharedAuthenticationHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        case 'managedAuthentication':
+            await managedAuthenticationHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
-        case 'sharedAuthOrg':
-            await sharedAuthOrgHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        case 'managedAuthOrg':
+            await managedAuthOrgHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
-        case 'sharedAuthUser':
-            await sharedAuthUserHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        case 'managedAuthUser':
+            await managedAuthUserHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'pluginMarket':
             await pluginMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
