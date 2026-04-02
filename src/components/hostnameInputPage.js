@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 
-function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid, submitText, connectorId = '', isPrivate = false }) {
+function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid, submitText, readyMessage = '', connectorId = '', isPrivate = false }) {
     const platformName = platform.displayName ?? platform.name;
     const url = platform.environment.url;
     const overrides = platform.overrides;
@@ -45,6 +45,16 @@ function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid,
                 "ui:field": "typography", // or typography to show raw text
                 "ui:bulletedList": true
             }
+        }
+    }
+    if (readyMessage) {
+        page.schema.properties.readyMessage = {
+            type: 'string',
+            description: readyMessage
+        }
+        page.uiSchema.readyMessage = {
+            'ui:field': 'typography',
+            'ui:variant': 'body2'
         }
     }
     switch (platform.environment.type) {

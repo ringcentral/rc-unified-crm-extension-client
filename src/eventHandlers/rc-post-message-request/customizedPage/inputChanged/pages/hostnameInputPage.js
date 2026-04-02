@@ -26,6 +26,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             selection: data.body.formData.selection,
             isUrlValid,
             submitText: managedAuthState?.allRequiredFieldsSatisfied ? 'Connect' : undefined,
+            readyMessage: managedAuthState?.allRequiredFieldsSatisfied
+                ? `All required authentication fields are ready. Click Connect to connect to ${selectedPlatform.displayName ?? selectedPlatform.name}.`
+                : '',
             connectorId: data.body.formData.connectorId ?? '',
             isPrivate: !!data.body.formData.isPrivate
         });
