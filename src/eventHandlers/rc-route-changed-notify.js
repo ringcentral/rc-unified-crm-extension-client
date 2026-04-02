@@ -49,6 +49,7 @@ async function onEvent({ data }) {
         } catch (e) { /* ignore */ }
       }
       if (data.path === '/customizedTabs/appointmentsPage') {
+        window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
         try {
           const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
           if (rcUnifiedCrmExtJwt && crmAuthed) {
@@ -70,6 +71,9 @@ async function onEvent({ data }) {
             }, '*');
           }
         } catch (e) { /* ignore */ }
+        finally {
+          window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+        }
       }
     }
     // user setting page needs a refresh mechanism to make sure user settings are up to date

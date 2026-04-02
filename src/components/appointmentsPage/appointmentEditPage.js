@@ -104,6 +104,14 @@ function normalizeParticipantNameForSubmit(value) {
     .join(', ');
 }
 
+function tokenizeParticipantNames(value) {
+  return String(value ?? '')
+    .split('\n')
+    .flatMap((line) => line.split(','))
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 function dedupeContactsByIdType(contacts) {
   const map = new Map();
   for (const c of contacts || []) {
@@ -121,6 +129,41 @@ function dedupeContactsByIdType(contacts) {
     if (!existing.name && name) existing.name = name;
   }
   return Array.from(map.values());
+}
+
+function reconcileParticipantContactsForSubmit({ participantName, participantContacts }) {
+  const normalizedContacts = dedupeContactsByIdType((participantContacts || [])
+    .map((c) => ({
+      id: String(c?.id ?? '').trim(),
+      type: String(c?.type ?? '').trim(),
+      name: String(c?.name ?? '').trim(),
+    }))
+    .filter((c) => c.id));
+
+  const tokens = tokenizeParticipantNames(participantName);
+  if (tokens.length === 0) {
+    return [];
+  }
+
+  const counts = new Map();
+  for (const token of tokens) {
+    const key = token.toLowerCase();
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+
+  const matched = [];
+  for (const contact of normalizedContacts) {
+    const key = String(contact?.name ?? '').trim().toLowerCase();
+    const remaining = key ? (counts.get(key) || 0) : 0;
+    if (remaining > 0) {
+      matched.push(contact);
+      counts.set(key, remaining - 1);
+    }
+  }
+
+  // If names were manually edited into values we cannot map back to ids,
+  // don't send stale contacts that were removed from the visible field.
+  return matched;
 }
 
 function getAppointmentEditPageRender({
@@ -322,29 +365,25 @@ async function saveAppointmentEdits({ manifest, jwtToken, formData }) {
   const participantContactsRaw = Array.isArray(formData?.participantContacts)
     ? formData.participantContacts
     : [];
-  const participantContacts = participantContactsRaw
-    .map((c) => ({
-      id: String(c?.id ?? '').trim(),
-      type: String(c?.type ?? '').trim(),
-      name: String(c?.name ?? '').trim(),
-    }))
-    .filter((c) => c.id);
-  const uniqueParticipantContacts = dedupeContactsByIdType(participantContacts);
+  const uniqueParticipantContacts = reconcileParticipantContactsForSubmit({
+    participantName: formData?.participantName,
+    participantContacts: participantContactsRaw,
+  });
+  const primaryParticipant =
+    uniqueParticipantContacts.find((c) => String(c?.id) === String(formData?.participantContactId ?? '').trim())
+    || uniqueParticipantContacts[0]
+    || null;
   const patchBase = {
     participantName: normalizeParticipantNameForSubmit(formData?.participantName),
     summary: formData?.summary ?? '',
     startTime,
     durationMinutes: safeDurationMinutes,
-    ...(formData?.participantContactId ? { contactId: String(formData.participantContactId) } : {}),
-    ...(formData?.participantContactType ? { contactType: String(formData.participantContactType) } : {}),
-    ...(uniqueParticipantContacts.length > 0
-      ? {
-        // Some backends use "attendees" while others use "contacts".
-        contacts: uniqueParticipantContacts,
-        attendees: uniqueParticipantContacts,
-        attendeeIds: uniqueParticipantContacts.map((c) => c.id),
-      }
-      : {}),
+    contactId: primaryParticipant?.id ?? '',
+    contactType: primaryParticipant?.type ?? '',
+    // Some backends use "attendees" while others use "contacts".
+    contacts: uniqueParticipantContacts,
+    attendees: uniqueParticipantContacts,
+    attendeeIds: uniqueParticipantContacts.map((c) => c.id),
   };
   const title = String(formData?.title ?? '').trim();
   if (title) patchBase.title = title;
@@ -384,4 +423,3 @@ async function saveAppointmentEdits({ manifest, jwtToken, formData }) {
 
 exports.getAppointmentEditPageRender = getAppointmentEditPageRender;
 exports.saveAppointmentEdits = saveAppointmentEdits;
-

@@ -88,4 +88,3 @@ function extractAppointmentsListContext(data) {
 }
 
 exports.extractAppointmentsListContext = extractAppointmentsListContext;
-
