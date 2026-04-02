@@ -138,7 +138,7 @@ class CustomC2DWidget {
 
         this._callBtn = mkBtn('Call with RingCentral', 'call');
         this._smsBtn = mkBtn('SMS with RingCentral', 'sms');
-        this._scheduleBtn = mkBtn('Call later', 'calendar');
+        this._scheduleBtn = mkBtn('Call Back', 'calendar');
         const onPress = (handler) => (e) => {
             // Fire immediately before any hover-out occurs
             this._widgetHovering = true;

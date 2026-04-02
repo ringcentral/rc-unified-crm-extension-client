@@ -22,7 +22,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 page: reportPageRender,
             }, '*');
         }
-        // Call-down tab (register only if enabled by admin)
+        // Call Back tab (register only if enabled by admin)
         if (userCore.getShowCalldownTabSetting(userSettings).value) {
             const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
             const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });

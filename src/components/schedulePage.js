@@ -1,7 +1,7 @@
 import { t } from '../i18n';
 
 /**
- * Creates a schedule page configuration for the call-down list functionality
+ * Creates a schedule page configuration for the call back list functionality
  * @param {Object} params - Parameters for creating the schedule page
  * @param {string} params.phoneNumber - The phone number to schedule
  * @param {Array} params.listOneOf - Array of contact options for the dropdown

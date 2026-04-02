@@ -34,7 +34,7 @@ async function onMessage({ request, sendResponse }) {
         page: reportPageRender,
       }, '*');
     }
-    // Call-down tab (register only if enabled by admin)
+    // Call Back tab (register only if enabled by admin)
     try {
       if (userCore.getShowCalldownTabSetting(userSettings).value) {
         const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
