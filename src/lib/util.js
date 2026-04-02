@@ -165,7 +165,7 @@ function createDebounceHandler(handlerKey, delay = 300) {
 }
 
 // Hack: put it here temporarily as there's no better place to go
-// Helper function to cache contact information for call-down list
+// Helper function to cache contact information for call back list
 async function cacheCalldownContact({ contactId, contactName, phoneNumber, contactType }) {
   if (!contactId || !contactName || !phoneNumber) return;
 
