@@ -155,9 +155,6 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
 }
 
 async function openContactPage({ manifest, platformName, phoneNumber, contactId, contactType, multiContactMatchBehavior, fromCallPop = false }) {
-    if (!contactId) {
-        return;
-    }
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     let platformInfo = await chrome.storage.local.get('platform-info');
     if (platformInfo['platform-info'].hostname === 'temp') {

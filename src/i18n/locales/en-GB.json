@@ -114,7 +114,7 @@
       "enterTitle": "Enter title...",
       "enterNote": "Enter note...",
       "enterName": "Enter name...",
-      "addToCalldownList": "Add this contact to the call-down list"
+      "addToCalldownList": "Add this contact to the Call Back list"
     },
     "unloggedCalls": {
       "title": "Unlogged Calls"
@@ -128,12 +128,12 @@
       "companyStats": "Company stats"
     },
     "schedule": {
-      "title": "Add to call-down list",
+      "title": "Add to Call Back list",
       "phoneNumber": "Phone Number",
       "scheduleTime": "Schedule time"
     },
     "calldown": {
-      "title": "Call-down",
+      "title": "Call Back",
       "contacts": "Contacts",
       "filterByName": "Filter by name",
       "all": "All",
@@ -188,7 +188,7 @@
       "developedBy": "Developed by {author}"
     },
     "buttons": {
-      "callLater": "Call later"
+      "callLater": "Call Back"
     },
     "logging": {
       "groupName": "Activity logging",
@@ -291,7 +291,7 @@
       "showRecordingsTab": "Show recordings tab",
       "showContactsTab": "Show contacts tab",
       "showUserReportTab": "Show user report tab",
-      "showCalldownTab": "Show Call-down tab",
+      "showCalldownTab": "Show Call Back tab",
       "showAppointmentsTab": "Show Appointments tab",
       "notificationLevel": "Notification level",
       "notificationLevelDesc": "Select the notification level to be displayed in the extension.",

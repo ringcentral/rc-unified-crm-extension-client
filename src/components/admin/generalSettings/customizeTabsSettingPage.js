@@ -121,7 +121,7 @@ function getCustomizeTabsSettingPageRender({ adminUserSettings }) {
                 },
                 showCalldownTab: {
                     type: 'object',
-                    title: 'Show Call-down tab',
+                    title: 'Show Call Back tab',
                     properties: {
                         customizable: {
                             type: 'boolean',

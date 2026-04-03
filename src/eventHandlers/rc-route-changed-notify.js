@@ -18,7 +18,7 @@ async function onEvent({ data }) {
       if (data.path.startsWith('/conversations/') || data.path.startsWith('/composeText')) {
         window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
       }
-      // Force Call-down tab to default to All when user navigates back to it from other tabs
+      // Force Call Back tab to default to All when user navigates back to it from other tabs
       if (data.path === '/customizedTabs/calldownPage') {
         try {
           const { userSettings } = await chrome.storage.local.get('userSettings');
@@ -35,7 +35,7 @@ async function onEvent({ data }) {
               page: refreshedCalldown
             }, '*');
           } else {
-            // CRM is disconnected, hide call-down page if it was enabled
+            // CRM is disconnected, hide call back page if it was enabled
             if (userCore.getShowCalldownTabSetting(userSettings).value) {
               const emptyCalldownPage = calldownPage.getCalldownPageRender();
               emptyCalldownPage.hidden = true; // Hide the tab when CRM is disconnected
