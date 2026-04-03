@@ -82,7 +82,8 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
                     type: 'rc-adapter-navigate-to',
                     path: 'goBack',
                 }, '*');
-                break;
+                window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+                return;
             }
             const authPageRender = authPage.getAuthPageRender({
                 manifest,
