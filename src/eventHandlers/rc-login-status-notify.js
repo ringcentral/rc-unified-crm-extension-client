@@ -35,6 +35,11 @@ async function onEvent({ data }) {
         userPermissions.ringSenseInsights = data.features && data.features.ringSenseInsights;
         userPermissions.ringCX = data.features && data.features.ringCX;
         userPermissions.sms = data.features && data.features.sms;
+        const rcInfo = await getRcInfo();
+        const smsSendingEnabled = rcInfo?.value?.cachedData?.extensionFeatures?.records?.find(ef => ef.id === 'SMSSending')?.available ?? false;
+        if (smsSendingEnabled) {
+            userPermissions.c2sms = true;
+        }
         await chrome.storage.local.set({ userPermissions });
     }
     console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
