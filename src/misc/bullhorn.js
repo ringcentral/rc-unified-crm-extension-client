@@ -19,7 +19,7 @@ async function bullhornHeartbeat({ platform }) {
             await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
             await chrome.storage.local.remove('crmAuthed');
             
-            // Clear call-down page after CRM disconnect
+            // Clear call back page after CRM disconnect
             try {
                 const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
                 if (userCore.getShowCalldownTabSetting(userSettings).value) {
@@ -76,7 +76,7 @@ async function bullhornHeartbeat({ platform }) {
         await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
         await chrome.storage.local.remove('crmAuthed');
         
-        // Clear call-down page after CRM disconnect
+        // Clear call back page after CRM disconnect
         try {
             const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
             if (userCore.getShowCalldownTabSetting(userSettings).value) {

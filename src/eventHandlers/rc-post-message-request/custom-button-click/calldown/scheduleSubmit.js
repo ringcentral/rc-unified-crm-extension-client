@@ -32,7 +32,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType: selectedType, note });
             }
 
-            // Cache contact information for call-down list display
+            // Cache contact information for call back list display
             await cacheCalldownContact({
                 contactId: contactIdToUse,
                 contactName: newContactName,
@@ -40,7 +40,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 contactType: selectedType
             });
 
-            showNotification({ level: 'success', message: isEditMode ? 'Schedule updated successfully' : 'Added to call-down list', ttl: 3000 });
+            showNotification({ level: 'success', message: isEditMode ? 'Schedule updated successfully' : 'Added to Call Back list', ttl: 3000 });
             document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
                 type: 'rc-adapter-trigger-contact-match',
                 phoneNumbers: [phone]
@@ -92,7 +92,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             });
 
             // Notify user on success
-            showNotification({ level: 'success', message: isEditMode ? 'Schedule updated successfully' : 'Added to call-down list', ttl: 3000 });
+            showNotification({ level: 'success', message: isEditMode ? 'Schedule updated successfully' : 'Added to Call Back list', ttl: 3000 });
         }
         const { userSettings } = await chrome.storage.local.get('userSettings');
         const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });

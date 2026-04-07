@@ -35,6 +35,11 @@ async function onEvent({ data }) {
         userPermissions.ringSenseInsights = data.features && data.features.ringSenseInsights;
         userPermissions.ringCX = data.features && data.features.ringCX;
         userPermissions.sms = data.features && data.features.sms;
+        const rcInfo = await getRcInfo();
+        const smsSendingEnabled = rcInfo?.value?.cachedData?.extensionFeatures?.records?.find(ef => ef.id === 'SMSSending')?.available ?? false;
+        if (smsSendingEnabled) {
+            userPermissions.c2sms = true;
+        }
         await chrome.storage.local.set({ userPermissions });
     }
     console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
@@ -82,7 +87,7 @@ async function onEvent({ data }) {
                 }, '*');
             }
             // 2.3.3. init calldown tab
-            // Call-down tab (register only if enabled by admin)
+            // Call Back tab (register only if enabled by admin)
             if (userCore.getShowCalldownTabSetting(userSettings).value) {
                 const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                 const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });

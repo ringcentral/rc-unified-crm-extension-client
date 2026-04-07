@@ -55,7 +55,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                     additionalSubmission,
                     returnToHistoryPage: !!data.body.redirect
                 });
-            // Optional: schedule callback into Call-down after successful log creation
+            // Optional: schedule callback into Call Back after successful log creation
             try {
                 if (data.body.formData.scheduleCallback && data.body.formData.callbackDateTime) {
                     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
@@ -70,7 +70,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                         note: data.body.formData.note ?? ''
                     };
                     await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, schedulePayload);
-                    // Refresh Call-down tab data and badge right after scheduling
+                    // Refresh Call Back tab data and badge right after scheduling
                     try {
                         const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
                         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

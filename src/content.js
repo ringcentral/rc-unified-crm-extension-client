@@ -153,7 +153,7 @@ async function initializeC2D() {
     rootNode: document.body,
   });
   // Disable the SMS button, keep only click-to-dial
-  window.clickToDialInject.widget.update({ enableC2Text: userPermissions?.sms ?? false });
+  window.clickToDialInject.widget.update({ enableC2Text: userPermissions?.c2sms ?? false });
   window.clickToDialInstances.push(window.clickToDialInject);
   console.log(`[App Connect] C2D initialized for document.body`);
 

@@ -16,7 +16,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: "" });
         await authCore.unAuthorize({ serverUrl: manifest.serverUrl, rcUnifiedCrmExtJwt });
 
-        // Clear call-down page after CRM disconnect
+        // Clear call back page after CRM disconnect
         const { userSettings } = await chrome.storage.local.get('userSettings');
         if (userCore.getShowCalldownTabSetting(userSettings).value) {
             const emptyCalldownPage = calldownPage.getCalldownPageRender(); // Get empty page
