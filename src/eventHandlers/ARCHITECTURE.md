@@ -70,7 +70,7 @@ Routed by `data.body.button.id` (parsed as `{actionId}-{itemId}-action`).
 | `factoryResetButton` | `auth/factoryResetButton.js` | Full reset: de-auth, clear platform, logout |
 | `insightlyGetApiKey` | `auth/insightlyGetApiKey.js` | Insightly-specific: retrieve API key |
 
-### `calldown/` — Scheduling & call-down list
+### `calldown/` — Scheduling & call back list
 
 | Button ID | File | What it does |
 |---|---|---|
@@ -78,12 +78,12 @@ Routed by `data.body.button.id` (parsed as `{actionId}-{itemId}-action`).
 | `callLaterInMessage` | `calldown/callLaterInMessage.js` | Schedule callback from messages |
 | `callLaterInContact` | `calldown/callLaterInContact.js` | Schedule callback from contact page |
 | `scheduleSubmit` | `calldown/scheduleSubmit.js` | Submit schedule/callback form |
-| `calldownActionCall` | `calldown/calldownActionCall.js` | Call a call-down item |
-| `calldownActionOpen` | `calldown/calldownActionOpen.js` | Open CRM contact for call-down item |
-| `calldownActionText` | `calldown/calldownActionText.js` | SMS a call-down item |
-| `calldownActionEdit` | `calldown/calldownActionEdit.js` | Edit a call-down item |
-| `calldownActionComplete` | `calldown/calldownActionComplete.js` | Mark call-down item complete |
-| `calldownActionRemove` | `calldown/calldownActionRemove.js` | Delete a call-down item |
+| `calldownActionCall` | `calldown/calldownActionCall.js` | Call a call back item |
+| `calldownActionOpen` | `calldown/calldownActionOpen.js` | Open CRM contact for call back item |
+| `calldownActionText` | `calldown/calldownActionText.js` | SMS a call back item |
+| `calldownActionEdit` | `calldown/calldownActionEdit.js` | Edit a call back item |
+| `calldownActionComplete` | `calldown/calldownActionComplete.js` | Mark call back item complete |
+| `calldownActionRemove` | `calldown/calldownActionRemove.js` | Delete a call back item |
 | `saveTempNoteButton` | `calldown/saveTempNoteButton.js` | Save temp call note while log data prepares |
 
 ### `plugins/` — Plugin management
@@ -181,7 +181,7 @@ This router has two separate dispatch passes on each event:
 | `hostnameInputPage` | `pages/hostnameInputPage.js` | Update hostname input page |
 | `platformSelectionPage` | `pages/platformSelectionPage.js` | Update platform selection page |
 | `getMultiContactPopPromptPage` | `pages/getMultiContactPopPromptPage.js` | Update multiple-contact prompt page |
-| `calldownPage` | `pages/calldownPage.js` | Handle call-down list search/filter (debounced) |
+| `calldownPage` | `pages/calldownPage.js` | Handle call back list search/filter (debounced) |
 | `googleSheetsPage` | `pages/googleSheetsPage.js` | Update Google Sheets user config page |
 | `contactSearchResultCallLog` | `pages/contactSearchResultCallLog.js` | Handle contact search result selection for call log |
 | `contactSearchResultMessageLog` | `pages/contactSearchResultMessageLog.js` | Handle contact search result selection for message log |
