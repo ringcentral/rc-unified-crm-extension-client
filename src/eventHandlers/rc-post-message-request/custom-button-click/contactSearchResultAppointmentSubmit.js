@@ -34,6 +34,15 @@ function dedupeContactsByIdType(contacts) {
   return Array.from(map.values());
 }
 
+function hasContactEmail(contact) {
+  const directEmail = String(
+    contact?.email ??
+    ''
+  ).trim();
+  if (directEmail) return true;
+  return false;
+}
+
 async function onEvent({ data, manifest, platformName }) {
   const selectedIds = normalizeSelectedIds(data?.body?.button?.formData?.contactList);
   const contactInfo = data?.body?.button?.formData?.contactInfo ?? data?.body?.page?.formData?.contactInfo ?? [];
@@ -44,13 +53,34 @@ async function onEvent({ data, manifest, platformName }) {
     data?.body?.button?.formData?.appointmentEditDraft ??
     data?.body?.page?.formData?.appointmentEditDraft;
   const draft = appointmentEditDraft ?? appointmentCreateDraft ?? {};
+  const requiresEmail = draft?.emailMandatoryInAttendee !== false;
 
-  const selectedContacts = (contactInfo || [])
+  const selectedContactsRaw = (contactInfo || [])
     .filter((c) => selectedIds.includes(String(c?.id)));
+  const selectedContacts = requiresEmail
+    ? selectedContactsRaw.filter((c) => hasContactEmail(c))
+    : selectedContactsRaw;
+  const skippedContacts = requiresEmail
+    ? selectedContactsRaw.filter((c) => !hasContactEmail(c))
+    : [];
 
   if (selectedContacts.length === 0) {
-    showNotification({ level: 'warning', message: 'Please select at least one contact.', ttl: 3000 });
+    showNotification({
+      level: 'warning',
+      message: skippedContacts.length > 0
+        ? 'Only contacts with an email address can be added to this appointment.'
+        : 'Please select at least one contact.',
+      ttl: 3000,
+    });
     return;
+  }
+
+  if (skippedContacts.length > 0) {
+    showNotification({
+      level: 'warning',
+      message: 'Some selected contacts were skipped because they do not have an email address.',
+      ttl: 3000,
+    });
   }
 
   const participantContacts = selectedContacts.map((c) => ({
@@ -106,4 +136,3 @@ async function onEvent({ data, manifest, platformName }) {
 }
 
 exports.onEvent = onEvent;
-

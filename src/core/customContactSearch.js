@@ -1,6 +1,15 @@
 import axios from 'axios';
 import { showNotification } from '../lib/util';
 
+function hasContactEmail(contact) {
+    const directEmail = String(
+        contact?.email ??
+        ''
+    ).trim();
+    if (directEmail) return true;
+    return false;
+}
+
 function getCustomContactSearch({
     contactSearchAdapterButton = "contactSearchAdapterButton",
     contactPhoneNumber,
@@ -8,13 +17,6 @@ function getCustomContactSearch({
     emailMandatoryInAttendee,
     formData = {},
 }) {
-    const warningFieldName = 'appointmentContactSearchWarning';
-    const warningText = 'Only contacts with an email address will be shown in search results.';
-    const resolvedEmailMandatoryInAttendee =
-        emailMandatoryInAttendee ??
-        formData?.appointmentCreateDraft?.emailMandatoryInAttendee ??
-        formData?.appointmentEditDraft?.emailMandatoryInAttendee;
-    const showEmailWarning = appointment && resolvedEmailMandatoryInAttendee !== false;
     return {
         id: 'searchContact',
         type: 'page',
@@ -22,15 +24,6 @@ function getCustomContactSearch({
             type: 'object',
             required: [],
             properties: {
-                ...(showEmailWarning
-                    ? {
-                        [warningFieldName]: {
-                            type: 'string',
-                            title: '',
-                            description: warningText,
-                        },
-                    }
-                    : {}),
                 contactNameToSearch: {
                     type: 'string',
                     title: 'Contact Search'
@@ -42,14 +35,6 @@ function getCustomContactSearch({
             }
         },
         uiSchema: {
-            ...(showEmailWarning
-                ? {
-                    [warningFieldName]: {
-                        "ui:field": "admonition",
-                        "ui:severity": "warning",
-                    },
-                }
-                : {}),
             contactNameToSearch: {
                 "ui:placeholder": 'enter contact name to search',
             },
@@ -59,7 +44,7 @@ function getCustomContactSearch({
                 "ui:fullWidth": true
             },
             "ui:order": appointment
-                ? [warningFieldName, "contactNameToSearch", contactSearchAdapterButton]
+                ? ["contactNameToSearch", contactSearchAdapterButton]
                 : ["contactNameToSearch", contactSearchAdapterButton],
         },
         formData: {
@@ -90,7 +75,6 @@ async function getCustomContactSearchData({
         params: {
             jwtToken: rcUnifiedCrmExtJwt,
             name: contactSearch ?? '',
-            ...(appointmentEmailFilter ? { appointment: true } : {}),
         },
     });
     if (contactRes.data.contact.length === 0) {
@@ -99,17 +83,21 @@ async function getCustomContactSearchData({
         });
     } else {
         const contactInfo = contactRes.data.contact;
+        const warningFieldName = 'appointmentContactEmailWarning';
+        const warningText = 'Email is required for appointment attendees. Contacts without an email address are disabled.';
         const filteredContactList = [];
+        const disabledContactIds = [];
         for (const c of contactInfo) {
+            const missingEmail = appointmentEmailFilter && !hasContactEmail(c);
+            if (missingEmail) {
+                disabledContactIds.push(String(c.id));
+            }
             filteredContactList.push({
                 const: c.id,
                 title: c.name,
-                description: `${c.type} - ${c.id}`
+                description: `${c.type} - ${c.id}${missingEmail ? ' (No email address)' : ''}`
             })
         }
-        const warningFieldName = 'appointmentContactSearchWarning';
-        const warningText = 'Only contacts with an email address will be shown in search results.';
-        const showEmailWarning = appointment && resolvedEmailMandatoryInAttendee !== false;
         const filteredContactIds = filteredContactList.map((c) => String(c.const));
         const filteredContactNames = filteredContactList.map((c) => String(c.title));
         return {
@@ -119,7 +107,7 @@ async function getCustomContactSearchData({
             schema: {
                 type: 'object',
                 properties: {
-                    ...(showEmailWarning
+                    ...(appointmentEmailFilter
                         ? {
                             [warningFieldName]: {
                                 type: 'string',
@@ -137,6 +125,9 @@ async function getCustomContactSearchData({
                                     type: 'string',
                                     enum: filteredContactIds,
                                     enumNames: filteredContactNames,
+                                    ...(disabledContactIds.length > 0
+                                        ? { enumDisabled: disabledContactIds }
+                                        : {}),
                                 },
                                 uniqueItems: true,
                                 minItems: 1,
@@ -157,7 +148,7 @@ async function getCustomContactSearchData({
                         },
                     }
                     : {}),
-                ...(showEmailWarning
+                ...(appointmentEmailFilter
                     ? {
                         [warningFieldName]: {
                             "ui:field": "admonition",
@@ -170,6 +161,16 @@ async function getCustomContactSearchData({
                     ...(appointment
                         ? {
                             "ui:widget": "checkboxes",
+                            ...(disabledContactIds.length > 0
+                                ? {
+                                    // Different JSONSchema form renderers use different keys for per-enum disables.
+                                    // We provide all common variants.
+                                    "ui:enumDisabled": disabledContactIds,
+                                    "ui:options": {
+                                        enumDisabled: disabledContactIds,
+                                    },
+                                }
+                                : {}),
                         }
                         : {
                             "ui:field": "list",
