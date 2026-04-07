@@ -138,7 +138,7 @@ async function initializeC2D() {
   window.clickToDialInject = createC2DInstance({
     rootNode: document.body,
   });
-  window.clickToDialInject.widget.update({ enableC2Text: userPermissions?.sms ?? false });
+  window.clickToDialInject.widget.update({ enableC2Text: userPermissions?.c2sms ?? false });
   window.clickToDialInstances.push(window.clickToDialInject);
   console.log(`[App Connect] C2D initialized for document.body`);
 

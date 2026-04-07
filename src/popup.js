@@ -221,8 +221,12 @@ window.addEventListener('message', async (e) => {
             userPermissions.aiNote = data.features && data.features.smartNote;
             userPermissions.ringSenseInsights = data.features && data.features.ringSenseInsights;
             userPermissions.sms = data.features && data.features.sms;
+            const rcInfo = await getRcInfo();
+            const smsSendingEnabled = rcInfo?.value?.cachedData?.extensionFeatures?.records?.find(ef => ef.id === 'SMSSending')?.available ?? false;
+            if (smsSendingEnabled) {
+              userPermissions.c2sms = true;
+            }
             await chrome.storage.local.set({ userPermissions });
-            await chrome.storage.local.set({ userFeatures: data.features });
           }
           console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
 
