@@ -11,6 +11,73 @@ import { initializeShadowRootSupport } from './lib/c2d/shadowRootSupport';
 import userCore from './core/user';
 console.log('import content js to web page');
 
+function hardenObserverInjection(observer) {
+  if (!observer || typeof observer._injectMatches !== 'function') {
+    return;
+  }
+
+  const originalInjectMatches = observer._injectMatches.bind(observer);
+
+  observer._injectMatches = (matches) => {
+    if (!Array.isArray(matches) || matches.length === 0) {
+      return originalInjectMatches(matches);
+    }
+
+    const sanitizedMatches = matches
+      .map((item) => {
+        if (!item || item.startsNode !== item.endsNode) {
+          return item;
+        }
+
+        const textNode = item.startsNode;
+        if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
+          return item;
+        }
+
+        const textLength = textNode.data ? textNode.data.length : 0;
+        const rawStart = Number.isFinite(item.startsAt) ? item.startsAt : 0;
+        const rawEnd = Number.isFinite(item.endsAt) ? item.endsAt : textLength;
+
+        const startsAt = Math.max(0, Math.min(textLength, Math.trunc(rawStart)));
+        const endsAt = Math.max(0, Math.min(textLength, Math.trunc(rawEnd)));
+
+        if (endsAt <= startsAt) {
+          return null;
+        }
+
+        return {
+          ...item,
+          startsAt,
+          endsAt,
+        };
+      })
+      .filter(Boolean);
+
+    if (sanitizedMatches.length === 0) {
+      return;
+    }
+
+    try {
+      return originalInjectMatches(sanitizedMatches);
+    } catch (error) {
+      if (error && error.name !== 'IndexSizeError') {
+        throw error;
+      }
+      // The DOM may have changed between match discovery and injection.
+      // Retry each match individually and skip stale ones.
+      sanitizedMatches.forEach((match) => {
+        try {
+          originalInjectMatches([match]);
+        } catch (singleMatchError) {
+          if (singleMatchError && singleMatchError.name !== 'IndexSizeError') {
+            console.error('[App Connect] Failed to inject C2D match', singleMatchError);
+          }
+        }
+      });
+    }
+  };
+}
+
 // type: c2d, quickAccessButton
 async function checkUrlMatch({ type = 'quickAccessButton' }) {
   try {
@@ -76,6 +143,7 @@ function createC2DInstance({ rootNode, sharedWidget }) {
     node: rootNode,
     matcher: new InputAwareRegExpMatcher(),
   });
+  hardenObserverInjection(observer);
   const options = {
     observer,
   };
