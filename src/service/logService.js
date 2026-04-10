@@ -3,7 +3,7 @@ import logCore from '../core/log';
 import dispositionCore from '../core/disposition';
 import contactCore from '../core/contact';
 import { showNotification, dismissNotification, isObjectEmpty, getRcAccessToken } from '../lib/util';
-import { getLogConflictInfo } from '../lib/logUtil';
+import logUtil from '../lib/logUtil';
 
 async function retroAutoCallLog({
     manifest,
@@ -41,7 +41,7 @@ async function retroAutoCallLog({
                 if (!callContactMatched) {
                     continue;
                 }
-                const { hasConflict, autoSelectAdditionalSubmission } = await getLogConflictInfo({
+                const { hasConflict, autoSelectAdditionalSubmission } = await logUtil.getLogConflictInfo({
                     platform,
                     isAutoLog,
                     contactInfo: callMatchedContact,

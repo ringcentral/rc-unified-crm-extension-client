@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 
-function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid }) {
+function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid, submitText, readyMessage = '', connectorId = '', isPrivate = false }) {
     const platformName = platform.displayName ?? platform.name;
     const url = platform.environment.url;
     const overrides = platform.overrides;
@@ -15,14 +15,16 @@ function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid 
         },
         uiSchema: {
             submitButtonOptions: { // optional if you don't want to show submit button
-                submitText: t('pages.hostname.next'),
+                submitText: submitText ?? t('pages.hostname.next'),
             }
         },
         formData: {
             url: inputUrl ?? '',
             platformId: platform.name,
             selection: selection ?? '',
-            platformDisplayName: platform.displayName ?? platform.name
+            platformDisplayName: platform.displayName ?? platform.name,
+            connectorId,
+            isPrivate
         }
     }
     if (platform.environment?.instructions?.length > 0) {
@@ -43,6 +45,16 @@ function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid 
                 "ui:field": "typography", // or typography to show raw text
                 "ui:bulletedList": true
             }
+        }
+    }
+    if (readyMessage) {
+        page.schema.properties.readyMessage = {
+            type: 'string',
+            description: readyMessage
+        }
+        page.uiSchema.readyMessage = {
+            'ui:field': 'typography',
+            'ui:variant': 'body2'
         }
     }
     switch (platform.environment.type) {

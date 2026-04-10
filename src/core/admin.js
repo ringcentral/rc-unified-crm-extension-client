@@ -481,6 +481,45 @@ async function reinitializeUserMapping({ serverUrl }) {
     return reinitializeUserMappingResp.data;
 }
 
+async function getManagedAuthSettings({ serverUrl }) {
+    const rcAccessToken = getRcAccessToken();
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const platformInfo = await getPlatformInfo();
+    const response = await axios.get(
+        `${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+    );
+    await chrome.storage.local.set({ managedAuthSettings: response.data });
+    return response.data;
+}
+
+async function saveManagedAuthSettings({
+    serverUrl,
+    scope,
+    values,
+    rcExtensionId,
+    rcUserName,
+    fieldsToRemove = [],
+    refreshAfterSave = true
+}) {
+    const rcAccessToken = getRcAccessToken();
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const platformInfo = await getPlatformInfo();
+    const response = await axios.post(
+        `${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        {
+            scope,
+            values,
+            rcExtensionId,
+            rcUserName,
+            fieldsToRemove
+        }
+    );
+    if (refreshAfterSave) {
+        await getManagedAuthSettings({ serverUrl });
+    }
+    return response.data;
+}
+
 exports.getAdminSettings = getAdminSettings;
 exports.uploadAdminSettings = uploadAdminSettings;
 exports.refreshAdminSettings = refreshAdminSettings;
@@ -496,3 +535,5 @@ exports.getUserMapping = getUserMapping;
 exports.getUserExtensionReportStats = getUserExtensionReportStats;
 exports.getAdminReportStats = getAdminReportStats;
 exports.reinitializeUserMapping = reinitializeUserMapping;
+exports.getManagedAuthSettings = getManagedAuthSettings;
+exports.saveManagedAuthSettings = saveManagedAuthSettings;

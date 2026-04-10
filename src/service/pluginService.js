@@ -44,6 +44,9 @@ function setPluginAsyncTaskCheck() {
 }
 
 async function pluginAsyncTaskCheck() {
+    if (!rcUnifiedCrmExtJwt) {
+        return;
+    }
     const manifest = await getManifest();
     const pluginAsyncTaskIds = await getPluginAsyncTaskIds();
     const pluginTaskRes = await axios.post(`${manifest.serverUrl}/pluginAsyncTask`, {

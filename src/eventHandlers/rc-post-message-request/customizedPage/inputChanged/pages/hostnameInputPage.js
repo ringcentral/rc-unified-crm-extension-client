@@ -1,4 +1,6 @@
 import hostnameInputPage from '../../../../../components/hostnameInputPage';
+import authCore from '../../../../../core/auth';
+import { getRcInfo } from '../../../../../lib/util';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     let isUrlValid = true;
@@ -6,12 +8,29 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         const urlIdentifierRegex = new RegExp(manifest.platforms[data.body.formData.platformId].environment.url.replace(/\*/g, '.*'));
         isUrlValid = urlIdentifierRegex.test(data.body.formData.url);
     }
+    const rcInfo = await getRcInfo();
+    const selectedPlatform = manifest.platforms[data.body.formData.platformId];
+    const managedAuthState = selectedPlatform?.auth?.type === 'apiKey'
+        ? await authCore.getManagedAuthState({
+            serverUrl: manifest.serverUrl,
+            platformName: data.body.formData.platformId,
+            connectorId: data.body.formData.connectorId ?? '',
+            isPrivate: !!data.body.formData.isPrivate,
+            rcInfo
+        })
+        : null;
     const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender(
         {
-            platform: manifest.platforms[data.body.formData.platformId],
+            platform: selectedPlatform,
             inputUrl: data.body.formData.url,
             selection: data.body.formData.selection,
-            isUrlValid
+            isUrlValid,
+            submitText: managedAuthState?.allRequiredFieldsSatisfied ? 'Connect' : undefined,
+            readyMessage: managedAuthState?.allRequiredFieldsSatisfied
+                ? `All required authentication fields are ready. Click Connect to connect to ${selectedPlatform.displayName ?? selectedPlatform.name}.`
+                : '',
+            connectorId: data.body.formData.connectorId ?? '',
+            isPrivate: !!data.body.formData.isPrivate
         });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',

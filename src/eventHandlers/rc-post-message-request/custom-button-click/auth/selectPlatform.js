@@ -27,7 +27,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             }
             catch (e) {
                 if (e.response.status === 404) {
-                    sharedManifestUrl = `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${selectedPlatform.accountId}`;
+                    sharedManifestUrl = `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?access=internal&type=connector&accountId=${selectedPlatform.accountId}`;
                     platformManifestResponse = await axios.get(sharedManifestUrl);
                 }
                 else {
@@ -43,7 +43,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             }
             catch (e) {
                 if (e.response.status === 404) {
-                    privateManifestUrl = `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=internal&accountId=${rcInfo.value.cachedData.accountInfo.id}`;
+                    privateManifestUrl = `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?access=internal&type=connector&accountId=${rcInfo.value.cachedData.accountInfo.id}`;
                     platformManifestResponse = await axios.get(privateManifestUrl);
                 }
                 else {
@@ -59,7 +59,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
         const inputUrlObj = new URL(manifest.platforms[selectedPlatform.name]?.environment?.url);
         const inputHostname = inputUrlObj.hostname;
         await chrome.storage.local.set({
-            ['platform-info']: { platformName: selectedPlatform.name, platformDisplayName: selectedPlatform.displayName ?? selectedPlatform.name, hostname: inputHostname }
+            ['platform-info']: {
+                platformName: selectedPlatform.name,
+                platformDisplayName: selectedPlatform.displayName ?? selectedPlatform.name,
+                hostname: inputHostname,
+                connectorId: selectedPlatform.id,
+                isPrivate: selectedPlatformType === 'private'
+            }
         });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-register-third-party-service',
@@ -72,9 +78,25 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
         await authCore.onUserClickConnectButton({ platform, platformName, manifest });
     }
     else {
+        const selectedPlatformConfig = manifest.platforms[selectedPlatform.name];
+        const managedAuthState = selectedPlatformConfig?.auth?.type === 'apiKey'
+            ? await authCore.getManagedAuthState({
+                serverUrl: manifest.serverUrl,
+                platformName: selectedPlatform.name,
+                connectorId: selectedPlatform.id,
+                isPrivate: selectedPlatformType === 'private',
+                rcInfo
+            })
+            : null;
         const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender({
-            platform: manifest.platforms[selectedPlatform.name],
-            isUrlValid: true
+            platform: selectedPlatformConfig,
+            isUrlValid: true,
+            submitText: managedAuthState?.allRequiredFieldsSatisfied ? 'Connect' : undefined,
+            readyMessage: managedAuthState?.allRequiredFieldsSatisfied
+                ? `All required authentication fields are ready. Click Connect to connect to ${selectedPlatformConfig.displayName ?? selectedPlatformConfig.name}.`
+                : '',
+            connectorId: selectedPlatform.id,
+            isPrivate: selectedPlatformType === 'private'
         });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-register-customized-page',
