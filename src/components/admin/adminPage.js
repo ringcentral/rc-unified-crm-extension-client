@@ -5,7 +5,7 @@ import { t } from '../../i18n';
 
 function getAdminPageRender({ platform }) {
     const hasManagedAuthFields = platform.auth?.type === 'apiKey'
-        && (platform.auth?.apiKey?.page?.content ?? []).some(field => field?.shared);
+        && (platform.auth?.apiKey?.page?.content ?? []).some(field => field?.managed);
     const page = {
         id: 'adminPage',
         title: t('pages.admin.title'),
@@ -27,7 +27,7 @@ function getAdminPageRender({ platform }) {
                         },
                         ...hasManagedAuthFields ? [{
                             const: "managedAuthentication",
-                            title: 'Shared authentication',
+                            title: 'Managed authentication',
                         }] : [],
                         ...platform.serverSideLogging ? [{
                             const: "serverSideLoggingSetting",
