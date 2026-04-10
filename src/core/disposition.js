@@ -12,7 +12,7 @@ async function upsertDisposition({ serverUrl, logType, sessionId, dispositions }
                     dispositions,
                     additionalSubmission: rcAdditionalSubmission
                 }
-                const callLogRes = await axios.put(`${serverUrl}/callDisposition?jwtToken=${rcUnifiedCrmExtJwt}`, patchBody);
+                const callLogRes = await axios.put(`${serverUrl}/callDisposition`, patchBody);
                 if(callLogRes.data.returnMessage)
                 {
                     showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'success', message: callLogRes.data.returnMessage?.message ?? 'Call disposition updated', ttl: callLogRes.data.returnMessage?.ttl ?? 3000, details: callLogRes.data.returnMessage?.details });

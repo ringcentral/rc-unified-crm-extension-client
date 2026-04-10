@@ -35,8 +35,7 @@ function getCustomContactSearch({ contactSearchAdapterButton = "contactSearchAda
 }
 
 async function getCustomContactSearchData({ serverUrl, platform, contactSearch, pageId, contactPhoneNumber }) {
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const contactRes = await axios.get(`${serverUrl}/custom/contact/search?jwtToken=${rcUnifiedCrmExtJwt}&name=${contactSearch}`);
+    const contactRes = await axios.get(`${serverUrl}/custom/contact/search?name=${contactSearch}`);
     if (contactRes.data.contact.length === 0) {
         showNotification({
             level: contactRes.data.returnMessage.messageType, message: contactRes.data.returnMessage.message, ttl: contactRes.data.returnMessage.ttl

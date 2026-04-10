@@ -22,10 +22,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             // Debounce search input to prevent characters from jumping/missing
             debounceCalldownSearch(data.requestId, async (request) => {
                 // Get fresh form data at execution time to prevent stale data
-                const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                 const updated = await calldownPage.getCalldownPageWithRecords({
                     manifest,
-                    jwtToken: rcUnifiedCrmExtJwt,
                     searchWithFilters: data.body.formData.searchWithFilters ?? {},
                     // fallback for legacy
                     filterName: data.body.formData.filterName ?? '',
@@ -62,10 +60,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                     }
                 });
 
-                const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                 const updated = await calldownPage.getCalldownPageWithRecords({
                     manifest,
-                    jwtToken: rcUnifiedCrmExtJwt,
                     searchWithFilters: data.body.formData.searchWithFilters ?? {},
                     // fallback for legacy
                     filterName: data.body.formData.filterName ?? '',
@@ -91,10 +87,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         }
     } else {
         // Other changes (row actions, etc.) - no debounce, no spinner
-        const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
         const updated = await calldownPage.getCalldownPageWithRecords({
             manifest,
-            jwtToken: rcUnifiedCrmExtJwt,
             searchWithFilters: data.body.formData.searchWithFilters ?? {},
             // fallback for legacy
             filterName: data.body.formData.filterName ?? '',

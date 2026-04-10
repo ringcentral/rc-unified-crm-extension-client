@@ -30,8 +30,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
     let isLoggedIn = false;
     if (plugin?.showAuthorizationButton && plugin?.authStateUrl) {
         try {
-            const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-            const authResponse = await axios.get(`${plugin.authStateUrl}?jwtToken=${rcUnifiedCrmExtJwt}`);
+            const authResponse = await axios.get(`${plugin.authStateUrl}`);
             isLoggedIn = authResponse.data.successful;
             if (authResponse.data.returnMessage) {
                 showNotification({ level: authResponse.data.returnMessage.messageType, message: authResponse.data.returnMessage.message, ttl: 3000 });

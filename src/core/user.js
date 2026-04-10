@@ -69,16 +69,14 @@ async function preloadUserSettingsFromAdmin({ serverUrl }) {
 }
 
 async function getUserSettingsOnline({ serverUrl }) {
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
     const getUserSettingsResponse = await axios.get(
-        `${serverUrl}/user/settings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`);
+        `${serverUrl}/user/settings?rcAccountId=${rcAccountId}`);
     return getUserSettingsResponse.data;
 }
 
 async function uploadUserSettings({ serverUrl, userSettings, settingKeysToRemove }) {
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' });
     let userSettingsToUpload = userSettings;
     // TODO: Remove this legacy migration once all environments have fully switched to
@@ -105,7 +103,7 @@ async function uploadUserSettings({ serverUrl, userSettings, settingKeysToRemove
         userSettingsToUpload.selectedRegion = { value: selectedRegion };
     }
     const uploadUserSettingsResponse = await axios.post(
-        `${serverUrl}/user/settings?jwtToken=${rcUnifiedCrmExtJwt}`,
+        `${serverUrl}/user/settings`,
         {
             userSettings: userSettingsToUpload,
             settingKeysToRemove
@@ -193,8 +191,7 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
         type: 'rc-adapter-register-customized-page',
         page: reportPageRender,
     }, '*');
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
+    const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, filterStatus: 'All', userSettings });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: calldownPageRender,

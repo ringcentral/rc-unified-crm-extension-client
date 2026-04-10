@@ -59,7 +59,7 @@ async function addLog({
                         logInfo.recording = hasRecording[`rec-link-${logInfo.sessionId}`];
                     }
                 }
-                addLogRes = await axios.post(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+                addLogRes = await axios.post(`${serverUrl}/callLog`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addLogRes.data.successful) {
                     trackSyncCallLog({ hasNote: note !== '' });
                     if(addLogRes.data.pluginAsyncTaskIds?.length > 0){
@@ -91,7 +91,7 @@ async function addLog({
                     // eslint-disable-next-line no-param-reassign
                     logInfo.rcAccessToken = rcAccessToken;
                 }
-                addLogRes = await axios.post(`${serverUrl}/messageLog?jwtToken=${rcUnifiedCrmExtJwt}`, { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+                addLogRes = await axios.post(`${serverUrl}/messageLog`, { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addLogRes.data.successful) {
                     if (isMain & addLogRes.data.logIds.length > 0) {
                         trackSyncMessageLog();
@@ -124,7 +124,7 @@ async function getLog({ serverUrl, logType, sessionIds, requireDetails }) {
     if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
-                const callLogRes = await axios.get(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}&sessionIds=${sessionIds}&requireDetails=${requireDetails}`);
+                const callLogRes = await axios.get(`${serverUrl}/callLog?sessionIds=${sessionIds}&requireDetails=${requireDetails}`);
                 showNotification({ level: callLogRes.data.returnMessage?.messageType, message: callLogRes.data.returnMessage?.message, ttl: callLogRes.data.returnMessage?.ttl, details: callLogRes.data.returnMessage?.details });
                 return { successful: callLogRes.data.successful, callLogs: callLogRes.data.logs };
         }
@@ -165,7 +165,7 @@ async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, re
                     from,
                     to
                 }
-                const callLogRes = await axios.patch(`${serverUrl}/callLog?jwtToken=${rcUnifiedCrmExtJwt}`, patchBody);
+                const callLogRes = await axios.patch(`${serverUrl}/callLog`, patchBody);
                 if (isShowNotification) {
                     if (callLogRes.data.successful) {
                         if(callLogRes.data.pluginAsyncTaskIds?.length > 0){
@@ -204,7 +204,7 @@ async function uploadCacheNote({ serverUrl, sessionId }) {
             sessionId,
             note: cachedNote[sessionId]
         }
-        const postRes = await axios.post(`${serverUrl}/callLog/cacheNote?jwtToken=${rcUnifiedCrmExtJwt}`, postBody);
+        const postRes = await axios.post(`${serverUrl}/callLog/cacheNote`, postBody);
     }
 }
 

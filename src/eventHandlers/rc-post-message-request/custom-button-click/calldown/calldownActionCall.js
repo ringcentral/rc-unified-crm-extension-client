@@ -13,10 +13,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             toCall: true
         }, '*');
         // Mark this calldown item as called
-        const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
         const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
         const rcAccountId = rcUserInfo?.rcAccountId ?? '';
-        await axios.patch(`${manifest.serverUrl}/calldown/${rowId}?jwtToken=${rcUnifiedCrmExtJwt}${rcAccountId ? `&rcAccountId=${rcAccountId}` : ''}`,
+        await axios.patch(`${manifest.serverUrl}/calldown/${rowId}${rcAccountId ? `?rcAccountId=${rcAccountId}` : ''}`,
             {status:"called", lastCallAt: new Date().toISOString() });
         // Refresh Call Back list and pill (preserve current filter)
         // Get current filter from form data to preserve user's view
@@ -29,7 +28,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
         const { userSettings } = await chrome.storage.local.get('userSettings');
         const refreshed = await calldownPage.getCalldownPageWithRecords({
             manifest,
-            jwtToken: rcUnifiedCrmExtJwt,
             filterStatus: currentFilter,
             searchWithFilters: {
                 search: currentSearch,

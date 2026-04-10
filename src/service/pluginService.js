@@ -12,8 +12,7 @@ async function getPluginLicenseStatus({ plugin }) {
     }
     const { isAdmin } = await chrome.storage.local.get('isAdmin');
     const licenseStatusUrl = plugin.licenseStatusUrl;
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const licenseStatusResponse = await axios.get(`${licenseStatusUrl}?jwtToken=${rcUnifiedCrmExtJwt}&isAdmin=${isAdmin}`);
+    const licenseStatusResponse = await axios.get(`${licenseStatusUrl}?isAdmin=${isAdmin}`);
     return { id: plugin.id, ...licenseStatusResponse.data };
 }
 
@@ -45,10 +44,9 @@ function setPluginAsyncTaskCheck() {
 }
 
 async function pluginAsyncTaskCheck() {
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const manifest = await getManifest();
     const pluginAsyncTaskIds = await getPluginAsyncTaskIds();
-    const pluginTaskRes = await axios.post(`${manifest.serverUrl}/pluginAsyncTask?jwtToken=${rcUnifiedCrmExtJwt}`, {
+    const pluginTaskRes = await axios.post(`${manifest.serverUrl}/pluginAsyncTask`, {
         asyncTaskIds: pluginAsyncTaskIds
     });
     if (pluginTaskRes.data?.tasks?.length === 0) {

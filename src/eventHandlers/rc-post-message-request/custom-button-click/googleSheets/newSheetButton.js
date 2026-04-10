@@ -5,8 +5,7 @@ import googleSheetsPage from '../../../../components/platformSpecific/googleShee
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-    const { rcUnifiedCrmExtJwt: tokenForNewSheet } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const newSheetResponse = await axios.post(`${manifest.serverUrl}/googleSheets/sheet?jwtToken=${tokenForNewSheet}`,
+    const newSheetResponse = await axios.post(`${manifest.serverUrl}/googleSheets/sheet`,
         {
             name: data.body.button.formData.newSheetName
         }

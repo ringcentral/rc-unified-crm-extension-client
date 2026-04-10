@@ -60,7 +60,7 @@ function getCalldownPageRender() {
 
 exports.getCalldownPageRender = getCalldownPageRender;
 
-async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '', filterStatus = 'All', searchWithFilters = {}, userSettings }) {
+async function getCalldownPageWithRecords({ manifest, filterName = '', filterStatus = 'All', searchWithFilters = {}, userSettings }) {
     const page = getCalldownPageRender();
     const isHidden = !userCore.getShowCalldownTabSetting(userSettings).value;
     page.hidden = isHidden;
@@ -75,7 +75,6 @@ async function getCalldownPageWithRecords({ manifest, jwtToken, filterName = '',
     try {
         const { data } = await axios.get(`${manifest.serverUrl}/calldown`, {
             params: {
-                jwtToken,
                 status: resolvedStatus
             }
         });
