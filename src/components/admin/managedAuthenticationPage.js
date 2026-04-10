@@ -3,7 +3,7 @@ function getManagedAuthenticationPageRender({ hasOrgFields, hasUserFields }) {
     if (hasOrgFields) {
         sections.push({
             const: 'managedAuthOrg',
-            title: 'Organization managed auth'
+            title: 'Account managed auth'
         });
     }
     if (hasUserFields) {

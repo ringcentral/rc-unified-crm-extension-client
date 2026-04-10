@@ -4,8 +4,8 @@ function getAuthPageRender({ manifest, platformName, visibleFieldConsts = null, 
     const authPage = manifest.platforms[platformName].auth.apiKey.page;
     const pageTitle = authPage.title;
     const filteredContent = visibleFieldConsts
-        ? authPage.content.filter(c => visibleFieldConsts.includes(c.const))
-        : authPage.content;
+        ? authPage.content.filter(c => visibleFieldConsts.includes(c.const) && !c.hidden)
+        : authPage.content.filter(c => !c.hidden);
     const required = filteredContent.filter(c => c.required).map(c => { return c.const });
     const warningText = warningMessage || authPage.warning;
     const warning = warningText ? {

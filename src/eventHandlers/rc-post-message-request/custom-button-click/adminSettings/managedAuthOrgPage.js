@@ -19,14 +19,14 @@ async function onEvent({ data, manifest }) {
         });
         await adminCore.saveManagedAuthSettings({
             serverUrl: manifest.serverUrl,
-            scope: 'org',
+            scope: 'account',
             values,
             fieldsToRemove
         });
     }
     catch (error) {
         window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-        showNotification({ level: 'error', message: 'Failed to update organization managed authentication. Please try again.', ttl: 3000 });
+        showNotification({ level: 'error', message: 'Failed to update account managed authentication. Please try again.', ttl: 3000 });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-navigate-to',
             path: 'goBack',
@@ -34,7 +34,7 @@ async function onEvent({ data, manifest }) {
         return;
     }
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
-    showNotification({ level: 'success', message: 'Organization managed authentication updated.', ttl: 3000 });
+    showNotification({ level: 'success', message: 'Account managed authentication updated.', ttl: 3000 });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-navigate-to',
         path: 'goBack',

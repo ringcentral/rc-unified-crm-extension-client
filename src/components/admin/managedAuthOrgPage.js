@@ -25,7 +25,7 @@ function getManagedAuthOrgPageRender({ orgFields = [], orgValues = {}, formData 
 
     return {
         id: 'managedAuthOrgPage',
-        title: 'Organization managed authentication',
+        title: 'Account managed authentication',
         type: 'page',
         schema: {
             type: 'object',
