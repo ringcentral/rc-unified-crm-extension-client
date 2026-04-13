@@ -59,6 +59,13 @@ function toLocalTimeValue(dt) {
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
+function toLocalDateTimeValue(dt) {
+  const date = toLocalDateValue(dt);
+  const time = toLocalTimeValue(dt);
+  if (!date || !time) return '';
+  return `${date}T${time}`;
+}
+
 const DURATION_REGEX = /^P(?=\d|T\d)(?:(\d+)D)?(?:T(?=\d)(?:(\d+)H)?(?:(\d+)M)?)?$/i;
 
 function durationIsoFromMinutes(totalMinutesRaw) {
@@ -91,6 +98,14 @@ function durationMinutesFromIso(value) {
 function toUtcIsoFromLocalDateTime({ date, time }) {
   if (!date || !time) return undefined;
   const d = new Date(`${date}T${time}`);
+  if (Number.isNaN(d.getTime())) return undefined;
+  return d.toISOString();
+}
+
+function toUtcIsoFromLocalDateTimeValue(value) {
+  const v = String(value ?? '').trim();
+  if (!v) return undefined;
+  const d = new Date(v);
   if (Number.isNaN(d.getTime())) return undefined;
   return d.toISOString();
 }
@@ -308,8 +323,7 @@ function getAppointmentEditPageRender({
     ),
     participantName,
     summary: source?.summary ?? source?.description ?? '',
-    appointmentDate: start ? toLocalDateValue(start) : '',
-    appointmentTime: start ? toLocalTimeValue(start) : '',
+    dateTime: start ? toLocalDateTimeValue(start) : '',
     duration: durationIsoFromMinutes(durationMinutes),
     participantContacts: participantContactsFromDraft.length > 0 ? participantContactsFromDraft : participantContactsFromAttendees,
     participantContactId: String(source?.participantContactId ?? '').trim() || first.id,
@@ -320,6 +334,10 @@ function getAppointmentEditPageRender({
   const merged = { ...defaults, ...(initialFormData || {}) };
   if (statusVisible) {
     merged.status = normalizeStatusKey(merged.status) || defaultStatus;
+  }
+  // Backward-compat: callers may still provide appointmentDate + appointmentTime.
+  if (!merged.dateTime && merged.appointmentDate && merged.appointmentTime) {
+    merged.dateTime = `${merged.appointmentDate}T${merged.appointmentTime}`;
   }
 
   const candidateContacts = dedupeContactsByIdType([
@@ -357,10 +375,7 @@ function getAppointmentEditPageRender({
             title: { type: 'string', title: '' },
           }
           : {}),
-        appointmentDateLabel: { type: 'string', title: '', description: 'Date' },
-        appointmentDate: { type: 'string', title: '', format: 'date' },
-        appointmentTimeLabel: { type: 'string', title: '', description: 'Time' },
-        appointmentTime: { type: 'string', title: '', format: 'time' },
+        dateTime: { type: 'string', format: 'date-time', title: 'Date and Time' },
         durationLabel: { type: 'string', title: '', description: 'Duration' },
         duration: { type: 'string', title: '', format: 'duration' },
         summaryLabel: { type: 'string', title: '', description: 'Summary' },
@@ -453,10 +468,7 @@ function getAppointmentEditPageRender({
         'returnFilter',
         'emailMandatoryInAttendee',
         ...(titleFieldVisible ? ['titleLabel', 'title'] : []),
-        'appointmentDateLabel',
-        'appointmentDate',
-        'appointmentTimeLabel',
-        'appointmentTime',
+        'dateTime',
         'durationLabel',
         'duration',
         'summaryLabel',
@@ -471,13 +483,8 @@ function getAppointmentEditPageRender({
         'participantContacts',
         ...(statusVisible ? ['statusLabel', 'status'] : []),
       ],
-      appointmentDateLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
-      appointmentDate: { 'ui:widget': 'date', 'ui:options': { label: false } },
-      // Render Time + Duration in a single row on desktop.
-      appointmentTimeLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
-      appointmentTime: {
-        'ui:widget': 'time',
-        'ui:options': { grid: { xs: 12, sm: 4 }, label: false },
+      dateTime: {
+        'ui:options': { grid: { xs: 12, sm: 12 } },
       },
       durationLabel: {
         'ui:field': 'typography',
@@ -486,7 +493,7 @@ function getAppointmentEditPageRender({
       },
       duration: {
         'ui:widget': 'duration',
-        'ui:options': { grid: { xs: 12, sm: 8 }, label: false },
+        'ui:options': { grid: { xs: 12, sm: 12 }, label: false },
       },
     },
     formData: merged,
@@ -497,10 +504,7 @@ async function saveAppointmentEdits({ manifest, jwtToken, formData }) {
   const appointmentId = formData?.thirdPartyAppointmentId;
   if (!appointmentId) return null;
 
-  const startTime = toUtcIsoFromLocalDateTime({
-    date: formData?.appointmentDate,
-    time: formData?.appointmentTime,
-  });
+  const startTime = toUtcIsoFromLocalDateTimeValue(formData?.dateTime);
   const durationMinutesTotal = durationMinutesFromIso(formData?.duration);
   const safeDurationMinutes = Number.isFinite(durationMinutesTotal) ? durationMinutesTotal : 60;
 

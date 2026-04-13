@@ -100,9 +100,9 @@ async function onEvent({ data, manifest, platformName }) {
   })).filter((c) => c.id);
 
   const existing = Array.isArray(draft?.participantContacts) ? draft.participantContacts : [];
-  const mergedContacts = appointmentEditDraft
-    ? dedupeContactsByIdType([...(existing || []), ...(participantContacts || [])])
-    : dedupeContactsByIdType(participantContacts);
+  // Always merge with existing participants so subsequent searches append selections
+  // instead of replacing them (both Create and Edit flows).
+  const mergedContacts = dedupeContactsByIdType([...(existing || []), ...(participantContacts || [])]);
 
   const existingCandidates = Array.isArray(draft?.participantCandidates) ? draft.participantCandidates : [];
   const mergedCandidates = dedupeContactsByIdType([
