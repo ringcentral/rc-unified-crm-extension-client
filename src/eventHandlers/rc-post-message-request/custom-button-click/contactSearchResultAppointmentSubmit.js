@@ -34,6 +34,16 @@ function dedupeContactsByIdType(contacts) {
   return Array.from(map.values());
 }
 
+function normalizeCandidateContacts(contacts) {
+  return (contacts || [])
+    .map((c) => ({
+      id: String(c?.id ?? '').trim(),
+      type: String(c?.type ?? c?.contactType ?? '').trim(),
+      name: String(c?.name ?? '').trim(),
+    }))
+    .filter((c) => c.id);
+}
+
 function hasContactEmail(contact) {
   const directEmail = String(
     contact?.email ??
@@ -94,11 +104,20 @@ async function onEvent({ data, manifest, platformName }) {
     ? dedupeContactsByIdType([...(existing || []), ...(participantContacts || [])])
     : dedupeContactsByIdType(participantContacts);
 
+  const existingCandidates = Array.isArray(draft?.participantCandidates) ? draft.participantCandidates : [];
+  const mergedCandidates = dedupeContactsByIdType([
+    ...normalizeCandidateContacts(existingCandidates),
+    ...normalizeCandidateContacts(contactInfo),
+    ...mergedContacts,
+  ]);
+
   const first = mergedContacts[0] ?? { id: '', type: '', name: '' };
   const participantName = buildParticipantNameDisplay(mergedContacts);
 
   const updatedDraft = {
     ...draft,
+    participantCandidates: mergedCandidates,
+    participantContactIds: mergedContacts.map((c) => String(c.id)),
     participantContacts: mergedContacts,
     participantName,
     // Preserve current primary contact if it's still present; otherwise fallback to first selected.

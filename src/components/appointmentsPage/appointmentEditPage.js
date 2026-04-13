@@ -131,6 +131,64 @@ function dedupeContactsByIdType(contacts) {
   return Array.from(map.values());
 }
 
+function normalizeContactList(value) {
+  const raw = Array.isArray(value) ? value : [];
+  return raw
+    .map((c) => ({
+      id: String(c?.id ?? '').trim(),
+      type: String(c?.type ?? '').trim(),
+      name: String(c?.name ?? '').trim(),
+    }))
+    .filter((c) => c.id);
+}
+
+function uniqueIds(values) {
+  const out = [];
+  const seen = new Set();
+  for (const v of values || []) {
+    const s = String(v ?? '').trim();
+    if (!s || seen.has(s)) continue;
+    seen.add(s);
+    out.push(s);
+  }
+  return out;
+}
+
+function resolveParticipantsForSubmit(formData) {
+  const selectedFromIds = uniqueIds(Array.isArray(formData?.participantContactIds) ? formData.participantContactIds : []);
+  const candidates = dedupeContactsByIdType([
+    ...normalizeContactList(formData?.participantCandidates),
+    ...normalizeContactList(formData?.participantContacts),
+    ...(formData?.participantContactId
+      ? [{
+        id: String(formData?.participantContactId ?? '').trim(),
+        type: String(formData?.participantContactType ?? '').trim(),
+        name: String(formData?.participantName ?? '').trim(),
+      }]
+      : []),
+  ]);
+  const selected = selectedFromIds.length > 0 ? selectedFromIds : uniqueIds(candidates.map((c) => c.id));
+  const byId = new Map(candidates.map((c) => [String(c.id), c]));
+  const selectedContacts = selected.map((id) => byId.get(id)).filter(Boolean);
+  const manualNames = selected.filter((id) => !byId.has(id));
+
+  const participantName = [
+    ...selectedContacts.map((c) => c.name).filter(Boolean),
+    ...manualNames,
+  ].join(', ');
+
+  const primary =
+    selectedContacts.find((c) => String(c?.id) === String(formData?.participantContactId ?? '').trim())
+    || selectedContacts[0]
+    || null;
+
+  return {
+    participantName,
+    participantContacts: selectedContacts,
+    primaryParticipant: primary,
+  };
+}
+
 function reconcileParticipantContactsForSubmit({ participantName, participantContacts }) {
   const normalizedContacts = dedupeContactsByIdType((participantContacts || [])
     .map((c) => ({
@@ -206,6 +264,16 @@ function getAppointmentEditPageRender({
       .filter((c) => c.id))
     : [];
 
+  const participantCandidatesFromSource = Array.isArray(source?.participantCandidates)
+    ? dedupeContactsByIdType(source.participantCandidates
+      .map((c) => ({
+        id: String(c?.id ?? '').trim(),
+        type: String(c?.type ?? '').trim(),
+        name: String(c?.name ?? '').trim(),
+      }))
+      .filter((c) => c.id))
+    : [];
+
   const participantName =
     (participantContactsFromDraft.length > 0
       ? participantContactsFromDraft.map((c) => c.name).filter(Boolean).join('\n')
@@ -226,6 +294,18 @@ function getAppointmentEditPageRender({
     returnSearch: String(source?.returnSearch ?? ''),
     returnFilter: String(source?.returnFilter ?? 'All'),
     ...(titleFieldVisible ? { title: source?.title ?? source?.subject ?? '' } : {}),
+    participantCandidates: dedupeContactsByIdType([
+      ...participantCandidatesFromSource,
+      ...participantContactsFromDraft,
+      ...participantContactsFromAttendees,
+    ]),
+    participantContactIds: uniqueIds(
+      Array.isArray(source?.participantContactIds) ? source.participantContactIds : (
+        participantContactsFromDraft.length > 0
+          ? participantContactsFromDraft.map((c) => c.id)
+          : participantContactsFromAttendees.map((c) => c.id)
+      ),
+    ),
     participantName,
     summary: source?.summary ?? source?.description ?? '',
     appointmentDate: start ? toLocalDateValue(start) : '',
@@ -242,6 +322,20 @@ function getAppointmentEditPageRender({
     merged.status = normalizeStatusKey(merged.status) || defaultStatus;
   }
 
+  const candidateContacts = dedupeContactsByIdType([
+    ...normalizeContactList(merged.participantCandidates),
+    ...normalizeContactList(merged.participantContacts),
+    ...participantContactsFromAttendees,
+  ]);
+  const candidateIds = candidateContacts.map((c) => String(c.id));
+  const candidateNames = candidateContacts.map((c) => String(c.name || c.id));
+
+  merged.participantContactIds = uniqueIds(
+    Array.isArray(merged.participantContactIds) && merged.participantContactIds.length > 0
+      ? merged.participantContactIds
+      : normalizeContactList(merged.participantContacts).map((c) => c.id),
+  );
+
   return {
     id: 'appointmentEditPage',
     title: `Edit ${entityTitle}`,
@@ -257,23 +351,42 @@ function getAppointmentEditPageRender({
         returnSearch: { type: 'string', title: '' },
         returnFilter: { type: 'string', title: '' },
         emailMandatoryInAttendee: { type: 'boolean', title: '' },
-        ...(titleFieldVisible ? { title: { type: 'string', title: titleFieldTitle } } : {}),
-        participantName: { type: 'string', title: 'Participant' },
+        ...(titleFieldVisible
+          ? {
+            titleLabel: { type: 'string', title: '', description: titleFieldTitle },
+            title: { type: 'string', title: '' },
+          }
+          : {}),
+        appointmentDateLabel: { type: 'string', title: '', description: 'Date' },
+        appointmentDate: { type: 'string', title: '', format: 'date' },
+        appointmentTimeLabel: { type: 'string', title: '', description: 'Time' },
+        appointmentTime: { type: 'string', title: '', format: 'time' },
+        durationLabel: { type: 'string', title: '', description: 'Duration' },
+        duration: { type: 'string', title: '', format: 'duration' },
+        summaryLabel: { type: 'string', title: '', description: 'Summary' },
+        summary: { type: 'string', title: '' },
+        participantsLabel: { type: 'string', title: '', description: 'Participants' },
+        participantContactIds: {
+          type: 'array',
+          title: '',
+          items: {
+            type: 'string',
+          },
+        },
+        participantCandidates: { type: 'array', title: '' },
+        participantName: { type: 'string', title: '' },
         // Hidden fields: selected contact identity
         participantContactId: { type: 'string', title: '' },
         participantContactType: { type: 'string', title: '' },
         // Hidden field: multi-selected contacts (normalized list)
         participantContacts: { type: 'array', title: '' },
         appointmentSelectParticipantButton: { type: 'string', title: 'Search' },
-        summary: { type: 'string', title: 'Summary' },
-        appointmentDate: { type: 'string', title: 'Date', format: 'date' },
-        appointmentTime: { type: 'string', title: 'Time', format: 'time' },
-        duration: { type: 'string', title: 'Duration', format: 'duration' },
         ...(statusVisible
           ? {
+            statusLabel: { type: 'string', title: '', description: 'Status' },
             status: {
               type: 'string',
-              title: 'Status',
+              title: '',
               oneOf: statusOneOf,
             },
           }
@@ -292,60 +405,88 @@ function getAppointmentEditPageRender({
       emailMandatoryInAttendee: { 'ui:widget': 'hidden' },
       ...(titleFieldVisible
         ? {
+          titleLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
           title: {
             'ui:placeholder': titleFieldTitle,
+            'ui:options': { label: false },
           },
         }
         : {}),
       ...(statusVisible
         ? {
-          status: { 'ui:widget': 'select' },
+          statusLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
+          status: { 'ui:widget': 'select', 'ui:options': { label: false } },
         }
         : {}),
+      participantCandidates: { 'ui:widget': 'hidden' },
+      participantName: { 'ui:widget': 'hidden' },
       participantContactId: { 'ui:widget': 'hidden' },
       participantContactType: { 'ui:widget': 'hidden' },
       participantContacts: { 'ui:widget': 'hidden' },
-      participantName: {
-        'ui:widget': 'textarea',
-        'ui:placeholder': 'Select a contact',
-        'ui:options': { rows: 3, grid: { xs: 8, sm: 8 } },
+      participantContactIds: {
+        'ui:widget': 'AutocompleteWidget',
+        'ui:placeholder': candidateContacts.length > 0 ? 'Select participants...' : 'Use Search to find contacts',
+        'ui:options': {
+          multiple: true,
+          enumOptions: candidateContacts.map((c) => ({ value: String(c.id), label: String(c.name || c.id) })),
+          grid: { xs: 8, sm: 9 },
+          label: false,
+        },
       },
       appointmentSelectParticipantButton: {
         'ui:field': 'button',
-        'ui:variant': 'plain',
+        'ui:variant': 'outlined',
+        'ui:color': 'primary',
         'ui:fullWidth': false,
-        'ui:options': { grid: { xs: 4, sm: 4 } },
+        'ui:options': { grid: { xs: 2, sm: 1} },
       },
       summary: {
         'ui:widget': 'textarea',
+        'ui:options': { label: false },
       },
+      summaryLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
+      participantsLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
       'ui:order': [
         'thirdPartyAppointmentId',
         'returnTab',
         'returnSearch',
         'returnFilter',
         'emailMandatoryInAttendee',
-        ...(titleFieldVisible ? ['title'] : []),
+        ...(titleFieldVisible ? ['titleLabel', 'title'] : []),
+        'appointmentDateLabel',
         'appointmentDate',
+        'appointmentTimeLabel',
         'appointmentTime',
+        'durationLabel',
         'duration',
+        'summaryLabel',
         'summary',
-        'participantName',
+        'participantsLabel',
+        'participantContactIds',
         'appointmentSelectParticipantButton',
+        'participantCandidates',
+        'participantName',
         'participantContactId',
         'participantContactType',
         'participantContacts',
-        ...(statusVisible ? ['status'] : []),
+        ...(statusVisible ? ['statusLabel', 'status'] : []),
       ],
-      appointmentDate: { 'ui:widget': 'date' },
+      appointmentDateLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
+      appointmentDate: { 'ui:widget': 'date', 'ui:options': { label: false } },
       // Render Time + Duration in a single row on desktop.
+      appointmentTimeLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
       appointmentTime: {
         'ui:widget': 'time',
-        'ui:options': { grid: { xs: 12, sm: 4 } },
+        'ui:options': { grid: { xs: 12, sm: 4 }, label: false },
+      },
+      durationLabel: {
+        'ui:field': 'typography',
+        'ui:variant': 'caption1',
+        'ui:style': { marginBottom: '-8px' },
       },
       duration: {
         'ui:widget': 'duration',
-        'ui:options': { grid: { xs: 12, sm: 8 } },
+        'ui:options': { grid: { xs: 12, sm: 8 }, label: false },
       },
     },
     formData: merged,
@@ -362,28 +503,36 @@ async function saveAppointmentEdits({ manifest, jwtToken, formData }) {
   });
   const durationMinutesTotal = durationMinutesFromIso(formData?.duration);
   const safeDurationMinutes = Number.isFinite(durationMinutesTotal) ? durationMinutesTotal : 60;
-  const participantContactsRaw = Array.isArray(formData?.participantContacts)
-    ? formData.participantContacts
-    : [];
-  const uniqueParticipantContacts = reconcileParticipantContactsForSubmit({
-    participantName: formData?.participantName,
-    participantContacts: participantContactsRaw,
-  });
+
+  const resolvedFromIds = resolveParticipantsForSubmit(formData);
+  const resolvedContacts =
+    resolvedFromIds.participantContacts.length > 0
+      ? resolvedFromIds.participantContacts
+      : reconcileParticipantContactsForSubmit({
+        participantName: formData?.participantName,
+        participantContacts: Array.isArray(formData?.participantContacts) ? formData.participantContacts : [],
+      });
   const primaryParticipant =
-    uniqueParticipantContacts.find((c) => String(c?.id) === String(formData?.participantContactId ?? '').trim())
-    || uniqueParticipantContacts[0]
+    resolvedFromIds.primaryParticipant
+    || resolvedContacts.find((c) => String(c?.id) === String(formData?.participantContactId ?? '').trim())
+    || resolvedContacts[0]
     || null;
+
+  const participantNameToSubmit =
+    resolvedFromIds.participantName
+    || normalizeParticipantNameForSubmit(formData?.participantName);
+
   const patchBase = {
-    participantName: normalizeParticipantNameForSubmit(formData?.participantName),
+    participantName: participantNameToSubmit,
     summary: formData?.summary ?? '',
     startTime,
     durationMinutes: safeDurationMinutes,
     contactId: primaryParticipant?.id ?? '',
     contactType: primaryParticipant?.type ?? '',
     // Some backends use "attendees" while others use "contacts".
-    contacts: uniqueParticipantContacts,
-    attendees: uniqueParticipantContacts,
-    attendeeIds: uniqueParticipantContacts.map((c) => c.id),
+    contacts: resolvedContacts,
+    attendees: resolvedContacts,
+    attendeeIds: resolvedContacts.map((c) => c.id),
   };
   const title = String(formData?.title ?? '').trim();
   if (title) patchBase.title = title;

@@ -122,6 +122,63 @@ function dedupeContactsByIdType(contacts) {
   return Array.from(map.values());
 }
 
+function normalizeContactList(value) {
+  const raw = Array.isArray(value) ? value : [];
+  return raw
+    .map((c) => ({
+      id: String(c?.id ?? '').trim(),
+      type: String(c?.type ?? '').trim(),
+      name: String(c?.name ?? '').trim(),
+    }))
+    .filter((c) => c.id);
+}
+
+function uniqueIds(values) {
+  const out = [];
+  const seen = new Set();
+  for (const v of values || []) {
+    const s = String(v ?? '').trim();
+    if (!s || seen.has(s)) continue;
+    seen.add(s);
+    out.push(s);
+  }
+  return out;
+}
+
+function resolveParticipantsForSubmit(formData) {
+  const selectedFromIds = uniqueIds(Array.isArray(formData?.participantContactIds) ? formData.participantContactIds : []);
+  const candidates = dedupeContactsByIdType([
+    ...normalizeContactList(formData?.participantCandidates),
+    ...normalizeContactList(formData?.participantContacts),
+    ...(formData?.participantContactId
+      ? [{
+        id: String(formData?.participantContactId ?? '').trim(),
+        type: String(formData?.participantContactType ?? '').trim(),
+        name: String(formData?.participantName ?? '').trim(),
+      }]
+      : []),
+  ]);
+  const selected = selectedFromIds.length > 0 ? selectedFromIds : uniqueIds(candidates.map((c) => c.id));
+  const byId = new Map(candidates.map((c) => [String(c.id), c]));
+  const selectedContacts = selected.map((id) => byId.get(id)).filter(Boolean);
+  const manualNames = selected.filter((id) => !byId.has(id));
+
+  const participantName = [
+    ...selectedContacts.map((c) => c.name).filter(Boolean),
+    ...manualNames,
+  ].join(', ');
+
+  const primary =
+    selectedContacts.find((c) => String(c?.id) === String(formData?.participantContactId ?? '').trim())
+    || null;
+
+  return {
+    participantName,
+    participantContacts: selectedContacts,
+    primaryParticipant: primary,
+  };
+}
+
 function getAppointmentCreatePageRender({
   initialFormData = {},
   appointmentTitle = 'Appointments',
@@ -146,6 +203,10 @@ function getAppointmentCreatePageRender({
     returnFilter: 'All',
     // Used by appointment participant search to optionally filter to contacts with email.
     emailMandatoryInAttendee: undefined,
+    // Hidden: candidates for the autocomplete dropdown (populated by the Search flow).
+    participantCandidates: [],
+    // Visible: selected participant contact ids (autocomplete).
+    participantContactIds: [],
     participantName: '',
     participantContactId: '',
     participantContactType: '',
@@ -159,38 +220,74 @@ function getAppointmentCreatePageRender({
   }
   const entityTitle = singularizeAppointmentTitle(appointmentTitle);
 
+  const candidateContacts = dedupeContactsByIdType([
+    ...normalizeContactList(merged.participantCandidates),
+    ...normalizeContactList(merged.participantContacts),
+  ]);
+  const candidateIds = candidateContacts.map((c) => String(c.id));
+  const candidateNames = candidateContacts.map((c) => String(c.name || c.id));
+
+  const selectedIds = uniqueIds(
+    Array.isArray(merged.participantContactIds) && merged.participantContactIds.length > 0
+      ? merged.participantContactIds
+      : normalizeContactList(merged.participantContacts).map((c) => c.id),
+  );
+  merged.participantContactIds = selectedIds;
+
   const required = [
     ...(titleFieldVisible ? ['title'] : []),
     'appointmentDate',
     'appointmentTime',
     'duration',
-    'participantName',
-    'summary',
+    'participantContactIds',
     ...(statusVisible ? ['status'] : []),
   ];
 
   const properties = {
-    ...(titleFieldVisible ? { title: { type: 'string', title: titleFieldTitle } } : {}),
-    appointmentDate: { type: 'string', title: 'Date', format: 'date' },
-    appointmentTime: { type: 'string', title: 'Time', format: 'time' },
-    duration: { type: 'string', title: 'Duration', format: 'duration' },
+    ...(titleFieldVisible
+      ? {
+        titleLabel: { type: 'string', title: '', description: titleFieldTitle },
+        title: { type: 'string', title: '' },
+      }
+      : {}),
+    appointmentDateLabel: { type: 'string', title: '', description: 'Date' },
+    appointmentDate: { type: 'string', title: '', format: 'date' },
+    appointmentTimeLabel: { type: 'string', title: '', description: 'Time' },
+    appointmentTime: { type: 'string', title: '', format: 'time' },
+    durationLabel: { type: 'string', title: '', description: 'Duration' },
+    duration: { type: 'string', title: '', format: 'duration' },
     returnTab: { type: 'string', title: '' },
     returnSearch: { type: 'string', title: '' },
     returnFilter: { type: 'string', title: '' },
     emailMandatoryInAttendee: { type: 'boolean', title: '' },
-    participantName: { type: 'string', title: 'Participant' },
+    participantsLabel: { type: 'string', title: '', description: 'Add Participants' },
+    // Visible: participants list (single AutocompleteWidget with multiple tags).
+    participantContactIds: {
+      type: 'array',
+      title: '',
+      minItems: 1,
+      items: {
+        type: 'string',
+      },
+    },
+    summaryLabel: { type: 'string', title: '', description: 'Summary/Description' },
+    // Hidden: keep participantName for backward compatibility / payload.
+    participantName: { type: 'string', title: '' },
     // Hidden fields: selected contact identity
     participantContactId: { type: 'string', title: '' },
     participantContactType: { type: 'string', title: '' },
     // Hidden field: multi-selected contacts (normalized list)
     participantContacts: { type: 'array', title: '' },
+    // Hidden field: all candidates to keep autocomplete options around.
+    participantCandidates: { type: 'array', title: '' },
     appointmentSelectParticipantButton: { type: 'string', title: 'Search' },
-    summary: { type: 'string', title: 'Summary/Description' },
+    summary: { type: 'string', title: '' },
     ...(statusVisible
       ? {
+        statusLabel: { type: 'string', title: '', description: 'Status' },
         status: {
           type: 'string',
-          title: 'Status',
+          title: '',
           oneOf: statusOneOf,
         },
       }
@@ -198,21 +295,28 @@ function getAppointmentCreatePageRender({
   };
 
   const uiOrder = [
-    ...(titleFieldVisible ? ['title'] : []),
+    ...(titleFieldVisible ? ['titleLabel', 'title'] : []),
+    'appointmentDateLabel',
     'appointmentDate',
+    'appointmentTimeLabel',
     'appointmentTime',
+    'durationLabel',
     'duration',
+    'summaryLabel',
     'summary',
-    'participantName',
+    'participantsLabel',
+    'participantContactIds',
     'appointmentSelectParticipantButton',
     'returnTab',
     'returnSearch',
     'returnFilter',
     'emailMandatoryInAttendee',
+    'participantCandidates',
+    'participantName',
     'participantContactId',
     'participantContactType',
     'participantContacts',
-    ...(statusVisible ? ['status'] : []),
+    ...(statusVisible ? ['statusLabel', 'status'] : []),
   ];
 
   return {
@@ -232,52 +336,73 @@ function getAppointmentCreatePageRender({
       },
       // keep date/time at top like Meetings
       'ui:order': uiOrder,
-      appointmentDate: { 'ui:widget': 'date' },
+      appointmentDateLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
+      appointmentDate: { 'ui:widget': 'date', 'ui:options': { label: false } },
       // Render Time + Duration in a single row on desktop.
+      appointmentTimeLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
       appointmentTime: {
         'ui:widget': 'time',
-        'ui:options': { grid: { xs: 12, sm: 4 } },
+        'ui:options': { grid: { xs: 12, sm: 4 }, label: false },
+      },
+      durationLabel: {
+        'ui:field': 'typography',
+        'ui:variant': 'caption1',
+        'ui:style': { marginBottom: '-8px' },
       },
       duration: {
         'ui:widget': 'duration',
-        'ui:options': { grid: { xs: 12, sm: 8 } },
+        'ui:options': { grid: { xs: 12, sm: 8 }, label: false },
       },
       ...(titleFieldVisible
         ? {
+          titleLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
           title: {
             'ui:placeholder': titleFieldTitle,
+            'ui:options': { label: false },
           },
         }
         : {}),
       ...(statusVisible
         ? {
-          status: { 'ui:widget': 'select' },
+          statusLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
+          status: { 'ui:widget': 'select', 'ui:options': { label: false } },
         }
         : {}),
       returnTab: { 'ui:widget': 'hidden' },
       returnSearch: { 'ui:widget': 'hidden' },
       returnFilter: { 'ui:widget': 'hidden' },
       emailMandatoryInAttendee: { 'ui:widget': 'hidden' },
+      participantCandidates: { 'ui:widget': 'hidden' },
+      participantName: { 'ui:widget': 'hidden' },
       participantContactId: { 'ui:widget': 'hidden' },
       participantContactType: { 'ui:widget': 'hidden' },
       participantContacts: { 'ui:widget': 'hidden' },
       // Try to render a compact "Search" button inline to the right of Participant.
       // If the embeddable build ignores grid hints, it will still render as a smaller button.
-      participantName: {
-        'ui:widget': 'textarea',
-        'ui:placeholder': 'Select a contact',
-        'ui:options': { rows: 3, grid: { xs: 8, sm: 8 } },
+      participantContactIds: {
+        'ui:widget': 'AutocompleteWidget',
+        'ui:placeholder': candidateContacts.length > 0 ? 'Select participants...' : 'Use Search to find contacts',
+        'ui:options': {
+          multiple: true,
+          enumOptions: candidateContacts.map((c) => ({ value: String(c.id), label: String(c.name || c.id) })),
+          grid: { xs: 8, sm: 9 },
+          label: false,
+        },
       },
       appointmentSelectParticipantButton: {
         'ui:field': 'button',
-        'ui:variant': 'plain',
+        'ui:variant': 'outlined',
+        'ui:color': 'primary',
         'ui:fullWidth': false,
-        'ui:options': { grid: { xs: 4, sm: 4 } },
+        'ui:options': { grid: { xs: 4, sm: 3 } },
       },
       summary: {
         'ui:widget': 'textarea',
-        'ui:help': 'Description',
+        'ui:options': { label: false },
+        'ui:help': '',
       },
+      summaryLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
+      participantsLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
     },
     formData: merged,
   };
@@ -291,22 +416,13 @@ async function submitAppointmentCreate({ manifest, jwtToken, formData }) {
   const durationMinutesTotal = durationMinutesFromIso(formData?.duration);
   const safeDurationMinutes = Number.isFinite(durationMinutesTotal) ? durationMinutesTotal : 60;
 
-  const participantContactsRaw = Array.isArray(formData?.participantContacts)
-    ? formData.participantContacts
-    : [];
-  const participantContacts = participantContactsRaw
-    .map((c) => ({
-      id: String(c?.id ?? '').trim(),
-      type: String(c?.type ?? '').trim(),
-      name: String(c?.name ?? '').trim(),
-    }))
-    .filter((c) => c.id);
+  const { participantName, participantContacts, primaryParticipant } = resolveParticipantsForSubmit(formData);
   const uniqueParticipantContacts = dedupeContactsByIdType(participantContacts);
 
   const payload = {
-    participantName: normalizeParticipantNameForSubmit(formData?.participantName),
-    contactId: formData?.participantContactId ?? '',
-    contactType: formData?.participantContactType ?? '',
+    participantName: normalizeParticipantNameForSubmit(participantName || formData?.participantName),
+    contactId: primaryParticipant?.id ?? '',
+    contactType: primaryParticipant?.type ?? '',
     // Always pass contacts as an array (even when only one is selected).
     contacts: uniqueParticipantContacts.length > 0
       ? uniqueParticipantContacts
