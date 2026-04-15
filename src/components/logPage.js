@@ -114,7 +114,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     break;
                 case 'checkbox':
                     if (defaultContact?.additionalInfo?.[f.const] === undefined) {
-                        continue;
+                        defaultContact.additionalInfo[f.const] = false;
                     }
                     additionalFields[f.const] = {
                         title: f.title,
