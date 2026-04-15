@@ -13,7 +13,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const isEditMode = !!editingRecordId;
     // show spinner while scheduling
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
     let contactIdToUse = contact;
@@ -27,9 +26,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             showNotification({ level: 'success', message: 'Contact created', ttl: 3000 });
             
             if (isEditMode) {
-                await axios.patch(`${manifest.serverUrl}/calldown/${editingRecordId}?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType: selectedType, note });
+                await axios.patch(`${manifest.serverUrl}/calldown/${editingRecordId}?rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType: selectedType, note });
             } else {
-                await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType: selectedType, note });
+                await axios.post(`${manifest.serverUrl}/calldown?rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType: selectedType, note });
             }
 
             // Cache contact information for call back list display
@@ -47,7 +46,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             }, '*');
             
             const { userSettings } = await chrome.storage.local.get('userSettings');
-            const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
+            const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, filterStatus: 'All', userSettings });
             document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: calldownPageRender }, '*');
             document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: 'goBack' }, '*');
         } else {
@@ -77,9 +76,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         }
 
         if (isEditMode) {
-            await axios.patch(`${manifest.serverUrl}/calldown/${editingRecordId}?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType, note });
+            await axios.patch(`${manifest.serverUrl}/calldown/${editingRecordId}?rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType, note });
         } else {
-            await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType, note });
+            await axios.post(`${manifest.serverUrl}/calldown?rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType, note });
         }
 
         // Cache contact information for existing contact
@@ -95,7 +94,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             showNotification({ level: 'success', message: isEditMode ? 'Schedule updated successfully' : 'Added to Call Back list', ttl: 3000 });
         }
         const { userSettings } = await chrome.storage.local.get('userSettings');
-        const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
+        const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, filterStatus: 'All', userSettings });
         document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: calldownPageRender }, '*');
         document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-navigate-to', path: 'goBack' }, '*');
     }

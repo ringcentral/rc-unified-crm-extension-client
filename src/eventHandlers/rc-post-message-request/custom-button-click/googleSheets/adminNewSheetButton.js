@@ -7,11 +7,10 @@ import adminGoogleSheetsPage from '../../../../components/admin/adminGoogleSheet
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     const rcAccessTokenNewSheet = getRcAccessToken();
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-    const { rcUnifiedCrmExtJwt: adminTokenForNewSheet } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { adminSettings } = await chrome.storage.local.get('adminSettings');
     
     try{
-    const adminNewSheetResponse = await axios.post(`${manifest.serverUrl}/admin/googleSheets/sheet?jwtToken=${adminTokenForNewSheet}&rcAccessToken=${rcAccessTokenNewSheet}`,
+    const adminNewSheetResponse = await axios.post(`${manifest.serverUrl}/admin/googleSheets/sheet?rcAccessToken=${rcAccessTokenNewSheet}`,
         {
             name: data.body.button.formData.newSheetName
         }

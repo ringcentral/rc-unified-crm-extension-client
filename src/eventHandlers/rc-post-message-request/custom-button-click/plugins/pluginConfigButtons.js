@@ -10,7 +10,7 @@ async function onEvent({ data, buttonId, manifest, platformInfo, platformName, p
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     switch (buttonId) {
         case 'pluginAuthButton':
-            const getAuthUriResponse = await axios.get(`${data.body.button.formData.plugin.authorizationUrl}?jwtToken=${rcUnifiedCrmExtJwt}&pluginId=${data.body.button.formData.pluginId}`);
+            const getAuthUriResponse = await axios.get(`${data.body.button.formData.plugin.authorizationUrl}?pluginId=${data.body.button.formData.pluginId}`);
             const authUri = getAuthUriResponse.data?.authUrl ?? getAuthUriResponse.data;
             authCore.handleThirdPartyOAuthWindow(authUri);
             await chrome.storage.local.set({ 'cachedPluginConfigFormData': data.body.button.formData });
@@ -21,7 +21,7 @@ async function onEvent({ data, buttonId, manifest, platformInfo, platformName, p
                     jwtToken: rcUnifiedCrmExtJwt
                 }
             );
-            const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ plugin: data.body.button.formData.plugin });
+            const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ pluginId: data.body.button.formData.pluginId, plugin: data.body.button.formData.plugin });
             if (logoutResponse.data.successful) {
                 showNotification({ level: 'success', message: t('notifications.success.loggedOut'), ttl: 3000 });
                 const pluginConfigurePageRender = getPluginConfigurePageRender({

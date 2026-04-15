@@ -261,10 +261,10 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                         minimum: todayStart.toISOString()
                     }
                 };
-page.schema.properties.callbackDateTime = {
-                ...(page.schema.properties.callbackDateTime || { title: t('pages.log.callbackTime'), type: 'string', format: 'date-time' }),
-                minimum: todayStart.toISOString()
-            };
+                page.schema.properties.callbackDateTime = {
+                    ...(page.schema.properties.callbackDateTime || { title: t('pages.log.callbackTime'), type: 'string', format: 'date-time' }),
+                    minimum: todayStart.toISOString()
+                };
                 // mark callback time as required so Save disables until provided
                 if (!Array.isArray(page.schema.required)) {
                     page.schema.required = [];
@@ -401,6 +401,7 @@ page.schema.properties.callbackDateTime = {
                             break;
                         case 'checkbox':
                             if (f.contactDependent && (contact?.additionalInfo?.[f.const] === undefined)) {
+                                contact.additionalInfo[f.const] = false;
                                 continue;
                             }
                             additionalFields[f.const] = {

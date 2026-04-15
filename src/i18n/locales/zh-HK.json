@@ -243,16 +243,16 @@
       "transcript": "通话记录",
       "transcriptDesc": "记录 AI 生成的通话记录（如果存在）",
       "aiAssistantRequired": "需要 AI 助手",
-      "ringSenseTranscript": "RingSense 记录",
-      "ringSenseTranscriptDesc": "需要 [RingSense 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
-      "ringSenseCallScore": "RingSense 通话评分",
-      "ringSenseCallScoreDesc": "需要 [RingSense 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
-      "ringSenseSummary": "RingSense 摘要",
-      "ringSenseSummaryDesc": "需要 [RingSense 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
-      "ringSenseBulletedSummary": "RingSense 要点摘要",
-      "ringSenseBulletedSummaryDesc": "需要 [RingSense 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
-      "ringSenseRecordingLink": "RingSense 录音链接",
-      "ringSenseRecordingLinkDesc": "需要 [RingSense 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
+      "ringSenseTranscript": "ACE 记录",
+      "ringSenseTranscriptDesc": "需要 [ACE 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
+      "ringSenseCallScore": "ACE 通话评分",
+      "ringSenseCallScoreDesc": "需要 [ACE 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
+      "ringSenseSummary": "ACE 摘要",
+      "ringSenseSummaryDesc": "需要 [ACE 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
+      "ringSenseBulletedSummary": "ACE 要点摘要",
+      "ringSenseBulletedSummaryDesc": "需要 [ACE 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
+      "ringSenseRecordingLink": "ACE 录音链接",
+      "ringSenseRecordingLinkDesc": "需要 [ACE 许可证](https://www.ringcentral.com/ringsense.html?ref=AppConnect)。仅服务器端日志记录。",
       "callJourney": "通话路径",
       "callJourneyDesc": "仅服务器端日志记录。",
       "dateFormatGlobal24H": "全球 - 24 小时（例如 2024-01-15 14:30:45）",
@@ -407,4 +407,3 @@
     "setup": "设置"
   }
 }
-

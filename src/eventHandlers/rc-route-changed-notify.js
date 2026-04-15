@@ -26,7 +26,6 @@ async function onEvent({ data }) {
           if (rcUnifiedCrmExtJwt && crmAuthed) {
             const refreshedCalldown = await calldownPage.getCalldownPageWithRecords({
               manifest,
-              jwtToken: rcUnifiedCrmExtJwt,
               filterStatus: 'All',
               userSettings
             });

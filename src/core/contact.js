@@ -57,7 +57,7 @@ async function getContact({ serverUrl, phoneNumber, platformName, isFromManual =
     }
 
     if (rcUnifiedCrmExtJwt) {
-        const contactRes = await axios.get(`${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}&phoneNumber=${phoneNumber}&overridingFormat=${encodeURIComponent(overridingFormats.toString())}&isExtension=${isExtensionNumber}&isForceRefreshAccountData=${isFromManual ? 'true' : 'false'}`);
+        const contactRes = await axios.get(`${serverUrl}/contact?phoneNumber=${phoneNumber}&overridingFormat=${encodeURIComponent(overridingFormats.toString())}&isExtension=${isExtensionNumber}&isForceRefreshAccountData=${isFromManual ? 'true' : 'false'}`);
         if (!contactRes.data.contact) {
             return {
                 matched: false,
@@ -111,7 +111,7 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     if (rcUnifiedCrmExtJwt) {
         const contactRes = await axios.post(
-            `${serverUrl}/contact?jwtToken=${rcUnifiedCrmExtJwt}`,
+            `${serverUrl}/contact`,
             {
                 phoneNumber,
                 newContactName,
@@ -155,10 +155,9 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
 }
 
 async function openContactPage({ manifest, platformName, phoneNumber, contactId, contactType, multiContactMatchBehavior, fromCallPop = false }) {
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     let platformInfo = await chrome.storage.local.get('platform-info');
     if (platformInfo['platform-info'].hostname === 'temp') {
-        const hostnameRes = await axios.get(`${manifest.serverUrl}/hostname?jwtToken=${rcUnifiedCrmExtJwt}`);
+        const hostnameRes = await axios.get(`${manifest.serverUrl}/hostname`);
         platformInfo['platform-info'].hostname = hostnameRes.data;
         await chrome.storage.local.set(platformInfo);
     }

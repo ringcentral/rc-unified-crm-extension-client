@@ -12,13 +12,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     for (const pluginId in installedPlugins) {
         const targetPlugin = pluginList.find(plugin => plugin.id === pluginId);
         targetPlugin.requireLicense = installedPlugins[pluginId]?.requireLicense ?? false;
-        targetPlugin.licenseStatusUrl = installedPlugins[pluginId]?.licenseStatusUrl ?? '';
         if (targetPlugin) {
             pluginListToRender.push(targetPlugin);
         }
     }
     // fetch license status for all plugins as a batch
-    const licenseStatuses = await Promise.all(pluginListToRender.map(plugin => pluginService.getPluginLicenseStatus({ plugin })));
+    const licenseStatuses = await Promise.all(pluginListToRender.map(plugin => pluginService.getPluginLicenseStatus({ pluginId: plugin.id, plugin })));
     for (const plugin of pluginListToRender) {
         const licenseStatus = licenseStatuses.find(status => status.id === plugin.id);
         plugin.licenseStatus = licenseStatus.licenseStatus;

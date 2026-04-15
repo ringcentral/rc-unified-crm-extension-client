@@ -243,16 +243,16 @@
       "transcript": "통화 녹취록",
       "transcriptDesc": "AI 생성 통화 녹취록 기록 (있는 경우)",
       "aiAssistantRequired": "AI 어시스턴트 필요",
-      "ringSenseTranscript": "RingSense 녹취록",
-      "ringSenseTranscriptDesc": "[RingSense 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
-      "ringSenseCallScore": "RingSense 통화 점수",
-      "ringSenseCallScoreDesc": "[RingSense 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
-      "ringSenseSummary": "RingSense 요약",
-      "ringSenseSummaryDesc": "[RingSense 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
-      "ringSenseBulletedSummary": "RingSense 글머리 기호 요약",
-      "ringSenseBulletedSummaryDesc": "[RingSense 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
-      "ringSenseRecordingLink": "RingSense 녹음 링크",
-      "ringSenseRecordingLinkDesc": "[RingSense 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
+      "ringSenseTranscript": "ACE 녹취록",
+      "ringSenseTranscriptDesc": "[ACE 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
+      "ringSenseCallScore": "ACE 통화 점수",
+      "ringSenseCallScoreDesc": "[ACE 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
+      "ringSenseSummary": "ACE 요약",
+      "ringSenseSummaryDesc": "[ACE 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
+      "ringSenseBulletedSummary": "ACE 글머리 기호 요약",
+      "ringSenseBulletedSummaryDesc": "[ACE 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
+      "ringSenseRecordingLink": "ACE 녹음 링크",
+      "ringSenseRecordingLinkDesc": "[ACE 라이선스](https://www.ringcentral.com/ringsense.html?ref=AppConnect) 필요. 서버 측 로깅만.",
       "callJourney": "통화 여정",
       "callJourneyDesc": "서버 측 로깅만.",
       "dateFormatGlobal24H": "글로벌 - 24시간 (예: 2024-01-15 14:30:45)",
@@ -407,4 +407,3 @@
     "setup": "설정"
   }
 }
-

@@ -47,10 +47,49 @@ const popupContext = {
 
 let isLoggingOut = false;
 
+function extractJwtTokenFromUrl(url, baseURL) {
+  if (!url || typeof url !== 'string') {
+    return { sanitizedUrl: url, jwtToken: null };
+  }
+  try {
+    const isAbsoluteUrl = /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(url);
+    const base = baseURL || window.location.origin;
+    const parsed = new URL(url, base);
+    const jwtToken = parsed.searchParams.get('jwtToken');
+    if (!jwtToken) {
+      return { sanitizedUrl: url, jwtToken: null };
+    }
+    parsed.searchParams.delete('jwtToken');
+    const sanitizedUrl = (isAbsoluteUrl || baseURL) ? parsed.toString() : `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    return { sanitizedUrl, jwtToken };
+  } catch {
+    return { sanitizedUrl: url, jwtToken: null };
+  }
+}
+
+async function persistRefreshedJwtToken(headers) {
+  const refreshedToken = headers?.['x-refreshed-jwt-token'] || headers?.['X-Refreshed-Jwt-Token'];
+  if (refreshedToken) {
+    await chrome.storage.local.set({ rcUnifiedCrmExtJwt: refreshedToken });
+  }
+}
+
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
 // Add request interceptor
 axios.interceptors.request.use(
   async (config) => {
+    const { sanitizedUrl, jwtToken: tokenFromUrl } = extractJwtTokenFromUrl(config.url, config.baseURL);
+    if (tokenFromUrl) {
+      config.url = sanitizedUrl;
+    }
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get({ rcUnifiedCrmExtJwt: null });
+    const tokenToUse = tokenFromUrl || rcUnifiedCrmExtJwt;
+    if (tokenToUse) {
+      config.headers = config.headers || {};
+      if (!config.headers.Authorization && !config.headers.authorization) {
+        config.headers.Authorization = `Bearer ${tokenToUse}`;
+      }
+    }
     if (await logRecorder.isRecordingLogs()) {
       logRecorder.logAction({
         name: 'API_REQUEST',
@@ -79,6 +118,7 @@ axios.interceptors.request.use(
 // Add response interceptor
 axios.interceptors.response.use(
   async (response) => {
+    await persistRefreshedJwtToken(response.headers);
     if (await logRecorder.isRecordingLogs()) {
       logRecorder.logAction({
         name: 'API_RESPONSE',
@@ -93,6 +133,7 @@ axios.interceptors.response.use(
     return response;
   },
   async (error) => {
+    await persistRefreshedJwtToken(error.response?.headers);
     if (await logRecorder.isRecordingLogs()) {
       logRecorder.logAction({
         name: 'API_RESPONSE_ERROR',
@@ -107,7 +148,8 @@ axios.interceptors.response.use(
     }
     if (error.response?.status === 401 && !isLoggingOut) {
       const url = error.config?.baseURL ? `${error.config.baseURL}${error.config.url}` : error.config?.url || '';
-      if (url.includes('jwtToken=') && !url.includes('/unAuthorize')) {
+      const hasBearerHeader = !!(error.config?.headers?.Authorization || error.config?.headers?.authorization);
+      if ((url.includes('jwtToken=') || hasBearerHeader) && !url.includes('/unAuthorize')) {
         isLoggingOut = true;
         try {
           const manifest = await getManifest();

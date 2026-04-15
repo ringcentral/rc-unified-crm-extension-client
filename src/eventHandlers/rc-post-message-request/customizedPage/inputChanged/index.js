@@ -16,6 +16,8 @@ import getErrorLogRecrodPageHandler from './pages/getErrorLogRecordPage';
 import logRecordSubmissionPageHandler from './pages/logRecordSubmissionPage';
 import adminGoogleSheetsPageHandler from './pages/adminGoogleSheetsPage';
 import pluginAdminSettingsPageHandler from './pages/pluginAdminSettingsPage';
+import managedAuthUserPageHandler from './pages/managedAuthUserPage';
+import managedAuthUserEditPageHandler from './pages/managedAuthUserEditPage';
 
 import generalSettingsHandler from './sections/generalSettings';
 import managedSettingsHandler from './sections/managedSettings';
@@ -36,6 +38,9 @@ import userMappingHandler from './sections/userMapping';
 import googleSheetsAdminConfigHandler from './sections/googleSheetsAdminConfig';
 import pluginsAdminConfigHandler from './sections/pluginsAdminConfig';
 import installedPluginsHandler from './sections/installedPlugins';
+import managedAuthenticationHandler from './sections/managedAuthentication';
+import managedAuthOrgHandler from './sections/managedAuthOrg';
+import managedAuthUserHandler from './sections/managedAuthUser';
 
 import pluginMarketListPageHandler from '../../pluginMarketListPage';
 import selectPluginHandler from '../../custom-button-click/plugins/selectPlugin';
@@ -105,6 +110,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             const pluginId = data.body?.formData?.section;
             await pluginAdminSettingsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, pluginId });
             break;
+        case 'managedAuthUserPage':
+            await managedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'managedAuthUserEditPage':
+            await managedAuthUserEditPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
         case 'installedPluginListPage':
             await selectPluginHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
@@ -129,6 +140,15 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                     await pluginsAdminConfigHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
                     break;
             }
+            break;
+        case 'managedAuthentication':
+            await managedAuthenticationHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'managedAuthOrg':
+            await managedAuthOrgHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'managedAuthUser':
+            await managedAuthUserHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'pluginMarket':
             await pluginMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

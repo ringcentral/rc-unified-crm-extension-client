@@ -243,16 +243,16 @@
       "transcript": "Puhelun litteraatio",
       "transcriptDesc": "Kirjaa tekoälyn luoma puhelun litteraatio, jos sellainen on",
       "aiAssistantRequired": "AI-avustaja vaaditaan",
-      "ringSenseTranscript": "RingSense-litteraatio",
-      "ringSenseTranscriptDesc": "[RingSense-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
-      "ringSenseCallScore": "RingSense-puhelupisteet",
-      "ringSenseCallScoreDesc": "[RingSense-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
-      "ringSenseSummary": "RingSense-yhteenveto",
-      "ringSenseSummaryDesc": "[RingSense-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
-      "ringSenseBulletedSummary": "RingSense-luetteloyhteenveto",
-      "ringSenseBulletedSummaryDesc": "[RingSense-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
-      "ringSenseRecordingLink": "RingSense-tallennelinkki",
-      "ringSenseRecordingLinkDesc": "[RingSense-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
+      "ringSenseTranscript": "ACE-litteraatio",
+      "ringSenseTranscriptDesc": "[ACE-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
+      "ringSenseCallScore": "ACE-puhelupisteet",
+      "ringSenseCallScoreDesc": "[ACE-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
+      "ringSenseSummary": "ACE-yhteenveto",
+      "ringSenseSummaryDesc": "[ACE-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
+      "ringSenseBulletedSummary": "ACE-luetteloyhteenveto",
+      "ringSenseBulletedSummaryDesc": "[ACE-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
+      "ringSenseRecordingLink": "ACE-tallennelinkki",
+      "ringSenseRecordingLinkDesc": "[ACE-lisenssi](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vaaditaan. Vain palvelinpuolen lokitus.",
       "callJourney": "Puhelupolku",
       "callJourneyDesc": "Vain palvelinpuolen lokitus.",
       "dateFormatGlobal24H": "Globaali - 24 h (esim. 2024-01-15 14:30:45)",
@@ -407,4 +407,3 @@
     "setup": "Asetukset"
   }
 }
-

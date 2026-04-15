@@ -4,6 +4,8 @@ import adminIconDark from '../../images/adminIcon_dark.png';
 import { t } from '../../i18n';
 
 function getAdminPageRender({ platform }) {
+    const hasManagedAuthFields = platform.auth?.type === 'apiKey'
+        && (platform.auth?.apiKey?.page?.content ?? []).some(field => field?.managed);
     const page = {
         id: 'adminPage',
         title: t('pages.admin.title'),
@@ -23,6 +25,10 @@ function getAdminPageRender({ platform }) {
                             const: "managedSettings",
                             title: t('pages.admin.managedSettings'),
                         },
+                        ...hasManagedAuthFields ? [{
+                            const: "managedAuthentication",
+                            title: 'Managed authentication',
+                        }] : [],
                         ...platform.serverSideLogging ? [{
                             const: "serverSideLoggingSetting",
                             title: t('pages.admin.serverSideLogging'),

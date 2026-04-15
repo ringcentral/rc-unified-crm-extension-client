@@ -243,16 +243,16 @@
       "transcript": "Trascrizione chiamata",
       "transcriptDesc": "Registra la trascrizione generata dall'IA della chiamata, se esiste",
       "aiAssistantRequired": "Assistente IA richiesto",
-      "ringSenseTranscript": "Trascrizione RingSense",
-      "ringSenseTranscriptDesc": "[Licenza RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) richiesta. Solo logging lato server.",
-      "ringSenseCallScore": "Punteggio chiamata RingSense",
-      "ringSenseCallScoreDesc": "[Licenza RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) richiesta. Solo logging lato server.",
-      "ringSenseSummary": "Riepilogo RingSense",
-      "ringSenseSummaryDesc": "[Licenza RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) richiesta. Solo logging lato server.",
-      "ringSenseBulletedSummary": "Riepilogo RingSense (elenco puntato)",
-      "ringSenseBulletedSummaryDesc": "[Licenza RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) richiesta. Solo logging lato server.",
-      "ringSenseRecordingLink": "Link registrazione RingSense",
-      "ringSenseRecordingLinkDesc": "[Licenza RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) richiesta. Solo logging lato server.",
+      "ringSenseTranscript": "Trascrizione ACE",
+      "ringSenseTranscriptDesc": "[Licenza ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) richiesta. Solo logging lato server.",
+      "ringSenseCallScore": "Punteggio chiamata ACE",
+      "ringSenseCallScoreDesc": "[Licenza ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) richiesta. Solo logging lato server.",
+      "ringSenseSummary": "Riepilogo ACE",
+      "ringSenseSummaryDesc": "[Licenza ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) richiesta. Solo logging lato server.",
+      "ringSenseBulletedSummary": "Riepilogo ACE (elenco puntato)",
+      "ringSenseBulletedSummaryDesc": "[Licenza ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) richiesta. Solo logging lato server.",
+      "ringSenseRecordingLink": "Link registrazione ACE",
+      "ringSenseRecordingLinkDesc": "[Licenza ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) richiesta. Solo logging lato server.",
       "callJourney": "Percorso chiamata",
       "callJourneyDesc": "Solo logging lato server.",
       "dateFormatGlobal24H": "Globale - 24H (es. 2024-01-15 14:30:45)",
@@ -406,4 +406,3 @@
     "setup": "Configurazione"
   }
 }
-

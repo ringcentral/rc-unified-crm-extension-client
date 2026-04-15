@@ -43,6 +43,9 @@ import logRecordSubmissionPageHandler from './errorLogging/logRecordSubmit';
 import saveServerSideLoggingButtonHandler from './adminSettings/saveServerSideLogging';
 import doNotLogNumbersSubmitButtonHandler from './adminSettings/doNotLogNumbersSubmit';
 import generalHandler from './adminSettings/adminSettingsFormSubmit';
+import managedAuthOrgPageHandler from './adminSettings/managedAuthOrgPage';
+import managedAuthUserPageHandler from './adminSettings/managedAuthUserPage';
+import managedAuthUserEditHandler from './adminSettings/managedAuthUserEdit';
 
 import googleSheetsConfigHandler from './googleSheets/googleSheetsConfig';
 import newSheetButtonHandler from './googleSheets/newSheetButton';
@@ -381,6 +384,18 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'phoneNumberFormatPage':
         case 'clickToDialEmbedPage':
             await generalHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+            break;
+        case 'managedAuthOrgPage':
+            await managedAuthOrgPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'managedAuthUserEdit':
+            await managedAuthUserEditHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'managedAuthUserPage':
+            await managedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'managedAuthUserEditPage':
+            await managedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
     }
     if (data.body.button.id.startsWith('link-button-')) {

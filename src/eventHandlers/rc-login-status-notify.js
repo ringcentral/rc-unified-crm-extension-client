@@ -36,6 +36,11 @@ async function onEvent({ data }) {
         userPermissions.ringSenseInsights = data.features && data.features.ringSenseInsights;
         userPermissions.ringCX = data.features && data.features.ringCX;
         userPermissions.sms = data.features && data.features.sms;
+        const rcInfo = await getRcInfo();
+        const smsSendingEnabled = rcInfo?.value?.cachedData?.extensionFeatures?.records?.find(ef => ef.id === 'SMSSending')?.available ?? false;
+        if (smsSendingEnabled) {
+            userPermissions.c2sms = true;
+        }
         await chrome.storage.local.set({ userPermissions });
     }
     console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
@@ -86,7 +91,7 @@ async function onEvent({ data }) {
             // Call Back tab (register only if enabled by admin)
             if (userCore.getShowCalldownTabSetting(userSettings).value) {
                 const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-                const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
+                const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, filterStatus: 'All', userSettings });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: calldownPageRender,

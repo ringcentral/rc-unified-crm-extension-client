@@ -243,16 +243,16 @@
       "transcript": "Anruftranskript",
       "transcriptDesc": "Das KI-generierte Transkript des Anrufs protokollieren, falls vorhanden",
       "aiAssistantRequired": "KI-Assistent erforderlich",
-      "ringSenseTranscript": "RingSense-Transkript",
-      "ringSenseTranscriptDesc": "[RingSense-Lizenz](https://www.ringcentral.com/ringsense.html?ref=AppConnect) erforderlich. Nur serverseitige Protokollierung.",
-      "ringSenseCallScore": "RingSense-Anrufbewertung",
-      "ringSenseCallScoreDesc": "[RingSense-Lizenz](https://www.ringcentral.com/ringsense.html?ref=AppConnect) erforderlich. Nur serverseitige Protokollierung.",
-      "ringSenseSummary": "RingSense-Zusammenfassung",
-      "ringSenseSummaryDesc": "[RingSense-Lizenz](https://www.ringcentral.com/ringsense.html?ref=AppConnect) erforderlich. Nur serverseitige Protokollierung.",
-      "ringSenseBulletedSummary": "RingSense-Zusammenfassung (Aufzählung)",
-      "ringSenseBulletedSummaryDesc": "[RingSense-Lizenz](https://www.ringcentral.com/ringsense.html?ref=AppConnect) erforderlich. Nur serverseitige Protokollierung.",
-      "ringSenseRecordingLink": "RingSense-Aufzeichnungslink",
-      "ringSenseRecordingLinkDesc": "[RingSense-Lizenz](https://www.ringcentral.com/ringsense.html?ref=AppConnect) erforderlich. Nur serverseitige Protokollierung.",
+      "ringSenseTranscript": "ACE-Transkript",
+      "ringSenseTranscriptDesc": "[ACE-Lizenz](https://www.ringcentral.com/ringsense.html?ref=AppConnect) erforderlich. Nur serverseitige Protokollierung.",
+      "ringSenseCallScore": "ACE-Anrufbewertung",
+      "ringSenseCallScoreDesc": "[ACE-Lizenz](https://www.ringcentral.com/ringsense.html?ref=AppConnect) erforderlich. Nur serverseitige Protokollierung.",
+      "ringSenseSummary": "ACE-Zusammenfassung",
+      "ringSenseSummaryDesc": "[ACE-Lizenz](https://www.ringcentral.com/ringsense.html?ref=AppConnect) erforderlich. Nur serverseitige Protokollierung.",
+      "ringSenseBulletedSummary": "ACE-Zusammenfassung (Aufzählung)",
+      "ringSenseBulletedSummaryDesc": "[ACE-Lizenz](https://www.ringcentral.com/ringsense.html?ref=AppConnect) erforderlich. Nur serverseitige Protokollierung.",
+      "ringSenseRecordingLink": "ACE-Aufzeichnungslink",
+      "ringSenseRecordingLinkDesc": "[ACE-Lizenz](https://www.ringcentral.com/ringsense.html?ref=AppConnect) erforderlich. Nur serverseitige Protokollierung.",
       "callJourney": "Anrufverlauf",
       "callJourneyDesc": "Nur serverseitige Protokollierung.",
       "dateFormatGlobal24H": "Global - 24H (z.B. 2024-01-15 14:30:45)",
@@ -407,4 +407,3 @@
     "setup": "Einrichtung"
   }
 }
-

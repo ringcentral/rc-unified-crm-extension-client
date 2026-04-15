@@ -243,16 +243,16 @@
       "transcript": "Call transcript",
       "transcriptDesc": "Log the AI-generated transcript of the call, if it exists",
       "aiAssistantRequired": "AI Assistant required",
-      "ringSenseTranscript": "RingSense transcript",
-      "ringSenseTranscriptDesc": "[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.",
-      "ringSenseCallScore": "RingSense call score",
-      "ringSenseCallScoreDesc": "[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.",
-      "ringSenseSummary": "RingSense summary",
-      "ringSenseSummaryDesc": "[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.",
-      "ringSenseBulletedSummary": "RingSense bulleted summary",
-      "ringSenseBulletedSummaryDesc": "[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.",
-      "ringSenseRecordingLink": "RingSense recording link",
-      "ringSenseRecordingLinkDesc": "[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.",
+      "ringSenseTranscript": "ACE transcript",
+      "ringSenseTranscriptDesc": "[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.",
+      "ringSenseCallScore": "ACE call score",
+      "ringSenseCallScoreDesc": "[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.",
+      "ringSenseSummary": "ACE summary",
+      "ringSenseSummaryDesc": "[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.",
+      "ringSenseBulletedSummary": "ACE bulleted summary",
+      "ringSenseBulletedSummaryDesc": "[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.",
+      "ringSenseRecordingLink": "ACE recording link",
+      "ringSenseRecordingLinkDesc": "[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.",
       "callJourney": "Call journey",
       "callJourneyDesc": "Server-side logging only.",
       "dateFormatGlobal24H": "Global - 24H (e.g. 2024-01-15 14:30:45)",
@@ -408,4 +408,3 @@
     "setup": "Setup"
   }
 }
-

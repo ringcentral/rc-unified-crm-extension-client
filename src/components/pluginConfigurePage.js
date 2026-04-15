@@ -71,8 +71,7 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
                 description: {
                     type: 'string',
                     description: plugin.description,
-                },
-                ...customFormProperties
+                }
             }
         },
         uiSchema: {
@@ -89,12 +88,10 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
             description: {
                 "ui:field": "typography",
                 "ui:variant": "body1",
-            },
-            ...customFormUiSchema
+            }
         },
         formData: {
             isFromAdmin: false,
-            config,
             access: pluginAccess,
             pluginId,
             plugin,
@@ -103,6 +100,14 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
             logTypes: plugin.supportedLogTypes,
             isLoggedIn
         }
+    }
+    if (customForm?.length > 0) {
+        page.schema.properties.config = {
+            type: 'object',
+            title: 'Configuration',
+            properties: customFormProperties
+        }
+        page.uiSchema.config = customFormUiSchema;
     }
     if (plugin.showAuthorizationButton) {
         if (isLoggedIn) {

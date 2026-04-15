@@ -31,8 +31,7 @@ async function stopRecordingLogs() {
 }
 
 async function uploadLogs({ serverUrl }) {
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const presignedUrlResponse = await axios.get(`${serverUrl}/debug/report/url?jwtToken=${rcUnifiedCrmExtJwt}`);
+    const presignedUrlResponse = await axios.get(`${serverUrl}/debug/report/url`);
     const presignedUrl = presignedUrlResponse.data.presignedUrl;
     const logs = getLog();
     const uploadResponse = await axios.put(presignedUrl, JSON.stringify(logs, null, 2));

@@ -6,11 +6,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const rcInfo = await getRcInfo();
     const rcAccountId = rcInfo.value.cachedData.extensionInfo.account.id;
     const form = data.body.button.formData;
-    const config = form.config;
-    for (const k in config) {
+    const config = {};
+    for (const k in form.config) {
         config[k] = {
-            value: form[k],
-            customizable: config[k].customizable
+            value: form.config[k]
         };
     }
     const changedSettings = {

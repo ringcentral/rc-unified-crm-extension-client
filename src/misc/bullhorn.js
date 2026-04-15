@@ -11,7 +11,7 @@ async function bullhornHeartbeat({ platform }) {
     const manifest = await getManifest();
     const { rcUnifiedCrmExtJwt: token } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     try {
-        const response = await axios.get(`${manifest.serverUrl}/authValidation?jwtToken=${token}`);
+        const response = await axios.get(`${manifest.serverUrl}/authValidation`);
         if (response.data.successful) {
             console.log('bullhorn heartbeat successful');
         }

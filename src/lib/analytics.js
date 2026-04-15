@@ -308,7 +308,7 @@ exports.trackCrmAuthFail = function trackCrmAuthFail() {
 }
 
 exports.trackRingSensePage = function trackRingSensePage() {
-    track('Visit RingSense from AppConnect', {
+    track('Visit ACE from AppConnect', {
         appName,
         via: eventAddedVia,
         version,

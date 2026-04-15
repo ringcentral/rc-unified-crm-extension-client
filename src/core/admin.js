@@ -11,9 +11,8 @@ import { getManifest } from '../service/manifestService';
 async function getAdminSettings({ serverUrl }) {
     try {
         const rcAccessToken = getRcAccessToken();
-        const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
         const getAdminSettingsResponse = await axios.get(
-            `${serverUrl}/admin/settings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`);
+            `${serverUrl}/admin/settings?rcAccessToken=${rcAccessToken}`);
         return getAdminSettingsResponse.data;
     }
     catch (e) {
@@ -23,9 +22,8 @@ async function getAdminSettings({ serverUrl }) {
 
 async function uploadAdminSettings({ serverUrl, adminSettings }) {
     const rcAccessToken = getRcAccessToken();
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const uploadAdminSettingsResponse = await axios.post(
-        `${serverUrl}/admin/settings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`,
+        `${serverUrl}/admin/settings?rcAccessToken=${rcAccessToken}`,
         {
             adminSettings
         });
@@ -119,12 +117,11 @@ async function getServerSideLoggingAdditionalFieldValues({ platform }) {
     if (!platform.serverSideLogging || !platform.serverSideLogging.additionalFields) {
         return {};
     }
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
     const manifest = await getManifest();
     const settingsResponse = await axios.get(
-        `${manifest.serverUrl}/admin/serverLoggingSettings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`,
+        `${manifest.serverUrl}/admin/serverLoggingSettings?rcAccountId=${rcAccountId}`,
     );
     return settingsResponse.data;
 }
@@ -137,12 +134,11 @@ async function uploadServerSideLoggingAdditionalFieldValues({ platform, formData
     platform.serverSideLogging.additionalFields.forEach(field => {
         additionalFieldValues[field.const] = formData.serverSideLoggingHolder[field.const];
     });
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
     const manifest = await getManifest();
     const uploadResponse = await axios.post(
-        `${manifest.serverUrl}/admin/serverLoggingSettings?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`,
+        `${manifest.serverUrl}/admin/serverLoggingSettings?rcAccountId=${rcAccountId}`,
         {
             additionalFieldValues,
         }
@@ -381,7 +377,7 @@ async function authServerSideLogging({ platform }) {
     const rcAPI = new RcAPI();
     const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
     const serverSideLoggingTokenResp = await axios.get(
-        `${serverDomainUrl}/oauth/callback?code=${rcInteropCode}&&rcAccountId=${rcUserInfo?.rcAccountId}`,
+        `${serverDomainUrl}/oauth/callback?code=${rcInteropCode}&rcAccountId=${rcUserInfo?.rcAccountId}`,
         {
             headers: {
                 Accept: 'application/json'
@@ -393,7 +389,7 @@ async function authServerSideLogging({ platform }) {
     return serverSideLoggingToken;
 }
 
-async function authAppConnectServer({ serverUrl, jwtToken }) {
+async function authAppConnectServer({ serverUrl }) {
     try {
         const rcAccessToken = getRcAccessToken();
         // eslint-disable-next-line no-undef
@@ -401,7 +397,7 @@ async function authAppConnectServer({ serverUrl, jwtToken }) {
         const rcAPI = new RcAPI();
         const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
         const serverSideLoggingTokenResp = await axios.get(
-            `${serverUrl}/ringcentral/oauth/callback?code=${rcInteropCode}&jwtToken=${jwtToken}`,
+            `${serverUrl}/ringcentral/oauth/callback?code=${rcInteropCode}`,
             {
                 headers: {
                     Accept: 'application/json'
@@ -414,12 +410,12 @@ async function authAppConnectServer({ serverUrl, jwtToken }) {
     }
 }
 
-async function getAdminReportStats({ serverUrl, timezone, timeFrom, timeTo, groupBy, jwtToken }) {
+async function getAdminReportStats({ serverUrl, timezone, timeFrom, timeTo, groupBy }) {
     if (timeFrom === undefined || timeTo === undefined) {
         return null;
     }
     const adminReportStatsResp = await axios.get(
-        `${serverUrl}/ringcentral/admin/report?jwtToken=${jwtToken}&timezone=${timezone}&timeFrom=${timeFrom}&timeTo=${timeTo}&groupBy=${groupBy}`,
+        `${serverUrl}/ringcentral/admin/report?timezone=${timezone}&timeFrom=${timeFrom}&timeTo=${timeTo}&groupBy=${groupBy}`,
         {
             headers: {
                 Accept: 'application/json'
@@ -429,12 +425,12 @@ async function getAdminReportStats({ serverUrl, timezone, timeFrom, timeTo, grou
     return adminReportStatsResp.data;
 }
 
-async function getUserExtensionReportStats({ serverUrl, rcExtensionId, timezone, timeFrom, timeTo, jwtToken }) {
+async function getUserExtensionReportStats({ serverUrl, rcExtensionId, timezone, timeFrom, timeTo }) {
     if (timeFrom === undefined || timeTo === undefined) {
         return null;
     }
     const userReportStatsResp = await axios.get(
-        `${serverUrl}/ringcentral/admin/userReport?jwtToken=${jwtToken}&rcExtensionId=${rcExtensionId}&timezone=${timezone}&timeFrom=${timeFrom}&timeTo=${timeTo}`,
+        `${serverUrl}/ringcentral/admin/userReport?rcExtensionId=${rcExtensionId}&timezone=${timezone}&timeFrom=${timeFrom}&timeTo=${timeTo}`,
     );
     if (rcExtensionId === `~`) {
         const { calls, hasMore } = await RCAdapter.getUnloggedCalls(100, 1);
@@ -458,12 +454,11 @@ async function getUserExtensionReportStats({ serverUrl, rcExtensionId, timezone,
 }
 
 async function getUserMapping({ serverUrl }) {
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
     const rcAccessToken = getRcAccessToken();
     const rcExtensionList = (await getRcContactInfo()).filter(rc => rc.type == 'User' || rc.type == 'Department');
     const userMappingResp = await axios.post(
-        `${serverUrl}/admin/userMapping?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}`,
+        `${serverUrl}/admin/userMapping?rcAccessToken=${rcAccessToken}`,
         {
             rcExtensionList
         }
@@ -472,19 +467,57 @@ async function getUserMapping({ serverUrl }) {
 }
 
 async function reinitializeUserMapping({ serverUrl }) {
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
     const rcAccessToken = getRcAccessToken();
     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
     const manifest = await getManifest();
     const rcExtensionList = (await getRcContactInfo()).filter(rc => rc.type == 'User' || rc.type == 'Department');
     const reinitializeUserMappingResp = await axios.post(
-        `${manifest.serverUrl}/admin/reinitializeUserMapping?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}&rcAccessToken=${rcAccessToken}`,
+        `${manifest.serverUrl}/admin/reinitializeUserMapping?rcAccountId=${rcAccountId}&rcAccessToken=${rcAccessToken}`,
         {
             rcExtensionList
         }
     );
     return reinitializeUserMappingResp.data;
+}
+
+async function getManagedAuthSettings({ serverUrl }) {
+    const rcAccessToken = getRcAccessToken();
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const platformInfo = await getPlatformInfo();
+    const response = await axios.get(
+        `${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+    );
+    await chrome.storage.local.set({ managedAuthSettings: response.data });
+    return response.data;
+}
+
+async function saveManagedAuthSettings({
+    serverUrl,
+    scope,
+    values,
+    rcExtensionId,
+    rcUserName,
+    fieldsToRemove = [],
+    refreshAfterSave = true
+}) {
+    const rcAccessToken = getRcAccessToken();
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const platformInfo = await getPlatformInfo();
+    const response = await axios.post(
+        `${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        {
+            scope,
+            values,
+            rcExtensionId,
+            rcUserName,
+            fieldsToRemove
+        }
+    );
+    if (refreshAfterSave) {
+        await getManagedAuthSettings({ serverUrl });
+    }
+    return response.data;
 }
 
 exports.getAdminSettings = getAdminSettings;
@@ -502,3 +535,5 @@ exports.getUserMapping = getUserMapping;
 exports.getUserExtensionReportStats = getUserExtensionReportStats;
 exports.getAdminReportStats = getAdminReportStats;
 exports.reinitializeUserMapping = reinitializeUserMapping;
+exports.getManagedAuthSettings = getManagedAuthSettings;
+exports.saveManagedAuthSettings = saveManagedAuthSettings;

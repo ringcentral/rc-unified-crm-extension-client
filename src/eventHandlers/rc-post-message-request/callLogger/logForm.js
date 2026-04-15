@@ -3,7 +3,7 @@ import userCore from '../../../core/user';
 import logCore from '../../../core/log';
 import calldownPage from '../../../components/calldownPage';
 import { isObjectEmpty, showNotification } from '../../../lib/util';
-import axios from 'axios';  
+import axios from 'axios';
 import dispositionCore from '../../../core/disposition';
 import logPage from '../../../components/logPage';
 
@@ -52,13 +52,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                     contactId: newContactInfo?.id ?? data.body.formData.contact,
                     contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                     contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
-                    additionalSubmission,
-                    returnToHistoryPage: !!data.body.redirect
+                    additionalSubmission
                 });
             // Optional: schedule callback into Call Back after successful log creation
             try {
                 if (data.body.formData.scheduleCallback && data.body.formData.callbackDateTime) {
-                    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
                     const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
                     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
                     const schedulePayload = {
@@ -69,10 +67,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                         scheduledAt: data.body.formData.callbackDateTime,
                         note: data.body.formData.note ?? ''
                     };
-                    await axios.post(`${manifest.serverUrl}/calldown?jwtToken=${rcUnifiedCrmExtJwt}&rcAccountId=${rcAccountId}`, schedulePayload);
+                    await axios.post(`${manifest.serverUrl}/calldown?rcAccountId=${rcAccountId}`, schedulePayload);
                     // Refresh Call Back tab data and badge right after scheduling
                     try {
-                        const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, jwtToken: rcUnifiedCrmExtJwt, filterStatus: 'All', userSettings });
+                        const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, filterStatus: 'All', userSettings });
                         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                             type: 'rc-adapter-register-customized-page',
                             page: calldownPageRender,
