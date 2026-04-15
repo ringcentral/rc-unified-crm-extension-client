@@ -232,7 +232,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallLogRingSenseRecordingTranscript: {
                     type: 'object',
                     title: 'ACE transcript',
-                    description: '[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
+                    description: '[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
                     properties: {
                         value: {
                             type: 'boolean',
@@ -243,7 +243,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallLogRingSenseRecordingAIScore: {
                     type: 'object',
                     title: 'ACE call score',
-                    description: '[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
+                    description: '[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
                     properties: {
                         value: {
                             type: 'boolean',
@@ -254,7 +254,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallLogRingSenseRecordingSummary: {
                     type: 'object',
                     title: 'ACE summary',
-                    description: '[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
+                    description: '[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
                     properties: {
                         value: {
                             type: 'boolean',
@@ -265,7 +265,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallLogRingSenseRecordingBulletedSummary: {
                     type: 'object',
                     title: 'ACE bulleted summary',
-                    description: '[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
+                    description: '[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
                     properties: {
                         value: {
                             type: 'boolean',
@@ -276,7 +276,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 addCallLogRingSenseRecordingLink: {
                     type: 'object',
                     title: 'ACE recording link',
-                    description: '[RingSense license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
+                    description: '[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
                     properties: {
                         value: {
                             type: 'boolean',

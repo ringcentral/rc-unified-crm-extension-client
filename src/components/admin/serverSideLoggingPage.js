@@ -35,7 +35,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
         sourcesFormData = sources;
         sourcesProperty.sources = {
             type: "array",
-            title: "RingSense sources",
+            title: "ACE sources",
             items: {
                 type: "string",
             },

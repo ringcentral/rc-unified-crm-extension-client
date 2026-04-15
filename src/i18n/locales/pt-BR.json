@@ -243,16 +243,16 @@
       "transcript": "Transcrição da chamada",
       "transcriptDesc": "Registrar a transcrição gerada por IA da chamada, se existir",
       "aiAssistantRequired": "Assistente de IA necessário",
-      "ringSenseTranscript": "Transcrição RingSense",
-      "ringSenseTranscriptDesc": "[Licença RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) necessária. Apenas log do lado do servidor.",
-      "ringSenseCallScore": "Pontuação de chamada RingSense",
-      "ringSenseCallScoreDesc": "[Licença RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) necessária. Apenas log do lado do servidor.",
-      "ringSenseSummary": "Resumo RingSense",
-      "ringSenseSummaryDesc": "[Licença RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) necessária. Apenas log do lado do servidor.",
-      "ringSenseBulletedSummary": "Resumo RingSense (lista)",
-      "ringSenseBulletedSummaryDesc": "[Licença RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) necessária. Apenas log do lado do servidor.",
-      "ringSenseRecordingLink": "Link de gravação RingSense",
-      "ringSenseRecordingLinkDesc": "[Licença RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) necessária. Apenas log do lado do servidor.",
+      "ringSenseTranscript": "Transcrição ACE",
+      "ringSenseTranscriptDesc": "[Licença ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) necessária. Apenas log do lado do servidor.",
+      "ringSenseCallScore": "Pontuação de chamada ACE",
+      "ringSenseCallScoreDesc": "[Licença ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) necessária. Apenas log do lado do servidor.",
+      "ringSenseSummary": "Resumo ACE",
+      "ringSenseSummaryDesc": "[Licença ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) necessária. Apenas log do lado do servidor.",
+      "ringSenseBulletedSummary": "Resumo ACE (lista)",
+      "ringSenseBulletedSummaryDesc": "[Licença ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) necessária. Apenas log do lado do servidor.",
+      "ringSenseRecordingLink": "Link de gravação ACE",
+      "ringSenseRecordingLinkDesc": "[Licença ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) necessária. Apenas log do lado do servidor.",
       "callJourney": "Jornada da chamada",
       "callJourneyDesc": "Apenas log do lado do servidor.",
       "dateFormatGlobal24H": "Global - 24H (ex. 2024-01-15 14:30:45)",
@@ -407,4 +407,3 @@
     "setup": "Configuração"
   }
 }
-

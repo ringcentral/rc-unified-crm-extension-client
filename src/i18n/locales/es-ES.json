@@ -243,16 +243,16 @@
       "transcript": "Transcripción de la llamada",
       "transcriptDesc": "Registrar la transcripción generada por IA de la llamada, si existe",
       "aiAssistantRequired": "Asistente de IA requerido",
-      "ringSenseTranscript": "Transcripción RingSense",
-      "ringSenseTranscriptDesc": "[Licencia RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
-      "ringSenseCallScore": "Puntuación de llamada RingSense",
-      "ringSenseCallScoreDesc": "[Licencia RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
-      "ringSenseSummary": "Resumen RingSense",
-      "ringSenseSummaryDesc": "[Licencia RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
-      "ringSenseBulletedSummary": "Resumen RingSense (viñetas)",
-      "ringSenseBulletedSummaryDesc": "[Licencia RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
-      "ringSenseRecordingLink": "Enlace de grabación RingSense",
-      "ringSenseRecordingLinkDesc": "[Licencia RingSense](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
+      "ringSenseTranscript": "Transcripción ACE",
+      "ringSenseTranscriptDesc": "[Licencia ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
+      "ringSenseCallScore": "Puntuación de llamada ACE",
+      "ringSenseCallScoreDesc": "[Licencia ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
+      "ringSenseSummary": "Resumen ACE",
+      "ringSenseSummaryDesc": "[Licencia ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
+      "ringSenseBulletedSummary": "Resumen ACE (viñetas)",
+      "ringSenseBulletedSummaryDesc": "[Licencia ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
+      "ringSenseRecordingLink": "Enlace de grabación ACE",
+      "ringSenseRecordingLinkDesc": "[Licencia ACE](https://www.ringcentral.com/ringsense.html?ref=AppConnect) requerida. Solo registro del lado del servidor.",
       "callJourney": "Recorrido de la llamada",
       "callJourneyDesc": "Solo registro del lado del servidor.",
       "dateFormatGlobal24H": "Global - 24H (ej. 2024-01-15 14:30:45)",
@@ -407,4 +407,3 @@
     "setup": "Configuración"
   }
 }
-

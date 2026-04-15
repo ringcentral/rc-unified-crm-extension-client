@@ -243,16 +243,16 @@
       "transcript": "Oproeptranscriptie",
       "transcriptDesc": "Registreer de AI-gegenereerde transcriptie van de oproep, indien aanwezig",
       "aiAssistantRequired": "AI-assistent vereist",
-      "ringSenseTranscript": "RingSense-transcriptie",
-      "ringSenseTranscriptDesc": "[RingSense-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
-      "ringSenseCallScore": "RingSense-oproepcijfer",
-      "ringSenseCallScoreDesc": "[RingSense-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
-      "ringSenseSummary": "RingSense-samenvatting",
-      "ringSenseSummaryDesc": "[RingSense-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
-      "ringSenseBulletedSummary": "RingSense-opsommingssamenvatting",
-      "ringSenseBulletedSummaryDesc": "[RingSense-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
-      "ringSenseRecordingLink": "RingSense-opnamelink",
-      "ringSenseRecordingLinkDesc": "[RingSense-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
+      "ringSenseTranscript": "ACE-transcriptie",
+      "ringSenseTranscriptDesc": "[ACE-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
+      "ringSenseCallScore": "ACE-oproepcijfer",
+      "ringSenseCallScoreDesc": "[ACE-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
+      "ringSenseSummary": "ACE-samenvatting",
+      "ringSenseSummaryDesc": "[ACE-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
+      "ringSenseBulletedSummary": "ACE-opsommingssamenvatting",
+      "ringSenseBulletedSummaryDesc": "[ACE-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
+      "ringSenseRecordingLink": "ACE-opnamelink",
+      "ringSenseRecordingLinkDesc": "[ACE-licentie](https://www.ringcentral.com/ringsense.html?ref=AppConnect) vereist. Alleen server-side logging.",
       "callJourney": "Oproepreis",
       "callJourneyDesc": "Alleen server-side logging.",
       "dateFormatGlobal24H": "Globaal - 24U (bijv. 2024-01-15 14:30:45)",
@@ -407,4 +407,3 @@
     "setup": "Instellen"
   }
 }
-
