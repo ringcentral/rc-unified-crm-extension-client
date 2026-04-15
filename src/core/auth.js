@@ -196,7 +196,7 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
             const pluginCallbackResp = await axios.get(`${stateData.redirectTo}?callbackUri=${callbackUri}`);
             showNotification({ level: 'success', message: 'Successfully authorized plugin.' });
             const { cachedPluginConfigFormData } = await chrome.storage.local.get('cachedPluginConfigFormData');
-            const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ plugin: cachedPluginConfigFormData.plugin });
+            const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ pluginId: cachedPluginConfigFormData.pluginId, plugin: cachedPluginConfigFormData.plugin });
             const pluginConfigurePageRender = getPluginConfigurePageRender({
                 pluginId: cachedPluginConfigFormData.pluginId,
                 pluginAccess: cachedPluginConfigFormData.access,

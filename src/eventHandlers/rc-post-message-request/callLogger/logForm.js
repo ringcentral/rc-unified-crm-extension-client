@@ -3,7 +3,7 @@ import userCore from '../../../core/user';
 import logCore from '../../../core/log';
 import calldownPage from '../../../components/calldownPage';
 import { isObjectEmpty, showNotification } from '../../../lib/util';
-import axios from 'axios';  
+import axios from 'axios';
 import dispositionCore from '../../../core/disposition';
 import logPage from '../../../components/logPage';
 
@@ -52,8 +52,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                     contactId: newContactInfo?.id ?? data.body.formData.contact,
                     contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                     contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
-                    additionalSubmission,
-                    returnToHistoryPage: !!data.body.redirect
+                    additionalSubmission
                 });
             // Optional: schedule callback into Call Back after successful log creation
             try {

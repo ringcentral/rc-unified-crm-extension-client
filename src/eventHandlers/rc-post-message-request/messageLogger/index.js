@@ -35,7 +35,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
   // Case: auto log
   if (data.body.triggerType === 'auto' && !messageAutoPopup) {
     // Case: group SMS
-    if(data.body.conversation.correspondents.length > 1){
+    if (data.body.conversation.correspondents.length > 1) {
       showNotification({ level: 'warning', message: 'Group SMS is not supported for auto log. Please log manually.', ttl: 3000 });
       // response to widget
       responseMessage(data.requestId, { data: 'ok' });
@@ -54,7 +54,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         contactId: existingConversationLogPref[messageLogPrefId].contact.id,
         contactType: existingConversationLogPref[messageLogPrefId].contact.type,
         contactName: existingConversationLogPref[messageLogPrefId].contact.name,
-        returnToHistoryPage: !!data.body.redirect
       });
     }
     else {
@@ -104,7 +103,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
               contactId: getContactMatchResult[0]?.id,
               contactType: getContactMatchResult[0]?.type,
               contactName: getContactMatchResult[0]?.name,
-              returnToHistoryPage: !!data.body.redirect
             });
           }
           if (requireManualDisposition) {
@@ -139,7 +137,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
               contactId: getContactMatchResult[0]?.id,
               contactType: getContactMatchResult[0]?.type,
               contactName: getContactMatchResult[0]?.name,
-              returnToHistoryPage: !!data.body.redirect
             });
           }
           if (requireManualDisposition) {
@@ -175,7 +172,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
               contactId: getContactMatchResult[0]?.id,
               contactType: getContactMatchResult[0]?.type,
               contactName: getContactMatchResult[0]?.name,
-              returnToHistoryPage: !!data.body.redirect
             });
           }
           if (requireManualDisposition) {
@@ -222,12 +218,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         contactId: newContactInfo?.id ?? data.body.formData.contact,
         contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
         contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
-        returnToHistoryPage: !!data.body.redirect
       });
     }
     // Case: group form
-    else{
-      for(const form in data.body.formData){
+    else {
+      for (const form in data.body.formData) {
         const formData = data.body.formData[form];
         let additionalSubmission = {};
         const additionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
@@ -261,7 +256,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
           contactId: newContactInfo?.id ?? formData.contact,
           contactType: formData.newContactType === '' ? formData.contactType : formData.newContactType,
           contactName: formData.newContactName === '' ? formData.contactName : formData.newContactName,
-          returnToHistoryPage: !!data.body.redirect,
           contactPhoneNumber: formData.contactPhoneNumber
         });
       }

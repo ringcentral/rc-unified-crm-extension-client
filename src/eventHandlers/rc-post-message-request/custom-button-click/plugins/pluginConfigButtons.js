@@ -21,7 +21,7 @@ async function onEvent({ data, buttonId, manifest, platformInfo, platformName, p
                     jwtToken: rcUnifiedCrmExtJwt
                 }
             );
-            const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ plugin: data.body.button.formData.plugin });
+            const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ pluginId: data.body.button.formData.pluginId, plugin: data.body.button.formData.plugin });
             if (logoutResponse.data.successful) {
                 showNotification({ level: 'success', message: t('notifications.success.loggedOut'), ttl: 3000 });
                 const pluginConfigurePageRender = getPluginConfigurePageRender({

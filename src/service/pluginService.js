@@ -1,18 +1,20 @@
 import axios from 'axios';
 import { getManifest, getPluginList, getPluginDetails } from './manifestService';
-import { showNotification } from '../lib/util';
+import { showNotification, getRcInfo } from '../lib/util';
 
-async function getPluginLicenseStatus({ plugin }) {
+async function getPluginLicenseStatus({ pluginId, plugin }) {
     if (!plugin.requireLicense) {
         return {
-            id: plugin.id,
+            id: pluginId,
             licenseStatus: true,
             licenseStatusDescription: ''
         }
     }
-    const { isAdmin } = await chrome.storage.local.get('isAdmin');
-    const licenseStatusUrl = plugin.licenseStatusUrl;
-    const licenseStatusResponse = await axios.get(`${licenseStatusUrl}?isAdmin=${isAdmin}`);
+    const manifest = await getManifest();
+    const rcInfo = await getRcInfo();
+    const rcAccountId = rcInfo?.value?.cachedData?.accountInfo?.id?.toString()
+        || rcInfo?.value?.cachedData?.extensionInfo?.account?.id?.toString();
+    const licenseStatusResponse = await axios.get(`${manifest.serverUrl}/plugin/licenseStatus?rcAccountId=${rcAccountId}&pluginId=${pluginId}`);
     return { id: plugin.id, ...licenseStatusResponse.data };
 }
 
@@ -44,9 +46,6 @@ function setPluginAsyncTaskCheck() {
 }
 
 async function pluginAsyncTaskCheck() {
-    if (!rcUnifiedCrmExtJwt) {
-        return;
-    }
     const manifest = await getManifest();
     const pluginAsyncTaskIds = await getPluginAsyncTaskIds();
     const pluginTaskRes = await axios.post(`${manifest.serverUrl}/pluginAsyncTask`, {

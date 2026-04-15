@@ -5,7 +5,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     try {
         const pluginId = data.body.button.formData.pluginId;
-        const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ plugin: data.body.button.formData.plugin });
+        const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ pluginId, plugin: data.body.button.formData.plugin });
         const pluginConfigurePageRender = getPluginConfigurePageRender({
             pluginId,
             pluginAccess: data.body.button.formData.access,

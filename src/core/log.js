@@ -18,7 +18,6 @@ async function addLog({
     contactType,
     contactName,
     additionalSubmission,
-    returnToHistoryPage = false,
     isShowNotification = true
 }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
@@ -62,7 +61,7 @@ async function addLog({
                 addLogRes = await axios.post(`${serverUrl}/callLog`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addLogRes.data.successful) {
                     trackSyncCallLog({ hasNote: note !== '' });
-                    if(addLogRes.data.pluginAsyncTaskIds?.length > 0){
+                    if (addLogRes.data.pluginAsyncTaskIds?.length > 0) {
                         await upsertPluginAsyncTaskIds({ taskIds: addLogRes.data.pluginAsyncTaskIds });
                     }
                     if (isShowNotification) {
@@ -168,7 +167,7 @@ async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, re
                 const callLogRes = await axios.patch(`${serverUrl}/callLog`, patchBody);
                 if (isShowNotification) {
                     if (callLogRes.data.successful) {
-                        if(callLogRes.data.pluginAsyncTaskIds?.length > 0){
+                        if (callLogRes.data.pluginAsyncTaskIds?.length > 0) {
                             await upsertPluginAsyncTaskIds({ taskIds: callLogRes.data.pluginAsyncTaskIds });
                         }
                     }

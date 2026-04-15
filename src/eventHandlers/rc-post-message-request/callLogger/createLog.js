@@ -157,8 +157,7 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
                         additionalSubmission: autoSelectAdditionalSubmission,
                         contactId: defaultingContact?.id,
                         contactType: defaultingContact?.type,
-                        contactName: defaultingContact?.name,
-                        returnToHistoryPage: !!data.body.redirect
+                        contactName: defaultingContact?.name
                     });
                 const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
                 const supportDisposition = implementedInterfaces?.upsertCallDisposition;

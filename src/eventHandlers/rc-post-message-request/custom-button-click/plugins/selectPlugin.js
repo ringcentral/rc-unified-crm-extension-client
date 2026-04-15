@@ -44,7 +44,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             isLoggedIn = false;
         }
     }
-    const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ plugin });
+    const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ pluginId: selectedPluginId, plugin });
     const pluginConfigurePageRender = formData.isFromAdmin ?
         getPluginAdminConfigurePageRender({
             pluginId: selectedPluginId,
