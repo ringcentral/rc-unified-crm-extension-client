@@ -267,7 +267,7 @@ function getAppointmentCreatePageRender({
         title: { type: 'string', title: '' },
       }
       : {}),
-    dateTime: { type: 'string', format: 'date-time', title: 'Date and Time' },
+    dateTime: { type: 'string', format: 'date-time', title: 'Start Date and Time' },
     durationLabel: { type: 'string', title: '', description: 'Duration' },
     duration: { type: 'string', title: '', format: 'duration' },
     returnTab: { type: 'string', title: '' },

@@ -21,15 +21,17 @@ function dedupeContactsByIdType(contacts) {
     const id = String(c?.id ?? '').trim();
     const type = String(c?.type ?? '').trim();
     const name = String(c?.name ?? '').trim();
+    const email = String(c?.email ?? '').trim();
     if (!id) continue;
     // Treat the same contact as unique by id (type is sometimes missing/unstable).
     const existing = map.get(id);
     if (!existing) {
-      map.set(id, { id, type, name });
+      map.set(id, { id, type, name, ...(email ? { email } : {}) });
       continue;
     }
     if (!existing.type && type) existing.type = type;
     if (!existing.name && name) existing.name = name;
+    if (!existing.email && email) existing.email = email;
   }
   return Array.from(map.values());
 }
@@ -40,6 +42,7 @@ function normalizeCandidateContacts(contacts) {
       id: String(c?.id ?? '').trim(),
       type: String(c?.type ?? c?.contactType ?? '').trim(),
       name: String(c?.name ?? '').trim(),
+      email: String(c?.email ?? '').trim() || undefined,
     }))
     .filter((c) => c.id);
 }
@@ -97,6 +100,7 @@ async function onEvent({ data, manifest, platformName }) {
     id: String(c?.id ?? ''),
     type: String(c?.type ?? ''),
     name: String(c?.name ?? ''),
+    email: String(c?.email ?? '').trim() || undefined,
   })).filter((c) => c.id);
 
   const existing = Array.isArray(draft?.participantContacts) ? draft.participantContacts : [];
@@ -105,9 +109,12 @@ async function onEvent({ data, manifest, platformName }) {
   const mergedContacts = dedupeContactsByIdType([...(existing || []), ...(participantContacts || [])]);
 
   const existingCandidates = Array.isArray(draft?.participantCandidates) ? draft.participantCandidates : [];
+  const eligibleCandidatesFromSearch = requiresEmail
+    ? (contactInfo || []).filter((c) => hasContactEmail(c))
+    : (contactInfo || []);
   const mergedCandidates = dedupeContactsByIdType([
     ...normalizeCandidateContacts(existingCandidates),
-    ...normalizeCandidateContacts(contactInfo),
+    ...normalizeCandidateContacts(eligibleCandidatesFromSearch),
     ...mergedContacts,
   ]);
 

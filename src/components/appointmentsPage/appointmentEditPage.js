@@ -375,12 +375,12 @@ function getAppointmentEditPageRender({
             title: { type: 'string', title: '' },
           }
           : {}),
-        dateTime: { type: 'string', format: 'date-time', title: 'Date and Time' },
+        dateTime: { type: 'string', format: 'date-time', title: 'Start Date and Time' },
         durationLabel: { type: 'string', title: '', description: 'Duration' },
         duration: { type: 'string', title: '', format: 'duration' },
         summaryLabel: { type: 'string', title: '', description: 'Summary' },
         summary: { type: 'string', title: '' },
-        participantsLabel: { type: 'string', title: '', description: 'Participants' },
+        participantsLabel: { type: 'string', title: '', description: 'Add Participants' },
         participantContactIds: {
           type: 'array',
           title: '',
