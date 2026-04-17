@@ -41,16 +41,10 @@ async function addLog({
         logInfo['customSubject'] = subject;
     }
     let addLogRes;
-    const rcAccessToken = getRcAccessToken();
     if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
-                // case: if call is recorded and recording is ready
-                if (logInfo.recording) {
-                    // eslint-disable-next-line no-param-reassign
-                    logInfo.recording.downloadUrl = `${logInfo.recording.contentUri}?accessToken=${rcAccessToken}`;
-                }
-                else {
+                if (!logInfo.recording) {
                     // case: if call is recorded but recording isn't ready, use '(pending...)' as temporary placeholder
                     const hasRecording = await chrome.storage.local.get(`rec-link-${logInfo.sessionId}`);
                     if (hasRecording[`rec-link-${logInfo.sessionId}`]) {
@@ -86,10 +80,6 @@ async function addLog({
                 }, '*');
                 break;
             case 'Message':
-                if (logInfo.type === 'Fax' || (logInfo.type === 'SMS' && logInfo.messages.some(m => m.attachments.some(a => a.type === 'MmsAttachment')))) {
-                    // eslint-disable-next-line no-param-reassign
-                    logInfo.rcAccessToken = rcAccessToken;
-                }
                 addLogRes = await axios.post(`${serverUrl}/messageLog`, { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
                 if (addLogRes.data.successful) {
                     if (isMain & addLogRes.data.logIds.length > 0) {

@@ -10,9 +10,7 @@ import { getManifest } from '../service/manifestService';
 
 async function getAdminSettings({ serverUrl }) {
     try {
-        const rcAccessToken = getRcAccessToken();
-        const getAdminSettingsResponse = await axios.get(
-            `${serverUrl}/admin/settings?rcAccessToken=${rcAccessToken}`);
+        const getAdminSettingsResponse = await axios.get(`${serverUrl}/admin/settings`);
         return getAdminSettingsResponse.data;
     }
     catch (e) {
@@ -21,9 +19,8 @@ async function getAdminSettings({ serverUrl }) {
 }
 
 async function uploadAdminSettings({ serverUrl, adminSettings }) {
-    const rcAccessToken = getRcAccessToken();
-    const uploadAdminSettingsResponse = await axios.post(
-        `${serverUrl}/admin/settings?rcAccessToken=${rcAccessToken}`,
+    await axios.post(
+        `${serverUrl}/admin/settings`,
         {
             adminSettings
         });
@@ -454,11 +451,9 @@ async function getUserExtensionReportStats({ serverUrl, rcExtensionId, timezone,
 }
 
 async function getUserMapping({ serverUrl }) {
-    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
-    const rcAccessToken = getRcAccessToken();
     const rcExtensionList = (await getRcContactInfo()).filter(rc => rc.type == 'User' || rc.type == 'Department');
     const userMappingResp = await axios.post(
-        `${serverUrl}/admin/userMapping?rcAccessToken=${rcAccessToken}`,
+        `${serverUrl}/admin/userMapping`,
         {
             rcExtensionList
         }
@@ -468,12 +463,10 @@ async function getUserMapping({ serverUrl }) {
 
 async function reinitializeUserMapping({ serverUrl }) {
     const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
-    const rcAccessToken = getRcAccessToken();
     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
-    const manifest = await getManifest();
     const rcExtensionList = (await getRcContactInfo()).filter(rc => rc.type == 'User' || rc.type == 'Department');
     const reinitializeUserMappingResp = await axios.post(
-        `${manifest.serverUrl}/admin/reinitializeUserMapping?rcAccountId=${rcAccountId}&rcAccessToken=${rcAccessToken}`,
+        `${serverUrl}/admin/reinitializeUserMapping?rcAccountId=${rcAccountId}`,
         {
             rcExtensionList
         }
@@ -482,11 +475,10 @@ async function reinitializeUserMapping({ serverUrl }) {
 }
 
 async function getManagedAuthSettings({ serverUrl }) {
-    const rcAccessToken = getRcAccessToken();
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
     const response = await axios.get(
-        `${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        `${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
     );
     await chrome.storage.local.set({ managedAuthSettings: response.data });
     return response.data;
@@ -501,11 +493,10 @@ async function saveManagedAuthSettings({
     fieldsToRemove = [],
     refreshAfterSave = true
 }) {
-    const rcAccessToken = getRcAccessToken();
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
     const response = await axios.post(
-        `${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        `${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
         {
             scope,
             values,
