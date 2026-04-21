@@ -35,11 +35,9 @@ async function onMessage({ request, sendResponse }) {
         if (data.type === 'rc-post-message-request' && data.path === '/custom-button-click' && data.body?.page?.id === 'c2dSchedulePage') {
             document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-post-message-response', responseId: data.requestId, response: { data: 'ok' } }, '*');
             try {
-                const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
-                const rcAccountId = rcUserInfo?.rcAccountId ?? '';
                 const { phone, note, callbackDateTime } = data.body?.formData || {};
                 if (!callbackDateTime) return;
-                await axios.post(`${manifest.serverUrl}/calldown${rcAccountId ? `?rcAccountId=${rcAccountId}` : ''}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: data.body?.formData?.contact, note });
+                await axios.post(`${manifest.serverUrl}/calldown`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: data.body?.formData?.contact, note });
 
                 // Cache contact information for c2schedule flow
                 try {

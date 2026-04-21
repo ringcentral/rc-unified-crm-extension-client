@@ -104,16 +104,13 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
     }
 }
 
-async function getManagedAuthState({ serverUrl, platformName, connectorId = null, isPrivate = false, rcInfo = null, rcExtensionId = null, rcAccountId = null }) {
+async function getManagedAuthState({ serverUrl, platformName, connectorId = null, isPrivate = false }) {
     try {
         const rcAccessToken = getRcAccessToken();
         const rcAPI = new RcAPI();
         const interopCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId: "Y4m1YREFKbXdDoet5djv46" });
-        const resolvedRcInfo = rcInfo ?? await getRcInfo();
-        const resolvedRcAccountId = rcAccountId ?? resolvedRcInfo?.value?.cachedData?.extensionInfo?.account?.id;
-        const resolvedRcExtensionId = rcExtensionId ?? resolvedRcInfo?.value?.cachedData?.extensionInfo?.id;
         const response = await axios.get(
-            `${serverUrl}/apiKeyManagedAuthState?platform=${encodeURIComponent(platformName)}&connectorId=${encodeURIComponent(connectorId ?? '')}&isPrivate=${encodeURIComponent(isPrivate ? 'true' : 'false')}&rcAccountId=${encodeURIComponent(resolvedRcAccountId ?? '')}&rcExtensionId=${encodeURIComponent(resolvedRcExtensionId ?? '')}&interopCode=${encodeURIComponent(interopCode ?? '')}`
+            `${serverUrl}/apiKeyManagedAuthState?platform=${encodeURIComponent(platformName)}&connectorId=${encodeURIComponent(connectorId ?? '')}&isPrivate=${encodeURIComponent(isPrivate ? 'true' : 'false')}&interopCode=${encodeURIComponent(interopCode ?? '')}`
         );
         return response.data;
     }

@@ -170,8 +170,8 @@ async function onEvent({ data }) {
                 identify({ extensionId: rcUserInfo?.rcExtensionId, rcAccountId: rcUserInfo?.rcAccountId, platformName });
                 group({ rcAccountId: rcUserInfo?.rcAccountId });
                 // setup headers for server side analytics
-                axios.defaults.headers.common['rc-extension-id'] = rcUserInfo?.rcExtensionId;
-                axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId;
+                axios.defaults.headers.common['rc-extension-id'] = rcUserInfo?.rcExtensionId; // this is hashed extension id
+                axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId; // this is hashed account id
                 axios.defaults.headers.common['developer-author-name'] = manifest?.author?.name ?? "";
             }
         }

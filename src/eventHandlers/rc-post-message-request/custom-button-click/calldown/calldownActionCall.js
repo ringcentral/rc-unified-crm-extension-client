@@ -13,10 +13,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             toCall: true
         }, '*');
         // Mark this calldown item as called
-        const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
-        const rcAccountId = rcUserInfo?.rcAccountId ?? '';
-        await axios.patch(`${manifest.serverUrl}/calldown/${rowId}${rcAccountId ? `?rcAccountId=${rcAccountId}` : ''}`,
-            {status:"called", lastCallAt: new Date().toISOString() });
+        await axios.patch(`${manifest.serverUrl}/calldown/${rowId}`, { status: "called", lastCallAt: new Date().toISOString() });
         // Refresh Call Back list and pill (preserve current filter)
         // Get current filter from form data to preserve user's view
         const currentFilter = data.body?.page?.formData?.searchWithFilters?.filter ||

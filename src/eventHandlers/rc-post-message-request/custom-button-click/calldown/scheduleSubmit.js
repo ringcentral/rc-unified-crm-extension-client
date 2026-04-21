@@ -9,12 +9,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     if (!callbackDateTime || !phone) {
         return;
     }
-    
+
     const isEditMode = !!editingRecordId;
     // show spinner while scheduling
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-    const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
-    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
     let contactIdToUse = contact;
     if (contact === 'newContact' && newContactName && newContactName.trim() !== '') {
         const ct = manifest.platforms[platformName]?.contactTypes || [];
@@ -24,11 +22,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         if (created?.contactInfo?.id) {
             contactIdToUse = created.contactInfo.id;
             showNotification({ level: 'success', message: 'Contact created', ttl: 3000 });
-            
+
             if (isEditMode) {
-                await axios.patch(`${manifest.serverUrl}/calldown/${editingRecordId}?rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType: selectedType, note });
+                await axios.patch(`${manifest.serverUrl}/calldown/${editingRecordId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType: selectedType, note });
             } else {
-                await axios.post(`${manifest.serverUrl}/calldown?rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType: selectedType, note });
+                await axios.post(`${manifest.serverUrl}/calldown`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType: selectedType, note });
             }
 
             // Cache contact information for call back list display
@@ -44,7 +42,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 type: 'rc-adapter-trigger-contact-match',
                 phoneNumbers: [phone]
             }, '*');
-            
+
             const { userSettings } = await chrome.storage.local.get('userSettings');
             const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, filterStatus: 'All', userSettings });
             document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({ type: 'rc-adapter-register-customized-page', page: calldownPageRender }, '*');
@@ -76,9 +74,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         }
 
         if (isEditMode) {
-            await axios.patch(`${manifest.serverUrl}/calldown/${editingRecordId}?rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType, note });
+            await axios.patch(`${manifest.serverUrl}/calldown/${editingRecordId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType, note });
         } else {
-            await axios.post(`${manifest.serverUrl}/calldown?rcAccountId=${rcAccountId}`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType, note });
+            await axios.post(`${manifest.serverUrl}/calldown`, { phoneNumber: phone, scheduledAt: callbackDateTime, contactId: contactIdToUse, contactType, note });
         }
 
         // Cache contact information for existing contact

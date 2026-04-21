@@ -13,7 +13,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         }
     });
 
-    window.open(`${manifest.serverUrl}/admin/googleSheets/filePicker?jwtToken=${adminTokenForExistingSheet}&rcAccountId=${rcAccountId}`, '_blank');
+    window.open(`${manifest.serverUrl}/admin/googleSheets/filePicker?jwtToken=${adminTokenForExistingSheet}`, '_blank');
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-navigate-to',
         path: 'goBack', // page id

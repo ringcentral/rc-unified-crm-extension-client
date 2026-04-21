@@ -114,11 +114,8 @@ async function getServerSideLoggingAdditionalFieldValues({ platform }) {
     if (!platform.serverSideLogging || !platform.serverSideLogging.additionalFields) {
         return {};
     }
-    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
-    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
     const manifest = await getManifest();
-    const settingsResponse = await axios.get(
-        `${manifest.serverUrl}/admin/serverLoggingSettings?rcAccountId=${rcAccountId}`,
+    const settingsResponse = await axios.get(`${manifest.serverUrl}/admin/serverLoggingSettings`,
     );
     return settingsResponse.data;
 }
@@ -131,11 +128,8 @@ async function uploadServerSideLoggingAdditionalFieldValues({ platform, formData
     platform.serverSideLogging.additionalFields.forEach(field => {
         additionalFieldValues[field.const] = formData.serverSideLoggingHolder[field.const];
     });
-    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
-    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
     const manifest = await getManifest();
-    const uploadResponse = await axios.post(
-        `${manifest.serverUrl}/admin/serverLoggingSettings?rcAccountId=${rcAccountId}`,
+    const uploadResponse = await axios.post(`${manifest.serverUrl}/admin/serverLoggingSettings`,
         {
             additionalFieldValues,
         }
@@ -366,15 +360,13 @@ async function authServerSideLogging({ platform }) {
     if (!platform.serverSideLogging) {
         return;
     }
-    const { rcUserInfo } = await chrome.storage.local.get('rcUserInfo');
     const rcAccessToken = getRcAccessToken();
     const rcClientId = "Y4m1YREFKbXdDoet5djv46";
     const serverDomainUrl = platform.serverSideLogging.url;
     // Auth
     const rcAPI = new RcAPI();
     const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
-    const serverSideLoggingTokenResp = await axios.get(
-        `${serverDomainUrl}/oauth/callback?code=${rcInteropCode}&rcAccountId=${rcUserInfo?.rcAccountId}`,
+    const serverSideLoggingTokenResp = await axios.get(`${serverDomainUrl}/oauth/callback?code=${rcInteropCode}`,
         {
             headers: {
                 Accept: 'application/json'
@@ -462,11 +454,8 @@ async function getUserMapping({ serverUrl }) {
 }
 
 async function reinitializeUserMapping({ serverUrl }) {
-    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
-    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
     const rcExtensionList = (await getRcContactInfo()).filter(rc => rc.type == 'User' || rc.type == 'Department');
-    const reinitializeUserMappingResp = await axios.post(
-        `${serverUrl}/admin/reinitializeUserMapping?rcAccountId=${rcAccountId}`,
+    const reinitializeUserMappingResp = await axios.post(`${serverUrl}/admin/reinitializeUserMapping`,
         {
             rcExtensionList
         }
@@ -477,9 +466,7 @@ async function reinitializeUserMapping({ serverUrl }) {
 async function getManagedAuthSettings({ serverUrl }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
-    const response = await axios.get(
-        `${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
-    );
+    const response = await axios.get(`${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`);
     await chrome.storage.local.set({ managedAuthSettings: response.data });
     return response.data;
 }

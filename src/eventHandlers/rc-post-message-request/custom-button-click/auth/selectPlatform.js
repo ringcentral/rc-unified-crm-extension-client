@@ -85,7 +85,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
                 platformName: selectedPlatform.name,
                 connectorId: selectedPlatform.id,
                 isPrivate: selectedPlatformType === 'private',
-                rcInfo
             })
             : null;
         const hostnameInputPageRender = hostnameInputPage.getHostnameInputPageRender({

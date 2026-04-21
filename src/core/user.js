@@ -56,10 +56,8 @@ async function getUserReportStats({ dateRange, customStartDate, customEndDate })
 }
 
 async function preloadUserSettingsFromAdmin({ serverUrl }) {
-    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
-    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
     try {
-        const preloadUserSettingsResponse = await axios.get(`${serverUrl}/user/preloadSettings?rcAccountId=${rcAccountId}`);
+        const preloadUserSettingsResponse = await axios.get(`${serverUrl}/user/preloadSettings`);
         return preloadUserSettingsResponse.data;
     }
     catch (e) {
@@ -69,11 +67,14 @@ async function preloadUserSettingsFromAdmin({ serverUrl }) {
 }
 
 async function getUserSettingsOnline({ serverUrl }) {
-    const { rcUserInfo } = (await chrome.storage.local.get('rcUserInfo'));
-    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
-    const getUserSettingsResponse = await axios.get(
-        `${serverUrl}/user/settings?rcAccountId=${rcAccountId}`);
-    return getUserSettingsResponse.data;
+    try {
+        const getUserSettingsResponse = await axios.get(`${serverUrl}/user/settings`);
+        return getUserSettingsResponse.data;
+    }
+    catch (e) {
+        console.log(e)
+        return null;
+    }
 }
 
 async function uploadUserSettings({ serverUrl, userSettings, settingKeysToRemove }) {

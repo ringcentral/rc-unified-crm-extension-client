@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { getManifest, getPluginList, getPluginDetails } from './manifestService';
-import { showNotification, getRcInfo } from '../lib/util';
+import { showNotification } from '../lib/util';
 
 async function getPluginLicenseStatus({ pluginId, plugin }) {
     if (!plugin.requireLicense) {
@@ -11,10 +11,7 @@ async function getPluginLicenseStatus({ pluginId, plugin }) {
         }
     }
     const manifest = await getManifest();
-    const rcInfo = await getRcInfo();
-    const rcAccountId = rcInfo?.value?.cachedData?.accountInfo?.id?.toString()
-        || rcInfo?.value?.cachedData?.extensionInfo?.account?.id?.toString();
-    const licenseStatusResponse = await axios.get(`${manifest.serverUrl}/plugin/licenseStatus?rcAccountId=${rcAccountId}&pluginId=${pluginId}`);
+    const licenseStatusResponse = await axios.get(`${manifest.serverUrl}/plugin/licenseStatus?pluginId=${pluginId}`);
     return { id: plugin.id, ...licenseStatusResponse.data };
 }
 

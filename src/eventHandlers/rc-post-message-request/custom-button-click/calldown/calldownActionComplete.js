@@ -6,9 +6,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
     const { userSettings } = await chrome.storage.local.get('userSettings');
     const btn = data.body.button || {};
     const rowId = (btn.formData && (btn.formData.recordId || btn.formData.records)) || listButtonItemId || btn?.additionalInfo?.recordId || btn?.listItem?.const || btn?.value || '';
-    const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
-    const rcAccountId = rcUserInfo?.rcAccountId ?? '';
-    await axios.patch(`${manifest.serverUrl}/calldown/${rowId}${rcAccountId ? `?rcAccountId=${rcAccountId}` : ''}`, { status:"called",lastCallAt: new Date().toISOString() });
+    await axios.patch(`${manifest.serverUrl}/calldown/${rowId}`, { status: "completed", completedAt: new Date().toISOString() });
     const refreshed = await calldownPage.getCalldownPageWithRecords({
         manifest,
         searchWithFilters: data.body?.button?.formData?.searchWithFilters,
