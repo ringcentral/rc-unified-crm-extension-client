@@ -57,6 +57,10 @@ async function onMessage({ request, sendResponse }) {
                 }
 
                 // admin tab
+                const { adminFromEmbeddable } = await chrome.storage.local.get('adminFromEmbeddable');
+                if (adminFromEmbeddable) {
+                    await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, platformName: platformInfo?.platformName ?? '' });
+                }
                 const adminSettingResults = await adminCore.refreshAdminSettings();
                 if (adminSettingResults.adminSettings) {
                     const adminPageRender = adminPage.getAdminPageRender({ platform });
@@ -64,7 +68,6 @@ async function onMessage({ request, sendResponse }) {
                         type: 'rc-adapter-register-customized-page',
                         page: adminPageRender,
                     }, '*');
-                    await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, jwtToken: returnedToken });
                 }
                 await userCore.refreshUserSettings({});
             }

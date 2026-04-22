@@ -55,7 +55,6 @@ async function onMessage({ request, sendResponse }) {
                 type: 'rc-adapter-register-customized-page',
                 page: adminPageRender,
             }, '*');
-            await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, jwtToken: returnedToken });
         }
         await userCore.refreshUserSettings({});
     }

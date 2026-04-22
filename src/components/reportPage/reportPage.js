@@ -8,7 +8,7 @@ import { t } from '../../i18n';
 import getUserReportTabRender from './userReportTab';
 import getCompanyReportTabRender from './companyReportTab';
 
-function getReportsPageRender({ selectedTab = 'userReportTab', selectedRcExtension, isAdmin = false, userStats, companyStats, selectedGroupKey, groupKeys, selectedItemKey, itemKeys, userSettings, rcExtensions = [] }) {
+function getReportsPageRender({ selectedTab = 'userReportTab', selectedRcExtension, isAdmin = false, isFeatureEnabled = false, userStats, companyStats, selectedGroupKey, groupKeys, selectedItemKey, itemKeys, userSettings, rcExtensions = [] }) {
     const isHidden = !userCore.getShowUserReportTabSetting(userSettings)?.value;
     let page = {
         id: 'reportPage',
@@ -25,8 +25,8 @@ function getReportsPageRender({ selectedTab = 'userReportTab', selectedRcExtensi
                 tab: {
                     type: 'string',
                     title: 'Tab',
-                    enum: ['userReportTab'].concat(isAdmin ? ['companyReportTab'] : []),
-                    enumNames: [t('pages.reports.userStats')].concat(isAdmin ? [t('pages.reports.companyStats')] : [])
+                    enum: ['userReportTab'].concat(isAdmin && isFeatureEnabled ? ['companyReportTab'] : []),
+                    enumNames: [t('pages.reports.userStats')].concat(isAdmin && isFeatureEnabled ? [t('pages.reports.companyStats')] : [])
                 }
             }
         },

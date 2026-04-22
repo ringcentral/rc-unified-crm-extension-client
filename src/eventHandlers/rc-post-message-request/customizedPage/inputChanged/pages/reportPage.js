@@ -136,11 +136,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 }
             }
             const { isAdmin } = await chrome.storage.local.get('isAdmin');
+            const rcClientId = manifest?.platforms[platformName]?.ringcentralAppConfig?.clientId;
             const reportPageRender = reportPage.getReportsPageRender(
                 {
                     selectedTab: currentTab,
                     selectedRcExtension: data.body.formData.rcExtensionList,
                     isAdmin,
+                    isFeatureEnabled: !!rcClientId,
                     userStats: userReportStats,
                     companyStats: adminReportStats,
                     selectedGroupKey: adminReportStats?.groupedBy,

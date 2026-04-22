@@ -118,9 +118,8 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
     if (!crmAuthed) {
         return;
     }
-    const rcAccessToken = getRcAccessToken();
     const manifest = await getManifest();
-    let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
+    let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl });
     // TODO: Remove this mirroring once all UI/logic reads `overridingNumberFormat` directly and we no longer
     // need to support the legacy per-user `overridingPhoneNumberFormat/2/3` fields.
     // Backward-compatible migration: reflect overridingNumberFormat into overridingPhoneNumberFormat* for older UI and tools
@@ -201,7 +200,7 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
 }
 
 async function updateSSCLToken({ serverUrl, platform, token }) {
-    const userSettings = await getUserSettingsOnline({ serverUrl, rcAccessToken: getRcAccessToken() });
+    const userSettings = await getUserSettingsOnline({ serverUrl });
     const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
     if (serverSideLoggingEnabled && token !== undefined) {
         const serverSideLoggingToken = await adminCore.authServerSideLogging({ platform });

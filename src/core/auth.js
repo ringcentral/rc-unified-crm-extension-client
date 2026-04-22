@@ -72,11 +72,12 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
                 const crmAuthed = !!returnedToken;
                 await chrome.storage.local.set({ crmAuthed });
                 if (crmAuthed) {
-                    await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
-                    const adminSettingResults = await adminCore.refreshAdminSettings();
-                    if (adminSettingResults.adminSettings) {
-                        await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl });
+                    const { adminFromEmbeddable } = await chrome.storage.local.get('adminFromEmbeddable');
+                    if (adminFromEmbeddable) {
+                        await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, platformName });
                     }
+                    await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
+                    await adminCore.refreshAdminSettings();
                 }
                 // exit from platform selection page
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -106,9 +107,8 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
 
 async function getManagedAuthState({ serverUrl, platformName, connectorId = null, isPrivate = false }) {
     try {
-        const rcAccessToken = getRcAccessToken();
         const rcAPI = new RcAPI();
-        const interopCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId: "Y4m1YREFKbXdDoet5djv46" });
+        const interopCode = await rcAPI.getInteropCode({ rcAccessToken: getRcAccessToken(), rcClientId: "Y4m1YREFKbXdDoet5djv46" });
         const response = await axios.get(
             `${serverUrl}/apiKeyManagedAuthState?platform=${encodeURIComponent(platformName)}&connectorId=${encodeURIComponent(connectorId ?? '')}&isPrivate=${encodeURIComponent(isPrivate ? 'true' : 'false')}&interopCode=${encodeURIComponent(interopCode ?? '')}`
         );
@@ -148,9 +148,8 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
         const platform = manifest?.platforms[platformName];
         const proxyId = platform.proxyId ? platform.proxyId : '';
         const rcInfo = await getRcInfo();
-        const rcAccessToken = getRcAccessToken();
         const rcAPI = new RcAPI();
-        const interopCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId: "Y4m1YREFKbXdDoet5djv46" });
+        const interopCode = await rcAPI.getInteropCode({ rcAccessToken: getRcAccessToken(), rcClientId: "Y4m1YREFKbXdDoet5djv46" });
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
             apiKey,
             platform: platformName,

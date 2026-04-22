@@ -2,7 +2,7 @@ import userCore from '../core/user';
 import logCore from '../core/log';
 import dispositionCore from '../core/disposition';
 import contactCore from '../core/contact';
-import { showNotification, dismissNotification, isObjectEmpty, getRcAccessToken } from '../lib/util';
+import { showNotification, dismissNotification, isObjectEmpty } from '../lib/util';
 import logUtil from '../lib/logUtil';
 
 async function retroAutoCallLog({
@@ -134,7 +134,6 @@ async function syncCallData({
     dataBody
 }) {
     const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
-    const rcAccessToken = getRcAccessToken();
     const recordingLink = dataBody?.call?.recording?.link;
 
     // Get the cached note for this call

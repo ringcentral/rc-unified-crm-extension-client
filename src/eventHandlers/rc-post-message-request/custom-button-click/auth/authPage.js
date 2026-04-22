@@ -38,7 +38,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 type: 'rc-adapter-register-customized-page',
                 page: adminPageRender,
             }, '*');
-            await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, jwtToken: returnedToken });
         }
     }
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');

@@ -5,7 +5,7 @@ import { getAdminSettings, uploadAdminSettings } from '../../../../core/admin';
 import { getPluginAdminConfigurePageRender } from '../../../../components/pluginAdminConfigurePage';
 import { getInstalledPluginListPageRender } from '../../../../components/installedPluginListPage';
 import { getPluginMarketListPageRender } from '../../../../components/pluginMarketListPage';
-import { getRcAccessToken, getRcInfo, showNotification } from '../../../../lib/util';
+import { showNotification } from '../../../../lib/util';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform, buttonId }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');

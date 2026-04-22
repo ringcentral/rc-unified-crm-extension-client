@@ -28,7 +28,7 @@ async function runBuild() {
         const currentBranch = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
         const manifestPath = './public/manifest.json';
         const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-        
+
         // Check if current branch is branched from 'beta'
         let isBranchedFromBeta = false;
         try {
@@ -37,7 +37,7 @@ async function runBuild() {
         } catch {
             // beta is not an ancestor of current branch
         }
-        
+
         if (currentBranch === 'beta' || isBranchedFromBeta) {
             // Add BETA suffix if not already present
             if (!manifest.name.includes(' - BETA')) {
@@ -53,7 +53,7 @@ async function runBuild() {
                 console.log(`Updated manifest name for ${currentBranch} branch: ${manifest.name}`);
             }
         }
-    } catch (e) { 
+    } catch (e) {
         console.log('Error updating manifest for branch:', e.message);
     }
 
@@ -66,7 +66,6 @@ async function runBuild() {
         outdir: 'dist',
         define: {
             'process.env.MIXPANEL_TOKEN': JSON.stringify(process.env?.MIXPANEL_TOKEN ?? ""),
-            'process.env.RC_CLIENT_ID': JSON.stringify(process.env?.RC_CLIENT_ID ?? "")
         },
         plugins: [
             sassPlugin({

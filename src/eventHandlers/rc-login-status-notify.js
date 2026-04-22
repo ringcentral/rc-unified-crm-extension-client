@@ -12,7 +12,6 @@ import { reset, identify, group, trackRcLogin, trackRcLogout } from '../lib/anal
 import releaseNotesPage from '../components/releaseNotesPage';
 import adminCore from '../core/admin';
 import logService from '../service/logService';
-import { RcAPI } from '../lib/rcAPI';
 import pluginService from '../service/pluginService';
 
 let firstTimeLogoutAbsorbed = false;
@@ -41,6 +40,10 @@ async function onEvent({ data }) {
             userPermissions.c2sms = true;
         }
         await chrome.storage.local.set({ userPermissions });
+        await chrome.storage.local.set({ adminFromEmbeddable: !!data?.admin })
+        if (!!data?.admin) {
+            await adminCore.authAppConnectServer({ serverUrl: manifest.serverUrl, platformName });
+        }
     }
     console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
 
@@ -153,17 +156,15 @@ async function onEvent({ data }) {
             }
             await chrome.storage.local.set({ rcAdditionalSubmission });
             if (manifest?.serverUrl) {
-                const rcAPI = new RcAPI();
-                const userInfoResponse = await rcAPI.getUserInfo({
-                    serverUrl: manifest.serverUrl,
-                    extensionId: rcInfo.value.cachedData.extensionInfo.id,
-                    accountId: rcInfo.value.cachedData.extensionInfo.account.id
-                });
+
+                const userInfoHashResponse = await axios.get(
+                    `${manifest.serverUrl}/userInfoHash?extensionId=${rcInfo.value.cachedData.extensionInfo.id}&accountId=${rcInfo.value.cachedData.extensionInfo.account.id}`
+                );
                 const rcUserInfo = {
                     rcUserName: rcInfo.value.cachedData.extensionInfo.name,
                     rcUserEmail: rcInfo.value.cachedData.extensionInfo.contact.email,
-                    rcAccountId: userInfoResponse.accountId,
-                    rcExtensionId: userInfoResponse.extensionId
+                    rcAccountId: userInfoHashResponse.data.accountId,
+                    rcExtensionId: userInfoHashResponse.data.extensionId
                 };
                 await chrome.storage.local.set({ ['rcUserInfo']: rcUserInfo });
                 reset();

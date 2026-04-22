@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { isObjectEmpty, showNotification, getRcAccessToken } from '../lib/util';
+import { isObjectEmpty, showNotification } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 import { upsertPluginAsyncTaskIds } from '../service/pluginService';
 import { t } from '../i18n';
@@ -132,7 +132,7 @@ function openLog({ manifest, platformName, hostname, logId, contactType, contact
     window.open(logPageUrl);
 }
 
-async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, recordingLink, recordingDownloadLink, subject, note, startTime, duration, aiNote, transcript, result, direction, from, to, isShowNotification }) {
+async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, recordingLink, subject, note, startTime, duration, aiNote, transcript, result, direction, from, to, isShowNotification }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
     if (rcUnifiedCrmExtJwt) {
@@ -142,7 +142,6 @@ async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, re
                     telephonySessionId,
                     sessionId,
                     recordingLink,
-                    recordingDownloadLink,
                     subject,
                     note,
                     startTime,
@@ -152,7 +151,8 @@ async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, re
                     result,
                     direction,
                     from,
-                    to
+                    to,
+                    additionalSubmission: rcAdditionalSubmission
                 }
                 const callLogRes = await axios.patch(`${serverUrl}/callLog`, patchBody);
                 if (isShowNotification) {

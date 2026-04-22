@@ -5,11 +5,16 @@ class RcAPI {
 
     rcExtensions = [];
 
-    async getUserInfo({ serverUrl, extensionId, accountId }) {
-        const userInfoHashResponse = await axios.get(
-            `${serverUrl}/userInfoHash?extensionId=${extensionId}&accountId=${accountId}`
+    async getUserInfo({ rcAccessToken }) {
+        const userInfoResponse = await axios.get(
+            'https://platform.ringcentral.com/restapi/v1.0/account/~/extension/~',
+            {
+                headers: {
+                    'Authorization': `Bearer ${rcAccessToken}`
+                }
+            }
         );
-        return userInfoHashResponse.data;
+        return userInfoResponse.data;
     }
 
     async getInteropCode({ rcAccessToken, rcClientId }) {

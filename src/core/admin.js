@@ -32,10 +32,9 @@ async function refreshAdminSettings() {
     const platformInfo = await getPlatformInfo();
     const platform = manifest.platforms[platformInfo.platformName];
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-    const rcAccessToken = getRcAccessToken();
     let adminSettings;
     // Admin tab render
-    const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
+    const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl });
     await chrome.storage.local.set({ isAdmin: !!storedAdminSettings });
     if (storedAdminSettings) {
         try {
@@ -141,7 +140,6 @@ async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel,
     if (!platform.serverSideLogging) {
         return;
     }
-    const rcAccessToken = getRcAccessToken();
     const serverDomainUrl = platform.serverSideLogging.url;
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { serverSideLoggingToken } = await chrome.storage.local.get('serverSideLoggingToken');
@@ -160,7 +158,7 @@ async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel,
             );
             // if subscribed, unsubscribe it first
             if (getSubscriptionResp.data.subscribed) {
-                await disableServerSideLogging({ platform, rcAccessToken });
+                await disableServerSideLogging({ platform });
             }
             //  Subscribe
             // TODO: loggingWithUserAssigned overrides loggingByAdmin if useAdminAssignedUserToken is true
@@ -245,7 +243,6 @@ async function disableServerSideLogging({ platform }) {
     if (!platform.serverSideLogging) {
         return;
     }
-    const rcAccessToken = getRcAccessToken();
     const serverDomainUrl = platform.serverSideLogging.url;
     const { serverSideLoggingToken } = await chrome.storage.local.get('serverSideLoggingToken');
     if (serverSideLoggingToken) {
@@ -360,12 +357,11 @@ async function authServerSideLogging({ platform }) {
     if (!platform.serverSideLogging) {
         return;
     }
-    const rcAccessToken = getRcAccessToken();
     const rcClientId = "Y4m1YREFKbXdDoet5djv46";
     const serverDomainUrl = platform.serverSideLogging.url;
     // Auth
     const rcAPI = new RcAPI();
-    const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
+    const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken: getRcAccessToken(), rcClientId });
     const serverSideLoggingTokenResp = await axios.get(`${serverDomainUrl}/oauth/callback?code=${rcInteropCode}`,
         {
             headers: {
@@ -378,13 +374,15 @@ async function authServerSideLogging({ platform }) {
     return serverSideLoggingToken;
 }
 
-async function authAppConnectServer({ serverUrl }) {
+async function authAppConnectServer({ serverUrl, platformName }) {
     try {
-        const rcAccessToken = getRcAccessToken();
-        // eslint-disable-next-line no-undef
-        const rcClientId = process.env.RC_CLIENT_ID;
+        const manifest = await getManifest();
+        const rcClientId = manifest?.platforms[platformName]?.ringcentralAppConfig?.clientId;
+        if (!rcClientId) {
+            return;
+        }
         const rcAPI = new RcAPI();
-        const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
+        const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken: getRcAccessToken(), rcClientId });
         const serverSideLoggingTokenResp = await axios.get(
             `${serverUrl}/ringcentral/oauth/callback?code=${rcInteropCode}`,
             {
