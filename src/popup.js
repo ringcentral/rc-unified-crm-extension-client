@@ -82,12 +82,14 @@ axios.interceptors.request.use(
     if (tokenFromUrl) {
       config.url = sanitizedUrl;
     }
-    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get({ rcUnifiedCrmExtJwt: null });
-    const tokenToUse = tokenFromUrl || rcUnifiedCrmExtJwt;
-    if (tokenToUse) {
-      config.headers = config.headers || {};
-      if (!config.headers.Authorization && !config.headers.authorization) {
-        config.headers.Authorization = `Bearer ${tokenToUse}`;
+    if (!config.skipAuthorization) {
+      const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get({ rcUnifiedCrmExtJwt: null });
+      const tokenToUse = tokenFromUrl || rcUnifiedCrmExtJwt;
+      if (tokenToUse) {
+        config.headers = config.headers || {};
+        if (!config.headers.Authorization && !config.headers.authorization) {
+          config.headers.Authorization = `Bearer ${tokenToUse}`;
+        }
       }
     }
     if (await logRecorder.isRecordingLogs()) {
@@ -149,7 +151,7 @@ axios.interceptors.response.use(
     if (error.response?.status === 401 && !isLoggingOut) {
       const url = error.config?.baseURL ? `${error.config.baseURL}${error.config.url}` : error.config?.url || '';
       const hasBearerHeader = !!(error.config?.headers?.Authorization || error.config?.headers?.authorization);
-      if ((url.includes('jwtToken=') || hasBearerHeader) && !url.includes('/unAuthorize')) {
+      if ((url.includes('jwtToken=') || hasBearerHeader) && !url.includes('/unAuthorize') && !error.config?.skipAuthorization) {
         isLoggingOut = true;
         try {
           const manifest = await getManifest();
