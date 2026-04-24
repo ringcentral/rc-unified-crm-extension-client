@@ -15,6 +15,10 @@ function getGeneralSettingPageRender() {
                             title: "Appearance"
                         },
                         {
+                            const: "clickToDialMatcher",
+                            title: "Click-to-dial Matcher"
+                        },
+                        {
                             const: "clickToDialEmbed",
                             title: "Enabled domains"
                         }

@@ -1,4 +1,4 @@
-import { WrapperObserver } from 'ringcentral-c2d';
+import { WrapperObserver, LibPhoneNumberMatcher } from 'ringcentral-c2d';
 import App from './components/embedded';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -138,10 +138,19 @@ async function checkUrlMatch({ type = 'quickAccessButton' }) {
 
 // Create a C2D instance for a specific root node
 // If sharedWidget is provided, it will be reused instead of creating a new one
-function createC2DInstance({ rootNode, sharedWidget }) {
+function createC2DInstance({ rootNode, sharedWidget, matcherType, selectedRegion }) {
+  let matcher;
+  switch (matcherType) {
+    case 'libPhone':
+      matcher = new LibPhoneNumberMatcher({ countryCode: selectedRegion });
+      break;
+    case 'regExp':
+      matcher = new InputAwareRegExpMatcher();
+      break;
+  }
   const observer = new WrapperObserver({
     node: rootNode,
-    matcher: new InputAwareRegExpMatcher(),
+    matcher,
   });
   hardenObserverInjection(observer);
   const options = {
@@ -202,9 +211,15 @@ async function initializeC2D() {
   window.clickToDialObservers = window.clickToDialObservers || [];
   window.clickToDialShadowRootPollers = window.clickToDialShadowRootPollers || [];
 
+  // Get matcher type
+  const { c2dMatcherType } = await chrome.storage.local.get({ c2dMatcherType: 'libPhone' });
+  const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: null });
+
   // Initialize main document C2D first (this creates the widget)
   window.clickToDialInject = createC2DInstance({
     rootNode: document.body,
+    matcherType: c2dMatcherType,
+    selectedRegion,
   });
   window.clickToDialInject.widget.update({ enableC2Text: userPermissions?.c2sms ?? false });
   window.clickToDialInstances.push(window.clickToDialInject);

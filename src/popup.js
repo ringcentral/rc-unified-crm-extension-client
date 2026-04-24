@@ -29,6 +29,7 @@ import advancedFeaturesSettingPage from './components/admin/managedSettings/adva
 import customSettingsPage from './components/admin/managedSettings/customSettingsPage';
 import customizeTabsSettingPage from './components/admin/generalSettings/customizeTabsSettingPage';
 import clickToDialEmbedPage from './components/admin/generalSettings/clickToDialEmbedPage';
+import clickToDialMatcherSettingPage from './components/admin/generalSettings/clickToDialMatcherSettingPage';
 import notificationLevelSettingPage from './components/admin/generalSettings/notificationLevelSettingPage';
 import appearancePage from './components/admin/generalSettings/appearancePage';
 import callLogDetailsSettingPage from './components/admin/managedSettings/callAndSMSLoggingSetting/callLogDetailsSettingPage';
@@ -1011,6 +1012,17 @@ window.addEventListener('message', async (e) => {
                   document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${appearancePageRender.id}`, // page id
+                  }, '*');
+                  break;
+                case 'clickToDialMatcher':
+                  const clickToDialMatcherSettingPageRender = clickToDialMatcherSettingPage.getClickToDialMatcherSettingPageRender({ adminUserSettings: adminSettings?.userSettings });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: clickToDialMatcherSettingPageRender
+                  });
+                  document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-navigate-to',
+                    path: `/customized/${clickToDialMatcherSettingPageRender.id}`, // page id
                   }, '*');
                   break;
                 case 'customizeTabs':
@@ -2308,10 +2320,14 @@ window.addEventListener('message', async (e) => {
                 case 'advancedFeaturesSettingPage':
                 case 'customSettingsPage':
                 case 'customizeTabsSettingPage':
+                case 'clickToDialMatcherSettingPage':
                 case 'notificationLevelSettingPage':
                 case 'clickToDialEmbedPage':
                   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
                   const settingDataKeys = Object.keys(data.body.button.formData);
+                  if (!adminSettings?.userSettings) {
+                    adminSettings.userSettings = {};
+                  }
                   for (const k of settingDataKeys) {
                     adminSettings.userSettings[k] = data.body.button.formData[k];
                   }
