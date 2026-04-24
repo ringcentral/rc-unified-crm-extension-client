@@ -17,6 +17,10 @@ function getGeneralSettingPageRender() {
                             title: t('pages.generalSettings.appearance')
                         },
                         {
+                            const: "clickToDialMatcher",
+                            title: "Click-to-dial Matcher"
+                        },
+                        {
                             const: "clickToDialEmbed",
                             title: t('pages.generalSettings.enabledDomains')
                         }
