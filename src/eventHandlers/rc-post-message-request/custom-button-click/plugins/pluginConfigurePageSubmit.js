@@ -20,7 +20,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 isAsync: form.isAsync,
                 phase: form.phase,
                 access: form.access,
-                logTypes: form.logTypes,
+                supportedLogTypes: form.supportedLogTypes,
                 rcAccountId,
                 config
             },
