@@ -1,4 +1,4 @@
-import { WrapperObserver, LibPhoneNumberMatcher } from 'ringcentral-c2d';
+import { RangeObserver, LibPhoneNumberMatcher } from 'ringcentral-c2d';
 import App from './components/embedded';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -10,73 +10,6 @@ import InputAwareRegExpMatcher from './lib/c2d/inputAwareRegExpMatcher';
 import { initializeShadowRootSupport } from './lib/c2d/shadowRootSupport';
 import userCore from './core/user';
 console.log('import content js to web page');
-
-function hardenObserverInjection(observer) {
-  if (!observer || typeof observer._injectMatches !== 'function') {
-    return;
-  }
-
-  const originalInjectMatches = observer._injectMatches.bind(observer);
-
-  observer._injectMatches = (matches) => {
-    if (!Array.isArray(matches) || matches.length === 0) {
-      return originalInjectMatches(matches);
-    }
-
-    const sanitizedMatches = matches
-      .map((item) => {
-        if (!item || item.startsNode !== item.endsNode) {
-          return item;
-        }
-
-        const textNode = item.startsNode;
-        if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
-          return item;
-        }
-
-        const textLength = textNode.data ? textNode.data.length : 0;
-        const rawStart = Number.isFinite(item.startsAt) ? item.startsAt : 0;
-        const rawEnd = Number.isFinite(item.endsAt) ? item.endsAt : textLength;
-
-        const startsAt = Math.max(0, Math.min(textLength, Math.trunc(rawStart)));
-        const endsAt = Math.max(0, Math.min(textLength, Math.trunc(rawEnd)));
-
-        if (endsAt <= startsAt) {
-          return null;
-        }
-
-        return {
-          ...item,
-          startsAt,
-          endsAt,
-        };
-      })
-      .filter(Boolean);
-
-    if (sanitizedMatches.length === 0) {
-      return;
-    }
-
-    try {
-      return originalInjectMatches(sanitizedMatches);
-    } catch (error) {
-      if (error && error.name !== 'IndexSizeError') {
-        throw error;
-      }
-      // The DOM may have changed between match discovery and injection.
-      // Retry each match individually and skip stale ones.
-      sanitizedMatches.forEach((match) => {
-        try {
-          originalInjectMatches([match]);
-        } catch (singleMatchError) {
-          if (singleMatchError && singleMatchError.name !== 'IndexSizeError') {
-            console.error('[App Connect] Failed to inject C2D match', singleMatchError);
-          }
-        }
-      });
-    }
-  };
-}
 
 // type: c2d, quickAccessButton
 async function checkUrlMatch({ type = 'quickAccessButton' }) {
@@ -148,11 +81,10 @@ function createC2DInstance({ rootNode, sharedWidget, matcherType, selectedRegion
       matcher = new InputAwareRegExpMatcher();
       break;
   }
-  const observer = new WrapperObserver({
+  const observer = new RangeObserver({
     node: rootNode,
     matcher,
   });
-  hardenObserverInjection(observer);
   const options = {
     observer,
   };
@@ -163,17 +95,6 @@ function createC2DInstance({ rootNode, sharedWidget, matcherType, selectedRegion
   }
 
   const c2dInstance = new window.RingCentralC2D(options);
-
-  if (rootNode instanceof ShadowRoot) {
-    try {
-      // ShadowRoot is a DocumentFragment, so manually seed existing child nodes.
-      const initialMatches = observer._processNodes(Array.from(rootNode.childNodes), false);
-      observer._injectMatches(initialMatches);
-    }
-    catch (e) {
-      console.error('[App Connect] Failed to seed C2D matches for shadowRoot', e);
-    }
-  }
 
   // Only attach event listeners if this is the primary instance (no shared widget)
   // Otherwise events would be duplicated since all instances share the same widget
@@ -228,6 +149,8 @@ async function initializeC2D() {
   initializeShadowRootSupport({
     createC2DInstance,
     sharedWidget: window.clickToDialInject.widget,
+    matcherType: c2dMatcherType,
+    selectedRegion,
     onInstanceCreated: (instance) => window.clickToDialInstances.push(instance),
     onObserverCreated: (observer) => window.clickToDialObservers.push(observer),
     pollerStore: window.clickToDialShadowRootPollers,
