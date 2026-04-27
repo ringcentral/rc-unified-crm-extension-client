@@ -1,6 +1,8 @@
 export function initializeShadowRootSupport({
   createC2DInstance,
   sharedWidget,
+  matcherType,
+  selectedRegion,
   onInstanceCreated,
   onObserverCreated,
   pollerStore,
@@ -16,6 +18,8 @@ export function initializeShadowRootSupport({
     const c2dInstance = createC2DInstance({
       rootNode: shadowRoot,
       sharedWidget,
+      matcherType,
+      selectedRegion,
     });
     onInstanceCreated(c2dInstance);
     console.log('[App Connect] C2D initialized for shadowRoot');
