@@ -495,6 +495,43 @@ async function getServiceManifest() {
     }
     services.settings.push(
         {
+            id: 'clickToDialMatcher',
+            type: 'section',
+            name: 'Click-to-dial Matcher',
+            groupId: 'general',
+            description: 'Control how App Connect detects phone numbers on webpages before showing the click-to-dial or click-to-SMS widget.',
+            items: [
+                {
+                    id: 'clickToDialMatcherIntro',
+                    name: 'About click-to-dial matching',
+                    type: 'admonition',
+                    severity: 'warning',
+                    value: 'App Connect scans webpages for phone numbers so it can display the click-to-dial or click-to-SMS widget when a match is found.'
+                },
+                {
+                    id: 'c2dMatcherType',
+                    type: 'option',
+                    name: 'Matcher type',
+                    description: 'Choose how broadly phone numbers should be detected on webpages.',
+                    options: [
+                        {
+                            id: 'libPhone',
+                            name: 'Region-focused matcher',
+                            description: 'Focus on phone-number variations that align with the selected region.'
+                        },
+                        {
+                            id: 'regExp',
+                            name: 'All matcher',
+                            description: 'Match any number sequence that looks like a phone number.'
+                        }
+                    ],
+                    value: userCore.getC2DMatcherTypeSetting(userSettings).value,
+                    readOnly: userCore.getC2DMatcherTypeSetting(userSettings).readOnly,
+                    readOnlyReason: userCore.getC2DMatcherTypeSetting(userSettings).readOnlyReason
+                }
+            ]
+        },
+        {
             id: 'clickToDialEmbed',
             type: 'section',
             name: t('settings.enabledDomains.groupName'),
