@@ -5,6 +5,57 @@ import appointmentEditPage from '../../../../components/appointmentsPage/appoint
 
 const debounceContactSearch = createDebounceHandler('appointmentContactSearch', 800);
 
+function durationIsoFromMinutes(totalMinutesRaw) {
+  const totalMinutes = Number(totalMinutesRaw);
+  if (!Number.isFinite(totalMinutes) || totalMinutes <= 0) return 'PT0M';
+  const minutesInt = Math.floor(totalMinutes);
+  const hours = Math.floor(minutesInt / 60);
+  const minutes = minutesInt % 60;
+  const parts = [];
+  if (hours > 0) parts.push(`${hours}H`);
+  if (minutes > 0 || parts.length === 0) parts.push(`${minutes}M`);
+  return `PT${parts.join('')}`;
+}
+
+function renderPage({ isEdit, formData, manifest, platformName }) {
+  const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+  const appointmentTitle = apptCfg?.title ?? 'Appointments';
+  return isEdit
+    ? appointmentEditPage.getAppointmentEditPageRender({
+      initialFormData: formData,
+      appointmentTitle,
+      statusConfig: apptCfg?.status,
+      titleFieldConfig: apptCfg?.titleField,
+    })
+    : appointmentCreatePage.getAppointmentCreatePageRender({
+      initialFormData: formData,
+      appointmentTitle,
+      statusConfig: apptCfg?.status,
+      titleFieldConfig: apptCfg?.titleField,
+    });
+}
+
+function postPage(page) {
+  const frame = document.querySelector('#rc-widget-adapter-frame').contentWindow;
+  frame.postMessage({ type: 'rc-adapter-register-customized-page', page }, '*');
+}
+
+async function handleDateTimeChange({ formData, manifest, platformName, isEdit }) {
+  const startVal = String(formData?.dateTime ?? '').trim();
+  const endVal = String(formData?.endDateTime ?? '').trim();
+  if (!startVal || !endVal) return;
+
+  const startMs = new Date(startVal).getTime();
+  const endMs = new Date(endVal).getTime();
+  if (Number.isNaN(startMs) || Number.isNaN(endMs) || endMs <= startMs) return;
+
+  const diffMinutes = Math.round((endMs - startMs) / (60 * 1000));
+  const duration = durationIsoFromMinutes(diffMinutes);
+
+  const updatedFormData = { ...formData, duration };
+  postPage(renderPage({ isEdit, formData: updatedFormData, manifest, platformName }));
+}
+
 function dedupeContactsByIdType(contacts) {
   const map = new Map();
   for (const c of contacts || []) {
@@ -35,9 +86,19 @@ function dedupeContactsByIdType(contacts) {
 
 async function onEvent({ data, manifest, platformName }) {
   const keys = Array.isArray(data?.body?.keys) ? data.body.keys : [];
+  const formData = data?.body?.formData ?? {};
+  const pageId = data?.body?.page?.id;
+  const isEdit = pageId === 'appointmentEditPage';
+
+  // Recalculate duration whenever start or end date/time changes.
+  if (keys.some((k) => k === 'dateTime' || k === 'endDateTime')) {
+    await handleDateTimeChange({ formData, manifest, platformName, isEdit });
+    return;
+  }
+
+  // Handle participant contact search via freeSolo autocomplete.
   if (!keys.some((k) => k === 'participantContactIds')) return;
 
-  const formData = data?.body?.formData ?? {};
   const selectedValues = Array.isArray(formData?.participantContactIds)
     ? formData.participantContactIds
     : [];
@@ -58,9 +119,6 @@ async function onEvent({ data, manifest, platformName }) {
   // Strip the query from selected IDs — it is a search term, not a real contact.
   const realSelectedIds = selectedValues.filter((v) => candidateIdSet.has(String(v)));
 
-  const pageId = data?.body?.page?.id;
-  const isEdit = pageId === 'appointmentEditPage';
-
   debounceContactSearch(data.requestId, async () => {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     try {
@@ -79,8 +137,6 @@ async function onEvent({ data, manifest, platformName }) {
           type: String(c?.type ?? '').trim(),
           name: String(c?.name ?? '').trim(),
           ...(c?.email ? { email: String(c.email).trim() } : {}),
-          // Mark as confirmed from a live API search so the renderer knows
-          // whether to show the "No email address" warning.
           emailChecked: true,
         }))
         .filter((c) => c.id);
@@ -88,39 +144,17 @@ async function onEvent({ data, manifest, platformName }) {
       const mergedCandidates = dedupeContactsByIdType([...candidates, ...normalizedContacts]);
 
       const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
-      // Read emailMandatoryInAttendee from the manifest (authoritative) — hidden form fields
-      // may not round-trip in inputChanged formData, so we never rely on formData alone.
       const emailMandatoryInAttendee =
         apptCfg?.emailMandatoryInAttendee ?? formData?.emailMandatoryInAttendee;
 
       const updatedFormData = {
         ...formData,
         participantCandidates: mergedCandidates,
-        // Restore only the real (confirmed) selections; drop the free-text search query.
         participantContactIds: realSelectedIds,
-        // Stamp authoritative value so the re-rendered page always has it.
         emailMandatoryInAttendee,
       };
-      const appointmentTitle = apptCfg?.title ?? 'Appointments';
 
-      const page = isEdit
-        ? appointmentEditPage.getAppointmentEditPageRender({
-          initialFormData: updatedFormData,
-          appointmentTitle,
-          statusConfig: apptCfg?.status,
-          titleFieldConfig: apptCfg?.titleField,
-        })
-        : appointmentCreatePage.getAppointmentCreatePageRender({
-          initialFormData: updatedFormData,
-          appointmentTitle,
-          statusConfig: apptCfg?.status,
-          titleFieldConfig: apptCfg?.titleField,
-        });
-
-      document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
-        type: 'rc-adapter-register-customized-page',
-        page,
-      }, '*');
+      postPage(renderPage({ isEdit, formData: updatedFormData, manifest, platformName }));
     } catch (e) {
       console.error('Appointment participant search failed:', e);
     } finally {

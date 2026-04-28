@@ -311,6 +311,9 @@ function getAppointmentEditPageRender({
     '';
   const start = source?.startTimeUtc ?? source?.startTime ?? source?.start ?? null;
   const durationMinutes = Number(source?.durationMinutes ?? source?.duration ?? 30) || 30;
+  const endDateTimeDefault = start
+    ? toLocalDateTimeValue(new Date(new Date(start).getTime() + durationMinutes * 60 * 1000))
+    : '';
 
   const entityTitle = singularizeAppointmentTitle(appointmentTitle);
   const defaults = {
@@ -319,6 +322,7 @@ function getAppointmentEditPageRender({
     returnSearch: String(source?.returnSearch ?? ''),
     returnFilter: String(source?.returnFilter ?? 'All'),
     ...(titleFieldVisible ? { title: source?.title ?? source?.subject ?? '' } : {}),
+    endDateTime: endDateTimeDefault,
     participantCandidates: dedupeContactsByIdType([
       ...participantCandidatesFromSource,
       ...participantContactsFromDraft,
@@ -386,6 +390,7 @@ function getAppointmentEditPageRender({
           }
           : {}),
         dateTime: { type: 'string', format: 'date-time', title: 'Start Date and Time' },
+        endDateTime: { type: 'string', format: 'date-time', title: 'End Date and Time' },
         durationLabel: { type: 'string', title: '', description: 'Duration' },
         duration: { type: 'string', title: '', format: 'duration' },
         summaryLabel: { type: 'string', title: '', description: 'Summary' },
@@ -481,6 +486,7 @@ function getAppointmentEditPageRender({
         'emailMandatoryInAttendee',
         ...(titleFieldVisible ? ['titleLabel', 'title'] : []),
         'dateTime',
+        'endDateTime',
         'durationLabel',
         'duration',
         'summaryLabel',
@@ -497,6 +503,9 @@ function getAppointmentEditPageRender({
       dateTime: {
         'ui:options': { grid: { xs: 12, sm: 12 } },
       },
+      endDateTime: {
+        'ui:options': { grid: { xs: 12, sm: 12 } },
+      },
       durationLabel: {
         'ui:field': 'typography',
         'ui:variant': 'caption1',
@@ -504,6 +513,8 @@ function getAppointmentEditPageRender({
       },
       duration: {
         'ui:widget': 'duration',
+        'ui:readonly': true,
+        'ui:disabled': true,
         'ui:options': { grid: { xs: 12, sm: 12 }, label: false },
       },
     },

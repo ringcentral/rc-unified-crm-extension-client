@@ -220,6 +220,7 @@ function getAppointmentCreatePageRender({
   const defaults = {
     ...(titleFieldVisible ? { title: '' } : {}),
     dateTime: toLocalDateTimeValue(nowPlus30),
+    endDateTime: toLocalDateTimeValue(nowPlus30 + 60 * 60 * 1000),
     duration: 'PT1H',
     // Used to return to the same list view after create (no local cache).
     returnTab: 'upcoming',
@@ -265,7 +266,7 @@ function getAppointmentCreatePageRender({
   const required = [
     ...(titleFieldVisible ? ['title'] : []),
     'dateTime',
-    'duration',
+    'endDateTime',
     'participantContactIds',
     ...(statusVisible ? ['status'] : []),
   ];
@@ -278,6 +279,7 @@ function getAppointmentCreatePageRender({
       }
       : {}),
     dateTime: { type: 'string', format: 'date-time', title: 'Start Date and Time' },
+    endDateTime: { type: 'string', format: 'date-time', title: 'End Date and Time' },
     durationLabel: { type: 'string', title: '', description: 'Duration' },
     duration: { type: 'string', title: '', format: 'duration' },
     returnTab: { type: 'string', title: '' },
@@ -320,6 +322,7 @@ function getAppointmentCreatePageRender({
   const uiOrder = [
     ...(titleFieldVisible ? ['titleLabel', 'title'] : []),
     'dateTime',
+    'endDateTime',
     'durationLabel',
     'duration',
     'summaryLabel',
@@ -358,6 +361,9 @@ function getAppointmentCreatePageRender({
       dateTime: {
         'ui:options': { grid: { xs: 12, sm: 12 } },
       },
+      endDateTime: {
+        'ui:options': { grid: { xs: 12, sm: 12 } },
+      },
       durationLabel: {
         'ui:field': 'typography',
         'ui:variant': 'caption1',
@@ -365,6 +371,8 @@ function getAppointmentCreatePageRender({
       },
       duration: {
         'ui:widget': 'duration',
+        'ui:readonly': true,
+        'ui:disabled': true,
         'ui:options': { grid: { xs: 12, sm: 12 }, label: false },
       },
       ...(titleFieldVisible
