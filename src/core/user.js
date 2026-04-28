@@ -180,7 +180,8 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
         }, '*');
     }
     const notificationLevelSetting = getNotificationLevelSetting(userSettings).value;
-    await chrome.storage.local.set({ notificationLevelSetting });
+    const c2dMatcherType = getC2DMatcherTypeSetting(userSettings).value;
+    await chrome.storage.local.set({ notificationLevelSetting, c2dMatcherType });
     const service = await embeddableServices.getServiceManifest();
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',
@@ -444,6 +445,14 @@ function getShowUserReportTabSetting(userSettings) {
         value: userSettings?.showUserReportTab?.value ?? true,
         readOnly: userSettings?.showUserReportTab?.customizable === undefined ? false : !userSettings?.showUserReportTab?.customizable,
         readOnlyReason: !userSettings?.showUserReportTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getC2DMatcherTypeSetting(userSettings) {
+    return {
+        value: userSettings?.c2dMatcherType?.value ?? 'libPhone',
+        readOnly: userSettings?.c2dMatcherType?.customizable === undefined ? false : !userSettings?.c2dMatcherType?.customizable,
+        readOnlyReason: !userSettings?.c2dMatcherType?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -712,6 +721,7 @@ exports.getShowVoicemailTabSetting = getShowVoicemailTabSetting;
 exports.getShowRecordingsTabSetting = getShowRecordingsTabSetting;
 exports.getShowContactsTabSetting = getShowContactsTabSetting;
 exports.getShowUserReportTabSetting = getShowUserReportTabSetting;
+exports.getC2DMatcherTypeSetting = getC2DMatcherTypeSetting;
 exports.getClickToDialEmbedMode = getClickToDialEmbedMode;
 exports.getClickToDialUrls = getClickToDialUrls;
 exports.getQuickAccessButtonEmbedMode = getQuickAccessButtonEmbedMode;

@@ -22,6 +22,7 @@ import managedAuthUserEditPageHandler from './pages/managedAuthUserEditPage';
 import generalSettingsHandler from './sections/generalSettings';
 import managedSettingsHandler from './sections/managedSettings';
 import appearanceHandler from './sections/appearance';
+import clickToDialMatcherHandler from './sections/clickToDialMatcher';
 import customizeTabsHandler from './sections/customizeTabs';
 import widgetSettingsHandler from './sections/widgetSettings';
 import notificationLevelHandler from './sections/notificationLevel';
@@ -155,6 +156,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'appearance':
             await appearanceHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'clickToDialMatcher':
+            await clickToDialMatcherHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'customizeTabs':
             await customizeTabsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
