@@ -133,15 +133,23 @@ function dedupeContactsByIdType(contacts) {
     const id = String(c?.id ?? '').trim();
     const type = String(c?.type ?? '').trim();
     const name = String(c?.name ?? '').trim();
+    const email = String(c?.email ?? '').trim();
+    const emailChecked = c?.emailChecked === true;
     if (!id) continue;
     // Treat the same contact as unique by id (type is sometimes missing/unstable).
     const existing = map.get(id);
     if (!existing) {
-      map.set(id, { id, type, name });
+      map.set(id, {
+        id, type, name,
+        ...(email ? { email } : {}),
+        ...(emailChecked ? { emailChecked: true } : {}),
+      });
       continue;
     }
     if (!existing.type && type) existing.type = type;
     if (!existing.name && name) existing.name = name;
+    if (!existing.email && email) existing.email = email;
+    if (emailChecked) existing.emailChecked = true;
   }
   return Array.from(map.values());
 }
@@ -153,6 +161,8 @@ function normalizeContactList(value) {
       id: String(c?.id ?? '').trim(),
       type: String(c?.type ?? '').trim(),
       name: String(c?.name ?? '').trim(),
+      ...(c?.email ? { email: String(c.email).trim() } : {}),
+      ...(c?.emailChecked ? { emailChecked: true } : {}),
     }))
     .filter((c) => c.id);
 }
@@ -380,7 +390,8 @@ function getAppointmentEditPageRender({
         duration: { type: 'string', title: '', format: 'duration' },
         summaryLabel: { type: 'string', title: '', description: 'Summary' },
         summary: { type: 'string', title: '' },
-        participantsLabel: { type: 'string', title: '', description: 'Add Participants' },
+        participantsLabel: { type: 'string', title: '', description: 'Participants' },
+        // Visible: participants list (AutocompleteWidget with freeSolo search + multi-select).
         participantContactIds: {
           type: 'array',
           title: '',
@@ -395,7 +406,6 @@ function getAppointmentEditPageRender({
         participantContactType: { type: 'string', title: '' },
         // Hidden field: multi-selected contacts (normalized list)
         participantContacts: { type: 'array', title: '' },
-        appointmentSelectParticipantButton: { type: 'string', title: 'Search' },
         ...(statusVisible
           ? {
             statusLabel: { type: 'string', title: '', description: 'Status' },
@@ -440,20 +450,22 @@ function getAppointmentEditPageRender({
       participantContacts: { 'ui:widget': 'hidden' },
       participantContactIds: {
         'ui:widget': 'AutocompleteWidget',
-        'ui:placeholder': candidateContacts.length > 0 ? 'Select participants...' : 'Use Search to find contacts',
+        'ui:placeholder': 'Type a name and press Enter to search...',
         'ui:options': {
           multiple: true,
-          enumOptions: candidateContacts.map((c) => ({ value: String(c.id), label: String(c.name || c.id) })),
-          grid: { xs: 8, sm: 9 },
+          freeSolo: true,
+          enumOptions: candidateContacts.map((c) => {
+            const noEmail = merged.emailMandatoryInAttendee && c.emailChecked && !c.email;
+            return {
+              value: String(c.id),
+              label: noEmail
+                ? `${String(c.name || c.id)} — No email address`
+                : String(c.name || c.id),
+            };
+          }),
+          grid: { xs: 12, sm: 12 },
           label: false,
         },
-      },
-      appointmentSelectParticipantButton: {
-        'ui:field': 'button',
-        'ui:variant': 'outlined',
-        'ui:color': 'primary',
-        'ui:fullWidth': false,
-        'ui:options': { grid: { xs: 2, sm: 1} },
       },
       summary: {
         'ui:widget': 'textarea',
@@ -475,7 +487,6 @@ function getAppointmentEditPageRender({
         'summary',
         'participantsLabel',
         'participantContactIds',
-        'appointmentSelectParticipantButton',
         'participantCandidates',
         'participantName',
         'participantContactId',

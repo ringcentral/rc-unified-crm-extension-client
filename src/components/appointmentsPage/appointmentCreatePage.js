@@ -124,15 +124,23 @@ function dedupeContactsByIdType(contacts) {
     const id = String(c?.id ?? '').trim();
     const type = String(c?.type ?? '').trim();
     const name = String(c?.name ?? '').trim();
+    const email = String(c?.email ?? '').trim();
+    const emailChecked = c?.emailChecked === true;
     if (!id) continue;
     // Treat the same contact as unique by id (type is sometimes missing/unstable).
     const existing = map.get(id);
     if (!existing) {
-      map.set(id, { id, type, name });
+      map.set(id, {
+        id, type, name,
+        ...(email ? { email } : {}),
+        ...(emailChecked ? { emailChecked: true } : {}),
+      });
       continue;
     }
     if (!existing.type && type) existing.type = type;
     if (!existing.name && name) existing.name = name;
+    if (!existing.email && email) existing.email = email;
+    if (emailChecked) existing.emailChecked = true;
   }
   return Array.from(map.values());
 }
@@ -144,6 +152,8 @@ function normalizeContactList(value) {
       id: String(c?.id ?? '').trim(),
       type: String(c?.type ?? '').trim(),
       name: String(c?.name ?? '').trim(),
+      ...(c?.email ? { email: String(c.email).trim() } : {}),
+      ...(c?.emailChecked ? { emailChecked: true } : {}),
     }))
     .filter((c) => c.id);
 }
@@ -217,9 +227,9 @@ function getAppointmentCreatePageRender({
     returnFilter: 'All',
     // Used by appointment participant search to optionally filter to contacts with email.
     emailMandatoryInAttendee: undefined,
-    // Hidden: candidates for the autocomplete dropdown (populated by the Search flow).
+    // Hidden: candidates for the autocomplete dropdown (populated by inline search).
     participantCandidates: [],
-    // Visible: selected participant contact ids (autocomplete).
+    // Visible: selected participant contact ids (autocomplete, freeSolo for search).
     participantContactIds: [],
     participantName: '',
     participantContactId: '',
@@ -274,8 +284,8 @@ function getAppointmentCreatePageRender({
     returnSearch: { type: 'string', title: '' },
     returnFilter: { type: 'string', title: '' },
     emailMandatoryInAttendee: { type: 'boolean', title: '' },
-    participantsLabel: { type: 'string', title: '', description: 'Add Participants' },
-    // Visible: participants list (single AutocompleteWidget with multiple tags).
+    participantsLabel: { type: 'string', title: '', description: 'Participants' },
+    // Visible: participants list (AutocompleteWidget with freeSolo search + multi-select).
     participantContactIds: {
       type: 'array',
       title: '',
@@ -294,7 +304,6 @@ function getAppointmentCreatePageRender({
     participantContacts: { type: 'array', title: '' },
     // Hidden field: all candidates to keep autocomplete options around.
     participantCandidates: { type: 'array', title: '' },
-    appointmentSelectParticipantButton: { type: 'string', title: 'Search' },
     summary: { type: 'string', title: '' },
     ...(statusVisible
       ? {
@@ -317,7 +326,6 @@ function getAppointmentCreatePageRender({
     'summary',
     'participantsLabel',
     'participantContactIds',
-    'appointmentSelectParticipantButton',
     'returnTab',
     'returnSearch',
     'returnFilter',
@@ -383,24 +391,24 @@ function getAppointmentCreatePageRender({
       participantContactId: { 'ui:widget': 'hidden' },
       participantContactType: { 'ui:widget': 'hidden' },
       participantContacts: { 'ui:widget': 'hidden' },
-      // Try to render a compact "Search" button inline to the right of Participant.
-      // If the embeddable build ignores grid hints, it will still render as a smaller button.
       participantContactIds: {
         'ui:widget': 'AutocompleteWidget',
-        'ui:placeholder': candidateContacts.length > 0 ? 'Select participants...' : 'Use Search to find contacts',
+        'ui:placeholder': 'Type a name and press Enter to search...',
         'ui:options': {
           multiple: true,
-          enumOptions: candidateContacts.map((c) => ({ value: String(c.id), label: String(c.name || c.id) })),
-          grid: { xs: 8, sm: 9 },
+          freeSolo: true,
+          enumOptions: candidateContacts.map((c) => {
+            const noEmail = merged.emailMandatoryInAttendee && c.emailChecked && !c.email;
+            return {
+              value: String(c.id),
+              label: noEmail
+                ? `${String(c.name || c.id)} — No email address`
+                : String(c.name || c.id),
+            };
+          }),
+          grid: { xs: 12, sm: 12 },
           label: false,
         },
-      },
-      appointmentSelectParticipantButton: {
-        'ui:field': 'button',
-        'ui:variant': 'outlined',
-        'ui:color': 'primary',
-        'ui:fullWidth': false,
-        'ui:options': { grid: { xs: 4, sm: 3 } },
       },
       summary: {
         'ui:widget': 'textarea',
