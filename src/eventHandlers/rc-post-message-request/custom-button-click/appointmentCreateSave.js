@@ -11,8 +11,9 @@ async function onEvent({ data, manifest }) {
       jwtToken: rcUnifiedCrmExtJwt,
       formData: data.body.button.formData,
     });
-    if (!created) {
-      showNotification({ level: 'error', message: 'Failed to create appointment.', ttl: 3000 });
+    if (!created?.successful) {
+
+      showNotification({ level: created?.returnMessage?.messageType, message: created?.returnMessage?.message, ttl: created?.returnMessage?.ttl ?? 3000, details: created?.returnMessage?.details });
       return;
     }
     showNotification({ level: 'success', message: 'Appointment created.', ttl: 3000 });

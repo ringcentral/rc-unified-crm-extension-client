@@ -43,16 +43,23 @@ function postPage(page) {
 async function handleDateTimeChange({ formData, manifest, platformName, isEdit }) {
   const startVal = String(formData?.dateTime ?? '').trim();
   const endVal = String(formData?.endDateTime ?? '').trim();
-  if (!startVal || !endVal) return;
+  if (!startVal) return;
 
   const startMs = new Date(startVal).getTime();
-  const endMs = new Date(endVal).getTime();
-  if (Number.isNaN(startMs) || Number.isNaN(endMs) || endMs <= startMs) return;
+  if (Number.isNaN(startMs)) return;
 
-  const diffMinutes = Math.round((endMs - startMs) / (60 * 1000));
+  // If end date is missing or before start, snap it forward to match start.
+  const endMs = endVal ? new Date(endVal).getTime() : NaN;
+  const effectiveEndMs = (!Number.isNaN(endMs) && endMs > startMs) ? endMs : startMs;
+  const effectiveEndVal = Number.isNaN(endMs) || endMs <= startMs
+    ? startVal
+    : endVal;
+
+  const diffMinutes = Math.round((effectiveEndMs - startMs) / (60 * 1000));
   const duration = durationIsoFromMinutes(diffMinutes);
 
-  const updatedFormData = { ...formData, duration };
+  const updatedFormData = { ...formData, endDateTime: effectiveEndVal, duration };
+  // Always re-render so the endDateTime minimum constraint updates to reflect the new start.
   postPage(renderPage({ isEdit, formData: updatedFormData, manifest, platformName }));
 }
 

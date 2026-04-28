@@ -11,8 +11,8 @@ async function onEvent({ data, manifest }) {
       jwtToken: rcUnifiedCrmExtJwt,
       formData: data.body.button.formData,
     });
-    if (!saved) {
-      showNotification({ level: 'error', message: 'Failed to save appointment.', ttl: 3000 });
+    if (!saved?.successful) {
+      showNotification({ level: saved?.returnMessage?.messageType, message: saved?.returnMessage?.message, ttl: saved?.returnMessage?.ttl ?? 3000, details: saved?.returnMessage?.details });
       return;
     }
     showNotification({ level: 'success', message: 'Appointment updated.', ttl: 3000 });

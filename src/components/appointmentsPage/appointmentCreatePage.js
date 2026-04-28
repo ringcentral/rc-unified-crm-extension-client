@@ -204,6 +204,13 @@ function resolveParticipantsForSubmit(formData) {
   };
 }
 
+function toLocalDateTimeMin(ms) {
+  // Returns a datetime-local compatible min string (YYYY-MM-DDTHH:MM) for the given timestamp.
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
 function getAppointmentCreatePageRender({
   initialFormData = {},
   appointmentTitle = 'Appointments',
@@ -216,6 +223,7 @@ function getAppointmentCreatePageRender({
   const titleFieldVisible = titleFieldConfig?.isVisible;
   const titleFieldTitle = String(titleFieldConfig?.value || 'Title');
 
+  const nowMin = toLocalDateTimeMin(Date.now());
   const nowPlus30 = Date.now() + 30 * 60 * 1000;
   const defaults = {
     ...(titleFieldVisible ? { title: '' } : {}),
@@ -278,8 +286,8 @@ function getAppointmentCreatePageRender({
         title: { type: 'string', title: '' },
       }
       : {}),
-    dateTime: { type: 'string', format: 'date-time', title: 'Start Date and Time' },
-    endDateTime: { type: 'string', format: 'date-time', title: 'End Date and Time' },
+    dateTime: { type: 'string', format: 'date-time', title: 'Start Date and Time', minimum: nowMin },
+    endDateTime: { type: 'string', format: 'date-time', title: 'End Date and Time', minimum: merged.dateTime || nowMin },
     durationLabel: { type: 'string', title: '', description: 'Duration' },
     duration: { type: 'string', title: '', format: 'duration' },
     returnTab: { type: 'string', title: '' },
@@ -359,10 +367,10 @@ function getAppointmentCreatePageRender({
       // keep date/time at top like Meetings
       'ui:order': uiOrder,
       dateTime: {
-        'ui:options': { grid: { xs: 12, sm: 12 } },
+        'ui:options': { grid: { xs: 12, sm: 12 }, min: nowMin },
       },
       endDateTime: {
-        'ui:options': { grid: { xs: 12, sm: 12 } },
+        'ui:options': { grid: { xs: 12, sm: 12 }, min: merged.dateTime || nowMin },
       },
       durationLabel: {
         'ui:field': 'typography',
