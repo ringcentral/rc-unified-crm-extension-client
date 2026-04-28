@@ -409,7 +409,7 @@ function getAppointmentCreatePageRender({
       participantContacts: { 'ui:widget': 'hidden' },
       participantContactIds: {
         'ui:widget': 'AutocompleteWidget',
-        'ui:placeholder': 'Type a name and press Enter to search...',
+        'ui:placeholder': 'Type a name to search participants...',
         'ui:options': {
           multiple: true,
           freeSolo: true,
