@@ -77,10 +77,17 @@ async function checkUrlMatch({ type = 'quickAccessButton' }) {
 function createC2DInstance({ rootNode, sharedWidget, matcherType, selectedRegion }) {
   let matcher;
   switch (matcherType) {
-    case 'libPhone':
-      matcher = new LibPhoneNumberMatcher({ countryCode: selectedRegion });
+    case 'libPhone': {
+      const textMatcher = new LibPhoneNumberMatcher({ countryCode: selectedRegion });
+      // ServiceNow and similar CRMs often keep phone numbers in input values.
+      // Wrap text matching with value-node support so detail views are clickable.
+      matcher = new InputAwareRegExpMatcher({ textMatcher });
       break;
+    }
     case 'regExp':
+      matcher = new InputAwareRegExpMatcher();
+      break;
+    default:
       matcher = new InputAwareRegExpMatcher();
       break;
   }
