@@ -84,9 +84,11 @@ function createC2DInstance({ rootNode, sharedWidget, matcherType, selectedRegion
     case 'regExp':
       matcher = new InputAwareRegExpMatcher();
       break;
-    default:
-      matcher = new InputAwareRegExpMatcher();
+    default: {
+      const textMatcher = new LibPhoneNumberMatcher({ countryCode: selectedRegion });
+      matcher = new InputAwareRegExpMatcher({ textMatcher });
       break;
+    }
   }
   const observer = new RangeObserver({
     node: rootNode,
