@@ -62,13 +62,11 @@ async function checkUrlMatch({ type = 'quickAccessButton' }) {
           return false;
       }
     }
-    else {
-      return false;
-    }
+    return true;
   }
   catch (e) {
     console.error(e);
-    return false;
+    return true;
   }
 }
 
