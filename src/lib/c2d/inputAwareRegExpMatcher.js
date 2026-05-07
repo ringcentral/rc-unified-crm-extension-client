@@ -3,8 +3,8 @@ import { RegExpPhoneNumberMatcher, extractPhoneNumber } from 'ringcentral-c2d';
 const VALUE_NODE_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
 
 export default class InputAwareRegExpMatcher {
-  constructor() {
-    this.textMatcher = new RegExpPhoneNumberMatcher();
+  constructor({ textMatcher } = {}) {
+    this.textMatcher = textMatcher ?? new RegExpPhoneNumberMatcher();
   }
 
   match({ node, validate }) {
@@ -15,7 +15,23 @@ export default class InputAwareRegExpMatcher {
 
   matchValueNodes(node) {
     const matches = [];
+    const seen = new Set();
     const valueNodes = this.collectValueNodes(node);
+    const pushMatch = ({ targetNode, startsAt, endsAt, phoneNumber }) => {
+      if (!targetNode) return;
+      const key = `${phoneNumber}::${targetNode.tagName || targetNode.nodeName}::${targetNode.id || ''}::${targetNode.className || ''}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      matches.push({
+        startsNode: targetNode,
+        endsNode: targetNode,
+        startsAt,
+        endsAt,
+        context: {
+          phoneNumber,
+        },
+      });
+    };
 
     for (const valueNode of valueNodes) {
       const value = typeof valueNode.value === 'string' ? valueNode.value : '';
@@ -29,15 +45,23 @@ export default class InputAwareRegExpMatcher {
 
         const startsAt = remaining.indexOf(phoneNumber);
         const endsAt = startsAt + phoneNumber.length;
-        matches.push({
-          startsNode: valueNode,
-          endsNode: valueNode,
+        pushMatch({
+          targetNode: valueNode,
           startsAt: offset + startsAt,
           endsAt: offset + endsAt,
-          context: {
-            phoneNumber,
-          },
+          phoneNumber,
         });
+        const rootNode = valueNode.getRootNode?.();
+        if (rootNode instanceof ShadowRoot && rootNode.host) {
+          // Some component libraries handle pointer events on the host wrapper
+          // rather than the inner <input>; bind C2D context to host as fallback.
+          pushMatch({
+            targetNode: rootNode.host,
+            startsAt: undefined,
+            endsAt: undefined,
+            phoneNumber,
+          });
+        }
 
         offset += endsAt;
         remaining = remaining.substring(endsAt);
