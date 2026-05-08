@@ -31,23 +31,31 @@ async function stopRecordingLogs() {
 }
 
 async function uploadLogs({ serverUrl }) {
-    const presignedUrlResponse = await axios.get(`${serverUrl}/debug/report/url`);
-    const presignedUrl = presignedUrlResponse.data.presignedUrl;
     const logs = getLog();
-    const uploadResponse = await axios.put(
-        presignedUrl,
-        JSON.stringify(logs, null, 2),
-        {
-            skipAuthorization: true,
-            headers: {
-                'Content-Type': 'application/json'
+    try {
+        const presignedUrlResponse = await axios.get(`${serverUrl}/debug/report/url`);
+        const presignedUrl = presignedUrlResponse.data.presignedUrl;
+        const uploadResponse = await axios.put(
+            presignedUrl,
+            JSON.stringify(logs, null, 2),
+            {
+                skipAuthorization: true,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             }
-        }
-    );
-    // download the report as json file to local as well
-    downloadTextFile({ filename: 'error-log-report.json', text: JSON.stringify(logs, null, 2) });
-    clearLog();
-    return uploadResponse.status === 200;
+        );
+        // download the report as json file to local as well
+        downloadTextFile({ filename: 'error-log-report.json', text: JSON.stringify(logs, null, 2) });
+        clearLog();
+        return uploadResponse.status === 200;
+    }
+    catch (error) {
+        // download the report as json file to local as well
+        downloadTextFile({ filename: 'error-log-report.json', text: JSON.stringify(logs, null, 2) });
+        clearLog();
+        return false;
+    }
 }
 
 async function isRecordingLogs() {
