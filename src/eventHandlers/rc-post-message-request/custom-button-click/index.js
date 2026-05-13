@@ -60,7 +60,6 @@ import adminRemoveSheetButtonHandler from './googleSheets/adminRemoveSheetButton
 import contactSearchAdapterButtonCallLogHandler from './contactSearch/contactSearchAdapterButtonCallLog';
 import contactSearchAdapterButtonMessageLogHandler from './contactSearch/contactSearchAdapterButtonMessageLog';
 
-import contactSearchAdapterButtonAppointmentHandler from './contactSearchAdapterButtonAppointment';
 import openInstalledPluginListPageHandler from './plugins/installedPluginListPage';
 import selectPluginHandler from './plugins/selectPlugin';
 import pluginConfigurePageSubmitHandler from './plugins/pluginConfigurePageSubmit';
@@ -80,8 +79,6 @@ import appointmentOpenContactHandler from './appointmentOpenContact';
 import appointmentOpenAppointmentHandler from './appointmentOpenAppointment';
 import appointmentCreateHandler from './appointmentCreate';
 import appointmentCreateSaveHandler from './appointmentCreateSave';
-import appointmentSelectParticipantHandler from './appointmentSelectParticipant';
-import contactSearchResultAppointmentSubmitHandler from './contactSearchResultAppointmentSubmit';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     // If user hides Appointments tab, block all appointment-related actions/APIs.
@@ -93,8 +90,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             const isAppointmentsTabAction = btn.type === 'customizedTabAction' && btn.tabId === 'appointmentsPage';
             const isAppointmentsPageSubmit =
                 btn.id === 'appointmentEditPage' ||
-                btn.id === 'appointmentCreatePage' ||
-                btn.id === 'contactSearchResultAppointment';
+                btn.id === 'appointmentCreatePage';
             const actionId = String(btn.id ?? '').split('-action')[0].split('-')[0];
             const isAppointmentsListAction = new Set([
                 'appointmentCreateButton',
@@ -107,8 +103,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 'appointmentSaveButton',
                 'appointmentCreateSaveButton',
                 'appointmentOpenAppointment',
-                'appointmentSelectParticipantButton',
-                'contactSearchAdapterButtonAppointment',
             ]).has(actionId);
             if (isAppointmentsTabAction || isAppointmentsPageSubmit || isAppointmentsListAction) {
                 responseMessage(data.requestId, { data: 'ok' });
@@ -148,11 +142,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         await appointmentCreateSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
         return;
     }
-    if (data.body.button.id === 'contactSearchResultAppointment') {
-        await contactSearchResultAppointmentSubmitHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
-        return;
-    }
-
     // button id is: {actionId}-{itemId}-action
     const listButtonActionIdAndItemId = data.body.button.id.split('-action')[0]; // {actionId}-{itemId}
     const listButtonActionId = listButtonActionIdAndItemId.split('-')[0]; // {actionId}
@@ -187,9 +176,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'appointmentOpenAppointment':
             await appointmentOpenAppointmentHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
-            break;
-        case 'appointmentSelectParticipantButton':
-            await appointmentSelectParticipantHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'callLater':
             await callLaterHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
@@ -326,9 +312,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'contactSearchAdapterButtonMessageLog':
             await contactSearchAdapterButtonMessageLogHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
-            break;
-        case 'contactSearchAdapterButtonAppointment':
-            await contactSearchAdapterButtonAppointmentHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'refreshLicense':
             if (platform.useLicense) { await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl }); }
