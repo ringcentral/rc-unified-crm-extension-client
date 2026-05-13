@@ -434,7 +434,7 @@ function getShowCalldownTabSetting(userSettings) {
 
 function getShowAppointmentsTabSetting(userSettings) {
     return {
-        value: userSettings?.showAppointmentsTab?.value ?? true,
+        value: userSettings?.showAppointmentsTab?.value ?? false,
         readOnly: userSettings?.showAppointmentsTab?.customizable === undefined ? false : !userSettings?.showAppointmentsTab?.customizable,
         readOnlyReason: !userSettings?.showAppointmentsTab?.customizable ? 'This setting is managed by admin' : ''
     }

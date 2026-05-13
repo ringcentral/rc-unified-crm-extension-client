@@ -1,4 +1,5 @@
-function getCustomizeTabsSettingPageRender({ adminUserSettings }) {
+function getCustomizeTabsSettingPageRender({ adminUserSettings, manifest, platformName }) {
+    const appointmentTitle = manifest?.platforms?.[platformName]?.page?.appointment?.title ?? 'Appointments';
     return {
         id: 'customizeTabsSettingPage',
         title: 'Customize tabs',
@@ -135,7 +136,7 @@ function getCustomizeTabsSettingPageRender({ adminUserSettings }) {
                 },
                 showAppointmentsTab: {
                     type: 'object',
-                    title: 'Show appointments tab',
+                    title: `Show ${appointmentTitle} tab`,
                     properties: {
                         customizable: {
                             type: 'boolean',
@@ -233,7 +234,7 @@ function getCustomizeTabsSettingPageRender({ adminUserSettings }) {
             showAppointmentsTab:
             {
                 customizable: adminUserSettings?.showAppointmentsTab?.customizable ?? true,
-                value: adminUserSettings?.showAppointmentsTab?.value ?? true
+                value: adminUserSettings?.showAppointmentsTab?.value ?? false
             }
         }
     }
