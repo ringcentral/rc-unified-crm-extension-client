@@ -1,5 +1,4 @@
 function getErrorLogRecordPageRender({ step = 1, email, issueDescription = '' }) {
-    let page = {};
     switch (step) {
         case 1:
             return {
