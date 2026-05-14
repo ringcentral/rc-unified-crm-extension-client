@@ -292,6 +292,7 @@
       "showContactsTab": "Show contacts tab",
       "showUserReportTab": "Show user report tab",
       "showCalldownTab": "Show Call Back tab",
+      "showAppointmentsTab": "Show Appointments tab",
       "notificationLevel": "Notification level",
       "notificationLevelDesc": "Select the notification level to be displayed in the extension.",
       "notificationLevelSelectDesc": "Choose which types of notifications to display",

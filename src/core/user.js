@@ -159,7 +159,8 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
         voicemail: getShowVoicemailTabSetting(userSettings).value,
         recordings: getShowRecordingsTabSetting(userSettings).value,
         contacts: getShowContactsTabSetting(userSettings).value,
-        calldown: getShowCalldownTabSetting(userSettings).value
+        calldown: getShowCalldownTabSetting(userSettings).value,
+        appointments: getShowAppointmentsTabSetting(userSettings).value,
     }, '*');
     const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false) || (userSettings?.autoLogVoicemail?.value ?? false);
     const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
@@ -428,6 +429,14 @@ function getShowCalldownTabSetting(userSettings) {
         value: userSettings?.showCalldownTab?.value ?? true,
         readOnly: userSettings?.showCalldownTab?.customizable === undefined ? false : !userSettings?.showCalldownTab?.customizable,
         readOnlyReason: !userSettings?.showCalldownTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getShowAppointmentsTabSetting(userSettings) {
+    return {
+        value: userSettings?.showAppointmentsTab?.value ?? false,
+        readOnly: userSettings?.showAppointmentsTab?.customizable === undefined ? false : !userSettings?.showAppointmentsTab?.customizable,
+        readOnlyReason: !userSettings?.showAppointmentsTab?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -733,6 +742,7 @@ exports.getAddCallLogRecordingSetting = getAddCallLogRecordingSetting;
 exports.getAddCallLogAiNoteSetting = getAddCallLogAiNoteSetting;
 exports.getAddCallLogTranscriptSetting = getAddCallLogTranscriptSetting;
 exports.getShowCalldownTabSetting = getShowCalldownTabSetting;
+exports.getShowAppointmentsTabSetting = getShowAppointmentsTabSetting;
 exports.getUnknownContactPreferenceSetting = getUnknownContactPreferenceSetting;
 exports.getMultipleContactsPreferenceSetting = getMultipleContactsPreferenceSetting;
 exports.getNewContactTypeSetting = getNewContactTypeSetting;

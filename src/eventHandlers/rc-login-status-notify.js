@@ -5,6 +5,7 @@ import userCore from '../core/user';
 import { showNotification, getRcAccessToken, getRcInfo } from '../lib/util';
 import reportPage from '../components/reportPage/reportPage';
 import calldownPage from '../components/calldownPage';
+import appointmentsPage from '../components/appointmentsPage/appointmentsPage';
 import { triggerPendingRecordingCheck } from '../lib/logUtil';
 import { bullhornHeartbeat } from '../misc/bullhorn';
 import axios from 'axios';
@@ -96,6 +97,26 @@ async function onEvent({ data }) {
                     page: calldownPageRender,
                 }, '*');
             }
+
+            // 2.3.3.b init appointments tab (Automotive Connect)
+            // Register a placeholder tab immediately so it shows up without requiring reload,
+            // then attempt to load records (which may fail transiently right after login).
+            try {
+                const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+                const placeholder = appointmentsPage.getAppointmentsPageRender({
+                    manifest,
+                    platformName,
+                    selectedTab: 'upcoming',
+                    appointmentTitle: apptCfg?.title ?? 'Appointments',
+                    showConfirm: apptCfg?.showConfirm !== false,
+                    userSettings,
+                });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    type: 'rc-adapter-register-customized-page',
+                    page: placeholder,
+                }, '*');
+            } catch (e) { /* ignore */ }
+            // Do NOT fetch appointments here. List API will run only when user opens the tab or refreshes.
 
             // 2.3.4. Set every 5min, check if there's any pending recording link
             setInterval(async function () {

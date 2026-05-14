@@ -39,6 +39,7 @@ async function getServiceManifest() {
     const platform = manifest.platforms[platformInfo.platformName];
     const platformName = platform.name;
     const customSettings = platform.settings;
+    const appointmentTitle = manifest?.platforms?.[platformInfo.platformName]?.page?.appointment?.title ?? 'Appointments';
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-set-phone-number-format',
         formatType: userCore.getPhoneNumberDisplayFormatTypeSetting(userSettings).value, // 'national', 'international', 'e164', 'custom'
@@ -270,6 +271,14 @@ async function getServiceManifest() {
                                 value: userCore.getShowCalldownTabSetting(userSettings).value,
                                 readOnly: userCore.getShowCalldownTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowCalldownTabSetting(userSettings).readOnlyReason
+                            },
+                            {
+                                id: 'showAppointmentsTab',
+                                type: 'boolean',
+                                name: `Show ${appointmentTitle} tab`,
+                                value: userCore.getShowAppointmentsTabSetting(userSettings).value,
+                                readOnly: userCore.getShowAppointmentsTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowAppointmentsTabSetting(userSettings).readOnlyReason
                             }
                         ]
                     },

@@ -1,6 +1,7 @@
 import userCore from '../../core/user';
 import { showNotification, responseMessage } from '../../lib/util';
 import embeddableServices from '../../service/embeddableServices';
+import appointmentsPage from '../../components/appointmentsPage/appointmentsPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     const changedSettings = {};
@@ -20,9 +21,26 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         changedSettings[s.id] = { value: s.value };
       }
     }
-    await userCore.refreshUserSettings({
+    const userSettings = await userCore.refreshUserSettings({
       changedSettings
     });
+
+    // Re-register Appointments tab so it hides/shows immediately after toggle.
+    try {
+      const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+      const placeholder = appointmentsPage.getAppointmentsPageRender({
+        manifest,
+        platformName,
+        selectedTab: 'upcoming',
+        appointmentTitle: apptCfg?.title ?? 'Appointments',
+        showConfirm: apptCfg?.showConfirm !== false,
+        userSettings,
+      });
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page: placeholder,
+      }, '*');
+    } catch (e) { /* ignore */ }
     if (data.body.setting.id === "developerMode") {
       showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
       await chrome.storage.local.set({ developerMode: data.body.setting.value });

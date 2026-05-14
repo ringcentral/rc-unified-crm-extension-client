@@ -1,7 +1,5 @@
 import userCore from '../../core/user';
 import authCore from '../../core/auth';
-import { getManifest } from '../../service/manifestService';
-import { getPlatformInfo } from '../../service/platformService';
 import calldownPage from '../../components/calldownPage';
 import { responseMessage } from '../../lib/util';
 

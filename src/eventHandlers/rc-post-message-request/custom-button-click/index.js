@@ -1,6 +1,7 @@
 import { showNotification } from '../../../lib/util';
 import authCore from '../../../core/auth';
 import { responseMessage } from '../../../lib/util';
+import userCore from '../../../core/user';
 import { clearPlatformInfo } from '../../../service/platformService';
 
 import customizedBannerHandler from './navigation/customizedBanner';
@@ -68,18 +69,114 @@ import pluginDetailsSettingPageHandler from './plugins/pluginDetailsSettingPage'
 import pluginLicenseRefreshButtonHandler from './plugins/pluginLicenseRefreshButton';
 
 import pluginMarketListPageHandler from '../pluginMarketListPage';
+import appointmentRefreshListHandler from './appointmentRefreshList';
+import appointmentRefreshHandler from './appointmentRefresh';
+import appointmentConfirmHandler from './appointmentConfirm';
+import appointmentCancelHandler from './appointmentCancel';
+import appointmentEditHandler from './appointmentEdit';
+import appointmentSaveHandler from './appointmentSave';
+import appointmentOpenContactHandler from './appointmentOpenContact';
+import appointmentOpenAppointmentHandler from './appointmentOpenAppointment';
+import appointmentCreateHandler from './appointmentCreate';
+import appointmentCreateSaveHandler from './appointmentCreateSave';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+    // If user hides Appointments tab, block all appointment-related actions/APIs.
+    try {
+        const { userSettings } = await chrome.storage.local.get('userSettings');
+        const appointmentsEnabled = userCore.getShowAppointmentsTabSetting(userSettings).value;
+        if (!appointmentsEnabled) {
+            const btn = data?.body?.button ?? {};
+            const isAppointmentsTabAction = btn.type === 'customizedTabAction' && btn.tabId === 'appointmentsPage';
+            const isAppointmentsPageSubmit =
+                btn.id === 'appointmentEditPage' ||
+                btn.id === 'appointmentCreatePage';
+            const actionId = String(btn.id ?? '').split('-action')[0].split('-')[0];
+            const isAppointmentsListAction = new Set([
+                'appointmentCreateButton',
+                'appointmentsRefreshButton',
+                'appointmentRefresh',
+                'appointmentConfirm',
+                'appointmentCancel',
+                'appointmentEdit',
+                'appointmentOpenContact',
+                'appointmentSaveButton',
+                'appointmentCreateSaveButton',
+                'appointmentOpenAppointment',
+            ]).has(actionId);
+            if (isAppointmentsTabAction || isAppointmentsPageSubmit || isAppointmentsListAction) {
+                responseMessage(data.requestId, { data: 'ok' });
+                return;
+            }
+        }
+    } catch (e) {
+        // ignore settings read errors; proceed normally
+    }
     switch (data.body.button.type) {
         case 'customizedBanner':
             await customizedBannerHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
+    }
+    // Embeddable v3 tab header actions (top-right icons)
+    if (data.body.button.type === 'customizedTabAction') {
+        // Only handle our Appointments tab actions here.
+        if (data.body.button.tabId === 'appointmentsPage') {
+            switch (data.body.button.id) {
+                case 'appointmentsHeaderNew':
+                    await appointmentCreateHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+                    break;
+                case 'appointmentsHeaderRefresh':
+                    await appointmentRefreshListHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+                    break;
+            }
+        }
+        return;
+    }
+    // Form submit button (page header submit): button id is the page id
+    // https://github.com/ringcentral/ringcentral-embeddable/blob/3.x/docs/integration/custom-tab.md#handle-button-clicked-and-input-changed-event
+    if (data.body.button.id === 'appointmentEditPage') {
+        await appointmentSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+        return;
+    }
+    if (data.body.button.id === 'appointmentCreatePage') {
+        await appointmentCreateSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+        return;
     }
     // button id is: {actionId}-{itemId}-action
     const listButtonActionIdAndItemId = data.body.button.id.split('-action')[0]; // {actionId}-{itemId}
     const listButtonActionId = listButtonActionIdAndItemId.split('-')[0]; // {actionId}
     const listButtonItemId = listButtonActionIdAndItemId.split(`${listButtonActionId}-`)[1]; // {itemId}
     switch (listButtonActionId) {
+        case 'appointmentCreateButton':
+            await appointmentCreateHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'appointmentsRefreshButton':
+            await appointmentRefreshListHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'appointmentRefresh':
+            await appointmentRefreshHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'appointmentConfirm':
+            await appointmentConfirmHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'appointmentCancel':
+            await appointmentCancelHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'appointmentEdit':
+            await appointmentEditHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'appointmentOpenContact':
+            await appointmentOpenContactHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'appointmentSaveButton':
+            await appointmentSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+            break;
+        case 'appointmentCreateSaveButton':
+            await appointmentCreateSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+            break;
+        case 'appointmentOpenAppointment':
+            await appointmentOpenAppointmentHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
         case 'callLater':
             await callLaterHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;

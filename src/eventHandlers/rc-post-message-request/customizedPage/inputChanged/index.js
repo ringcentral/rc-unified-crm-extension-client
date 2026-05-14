@@ -44,6 +44,8 @@ import managedAuthUserHandler from './sections/managedAuthUser';
 
 import pluginMarketListPageHandler from '../../pluginMarketListPage';
 import selectPluginHandler from '../../custom-button-click/plugins/selectPlugin';
+import appointmentsPageHandler from './appointmentsPage';
+import appointmentPageHandler from './appointmentPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -114,6 +116,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'installedPluginListPage':
             await selectPluginHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'appointmentsPage':
+            await appointmentsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'appointmentCreatePage':
+        case 'appointmentEditPage':
+            await appointmentPageHandler.onEvent({ data, manifest, platformName });
             break;
     }
     // Page render update from section change input

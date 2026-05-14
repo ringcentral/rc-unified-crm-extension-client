@@ -3,6 +3,7 @@ import userCore from '../core/user';
 import adminCore from '../core/admin';
 import reportPage from '../components/reportPage/reportPage';
 import calldownPage from '../components/calldownPage';
+import appointmentsPage from '../components/appointmentsPage/appointmentsPage';
 import adminPage from '../components/admin/adminPage';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest } from '../service/manifestService';
@@ -55,6 +56,26 @@ async function onMessage({ request, sendResponse }) {
                         page: calldownPageRender,
                     }, '*');
                 }
+
+                // Register a placeholder tab immediately so it shows up without requiring reload,
+                // then attempt to load records (which may fail transiently right after auth).
+                try {
+                    const platformName = platformInfo?.platformName ?? '';
+                    const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+                    const placeholder = appointmentsPage.getAppointmentsPageRender({
+                        manifest,
+                        platformName: platformInfo?.platformName ?? '',
+                        selectedTab: 'upcoming',
+                        appointmentTitle: apptCfg?.title ?? 'Appointments',
+                        showConfirm: apptCfg?.showConfirm !== false,
+                        userSettings,
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: placeholder,
+                    }, '*');
+                } catch (e) { /* ignore */ }
+                // Do NOT fetch appointments here. List API will run only when user opens the tab or refreshes.
 
                 // admin tab
                 const adminSettingResults = await adminCore.refreshAdminSettings();

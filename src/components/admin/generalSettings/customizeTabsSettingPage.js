@@ -1,4 +1,5 @@
-function getCustomizeTabsSettingPageRender({ adminUserSettings }) {
+function getCustomizeTabsSettingPageRender({ adminUserSettings, manifest, platformName }) {
+    const appointmentTitle = manifest?.platforms?.[platformName]?.page?.appointment?.title ?? 'Appointments';
     return {
         id: 'customizeTabsSettingPage',
         title: 'Customize tabs',
@@ -132,6 +133,20 @@ function getCustomizeTabsSettingPageRender({ adminUserSettings }) {
                             title: 'Value'
                         }
                     }
+                },
+                showAppointmentsTab: {
+                    type: 'object',
+                    title: `Show ${appointmentTitle} tab`,
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: 'Customizable by user'
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: 'Value'
+                        }
+                    }
                 }
             }
         },
@@ -161,6 +176,9 @@ function getCustomizeTabsSettingPageRender({ adminUserSettings }) {
                 "ui:collapsible": true,
             },
             showCalldownTab: {
+                "ui:collapsible": true,
+            },
+            showAppointmentsTab: {
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
@@ -212,6 +230,11 @@ function getCustomizeTabsSettingPageRender({ adminUserSettings }) {
             {
                 customizable: adminUserSettings?.showCalldownTab?.customizable ?? true,
                 value: adminUserSettings?.showCalldownTab?.value ?? true
+            },
+            showAppointmentsTab:
+            {
+                customizable: adminUserSettings?.showAppointmentsTab?.customizable ?? true,
+                value: adminUserSettings?.showAppointmentsTab?.value ?? false
             }
         }
     }
