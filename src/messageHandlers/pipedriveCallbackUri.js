@@ -3,7 +3,6 @@ import userCore from '../core/user';
 import adminCore from '../core/admin';
 import reportPage from '../components/reportPage/reportPage';
 import calldownPage from '../components/calldownPage';
-import appointmentsPage from '../components/appointmentsPage/appointmentsPage';
 import adminPage from '../components/admin/adminPage';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest } from '../service/manifestService';
