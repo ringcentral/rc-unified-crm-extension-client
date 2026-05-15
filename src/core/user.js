@@ -2,6 +2,7 @@ import axios from 'axios';
 import moment from 'moment';
 import { getRcAccessToken } from '../lib/util';
 import { getManifest } from '../service/manifestService';
+import { getPlatformInfo } from '../service/platformService';
 import adminCore from './admin';
 import embeddableServices from '../service/embeddableServices';
 import reportPage from '../components/reportPage/reportPage';
@@ -119,6 +120,9 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
     }
     const rcAccessToken = getRcAccessToken();
     const manifest = await getManifest();
+    const platformInfo = await getPlatformInfo();
+    const platformName = platformInfo?.platformName ?? '';
+    const appointmentsSupported = !!manifest?.platforms?.[platformName]?.page?.appointment?.supported;
     let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl, rcAccessToken });
     // TODO: Remove this mirroring once all UI/logic reads `overridingNumberFormat` directly and we no longer
     // need to support the legacy per-user `overridingPhoneNumberFormat/2/3` fields.
@@ -160,7 +164,7 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
         recordings: getShowRecordingsTabSetting(userSettings).value,
         contacts: getShowContactsTabSetting(userSettings).value,
         calldown: getShowCalldownTabSetting(userSettings).value,
-        appointments: getShowAppointmentsTabSetting(userSettings).value,
+        appointments: appointmentsSupported && getShowAppointmentsTabSetting(userSettings).value,
     }, '*');
     const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false) || (userSettings?.autoLogVoicemail?.value ?? false);
     const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
@@ -434,7 +438,7 @@ function getShowCalldownTabSetting(userSettings) {
 
 function getShowAppointmentsTabSetting(userSettings) {
     return {
-        value: userSettings?.showAppointmentsTab?.value ?? false,
+        value: userSettings?.showAppointmentsTab?.value ?? true,
         readOnly: userSettings?.showAppointmentsTab?.customizable === undefined ? false : !userSettings?.showAppointmentsTab?.customizable,
         readOnlyReason: !userSettings?.showAppointmentsTab?.customizable ? 'This setting is managed by admin' : ''
     }

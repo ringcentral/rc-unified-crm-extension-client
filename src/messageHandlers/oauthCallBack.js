@@ -59,21 +59,24 @@ async function onMessage({ request, sendResponse }) {
 
                 // Register a placeholder tab immediately so it shows up without requiring reload,
                 // then attempt to load records (which may fail transiently right after auth).
+                // Only register if the CRM manifest has explicitly enabled appointment support.
                 try {
                     const platformName = platformInfo?.platformName ?? '';
                     const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
-                    const placeholder = appointmentsPage.getAppointmentsPageRender({
-                        manifest,
-                        platformName: platformInfo?.platformName ?? '',
-                        selectedTab: 'upcoming',
-                        appointmentTitle: apptCfg?.title ?? 'Appointments',
-                        showConfirm: apptCfg?.showConfirm !== false,
-                        userSettings,
-                    });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                        type: 'rc-adapter-register-customized-page',
-                        page: placeholder,
-                    }, '*');
+                    if (apptCfg.supported) {
+                        const placeholder = appointmentsPage.getAppointmentsPageRender({
+                            manifest,
+                            platformName: platformInfo?.platformName ?? '',
+                            selectedTab: 'upcoming',
+                            appointmentTitle: apptCfg?.title ?? 'Appointments',
+                            showConfirm: apptCfg?.showConfirm !== false,
+                            userSettings,
+                        });
+                        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                            type: 'rc-adapter-register-customized-page',
+                            page: placeholder,
+                        }, '*');
+                    }
                 } catch (e) { /* ignore */ }
                 // Do NOT fetch appointments here. List API will run only when user opens the tab or refreshes.
 
