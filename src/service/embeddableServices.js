@@ -274,7 +274,7 @@ async function getServiceManifest() {
                                 readOnly: userCore.getShowCalldownTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowCalldownTabSetting(userSettings).readOnlyReason
                             },
-                            ...(appointmentsSupported ? [{
+                            ...(appointmentsSupported && !userCore.getShowAppointmentsTabSetting(userSettings).readOnly ? [{
                                 id: 'showAppointmentsTab',
                                 type: 'boolean',
                                 name: `Show ${appointmentTitle} tab`,
