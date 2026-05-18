@@ -26,20 +26,23 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     });
 
     // Re-register Appointments tab so it hides/shows immediately after toggle.
+    // Only do this when the manifest explicitly enables appointment support.
     try {
       const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
-      const placeholder = appointmentsPage.getAppointmentsPageRender({
-        manifest,
-        platformName,
-        selectedTab: 'upcoming',
-        appointmentTitle: apptCfg?.title ?? 'Appointments',
-        showConfirm: apptCfg?.showConfirm !== false,
-        userSettings,
-      });
-      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-        type: 'rc-adapter-register-customized-page',
-        page: placeholder,
-      }, '*');
+      if (apptCfg.supported) {
+        const placeholder = appointmentsPage.getAppointmentsPageRender({
+          manifest,
+          platformName,
+          selectedTab: 'upcoming',
+          appointmentTitle: apptCfg?.title ?? 'Appointments',
+          showConfirm: apptCfg?.showConfirm !== false,
+          userSettings,
+        });
+        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+          type: 'rc-adapter-register-customized-page',
+          page: placeholder,
+        }, '*');
+      }
     } catch (e) { /* ignore */ }
     if (data.body.setting.id === "developerMode") {
       showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });

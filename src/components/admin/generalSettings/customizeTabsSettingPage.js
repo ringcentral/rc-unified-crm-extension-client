@@ -1,5 +1,7 @@
 function getCustomizeTabsSettingPageRender({ adminUserSettings, manifest, platformName }) {
-    const appointmentTitle = manifest?.platforms?.[platformName]?.page?.appointment?.title ?? 'Appointments';
+    const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+    const appointmentTitle = apptCfg?.title ?? 'Appointments';
+    const appointmentsSupported = !!apptCfg.supported;
     return {
         id: 'customizeTabsSettingPage',
         title: 'Customize tabs',
@@ -134,20 +136,22 @@ function getCustomizeTabsSettingPageRender({ adminUserSettings, manifest, platfo
                         }
                     }
                 },
-                showAppointmentsTab: {
-                    type: 'object',
-                    title: `Show ${appointmentTitle} tab`,
-                    properties: {
-                        customizable: {
-                            type: 'boolean',
-                            title: 'Customizable by user'
-                        },
-                        value: {
-                            type: 'boolean',
-                            title: 'Value'
+                ...(appointmentsSupported && {
+                    showAppointmentsTab: {
+                        type: 'object',
+                        title: `Show ${appointmentTitle} tab`,
+                        properties: {
+                            customizable: {
+                                type: 'boolean',
+                                title: 'Customizable by user'
+                            },
+                            value: {
+                                type: 'boolean',
+                                title: 'Value'
+                            }
                         }
                     }
-                }
+                })
             }
         },
         uiSchema: {
@@ -178,9 +182,11 @@ function getCustomizeTabsSettingPageRender({ adminUserSettings, manifest, platfo
             showCalldownTab: {
                 "ui:collapsible": true,
             },
-            showAppointmentsTab: {
-                "ui:collapsible": true,
-            },
+            ...(appointmentsSupported && {
+                showAppointmentsTab: {
+                    "ui:collapsible": true,
+                }
+            }),
             submitButtonOptions: {
                 submitText: 'Save',
             }
@@ -231,11 +237,12 @@ function getCustomizeTabsSettingPageRender({ adminUserSettings, manifest, platfo
                 customizable: adminUserSettings?.showCalldownTab?.customizable ?? true,
                 value: adminUserSettings?.showCalldownTab?.value ?? true
             },
-            showAppointmentsTab:
-            {
-                customizable: adminUserSettings?.showAppointmentsTab?.customizable ?? true,
-                value: adminUserSettings?.showAppointmentsTab?.value ?? false
-            }
+            ...(appointmentsSupported && {
+                showAppointmentsTab: {
+                    customizable: adminUserSettings?.showAppointmentsTab?.customizable ?? true,
+                    value: adminUserSettings?.showAppointmentsTab?.value ?? true
+                }
+            })
         }
     }
 }

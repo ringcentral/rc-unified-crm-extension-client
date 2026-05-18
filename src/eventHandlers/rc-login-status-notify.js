@@ -98,23 +98,29 @@ async function onEvent({ data }) {
                 }, '*');
             }
 
-            // 2.3.3.b init appointments tab (Automotive Connect)
+            // 2.3.3.b init appointments tab
             // Register a placeholder tab immediately so it shows up without requiring reload,
             // then attempt to load records (which may fail transiently right after login).
+            // Only register if the CRM manifest has not explicitly disabled appointment support.
             try {
                 const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
-                const placeholder = appointmentsPage.getAppointmentsPageRender({
-                    manifest,
-                    platformName,
-                    selectedTab: 'upcoming',
-                    appointmentTitle: apptCfg?.title ?? 'Appointments',
-                    showConfirm: apptCfg?.showConfirm !== false,
-                    userSettings,
-                });
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-                    type: 'rc-adapter-register-customized-page',
-                    page: placeholder,
-                }, '*');
+                if (apptCfg.supported) {
+                    // Read persisted user settings so the hidden flag reflects the user's saved preference,
+                    // rather than the empty {} default (which would always default showAppointmentsTab to true).
+                    const { userSettings: storedUserSettings } = await chrome.storage.local.get({ userSettings: {} });
+                    const placeholder = appointmentsPage.getAppointmentsPageRender({
+                        manifest,
+                        platformName,
+                        selectedTab: 'upcoming',
+                        appointmentTitle: apptCfg?.title ?? 'Appointments',
+                        showConfirm: apptCfg?.showConfirm !== false,
+                        userSettings: storedUserSettings,
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: placeholder,
+                    }, '*');
+                }
             } catch (e) { /* ignore */ }
             // Do NOT fetch appointments here. List API will run only when user opens the tab or refreshes.
 

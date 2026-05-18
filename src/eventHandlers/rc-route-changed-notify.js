@@ -3,6 +3,7 @@ import userCore from '../core/user';
 import calldownPage from '../components/calldownPage';
 import appointmentsPage from '../components/appointmentsPage/appointmentsPage';
 import { getManifest } from '../service/manifestService';
+import { getPlatformInfo } from '../service/platformService';
 
 async function onEvent({ data }) {
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
@@ -53,7 +54,10 @@ async function onEvent({ data }) {
           const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
           if (rcUnifiedCrmExtJwt && crmAuthed) {
             const { userSettings } = await chrome.storage.local.get('userSettings');
-            if (!userCore.getShowAppointmentsTabSetting(userSettings).value) {
+            const platformInfo = await getPlatformInfo();
+            const platformName = platformInfo?.platformName ?? '';
+            const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+            if (!apptCfg.supported || !userCore.getShowAppointmentsTabSetting(userSettings).value) {
               return;
             }
             const refreshedAppointments = await appointmentsPage.getAppointmentsPageWithRecords({
