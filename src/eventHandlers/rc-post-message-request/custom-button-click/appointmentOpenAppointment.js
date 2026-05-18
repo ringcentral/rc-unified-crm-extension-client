@@ -29,6 +29,15 @@ async function onEvent({ data, manifest, platformName, listButtonItemId }) {
       resolvedTpl = resolvedTpl.replace('{hostname}', hostname);
     }
 
+    // {atsUrl} resolves to the Bullhorn user's cluster-specific ATS base URL,
+    // Use this instead of hardcoding a cluster domain (e.g. cls91) in the manifest.
+    if (resolvedTpl.includes('{atsUrl}')) {
+      const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
+      const atsUrl = crm_extension_bullhorn_user_urls?.atsUrl ?? '';
+      let sanitizedAtsUrl = atsUrl.startsWith('https://') ? atsUrl.slice('https://'.length) : atsUrl;
+      resolvedTpl = resolvedTpl.replace('{atsUrl}', sanitizedAtsUrl);
+    }
+
     const needsId = resolvedTpl.includes('{thirdPartyAppointmentId}');
     const targetUrl = (needsId && thirdPartyAppointmentId)
       ? resolvedTpl.replaceAll('{thirdPartyAppointmentId}', encodeURIComponent(String(thirdPartyAppointmentId)))
