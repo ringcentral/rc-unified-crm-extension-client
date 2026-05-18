@@ -332,11 +332,11 @@ function getCallPopMultiMatchBehavior(userSettings) {
     }
 }
 
-function getOpenContactAfterCreationSetting(userSettings) {
+function getopenContactPageAfterCreationSetting(userSettings) {
     return {
-        value: userSettings?.openContactAfterCreatingIt?.value ?? false,
-        readOnly: userSettings?.openContactAfterCreatingIt?.customizable === undefined ? false : !userSettings?.openContactAfterCreatingIt?.customizable,
-        readOnlyReason: !userSettings?.openContactAfterCreatingIt?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.openContactPageAfterCreation?.value ?? false,
+        readOnly: userSettings?.openContactPageAfterCreation?.customizable === undefined ? false : !userSettings?.openContactPageAfterCreation?.customizable,
+        readOnlyReason: !userSettings?.openContactPageAfterCreation?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -712,7 +712,7 @@ exports.getSMSPopSetting = getSMSPopSetting;
 exports.getIncomingCallPop = getIncomingCallPop;
 exports.getOutgoingCallPop = getOutgoingCallPop;
 exports.getCallPopMultiMatchBehavior = getCallPopMultiMatchBehavior;
-exports.getOpenContactAfterCreationSetting = getOpenContactAfterCreationSetting;
+exports.getopenContactPageAfterCreationSetting = getopenContactPageAfterCreationSetting;
 exports.getDeveloperModeSetting = getDeveloperModeSetting;
 exports.getAutoOpenSetting = getAutoOpenSetting;
 exports.getShowAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting;

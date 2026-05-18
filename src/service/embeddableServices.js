@@ -443,9 +443,9 @@ async function getServiceManifest() {
                         type: 'boolean',
                         name: t('settings.callPop.contactCreatedCallPop'),
                         description: t('settings.callPop.contactCreatedCallPopDesc'),
-                        value: userCore.getOpenContactAfterCreationSetting(userSettings).value,
-                        readOnly: userCore.getOpenContactAfterCreationSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getOpenContactAfterCreationSetting(userSettings).readOnlyReason
+                        value: userCore.getopenContactPageAfterCreationSetting(userSettings).value,
+                        readOnly: userCore.getopenContactPageAfterCreationSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getopenContactPageAfterCreationSetting(userSettings).readOnlyReason
                     }
                 ]
             },

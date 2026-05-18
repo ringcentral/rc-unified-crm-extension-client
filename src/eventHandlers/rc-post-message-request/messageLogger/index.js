@@ -204,7 +204,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
           additionalSubmission
         });
         newContactInfo = newContactResp.contactInfo;
-        if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
+        if (userCore.getopenContactPageAfterCreationSetting(userSettings).value) {
           await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
         }
       }
@@ -242,7 +242,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             additionalSubmission
           });
           newContactInfo = newContactResp.contactInfo;
-          if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
+          if (userCore.getopenContactPageAfterCreationSetting(userSettings).value) {
             await contactCore.openContactPage({ manifest, platformName, phoneNumber: formData.contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
           }
         }
