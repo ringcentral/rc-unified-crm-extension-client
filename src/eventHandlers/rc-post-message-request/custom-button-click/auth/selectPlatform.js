@@ -75,7 +75,20 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             type: 'rc-adapter-navigate-to',
             path: '/settings',
         }, '*');
-        await authCore.onUserClickConnectButton({ platform, platformName, manifest });
+        const managedOAuthResult = await authCore.checkManagedOAuthBeforeCrmVisible({
+            manifest,
+            platformName: selectedPlatform.name,
+            platform: manifest.platforms[selectedPlatform.name]
+        });
+        if (managedOAuthResult.blocked) {
+            window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+            return;
+        }
+        await authCore.onUserClickConnectButton({
+            platform: manifest.platforms[selectedPlatform.name],
+            platformName: selectedPlatform.name,
+            manifest
+        });
     }
     else {
         const selectedPlatformConfig = manifest.platforms[selectedPlatform.name];

@@ -7,6 +7,8 @@ import { openDB } from 'idb';
 import platformSelectionPage from '../components/platformSelectionPage';
 import embeddableServices from '../service/embeddableServices';
 import authPage from '../components/authPage';
+import managedOAuthSetupPage from '../components/managedOAuthSetupPage';
+import managedOAuthMissingPage from '../components/managedOAuthMissingPage';
 import { tryConnectToBullhorn } from '../misc/bullhorn';
 import { t } from '../i18n';
 import { getPluginConfigurePageRender } from '../components/pluginConfigurePage';
@@ -19,6 +21,23 @@ function handleThirdPartyOAuthWindow(oAuthUri) {
         type: 'openThirdPartyAuthWindow',
         oAuthUri
     });
+}
+
+function isAdminManagedOAuthEnabled(platform) {
+    return platform?.auth?.type === 'oauth' && platform?.auth?.oauth?.adminManaged?.enabled === true;
+}
+
+function buildOAuthUrl({ authorizationUri, clientId, redirectUri, scopes, customState, platformName }) {
+    const state = customState === '' || !customState ? `platform=${platformName}` : customState;
+    const scopeQuery = scopes
+        ? (scopes.includes('=') ? `&${scopes}` : `&scope=${encodeURIComponent(scopes)}`)
+        : '';
+    return `${authorizationUri}?` +
+        'response_type=code' +
+        `&client_id=${encodeURIComponent(clientId)}` +
+        scopeQuery +
+        `&state=${state}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}`;
 }
 
 async function onUserClickConnectButton({ platform, platformName, manifest }) {
@@ -38,8 +57,28 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
             if (platform.auth.oauth.customState) {
                 customState = platform.auth.oauth.customState;
             }
+            if (isAdminManagedOAuthEnabled(platform)) {
+                const managedOAuthState = await getManagedOAuthState({
+                    serverUrl: manifest.serverUrl,
+                    platformName
+                });
+                const managedOAuthValues = managedOAuthState?.oauthValues ?? managedOAuthState?.pendingValues;
+                if (!managedOAuthValues) {
+                    showNotification({ level: 'warning', message: 'Authorization information is not provided. Please contact the admin user.', ttl: 60000 });
+                    return;
+                }
+                authUri = buildOAuthUrl({
+                    authorizationUri: managedOAuthValues.authorizationUri,
+                    clientId: managedOAuthValues.clientId,
+                    redirectUri: managedOAuthValues.redirectUri,
+                    scopes: managedOAuthValues.scopes,
+                    customState,
+                    platformName: platform.name
+                });
+                handleThirdPartyOAuthWindow(authUri);
+            }
             // Unique: Pipedrive
-            if (platformName === 'pipedrive') {
+            else if (platformName === 'pipedrive') {
                 authUri = manifest.platforms.pipedrive.auth.oauth.redirectUri;
                 handleThirdPartyOAuthWindow(authUri);
             }
@@ -48,12 +87,14 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
                 await tryConnectToBullhorn({ platform });
             }
             else {
-                authUri = `${platform.auth.oauth.authUrl}?` +
-                    `response_type=code` +
-                    `&client_id=${platform.auth.oauth.clientId}` +
-                    `${!!platform.auth.oauth.scope && platform.auth.oauth.scope != '' ? `&${platform.auth.oauth.scope}` : ''}` +
-                    `&state=${customState === '' ? `platform=${platform.name}` : customState}` +
-                    '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
+                authUri = buildOAuthUrl({
+                    authorizationUri: platform.auth.oauth.authUrl,
+                    clientId: platform.auth.oauth.clientId,
+                    redirectUri: 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html',
+                    scopes: platform.auth.oauth.scope,
+                    customState,
+                    platformName: platform.name
+                });
                 handleThirdPartyOAuthWindow(authUri);
             }
             break;
@@ -101,6 +142,64 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
             window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
             break;
     }
+}
+
+async function getManagedOAuthState({ serverUrl, platformName }) {
+    try {
+        const rcAccessToken = getRcAccessToken();
+        const response = await axios.get(
+            `${serverUrl}/oauthManagedAuthState?platform=${encodeURIComponent(platformName)}&rcAccessToken=${encodeURIComponent(rcAccessToken ?? '')}`
+        );
+        return response.data;
+    }
+    catch (error) {
+        return null;
+    }
+}
+
+async function saveManagedOAuthPendingValues({ serverUrl, values }) {
+    const rcAccessToken = getRcAccessToken();
+    const response = await axios.post(
+        `${serverUrl}/admin/managedOAuth/cache?rcAccessToken=${encodeURIComponent(rcAccessToken ?? '')}`,
+        { values }
+    );
+    return response.data;
+}
+
+async function checkManagedOAuthBeforeCrmVisible({ manifest, platformName, platform }) {
+    if (!isAdminManagedOAuthEnabled(platform)) {
+        return {
+            blocked: false
+        };
+    }
+    const managedOAuthState = await getManagedOAuthState({
+        serverUrl: manifest.serverUrl,
+        platformName
+    });
+    if (managedOAuthState?.hasAccountOAuth) {
+        return {
+            blocked: false,
+            state: managedOAuthState
+        };
+    }
+    const page = managedOAuthState?.isAdmin
+        ? managedOAuthSetupPage.getManagedOAuthSetupPageRender({
+            platform,
+            pendingValues: managedOAuthState?.pendingValues ?? {}
+        })
+        : managedOAuthMissingPage.getManagedOAuthMissingPageRender();
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-customized-page',
+        page
+    }, '*');
+    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-navigate-to',
+        path: `/customized/${page.id}`,
+    }, '*');
+    return {
+        blocked: true,
+        state: managedOAuthState
+    };
 }
 
 async function getManagedAuthState({ serverUrl, platformName, connectorId = null, isPrivate = false, rcInfo = null, rcExtensionId = null, rcAccountId = null }) {
@@ -333,6 +432,11 @@ async function refreshLicenseStatus({ serverUrl }) {
 exports.handleThirdPartyOAuthWindow = handleThirdPartyOAuthWindow;
 exports.onUserClickConnectButton = onUserClickConnectButton;
 exports.checkAndOpenPlatformSelectionPage = checkAndOpenPlatformSelectionPage;
+exports.isAdminManagedOAuthEnabled = isAdminManagedOAuthEnabled;
+exports.buildOAuthUrl = buildOAuthUrl;
+exports.getManagedOAuthState = getManagedOAuthState;
+exports.saveManagedOAuthPendingValues = saveManagedOAuthPendingValues;
+exports.checkManagedOAuthBeforeCrmVisible = checkManagedOAuthBeforeCrmVisible;
 exports.apiKeyLogin = apiKeyLogin;
 exports.getManagedAuthState = getManagedAuthState;
 exports.onAuthCallback = onAuthCallback;

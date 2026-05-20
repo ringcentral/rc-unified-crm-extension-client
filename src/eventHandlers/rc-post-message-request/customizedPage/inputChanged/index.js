@@ -39,6 +39,7 @@ import googleSheetsAdminConfigHandler from './sections/googleSheetsAdminConfig';
 import pluginsAdminConfigHandler from './sections/pluginsAdminConfig';
 import installedPluginsHandler from './sections/installedPlugins';
 import managedAuthenticationHandler from './sections/managedAuthentication';
+import managedOAuthHandler from './sections/managedOAuth';
 import managedAuthOrgHandler from './sections/managedAuthOrg';
 import managedAuthUserHandler from './sections/managedAuthUser';
 
@@ -145,6 +146,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'managedAuthentication':
             await managedAuthenticationHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'managedOAuth':
+            await managedOAuthHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'managedAuthOrg':
             await managedAuthOrgHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

@@ -201,6 +201,9 @@ async function onEvent({ data }) {
                 axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId;
                 axios.defaults.headers.common['developer-author-name'] = manifest?.author?.name ?? "";
             }
+            if (platformInfo && platform && authCore.isAdminManagedOAuthEnabled(platform)) {
+                await authCore.checkManagedOAuthBeforeCrmVisible({ manifest, platformName, platform });
+            }
         }
         catch (e) {
             reset();

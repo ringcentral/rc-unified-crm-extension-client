@@ -26,6 +26,7 @@ import usermappingRemoveHandler from './userMapping/usermappingRemove';
 import hostnameInputPageHandler from './auth/hostnameInputPage';
 import insightlyGetApiKeyHandler from './auth/insightlyGetApiKey';
 import authPageHandler from './auth/authPage';
+import managedOAuthSetupPageHandler from './auth/managedOAuthSetupPage';
 import factoryResetButtonHandler from './auth/factoryResetButton';
 import selectPlatformHandler from './auth/selectPlatform';
 
@@ -46,6 +47,7 @@ import generalHandler from './adminSettings/adminSettingsFormSubmit';
 import managedAuthOrgPageHandler from './adminSettings/managedAuthOrgPage';
 import managedAuthUserPageHandler from './adminSettings/managedAuthUserPage';
 import managedAuthUserEditHandler from './adminSettings/managedAuthUserEdit';
+import deleteManagedOAuthAccountHandler from './adminSettings/deleteManagedOAuthAccount';
 
 import googleSheetsConfigHandler from './googleSheets/googleSheetsConfig';
 import newSheetButtonHandler from './googleSheets/newSheetButton';
@@ -219,6 +221,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'authPage':
             await authPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
+        case 'managedOAuthSetupPage':
+            await managedOAuthSetupPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
         case 'feedbackPage':
             await feedbackPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
@@ -374,6 +379,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'managedAuthUserEdit':
             await managedAuthUserEditHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            break;
+        case 'deleteManagedOAuthAccount':
+            await deleteManagedOAuthAccountHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'managedAuthUserPage':
             await managedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

@@ -520,6 +520,14 @@ async function saveManagedAuthSettings({
     return response.data;
 }
 
+async function deleteManagedOAuthAccount({ serverUrl, platformName }) {
+    const rcAccessToken = getRcAccessToken();
+    const response = await axios.delete(
+        `${serverUrl}/admin/managedOAuth/account?rcAccessToken=${encodeURIComponent(rcAccessToken ?? '')}&platform=${encodeURIComponent(platformName)}`
+    );
+    return response.data;
+}
+
 exports.getAdminSettings = getAdminSettings;
 exports.uploadAdminSettings = uploadAdminSettings;
 exports.refreshAdminSettings = refreshAdminSettings;
@@ -537,3 +545,4 @@ exports.getAdminReportStats = getAdminReportStats;
 exports.reinitializeUserMapping = reinitializeUserMapping;
 exports.getManagedAuthSettings = getManagedAuthSettings;
 exports.saveManagedAuthSettings = saveManagedAuthSettings;
+exports.deleteManagedOAuthAccount = deleteManagedOAuthAccount;
