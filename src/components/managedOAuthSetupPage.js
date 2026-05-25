@@ -1,4 +1,4 @@
-const DEFAULT_REDIRECT_URI = 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
+const DEFAULT_REDIRECT_URI = 'https://apps.ringcentral.com/integration/ringcentral-embeddable/latest/redirect.html';
 
 const MANAGED_OAUTH_FIELDS = {
     clientId: {

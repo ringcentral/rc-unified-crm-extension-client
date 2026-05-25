@@ -18,7 +18,7 @@ async function bullhornHeartbeat({ platform }) {
         else {
             await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
             await chrome.storage.local.remove('crmAuthed');
-            
+
             // Clear call back page after CRM disconnect
             try {
                 const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
@@ -32,7 +32,7 @@ async function bullhornHeartbeat({ platform }) {
                     }, '*');
                 }
             } catch (e) { /* ignore */ }
-            
+
             const serviceManifest = await getServiceManifest();
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-third-party-service',
@@ -75,7 +75,7 @@ async function bullhornHeartbeat({ platform }) {
     catch (e) {
         await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
         await chrome.storage.local.remove('crmAuthed');
-        
+
         // Clear call back page after CRM disconnect
         try {
             const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
@@ -89,7 +89,7 @@ async function bullhornHeartbeat({ platform }) {
                 }, '*');
             }
         } catch (e2) { /* ignore */ }
-        
+
         const serviceManifest = await getServiceManifest();
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-register-third-party-service',
@@ -150,7 +150,7 @@ async function tryConnectToBullhorn({ platform }) {
             `&action=Login` +
             `&client_id=${platform.auth.oauth.clientId}` +
             `&state=platform=${platform.name}` +
-            '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
+            '&redirect_uri=https://apps.ringcentral.com/integration/ringcentral-embeddable/latest/redirect.html';
     }
     else {
         const { crm_extension_bullhornUsername } = await chrome.storage.local.get({ crm_extension_bullhornUsername: null });
@@ -179,7 +179,7 @@ async function tryConnectToBullhorn({ platform }) {
                 `&action=Login` +
                 `&client_id=${platform.auth.oauth.clientId}` +
                 `&state=platform=${platform.name}` +
-                '&redirect_uri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
+                '&redirect_uri=https://apps.ringcentral.com/integration/ringcentral-embeddable/latest/redirect.html';
         }
     }
     chrome.runtime.sendMessage({
