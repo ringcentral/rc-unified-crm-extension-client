@@ -2,5 +2,5 @@
   "platformPublicListUrl": "https://appconnect.labs.ringcentral.com/public-api/connectors",
   "platformInternalListUrl": "https://appconnect.labs.ringcentral.com/public-api/connectors/internal",
   "redirectUri": "https://apps.ringcentral.com/integration/ringcentral-embeddable/latest/redirect.html",
-  "version": "1.7.26"
+  "version": "1.7.27"
 }
