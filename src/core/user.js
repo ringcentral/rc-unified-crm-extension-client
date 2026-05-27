@@ -460,6 +460,14 @@ function getC2DMatcherTypeSetting(userSettings) {
     }
 }
 
+function getC2DIgnoreSelectorSetting(userSettings) {
+    return {
+        value: userSettings?.c2dIgnoreSelector?.value ?? '',
+        readOnly: userSettings?.c2dIgnoreSelector?.customizable === undefined ? false : !userSettings?.c2dIgnoreSelector?.customizable,
+        readOnlyReason: !userSettings?.c2dIgnoreSelector?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getClickToDialEmbedMode(userSettings) {
     return {
         value: userSettings?.clickToDialEmbedMode?.value ?? 'crmOnly',
@@ -726,6 +734,7 @@ exports.getShowRecordingsTabSetting = getShowRecordingsTabSetting;
 exports.getShowContactsTabSetting = getShowContactsTabSetting;
 exports.getShowUserReportTabSetting = getShowUserReportTabSetting;
 exports.getC2DMatcherTypeSetting = getC2DMatcherTypeSetting;
+exports.getC2DIgnoreSelectorSetting = getC2DIgnoreSelectorSetting;
 exports.getClickToDialEmbedMode = getClickToDialEmbedMode;
 exports.getClickToDialUrls = getClickToDialUrls;
 exports.getQuickAccessButtonEmbedMode = getQuickAccessButtonEmbedMode;

@@ -9,6 +9,7 @@ export function initializeShadowRootSupport({
   sharedWidget,
   matcherType,
   selectedRegion,
+  c2dIgnoreSelector,
   onInstanceCreated,
   onObserverCreated,
   pollerStore,
@@ -64,6 +65,7 @@ export function initializeShadowRootSupport({
       sharedWidget,
       matcherType,
       selectedRegion,
+      c2dIgnoreSelector,
     });
     onInstanceCreated(c2dInstance);
     console.log('[App Connect] C2D initialized for shadowRoot');

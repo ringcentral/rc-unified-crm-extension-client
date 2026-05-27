@@ -1,4 +1,4 @@
-import { RangeObserver, LibPhoneNumberMatcher } from 'ringcentral-c2d';
+import { RangeObserver, LibPhoneNumberMatcher, defaultExclusions } from 'ringcentral-c2d';
 import App from './components/embedded';
 import CustomC2DWidget from './misc/CustomC2DWidget'
 import React from 'react';
@@ -9,6 +9,7 @@ import { sendMessageToExtension } from './lib/sendMessage';
 import { isObjectEmpty } from './lib/util';
 import InputAwareRegExpMatcher from './lib/c2d/inputAwareRegExpMatcher';
 import { initializeShadowRootSupport } from './lib/c2d/shadowRootSupport';
+import { createC2DNodeIgnorePredicate } from './lib/c2d/domIgnore';
 import userCore from './core/user';
 console.log('import content js to web page');
 
@@ -72,22 +73,36 @@ async function checkUrlMatch({ type = 'quickAccessButton' }) {
 
 // Create a C2D instance for a specific root node
 // If sharedWidget is provided, it will be reused instead of creating a new one
-function createC2DInstance({ rootNode, sharedWidget, matcherType, selectedRegion }) {
+function createC2DInstance({ rootNode, sharedWidget, matcherType, selectedRegion, c2dIgnoreSelector }) {
   let matcher;
+  const isNodeIgnored = createC2DNodeIgnorePredicate(c2dIgnoreSelector);
+  const validDomExclusions = [
+    ...defaultExclusions,
+    { matchFunc: isNodeIgnored },
+  ];
   switch (matcherType) {
     case 'libPhone': {
-      const textMatcher = new LibPhoneNumberMatcher({ countryCode: selectedRegion });
+      const textMatcher = new LibPhoneNumberMatcher({
+        countryCode: selectedRegion,
+        validDomExclusions,
+      });
       // ServiceNow and similar CRMs often keep phone numbers in input values.
       // Wrap text matching with value-node support so detail views are clickable.
-      matcher = new InputAwareRegExpMatcher({ textMatcher });
+      matcher = new InputAwareRegExpMatcher({ textMatcher, isNodeIgnored });
       break;
     }
     case 'regExp':
-      matcher = new InputAwareRegExpMatcher();
+      matcher = new InputAwareRegExpMatcher({
+        validDomExclusions,
+        isNodeIgnored,
+      });
       break;
     default: {
-      const textMatcher = new LibPhoneNumberMatcher({ countryCode: selectedRegion });
-      matcher = new InputAwareRegExpMatcher({ textMatcher });
+      const textMatcher = new LibPhoneNumberMatcher({
+        countryCode: selectedRegion,
+        validDomExclusions,
+      });
+      matcher = new InputAwareRegExpMatcher({ textMatcher, isNodeIgnored });
       break;
     }
   }
@@ -155,12 +170,15 @@ async function initializeC2D() {
   // Get matcher type
   const { c2dMatcherType } = await chrome.storage.local.get({ c2dMatcherType: 'libPhone' });
   const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: null });
+  const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
+  const c2dIgnoreSelector = userCore.getC2DIgnoreSelectorSetting(userSettings).value;
 
   // Initialize main document C2D first (this creates the widget)
   window.clickToDialInject = createC2DInstance({
     rootNode: document.body,
     matcherType: c2dMatcherType,
     selectedRegion: selectedRegion,
+    c2dIgnoreSelector,
   });
   // Disable the SMS button, keep only click-to-dial
   window.clickToDialInject.widget.update({ enableC2Text: userPermissions?.c2sms ?? false });
@@ -172,6 +190,7 @@ async function initializeC2D() {
     sharedWidget: window.clickToDialInject.widget,
     matcherType: c2dMatcherType,
     selectedRegion,
+    c2dIgnoreSelector,
     onInstanceCreated: (instance) => window.clickToDialInstances.push(instance),
     onObserverCreated: (observer) => window.clickToDialObservers.push(observer),
     pollerStore: window.clickToDialShadowRootPollers,
