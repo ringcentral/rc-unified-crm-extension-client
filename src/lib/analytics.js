@@ -17,6 +17,7 @@ const appName = 'App Connect';
 const eventAddedVia = 'client';
 const version = manifest.version;
 let author = '';
+let platformName = '';
 
 exports.setAuthor = function setAuthor(authorName) {
     if (!useAnalytics) {
@@ -43,6 +44,7 @@ exports.identify = function identify({ platformName, rcAccountId, extensionId })
         version,
         author
     });
+    platformName = platformName;
 }
 
 exports.group = function group({ rcAccountId }) {
@@ -119,7 +121,8 @@ exports.trackCrmLogin = function trackCrmLogin() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     });
 }
 exports.trackCrmLogout = function trackCrmLogout() {
@@ -127,7 +130,8 @@ exports.trackCrmLogout = function trackCrmLogout() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     });
 }
 exports.trackPlacedCall = function trackPlacedCall() {
@@ -135,7 +139,8 @@ exports.trackPlacedCall = function trackPlacedCall() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     });
 }
 exports.trackAnsweredCall = function trackAnsweredCall() {
@@ -143,7 +148,8 @@ exports.trackAnsweredCall = function trackAnsweredCall() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     });
 }
 exports.trackConnectedCall = function trackConnectedCall() {
@@ -151,7 +157,8 @@ exports.trackConnectedCall = function trackConnectedCall() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     });
 }
 exports.trackCallEnd = function trackCallEnd({ durationInSeconds, direction, result, callWith, callingMode }) {
@@ -164,7 +171,8 @@ exports.trackCallEnd = function trackCallEnd({ durationInSeconds, direction, res
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     });
 }
 exports.trackSentSMS = function trackSentSMS() {
@@ -172,7 +180,8 @@ exports.trackSentSMS = function trackSentSMS() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     });
 }
 exports.trackSyncCallLog = function trackSyncCallLog({ hasNote }) {
@@ -181,7 +190,8 @@ exports.trackSyncCallLog = function trackSyncCallLog({ hasNote }) {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     })
 }
 exports.trackSyncMessageLog = function trackSyncMessageLog() {
@@ -189,7 +199,8 @@ exports.trackSyncMessageLog = function trackSyncMessageLog() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     })
 }
 exports.trackEditSettings = function trackEditSettings({ changedItem, status }) {
@@ -199,7 +210,8 @@ exports.trackEditSettings = function trackEditSettings({ changedItem, status }) 
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     })
 }
 
@@ -216,7 +228,8 @@ exports.trackOpenFeedback = function trackOpenFeedback() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     })
 }
 exports.trackSubmitFeedback = function trackSubmitFeedback() {
@@ -232,7 +245,8 @@ exports.createNewContact = function createNewContact() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     })
 }
 exports.contactPop = function contactPop() {
@@ -240,7 +254,8 @@ exports.contactPop = function contactPop() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     })
 }
 
@@ -249,7 +264,8 @@ exports.trackFactoryReset = function trackFactoryReset() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     })
 }
 exports.trackUpdateCallRecordingLink = function trackUpdateCallRecordingLink({ processState }) {
@@ -258,7 +274,8 @@ exports.trackUpdateCallRecordingLink = function trackUpdateCallRecordingLink({ p
         via: eventAddedVia,
         version,
         author,
-        processState
+        processState,
+        crmPlatform: platformName
     })
 }
 
@@ -294,7 +311,8 @@ exports.trackCRMSetupError = async function trackCRMSetupError() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     })
 }
 
@@ -303,7 +321,8 @@ exports.trackCrmAuthFail = function trackCrmAuthFail() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     });
 }
 
@@ -312,6 +331,7 @@ exports.trackRingSensePage = function trackRingSensePage() {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        crmPlatform: platformName
     });
 }
