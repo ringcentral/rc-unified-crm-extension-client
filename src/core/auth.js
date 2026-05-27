@@ -90,7 +90,7 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
                 authUri = buildOAuthUrl({
                     authorizationUri: platform.auth.oauth.authUrl,
                     clientId: platform.auth.oauth.clientId,
-                    redirectUri: 'https://apps.ringcentral.com/integration/ringcentral-embeddable/latest/redirect.html',
+                    redirectUri: 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html',
                     scopes: platform.auth.oauth.scope,
                     customState,
                     platformName: platform.name
