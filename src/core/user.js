@@ -2,6 +2,7 @@ import axios from 'axios';
 import moment from 'moment';
 import { getRcAccessToken } from '../lib/util';
 import { getManifest } from '../service/manifestService';
+import { getPlatformInfo } from '../service/platformService';
 import adminCore from './admin';
 import embeddableServices from '../service/embeddableServices';
 import reportPage from '../components/reportPage/reportPage';
@@ -120,6 +121,9 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
     }
     const manifest = await getManifest();
     let userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl });
+    const platformInfo = await getPlatformInfo();
+    const platformName = platformInfo?.platformName ?? '';
+    const appointmentsSupported = !!manifest?.platforms?.[platformName]?.page?.appointment?.supported;
     // TODO: Remove this mirroring once all UI/logic reads `overridingNumberFormat` directly and we no longer
     // need to support the legacy per-user `overridingPhoneNumberFormat/2/3` fields.
     // Backward-compatible migration: reflect overridingNumberFormat into overridingPhoneNumberFormat* for older UI and tools
@@ -159,7 +163,8 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
         voicemail: getShowVoicemailTabSetting(userSettings).value,
         recordings: getShowRecordingsTabSetting(userSettings).value,
         contacts: getShowContactsTabSetting(userSettings).value,
-        calldown: getShowCalldownTabSetting(userSettings).value
+        calldown: getShowCalldownTabSetting(userSettings).value,
+        appointments: appointmentsSupported && getShowAppointmentsTabSetting(userSettings).value,
     }, '*');
     const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false) || (userSettings?.autoLogVoicemail?.value ?? false);
     const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
@@ -327,11 +332,11 @@ function getCallPopMultiMatchBehavior(userSettings) {
     }
 }
 
-function getOpenContactAfterCreationSetting(userSettings) {
+function getopenContactPageAfterCreationSetting(userSettings) {
     return {
-        value: userSettings?.openContactAfterCreatingIt?.value ?? false,
-        readOnly: userSettings?.openContactAfterCreatingIt?.customizable === undefined ? false : !userSettings?.openContactAfterCreatingIt?.customizable,
-        readOnlyReason: !userSettings?.openContactAfterCreatingIt?.customizable ? 'This setting is managed by admin' : ''
+        value: userSettings?.openContactPageAfterCreation?.value ?? false,
+        readOnly: userSettings?.openContactPageAfterCreation?.customizable === undefined ? false : !userSettings?.openContactPageAfterCreation?.customizable,
+        readOnlyReason: !userSettings?.openContactPageAfterCreation?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -431,6 +436,14 @@ function getShowCalldownTabSetting(userSettings) {
     }
 }
 
+function getShowAppointmentsTabSetting(userSettings) {
+    return {
+        value: userSettings?.showAppointmentsTab?.value ?? true,
+        readOnly: userSettings?.showAppointmentsTab?.customizable === undefined ? false : !userSettings?.showAppointmentsTab?.customizable,
+        readOnlyReason: !userSettings?.showAppointmentsTab?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getShowUserReportTabSetting(userSettings) {
     return {
         value: userSettings?.showUserReportTab?.value ?? true,
@@ -444,6 +457,14 @@ function getC2DMatcherTypeSetting(userSettings) {
         value: userSettings?.c2dMatcherType?.value ?? 'libPhone',
         readOnly: userSettings?.c2dMatcherType?.customizable === undefined ? false : !userSettings?.c2dMatcherType?.customizable,
         readOnlyReason: !userSettings?.c2dMatcherType?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+function getC2DIgnoreSelectorSetting(userSettings) {
+    return {
+        value: userSettings?.c2dIgnoreSelector?.value ?? '',
+        readOnly: userSettings?.c2dIgnoreSelector?.customizable === undefined ? false : !userSettings?.c2dIgnoreSelector?.customizable,
+        readOnlyReason: !userSettings?.c2dIgnoreSelector?.customizable ? 'This setting is managed by admin' : ''
     }
 }
 
@@ -699,7 +720,7 @@ exports.getSMSPopSetting = getSMSPopSetting;
 exports.getIncomingCallPop = getIncomingCallPop;
 exports.getOutgoingCallPop = getOutgoingCallPop;
 exports.getCallPopMultiMatchBehavior = getCallPopMultiMatchBehavior;
-exports.getOpenContactAfterCreationSetting = getOpenContactAfterCreationSetting;
+exports.getopenContactPageAfterCreationSetting = getopenContactPageAfterCreationSetting;
 exports.getDeveloperModeSetting = getDeveloperModeSetting;
 exports.getAutoOpenSetting = getAutoOpenSetting;
 exports.getShowAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting;
@@ -713,6 +734,7 @@ exports.getShowRecordingsTabSetting = getShowRecordingsTabSetting;
 exports.getShowContactsTabSetting = getShowContactsTabSetting;
 exports.getShowUserReportTabSetting = getShowUserReportTabSetting;
 exports.getC2DMatcherTypeSetting = getC2DMatcherTypeSetting;
+exports.getC2DIgnoreSelectorSetting = getC2DIgnoreSelectorSetting;
 exports.getClickToDialEmbedMode = getClickToDialEmbedMode;
 exports.getClickToDialUrls = getClickToDialUrls;
 exports.getQuickAccessButtonEmbedMode = getQuickAccessButtonEmbedMode;
@@ -733,6 +755,7 @@ exports.getAddCallLogRecordingSetting = getAddCallLogRecordingSetting;
 exports.getAddCallLogAiNoteSetting = getAddCallLogAiNoteSetting;
 exports.getAddCallLogTranscriptSetting = getAddCallLogTranscriptSetting;
 exports.getShowCalldownTabSetting = getShowCalldownTabSetting;
+exports.getShowAppointmentsTabSetting = getShowAppointmentsTabSetting;
 exports.getUnknownContactPreferenceSetting = getUnknownContactPreferenceSetting;
 exports.getMultipleContactsPreferenceSetting = getMultipleContactsPreferenceSetting;
 exports.getNewContactTypeSetting = getNewContactTypeSetting;

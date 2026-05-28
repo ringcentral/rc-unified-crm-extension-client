@@ -34,7 +34,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                 newContactInfo = createContactResult.contactInfo;
                 const newContactReturnMessage = createContactResult.returnMessage;
                 showNotification({ level: newContactReturnMessage?.messageType, message: newContactReturnMessage?.message, ttl: newContactReturnMessage?.ttl, details: newContactReturnMessage?.details });
-                if (userCore.getOpenContactAfterCreationSetting(userSettings).value) {
+                if (userCore.getopenContactPageAfterCreationSetting(userSettings).value) {
                     await contactCore.openContactPage({ manifest, platformName, phoneNumber: contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
                 }
             }

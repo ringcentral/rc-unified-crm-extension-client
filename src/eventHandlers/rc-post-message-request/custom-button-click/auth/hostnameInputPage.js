@@ -33,7 +33,20 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         type: 'rc-adapter-navigate-to',
         path: '/settings',
     }, '*');
-    await authCore.onUserClickConnectButton({ platform, platformName, manifest });
+    const selectedPlatform = manifest.platforms[data.body.button.formData.platformId];
+    const managedOAuthResult = await authCore.checkManagedOAuthBeforeCrmVisible({
+        manifest,
+        platformName: data.body.button.formData.platformId,
+        platform: selectedPlatform
+    });
+    if (managedOAuthResult.blocked) {
+        return;
+    }
+    await authCore.onUserClickConnectButton({
+        platform: selectedPlatform,
+        platformName: data.body.button.formData.platformId,
+        manifest
+    });
 }
 
 exports.onEvent = onEvent;

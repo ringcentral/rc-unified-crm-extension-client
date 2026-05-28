@@ -5,6 +5,7 @@ import userCore from '../core/user';
 import { showNotification, getRcAccessToken, getRcInfo } from '../lib/util';
 import reportPage from '../components/reportPage/reportPage';
 import calldownPage from '../components/calldownPage';
+import appointmentsPage from '../components/appointmentsPage/appointmentsPage';
 import { triggerPendingRecordingCheck } from '../lib/logUtil';
 import { bullhornHeartbeat } from '../misc/bullhorn';
 import axios from 'axios';
@@ -100,6 +101,32 @@ async function onEvent({ data }) {
                 }, '*');
             }
 
+            // 2.3.3.b init appointments tab
+            // Register a placeholder tab immediately so it shows up without requiring reload,
+            // then attempt to load records (which may fail transiently right after login).
+            // Only register if the CRM manifest has not explicitly disabled appointment support.
+            try {
+                const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+                if (apptCfg.supported) {
+                    // Read persisted user settings so the hidden flag reflects the user's saved preference,
+                    // rather than the empty {} default (which would always default showAppointmentsTab to true).
+                    const { userSettings: storedUserSettings } = await chrome.storage.local.get({ userSettings: {} });
+                    const placeholder = appointmentsPage.getAppointmentsPageRender({
+                        manifest,
+                        platformName,
+                        selectedTab: 'upcoming',
+                        appointmentTitle: apptCfg?.title ?? 'Appointments',
+                        showConfirm: apptCfg?.showConfirm !== false,
+                        userSettings: storedUserSettings,
+                    });
+                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        type: 'rc-adapter-register-customized-page',
+                        page: placeholder,
+                    }, '*');
+                }
+            } catch (e) { /* ignore */ }
+            // Do NOT fetch appointments here. List API will run only when user opens the tab or refreshes.
+
             // 2.3.4. Set every 5min, check if there's any pending recording link
             setInterval(async function () {
                 await triggerPendingRecordingCheck({ serverUrl: manifest.serverUrl });
@@ -174,6 +201,9 @@ async function onEvent({ data }) {
                 axios.defaults.headers.common['rc-extension-id'] = rcUserInfo?.rcExtensionId; // this is hashed extension id
                 axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId; // this is hashed account id
                 axios.defaults.headers.common['developer-author-name'] = manifest?.author?.name ?? "";
+            }
+            if (platformInfo && platform && authCore.isAdminManagedOAuthEnabled(platform)) {
+                await authCore.checkManagedOAuthBeforeCrmVisible({ manifest, platformName, platform });
             }
         }
         catch (e) {

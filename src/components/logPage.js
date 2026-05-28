@@ -67,6 +67,9 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
     }
     let page = {};
     let allAdditionalFields = logType === 'Call' ? manifest.platforms[platformName].page?.callLog?.additionalFields : manifest.platforms[platformName].page?.messageLog?.additionalFields;
+    if (allAdditionalFields) {
+        allAdditionalFields = allAdditionalFields.filter(f => !f.showIfContactType || f.showIfContactType.length === 0 || f.showIfContactType.includes(contactInfo.type));
+    }
     if (defaultContact.isNewContact) {
         allAdditionalFields = allAdditionalFields.concat(manifest.platforms[platformName].page?.newContact?.additionalFields);
     }
@@ -373,6 +376,15 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                 manifest.platforms[platformName].page?.messageLog?.additionalFields;
             if (contact.isNewContact) {
                 allAdditionalFields = allAdditionalFields.concat(manifest.platforms[platformName].page?.newContact?.additionalFields);
+            }
+            if (allAdditionalFields) {
+                const fieldsToRemove = allAdditionalFields.filter(f => f.showIfContactType && f.showIfContactType.length > 0 && !f.showIfContactType.includes(contact.type));
+                for (const f of fieldsToRemove) {
+                    delete page.schema.properties[f.const];
+                    delete page.formData[f.const];
+                    delete page.uiSchema[f.const];
+                }
+                allAdditionalFields = allAdditionalFields.filter(f => !fieldsToRemove.includes(f));
             }
             if (allAdditionalFields) {
                 for (const f of allAdditionalFields) {

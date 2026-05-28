@@ -45,6 +45,7 @@ async function onMessage({ request, sendResponse }) {
     }
   }
   catch (e) { /* ignore */ }
+    // Do NOT fetch appointments here. List API will run only when user opens the tab or refreshes.
   // admin tab
   await chrome.storage.local.set({ crmAuthed });
   const adminSettingResults = await adminCore.refreshAdminSettings();

@@ -39,6 +39,9 @@ async function getServiceManifest() {
     const platform = manifest.platforms[platformInfo.platformName];
     const platformName = platform.name;
     const customSettings = platform.settings;
+    const apptCfg = manifest?.platforms?.[platformInfo.platformName]?.page?.appointment ?? {};
+    const appointmentTitle = apptCfg?.title ?? 'Appointments';
+    const appointmentsSupported = !!apptCfg.supported;
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-set-phone-number-format',
         formatType: userCore.getPhoneNumberDisplayFormatTypeSetting(userSettings).value, // 'national', 'international', 'e164', 'custom'
@@ -270,7 +273,15 @@ async function getServiceManifest() {
                                 value: userCore.getShowCalldownTabSetting(userSettings).value,
                                 readOnly: userCore.getShowCalldownTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowCalldownTabSetting(userSettings).readOnlyReason
-                            }
+                            },
+                            ...(appointmentsSupported && !userCore.getShowAppointmentsTabSetting(userSettings).readOnly ? [{
+                                id: 'showAppointmentsTab',
+                                type: 'boolean',
+                                name: `Show ${appointmentTitle} tab`,
+                                value: userCore.getShowAppointmentsTabSetting(userSettings).value,
+                                readOnly: userCore.getShowAppointmentsTabSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getShowAppointmentsTabSetting(userSettings).readOnlyReason
+                            }] : [])
                         ]
                     },
                     {
@@ -432,9 +443,9 @@ async function getServiceManifest() {
                         type: 'boolean',
                         name: t('settings.callPop.contactCreatedCallPop'),
                         description: t('settings.callPop.contactCreatedCallPopDesc'),
-                        value: userCore.getOpenContactAfterCreationSetting(userSettings).value,
-                        readOnly: userCore.getOpenContactAfterCreationSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getOpenContactAfterCreationSetting(userSettings).readOnlyReason
+                        value: userCore.getopenContactPageAfterCreationSetting(userSettings).value,
+                        readOnly: userCore.getopenContactPageAfterCreationSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getopenContactPageAfterCreationSetting(userSettings).readOnlyReason
                     }
                 ]
             },
@@ -481,6 +492,16 @@ async function getServiceManifest() {
                         value: userCore.getAutoOpenSetting(userSettings).value,
                         readOnly: userCore.getAutoOpenSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoOpenSetting(userSettings).readOnlyReason
+                    },
+                    {
+                        id: 'c2dIgnoreSelector',
+                        type: 'string',
+                        name: 'Click-to-dial ignore selector',
+                        description: 'CSS selector for page areas where click-to-dial should not detect phone numbers.',
+                        helper: 'Example: .no-c2d, [data-no-c2d="true"]',
+                        value: userCore.getC2DIgnoreSelectorSetting(userSettings).value,
+                        readOnly: userCore.getC2DIgnoreSelectorSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getC2DIgnoreSelectorSetting(userSettings).readOnlyReason
                     }
                 ]
             }

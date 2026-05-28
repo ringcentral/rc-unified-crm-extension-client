@@ -45,9 +45,9 @@ function getPluginDetailsSettingPageRender({ pluginId, pluginDetails, pluginSett
             else {
                 if (field.oneOf) {
                     schemaProp.properties.value.oneOf = field.oneOf;
-                }
-                customFormUiSchema[key].value = {
-                    "ui:widget": "select",
+                    customFormUiSchema[key].value = {
+                        "ui:widget": "select",
+                    }
                 }
             }
             customFormProperties[key] = schemaProp;

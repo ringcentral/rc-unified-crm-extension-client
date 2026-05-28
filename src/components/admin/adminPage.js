@@ -2,10 +2,12 @@ import adminIcon from '../../images/adminIcon.png';
 import adminIconActive from '../../images/adminIcon_active.png';
 import adminIconDark from '../../images/adminIcon_dark.png';
 import { t } from '../../i18n';
+import authCore from '../../core/auth';
 
 function getAdminPageRender({ platform }) {
     const hasManagedAuthFields = platform.auth?.type === 'apiKey'
         && (platform.auth?.apiKey?.page?.content ?? []).some(field => field?.managed);
+    const hasManagedOAuth = authCore.isAdminManagedOAuthEnabled(platform);
     const page = {
         id: 'adminPage',
         title: t('pages.admin.title'),
@@ -28,6 +30,10 @@ function getAdminPageRender({ platform }) {
                         ...hasManagedAuthFields ? [{
                             const: "managedAuthentication",
                             title: 'Managed authentication',
+                        }] : [],
+                        ...hasManagedOAuth ? [{
+                            const: "managedOAuth",
+                            title: 'Managed OAuth',
                         }] : [],
                         ...platform.serverSideLogging ? [{
                             const: "serverSideLoggingSetting",

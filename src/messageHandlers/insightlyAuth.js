@@ -47,6 +47,9 @@ async function onMessage({ request, sendResponse }) {
                 page: calldownPageRender,
             }, '*');
         }
+
+        // Appointments tab (Automotive Connect)
+        // Do NOT fetch appointments here. List API will run only when user opens the tab or refreshes.
         // admin tab
         const adminSettingResults = await adminCore.refreshAdminSettings();
         if (adminSettingResults.adminSettings) {

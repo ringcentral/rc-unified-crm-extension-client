@@ -39,11 +39,14 @@ import googleSheetsAdminConfigHandler from './sections/googleSheetsAdminConfig';
 import pluginsAdminConfigHandler from './sections/pluginsAdminConfig';
 import installedPluginsHandler from './sections/installedPlugins';
 import managedAuthenticationHandler from './sections/managedAuthentication';
+import managedOAuthHandler from './sections/managedOAuth';
 import managedAuthOrgHandler from './sections/managedAuthOrg';
 import managedAuthUserHandler from './sections/managedAuthUser';
 
 import pluginMarketListPageHandler from '../../pluginMarketListPage';
 import selectPluginHandler from '../../custom-button-click/plugins/selectPlugin';
+import appointmentsPageHandler from './appointmentsPage';
+import appointmentPageHandler from './appointmentPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -115,6 +118,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'installedPluginListPage':
             await selectPluginHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
+        case 'appointmentsPage':
+            await appointmentsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'appointmentCreatePage':
+        case 'appointmentEditPage':
+            await appointmentPageHandler.onEvent({ data, manifest, platformName });
+            break;
     }
     // Page render update from section change input
     switch (data.body?.formData?.section) {
@@ -136,6 +146,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         case 'managedAuthentication':
             await managedAuthenticationHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'managedOAuth':
+            await managedOAuthHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'managedAuthOrg':
             await managedAuthOrgHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

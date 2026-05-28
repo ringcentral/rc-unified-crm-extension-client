@@ -1,7 +1,9 @@
 import { trackPage } from '../lib/analytics';
 import userCore from '../core/user';
 import calldownPage from '../components/calldownPage';
+import appointmentsPage from '../components/appointmentsPage/appointmentsPage';
 import { getManifest } from '../service/manifestService';
+import { getPlatformInfo } from '../service/platformService';
 
 async function onEvent({ data }) {
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
@@ -45,6 +47,36 @@ async function onEvent({ data }) {
             }
           }
         } catch (e) { /* ignore */ }
+      }
+      if (data.path === '/customizedTabs/appointmentsPage') {
+        window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+        try {
+          const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+          if (rcUnifiedCrmExtJwt && crmAuthed) {
+            const { userSettings } = await chrome.storage.local.get('userSettings');
+            const platformInfo = await getPlatformInfo();
+            const platformName = platformInfo?.platformName ?? '';
+            const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+            if (!apptCfg.supported || !userCore.getShowAppointmentsTabSetting(userSettings).value) {
+              return;
+            }
+            const refreshedAppointments = await appointmentsPage.getAppointmentsPageWithRecords({
+              manifest,
+              jwtToken: rcUnifiedCrmExtJwt,
+              tab: 'upcoming',
+              searchWithFilters: { search: '', filter: 'All' },
+              forceSync: false,
+              userSettings,
+            });
+            document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+              type: 'rc-adapter-register-customized-page',
+              page: refreshedAppointments
+            }, '*');
+          }
+        } catch (e) { /* ignore */ }
+        finally {
+          window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+        }
       }
     }
     // user setting page needs a refresh mechanism to make sure user settings are up to date

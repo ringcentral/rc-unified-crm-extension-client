@@ -3,6 +3,7 @@ import userCore from '../core/user';
 import adminCore from '../core/admin';
 import reportPage from '../components/reportPage/reportPage';
 import calldownPage from '../components/calldownPage';
+import appointmentsPage from '../components/appointmentsPage/appointmentsPage';
 import adminPage from '../components/admin/adminPage';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest } from '../service/manifestService';
@@ -55,6 +56,29 @@ async function onMessage({ request, sendResponse }) {
                         page: calldownPageRender,
                     }, '*');
                 }
+
+                // Register a placeholder tab immediately so it shows up without requiring reload,
+                // then attempt to load records (which may fail transiently right after auth).
+                // Only register if the CRM manifest has explicitly enabled appointment support.
+                try {
+                    const platformName = platformInfo?.platformName ?? '';
+                    const apptCfg = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+                    if (apptCfg.supported) {
+                        const placeholder = appointmentsPage.getAppointmentsPageRender({
+                            manifest,
+                            platformName: platformInfo?.platformName ?? '',
+                            selectedTab: 'upcoming',
+                            appointmentTitle: apptCfg?.title ?? 'Appointments',
+                            showConfirm: apptCfg?.showConfirm !== false,
+                            userSettings,
+                        });
+                        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                            type: 'rc-adapter-register-customized-page',
+                            page: placeholder,
+                        }, '*');
+                    }
+                } catch (e) { /* ignore */ }
+                // Do NOT fetch appointments here. List API will run only when user opens the tab or refreshes.
 
                 // admin tab
                 const { adminFromEmbeddable } = await chrome.storage.local.get('adminFromEmbeddable');

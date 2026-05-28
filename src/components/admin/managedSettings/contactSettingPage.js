@@ -92,7 +92,7 @@ function getContactSettingPageRender({ adminUserSettings, renderOverridingNumber
                         }
                     }
                 },
-                openContactAfterCreatingIt: {
+                openContactPageAfterCreation: {
                     type: 'object',
                     title: 'Open contact after creating it',
                     properties: {
@@ -118,7 +118,7 @@ function getContactSettingPageRender({ adminUserSettings, renderOverridingNumber
             multiContactMatchBehavior: {
                 "ui:collapsible": true,
             },
-            openContactAfterCreatingIt: {
+            openContactPageAfterCreation: {
                 "ui:collapsible": true,
             },
             contactSettingPageSubmitButton: {
@@ -146,16 +146,15 @@ function getContactSettingPageRender({ adminUserSettings, renderOverridingNumber
                 customizable: adminUserSettings?.multiContactMatchBehavior?.customizable ?? true,
                 value: adminUserSettings?.multiContactMatchBehavior?.value ?? 'promptToSelect'
             },
-            openContactAfterCreatingIt:
+            openContactPageAfterCreation:
             {
-                customizable: adminUserSettings?.openContactAfterCreatingIt?.customizable ?? true,
-                value: adminUserSettings?.openContactAfterCreatingIt?.value ?? false
+                customizable: adminUserSettings?.openContactPageAfterCreation?.customizable ?? true,
+                value: adminUserSettings?.openContactPageAfterCreation?.value ?? false
             }
         }
     }
     // Overriding number format moved to Managed settings -> Custom settings
-    if(renderAllowExtensionNumberLogging)
-    {
+    if (renderAllowExtensionNumberLogging) {
         page.schema.properties.allowExtensionNumberLogging = {
             type: 'object',
             title: 'Allow extension number logging',

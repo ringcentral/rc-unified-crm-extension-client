@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { isObjectEmpty, showNotification } from '../lib/util';
+import { isObjectEmpty, showNotification, getRcAccessToken, getRcInfo } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 import { upsertPluginAsyncTaskIds } from '../service/pluginService';
 import { t } from '../i18n';
@@ -45,6 +45,7 @@ async function addLog({
         switch (logType) {
             case 'Call':
                 if (!logInfo.recording) {
+                const extensionNumber = rcInfo?.value?.cachedData?.extensionInfo?.extensionNumber ?? '';
                     // case: if call is recorded but recording isn't ready, use '(pending...)' as temporary placeholder
                     const hasRecording = await chrome.storage.local.get(`rec-link-${logInfo.sessionId}`);
                     if (hasRecording[`rec-link-${logInfo.sessionId}`]) {
@@ -52,7 +53,7 @@ async function addLog({
                         logInfo.recording = hasRecording[`rec-link-${logInfo.sessionId}`];
                     }
                 }
-                addLogRes = await axios.post(`${serverUrl}/callLog`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+                addLogRes = await axios.post(`${serverUrl}/callLog`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName, extensionNumber });
                 if (addLogRes.data.successful) {
                     trackSyncCallLog({ hasNote: note !== '' });
                     if (addLogRes.data.pluginAsyncTaskIds?.length > 0) {
@@ -113,7 +114,9 @@ async function getLog({ serverUrl, logType, sessionIds, requireDetails }) {
     if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
-                const callLogRes = await axios.get(`${serverUrl}/callLog?sessionIds=${sessionIds}&requireDetails=${requireDetails}`);
+                const rcInfo = await getRcInfo();
+                const extensionNumber = rcInfo?.value?.cachedData?.extensionInfo?.extensionNumber ?? '';
+                const callLogRes = await axios.get(`${serverUrl}/callLog?sessionIds=${sessionIds}&requireDetails=${requireDetails}&extensionNumber=${extensionNumber}`);
                 showNotification({ level: callLogRes.data.returnMessage?.messageType, message: callLogRes.data.returnMessage?.message, ttl: callLogRes.data.returnMessage?.ttl, details: callLogRes.data.returnMessage?.details });
                 return { successful: callLogRes.data.successful, callLogs: callLogRes.data.logs };
         }
@@ -138,6 +141,8 @@ async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, re
     if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
+                const rcInfo = await getRcInfo();
+                const extensionNumber = rcInfo?.value?.cachedData?.extensionInfo?.extensionNumber ?? '';
                 const patchBody = {
                     telephonySessionId,
                     sessionId,
@@ -153,6 +158,7 @@ async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, re
                     from,
                     to,
                     additionalSubmission: rcAdditionalSubmission
+                    extensionNumber
                 }
                 const callLogRes = await axios.patch(`${serverUrl}/callLog`, patchBody);
                 if (isShowNotification) {
