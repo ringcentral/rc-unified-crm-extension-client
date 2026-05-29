@@ -35,21 +35,6 @@ function getAdvancedFeaturesSettingPageRender({ adminUserSettings }) {
                             title: 'Value'
                         }
                     }
-                },
-                c2dIgnoreSelector: {
-                    type: 'object',
-                    title: 'Click-to-dial ignore selector',
-                    description: 'CSS selector for page areas where click-to-dial should not detect phone numbers.',
-                    properties: {
-                        customizable: {
-                            type: 'boolean',
-                            title: 'Customizable by user'
-                        },
-                        value: {
-                            type: 'string',
-                            title: 'Selector'
-                        }
-                    }
                 }
             }
         },
@@ -58,9 +43,6 @@ function getAdvancedFeaturesSettingPageRender({ adminUserSettings }) {
                 "ui:collapsible": true,
             },
             developerMode: {
-                "ui:collapsible": true,
-            },
-            c2dIgnoreSelector: {
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
@@ -77,11 +59,6 @@ function getAdvancedFeaturesSettingPageRender({ adminUserSettings }) {
             {
                 customizable: adminUserSettings?.developerMode?.customizable ?? true,
                 value: adminUserSettings?.developerMode?.value ?? false
-            },
-            c2dIgnoreSelector:
-            {
-                customizable: adminUserSettings?.c2dIgnoreSelector?.customizable ?? true,
-                value: adminUserSettings?.c2dIgnoreSelector?.value ?? ''
             }
         }
     }

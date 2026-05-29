@@ -170,8 +170,14 @@ async function initializeC2D() {
   // Get matcher type
   const { c2dMatcherType } = await chrome.storage.local.get({ c2dMatcherType: 'libPhone' });
   const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: null });
-  const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
-  const c2dIgnoreSelector = userCore.getC2DIgnoreSelectorSetting(userSettings).value;
+
+
+  const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
+  const platformInfo = await chrome.storage.local.get('platform-info');
+  let c2dIgnoreSelector = '';
+  if (customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.c2dIgnoreSelector) {
+    c2dIgnoreSelector = customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.c2dIgnoreSelector;
+  }
 
   // Initialize main document C2D first (this creates the widget)
   window.clickToDialInject = createC2DInstance({

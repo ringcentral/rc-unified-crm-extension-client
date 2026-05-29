@@ -492,16 +492,6 @@ async function getServiceManifest() {
                         value: userCore.getAutoOpenSetting(userSettings).value,
                         readOnly: userCore.getAutoOpenSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoOpenSetting(userSettings).readOnlyReason
-                    },
-                    {
-                        id: 'c2dIgnoreSelector',
-                        type: 'string',
-                        name: 'Click-to-dial ignore selector',
-                        description: 'CSS selector for page areas where click-to-dial should not detect phone numbers.',
-                        helper: 'Example: .no-c2d, [data-no-c2d="true"]',
-                        value: userCore.getC2DIgnoreSelectorSetting(userSettings).value,
-                        readOnly: userCore.getC2DIgnoreSelectorSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getC2DIgnoreSelectorSetting(userSettings).readOnlyReason
                     }
                 ]
             }
