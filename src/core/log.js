@@ -127,6 +127,10 @@ async function getLog({ serverUrl, logType, sessionIds, requireDetails }) {
             case 'Call':
                 const rcInfo = await getRcInfo();
                 const extensionNumber = rcInfo?.value?.cachedData?.extensionInfo?.extensionNumber ?? '';
+                // check if axios default has jwtToken in bearer, if not, add it
+                if (!axios.defaults.headers.common.Authorization?.startsWith('Bearer ')) {
+                    axios.defaults.headers.common.Authorization = `Bearer ${rcUnifiedCrmExtJwt}`;
+                }
                 const callLogRes = await axios.get(`${serverUrl}/callLog?sessionIds=${sessionIds}&requireDetails=${requireDetails}&extensionNumber=${extensionNumber}`);
                 showNotification({ level: callLogRes.data.returnMessage?.messageType, message: callLogRes.data.returnMessage?.message, ttl: callLogRes.data.returnMessage?.ttl, details: callLogRes.data.returnMessage?.details });
                 return { successful: callLogRes.data.successful, callLogs: callLogRes.data.logs };

@@ -99,7 +99,7 @@ export default () => {
                                         serverUrl: cachedLogPageData.manifest.serverUrl,
                                         logType: 'Call',
                                         sessionIds: sessionId,
-                                        requireDetails: true
+                                        requireDetails: false
                                     })).callLogs;
                                     let logPageRender = null;
                                     if (existingCalls.length > 0 && existingCalls.find(l => l.sessionId == sessionId)?.matched) {
