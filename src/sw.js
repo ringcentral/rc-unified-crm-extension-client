@@ -3,6 +3,7 @@ import packageJson from '../package.json';
 import baseManifest from './manifest.json';
 
 let manifest;
+let redirectUri;
 let pipedriveInstallationTabId;
 let pipedriveCallbackUri;
 let cachedClickToXRequest;
@@ -19,8 +20,11 @@ async function openPopupWindow() {
     }
   }
   const { extensionWindowStatus } = await chrome.storage.local.get({ extensionWindowStatus: null });
+  const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
+  const platformInfo = await chrome.storage.local.get('platform-info');
+  redirectUri = customCrmManifest?.platforms[platformInfo['platform-info'].platformName]?.auth?.oauth?.redirectUri;
   // const redirectUri = chrome.identity.getRedirectURL('redirect.html'); //  set this when oauth with chrome.identity.launchWebAuthFlow
-  const popupUri = `popup.html?multipleTabsSupport=1&disableLoginPopup=1&enableRingtoneSettings=1&appServer=https://platform.ringcentral.com&redirectUri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html&enableAnalytics=1&showSignUpButton=1&clientId=3rJq9BxcTCm-I7CFcY19ew&appVersion=${packageJson.version}&userAgent=RingCentral CRM Extension&disableNoiseReduction=false&enableSMSTemplate=1&enableLoadMoreCalls=1&disableGlip=false&enableSmartNote=1&enableVoicemailDrop=1&enableSideWidget=1`;
+  const popupUri = `popup.html?multipleTabsSupport=1&disableLoginPopup=1&enableRingtoneSettings=1&appServer=https://platform.ringcentral.com&redirectUri=${redirectUri ?? 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html'}&enableAnalytics=1&showSignUpButton=1&clientId=3rJq9BxcTCm-I7CFcY19ew&appVersion=${packageJson.version}&userAgent=RingCentral CRM Extension&disableNoiseReduction=false&enableSMSTemplate=1&enableLoadMoreCalls=1&disableGlip=false&enableSmartNote=1&enableVoicemailDrop=1&enableSideWidget=1`;
   let popup;
   if (!!extensionWindowStatus?.state && (extensionWindowStatus.state === 'maximized' || extensionWindowStatus.state === 'fullscreen')) {
     popup = await chrome.windows.create({
@@ -93,7 +97,7 @@ chrome.alarms.onAlarm.addListener(async () => {
   }
   const loginWindowUrl = tabs[0].url
   console.log('loginWindowUrl', loginWindowUrl);
-  if (loginWindowUrl.indexOf(baseManifest.redirectUri) !== 0) {
+  if (loginWindowUrl.indexOf(redirectUri ?? baseManifest.redirectUri) !== 0) {
     chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
     return;
   }
