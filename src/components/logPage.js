@@ -1,6 +1,5 @@
 import outboundCallIcon from '../images/outboundCallIcon.png';
 import inboundCallIcon from '../images/inboundCallIcon.png';
-import conflictLogIcon from '../images/conflictLogIcon.png';
 import smsMessageIcon from '../images/smsMessageIcon.png';
 import logCore from '../core/log';
 import { t } from '../i18n';
@@ -67,11 +66,11 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
     }
     let page = {};
     let allAdditionalFields = logType === 'Call' ? manifest.platforms[platformName].page?.callLog?.additionalFields : manifest.platforms[platformName].page?.messageLog?.additionalFields;
-    if (allAdditionalFields) {
-        allAdditionalFields = allAdditionalFields.filter(f => !f.showIfContactType || f.showIfContactType.length === 0 || f.showIfContactType.includes(contactInfo.type));
-    }
     if (defaultContact.isNewContact) {
         allAdditionalFields = allAdditionalFields.concat(manifest.platforms[platformName].page?.newContact?.additionalFields);
+    }
+    if (allAdditionalFields) {
+        allAdditionalFields = allAdditionalFields.filter(f => !f.showIfContactType || f.showIfContactType.length === 0 || f.showIfContactType.includes(defaultContact.type ?? defaultContact.defaultContactType));
     }
     const { additionalFields, additionalFieldsValue, additionalWarningUISchemas, requiredFieldNames } =
         buildAdditionalFieldsSchema({ allAdditionalFields, contact: defaultContact, logInfo });
@@ -476,12 +475,30 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             }
             break;
         case 'newContactType':
+            // deprecated
             const contactTypeDependentFields = manifest.platforms[platformName].page?.newContact?.additionalFields?.filter(f => f.contactTypeDependent);
             for (const f of contactTypeDependentFields) {
                 page.schema.properties[f.const].oneOf = [
                     ...contact.additionalInfo[page.formData.newContactType][f.const],
                     { const: 'none', title: t('common.labels.none') }
                 ]
+            }
+
+            // New contact fields
+            const newContactFields = manifest.platforms[platformName].page?.newContact?.additionalFields;
+            for (const f of newContactFields) {
+                if (f.showIfContactType && f.showIfContactType.length > 0 && !f.showIfContactType.includes(page.formData.newContactType)) {
+                    // to remove
+                    delete page.schema.properties[f.const];
+                    delete page.formData[f.const];
+                    delete page.uiSchema[f.const];
+                    continue;
+                }
+                page.schema.properties[f.const] = {
+                    title: f.title,
+                    type: 'string',
+                    oneOf: [...contact.additionalInfo?.[f.const] ?? [], { const: 'none', title: t('common.labels.none') }]
+                }
             }
             break;
         case 'newContactName':

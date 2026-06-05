@@ -42,6 +42,7 @@ function buildAdditionalFieldsSchema({ allAdditionalFields, contact, logInfo }) 
         }
         switch (f.type) {
             case 'selection': {
+                // deprecated
                 if (contact.isNewContact && f.contactTypeDependent) {
                     const baseOptions = [...contact.additionalInfo[contact.defaultContactType][f.const]];
                     const includeNoneOption = f.includeNoneOption !== false;

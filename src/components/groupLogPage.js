@@ -206,6 +206,7 @@ function getUpdatedGroupLogPageRender({ manifest, platformName, updateData }) {
         }
         case 'newContactType': {
             if (!contact) break;
+            // deprecated
             const contactTypeDependentFields = manifest.platforms[platformName].page?.newContact?.additionalFields?.filter(f => f.contactTypeDependent) ?? [];
             for (const f of contactTypeDependentFields) {
                 sectionSchema.properties[f.const].oneOf = [
