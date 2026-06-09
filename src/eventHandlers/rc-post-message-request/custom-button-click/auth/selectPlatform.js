@@ -64,7 +64,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
                 platformDisplayName: selectedPlatform.displayName ?? selectedPlatform.name,
                 hostname: inputHostname,
                 connectorId: selectedPlatform.id,
-                isPrivate: selectedPlatformType === 'private'
+                isPrivate: selectedPlatformType === 'private' || selectedPlatformType === 'shared'
             }
         });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -97,7 +97,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
                 serverUrl: manifest.serverUrl,
                 platformName: selectedPlatform.name,
                 connectorId: selectedPlatform.id,
-                isPrivate: selectedPlatformType === 'private',
+                isPrivate: selectedPlatformType === 'private' || selectedPlatformType === 'shared',
                 rcInfo
             })
             : null;
@@ -109,7 +109,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
                 ? `All required authentication fields are ready. Click Connect to connect to ${selectedPlatformConfig.displayName ?? selectedPlatformConfig.name}.`
                 : '',
             connectorId: selectedPlatform.id,
-            isPrivate: selectedPlatformType === 'private'
+            isPrivate: selectedPlatformType === 'private' || selectedPlatformType === 'shared'
         });
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-register-customized-page',
