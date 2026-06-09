@@ -1,7 +1,9 @@
+import { t } from '../../../../i18n';
+
 function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions, serverSideLoggingSubscribed }) {
     return {
         id: 'callLogDetailsSettingPage',
-        title: 'Call log details',
+        title: t('settings.callLogDetails.groupName'),
         type: 'page',
         schema: {
             type: 'object',
@@ -9,144 +11,144 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
             properties: {
                 addCallLogNote: {
                     type: 'object',
-                    title: 'Agent-entered notes',
-                    description: 'Log the notes manually entered by agent user',
+                    title: t('settings.callLogDetails.agentNotes'),
+                    description: t('settings.callLogDetails.agentNotesDescAdmin'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addCallSessionId: {
                     type: 'object',
-                    title: 'Call session id',
-                    description: 'Log RingCentral call session id',
+                    title: t('settings.callLogDetails.callSessionId'),
+                    description: t('settings.callLogDetails.callSessionIdDesc'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addRingCentralUserName: {
                     type: 'object',
-                    title: 'RingCentral user name',
-                    description: 'Log the RingCentral user name',
+                    title: t('settings.callLogDetails.rcUserName'),
+                    description: t('settings.callLogDetails.rcUserNameDesc'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addRingCentralNumber: {
                     type: 'object',
-                    title: 'RingCentral phone number',
-                    description: 'Log the RingCentral phone number',
+                    title: t('settings.callLogDetails.rcNumber'),
+                    description: t('settings.callLogDetails.rcNumberDesc'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addCallLogSubject: {
                     type: 'object',
-                    title: 'Call subject',
-                    description: "Log a short phrase to summarize call, e.g. 'Inbound call from...'",
+                    title: t('settings.callLogDetails.callSubject'),
+                    description: t('settings.callLogDetails.callSubjectDesc'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addCallLogContactNumber: {
                     type: 'object',
-                    title: 'Contact\'s phone number',
-                    description: 'Log the contact information of the other participant',
+                    title: t('settings.callLogDetails.contactNumber'),
+                    description: t('settings.callLogDetails.contactNumberDesc'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addCallLogDateTime: {
                     type: 'object',
-                    title: 'Date and time',
-                    description: 'Log the call\'s explicit start and end date/times',
+                    title: t('settings.callLogDetails.dateTime'),
+                    description: t('settings.callLogDetails.dateTimeDesc'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 logDateFormat: {
                     type: 'object',
-                    title: 'Date format',
+                    title: t('settings.callLogDetails.dateFormat'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'string',
-                            title: 'Value',
+                            title: t('common.labels.value'),
                             oneOf: [
                                 {
                                     const: 'YYYY-MM-DD HH:mm:ss',
-                                    title: 'Global - 24H (e.g. 2024-01-15 14:30:45)'
+                                    title: t('settings.callLogDetails.dateFormatGlobal24H')
                                 },
                                 {
                                     const: 'YYYY-MM-DD hh:mm:ss A',
-                                    title: 'Global - 12H (e.g. 2024-01-15 02:30:45 PM)'
+                                    title: t('settings.callLogDetails.dateFormatGlobal12H')
                                 },
                                 {
                                     const: 'MM/DD/YYYY hh:mm:ss A',
-                                    title: 'US - 12H (e.g. 01/15/2024 02:30:45 PM)'
+                                    title: t('settings.callLogDetails.dateFormatUS12H')
                                 },
                                 {
                                     const: 'MM/DD/YYYY HH:mm:ss',
-                                    title: 'US - 24H (e.g. 01/15/2024 14:30:45)'
+                                    title: t('settings.callLogDetails.dateFormatUS24H')
                                 },
                                 {
                                     const: 'DD/MM/YYYY HH:mm:ss',
-                                    title: 'EU - 24H (e.g. 15/01/2024 14:30:45)'
+                                    title: t('settings.callLogDetails.dateFormatEU24H')
                                 },
                                 {
                                     const: 'DD/MM/YYYY hh:mm:ss A',
-                                    title: 'EU - 12H (e.g. 15/01/2024 02:30:45 PM)'
+                                    title: t('settings.callLogDetails.dateFormatEU12H')
                                 }
                             ]
                         }
@@ -154,144 +156,144 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 },
                 addCallLogDuration: {
                     type: 'object',
-                    title: 'Call duration',
-                    description: 'Log the call duration, noted in minutes and seconds',
+                    title: t('settings.callLogDetails.callDuration'),
+                    description: t('settings.callLogDetails.callDurationDesc'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addCallLogResult: {
                     type: 'object',
-                    title: 'Call result',
-                    description: 'Log the result of the call, e.g. Call connected',
+                    title: t('settings.callLogDetails.callResult'),
+                    description: t('settings.callLogDetails.callResultDesc'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addCallLogRecording: {
                     type: 'object',
-                    title: 'Link to the recording',
-                    description: 'Provide a link to the call\'s recording, if it exists',
+                    title: t('settings.callLogDetails.recordingLink'),
+                    description: t('settings.callLogDetails.recordingLinkDesc'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addCallLogAiNote: {
                     type: 'object',
-                    title: 'Smart summary',
-                    description: 'Log the AI-generated summary of the call, if it exists',
+                    title: t('settings.callLogDetails.smartSummary'),
+                    description: t('settings.callLogDetails.smartSummaryDesc'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value',
-                            description: userPermissions.aiNote ? '' : 'AI Assistant required'
+                            title: t('common.labels.value'),
+                            description: userPermissions.aiNote ? '' : t('settings.callLogDetails.aiAssistantRequired')
                         }
                     }
                 },
                 addCallLogTranscript: {
                     type: 'object',
-                    title: 'Call transcript',
-                    description: 'Log the AI-generated transcript of the call, if it exists',
+                    title: t('settings.callLogDetails.transcript'),
+                    description: t('settings.callLogDetails.transcriptDesc'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value',
-                            description: userPermissions.aiNote ? '' : 'AI Assistant required'
+                            title: t('common.labels.value'),
+                            description: userPermissions.aiNote ? '' : t('settings.callLogDetails.aiAssistantRequired')
                         }
                     }
                 },
                 addCallLogRingSenseRecordingTranscript: {
                     type: 'object',
-                    title: 'ACE transcript',
-                    description: '[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
+                    title: t('settings.callLogDetails.ringSenseTranscript'),
+                    description: t('settings.callLogDetails.ringSenseTranscriptDesc'),
                     properties: {
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addCallLogRingSenseRecordingAIScore: {
                     type: 'object',
-                    title: 'ACE call score',
-                    description: '[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
+                    title: t('settings.callLogDetails.ringSenseCallScore'),
+                    description: t('settings.callLogDetails.ringSenseCallScoreDesc'),
                     properties: {
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addCallLogRingSenseRecordingSummary: {
                     type: 'object',
-                    title: 'ACE summary',
-                    description: '[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
+                    title: t('settings.callLogDetails.ringSenseSummary'),
+                    description: t('settings.callLogDetails.ringSenseSummaryDesc'),
                     properties: {
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addCallLogRingSenseRecordingBulletedSummary: {
                     type: 'object',
-                    title: 'ACE bulleted summary',
-                    description: '[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
+                    title: t('settings.callLogDetails.ringSenseBulletedSummary'),
+                    description: t('settings.callLogDetails.ringSenseBulletedSummaryDesc'),
                     properties: {
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addCallLogRingSenseRecordingLink: {
                     type: 'object',
-                    title: 'ACE recording link',
-                    description: '[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) required. Server-side logging only.',
+                    title: t('settings.callLogDetails.ringSenseRecordingLink'),
+                    description: t('settings.callLogDetails.ringSenseRecordingLinkDesc'),
                     properties: {
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 addCallLogLegs: {
                     type: 'object',
-                    title: 'Call journey',
-                    description: 'Server-side logging only.',
+                    title: t('settings.callLogDetails.callJourney'),
+                    description: t('settings.callLogDetails.callJourneyDesc'),
                     properties: {
                         value: {
                             type: 'boolean',
-                            title: 'Value',
+                            title: t('common.labels.value'),
                         }
                     }
                 }
@@ -364,7 +366,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 "ui:disabled": !serverSideLoggingSubscribed,
             },
             submitButtonOptions: {
-                submitText: 'Save',
+                submitText: t('common.buttons.save'),
             }
         },
         formData: {

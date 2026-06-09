@@ -1,7 +1,9 @@
+import { t } from '../../../i18n';
+
 function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
     return {
         id: 'callAndSMSLoggingSettingPage',
-        title: 'Activity logging',
+        title: t('settings.logging.groupName'),
         type: 'page',
         schema: {
             type: 'object',
@@ -9,127 +11,127 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             properties: {
                 autoLogCall: {
                     type: 'object',
-                    title: 'Log phone calls automatically',
+                    title: t('settings.logging.autoLogCall'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 autoLogSMS: {
                     type: 'object',
-                    title: 'Log SMS conversations automatically',
+                    title: t('settings.logging.autoLogSMS'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 autoLogVoicemail: {
                     type: 'object',
-                    title: 'Log voicemail messages automatically',
+                    title: t('settings.logging.autoLogVoicemail'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 autoLogInboundFax: {
                     type: 'object',
-                    title: 'Log inbound faxes automatically',
+                    title: t('settings.logging.autoLogInboundFax'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 autoLogOutboundFax: {
                     type: 'object',
-                    title: 'Log outbound faxes automatically',
+                    title: t('settings.logging.autoLogOutboundFax'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 enableRetroCallLogSync: {
                     type: 'object',
-                    title: 'Disable retroactive call log sync',
+                    title: t('settings.logging.disableRetroCallLogSync'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 oneTimeLog: {
                     type: 'object',
-                    title: 'Enable one-time call logging',
+                    title: t('settings.logging.enableOneTimeLog'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 popupLogPageAfterCall: {
                     type: 'object',
-                    title: '(Manual log) Open call logging page after call',
+                    title: t('settings.logging.popupLogPageAfterCall'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 popupLogPageAfterSMS: {
                     type: 'object',
-                    title: '(Manual log) Open SMS logging page after message',
+                    title: t('settings.logging.popupLogPageAfterSMS'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
@@ -137,10 +139,10 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                     type: "string",
                     oneOf: [{
                         const: "callLogDetailsSetting",
-                        title: "Call log details"
+                        title: t('settings.callLogDetails.groupName')
                     }, {
                         const: "autoLogPreferences",
-                        title: "Auto log preferences"
+                        title: t('settings.autoLogPreferences.groupName')
                     }]
                 }
             }
@@ -178,7 +180,7 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
-                submitText: 'Save',
+                submitText: t('common.buttons.save'),
             }
         },
         formData: {

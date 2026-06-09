@@ -1,3 +1,5 @@
+import { t } from '../../../../i18n';
+
 function getAutoLogPreferenceSettingPageRender({ adminUserSettings, contactTypes }) {
     const newContactTypes = contactTypes.map(contactType => ({
         const: contactType.value,
@@ -5,7 +7,7 @@ function getAutoLogPreferenceSettingPageRender({ adminUserSettings, contactTypes
     }));
     const page = {
         id: 'autoLogPreferenceSettingPage',
-        title: 'Auto log preferences',
+        title: t('settings.autoLogPreferences.groupName'),
         type: 'page',
         schema: {
             type: 'object',
@@ -13,23 +15,23 @@ function getAutoLogPreferenceSettingPageRender({ adminUserSettings, contactTypes
             properties: {
                 unknownContactPreference: {
                     type: 'object',
-                    title: 'Unknown contact',
+                    title: t('settings.autoLogPreferences.unknownContact'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'string',
-                            title: 'Value',
+                            title: t('common.labels.value'),
                             oneOf: [
                                 {
                                     const: 'skipLogging',
-                                    title: 'Skip logging'
+                                    title: t('settings.autoLogPreferences.skipLogging')
                                 },
                                 {
                                     const: 'createNewPlaceholderContact',
-                                    title: 'Create new placeholder contact'
+                                    title: t('settings.autoLogPreferences.createNewPlaceholder')
                                 }
                             ]
                         }
@@ -37,56 +39,56 @@ function getAutoLogPreferenceSettingPageRender({ adminUserSettings, contactTypes
                 },
                 newContactType: {
                     type: 'object',
-                    title: 'Contact type',
+                    title: t('settings.autoLogPreferences.newContactType'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'string',
-                            title: 'Value',
+                            title: t('common.labels.value'),
                             oneOf: newContactTypes
                         }
                     }
                 },
                 newContactNamePrefix: {
                     type: 'object',
-                    title: 'New contact name prefix',
+                    title: t('settings.autoLogPreferences.newContactNamePrefix'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'string',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 multipleContactsPreference: {
                     type: 'object',
-                    title: 'Multiple contacts',
+                    title: t('settings.autoLogPreferences.multipleContacts'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'string',
-                            title: 'Value',
+                            title: t('common.labels.value'),
                             oneOf: [
                                 {
                                     const: 'skipLogging',
-                                    title: 'Skip logging'
+                                    title: t('settings.autoLogPreferences.skipLogging')
                                 },
                                 {
                                     const: 'firstAlphabetical',
-                                    title: 'First alphabetical'
+                                    title: t('settings.autoLogPreferences.firstAlphabetical')
                                 },
                                 {
                                     const: 'mostRecentActivity',
-                                    title: 'Most recent activity'
+                                    title: t('settings.autoLogPreferences.mostRecentActivity')
                                 }
                             ]
                         }
@@ -108,7 +110,7 @@ function getAutoLogPreferenceSettingPageRender({ adminUserSettings, contactTypes
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
-                submitText: 'Save',
+                submitText: t('common.buttons.save'),
             }
         },
         formData: {
