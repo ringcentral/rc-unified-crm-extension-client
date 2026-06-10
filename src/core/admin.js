@@ -528,6 +528,36 @@ async function deleteManagedOAuthAccount({ serverUrl, platformName }) {
     return response.data;
 }
 
+// Short in-memory cache so reopening Account settings within a session doesn't re-hit the
+// server; the server itself caches account data with a longer lazy TTL.
+const ACCOUNT_DATA_CACHE_TTL_MS = 5 * 60 * 1000;
+const accountDataCache = new Map();
+
+async function getAccountData({ serverUrl, keys, forceRefresh = false }) {
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const result = {};
+    const keysToFetch = [];
+    for (const key of keys) {
+        const cached = accountDataCache.get(`${serverUrl}:${key}`);
+        if (!forceRefresh && cached && cached.expiry > Date.now()) {
+            result[key] = cached.data;
+        }
+        else {
+            keysToFetch.push(key);
+        }
+    }
+    if (keysToFetch.length > 0) {
+        const response = await axios.get(
+            `${serverUrl}/accountData?jwtToken=${rcUnifiedCrmExtJwt}&keys=${encodeURIComponent(keysToFetch.join(','))}&forceRefresh=${forceRefresh ? 'true' : 'false'}`
+        );
+        for (const key of keysToFetch) {
+            result[key] = response.data?.data?.[key] ?? [];
+            accountDataCache.set(`${serverUrl}:${key}`, { data: result[key], expiry: Date.now() + ACCOUNT_DATA_CACHE_TTL_MS });
+        }
+    }
+    return result;
+}
+
 exports.getAdminSettings = getAdminSettings;
 exports.uploadAdminSettings = uploadAdminSettings;
 exports.refreshAdminSettings = refreshAdminSettings;
@@ -546,3 +576,4 @@ exports.reinitializeUserMapping = reinitializeUserMapping;
 exports.getManagedAuthSettings = getManagedAuthSettings;
 exports.saveManagedAuthSettings = saveManagedAuthSettings;
 exports.deleteManagedOAuthAccount = deleteManagedOAuthAccount;
+exports.getAccountData = getAccountData;

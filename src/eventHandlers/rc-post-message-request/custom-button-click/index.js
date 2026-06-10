@@ -44,6 +44,7 @@ import logRecordSubmissionPageHandler from './errorLogging/logRecordSubmit';
 import saveServerSideLoggingButtonHandler from './adminSettings/saveServerSideLogging';
 import doNotLogNumbersSubmitButtonHandler from './adminSettings/doNotLogNumbersSubmit';
 import generalHandler from './adminSettings/adminSettingsFormSubmit';
+import refreshAccountDataHandler from './adminSettings/refreshAccountData';
 import managedAuthOrgPageHandler from './adminSettings/managedAuthOrgPage';
 import managedAuthUserPageHandler from './adminSettings/managedAuthUserPage';
 import managedAuthUserEditHandler from './adminSettings/managedAuthUserEdit';
@@ -372,7 +373,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         case 'notificationLevelSettingPage':
         case 'phoneNumberFormatPage':
         case 'clickToDialEmbedPage':
+        case 'accountSettingsPage':
             await generalHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+            break;
+        case 'accountDataPage':
+            await refreshAccountDataHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'managedAuthOrgPage':
             await managedAuthOrgPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

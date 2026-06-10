@@ -27,6 +27,14 @@ function getAdminPageRender({ platform }) {
                             const: "managedSettings",
                             title: t('pages.admin.managedSettings'),
                         },
+                        ...(platform.adminSettings?.length > 0 ? [{
+                            const: "accountSettings",
+                            title: 'Account settings',
+                        },
+                        {
+                            const: "accountData",
+                            title: 'Account data',
+                        }] : []),
                         ...hasManagedAuthFields ? [{
                             const: "managedAuthentication",
                             title: 'Managed authentication',
