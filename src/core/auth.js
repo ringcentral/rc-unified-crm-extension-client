@@ -248,6 +248,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
         const proxyId = platform.proxyId ? platform.proxyId : '';
         const rcInfo = await getRcInfo();
         const rcAccessToken = getRcAccessToken();
+        const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
             apiKey,
             platform: platformName,
@@ -260,7 +261,8 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
             rcExtensionId: rcInfo.value.cachedData.extensionInfo.id,
             userEmail: rcInfo.value.cachedData.extensionInfo.contact.email,
             additionalInfo: {
-                ...formData
+                ...formData,
+                ...rcAdditionalSubmission
             }
         });
         setAuth(true);
