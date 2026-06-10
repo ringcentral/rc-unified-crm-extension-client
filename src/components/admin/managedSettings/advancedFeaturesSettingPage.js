@@ -1,8 +1,10 @@
+import { t } from '../../../i18n';
+
 function getAdvancedFeaturesSettingPageRender({ adminUserSettings }) {
     const page =
     {
         id: 'advancedFeaturesSettingPage',
-        title: 'Advanced Features',
+        title: t('settings.advanced.groupName'),
         type: 'page',
         schema: {
             type: 'object',
@@ -10,29 +12,57 @@ function getAdvancedFeaturesSettingPageRender({ adminUserSettings }) {
             properties: {
                 autoOpenExtension: {
                     type: 'object',
-                    title: 'Auto-open extension',
+                    title: t('settings.advanced.autoOpenExtension'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
                         }
                     }
                 },
                 developerMode: {
                     type: 'object',
-                    title: 'Developer mode',
+                    title: t('settings.advanced.developerMode'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'boolean',
-                            title: 'Value'
+                            title: t('common.labels.value')
+                        }
+                    }
+                },
+                popupLogPageAfterCall: {
+                    type: 'object',
+                    title: t('settings.logging.popupLogPageAfterCall'),
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: t('common.labels.customizableByUser')
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: t('common.labels.value')
+                        }
+                    }
+                },
+                popupLogPageAfterSMS: {
+                    type: 'object',
+                    title: t('settings.logging.popupLogPageAfterSMS'),
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: t('common.labels.customizableByUser')
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: t('common.labels.value')
                         }
                     }
                 }
@@ -45,8 +75,14 @@ function getAdvancedFeaturesSettingPageRender({ adminUserSettings }) {
             developerMode: {
                 "ui:collapsible": true,
             },
+            popupLogPageAfterCall: {
+                "ui:collapsible": true,
+            },
+            popupLogPageAfterSMS: {
+                "ui:collapsible": true,
+            },
             submitButtonOptions: {
-                submitText: 'Save',
+                submitText: t('common.buttons.save'),
             },
         },
         formData: {
@@ -59,6 +95,16 @@ function getAdvancedFeaturesSettingPageRender({ adminUserSettings }) {
             {
                 customizable: adminUserSettings?.developerMode?.customizable ?? true,
                 value: adminUserSettings?.developerMode?.value ?? false
+            },
+            popupLogPageAfterCall:
+            {
+                customizable: adminUserSettings?.popupLogPageAfterCall?.customizable ?? true,
+                value: adminUserSettings?.popupLogPageAfterCall?.value ?? false
+            },
+            popupLogPageAfterSMS:
+            {
+                customizable: adminUserSettings?.popupLogPageAfterSMS?.customizable ?? true,
+                value: adminUserSettings?.popupLogPageAfterSMS?.value ?? false
             }
         }
     }

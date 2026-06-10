@@ -107,34 +107,6 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                         }
                     }
                 },
-                popupLogPageAfterCall: {
-                    type: 'object',
-                    title: t('settings.logging.popupLogPageAfterCall'),
-                    properties: {
-                        customizable: {
-                            type: 'boolean',
-                            title: t('common.labels.customizableByUser')
-                        },
-                        value: {
-                            type: 'boolean',
-                            title: t('common.labels.value')
-                        }
-                    }
-                },
-                popupLogPageAfterSMS: {
-                    type: 'object',
-                    title: t('settings.logging.popupLogPageAfterSMS'),
-                    properties: {
-                        customizable: {
-                            type: 'boolean',
-                            title: t('common.labels.customizableByUser')
-                        },
-                        value: {
-                            type: 'boolean',
-                            title: t('common.labels.value')
-                        }
-                    }
-                },
                 section: {
                     type: "string",
                     oneOf: [{
@@ -171,12 +143,6 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
                 "ui:collapsible": true,
             },
             oneTimeLog: {
-                "ui:collapsible": true,
-            },
-            popupLogPageAfterCall: {
-                "ui:collapsible": true,
-            },
-            popupLogPageAfterSMS: {
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
@@ -218,16 +184,6 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }) {
             {
                 customizable: adminUserSettings?.oneTimeLog?.customizable ?? true,
                 value: adminUserSettings?.oneTimeLog?.value ?? false
-            },
-            popupLogPageAfterCall:
-            {
-                customizable: adminUserSettings?.popupLogPageAfterCall?.customizable ?? true,
-                value: adminUserSettings?.popupLogPageAfterCall?.value ?? false
-            },
-            popupLogPageAfterSMS:
-            {
-                customizable: adminUserSettings?.popupLogPageAfterSMS?.customizable ?? true,
-                value: adminUserSettings?.popupLogPageAfterSMS?.value ?? false
             }
         }
     }

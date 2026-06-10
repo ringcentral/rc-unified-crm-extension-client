@@ -168,24 +168,6 @@ async function getServiceManifest() {
                         readOnly: userCore.getOneTimeLogSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getOneTimeLogSetting(userSettings).readOnlyReason,
                         value: userCore.getOneTimeLogSetting(userSettings).value
-                    },
-                    {
-                        id: "popupLogPageAfterCall",
-                        type: "boolean",
-                        name: t('settings.logging.popupLogPageAfterCall'),
-                        description: t('settings.logging.popupLogPageAfterCallDesc'),
-                        readOnly: userCore.getCallPopSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getCallPopSetting(userSettings).readOnlyReason,
-                        value: userCore.getCallPopSetting(userSettings).value
-                    },
-                    {
-                        id: "popupLogPageAfterSMS",
-                        type: "boolean",
-                        name: t('settings.logging.popupLogPageAfterSMS'),
-                        description: t('settings.logging.popupLogPageAfterSMSDesc'),
-                        readOnly: userCore.getSMSPopSetting(userSettings).readOnly,
-                        readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason,
-                        value: userCore.getSMSPopSetting(userSettings).value
                     }
                 ]
             },
@@ -492,6 +474,24 @@ async function getServiceManifest() {
                         value: userCore.getAutoOpenSetting(userSettings).value,
                         readOnly: userCore.getAutoOpenSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoOpenSetting(userSettings).readOnlyReason
+                    },
+                    {
+                        id: "popupLogPageAfterCall",
+                        type: "boolean",
+                        name: t('settings.logging.popupLogPageAfterCall'),
+                        description: t('settings.logging.popupLogPageAfterCallDesc'),
+                        readOnly: userCore.getCallPopSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getCallPopSetting(userSettings).readOnlyReason,
+                        value: userCore.getCallPopSetting(userSettings).value
+                    },
+                    {
+                        id: "popupLogPageAfterSMS",
+                        type: "boolean",
+                        name: t('settings.logging.popupLogPageAfterSMS'),
+                        description: t('settings.logging.popupLogPageAfterSMSDesc'),
+                        readOnly: userCore.getSMSPopSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason,
+                        value: userCore.getSMSPopSetting(userSettings).value
                     }
                 ]
             }
