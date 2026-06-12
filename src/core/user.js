@@ -205,6 +205,11 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
     return userSettings;
 }
 
+async function refreshUserInfo({ serverUrl }) {
+    const response = await axios.post(`${serverUrl}/user/refreshInfo`);
+    return response;
+}
+
 async function updateSSCLToken({ serverUrl, platform, token }) {
     const userSettings = await getUserSettingsOnline({ serverUrl, rcAccessToken: getRcAccessToken() });
     const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
@@ -699,6 +704,7 @@ exports.getUserSettingsOnline = getUserSettingsOnline;
 exports.uploadUserSettings = uploadUserSettings;
 exports.refreshUserSettings = refreshUserSettings;
 exports.updateSSCLToken = updateSSCLToken;
+exports.refreshUserInfo = refreshUserInfo;
 
 exports.getAutoLogCallSetting = getAutoLogCallSetting;
 exports.getAutoLogSMSSetting = getAutoLogSMSSetting;
