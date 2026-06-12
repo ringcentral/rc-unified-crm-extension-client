@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { isObjectEmpty, showNotification, getRcAccessToken, getRcInfo } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
-import { upsertPluginAsyncTaskIds } from '../service/pluginService';
 import { t } from '../i18n';
 
 // Input {id} = sessionId from RC
@@ -63,9 +62,6 @@ async function addLog({
                 addLogRes = await axios.post(`${serverUrl}/callLog`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName, extensionNumber });
                 if (addLogRes.data.successful) {
                     trackSyncCallLog({ hasNote: note !== '' });
-                    if (addLogRes.data.pluginAsyncTaskIds?.length > 0) {
-                        await upsertPluginAsyncTaskIds({ taskIds: addLogRes.data.pluginAsyncTaskIds });
-                    }
                     if (isShowNotification) {
                         showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'success', message: addLogRes.data.returnMessage?.message ?? t('notifications.success.callLogAdded'), ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
                     }
@@ -177,14 +173,7 @@ async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, re
                 }
                 const callLogRes = await axios.patch(`${serverUrl}/callLog`, patchBody);
                 if (isShowNotification) {
-                    if (callLogRes.data.successful) {
-                        if (callLogRes.data.pluginAsyncTaskIds?.length > 0) {
-                            await upsertPluginAsyncTaskIds({ taskIds: callLogRes.data.pluginAsyncTaskIds });
-                        }
-                    }
-                    else {
-                        showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'warning', message: callLogRes.data.returnMessage?.message ?? t('notifications.warning.callLogUpdateFailed'), ttl: callLogRes.data.returnMessage?.ttl ?? 3000, details: callLogRes.data.returnMessage?.details });
-                    }
+                    showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'warning', message: callLogRes.data.returnMessage?.message ?? t('notifications.warning.callLogUpdateFailed'), ttl: callLogRes.data.returnMessage?.ttl ?? 3000, details: callLogRes.data.returnMessage?.details });
                 }
         }
     }
