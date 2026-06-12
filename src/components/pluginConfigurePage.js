@@ -1,12 +1,27 @@
 import { t } from '../i18n';
 
+function getMergedPluginConfigFromFormData(formData = {}) {
+    const config = {
+        ...(formData.existingConfig ?? {})
+    };
+    for (const key in (formData.config ?? {})) {
+        const submittedValue = formData.config[key];
+        config[key] = {
+            ...(config[key] ?? {}),
+            value: submittedValue
+        };
+    }
+    return config;
+}
+
 function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, isLoggedIn, hasValidLicense = false, licenseStatusDescription = '' }) {
     const customForm = plugin.pageContent;
+    const visibleCustomForm = customForm?.filter(field => field.hidden !== true);
     let customFormProperties = {};
     let customFormUiSchema = {};
     let customFormRequired = [];
-    if (customForm) {
-        for (const field of customForm) {
+    if (visibleCustomForm) {
+        for (const field of visibleCustomForm) {
             const key = field.const;
             const schemaProp = {
                 type: field.type === 'selection' ? 'string' : field.type,
@@ -98,10 +113,11 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
             isAsync: plugin.isAsync,
             phase: plugin.phase,
             logTypes: plugin.supportedLogTypes,
-            isLoggedIn
+            isLoggedIn,
+            existingConfig: config
         }
     }
-    if (customForm?.length > 0) {
+    if (visibleCustomForm?.length > 0) {
         page.schema.properties.config = {
             type: 'object',
             title: 'Configuration',
@@ -148,4 +164,5 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
 }
 
 exports.getPluginConfigurePageRender = getPluginConfigurePageRender;
+exports.getMergedPluginConfigFromFormData = getMergedPluginConfigFromFormData;
 

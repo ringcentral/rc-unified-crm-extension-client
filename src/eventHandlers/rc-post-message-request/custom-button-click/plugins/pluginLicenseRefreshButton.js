@@ -1,5 +1,5 @@
 import pluginService from '../../../../service/pluginService';
-import { getPluginConfigurePageRender } from '../../../../components/pluginConfigurePage';
+import { getMergedPluginConfigFromFormData, getPluginConfigurePageRender } from '../../../../components/pluginConfigurePage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -10,7 +10,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             pluginId,
             pluginAccess: data.body.button.formData.access,
             plugin: data.body.button.formData.plugin,
-            config: data.body.button.formData.config,
+            config: getMergedPluginConfigFromFormData(data.body.button.formData),
             isLoggedIn: data.body.button.formData.isLoggedIn,
             hasValidLicense: licenseStatus,
             licenseStatusDescription

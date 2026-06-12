@@ -3,11 +3,13 @@ function getPluginDetailsSettingPageRender({ pluginId, pluginDetails, pluginSett
     let customFormProperties = {};
     let customFormUiSchema = {};
     const formData = {
-        pluginId
+        pluginId,
+        hiddenConfigFields: []
     };
     if (customForm) {
         for (const field of customForm) {
             const key = field.const;
+            const isHidden = field.hidden === true;
             const schemaProp = {
                 type: 'object',
                 title: field.title,
@@ -16,16 +18,33 @@ function getPluginDetailsSettingPageRender({ pluginId, pluginDetails, pluginSett
                         type: field.type === 'selection' ? 'string' : field.type,
                         title: field.title,
                         defaultValue: null
-                    },
-                    customizable: {
-                        type: 'boolean',
-                        title: 'Customizable by user',
-                        defaultValue: true
                     }
                 }
             }
+            if (!isHidden) {
+                schemaProp.properties.customizable = {
+                    type: 'boolean',
+                    title: 'Customizable by user',
+                    defaultValue: true
+                };
+            }
+            else {
+                schemaProp.properties.customizable = {
+                    type: 'boolean',
+                    title: 'Customizable by user',
+                    defaultValue: false
+                };
+            }
             customFormUiSchema[key] = {
                 "ui:collapsible": true,
+            }
+            if (isHidden) {
+                customFormUiSchema[key].customizable = {
+                    "ui:widget": "hidden",
+                };
+            }
+            if (isHidden) {
+                formData.hiddenConfigFields.push(key);
             }
             // special case: single selection or multi selection
             // Multi
@@ -52,7 +71,7 @@ function getPluginDetailsSettingPageRender({ pluginId, pluginDetails, pluginSett
             }
             customFormProperties[key] = schemaProp;
             formData[key] = {
-                customizable: pluginSetting?.config?.[key]?.customizable ?? true,
+                customizable: isHidden ? false : pluginSetting?.config?.[key]?.customizable ?? true,
                 value: pluginSetting?.config?.[key]?.value ?? null
             }
         }

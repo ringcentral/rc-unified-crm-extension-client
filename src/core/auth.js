@@ -11,7 +11,7 @@ import managedOAuthSetupPage from '../components/managedOAuthSetupPage';
 import managedOAuthMissingPage from '../components/managedOAuthMissingPage';
 import { tryConnectToBullhorn } from '../misc/bullhorn';
 import { t } from '../i18n';
-import { getPluginConfigurePageRender } from '../components/pluginConfigurePage';
+import { getMergedPluginConfigFromFormData, getPluginConfigurePageRender } from '../components/pluginConfigurePage';
 import pluginService from '../service/pluginService';
 import adminCore from './admin';
 import userCore from './user';
@@ -302,7 +302,7 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
                 pluginId: cachedPluginConfigFormData.pluginId,
                 pluginAccess: cachedPluginConfigFormData.access,
                 plugin: cachedPluginConfigFormData.plugin,
-                config: cachedPluginConfigFormData.config,
+                config: getMergedPluginConfigFromFormData(cachedPluginConfigFormData),
                 isLoggedIn: true,
                 hasValidLicense: licenseStatus,
                 licenseStatusDescription
