@@ -208,9 +208,9 @@
       "oneTimeLog": "One-time call logging",
       "oneTimeLogDesc": "Delays logging until full call details are available",
       "enableOneTimeLog": "Enable one-time call logging",
-      "popupLogPageAfterCall": "(Manual log) Open call logging page after call",
+      "popupLogPageAfterCall": "(Deprecated) Open call logging page after call",
       "popupLogPageAfterCallDesc": "Automatically open the logging form after each call",
-      "popupLogPageAfterSMS": "(Manual log) Open SMS logging page after message",
+      "popupLogPageAfterSMS": "(Deprecated) Open SMS logging page after message",
       "popupLogPageAfterSMSDesc": "Automatically open the logging form after each message"
     },
     "callLogDetails": {

@@ -3,6 +3,7 @@ import analytics from '../lib/analytics';
 import { showNotification } from '../lib/util';
 import multiContactPopPromptPage from '../components/multiContactPopPromptPage';
 import { t } from '../i18n';
+import { getManifest } from '../service/manifestService';
 
 function getLocalCachedContact({ phoneNumber, platformName }) {
     const allCachedContacts = document.querySelector("#rc-widget-adapter-frame").contentWindow.phone.contactMatcher.data;
@@ -32,7 +33,18 @@ function getLocalCachedContact({ phoneNumber, platformName }) {
     return result;
 }
 
-async function getContact({ serverUrl, phoneNumber, platformName, isFromManual = false, isExtensionNumber = false, isForceRefresh = false, isToTriggerContactMatch = true }) {
+async function shouldForceRefreshAccountData({ platformName, isFromManual, isForceRefreshAccountData }) {
+    if (isFromManual || isForceRefreshAccountData) {
+        return true;
+    }
+    if (!platformName) {
+        return false;
+    }
+    const manifest = await getManifest();
+    return manifest?.platforms?.[platformName]?.page?.disableContactCache ?? false;
+}
+
+async function getContact({ serverUrl, phoneNumber, platformName, isFromManual = false, isExtensionNumber = false, isForceRefresh = false, isForceRefreshAccountData = false, isToTriggerContactMatch = true }) {
     if (!isForceRefresh) {
         const cachedContact = getLocalCachedContact({ phoneNumber, platformName });
         if (cachedContact.length > 0) {
@@ -55,9 +67,10 @@ async function getContact({ serverUrl, phoneNumber, platformName, isFromManual =
     if (userSettings?.overridingPhoneNumberFormat3?.value) {
         overridingFormats.push(userSettings.overridingPhoneNumberFormat3.value);
     }
+    const forceRefreshAccountData = await shouldForceRefreshAccountData({ platformName, isFromManual, isForceRefreshAccountData });
 
     if (rcUnifiedCrmExtJwt) {
-        const contactRes = await axios.get(`${serverUrl}/contact?phoneNumber=${phoneNumber}&overridingFormat=${encodeURIComponent(overridingFormats.toString())}&isExtension=${isExtensionNumber}&isForceRefreshAccountData=${isFromManual ? 'true' : 'false'}`);
+        const contactRes = await axios.get(`${serverUrl}/contact?phoneNumber=${phoneNumber}&overridingFormat=${encodeURIComponent(overridingFormats.toString())}&isExtension=${isExtensionNumber}&isForceRefreshAccountData=${forceRefreshAccountData ? 'true' : 'false'}`);
         if (!contactRes.data.contact) {
             return {
                 matched: false,
@@ -202,7 +215,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
     }
     // case: unknown contact OR multi matches
     else {
-        const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber });
+        const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName });
         if (!contactMatched) {
             return;
         }

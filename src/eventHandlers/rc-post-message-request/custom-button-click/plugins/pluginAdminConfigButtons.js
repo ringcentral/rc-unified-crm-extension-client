@@ -23,7 +23,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, b
                 for (const c of data.body.button.formData.plugin.pageContent) {
                     config[c.const] = {
                         value: null,
-                        customizable: true
+                        customizable: c.hidden === true ? false : true
                     };
                 }
                 adminSettingsForInstall.userSettings[`plugin_${data.body.button.formData.pluginId}`] =

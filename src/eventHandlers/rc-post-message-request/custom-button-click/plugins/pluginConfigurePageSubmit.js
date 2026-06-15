@@ -1,17 +1,13 @@
 import { refreshUserSettings } from '../../../../core/user';
 import { getRcInfo, showNotification } from '../../../../lib/util';
+import { getMergedPluginConfigFromFormData } from '../../../../components/pluginConfigurePage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     const rcInfo = await getRcInfo();
     const rcAccountId = rcInfo.value.cachedData.extensionInfo.account.id;
     const form = data.body.button.formData;
-    const config = {};
-    for (const k in form.config) {
-        config[k] = {
-            value: form.config[k]
-        };
-    }
+    const config = getMergedPluginConfigFromFormData(form);
     const changedSettings = {
         [`plugin_${form.pluginId}`]: {
             value: {

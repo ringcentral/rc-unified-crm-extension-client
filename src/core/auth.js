@@ -11,7 +11,7 @@ import managedOAuthSetupPage from '../components/managedOAuthSetupPage';
 import managedOAuthMissingPage from '../components/managedOAuthMissingPage';
 import { tryConnectToBullhorn } from '../misc/bullhorn';
 import { t } from '../i18n';
-import { getPluginConfigurePageRender } from '../components/pluginConfigurePage';
+import { getMergedPluginConfigFromFormData, getPluginConfigurePageRender } from '../components/pluginConfigurePage';
 import pluginService from '../service/pluginService';
 import adminCore from './admin';
 import userCore from './user';
@@ -248,6 +248,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
         const proxyId = platform.proxyId ? platform.proxyId : '';
         const rcInfo = await getRcInfo();
         const rcAccessToken = getRcAccessToken();
+        const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
             apiKey,
             platform: platformName,
@@ -260,7 +261,8 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
             rcExtensionId: rcInfo.value.cachedData.extensionInfo.id,
             userEmail: rcInfo.value.cachedData.extensionInfo.contact.email,
             additionalInfo: {
-                ...formData
+                ...formData,
+                ...rcAdditionalSubmission
             }
         });
         setAuth(true);
@@ -300,7 +302,7 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
                 pluginId: cachedPluginConfigFormData.pluginId,
                 pluginAccess: cachedPluginConfigFormData.access,
                 plugin: cachedPluginConfigFormData.plugin,
-                config: cachedPluginConfigFormData.config,
+                config: getMergedPluginConfigFromFormData(cachedPluginConfigFormData),
                 isLoggedIn: true,
                 hasValidLicense: licenseStatus,
                 licenseStatusDescription

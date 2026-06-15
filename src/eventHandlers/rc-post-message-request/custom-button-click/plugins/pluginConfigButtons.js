@@ -2,7 +2,7 @@ import axios from 'axios';
 import authCore from '../../../../core/auth';
 import { showNotification } from '../../../../lib/util';
 import { t } from '../../../../i18n';
-import { getPluginConfigurePageRender } from '../../../../components/pluginConfigurePage';
+import { getMergedPluginConfigFromFormData, getPluginConfigurePageRender } from '../../../../components/pluginConfigurePage';
 import pluginService from '../../../../service/pluginService';
 
 async function onEvent({ data, buttonId, manifest, platformInfo, platformName, platform }) {
@@ -28,7 +28,7 @@ async function onEvent({ data, buttonId, manifest, platformInfo, platformName, p
                     pluginId: data.body.button.formData.pluginId,
                     pluginAccess: data.body.button.formData.access,
                     plugin: data.body.button.formData.plugin,
-                    config: data.body.button.formData.config,
+                    config: getMergedPluginConfigFromFormData(data.body.button.formData),
                     isLoggedIn: false,
                     hasValidLicense: licenseStatus,
                     licenseStatusDescription
