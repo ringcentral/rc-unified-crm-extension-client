@@ -1,11 +1,13 @@
 import { t } from '../i18n';
 
-function getAuthPageRender({ manifest, platformName, visibleFieldConsts = null, warningMessage = '' }) {
+function getAuthPageRender({ manifest, platformName, isAdmin, visibleFieldConsts = null, warningMessage = '' }) {
     const authPage = manifest.platforms[platformName].auth.apiKey.page;
     const pageTitle = authPage.title;
-    const filteredContent = visibleFieldConsts
-        ? authPage.content.filter(c => visibleFieldConsts.includes(c.const) && !c.hidden)
-        : authPage.content.filter(c => !c.hidden);
+    const filteredContent = isAdmin ?
+        authPage.content :
+        (visibleFieldConsts
+            ? authPage.content.filter(c => visibleFieldConsts.includes(c.const) && !c.hidden)
+            : authPage.content.filter(c => !c.hidden));
     const required = filteredContent.filter(c => c.required).map(c => { return c.const });
     const warningText = warningMessage || authPage.warning;
     const warning = warningText ? {

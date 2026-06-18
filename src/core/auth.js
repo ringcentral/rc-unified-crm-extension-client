@@ -126,10 +126,13 @@ async function onUserClickConnectButton({ platform, platformName, manifest }) {
                 window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                 return;
             }
+            const rcInfo = await getRcInfo();
+            const isAdmin = !!rcInfo?.value?.cachedData?.extensionInfo?.permissions?.admin?.enabled;
             const authPageRender = authPage.getAuthPageRender({
                 manifest,
                 platformName,
-                visibleFieldConsts: managedAuthState?.visibleFieldConsts ?? null
+                visibleFieldConsts: managedAuthState?.visibleFieldConsts ?? null,
+                isAdmin
             });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                 type: 'rc-adapter-register-customized-page',
