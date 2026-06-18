@@ -1,15 +1,17 @@
 import hostnameInputPage from '../../../../../components/hostnameInputPage';
 import authCore from '../../../../../core/auth';
-import { getRcInfo } from '../../../../../lib/util';
+import { createDebounceHandler, getRcInfo } from '../../../../../lib/util';
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+const debounceHostnameInputPageUrl = createDebounceHandler('hostnameInputPageUrl', 300);
+
+async function renderHostnameInputPage({ data, manifest }) {
     let isUrlValid = true;
-    if (manifest.platforms[data.body.formData.platformId]?.environment?.url) {
-        const urlIdentifierRegex = new RegExp(manifest.platforms[data.body.formData.platformId].environment.url.replace(/\*/g, '.*'));
+    const selectedPlatform = manifest.platforms[data.body.formData.platformId];
+    if (selectedPlatform?.environment?.url) {
+        const urlIdentifierRegex = new RegExp(selectedPlatform.environment.url.replace(/\*/g, '.*'));
         isUrlValid = urlIdentifierRegex.test(data.body.formData.url);
     }
     const rcInfo = await getRcInfo();
-    const selectedPlatform = manifest.platforms[data.body.formData.platformId];
     const managedAuthState = selectedPlatform?.auth?.type === 'apiKey'
         ? await authCore.getManagedAuthState({
             serverUrl: manifest.serverUrl,
@@ -40,6 +42,19 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         type: 'rc-adapter-navigate-to',
         path: `/customized/${hostnameInputPageRender.id}`, // page id
     }, '*');
+}
+
+async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+    const selectedPlatform = manifest.platforms[data.body.formData.platformId];
+    const changedKeys = Array.isArray(data.body.keys) ? data.body.keys : [];
+    const shouldDebounceUrlInput = selectedPlatform?.environment?.type === 'dynamic' && changedKeys.includes('url');
+
+    if (shouldDebounceUrlInput) {
+        debounceHostnameInputPageUrl({ data, manifest }, renderHostnameInputPage);
+        return;
+    }
+
+    await renderHostnameInputPage({ data, manifest });
 }
 
 exports.onEvent = onEvent;
