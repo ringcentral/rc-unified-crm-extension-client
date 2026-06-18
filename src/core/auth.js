@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getRcAccessToken, getRcInfo, showNotification } from '../lib/util';
+import { getRcAccessToken, getRcInfo, showNotification, setRcAdditionalSubmission } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest } from '../service/manifestService';
 import { trackCrmLogin, trackCrmLogout } from '../lib/analytics';
@@ -248,7 +248,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }) {
         const proxyId = platform.proxyId ? platform.proxyId : '';
         const rcInfo = await getRcInfo();
         const rcAccessToken = getRcAccessToken();
-        const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
+        const rcAdditionalSubmission = await setRcAdditionalSubmission({ rcInfo, platform });
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
             apiKey,
             platform: platformName,

@@ -12,7 +12,7 @@ async function showNotification({ level, message, ttl, details = null }) {
   if (!message || isObjectEmpty(message)) {
     return;
   }
-  if(!level) {
+  if (!level) {
     // eslint-disable-next-line no-param-reassign
     level = 'warning';
   }
@@ -183,6 +183,33 @@ async function cacheCalldownContact({ contactId, contactName, phoneNumber, conta
   }
 }
 
+async function setRcAdditionalSubmission({ rcInfo, platform }) {
+  const rcAdditionalSubmission = {};
+  if (platform?.rcAdditionalSubmission) {
+    for (const ras of platform.rcAdditionalSubmission) {
+      const pathSegments = ras.path.split('.');
+      let rcInfoSubmissionValue = null;
+      for (const ps of pathSegments) {
+        if (rcAdditionalSubmission === undefined) {
+          break;
+        }
+        if (rcInfoSubmissionValue === null) {
+          rcInfoSubmissionValue = rcInfo.value[ps];
+        }
+        else {
+          rcInfoSubmissionValue = rcInfoSubmissionValue[ps];
+        }
+      }
+
+      if (rcInfoSubmissionValue) {
+        rcAdditionalSubmission[ras.id] = rcInfoSubmissionValue;
+      }
+    }
+  }
+  await chrome.storage.local.set({ rcAdditionalSubmission });
+  return rcAdditionalSubmission;
+}
+
 exports.secondsToHourMinuteSecondString = secondsToHourMinuteSecondString;
 exports.showNotification = showNotification;
 exports.dismissNotification = dismissNotification;
@@ -196,3 +223,4 @@ exports.downloadTextFile = downloadTextFile;
 exports.cleanUpExpiredStorage = cleanUpExpiredStorage;
 exports.createDebounceHandler = createDebounceHandler;
 exports.cacheCalldownContact = cacheCalldownContact;;
+exports.setRcAdditionalSubmission = setRcAdditionalSubmission;

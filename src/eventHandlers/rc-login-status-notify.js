@@ -2,7 +2,7 @@ import { getPlatformInfo } from '../service/platformService';
 import { getManifest, getPlatformList } from '../service/manifestService';
 import authCore from '../core/auth';
 import userCore from '../core/user';
-import { showNotification, getRcAccessToken, getRcInfo } from '../lib/util';
+import { showNotification, getRcAccessToken, getRcInfo, setRcAdditionalSubmission } from '../lib/util';
 import reportPage from '../components/reportPage/reportPage';
 import calldownPage from '../components/calldownPage';
 import appointmentsPage from '../components/appointmentsPage/appointmentsPage';
@@ -156,29 +156,7 @@ async function onEvent({ data }) {
 
         try {
             const rcInfo = await getRcInfo();
-            const rcAdditionalSubmission = {};
-            if (platform?.rcAdditionalSubmission) {
-                for (const ras of platform.rcAdditionalSubmission) {
-                    const pathSegments = ras.path.split('.');
-                    let rcInfoSubmissionValue = null;
-                    for (const ps of pathSegments) {
-                        if (rcAdditionalSubmission === undefined) {
-                            break;
-                        }
-                        if (rcInfoSubmissionValue === null) {
-                            rcInfoSubmissionValue = rcInfo.value[ps];
-                        }
-                        else {
-                            rcInfoSubmissionValue = rcInfoSubmissionValue[ps];
-                        }
-                    }
-
-                    if (rcInfoSubmissionValue) {
-                        rcAdditionalSubmission[ras.id] = rcInfoSubmissionValue;
-                    }
-                }
-            }
-            await chrome.storage.local.set({ rcAdditionalSubmission });
+            await setRcAdditionalSubmission({ rcInfo, platform });
             if (manifest?.serverUrl) {
                 const rcAPI = new RcAPI();
                 const userInfoResponse = await rcAPI.getUserInfo({
