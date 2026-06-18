@@ -167,6 +167,34 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
     }
 }
 
+function isSafeHttpUrl(url) {
+    return (
+        typeof url === 'string' &&
+        (url.startsWith('https://') || url.startsWith('http://')) &&
+        !url.toLowerCase().includes('javascript')
+    );
+}
+
+function openFallbackContactPage({ manifest, platformName, hostname, fromCallPop }) {
+    const platform = manifest?.platforms?.[platformName];
+    if (
+        !fromCallPop ||
+        !platform?.enableFallbackContactPageUrl ||
+        typeof platform?.fallbackContactPageUrl !== 'string' ||
+        !platform.fallbackContactPageUrl
+    ) {
+        return false;
+    }
+    const fallbackContactPageUrl = platform.fallbackContactPageUrl
+        .replaceAll('{hostname}', hostname);
+    if (!isSafeHttpUrl(fallbackContactPageUrl)) {
+        return false;
+    }
+    showNotification({ level: 'success', message: t('notifications.success.openingContactPage'), ttl: 5000 });
+    window.open(fallbackContactPageUrl);
+    return true;
+}
+
 async function openContactPage({ manifest, platformName, phoneNumber, contactId, contactType, multiContactMatchBehavior, fromCallPop = false }) {
     let platformInfo = await chrome.storage.local.get('platform-info');
     if (platformInfo['platform-info'].hostname === 'temp') {
@@ -217,10 +245,16 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
     else {
         const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName });
         if (!contactMatched) {
+            openFallbackContactPage({ manifest, platformName, hostname, fromCallPop });
+            return;
+        }
+        const existingContacts = (contactInfo || []).filter(c => !c.isNewContact);
+        if (existingContacts.length === 0) {
+            openFallbackContactPage({ manifest, platformName, hostname, fromCallPop });
             return;
         }
         // case: multi contacts
-        const isMultipleContact = contactInfo.filter(c => !c.isNewContact).length > 1;
+        const isMultipleContact = existingContacts.length > 1;
         if (isMultipleContact) {
             if (!multiContactMatchBehavior) {
                 return;
@@ -235,10 +269,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                     if (platformName === 'bullhorn') {
                         const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
                         if (crm_extension_bullhorn_user_urls?.atsUrl) {
-                            for (const c of contactInfo) {
-                                if (c.isNewContact) {
-                                    continue;
-                                }
+                            for (const c of existingContacts) {
                                 const newTab = window.open(`${crm_extension_bullhorn_user_urls.atsUrl}/BullhornStaffing/OpenWindow.cfm?Entity=${c.type}&id=${c.id}&view=Overview`, '_blank', 'popup');
                                 newTab.blur();
                                 window.focus();
@@ -246,10 +277,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                         }
                     }
                     else {
-                        for (const c of contactInfo) {
-                            if (c.isNewContact) {
-                                continue;
-                            }
+                        for (const c of existingContacts) {
                             const hostname = platformInfo['platform-info'].hostname;
                             const contactPageUrl = manifest.platforms[platformName].contactPageUrl
                                 .replace('{hostname}', hostname)
@@ -261,7 +289,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                     break;
                 case 'promptToSelect':
                     // open prompt page
-                    const multiContactPopPromptPageRender = multiContactPopPromptPage.getMultiContactPopPromptPageRender({ contactInfo: contactInfo.filter(c => !c.isNewContact) });
+                    const multiContactPopPromptPageRender = multiContactPopPromptPage.getMultiContactPopPromptPageRender({ contactInfo: existingContacts });
                     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
                         type: 'rc-adapter-register-customized-page',
                         page: multiContactPopPromptPageRender
@@ -279,14 +307,11 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
             }
         }
         //This is the case where there is only one contact and it is not a new contact
-        if (contactInfo.filter(c => !c.isNewContact).length == 1) {
+        if (existingContacts.length == 1) {
             if (platformName === 'bullhorn') {
                 const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
                 if (crm_extension_bullhorn_user_urls?.atsUrl) {
-                    for (const c of contactInfo) {
-                        if (c.isNewContact) {
-                            continue;
-                        }
+                    for (const c of existingContacts) {
                         const newTab = window.open(`${crm_extension_bullhorn_user_urls.atsUrl}/BullhornStaffing/OpenWindow.cfm?Entity=${c.type}&id=${c.id}&view=Overview`, '_blank', 'popup');
                         newTab.blur();
                         window.focus();
@@ -294,10 +319,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                 }
             }
             else {
-                for (const c of contactInfo) {
-                    if (c.isNewContact) {
-                        continue;
-                    }
+                for (const c of existingContacts) {
                     const hostname = platformInfo['platform-info'].hostname;
                     const contactPageUrl = manifest.platforms[platformName].contactPageUrl
                         .replace('{hostname}', hostname)
