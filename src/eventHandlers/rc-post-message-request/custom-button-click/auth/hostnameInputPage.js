@@ -1,5 +1,6 @@
 import embeddableServices from '../../../../service/embeddableServices';
 import authCore from '../../../../core/auth';
+import { getManifest, saveManifest } from '../../../../service/manifestService';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     let inputUrl = '';
@@ -25,6 +26,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             isPrivate: !!data.body.button.formData.isPrivate
         }
     });
+    manifest = await getManifest(true);
+    await saveManifest({ manifest });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',
         service: (await embeddableServices.getServiceManifest())
