@@ -5,6 +5,8 @@ import multiContactPopPromptPage from '../components/multiContactPopPromptPage';
 import { t } from '../i18n';
 import { getManifest } from '../service/manifestService';
 
+let lastOpenedContactPageUrl = null;
+
 function getLocalCachedContact({ phoneNumber, platformName }) {
     const allCachedContacts = document.querySelector("#rc-widget-adapter-frame").contentWindow.phone.contactMatcher.data;
     let result = [];
@@ -237,6 +239,14 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                 .replace('{hostname}', hostname)
                 .replaceAll('{contactId}', contactIdInUse)
                 .replaceAll('{contactType}', contactTypeInUse);
+            if (lastOpenedContactPageUrl === contactPageUrl) {
+                return;
+            }
+            lastOpenedContactPageUrl = contactPageUrl;
+            // timer to set lastOpenedContactPageUrl to null after 10 seconds
+            setTimeout(() => {
+                lastOpenedContactPageUrl = null;
+            }, 10000);
             window.open(contactPageUrl);
             return;
         }
@@ -325,6 +335,14 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                         .replace('{hostname}', hostname)
                         .replaceAll('{contactId}', c.id)
                         .replaceAll('{contactType}', c.type);
+                    if (lastOpenedContactPageUrl === contactPageUrl) {
+                        return;
+                    }
+                    lastOpenedContactPageUrl = contactPageUrl;
+                    // timer to set lastOpenedContactPageUrl to null after 10 seconds
+                    setTimeout(() => {
+                        lastOpenedContactPageUrl = null;
+                    }, 10000);
                     window.open(contactPageUrl);
                 }
             }
