@@ -2,6 +2,8 @@ import { checkC2DCollision, showNotification } from './lib/util';
 import { setAuthor } from './lib/analytics';
 import axios from 'axios';
 import authCore from './core/auth';
+import apiErrorHandler from './lib/apiErrorHandler';
+import embeddableServices from './service/embeddableServices';
 import { getManifest } from './service/manifestService';
 import { saveManifestUrl } from './service/manifestService';
 import { getPlatformInfo } from './service/platformService';
@@ -147,18 +149,14 @@ axios.interceptors.response.use(
         }
       });
     }
+    await apiErrorHandler.handleApiError(error);
     if (error.response?.status === 401 && !isLoggingOut) {
       const url = error.config?.baseURL ? `${error.config.baseURL}${error.config.url}` : error.config?.url || '';
       const hasBearerHeader = !!(error.config?.headers?.Authorization || error.config?.headers?.authorization);
       if ((url.includes('jwtToken=') || hasBearerHeader) && !url.includes('/unAuthorize') && !error.config?.skipAuthorization) {
         isLoggingOut = true;
         try {
-          const manifest = await getManifest();
-          const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get({ rcUnifiedCrmExtJwt: null });
-          const serverUrl = manifest?.serverUrl;
-          if (rcUnifiedCrmExtJwt && serverUrl) {
-            await authCore.unAuthorize({ serverUrl, rcUnifiedCrmExtJwt, isShowNotification: false });
-          }
+          await authCore.clearLocalCrmAuthState();
         } finally {
           isLoggingOut = false;
         }
@@ -169,6 +167,38 @@ axios.interceptors.response.use(
 );
 
 window.__ON_RC_POPUP_WINDOW = 1;
+
+apiErrorHandler.registerCrmAuthCacheClearedHandler(async () => {
+  const adapterFrame = document.querySelector('#rc-widget-adapter-frame');
+  if (adapterFrame?.contentWindow) {
+    const serviceManifest = await embeddableServices.getServiceManifest();
+    adapterFrame.contentWindow.postMessage({
+      type: 'rc-adapter-register-third-party-service',
+      service: serviceManifest
+    }, '*');
+  }
+});
+
+authCore.syncCrmAuthedFromStorage();
+
+chrome.storage.onChanged.addListener(async (changes, area) => {
+  if (area !== 'local') {
+    return;
+  }
+  if (changes.rcUnifiedCrmExtJwt?.newValue) {
+    await authCore.syncCrmAuthedFromStorage();
+  }
+  if (changes.rcUnifiedCrmExtJwt || changes.crmAuthed) {
+    const adapterFrame = document.querySelector('#rc-widget-adapter-frame');
+    if (adapterFrame?.contentWindow) {
+      const serviceManifest = await embeddableServices.getServiceManifest();
+      adapterFrame.contentWindow.postMessage({
+        type: 'rc-adapter-register-third-party-service',
+        service: serviceManifest
+      }, '*');
+    }
+  }
+});
 
 // Initialize i18n with stored locale
 i18n.restoreLocale();
