@@ -42,7 +42,10 @@ async function logPageFormDataDefaulting({ platform, targetPage, caseType, logTy
         let fieldType = targetPage.schema.properties[defaultValue.field]?.oneOf ? 'options' : 'boolean';
         switch (fieldType) {
             case 'options':
-                const mappedOption = targetPage.schema.properties[defaultValue.field]?.oneOf.find(o => rawValueCompare(o.const, defaultValue.value))?.const;
+                const mappedOption = findMatchingFieldOption(
+                    targetPage.schema.properties[defaultValue.field]?.oneOf,
+                    defaultValue.value
+                );
                 if (mappedOption) {
                     updatedTargetPage.formData[defaultValue.field] = mappedOption;
                 }
@@ -74,13 +77,20 @@ function allowBullhornCustomNoteAction({ platformName, userSettings }) {
 
 // A fuzzy string compare that ignores cases and spaces
 function rawValueCompare(value1 = '', value2 = '') {
-    // check if value1 is a number
-    if (!Number.isNaN(value1)) {
+    if (typeof value1 === 'number' || typeof value2 === 'number') {
         return value1 === value2;
     }
-    else {
-        return value1.toLowerCase().replace(/\s/g, '') === value2.toLowerCase().replace(/\s/g, '');
+    return String(value1).toLowerCase().replace(/\s/g, '') === String(value2).toLowerCase().replace(/\s/g, '');
+}
+
+function findMatchingFieldOption(options, value) {
+    if (!Array.isArray(options) || value == null || String(value).trim() === '') {
+        return null;
     }
+    const matchedOption = options.find(o =>
+        rawValueCompare(o.const, value) || (o.title != null && rawValueCompare(o.title, value))
+    );
+    return matchedOption?.const ?? null;
 }
 
 async function getLogConflictInfo({
@@ -158,8 +168,11 @@ async function getLogConflictInfo({
                     });
                     let allMatched = true;
                     const fieldDefaultValue = fieldDefaultValues.find(f => f.field === key);
-                    if (fieldDefaultValue) {
-                        const fieldMappedOption = defaultingContact.additionalInfo[key]?.find(o => rawValueCompare(o.const, fieldDefaultValue.value))?.const;
+                    if (fieldDefaultValue && String(fieldDefaultValue.value ?? '').trim() !== '') {
+                        const fieldMappedOption = findMatchingFieldOption(
+                            defaultingContact.additionalInfo[key],
+                            fieldDefaultValue.value
+                        );
                         if (fieldMappedOption) {
                             autoSelectAdditionalSubmission[key] = fieldMappedOption;
                             continue;
@@ -188,7 +201,7 @@ async function getLogConflictInfo({
             }
             // if non array field, go with the value directly
             else {
-                const fieldDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ caseType, logType });
+                const fieldDefaultValues = getAdditionalFieldDefaultValuesFromSetting({ platform, userSettings, caseType, logType });
                 const fieldDefaultValue = fieldDefaultValues.find(f => f.field === key);
                 if (fieldDefaultValue) {
                     autoSelectAdditionalSubmission[key] = fieldDefaultValue.value;

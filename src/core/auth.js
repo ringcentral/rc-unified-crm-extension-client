@@ -82,25 +82,33 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
     return res.data.jwtToken;
 }
 
-async function unAuthorize({ serverUrl, platformName, rcUnifiedCrmExtJwt }) {
-    try {
-        const res = await axios.post(`${serverUrl}/unAuthorize?jwtToken=${rcUnifiedCrmExtJwt}`);
-        // Unique: Bullhorn
-        if (platformName === 'bullhorn') {
-            await chrome.storage.local.remove('crm_extension_bullhornUsername');
-            await chrome.storage.local.remove('crm_extension_bullhorn_user_urls');
-        }
-        showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully unauthorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
-        trackCrmLogout()
+async function clearLocalCrmAuthState({ platformName } = {}) {
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    if (!rcUnifiedCrmExtJwt) {
+        return false;
     }
-    catch (e) {
-        console.log(e);
+    if (platformName === 'bullhorn') {
+        await chrome.storage.local.remove('crm_extension_bullhornUsername');
+        await chrome.storage.local.remove('crm_extension_bullhorn_user_urls');
     }
     await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
     await chrome.storage.local.remove('serverSideLoggingToken');
     await chrome.storage.local.remove('isAdmin');
     await chrome.storage.local.remove('crmAuthed');
     setAuth(false);
+    return true;
+}
+
+async function unAuthorize({ serverUrl, platformName, rcUnifiedCrmExtJwt }) {
+    try {
+        const res = await axios.post(`${serverUrl}/unAuthorize?jwtToken=${rcUnifiedCrmExtJwt}`);
+        showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? 'Successfully unauthorized.', ttl: res.data.returnMessage?.ttl ?? 3000 });
+        trackCrmLogout()
+    }
+    catch (e) {
+        console.log(e);
+    }
+    await clearLocalCrmAuthState({ platformName });
 }
 
 async function checkAuth() {
@@ -146,6 +154,7 @@ exports.submitPlatformSelection = submitPlatformSelection;
 exports.apiKeyLogin = apiKeyLogin;
 exports.onAuthCallback = onAuthCallback;
 exports.unAuthorize = unAuthorize;
+exports.clearLocalCrmAuthState = clearLocalCrmAuthState;
 exports.checkAuth = checkAuth;
 exports.setAuth = setAuth;
 exports.getLicenseStatus = getLicenseStatus;
