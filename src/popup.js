@@ -62,7 +62,25 @@ import { logPageFormDataDefaulting, getLogConflictInfo, addPendingRecordingSessi
 import { bullhornHeartbeat, tryConnectToBullhorn } from './misc/bullhorn';
 
 import axios from 'axios';
+
+async function persistRefreshedJwtToken(headers) {
+  const refreshedToken = headers?.['x-refreshed-jwt-token'] || headers?.['X-Refreshed-Jwt-Token'];
+  if (refreshedToken) {
+    await chrome.storage.local.set({ rcUnifiedCrmExtJwt: refreshedToken });
+  }
+}
+
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
+axios.interceptors.response.use(
+  async (response) => {
+    await persistRefreshedJwtToken(response.headers);
+    return response;
+  },
+  async (error) => {
+    await persistRefreshedJwtToken(error.response?.headers);
+    return Promise.reject(error);
+  }
+);
 
 window.__ON_RC_POPUP_WINDOW = 1;
 
