@@ -18,7 +18,7 @@ import customButtonClickHandler from './custom-button-click';
 import authCore from '../../core/auth';
 
 async function onEvent({ data }) {
-  const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
+  const crmAuthed = await authCore.syncCrmAuthedFromStorage();
   const manifest = await getManifest();
   const platformInfo = await getPlatformInfo();
   const platformName = platformInfo?.platformName ?? '';;
