@@ -60,6 +60,7 @@ import logService from './service/logService';
 import embeddableServices from './service/embeddableServices';
 import { logPageFormDataDefaulting, getLogConflictInfo, addPendingRecordingSessionId, triggerPendingRecordingCheck, removePendingRecordingSessionId } from './lib/logUtil';
 import { bullhornHeartbeat, tryConnectToBullhorn } from './misc/bullhorn';
+import apiErrorHandler from './lib/apiErrorHandler';
 
 import axios from 'axios';
 axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be overriden with server manifest
@@ -83,8 +84,48 @@ let platform = null;
 let hasOngoingCall = false;
 let lastUserSettingSyncDate = new Date();
 
+async function syncCrmAuthedFromStorage() {
+  const { rcUnifiedCrmExtJwt, crmAuthed: storedCrmAuthed } = await chrome.storage.local.get(['rcUnifiedCrmExtJwt', 'crmAuthed']);
+  crmAuthed = !!rcUnifiedCrmExtJwt;
+  if (crmAuthed && !storedCrmAuthed) {
+    await chrome.storage.local.set({ crmAuthed: true });
+  }
+  return crmAuthed;
+}
+
+apiErrorHandler.registerCrmAuthCacheClearedHandler(async () => {
+  crmAuthed = false;
+  authCore.setAuth(false);
+});
+apiErrorHandler.registerAxiosCrmAuthInterceptor();
+
+syncCrmAuthedFromStorage();
+
 checkC2DCollision();
 getCustomManifest();
+
+chrome.storage.onChanged.addListener(async (changes, area) => {
+  if (area !== 'local') {
+    return;
+  }
+  if (changes.rcUnifiedCrmExtJwt?.newValue) {
+    crmAuthed = true;
+    await chrome.storage.local.set({ crmAuthed: true });
+  }
+  else if (changes.rcUnifiedCrmExtJwt?.newValue === undefined || changes.crmAuthed?.newValue === false) {
+    crmAuthed = false;
+  }
+  if (changes.rcUnifiedCrmExtJwt || changes.crmAuthed) {
+    const adapterFrame = document.querySelector("#rc-widget-adapter-frame");
+    if (adapterFrame?.contentWindow) {
+      const serviceManifest = await embeddableServices.getServiceManifest();
+      adapterFrame.contentWindow.postMessage({
+        type: 'rc-adapter-register-third-party-service',
+        service: serviceManifest
+      }, '*');
+    }
+  }
+});
 
 async function getCustomManifest() {
   const customCrmManifest = await getManifest();
@@ -669,6 +710,7 @@ window.addEventListener('message', async (e) => {
           });
           break;
         case 'rc-post-message-request':
+          await syncCrmAuthedFromStorage();
           if (!crmAuthed && (data.path === '/callLogger' || data.path === '/messageLogger')) {
             showNotification({ level: 'warning', message: `Please go to Settings and connect to ${platformName}`, ttl: 60000 });
             responseMessage(data.requestId, { data: 'ok' });
