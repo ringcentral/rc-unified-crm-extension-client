@@ -378,6 +378,32 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }) {
     return res.data.jwtToken;
 }
 
+async function clearLocalCrmAuthState() {
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const hadJwt = !!rcUnifiedCrmExtJwt;
+    const platformInfo = await chrome.storage.local.get('platform-info');
+    const platformName = platformInfo['platform-info']?.platformName;
+    if (platformName === 'bullhorn') {
+        await chrome.storage.local.remove('crm_extension_bullhornUsername');
+        await chrome.storage.local.remove('crm_extension_bullhorn_user_urls');
+    }
+    await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
+    await chrome.storage.local.remove('serverSideLoggingToken');
+    await chrome.storage.local.remove('isAdmin');
+    await chrome.storage.local.remove('crmAuthed');
+    setAuth(false);
+    return hadJwt;
+}
+
+async function syncCrmAuthedFromStorage() {
+    const { rcUnifiedCrmExtJwt, crmAuthed } = await chrome.storage.local.get(['rcUnifiedCrmExtJwt', 'crmAuthed']);
+    const isAuthed = !!rcUnifiedCrmExtJwt;
+    if (isAuthed !== !!crmAuthed) {
+        await chrome.storage.local.set({ crmAuthed: isAuthed });
+    }
+    return isAuthed;
+}
+
 async function unAuthorize({ serverUrl, isShowNotification = true }) {
     try {
         const res = await axios.post(`${serverUrl}/unAuthorize`);
@@ -389,11 +415,7 @@ async function unAuthorize({ serverUrl, isShowNotification = true }) {
     catch (e) {
         console.log(e);
     }
-    await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
-    await chrome.storage.local.remove('serverSideLoggingToken');
-    await chrome.storage.local.remove('isAdmin');
-    await chrome.storage.local.remove('crmAuthed');
-    setAuth(false);
+    await clearLocalCrmAuthState();
 }
 
 async function checkAuth() {
@@ -446,6 +468,8 @@ exports.apiKeyLogin = apiKeyLogin;
 exports.getManagedAuthState = getManagedAuthState;
 exports.onAuthCallback = onAuthCallback;
 exports.unAuthorize = unAuthorize;
+exports.clearLocalCrmAuthState = clearLocalCrmAuthState;
+exports.syncCrmAuthedFromStorage = syncCrmAuthedFromStorage;
 exports.checkAuth = checkAuth;
 exports.setAuth = setAuth;
 exports.getLicenseStatus = getLicenseStatus;
