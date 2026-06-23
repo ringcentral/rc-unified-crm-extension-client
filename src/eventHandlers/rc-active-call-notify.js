@@ -35,11 +35,22 @@ async function onEvent({ data, popupContext }) {
   const callLogSubject = data.call.direction === 'Inbound' ?
     `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
     `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
+  const incomingCallMessagePayload = {
+    callId: data.call.telephonySessionId ?? data.call.sessionId,
+    telephonySessionId: data.call.telephonySessionId,
+    sessionId: data.call.sessionId,
+    phoneNumber: contactPhoneNumber,
+    callerName: callMatchedContact[0]?.name,
+  };
   switch (data.call.telephonyStatus) {
     case 'CallConnected':
       window.postMessage({ type: 'rc-expandable-call-note-open', sessionId: data.call.sessionId }, '*');
       switch (data.call.direction) {
         case 'Inbound':
+          chrome.runtime.sendMessage({
+            type: 'incomingCallResolved',
+            ...incomingCallMessagePayload
+          });
           chrome.runtime.sendMessage({
             type: 'openPopupWindow'
           });
@@ -79,6 +90,12 @@ async function onEvent({ data, popupContext }) {
       break;
     case 'NoCall':
       if (data.call.terminationType === 'final') {
+        if (data.call.direction === 'Inbound') {
+          chrome.runtime.sendMessage({
+            type: 'incomingCallResolved',
+            ...incomingCallMessagePayload
+          });
+        }
         window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
         const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
         if (implementedInterfaces?.cacheCallNote) {
@@ -156,7 +173,8 @@ async function onEvent({ data, popupContext }) {
       switch (data.call.direction) {
         case 'Inbound':
           chrome.runtime.sendMessage({
-            type: 'openPopupWindow'
+            type: 'incomingCallRinging',
+            ...incomingCallMessagePayload
           });
           if (userCore.getIncomingCallPop(userSettings).value === 'onFirstRing') {
             await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.call.from.phoneNumber, multiContactMatchBehavior: userCore.getCallPopMultiMatchBehavior(userSettings).value, fromCallPop: true });

@@ -8,16 +8,35 @@ let pipedriveInstallationTabId;
 let pipedriveCallbackUri;
 let cachedClickToXRequest;
 
-async function openPopupWindow() {
-  console.log('open popup');
+const INCOMING_CALL_NOTIFICATION_PREFIX = 'incoming-call-';
+const RECENT_INCOMING_CALL_NOTIFICATIONS_KEY = 'recentIncomingCallNotificationIds';
+const INCOMING_CALL_NOTIFICATION_TTL = 5 * 60 * 1000;
+
+async function focusExistingPopupWindow() {
   const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
   if (popupWindowId) {
     try {
-      await chrome.windows.update(popupWindowId, { focused: true });
-      return true;
+      const popupWindow = await chrome.windows.get(popupWindowId);
+      const wasMinimized = popupWindow.state === 'minimized';
+      const wasFocused = popupWindow.focused;
+      const updateInfo = { focused: true };
+      if (wasMinimized) {
+        updateInfo.state = 'normal';
+      }
+      await chrome.windows.update(popupWindowId, updateInfo);
+      return { exists: true, popupWindowId, wasMinimized, wasFocused };
     } catch (e) {
       // ignore
     }
+  }
+  return { exists: false, popupWindowId: null, wasMinimized: false, wasFocused: false };
+}
+
+async function openPopupWindow() {
+  console.log('open popup');
+  const popupFocusResult = await focusExistingPopupWindow();
+  if (popupFocusResult.exists) {
+    return true;
   }
   const { extensionWindowStatus } = await chrome.storage.local.get({ extensionWindowStatus: null });
   const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
@@ -65,8 +84,135 @@ async function openPopupWindow() {
   return false;
 }
 
+function getIncomingCallNotificationId(callId) {
+  return `${INCOMING_CALL_NOTIFICATION_PREFIX}${String(callId ?? Date.now()).slice(0, 450)}`;
+}
+
+function createNotification(notificationId, options) {
+  return new Promise((resolve) => {
+    chrome.notifications.create(notificationId, options, resolve);
+  });
+}
+
+function clearNotification(notificationId) {
+  return new Promise((resolve) => {
+    chrome.notifications.clear(notificationId, resolve);
+  });
+}
+
+function getAllNotifications() {
+  return new Promise((resolve) => {
+    chrome.notifications.getAll(resolve);
+  });
+}
+
+async function shouldSkipIncomingCallNotification(callId) {
+  const now = Date.now();
+  const storage = await chrome.storage.local.get({ [RECENT_INCOMING_CALL_NOTIFICATIONS_KEY]: {} });
+  const recentNotifications = storage[RECENT_INCOMING_CALL_NOTIFICATIONS_KEY] ?? {};
+  const activeNotifications = Object.keys(recentNotifications).reduce((result, id) => {
+    if (recentNotifications[id] > now) {
+      result[id] = recentNotifications[id];
+    }
+    return result;
+  }, {});
+  const shouldSkip = !!activeNotifications[callId];
+  activeNotifications[callId] = now + INCOMING_CALL_NOTIFICATION_TTL;
+  await chrome.storage.local.set({ [RECENT_INCOMING_CALL_NOTIFICATIONS_KEY]: activeNotifications });
+  return shouldSkip;
+}
+
+async function clearIncomingCallNotifications(notificationId) {
+  if (notificationId) {
+    await clearNotification(notificationId);
+    return;
+  }
+  const notifications = await getAllNotifications();
+  await Promise.all(Object.keys(notifications)
+    .filter((id) => id.startsWith(INCOMING_CALL_NOTIFICATION_PREFIX))
+    .map((id) => clearNotification(id)));
+}
+
+async function showIncomingCallNotification({ callId, callerName, phoneNumber }) {
+  if (await shouldSkipIncomingCallNotification(callId)) {
+    return;
+  }
+  const caller = callerName || phoneNumber || 'Unknown caller';
+  await createNotification(getIncomingCallNotificationId(callId), {
+    type: 'basic',
+    iconUrl: chrome.runtime.getURL('images/logo128.png'),
+    title: 'Incoming call',
+    message: `Call from ${caller}`,
+    isClickable: true,
+    priority: 2,
+    requireInteraction: true,
+  });
+}
+
+async function incomingCallRingingHandler(request) {
+  const callId = request.callId ?? request.telephonySessionId ?? request.sessionId ?? request.phoneNumber ?? Date.now();
+  const popupFocusResult = await focusExistingPopupWindow();
+  if (!popupFocusResult.exists) {
+    await openPopupWindow();
+    return;
+  }
+  if (popupFocusResult.wasMinimized || !popupFocusResult.wasFocused) {
+    await showIncomingCallNotification({
+      callId,
+      callerName: request.callerName,
+      phoneNumber: request.phoneNumber,
+    });
+    try {
+      await chrome.windows.update(popupFocusResult.popupWindowId, { drawAttention: true });
+    } catch (e) {
+      // ignore
+    }
+  }
+}
+
+async function incomingCallResolvedHandler(request) {
+  const callId = request.callId ?? request.telephonySessionId ?? request.sessionId;
+  if (!callId) {
+    await clearIncomingCallNotifications();
+    return;
+  }
+  await clearIncomingCallNotifications(getIncomingCallNotificationId(callId));
+}
+
 chrome.action.onClicked.addListener(async function (tab) {
   openPopupWindow();
+});
+
+chrome.windows.onFocusChanged.addListener(async (windowId) => {
+  const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
+  if (popupWindowId === windowId) {
+    try {
+      await chrome.windows.update(popupWindowId, { drawAttention: false });
+    } catch (e) {
+      // ignore
+    }
+  }
+});
+
+function openPopupWindowFromNotification(notificationId) {
+  if (!notificationId.startsWith(INCOMING_CALL_NOTIFICATION_PREFIX)) {
+    return;
+  }
+  openPopupWindow()
+    .catch((e) => {
+      console.error('Failed to open popup from notification', e);
+    })
+    .finally(() => {
+      clearIncomingCallNotifications(notificationId).catch((e) => {
+        console.error('Failed to clear incoming call notification', e);
+      });
+    });
+}
+
+chrome.notifications.onClicked.addListener(openPopupWindowFromNotification);
+
+chrome.notifications.onButtonClicked.addListener((notificationId) => {
+  openPopupWindowFromNotification(notificationId);
 });
 
 chrome.windows.onRemoved.addListener(async (windowId) => {
@@ -205,6 +351,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         })
       }
       break;
+    case "incomingCallRinging":
+      incomingCallRingingHandler(request)
+        .then(() => sendResponse({ result: 'ok' }))
+        .catch((e) => {
+          console.error('Failed to handle incoming call ringing', e);
+          sendResponse({ result: 'error', message: e.message });
+        });
+      return true;
+    case "incomingCallResolved":
+      incomingCallResolvedHandler(request)
+        .then(() => sendResponse({ result: 'ok' }))
+        .catch((e) => {
+          console.error('Failed to handle incoming call resolved', e);
+          sendResponse({ result: 'error', message: e.message });
+        });
+      return true;
     // Unique: Pipedrive
     case "openPopupWindowOnPipedriveDirectPage":
       pipedriveCallbackHandler(request, sender);
