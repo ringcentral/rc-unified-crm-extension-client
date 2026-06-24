@@ -67,6 +67,7 @@
       "communityForums": "Communityforums",
       "serverStatus": "Serverstatus: {status}",
       "versionLabel": "Versie: v{version}",
+      "rcAccountIdLabel": "RingCentral-account-ID: {accountId}",
       "sendErrorReport": "Foutrapport verzenden",
       "clearLogConflicts": "Logconflicten wissen",
       "factoryResetWarning": "Fabrieksinstellingen herstellen zal zowel CRM- als RingCentral-accounts van deze extensie loskoppelen en u uitloggen.",

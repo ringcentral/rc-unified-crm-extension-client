@@ -67,6 +67,7 @@
       "communityForums": "社区论坛",
       "serverStatus": "服务器状态：{status}",
       "versionLabel": "版本：v{version}",
+      "rcAccountIdLabel": "RingCentral 账户 ID：{accountId}",
       "sendErrorReport": "发送错误报告",
       "clearLogConflicts": "清除日志冲突",
       "factoryResetWarning": "恢复出厂设置将断开此扩展程序与 CRM 和 RingCentral 账户的连接并退出登录。",

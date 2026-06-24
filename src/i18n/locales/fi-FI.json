@@ -67,6 +67,7 @@
       "communityForums": "Yhteisöfoorumit",
       "serverStatus": "Palvelimen tila: {status}",
       "versionLabel": "Versio: v{version}",
+      "rcAccountIdLabel": "RingCentral-tilin tunnus: {accountId}",
       "sendErrorReport": "Lähetä virheraportti",
       "clearLogConflicts": "Tyhjennä lokikonfliktit",
       "factoryResetWarning": "Tehdasasetusten palautus katkaisee yhteyden sekä CRM- että RingCentral-tileihin ja kirjaa sinut ulos.",

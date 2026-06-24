@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 
-function getSupportPageRender({ manifest, platformName, isOnline }) {
+function getSupportPageRender({ manifest, platformName, isOnline, rcAccountId }) {
     const supportPage = {
         id: 'supportPage',
         title: t('pages.support.title'),
@@ -31,6 +31,10 @@ function getSupportPageRender({ manifest, platformName, isOnline }) {
                 isServiceOnline: {
                     type: "string",
                     description: t('pages.support.serverStatus', { status: isOnline ? t('common.status.online') : t('common.status.offline') })
+                },
+                rcAccountId: {
+                    type: "string",
+                    description: t('pages.support.rcAccountIdLabel', { accountId: rcAccountId || 'N/A' })
                 },
                 version: {
                     type: "string",
@@ -88,6 +92,10 @@ function getSupportPageRender({ manifest, platformName, isOnline }) {
                 "ui:align": "center"
             },
             isServiceOnline: {
+                "ui:field": "typography",
+                "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+            },
+            rcAccountId: {
                 "ui:field": "typography",
                 "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
             },

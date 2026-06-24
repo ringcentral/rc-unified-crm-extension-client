@@ -67,6 +67,7 @@
       "communityForums": "Forums communautaires",
       "serverStatus": "État du serveur : {status}",
       "versionLabel": "Version : v{version}",
+      "rcAccountIdLabel": "ID du compte RingCentral : {accountId}",
       "sendErrorReport": "Envoyer un rapport d'erreur",
       "clearLogConflicts": "Effacer les conflits de journaux",
       "factoryResetWarning": "La réinitialisation d'usine déconnectera les comptes CRM et RingCentral de cette extension et vous déconnectera.",

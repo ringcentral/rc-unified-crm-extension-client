@@ -4,6 +4,7 @@ import axios from 'axios';
 import { getManifest } from '../service/manifestService';
 import { getPlatformInfo } from '../service/platformService';
 import { trackOpenFeedback } from '../lib/analytics';
+import { getRcInfo } from '../lib/util';
 
 async function onMessage({ request, sendResponse }) {
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -31,7 +32,15 @@ async function onMessage({ request, sendResponse }) {
     catch (e) {
       isOnline = false;
     }
-    const supportPageRender = supportPage.getSupportPageRender({ manifest, platformName, isOnline });
+    let rcAccountId;
+    try {
+      const rcInfo = await getRcInfo();
+      rcAccountId = rcInfo?.value?.cachedData?.extensionInfo?.account?.id;
+    }
+    catch (e) {
+      rcAccountId = null;
+    }
+    const supportPageRender = supportPage.getSupportPageRender({ manifest, platformName, isOnline, rcAccountId });
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
       type: 'rc-adapter-register-customized-page',
       page: supportPageRender

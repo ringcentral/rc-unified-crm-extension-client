@@ -67,6 +67,7 @@
       "communityForums": "Community-Foren",
       "serverStatus": "Serverstatus: {status}",
       "versionLabel": "Version: v{version}",
+      "rcAccountIdLabel": "RingCentral-Konto-ID: {accountId}",
       "sendErrorReport": "Fehlerbericht senden",
       "clearLogConflicts": "Protokollkonflikte löschen",
       "factoryResetWarning": "Das Zurücksetzen auf Werkseinstellungen trennt sowohl das CRM- als auch das RingCentral-Konto von dieser Erweiterung und meldet Sie ab.",

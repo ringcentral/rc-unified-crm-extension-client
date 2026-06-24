@@ -67,6 +67,7 @@
       "communityForums": "Community forums",
       "serverStatus": "Server status: {status}",
       "versionLabel": "Version: v{version}",
+      "rcAccountIdLabel": "RingCentral account ID: {accountId}",
       "sendErrorReport": "Send error report",
       "clearLogConflicts": "Clear log conflicts",
       "factoryResetWarning": "Factory reset will disconnect both CRM and RingCentral accounts from this extension and log you out.",

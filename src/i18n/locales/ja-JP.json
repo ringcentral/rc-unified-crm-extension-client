@@ -67,6 +67,7 @@
       "communityForums": "コミュニティフォーラム",
       "serverStatus": "サーバーステータス：{status}",
       "versionLabel": "バージョン：v{version}",
+      "rcAccountIdLabel": "RingCentral アカウント ID：{accountId}",
       "sendErrorReport": "エラーレポートを送信",
       "clearLogConflicts": "ログの競合をクリア",
       "factoryResetWarning": "工場出荷時リセットは、この拡張機能からCRMとRingCentralの両方のアカウントを切断し、ログアウトします。",

@@ -67,6 +67,7 @@
       "communityForums": "Fóruns da comunidade",
       "serverStatus": "Status do servidor: {status}",
       "versionLabel": "Versão: v{version}",
+      "rcAccountIdLabel": "ID da conta RingCentral: {accountId}",
       "sendErrorReport": "Enviar relatório de erro",
       "clearLogConflicts": "Limpar conflitos de log",
       "factoryResetWarning": "A redefinição de fábrica desconectará as contas CRM e RingCentral desta extensão e fará logout.",
