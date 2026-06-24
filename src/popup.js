@@ -3065,7 +3065,15 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       catch (e) {
         isOnline = false;
       }
-      const supportPageRender = supportPage.getSupportPageRender({ manifest, isOnline });
+      let rcAccountId;
+      try {
+        const rcInfo = await getRcInfo();
+        rcAccountId = rcInfo?.value?.cachedData?.extensionInfo?.account?.id;
+      }
+      catch (e) {
+        rcAccountId = null;
+      }
+      const supportPageRender = supportPage.getSupportPageRender({ manifest, isOnline, rcAccountId });
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-customized-page',
         page: supportPageRender

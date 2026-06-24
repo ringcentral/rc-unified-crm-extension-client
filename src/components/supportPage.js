@@ -1,4 +1,4 @@
-function getSupportPageRender({ manifest, isOnline }) {
+function getSupportPageRender({ manifest, isOnline, rcAccountId }) {
     const supportPage = {
         id: 'supportPage',
         title: 'Support',
@@ -29,6 +29,10 @@ function getSupportPageRender({ manifest, isOnline }) {
                 isServiceOnline: {
                     type: "string",
                     description: `Server status: ${isOnline ? 'Online' : 'Offline'}`
+                },
+                rcAccountId: {
+                    type: "string",
+                    description: `RingCentral account ID: ${rcAccountId || 'N/A'}`
                 },
                 version: {
                     type: "string",
@@ -93,6 +97,10 @@ function getSupportPageRender({ manifest, isOnline }) {
                 "ui:fullWidth": false
             },
             isServiceOnline: {
+                "ui:field": "typography",
+                "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+            },
+            rcAccountId: {
                 "ui:field": "typography",
                 "ui:variant": "body2", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
             },
