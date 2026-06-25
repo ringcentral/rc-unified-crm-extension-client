@@ -66,8 +66,8 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
     }
     let page = {};
     let allAdditionalFields = logType === 'Call' ? manifest.platforms[platformName].page?.callLog?.additionalFields : manifest.platforms[platformName].page?.messageLog?.additionalFields;
-    if (defaultContact.isNewContact) {
-        allAdditionalFields = allAdditionalFields.concat(manifest.platforms[platformName].page?.newContact?.additionalFields);
+    if (defaultContact.isNewContact && !!manifest.platforms[platformName].page?.newContact?.additionalFields) {
+        allAdditionalFields = allAdditionalFields.concat(manifest.platforms[platformName].page.newContact.additionalFields);
     }
     if (allAdditionalFields) {
         allAdditionalFields = allAdditionalFields.filter(f => !f.showIfContactType || f.showIfContactType.length === 0 || f.showIfContactType.includes(defaultContact.type ?? defaultContact.defaultContactType));
