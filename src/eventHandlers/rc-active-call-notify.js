@@ -31,7 +31,8 @@ async function onEvent({ data, popupContext }) {
   const contactPhoneNumber = data.call.direction === 'Inbound' ?
     (data.call.from.phoneNumber ?? data.call.from.extensionNumber) :
     (data.call.to.phoneNumber ?? data.call.to.extensionNumber);
-  const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
+  const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
+  const callMatchedContact = contactInfo ?? [];
   const callLogSubject = data.call.direction === 'Inbound' ?
     `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
     `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;

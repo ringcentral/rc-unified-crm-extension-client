@@ -66,7 +66,8 @@ async function checkC2DCollision() {
     const { rcForGoogleCollisionChecked } = await chrome.storage.local.get({ rcForGoogleCollisionChecked: false });
     const collidingC2DResponse = await fetch("chrome-extension://fddhonoimfhgiopglkiokmofecgdiedb/redirect.html");
     if (!rcForGoogleCollisionChecked && collidingC2DResponse.status === 200) {
-      chrome.notifications.create({
+      const c2dCollisionNotificationId = 'rc-c2d-collision';
+      chrome.notifications.create(c2dCollisionNotificationId, {
         type: 'basic',
         iconUrl: '/images/logo32.png',
         title: t('misc.clickToDialCollisionTitle'),
@@ -80,6 +81,9 @@ async function checkC2DCollision() {
       });
       chrome.notifications.onButtonClicked.addListener(
         (notificationId, buttonIndex) => {
+          if (notificationId !== c2dCollisionNotificationId) {
+            return;
+          }
           window.open('https://youtu.be/tbCOM27GUbc');
         }
       )

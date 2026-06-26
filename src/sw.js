@@ -143,6 +143,10 @@ async function showIncomingCallNotification({ callId, callerName, phoneNumber })
     iconUrl: chrome.runtime.getURL('images/logo128.png'),
     title: 'Incoming call',
     message: `Call from ${caller}`,
+    buttons: [
+      { title: 'Answer' },
+      { title: 'Ignore' },
+    ],
     isClickable: true,
     priority: 2,
     requireInteraction: true,
@@ -211,8 +215,34 @@ function openPopupWindowFromNotification(notificationId) {
 
 chrome.notifications.onClicked.addListener(openPopupWindowFromNotification);
 
-chrome.notifications.onButtonClicked.addListener((notificationId) => {
-  openPopupWindowFromNotification(notificationId);
+function answerIncomingCallFromNotification(notificationId) {
+  chrome.runtime.sendMessage({
+    type: 'controlCall',
+    callAction: 'answer',
+  })
+    .catch((e) => {
+      console.error('Failed to answer incoming call from notification', e);
+    })
+    .finally(() => {
+      clearIncomingCallNotifications(notificationId).catch((e) => {
+        console.error('Failed to clear incoming call notification', e);
+      });
+    });
+}
+
+chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
+  if (!notificationId.startsWith(INCOMING_CALL_NOTIFICATION_PREFIX)) {
+    return;
+  }
+  if (buttonIndex === 0) {
+    answerIncomingCallFromNotification(notificationId);
+    return;
+  }
+  if (buttonIndex === 1) {
+    clearIncomingCallNotifications(notificationId).catch((e) => {
+      console.error('Failed to clear incoming call notification', e);
+    });
+  }
 });
 
 chrome.windows.onRemoved.addListener(async (windowId) => {

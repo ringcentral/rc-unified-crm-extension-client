@@ -41,6 +41,7 @@ import c2scheduleHandler from './messageHandlers/c2schedule';
 import navigateHandler from './messageHandlers/navigate';
 import insightlyAuthHandler from './messageHandlers/insightlyAuth';
 import ringsenseRefTrackHandler from './messageHandlers/ringsenseRefTrack';
+import controlCallHandler from './messageHandlers/controlCall';
 
 const popupContext = {
   transferOnHold: ''
@@ -400,6 +401,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         break;
       case 'ringsenseRefTrack':
         await ringsenseRefTrackHandler.onMessage({ request, sendResponse });
+        break;
+      case 'controlCall':
+        await controlCallHandler.onMessage({ request, sendResponse });
         break;
       default:
         break;
