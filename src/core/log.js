@@ -108,6 +108,11 @@ async function addLog({
                     }
                     await chrome.storage.local.set({ [`rc-crm-conversation-log-${logInfo.conversationLogId}`]: { logged: true } });
                 }
+                else {
+                    if (isShowNotification) {
+                        showNotification({ level: addLogRes.data.returnMessage?.messageType ?? 'warning', message: addLogRes.data.returnMessage?.message ?? 'Failed to save message log', ttl: addLogRes.data.returnMessage?.ttl ?? 3000, details: addLogRes.data.returnMessage?.details });
+                    }
+                }
                 break;
         }
     }
