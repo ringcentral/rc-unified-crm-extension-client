@@ -6,6 +6,7 @@ import { getLogConflictInfo, logPageFormDataDefaulting, cacheLogPageData } from 
 import moment from 'moment';
 import logPage from '../../../components/logPage';
 import groupLogPage from '../../../components/groupLogPage';
+import { CONSTANTS } from '../../../misc/constant';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
   const { userSettings } = await chrome.storage.local.get('userSettings');
@@ -36,8 +37,83 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
   if (data.body.triggerType === 'auto' && !messageAutoPopup) {
     // Case: group SMS
     if (data.body.conversation.correspondents.length > 1) {
-      showNotification({ level: 'warning', message: 'Group SMS is not supported for auto log. Please log manually.', ttl: 3000 });
-      // response to widget
+      // Group auto-log is only supported for SMS conversations
+      if (data.body.conversation.type !== 'SMS') {
+        showNotification({ level: 'warning', message: 'Group messages of this type are not supported for auto log. Please log manually.', ttl: 3000 });
+        responseMessage(data.requestId, { data: 'ok' });
+        return;
+      }
+      if (isAutoLogSMS) {
+        // Resolve every correspondent first so we can decide whether the whole group can be
+        // auto-logged. If any member is ambiguous (multiple matches) or has no match, we bail
+        // out and ask the user to log manually.
+        const correspondentLogs = [];
+        let hasMultipleContactsConflict = false;
+        let hasUnknownContactConflict = false;
+        let groupRequireManualDisposition = false;
+        for (const correspondent of data.body.conversation.correspondents) {
+          const contactInfo = (await contactCore.getContact({
+            serverUrl: manifest.serverUrl,
+            phoneNumber: correspondent.phoneNumber,
+            platformName
+          })).contactInfo ?? [];
+          const conflictInfo = await getLogConflictInfo({
+            platform,
+            isAutoLog: isAutoLogSMS,
+            contactInfo,
+            logType: 'messageLog',
+            direction: '',
+            isVoicemail: false,
+            isFax: false
+          });
+          if (conflictInfo.conflictType === CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE) {
+            hasMultipleContactsConflict = true;
+          }
+          else if (conflictInfo.conflictType === CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE) {
+            hasUnknownContactConflict = true;
+          }
+          if (conflictInfo.requireManualDisposition) {
+            groupRequireManualDisposition = true;
+          }
+          const existingContacts = contactInfo.filter(c => !c.isNewContact);
+          const defaultingContact = existingContacts.find(c => c.toNumberEntity) ?? existingContacts[0];
+          correspondentLogs.push({
+            correspondent,
+            defaultingContact,
+            additionalSubmission: conflictInfo.autoSelectAdditionalSubmission
+          });
+        }
+        // Gate: a group member matched multiple contacts -> cannot auto-pick, log manually
+        if (hasMultipleContactsConflict) {
+          showNotification({ level: 'warning', message: 'Multiple contacts matched for a group member. Message not logged - please log manually.', ttl: 5000 });
+          responseMessage(data.requestId, { data: 'ok' });
+          return;
+        }
+        // Gate: a group member has no matching contact -> log manually
+        if (hasUnknownContactConflict) {
+          showNotification({ level: 'warning', message: 'No matching contact found for a group member. Message not logged - please log manually.', ttl: 5000 });
+          responseMessage(data.requestId, { data: 'ok' });
+          return;
+        }
+        // No conflicts: auto-log one entry per correspondent
+        for (const correspondentLog of correspondentLogs) {
+          await logCore.addLog({
+            serverUrl: manifest.serverUrl,
+            logType: 'Message',
+            logInfo: data.body.conversation,
+            isMain: true,
+            note: '',
+            additionalSubmission: correspondentLog.additionalSubmission,
+            contactId: correspondentLog.defaultingContact?.id,
+            contactType: correspondentLog.defaultingContact?.type,
+            contactName: correspondentLog.defaultingContact?.name,
+            contactPhoneNumber: correspondentLog.correspondent.phoneNumber
+          });
+        }
+        if (groupRequireManualDisposition) {
+          showNotification({ level: 'warning', message: 'Manual disposition might be needed. Please edit logged message to disposition.', ttl: 5000 });
+        }
+      }
       responseMessage(data.requestId, { data: 'ok' });
       return;
     }
