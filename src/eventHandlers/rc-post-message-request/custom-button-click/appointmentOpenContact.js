@@ -3,6 +3,7 @@ import axios from 'axios';
 import { normalizeAttendees } from '../../../lib/appointmentUtils';
 import { listAppointments } from '../../../service/appointmentService';
 import { extractAppointmentsListContext, normalizeAppointmentId } from '../../../lib/appointmentUtils';
+import { renderUrlTemplate } from '../../../lib/urlTemplate';
 
 async function onEvent({ data, manifest, platformName, listButtonItemId }) {
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
@@ -59,14 +60,20 @@ async function onEvent({ data, manifest, platformName, listButtonItemId }) {
       }
       const hostname = platformInfo?.['platform-info']?.hostname ?? '';
       const targetUrlTemplate = manifest?.platforms?.[platformName]?.contactPageUrl ?? '';
+      const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
 
       if (targetUrlTemplate) {
         for (const a of attendees) {
           const resolvedType = a.type || contactType;
-          const contactPageUrl = String(targetUrlTemplate)
-            .replace('{hostname}', hostname)
-            .replaceAll('{contactId}', String(a.id))
-            .replaceAll('{contactType}', String(resolvedType));
+          const contactPageUrl = renderUrlTemplate({
+            template: String(targetUrlTemplate),
+            values: {
+              hostname,
+              contactId: String(a.id),
+              contactType: String(resolvedType),
+            },
+            userSettings,
+          }).url;
           window.open(contactPageUrl);
         }
         return;

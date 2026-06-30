@@ -2,6 +2,7 @@ import axios from 'axios';
 import { isObjectEmpty, showNotification, getRcAccessToken, getRcInfo } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 import { t } from '../i18n';
+import { renderUrlTemplate } from '../lib/urlTemplate';
 
 // Input {id} = sessionId from RC
 async function addLog({
@@ -137,12 +138,17 @@ async function getLog({ serverUrl, logType, sessionIds, requireDetails }) {
     }
 }
 
-function openLog({ manifest, platformName, hostname, logId, contactType, contactId }) {
-    const logPageUrl = manifest.platforms[platformName].logPageUrl
-        .replace('{hostname}', hostname)
-        .replaceAll('{logId}', logId)
-        .replaceAll('{contactId}', contactId)
-        .replaceAll('{contactType}', contactType);
+function openLog({ manifest, platformName, hostname, logId, contactType, contactId, userSettings }) {
+    const logPageUrl = renderUrlTemplate({
+        template: manifest.platforms[platformName].logPageUrl,
+        values: {
+            hostname,
+            logId,
+            contactId,
+            contactType,
+        },
+        userSettings,
+    }).url;
     window.open(logPageUrl);
 }
 

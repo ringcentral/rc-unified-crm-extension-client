@@ -877,6 +877,9 @@ async function getServiceManifest() {
     })
     if (customSettings) {
         for (const cs of customSettings) {
+            if (cs.visibleToUsers === false) {
+                continue;
+            }
             // TEMP: skip custom settings for call log details
             if (cs.items.some(c => c.id === 'addCallLogNote' || c.id === 'addCallSessionId' || c.id === 'addCallLogSubject' || c.id === 'addCallLogContactNumber' || c.id === 'addCallLogDateTime' || c.id === 'addCallLogDuration' || c.id === 'addCallLogResult' || c.id === 'addCallLogRecording' || c.id === 'addCallLogAiNote' || c.id === 'addCallLogTranscript')) {
                 continue;

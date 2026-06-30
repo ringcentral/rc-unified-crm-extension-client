@@ -1,5 +1,6 @@
 import { showNotification } from '../../../lib/util';
 import axios from 'axios';
+import { renderUrlTemplate } from '../../../lib/urlTemplate';
 
 async function onEvent({ data, manifest, platformName, listButtonItemId }) {
   const btn = data.body.button || {};
@@ -15,9 +16,9 @@ async function onEvent({ data, manifest, platformName, listButtonItemId }) {
   const template = apptCfg?.appointmentPageUrl;
   if (canOpen && template) {
     const tpl = String(template);
+    const values = {};
 
-    let resolvedTpl = tpl;
-    if (resolvedTpl.includes('{hostname}')) {
+    if (tpl.includes('{hostname}')) {
       const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
       let platformInfo = await chrome.storage.local.get('platform-info');
       if (platformInfo?.['platform-info']?.hostname === 'temp' && rcUnifiedCrmExtJwt) {
@@ -25,25 +26,23 @@ async function onEvent({ data, manifest, platformName, listButtonItemId }) {
         platformInfo['platform-info'].hostname = hostnameRes.data;
         await chrome.storage.local.set(platformInfo);
       }
-      const hostname = platformInfo?.['platform-info']?.hostname ?? '';
-      resolvedTpl = resolvedTpl.replace('{hostname}', hostname);
+      values.hostname = platformInfo?.['platform-info']?.hostname ?? '';
     }
 
     // {atsUrl} resolves to the Bullhorn user's cluster-specific ATS base URL,
     // Use this instead of hardcoding a cluster domain (e.g. cls91) in the manifest.
-    if (resolvedTpl.includes('{atsUrl}')) {
+    if (tpl.includes('{atsUrl}')) {
       const { crm_extension_bullhorn_user_urls } = await chrome.storage.local.get({ crm_extension_bullhorn_user_urls: null });
       const atsUrl = crm_extension_bullhorn_user_urls?.atsUrl ?? '';
-      let sanitizedAtsUrl = atsUrl.startsWith('https://') ? atsUrl.slice('https://'.length) : atsUrl;
-      resolvedTpl = resolvedTpl.replace('{atsUrl}', sanitizedAtsUrl);
+      values.atsUrl = atsUrl.startsWith('https://') ? atsUrl.slice('https://'.length) : atsUrl;
     }
 
-    const needsId = resolvedTpl.includes('{thirdPartyAppointmentId}');
-    const targetUrl = (needsId && thirdPartyAppointmentId)
-      ? resolvedTpl.replaceAll('{thirdPartyAppointmentId}', encodeURIComponent(String(thirdPartyAppointmentId)))
-      : resolvedTpl;
+    if (thirdPartyAppointmentId) {
+      values.thirdPartyAppointmentId = encodeURIComponent(String(thirdPartyAppointmentId));
+    }
+    const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
 
-    window.open(targetUrl, '_blank');
+    window.open(renderUrlTemplate({ template: tpl, values, userSettings }).url, '_blank');
     return;
   }
 

@@ -4,6 +4,7 @@ import { showNotification } from '../lib/util';
 import multiContactPopPromptPage from '../components/multiContactPopPromptPage';
 import { t } from '../i18n';
 import { getManifest } from '../service/manifestService';
+import { isSafeHttpUrl, renderUrlTemplate } from '../lib/urlTemplate';
 
 let lastOpenedContactPageUrl = null;
 
@@ -169,15 +170,23 @@ async function createContact({ serverUrl, phoneNumber, newContactName, newContac
     }
 }
 
-function isSafeHttpUrl(url) {
-    return (
-        typeof url === 'string' &&
-        (url.startsWith('https://') || url.startsWith('http://')) &&
-        !url.toLowerCase().includes('javascript')
-    );
+function renderContactPageUrl({ manifest, platformName, hostname, contactId, contactType, fromCallPop, userSettings }) {
+    let targetUrlTemplate = manifest.platforms[platformName].contactPageUrl;
+    if (fromCallPop && !!manifest.platforms[platformName].callPopUrl) {
+        targetUrlTemplate = manifest.platforms[platformName].callPopUrl;
+    }
+    return renderUrlTemplate({
+        template: targetUrlTemplate,
+        values: {
+            hostname,
+            contactId,
+            contactType,
+        },
+        userSettings,
+    }).url;
 }
 
-function openFallbackContactPage({ manifest, platformName, hostname, fromCallPop }) {
+function openFallbackContactPage({ manifest, platformName, hostname, fromCallPop, userSettings }) {
     const platform = manifest?.platforms?.[platformName];
     if (
         !fromCallPop ||
@@ -187,8 +196,13 @@ function openFallbackContactPage({ manifest, platformName, hostname, fromCallPop
     ) {
         return false;
     }
-    const fallbackContactPageUrl = platform.fallbackContactPageUrl
-        .replaceAll('{hostname}', hostname);
+    const fallbackContactPageUrl = renderUrlTemplate({
+        template: platform.fallbackContactPageUrl,
+        values: {
+            hostname,
+        },
+        userSettings,
+    }).url;
     if (!isSafeHttpUrl(fallbackContactPageUrl)) {
         return false;
     }
@@ -199,6 +213,7 @@ function openFallbackContactPage({ manifest, platformName, hostname, fromCallPop
 
 async function openContactPage({ manifest, platformName, phoneNumber, contactId, contactType, multiContactMatchBehavior, fromCallPop = false }) {
     let platformInfo = await chrome.storage.local.get('platform-info');
+    const { userSettings } = await chrome.storage.local.get({ userSettings: {} });
     if (platformInfo['platform-info'].hostname === 'temp') {
         const hostnameRes = await axios.get(`${manifest.serverUrl}/hostname`);
         platformInfo['platform-info'].hostname = hostnameRes.data;
@@ -231,14 +246,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
             return;
         }
         else {
-            let targetUrlTemplate = manifest.platforms[platformName].contactPageUrl;
-            if (fromCallPop && !!manifest.platforms[platformName].callPopUrl) {
-                targetUrlTemplate = manifest.platforms[platformName].callPopUrl;
-            }
-            const contactPageUrl = targetUrlTemplate
-                .replace('{hostname}', hostname)
-                .replaceAll('{contactId}', contactIdInUse)
-                .replaceAll('{contactType}', contactTypeInUse);
+            const contactPageUrl = renderContactPageUrl({ manifest, platformName, hostname, contactId: contactIdInUse, contactType: contactTypeInUse, fromCallPop, userSettings });
             if (lastOpenedContactPageUrl === contactPageUrl) {
                 return;
             }
@@ -255,12 +263,12 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
     else {
         const { matched: contactMatched, contactInfo } = await getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName });
         if (!contactMatched) {
-            openFallbackContactPage({ manifest, platformName, hostname, fromCallPop });
+            openFallbackContactPage({ manifest, platformName, hostname, fromCallPop, userSettings });
             return;
         }
         const existingContacts = (contactInfo || []).filter(c => !c.isNewContact);
         if (existingContacts.length === 0) {
-            openFallbackContactPage({ manifest, platformName, hostname, fromCallPop });
+            openFallbackContactPage({ manifest, platformName, hostname, fromCallPop, userSettings });
             return;
         }
         // case: multi contacts
@@ -289,10 +297,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
                     else {
                         for (const c of existingContacts) {
                             const hostname = platformInfo['platform-info'].hostname;
-                            const contactPageUrl = manifest.platforms[platformName].contactPageUrl
-                                .replace('{hostname}', hostname)
-                                .replaceAll('{contactId}', c.id)
-                                .replaceAll('{contactType}', c.type);
+                            const contactPageUrl = renderContactPageUrl({ manifest, platformName, hostname, contactId: c.id, contactType: c.type, fromCallPop: false, userSettings });
                             window.open(contactPageUrl);
                         }
                     }
@@ -331,10 +336,7 @@ async function openContactPage({ manifest, platformName, phoneNumber, contactId,
             else {
                 for (const c of existingContacts) {
                     const hostname = platformInfo['platform-info'].hostname;
-                    const contactPageUrl = manifest.platforms[platformName].contactPageUrl
-                        .replace('{hostname}', hostname)
-                        .replaceAll('{contactId}', c.id)
-                        .replaceAll('{contactType}', c.type);
+                    const contactPageUrl = renderContactPageUrl({ manifest, platformName, hostname, contactId: c.id, contactType: c.type, fromCallPop: false, userSettings });
                     if (lastOpenedContactPageUrl === contactPageUrl) {
                         return;
                     }
