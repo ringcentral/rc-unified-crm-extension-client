@@ -1,14 +1,18 @@
 import axios from 'axios';
 import { downloadTextFile } from './util';
 
-let log = {};
-
-async function startRecordingLogs() {
-    log = {
+function createEmptyLog() {
+    return {
         summary: [],
         basicInfo: {},
         details: []
     };
+}
+
+let log = createEmptyLog();
+
+async function startRecordingLogs() {
+    log = createEmptyLog();
     await chrome.storage.local.set({ errorLogRecordingStatus: 'recording' });
     axios.defaults.headers.common['is-debug'] = true;
     document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
@@ -93,7 +97,7 @@ function getLog() {
 }
 
 function clearLog() {
-    log.length = 0;
+    log = createEmptyLog();
 }
 
 exports.startRecordingLogs = startRecordingLogs;

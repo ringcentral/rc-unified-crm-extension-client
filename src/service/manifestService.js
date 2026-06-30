@@ -6,6 +6,17 @@ import { getRcInfo } from '../lib/util';
 let sessionManifest = null;
 let platformList = null;
 
+async function getPublicCatalogList({ type }) {
+    const result = [];
+    let nextPageToken = null;
+    do {
+        const pageTokenQuery = nextPageToken ? `&pageToken=${encodeURIComponent(nextPageToken)}` : '';
+        const response = await axios.get(`${baseManifest.platformPublicListUrl}?type=${type}${pageTokenQuery}`);
+        result.push(...(response.data?.connectors ?? []));
+        nextPageToken = response.data?.nextPageToken;
+    } while (nextPageToken);
+    return result;
+}
 async function getPluginDetails({ pluginId, selectedPlugin }) {
     let pluginManifestResponse;
     switch (selectedPlugin.access) {
@@ -28,8 +39,8 @@ async function getPlatformList() {
         return platformList;
     }
     const result = [];
-    const platformPublicListResponse = await axios.get(`${baseManifest.platformPublicListUrl}?type=connector`);
-    for (const platform of platformPublicListResponse.data.connectors) {
+    const publicPlatforms = await getPublicCatalogList({ type: 'connector' });
+    for (const platform of publicPlatforms) {
         platform.access = 'public';
         result.push(platform);
     }
@@ -50,8 +61,8 @@ async function getPlatformList() {
 
 async function getPluginList() {
     const result = [];
-    const pluginPublicListResponse = await axios.get(`${baseManifest.platformPublicListUrl}?type=plugin`);
-    for (const plugin of pluginPublicListResponse.data.connectors) {
+    const publicPlugins = await getPublicCatalogList({ type: 'plugin' });
+    for (const plugin of publicPlugins) {
         plugin.access = 'public';
         result.push(plugin);
     }
@@ -108,11 +119,12 @@ async function refreshManifest() {
         if (!customCrmManifest) {
             return null;
         }
-        else {
-            manifestUrl = customCrmManifest;
-            await saveManifestUrl({ manifestUrl });
-            await chrome.storage.local.remove('customCrmManifest');
+        if (typeof customCrmManifest !== 'string') {
+            return await saveManifest({ manifest: customCrmManifest });
         }
+        manifestUrl = customCrmManifest;
+        await saveManifestUrl({ manifestUrl });
+        await chrome.storage.local.remove('customCrmManifest');
     }
     const manifestResponse = await axios.get(manifestUrl);
     const manifest = manifestResponse.data;

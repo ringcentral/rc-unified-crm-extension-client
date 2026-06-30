@@ -8,6 +8,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const rcAccountId = rcInfo.value.cachedData.extensionInfo.account.id;
     const form = data.body.button.formData;
     const config = getMergedPluginConfigFromFormData(form);
+    const supportedLogTypes = form.supportedLogTypes ?? form.logTypes ?? form.plugin?.supportedLogTypes;
     const changedSettings = {
         [`plugin_${form.pluginId}`]: {
             value: {
@@ -16,7 +17,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 isAsync: form.isAsync,
                 phase: form.phase,
                 access: form.access,
-                supportedLogTypes: form.supportedLogTypes,
+                supportedLogTypes,
                 rcAccountId,
                 config
             },

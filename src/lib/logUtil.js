@@ -245,7 +245,7 @@ async function triggerPendingRecordingCheck({ serverUrl }) {
 async function removePendingRecordingSessionId({ sessionId }) {
     let { pendingRecordings } = await chrome.storage.local.get({ pendingRecordings: [] });
     if (pendingRecordings.includes(sessionId)) {
-        pendingRecordings = pendingRecordings.filter(sessionId => sessionId !== sessionId);
+        pendingRecordings = pendingRecordings.filter(pendingSessionId => pendingSessionId !== sessionId);
     }
     await chrome.storage.local.set({ pendingRecordings });
 }

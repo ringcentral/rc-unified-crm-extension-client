@@ -5,6 +5,8 @@
   "main": "background.js",
   "scripts": {
     "build": "node ./build.js",
+    "test": "node --test \"test/**/*.test.js\"",
+    "test:e2e": "node --test \"e2e/**/*.test.js\"",
     "update": "node ./updateVersion.js"
   },
   "repository": {

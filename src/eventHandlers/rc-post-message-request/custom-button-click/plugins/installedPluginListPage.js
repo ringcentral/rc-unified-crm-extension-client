@@ -11,8 +11,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const installedPlugins = getAllPluginSettings(userSettings);
     for (const pluginId in installedPlugins) {
         const targetPlugin = pluginList.find(plugin => plugin.id === pluginId);
-        targetPlugin.requireLicense = installedPlugins[pluginId]?.requireLicense ?? false;
         if (targetPlugin) {
+            targetPlugin.requireLicense = installedPlugins[pluginId]?.requireLicense ?? false;
             pluginListToRender.push(targetPlugin);
         }
     }

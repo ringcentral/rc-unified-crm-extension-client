@@ -23,7 +23,6 @@ async function onEvent({ data, manifest, platformName, platform }) {
             ttl: 10000
         });
         await authCore.onUserClickConnectButton({ platform, platformName, manifest });
-        window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
         document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
             type: 'rc-adapter-navigate-to',
             path: 'goBack',

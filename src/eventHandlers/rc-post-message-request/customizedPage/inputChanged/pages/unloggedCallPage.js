@@ -3,9 +3,11 @@ import logPage from '../../../../../components/logPage';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-    const callLogNote = await logCore.getCachedNote({ sessionId: data.body.formData.record.sessionId });
+    const callLogDataId = typeof data.body.formData.record === 'object'
+        ? data.body.formData.record.sessionId
+        : data.body.formData.record;
+    const callLogNote = await logCore.getCachedNote({ sessionId: callLogDataId });
     // bring out call log page
-    const callLogDataId = data.body.formData.record;
     const { unloggedCallPageDataCache } = await chrome.storage.local.get({ unloggedCallPageDataCache: null });
     const callLogData = unloggedCallPageDataCache.find(c => c.sessionId === callLogDataId);
     const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });

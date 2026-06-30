@@ -33,18 +33,18 @@ exports.reset = function reset() {
     mixpanel.reset();
 }
 
-exports.identify = function identify({ platformName, rcAccountId, extensionId }) {
+exports.identify = function identify({ platformName: crmPlatformName, rcAccountId, extensionId }) {
     if (!useAnalytics) {
         return;
     }
     mixpanel.identify(extensionId);
     mixpanel.people.set({
-        crmPlatform: platformName,
+        crmPlatform: crmPlatformName,
         rcAccountId,
         version,
         author
     });
-    platformName = platformName;
+    platformName = crmPlatformName;
 }
 
 exports.group = function group({ rcAccountId }) {

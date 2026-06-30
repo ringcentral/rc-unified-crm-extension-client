@@ -1,9 +1,12 @@
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
     let number = undefined;
-    if (data.body?.resource?.direction === "Inbound") {
-        number = data.body?.resource?.from?.phoneNumber;
-    } else {
-        number = data.body?.resource?.to?.phoneNumber || data.body?.resource?.to?.length > 0 ? data.body?.resource?.to?.[0]?.phoneNumber : undefined;
+    const resource = data.body?.resource;
+    if (resource?.direction === "Inbound") {
+        number = resource?.from?.phoneNumber;
+    }
+    else {
+        const to = resource?.to;
+        number = Array.isArray(to) ? to[0]?.phoneNumber : to?.phoneNumber;
     }
     if (!number) {
         return;

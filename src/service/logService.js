@@ -26,10 +26,11 @@ async function retroAutoCallLog({
         const pageNumber = 1;
         const { calls, hasMore } = await RCAdapter.getUnloggedCalls(itemsPerPage, pageNumber)
         const isAutoLog = userCore.getAutoLogCallSetting(userSettings, isAdmin).value;
-        const { retroAutoCallLogNotificationId } = await chrome.storage.local.get({ retroAutoCallLogNotificationId: null })
+        let { retroAutoCallLogNotificationId } = await chrome.storage.local.get({ retroAutoCallLogNotificationId: null })
         if (isAutoLog) {
             if (!retroAutoCallLogNotificationId) {
                 const newRetroAutoCallLogNotificationId = await showNotification({ level: 'success', message: 'Attempting to sync historical call logs in the background...', ttl: 5000 });
+                retroAutoCallLogNotificationId = newRetroAutoCallLogNotificationId;
                 await chrome.storage.local.set({ retroAutoCallLogNotificationId: newRetroAutoCallLogNotificationId });
             }
             for (const c of calls) {
@@ -134,7 +135,6 @@ async function syncCallData({
     dataBody
 }) {
     const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
-    const rcAccessToken = getRcAccessToken();
     const recordingLink = dataBody?.call?.recording?.link;
 
     // Get the cached note for this call
@@ -142,6 +142,7 @@ async function syncCallData({
 
     // case: with recording link ready, definitely recorded, update with link
     if (recordingLink) {
+        const rcAccessToken = getRcAccessToken();
         console.log('call recording updating...');
         await logCore.updateLog(
             {

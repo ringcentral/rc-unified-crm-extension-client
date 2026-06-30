@@ -1,6 +1,8 @@
 name: Build, Package, and Release
 
 on:
+  pull_request:
+  workflow_dispatch:
   push:
     # Keep running build steps on pushes to 'release' branch (optional, remove if not needed)
     branches:
@@ -35,26 +37,30 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # 4. Run the build script
+      # 4. Run the unit and contract tests
+      - name: Test project
+        run: npm test
+
+      # 5. Run the build script
       - name: Build project
         run: npm run build
         env:
           MIXPANEL_TOKEN: ${{ secrets.MIXPANEL_TOKEN }}
           RC_CLIENT_ID: ${{ secrets.RC_CLIENT_ID }}
 
-      # 5. Zip the 'dist' folder
+      # 6. Zip the 'dist' folder
       - name: Zip dist folder
         run: |
           zip -r dist.zip dist
 
-      # 6. (Optional) Upload the zip file as a workflow artifact for debugging/record
+      # 7. (Optional) Upload the zip file as a workflow artifact for debugging/record
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist-package-${{ github.sha }} # Unique name using commit SHA
           path: dist.zip
 
-      # 7. Create GitHub Release and Upload Asset (ONLY executes on tag push)
+      # 8. Create GitHub Release and Upload Asset (ONLY executes on tag push)
       - name: Create Release and Upload Release Asset
         # This step only runs if the trigger was a tag push
         if: startsWith(github.ref, 'refs/tags/')

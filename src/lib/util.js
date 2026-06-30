@@ -192,17 +192,12 @@ async function setRcAdditionalSubmission({ rcInfo, platform }) {
   if (platform?.rcAdditionalSubmission) {
     for (const ras of platform.rcAdditionalSubmission) {
       const pathSegments = ras.path.split('.');
-      let rcInfoSubmissionValue = null;
+      let rcInfoSubmissionValue = rcInfo?.value;
       for (const ps of pathSegments) {
-        if (rcAdditionalSubmission === undefined) {
+        if (rcInfoSubmissionValue === undefined || rcInfoSubmissionValue === null) {
           break;
         }
-        if (rcInfoSubmissionValue === null) {
-          rcInfoSubmissionValue = rcInfo.value[ps];
-        }
-        else {
-          rcInfoSubmissionValue = rcInfoSubmissionValue[ps];
-        }
+        rcInfoSubmissionValue = rcInfoSubmissionValue[ps];
       }
 
       if (rcInfoSubmissionValue) {

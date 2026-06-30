@@ -51,6 +51,7 @@ const COUNTRY_TO_LOCALE_MAP = {
 
 // Supported country codes (matching Embeddable regions)
 const SUPPORTED_LOCALES_AS_COUNTRY_CODE = Object.keys(COUNTRY_TO_LOCALE_MAP);
+const SUPPORTED_LOCALES_AS_LOCALE_CODE = [...new Set(Object.values(COUNTRY_TO_LOCALE_MAP))];
 
 /**
  * Convert country code to locale code
@@ -59,6 +60,10 @@ const SUPPORTED_LOCALES_AS_COUNTRY_CODE = Object.keys(COUNTRY_TO_LOCALE_MAP);
  */
 function countryToLocale(countryCode) {
     return COUNTRY_TO_LOCALE_MAP[countryCode] || FALLBACK_LOCALE;
+}
+
+function isSupportedLocaleCode(localeCode) {
+    return SUPPORTED_LOCALES_AS_LOCALE_CODE.includes(localeCode);
 }
 
 /**
@@ -134,6 +139,19 @@ async function setLocale(countryCode) {
     return await init(countryCode);
 }
 
+async function restoreLocaleCode(localeCode) {
+    currentLocale = localeCode;
+    translations = await loadTranslations(currentLocale);
+
+    try {
+        await chrome.storage.local.set({ currentLocale });
+    } catch (e) {
+        // Ignore storage errors (may be in non-extension context)
+    }
+
+    return currentLocale;
+}
+
 /**
  * Get the current locale
  * @returns {string} Current locale code
@@ -205,9 +223,15 @@ function getSupportedLocales() {
  */
 async function restoreLocale() {
     try {
-        // Try to get stored country code first, fallback to stored locale for backwards compatibility
-        const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' });
-        return await init(selectedRegion);
+        // Try stored country code first, then stored locale for backwards compatibility.
+        const { selectedRegion, currentLocale: storedLocale } = await chrome.storage.local.get(['selectedRegion', 'currentLocale']);
+        if (selectedRegion) {
+            return await init(selectedRegion);
+        }
+        if (isSupportedLocaleCode(storedLocale)) {
+            return await restoreLocaleCode(storedLocale);
+        }
+        return await init('US');
     } catch (e) {
         return await init('US');
     }
