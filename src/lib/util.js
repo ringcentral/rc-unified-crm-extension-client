@@ -96,6 +96,20 @@ async function getRcInfo() {
   return rcInfo;
 }
 
+async function getRcUserInfo() {
+  const { rcUserInfo } = await chrome.storage.local.get({ rcUserInfo: null });
+  return rcUserInfo;
+}
+
+async function getRcCallLogIdentity() {
+  const rcInfo = await getRcInfo();
+  const rcUserInfo = await getRcUserInfo();
+  return {
+    extensionNumber: rcInfo?.value?.cachedData?.extensionInfo?.extensionNumber ?? '',
+    hashedExtensionId: rcUserInfo?.rcExtensionId ?? '',
+  };
+}
+
 function getRcAccessToken() {
   return JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).access_token;
 }
@@ -250,6 +264,8 @@ exports.getManifest = getManifest;
 exports.responseMessage = responseMessage;
 exports.isObjectEmpty = isObjectEmpty;
 exports.getRcInfo = getRcInfo;
+exports.getRcUserInfo = getRcUserInfo;
+exports.getRcCallLogIdentity = getRcCallLogIdentity;
 exports.getRcAccessToken = getRcAccessToken;
 exports.getRcContactInfo = getRcContactInfo;
 exports.checkC2DCollision = checkC2DCollision;

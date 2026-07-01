@@ -1,17 +1,17 @@
 import axios from 'axios';
-import { showNotification, getRcInfo } from '../lib/util';
+import { showNotification, getRcCallLogIdentity } from '../lib/util';
 
 async function upsertDisposition({ serverUrl, logType, sessionId, dispositions }) {
     const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
     const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} });
-    const rcInfo = await getRcInfo();
-    const extensionNumber = rcInfo?.value?.cachedData?.extensionInfo?.extensionNumber ?? '';
+    const { extensionNumber, hashedExtensionId } = await getRcCallLogIdentity();
     if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
                 const patchBody = {
                     sessionId,
                     extensionNumber,
+                    hashedExtensionId,
                     dispositions,
                     additionalSubmission: rcAdditionalSubmission
                 }
