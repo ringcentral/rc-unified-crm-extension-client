@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { isObjectEmpty, showNotification, getRcAccessToken, getRcInfo } from '../lib/util';
+import { isObjectEmpty, showNotification, getRcAccessToken, getRcCallLogIdentity } from '../lib/util';
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 import { t } from '../i18n';
 import { renderUrlTemplate } from '../lib/urlTemplate';
@@ -45,8 +45,7 @@ async function addLog({
     if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
-                const rcInfo = await getRcInfo();
-                const extensionNumber = rcInfo?.value?.cachedData?.extensionInfo?.extensionNumber ?? '';
+                const { extensionNumber, hashedExtensionId } = await getRcCallLogIdentity();
                 // case: if call is recorded and recording is ready
                 if (logInfo.recording) {
                     // eslint-disable-next-line no-param-reassign
@@ -60,7 +59,7 @@ async function addLog({
                         logInfo.recording = hasRecording[`rec-link-${logInfo.sessionId}`];
                     }
                 }
-                addLogRes = await axios.post(`${serverUrl}/callLog`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName, extensionNumber });
+                addLogRes = await axios.post(`${serverUrl}/callLog`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName, extensionNumber, hashedExtensionId });
                 if (addLogRes.data.successful) {
                     trackSyncCallLog({ hasNote: note !== '' });
                     if (isShowNotification) {
@@ -122,13 +121,18 @@ async function getLog({ serverUrl, logType, sessionIds, requireDetails }) {
     if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
-                const rcInfo = await getRcInfo();
-                const extensionNumber = rcInfo?.value?.cachedData?.extensionInfo?.extensionNumber ?? '';
+                const { extensionNumber, hashedExtensionId } = await getRcCallLogIdentity();
                 // check if axios default has jwtToken in bearer, if not, add it
                 if (!axios.defaults.headers.common.Authorization?.startsWith('Bearer ')) {
                     axios.defaults.headers.common.Authorization = `Bearer ${rcUnifiedCrmExtJwt}`;
                 }
-                const callLogRes = await axios.get(`${serverUrl}/callLog?sessionIds=${sessionIds}&requireDetails=${requireDetails}&extensionNumber=${extensionNumber}`);
+                const query = new URLSearchParams({
+                    sessionIds,
+                    requireDetails: requireDetails ? 'true' : 'false',
+                    extensionNumber,
+                    hashedExtensionId
+                });
+                const callLogRes = await axios.get(`${serverUrl}/callLog?${query.toString()}`);
                 showNotification({ level: callLogRes.data.returnMessage?.messageType, message: callLogRes.data.returnMessage?.message, ttl: callLogRes.data.returnMessage?.ttl, details: callLogRes.data.returnMessage?.details });
                 return { successful: callLogRes.data.successful, callLogs: callLogRes.data.logs };
         }
@@ -158,8 +162,7 @@ async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, re
     if (rcUnifiedCrmExtJwt) {
         switch (logType) {
             case 'Call':
-                const rcInfo = await getRcInfo();
-                const extensionNumber = rcInfo?.value?.cachedData?.extensionInfo?.extensionNumber ?? '';
+                const { extensionNumber, hashedExtensionId } = await getRcCallLogIdentity();
                 const patchBody = {
                     telephonySessionId,
                     sessionId,
@@ -175,7 +178,8 @@ async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, re
                     direction,
                     from,
                     to,
-                    extensionNumber
+                    extensionNumber,
+                    hashedExtensionId
                 }
                 const callLogRes = await axios.patch(`${serverUrl}/callLog`, patchBody);
                 if (isShowNotification) {
