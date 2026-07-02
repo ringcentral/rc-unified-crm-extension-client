@@ -44,13 +44,14 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         return;
       }
       if (isAutoLogSMS) {
-        // Resolve every correspondent first so we can decide whether the whole group can be
-        // auto-logged. If any member is ambiguous (multiple matches) or has no match, we bail
-        // out and ask the user to log manually.
-        const correspondentLogs = [];
-        let hasMultipleContactsConflict = false;
-        let hasUnknownContactConflict = false;
+        // Resolve every correspondent independently. Ambiguous (multiple matches) or unmatched
+        // (unknown contact) members are handled per the beta auto-log preferences instead of
+        // blocking the whole group. Members that can't be resolved are skipped (default) and
+        // reported afterwards so the resolvable members still get logged.
+        const unknownContactPreference = userCore.getUnknownContactPreferenceSetting(userSettings).value;
+        const multipleContactsPreference = userCore.getMultipleContactsPreferenceSetting(userSettings).value;
         let groupRequireManualDisposition = false;
+        let skippedMemberCount = 0;
         for (const correspondent of data.body.conversation.correspondents) {
           const contactInfo = (await contactCore.getContact({
             serverUrl: manifest.serverUrl,
@@ -66,49 +67,72 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             isVoicemail: false,
             isFax: false
           });
-          if (conflictInfo.conflictType === CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE) {
-            hasMultipleContactsConflict = true;
+          const existingContacts = contactInfo.filter(c => !c.isNewContact);
+          let defaultingContact = existingContacts.find(c => c.toNumberEntity) ?? existingContacts[0];
+          // Sub-case: no matching contact for this member
+          if (conflictInfo.conflictType === CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE) {
+            if (unknownContactPreference === 'createNewPlaceholderContact') {
+              const newContactType = userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value;
+              let newContactName = (correspondent.name ? `${correspondent.name} ` : '') + correspondent.phoneNumber;
+              newContactName = userCore.getNewContactNamePrefixSetting(userSettings).value + newContactName;
+              let additionalSubmission = {};
+              if (platform.page?.newContact?.additionalFields) {
+                const newContactUnderType = contactInfo[0]?.additionalInfo?.[newContactType];
+                if (newContactUnderType) {
+                  for (const fieldKey of Object.keys(newContactUnderType)) {
+                    additionalSubmission[fieldKey] = Array.isArray(newContactUnderType[fieldKey]) ? newContactUnderType[fieldKey][0].const : newContactUnderType[fieldKey];
+                  }
+                }
+              }
+              const newContactResp = await contactCore.createContact({
+                serverUrl: manifest.serverUrl,
+                phoneNumber: correspondent.phoneNumber,
+                newContactName,
+                newContactType,
+                additionalSubmission
+              });
+              defaultingContact = newContactResp.contactInfo;
+            }
+            else {
+              // Default: skip logging for this member
+              skippedMemberCount++;
+              continue;
+            }
           }
-          else if (conflictInfo.conflictType === CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE) {
-            hasUnknownContactConflict = true;
+          // Sub-case: multiple contacts matched for this member
+          else if (conflictInfo.conflictType === CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE) {
+            switch (multipleContactsPreference) {
+              case 'firstAlphabetical':
+                defaultingContact = [...existingContacts].sort((a, b) => a.name.localeCompare(b.name))[0];
+                break;
+              case 'mostRecentActivity':
+                defaultingContact = [...existingContacts].sort((a, b) => new Date(b.mostRecentActivityDate) - new Date(a.mostRecentActivityDate))[0];
+                break;
+              case 'skipLogging':
+              default:
+                // Default: skip logging for this member
+                skippedMemberCount++;
+                continue;
+            }
           }
           if (conflictInfo.requireManualDisposition) {
             groupRequireManualDisposition = true;
           }
-          const existingContacts = contactInfo.filter(c => !c.isNewContact);
-          const defaultingContact = existingContacts.find(c => c.toNumberEntity) ?? existingContacts[0];
-          correspondentLogs.push({
-            correspondent,
-            defaultingContact,
-            additionalSubmission: conflictInfo.autoSelectAdditionalSubmission
-          });
-        }
-        // Gate: a group member matched multiple contacts -> cannot auto-pick, log manually
-        if (hasMultipleContactsConflict) {
-          showNotification({ level: 'warning', message: 'Multiple contacts matched for a group member. Message not logged - please log manually.', ttl: 5000 });
-          responseMessage(data.requestId, { data: 'ok' });
-          return;
-        }
-        // Gate: a group member has no matching contact -> log manually
-        if (hasUnknownContactConflict) {
-          showNotification({ level: 'warning', message: 'No matching contact found for a group member. Message not logged - please log manually.', ttl: 5000 });
-          responseMessage(data.requestId, { data: 'ok' });
-          return;
-        }
-        // No conflicts: auto-log one entry per correspondent
-        for (const correspondentLog of correspondentLogs) {
           await logCore.addLog({
             serverUrl: manifest.serverUrl,
             logType: 'Message',
             logInfo: data.body.conversation,
             isMain: true,
             note: '',
-            additionalSubmission: correspondentLog.additionalSubmission,
-            contactId: correspondentLog.defaultingContact?.id,
-            contactType: correspondentLog.defaultingContact?.type,
-            contactName: correspondentLog.defaultingContact?.name,
-            contactPhoneNumber: correspondentLog.correspondent.phoneNumber
+            additionalSubmission: conflictInfo.autoSelectAdditionalSubmission,
+            contactId: defaultingContact?.id,
+            contactType: defaultingContact?.type,
+            contactName: defaultingContact?.name,
+            contactPhoneNumber: correspondent.phoneNumber
           });
+        }
+        if (skippedMemberCount > 0) {
+          showNotification({ level: 'warning', message: `${skippedMemberCount} group member(s) could not be auto-logged (no match or multiple matches). Please log them manually.`, ttl: 5000 });
         }
         if (groupRequireManualDisposition) {
           showNotification({ level: 'warning', message: 'Manual disposition might be needed. Please edit logged message to disposition.', ttl: 5000 });
