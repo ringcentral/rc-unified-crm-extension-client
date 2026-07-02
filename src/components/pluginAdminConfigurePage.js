@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 
-function getPluginAdminConfigurePageRender({ pluginId, pluginAccess, plugin, installed }) {
+function getPluginAdminConfigurePageRender({ pluginId, pluginAccess, plugin, installed, ownerRcAccountId }) {
     const page = {
         id: 'pluginConfigurePage',
         title: t('plugins.configurePage'),
@@ -52,6 +52,7 @@ function getPluginAdminConfigurePageRender({ pluginId, pluginAccess, plugin, ins
             isAsync: plugin.isAsync,
             phase: plugin.phase,
             logTypes: plugin.supportedLogTypes,
+            ownerRcAccountId,
         }
     }
     return page;

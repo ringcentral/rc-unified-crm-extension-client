@@ -49,7 +49,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, b
                         pluginId: data.body.button.formData.pluginId,
                         pluginAccess: data.body.button.formData.access,
                         pluginName: data.body.button.formData.plugin.name,
-                        rcAccountId
+                        rcAccountId,
+                        ownerRcAccountId: data.body.button.formData.ownerRcAccountId,
                     });
                 } catch (registerError) {
                     adminSettingsForInstall.userSettings[`plugin_${data.body.button.formData.pluginId}`].isRemoved = true;
@@ -62,6 +63,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, b
                     pluginId: data.body.button.formData.pluginId,
                     pluginAccess: data.body.button.formData.access,
                     plugin: data.body.button.formData.plugin,
+                    ownerRcAccountId: data.body.button.formData.ownerRcAccountId,
                     installed: true
                 });
                 document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({

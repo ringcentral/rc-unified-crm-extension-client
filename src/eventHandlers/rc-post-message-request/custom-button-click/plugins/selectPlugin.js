@@ -50,6 +50,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, l
             pluginId: selectedPluginId,
             pluginAccess: selectedPluginAccess,
             plugin,
+            ownerRcAccountId: selectedPlugin.accountId,
             installed,
         }) :
         getPluginConfigurePageRender({
