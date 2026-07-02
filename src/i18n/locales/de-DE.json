@@ -361,6 +361,13 @@
     },
     "googleSheets": {
       "config": "Google Sheets-Konfiguration"
+    },
+    "language": {
+      "groupName": "Sprache",
+      "groupDesc": "Wählen Sie die Anzeigesprache für die Erweiterung",
+      "label": "Anzeigesprache",
+      "helper": "Automatisch folgt Ihrer RingCentral-Region. Die Auswahl einer Sprache überschreibt dies.",
+      "auto": "Automatisch (RingCentral-Region folgen)"
     }
   },
   "notifications": {
@@ -378,7 +385,14 @@
       "callLogUpdateFailed": "Aktualisierung des Anrufprotokolls fehlgeschlagen",
       "connectToCrm": "Bitte gehen Sie zu den Einstellungen und verbinden Sie sich mit der CRM-Plattform",
       "apiKeyFailed": "API-Schlüssel konnte nicht registriert werden.",
-      "noContactFound": "Kein Kontakt gefunden"
+      "noContactFound": "Kein Kontakt gefunden",
+      "extensionNumberNotLoggable": "Nebenstellennummern können nicht protokolliert werden",
+      "groupTypeNotSupported": "Gruppennachrichten dieses Typs werden für die automatische Protokollierung nicht unterstützt. Bitte manuell protokollieren.",
+      "groupMembersSkipped": "{count} Gruppenmitglied(er) konnten nicht automatisch protokolliert werden (keine oder mehrere Übereinstimmungen). Bitte manuell protokollieren.",
+      "manualDispositionNeeded": "Manuelle Disposition könnte erforderlich sein. Bitte bearbeiten Sie die protokollierte Nachricht zur Disposition.",
+      "messageNotLogged": "Nachricht nicht protokolliert. {details}.",
+      "voicemailNotLogged": "Voicemail nicht protokolliert. {details}.",
+      "faxNotLogged": "Fax nicht protokolliert. {details}."
     },
     "error": {
       "wrongFormat": "Falsches Format: {field}",

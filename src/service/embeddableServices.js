@@ -2,7 +2,7 @@ import userCore from '../core/user';
 import authCore from '../core/auth';
 import { getPlatformInfo } from './platformService';
 import { getManifest } from './manifestService';
-import { t } from '../i18n';
+import i18n, { t } from '../i18n';
 
 async function preconfigureServiceManifest() {
     const manifest = await getManifest();
@@ -33,6 +33,7 @@ async function getServiceManifest() {
     const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} });
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false });
     const { developerMode } = await chrome.storage.local.get({ developerMode: false });
+    const { languageOverride } = await chrome.storage.local.get({ languageOverride: 'auto' });
     const { crmUserInfo } = (await chrome.storage.local.get({ crmUserInfo: null }));
     const platformInfo = await getPlatformInfo();
     const manifest = await getManifest();
@@ -177,6 +178,26 @@ async function getServiceManifest() {
                 name: t('settings.appearance.groupName'),
                 description: t('settings.appearance.groupDesc'),
                 items: [
+                    {
+                        id: 'language',
+                        type: 'section',
+                        name: t('settings.language.groupName'),
+                        groupId: 'appearance',
+                        description: t('settings.language.groupDesc'),
+                        items: [
+                            {
+                                id: 'language',
+                                type: 'option',
+                                name: t('settings.language.label'),
+                                description: t('settings.language.helper'),
+                                options: [
+                                    { id: 'auto', name: t('settings.language.auto') },
+                                    ...i18n.getSupportedLocaleOptions()
+                                ],
+                                value: languageOverride ?? 'auto'
+                            }
+                        ]
+                    },
                     {
                         id: 'tabs',
                         type: 'section',

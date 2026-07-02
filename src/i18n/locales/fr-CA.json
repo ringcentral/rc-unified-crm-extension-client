@@ -361,6 +361,13 @@
     },
     "googleSheets": {
       "config": "Configuration Google Sheets"
+    },
+    "language": {
+      "groupName": "Langue",
+      "groupDesc": "Choisissez la langue d'affichage de l'extension",
+      "label": "Langue d'affichage",
+      "helper": "Automatique suit votre région RingCentral. Sélectionner une langue la remplace.",
+      "auto": "Automatique (suivre la région RingCentral)"
     }
   },
   "notifications": {
@@ -378,7 +385,14 @@
       "callLogUpdateFailed": "Échec de la mise à jour du journal d'appel",
       "connectToCrm": "Veuillez aller dans les Paramètres et vous connecter à la plateforme CRM",
       "apiKeyFailed": "Échec de l'enregistrement de la clé API.",
-      "noContactFound": "Aucun contact trouvé"
+      "noContactFound": "Aucun contact trouvé",
+      "extensionNumberNotLoggable": "Les numéros de poste ne peuvent pas être enregistrés",
+      "groupTypeNotSupported": "Les messages de groupe de ce type ne sont pas pris en charge pour l'enregistrement automatique. Veuillez enregistrer manuellement.",
+      "groupMembersSkipped": "{count} membre(s) du groupe n'ont pas pu être enregistrés automatiquement (aucune correspondance ou plusieurs correspondances). Veuillez les enregistrer manuellement.",
+      "manualDispositionNeeded": "Une disposition manuelle peut être nécessaire. Veuillez modifier le message enregistré pour la disposition.",
+      "messageNotLogged": "Message non enregistré. {details}.",
+      "voicemailNotLogged": "Messagerie vocale non enregistrée. {details}.",
+      "faxNotLogged": "Fax non enregistré. {details}."
     },
     "error": {
       "wrongFormat": "Mauvais format : {field}",

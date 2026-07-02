@@ -81,32 +81,34 @@ axios.defaults.timeout = 30000; // Set default timeout to 30 seconds, can be ove
 axios.interceptors.request.use(
   async (config) => {
     const { sanitizedUrl, jwtToken: tokenFromUrl } = extractJwtTokenFromUrl(config.url, config.baseURL);
+    const requestConfig = { ...config };
     if (tokenFromUrl) {
-      config.url = sanitizedUrl;
+      requestConfig.url = sanitizedUrl;
     }
-    if (!config.skipAuthorization) {
+    if (!requestConfig.skipAuthorization) {
       const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get({ rcUnifiedCrmExtJwt: null });
       const tokenToUse = tokenFromUrl || rcUnifiedCrmExtJwt;
       if (tokenToUse) {
-        config.headers = config.headers || {};
-        if (!config.headers.Authorization && !config.headers.authorization) {
-          config.headers.Authorization = `Bearer ${tokenToUse}`;
+        const headers = requestConfig.headers || {};
+        if (!headers.Authorization && !headers.authorization) {
+          headers.Authorization = `Bearer ${tokenToUse}`;
         }
+        requestConfig.headers = headers;
       }
     }
     if (await logRecorder.isRecordingLogs()) {
       logRecorder.logAction({
         name: 'API_REQUEST',
         data: {
-          method: config.method,
-          url: config.url,
-          params: config.params,
-          data: config.data,
-          headers: config.headers
+          method: requestConfig.method,
+          url: requestConfig.url,
+          params: requestConfig.params,
+          data: requestConfig.data,
+          headers: requestConfig.headers
         }
       });
     }
-    return config;
+    return requestConfig;
   },
   async (error) => {
     if (await logRecorder.isRecordingLogs()) {
@@ -201,12 +203,15 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
   }
 });
 
-// Initialize i18n with stored locale
-i18n.restoreLocale();
+initializePopup();
 
-checkC2DCollision();
-getCustomManifest();
-getImplementedInterfaces();
+async function initializePopup() {
+  // Initialize i18n with stored locale before early API calls so Accept-Language is applied.
+  await i18n.restoreLocale();
+  checkC2DCollision();
+  getCustomManifest();
+  getImplementedInterfaces();
+}
 
 async function getCustomManifest() {
   const customCrmManifest = await getManifest();

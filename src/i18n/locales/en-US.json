@@ -362,6 +362,13 @@
     },
     "googleSheets": {
       "config": "Google Sheets Config"
+    },
+    "language": {
+      "groupName": "Language",
+      "groupDesc": "Choose the display language for the extension",
+      "label": "Display language",
+      "helper": "Automatic follows your RingCentral region. Selecting a language overrides it.",
+      "auto": "Automatic (follow RingCentral region)"
     }
   },
   "notifications": {
@@ -379,7 +386,14 @@
       "callLogUpdateFailed": "Call log update failed",
       "connectToCrm": "Please go to Settings and connect to CRM platform",
       "apiKeyFailed": "Failed to register api key.",
-      "noContactFound": "No contact found"
+      "noContactFound": "No contact found",
+      "extensionNumberNotLoggable": "Extension numbers cannot be logged",
+      "groupTypeNotSupported": "Group messages of this type are not supported for auto log. Please log manually.",
+      "groupMembersSkipped": "{count} group member(s) could not be auto-logged (no match or multiple matches). Please log them manually.",
+      "manualDispositionNeeded": "Manual disposition might be needed. Please edit logged message to disposition.",
+      "messageNotLogged": "Message not logged. {details}.",
+      "voicemailNotLogged": "Voicemail not logged. {details}.",
+      "faxNotLogged": "Fax not logged. {details}."
     },
     "error": {
       "wrongFormat": "Wrong format: {field}",

@@ -2,8 +2,30 @@ import userCore from '../../core/user';
 import { showNotification, responseMessage } from '../../lib/util';
 import embeddableServices from '../../service/embeddableServices';
 import appointmentsPage from '../../components/appointmentsPage/appointmentsPage';
+import i18n from '../../i18n';
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+    if (data.body.setting.id === "language") {
+      // Language is stored locally (works even before CRM auth) and takes precedence over the RingCentral region.
+      const selectedLanguage = data.body.setting.value ?? 'auto';
+      await chrome.storage.local.set({ languageOverride: selectedLanguage });
+      if (selectedLanguage === 'auto') {
+        const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' });
+        await i18n.init(selectedRegion);
+      }
+      else {
+        await i18n.applyLocaleCode(selectedLanguage);
+      }
+      // Re-register the service so all UI strings refresh in the newly selected language.
+      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        type: 'rc-adapter-register-third-party-service',
+        service: (await embeddableServices.getServiceManifest())
+      }, '*');
+      showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
+      responseMessage(data.requestId, { data: 'ok' });
+      return;
+    }
+
     const changedSettings = {};
     for (const s of data.body.settings) {
       if (s.items !== undefined) {

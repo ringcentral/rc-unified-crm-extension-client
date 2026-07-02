@@ -361,6 +361,13 @@
     },
     "googleSheets": {
       "config": "Google Sheets -määritys"
+    },
+    "language": {
+      "groupName": "Kieli",
+      "groupDesc": "Valitse laajennuksen näyttökieli",
+      "label": "Näyttökieli",
+      "helper": "Automaattinen seuraa RingCentral-aluettasi. Kielen valitseminen ohittaa sen.",
+      "auto": "Automaattinen (seuraa RingCentral-aluetta)"
     }
   },
   "notifications": {
@@ -378,7 +385,14 @@
       "callLogUpdateFailed": "Puhelulokin päivitys epäonnistui",
       "connectToCrm": "Siirry asetuksiin ja yhdistä CRM-alustaan",
       "apiKeyFailed": "API-avaimen rekisteröinti epäonnistui.",
-      "noContactFound": "Yhteystietoa ei löytynyt"
+      "noContactFound": "Yhteystietoa ei löytynyt",
+      "extensionNumberNotLoggable": "Alanumeroita ei voi kirjata",
+      "groupTypeNotSupported": "Tämän tyyppisiä ryhmäviestejä ei tueta automaattisessa kirjaamisessa. Kirjaa manuaalisesti.",
+      "groupMembersSkipped": "{count} ryhmän jäsentä ei voitu kirjata automaattisesti (ei osumaa tai useita osumia). Kirjaa ne manuaalisesti.",
+      "manualDispositionNeeded": "Manuaalinen käsittely saattaa olla tarpeen. Muokkaa kirjattua viestiä käsittelyä varten.",
+      "messageNotLogged": "Viestiä ei kirjattu. {details}.",
+      "voicemailNotLogged": "Vastaajaviestiä ei kirjattu. {details}.",
+      "faxNotLogged": "Faksia ei kirjattu. {details}."
     },
     "error": {
       "wrongFormat": "Väärä muoto: {field}",

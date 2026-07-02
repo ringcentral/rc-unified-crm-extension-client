@@ -9,9 +9,13 @@ async function onEvent({data}){
         { selectedRegion: data.countryCode }
       )
     }
-    
+
+    // If the user picked an explicit language, the region should not override it.
+    const { languageOverride } = await chrome.storage.local.get({ languageOverride: 'auto' });
+    const hasManualLanguage = languageOverride && languageOverride !== 'auto';
+
     // Handle locale change and refresh UI strings
-    if (data.countryCode) {
+    if (data.countryCode && !hasManualLanguage) {
       await i18n.setLocale(data.countryCode);
       // Re-register service to refresh UI strings with new locale
       try {

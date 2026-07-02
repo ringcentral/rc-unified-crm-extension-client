@@ -361,6 +361,13 @@
     },
     "googleSheets": {
       "config": "Google Sheets 配置"
+    },
+    "language": {
+      "groupName": "语言",
+      "groupDesc": "选择扩展程序的显示语言",
+      "label": "显示语言",
+      "helper": "自动将跟随您的 RingCentral 区域。选择语言将覆盖此设置。",
+      "auto": "自动（跟随 RingCentral 区域）"
     }
   },
   "notifications": {
@@ -378,7 +385,14 @@
       "callLogUpdateFailed": "通话日志更新失败",
       "connectToCrm": "请前往设置并连接到 CRM 平台",
       "apiKeyFailed": "注册 API 密钥失败。",
-      "noContactFound": "未找到联系人"
+      "noContactFound": "未找到联系人",
+      "extensionNumberNotLoggable": "无法记录分机号码",
+      "groupTypeNotSupported": "此类型的群组消息不支持自动记录。请手动记录。",
+      "groupMembersSkipped": "有 {count} 位群组成员无法自动记录（无匹配或多个匹配）。请手动记录。",
+      "manualDispositionNeeded": "可能需要手动处理。请编辑已记录的消息以进行处理。",
+      "messageNotLogged": "消息未记录。{details}。",
+      "voicemailNotLogged": "语音邮件未记录。{details}。",
+      "faxNotLogged": "传真未记录。{details}。"
     },
     "error": {
       "wrongFormat": "格式错误：{field}",

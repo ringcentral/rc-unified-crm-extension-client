@@ -361,6 +361,13 @@
     },
     "googleSheets": {
       "config": "Google Sheets-configuratie"
+    },
+    "language": {
+      "groupName": "Taal",
+      "groupDesc": "Kies de weergavetaal voor de extensie",
+      "label": "Weergavetaal",
+      "helper": "Automatisch volgt uw RingCentral-regio. Het selecteren van een taal overschrijft dit.",
+      "auto": "Automatisch (RingCentral-regio volgen)"
     }
   },
   "notifications": {
@@ -378,7 +385,14 @@
       "callLogUpdateFailed": "Bijwerken van oproeplog mislukt",
       "connectToCrm": "Ga naar Instellingen en maak verbinding met het CRM-platform",
       "apiKeyFailed": "Registreren van API-sleutel mislukt.",
-      "noContactFound": "Geen contact gevonden"
+      "noContactFound": "Geen contact gevonden",
+      "extensionNumberNotLoggable": "Toestelnummers kunnen niet worden geregistreerd",
+      "groupTypeNotSupported": "Groepsberichten van dit type worden niet ondersteund voor automatisch registreren. Registreer handmatig.",
+      "groupMembersSkipped": "{count} groepslid(leden) konden niet automatisch worden geregistreerd (geen overeenkomst of meerdere overeenkomsten). Registreer ze handmatig.",
+      "manualDispositionNeeded": "Handmatige verwerking is mogelijk nodig. Bewerk het geregistreerde bericht om de verwerking in te stellen.",
+      "messageNotLogged": "Bericht niet geregistreerd. {details}.",
+      "voicemailNotLogged": "Voicemail niet geregistreerd. {details}.",
+      "faxNotLogged": "Fax niet geregistreerd. {details}."
     },
     "error": {
       "wrongFormat": "Verkeerd formaat: {field}",
