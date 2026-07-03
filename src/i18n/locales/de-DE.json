@@ -277,7 +277,8 @@
       "multipleContacts": "Mehrere Kontakte",
       "multipleContactsHelper": "Was tun, wenn mehrere Kontakte der Telefonnummer entsprechen",
       "firstAlphabetical": "Erster alphabetisch",
-      "mostRecentActivity": "Neueste Aktivität"
+      "mostRecentActivity": "Neueste Aktivität",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "Erscheinungsbild",
@@ -378,7 +379,8 @@
       "callLogUpdateFailed": "Aktualisierung des Anrufprotokolls fehlgeschlagen",
       "connectToCrm": "Bitte gehen Sie zu den Einstellungen und verbinden Sie sich mit der CRM-Plattform",
       "apiKeyFailed": "API-Schlüssel konnte nicht registriert werden.",
-      "noContactFound": "Kein Kontakt gefunden"
+      "noContactFound": "Kein Kontakt gefunden",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "Falsches Format: {field}",

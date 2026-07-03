@@ -22,6 +22,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             ],
             entityType: platformName,
             contactType: c.type,
+            createdDate: c.createdDate,
+            mostRecentActivityDate: c.mostRecentActivityDate,
             additionalInfo: c.additionalInfo
         }));
         const cachedSearchContactKey = `rc-crm-search-contact-${data.body.phoneNumbers[0]}`;
@@ -41,6 +43,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                     ],
                     entityType: platformName,
                     contactType: cachedContact.type,
+                    createdDate: cachedContact.createdDate,
+                    mostRecentActivityDate: cachedContact.mostRecentActivityDate,
                     additionalInfo: cachedContact.additionalInfo
                 });
             }
@@ -84,6 +88,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                             ],
                             entityType: platformName,
                             contactType: contactInfoItem.type,
+                            createdDate: contactInfoItem.createdDate,
                             additionalInfo: contactInfoItem.additionalInfo,
                             mostRecentActivityDate: contactInfoItem.mostRecentActivityDate
                         });

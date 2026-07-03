@@ -142,6 +142,13 @@ async function loadCreateLog() {
     isObjectEmpty: vi.fn((obj) => Object.keys(obj || {}).length === 0),
   };
   vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/i18n/index.js', () => ({
+    t: vi.fn((key) => (
+      key === 'notifications.warning.earliestCreatedResolverMissingField'
+        ? 'Call not logged because createdDate is missing.'
+        : key
+    )),
+  }));
 
   const contactCore = {
     getContact: vi.fn(async () => ({
@@ -151,6 +158,8 @@ async function loadCreateLog() {
           id: 'contact-b',
           type: 'Lead',
           name: 'Beta Contact',
+          createdDate: '2026-07-01T08:00:00Z',
+          mostRecentActivityDate: '2026-07-01T08:00:00Z',
           additionalInfo: {
             Lead: {
               newCategory: [{ const: 'prospect' }],
@@ -161,6 +170,7 @@ async function loadCreateLog() {
           id: 'contact-a',
           type: 'Lead',
           name: 'Alpha Contact',
+          createdDate: '2026-07-02T08:00:00Z',
           mostRecentActivityDate: '2026-07-02T08:00:00Z',
         },
       ],
@@ -201,6 +211,28 @@ async function loadCreateLog() {
     })),
     logPageFormDataDefaulting: vi.fn(async ({ targetPage }) => ({ ...targetPage, defaulted: true })),
     cacheLogPageData: vi.fn(async () => {}),
+    getExistingContacts: vi.fn((contactInfo = []) => (contactInfo || []).filter((contact) => !contact.isNewContact)),
+    resolveEarliestCreatedContact: vi.fn((contactInfo = []) => {
+      const existingContacts = (contactInfo || []).filter((contact) => !contact.isNewContact);
+      const missingCreatedDate = existingContacts.some((contact) => !contact.createdDate);
+      if (missingCreatedDate) {
+        return { contact: null, missingCreatedDate: true };
+      }
+      return {
+        contact: [...existingContacts].sort((a, b) => new Date(a.createdDate) - new Date(b.createdDate))[0] ?? null,
+        missingCreatedDate: false,
+      };
+    }),
+    resolveMostRecentActivityContact: vi.fn((contactInfo = []) => {
+      const contactsWithActivityDate = (contactInfo || [])
+        .filter((contact) => !contact.isNewContact && contact.mostRecentActivityDate)
+        .map((contact) => ({
+          contact,
+          mostRecentActivityTimestamp: new Date(contact.mostRecentActivityDate).getTime(),
+        }))
+        .filter((contact) => !Number.isNaN(contact.mostRecentActivityTimestamp));
+      return [...contactsWithActivityDate].sort((a, b) => b.mostRecentActivityTimestamp - a.mostRecentActivityTimestamp)[0]?.contact ?? null;
+    }),
   };
   vi.doMock('../../src/lib/logUtil.js', () => logUtil);
 
@@ -473,7 +505,7 @@ describe('callLogger createLog', () => {
         upsertCallDisposition: true,
       },
     });
-    const { createLog, contactCore, logCore, userCore, dispositionCore, logUtil } = await loadCreateLog();
+    const { createLog, contactCore, logCore, userCore, dispositionCore, logUtil, util } = await loadCreateLog();
 
     logUtil.getLogConflictInfo.mockResolvedValueOnce({
       hasConflict: true,
@@ -531,6 +563,100 @@ describe('callLogger createLog', () => {
       subject: 'Outbound Call to Alpha Contact',
       note: 'cached note',
     }));
+
+    userCore.getMultipleContactsPreferenceSetting.mockReturnValueOnce({ value: 'mostRecentActivity' });
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: true,
+      conflictType: 'Multiple contacts',
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+    await createLog.onEvent({
+      data: eventFor({
+        call: baseCall({ direction: 'Outbound' }),
+      }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550200',
+      userSettings: {},
+      existingCalls: [{ matched: true, sessionId: 'session-1', logData: { note: 'old note', subject: '' } }],
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+    expect(logUtil.resolveMostRecentActivityContact).toHaveBeenCalledWith(expect.arrayContaining([
+      expect.objectContaining({ id: 'contact-b', mostRecentActivityDate: '2026-07-01T08:00:00Z' }),
+      expect.objectContaining({ id: 'contact-a', mostRecentActivityDate: '2026-07-02T08:00:00Z' }),
+    ]));
+    expect(logCore.updateLog).toHaveBeenLastCalledWith(expect.objectContaining({
+      subject: 'Outbound Call to Alpha Contact',
+      note: 'cached note',
+    }));
+
+    userCore.getMultipleContactsPreferenceSetting.mockReturnValueOnce({ value: 'earliestCreated' });
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: true,
+      conflictType: 'Multiple contacts',
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+    await createLog.onEvent({
+      data: eventFor({
+        call: baseCall({ direction: 'Outbound' }),
+      }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550200',
+      userSettings: {},
+      existingCalls: [{ matched: true, sessionId: 'session-1', logData: { note: 'old note', subject: '' } }],
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+    expect(logUtil.resolveEarliestCreatedContact).toHaveBeenCalledWith(expect.arrayContaining([
+      expect.objectContaining({ id: 'contact-b', createdDate: '2026-07-01T08:00:00Z' }),
+      expect.objectContaining({ id: 'contact-a', createdDate: '2026-07-02T08:00:00Z' }),
+    ]));
+    expect(logCore.updateLog).toHaveBeenLastCalledWith(expect.objectContaining({
+      subject: 'Outbound Call to Beta Contact',
+      note: 'cached note',
+    }));
+
+    userCore.getMultipleContactsPreferenceSetting.mockReturnValueOnce({ value: 'earliestCreated' });
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: true,
+      conflictType: 'Multiple contacts',
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+    contactCore.getContact.mockResolvedValueOnce({
+      matched: true,
+      contactInfo: [
+        { id: 'contact-b', type: 'Lead', name: 'Beta Contact', createdDate: '2026-07-01T08:00:00Z' },
+        { id: 'contact-a', type: 'Lead', name: 'Alpha Contact' },
+      ],
+    });
+    const addLogCallsBeforeMissingCreatedDate = logCore.addLog.mock.calls.length;
+    const updateLogCallsBeforeMissingCreatedDate = logCore.updateLog.mock.calls.length;
+    await createLog.onEvent({
+      data: eventFor({
+        call: baseCall({ direction: 'Outbound' }),
+      }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550200',
+      userSettings: {},
+      existingCalls: [{ matched: true, sessionId: 'session-1', logData: { note: 'old note', subject: '' } }],
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+    expect(util.showNotification).toHaveBeenLastCalledWith(expect.objectContaining({
+      level: 'warning',
+      message: expect.stringContaining('createdDate'),
+    }));
+    expect(logCore.addLog).toHaveBeenCalledTimes(addLogCallsBeforeMissingCreatedDate);
+    expect(logCore.updateLog).toHaveBeenCalledTimes(updateLogCallsBeforeMissingCreatedDate);
   });
 });
 

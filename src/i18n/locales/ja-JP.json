@@ -277,7 +277,8 @@
       "multipleContacts": "複数の連絡先",
       "multipleContactsHelper": "複数の連絡先が電話番号と一致する場合の対応",
       "firstAlphabetical": "アルファベット順の最初",
-      "mostRecentActivity": "最新のアクティビティ"
+      "mostRecentActivity": "最新のアクティビティ",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "外観",
@@ -378,7 +379,8 @@
       "callLogUpdateFailed": "通話ログの更新に失敗しました",
       "connectToCrm": "設定に移動してCRMプラットフォームに接続してください",
       "apiKeyFailed": "APIキーの登録に失敗しました。",
-      "noContactFound": "連絡先が見つかりません"
+      "noContactFound": "連絡先が見つかりません",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "形式エラー：{field}",
@@ -408,4 +410,3 @@
     "setup": "セットアップ"
   }
 }
-

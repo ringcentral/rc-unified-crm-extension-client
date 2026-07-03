@@ -277,7 +277,8 @@
       "multipleContacts": "Useita yhteystietoja",
       "multipleContactsHelper": "Mitä tehdä, kun useita yhteystietoja vastaa puhelinnumeroa",
       "firstAlphabetical": "Ensimmäinen aakkosjärjestyksessä",
-      "mostRecentActivity": "Viimeisin aktiviteetti"
+      "mostRecentActivity": "Viimeisin aktiviteetti",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "Ulkoasu",
@@ -378,7 +379,8 @@
       "callLogUpdateFailed": "Puhelulokin päivitys epäonnistui",
       "connectToCrm": "Siirry asetuksiin ja yhdistä CRM-alustaan",
       "apiKeyFailed": "API-avaimen rekisteröinti epäonnistui.",
-      "noContactFound": "Yhteystietoa ei löytynyt"
+      "noContactFound": "Yhteystietoa ei löytynyt",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "Väärä muoto: {field}",

@@ -277,7 +277,8 @@
       "multipleContacts": "여러 연락처",
       "multipleContactsHelper": "여러 연락처가 전화번호와 일치할 때 수행할 작업",
       "firstAlphabetical": "알파벳순 첫 번째",
-      "mostRecentActivity": "가장 최근 활동"
+      "mostRecentActivity": "가장 최근 활동",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "외관",
@@ -378,7 +379,8 @@
       "callLogUpdateFailed": "통화 로그 업데이트 실패",
       "connectToCrm": "설정으로 이동하여 CRM 플랫폼에 연결하세요",
       "apiKeyFailed": "API 키 등록 실패.",
-      "noContactFound": "연락처를 찾을 수 없습니다"
+      "noContactFound": "연락처를 찾을 수 없습니다",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "잘못된 형식: {field}",
