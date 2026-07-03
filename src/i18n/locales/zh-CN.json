@@ -277,7 +277,8 @@
       "multipleContacts": "多个联系人",
       "multipleContactsHelper": "当多个联系人匹配电话号码时的操作",
       "firstAlphabetical": "按字母顺序第一个",
-      "mostRecentActivity": "最近活动"
+      "mostRecentActivity": "最近活动",
+      "earliestCreated": "最早创建"
     },
     "appearance": {
       "groupName": "外观",
@@ -378,7 +379,8 @@
       "callLogUpdateFailed": "通话日志更新失败",
       "connectToCrm": "请前往设置并连接到 CRM 平台",
       "apiKeyFailed": "注册 API 密钥失败。",
-      "noContactFound": "未找到联系人"
+      "noContactFound": "未找到联系人",
+      "earliestCreatedResolverMissingField": "通话未记录。最早创建联系人解析需要每个匹配联系人都包含创建时间。请联系您的 App Connect 开发者，在 connector 的 findContact 响应中添加 createdDate。"
     },
     "error": {
       "wrongFormat": "格式错误：{field}",

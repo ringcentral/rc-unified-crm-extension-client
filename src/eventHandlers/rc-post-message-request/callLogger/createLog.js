@@ -5,8 +5,9 @@ import userCore from '../../../core/user';
 import moment from 'moment';
 import logPage from '../../../components/logPage';
 import dispositionCore from '../../../core/disposition';
-import { getLogConflictInfo, logPageFormDataDefaulting, cacheLogPageData } from '../../../lib/logUtil';
+import { getLogConflictInfo, logPageFormDataDefaulting, cacheLogPageData, getExistingContacts, resolveEarliestCreatedContact } from '../../../lib/logUtil';
 import { CONSTANTS } from '../../../misc/constant';
+import { t } from '../../../i18n';
 
 async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber }) {
     const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
@@ -55,6 +56,7 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
     });
 
     if (isAutoLog && !isCallAutoPopup) {
+        let autoLogConflictWarningMessage = null;
         // Case: auto log but encountering multiple selection that needs user input, so shown as conflicts
         if (hasConflict) {
             // Sub-case: Unknown contact
@@ -84,33 +86,50 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
             }
             else if (conflictType === CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE) {
                 const multipleContactPreference = userCore.getMultipleContactsPreferenceSetting(userSettings).value;
+                const existingMatchedContacts = getExistingContacts(callMatchedContact);
                 switch (multipleContactPreference) {
                     case 'skipLogging':
                         break;
                     case 'firstAlphabetical':
-                        defaultingContact = callMatchedContact.sort((a, b) => a.name.localeCompare(b.name))[0];
+                        defaultingContact = [...existingMatchedContacts].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))[0];
                         hasConflict = false;
                         break;
                     case 'mostRecentActivity':
-                        defaultingContact = callMatchedContact.sort((a, b) => new Date(b.mostRecentActivityDate) - new Date(a.mostRecentActivityDate))[0];
+                        defaultingContact = [...existingMatchedContacts].sort((a, b) => new Date(b.mostRecentActivityDate) - new Date(a.mostRecentActivityDate))[0];
                         hasConflict = false;
+                        break;
+                    case 'earliestCreated':
+                        {
+                            const { contact, missingCreatedDate } = resolveEarliestCreatedContact(callMatchedContact);
+                            if (missingCreatedDate) {
+                                autoLogConflictWarningMessage = t('notifications.warning.earliestCreatedResolverMissingField');
+                                break;
+                            }
+                            defaultingContact = contact;
+                            hasConflict = !defaultingContact;
+                        }
                         break;
                 }
             }
             window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
             if (hasConflict) {
-                const conflictLog = {
-                    type: 'Call',
-                    id: data.body.call.sessionId,
-                    phoneNumber: contactPhoneNumber,
-                    direction: data.body.call.direction,
-                    contactInfo: callMatchedContact ?? [],
-                    subject: logInfo.subject,
-                    note: logInfo.note,
-                    date: moment(data.body.call.startTime).format('MM/DD/YYYY')
-                };
-                const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
-                showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Please log it manually on call history page`, ttl: 5000 });
+                if (autoLogConflictWarningMessage) {
+                    showNotification({ level: 'warning', message: autoLogConflictWarningMessage, ttl: 5000 });
+                }
+                else {
+                    const conflictLog = {
+                        type: 'Call',
+                        id: data.body.call.sessionId,
+                        phoneNumber: contactPhoneNumber,
+                        direction: data.body.call.direction,
+                        contactInfo: callMatchedContact ?? [],
+                        subject: logInfo.subject,
+                        note: logInfo.note,
+                        date: moment(data.body.call.startTime).format('MM/DD/YYYY')
+                    };
+                    const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
+                    showNotification({ level: 'warning', message: `Call not logged. ${conflictContent.description}. Please log it manually on call history page`, ttl: 5000 });
+                }
             }
         }
 

@@ -277,7 +277,8 @@
       "multipleContacts": "Meerdere contacten",
       "multipleContactsHelper": "Wat te doen wanneer meerdere contacten overeenkomen met het telefoonnummer",
       "firstAlphabetical": "Eerst alfabetisch",
-      "mostRecentActivity": "Meest recente activiteit"
+      "mostRecentActivity": "Meest recente activiteit",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "Uiterlijk",
@@ -378,7 +379,8 @@
       "callLogUpdateFailed": "Bijwerken van oproeplog mislukt",
       "connectToCrm": "Ga naar Instellingen en maak verbinding met het CRM-platform",
       "apiKeyFailed": "Registreren van API-sleutel mislukt.",
-      "noContactFound": "Geen contact gevonden"
+      "noContactFound": "Geen contact gevonden",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "Verkeerd formaat: {field}",

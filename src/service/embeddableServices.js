@@ -867,6 +867,10 @@ async function getServiceManifest() {
                     {
                         id: "mostRecentActivity",
                         name: t('settings.autoLogPreferences.mostRecentActivity')
+                    },
+                    {
+                        id: "earliestCreated",
+                        name: t('settings.autoLogPreferences.earliestCreated')
                     }
                 ],
                 value: userCore.getMultipleContactsPreferenceSetting(userSettings).value,
