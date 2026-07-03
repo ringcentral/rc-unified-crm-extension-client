@@ -55,6 +55,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         contactType: existingConversationLogPref[messageLogPrefId].contact.type,
         contactName: existingConversationLogPref[messageLogPrefId].contact.name,
       });
+      responseMessage(data.requestId, { data: 'ok' });
+      return;
     }
     else {
       getContactMatchResult = (await contactCore.getContact({

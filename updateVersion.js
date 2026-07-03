@@ -130,5 +130,7 @@ if (require.main === module) {
 
 module.exports = {
   updateVersionInFile,
-  isValidVersion
+  isValidVersion,
+  FILES_TO_UPDATE,
+  main
 };
