@@ -14,7 +14,7 @@ import userCore from './core/user';
 console.log('import content js to web page');
 
 // type: c2d, quickAccessButton
-async function checkUrlMatch({ type = 'quickAccessButton' }) {
+export async function checkUrlMatch({ type = 'quickAccessButton' }) {
   try {
     const { allowEmbeddingForAllPages } = await chrome.storage.local.get({ allowEmbeddingForAllPages: false });
     if (allowEmbeddingForAllPages) {
@@ -73,7 +73,7 @@ async function checkUrlMatch({ type = 'quickAccessButton' }) {
 
 // Create a C2D instance for a specific root node
 // If sharedWidget is provided, it will be reused instead of creating a new one
-function createC2DInstance({ rootNode, sharedWidget, matcherType, selectedRegion, c2dIgnoreSelector }) {
+export function createC2DInstance({ rootNode, sharedWidget, matcherType, selectedRegion, c2dIgnoreSelector }) {
   let matcher;
   const isNodeIgnored = createC2DNodeIgnorePredicate(c2dIgnoreSelector);
   const validDomExclusions = [
@@ -153,7 +153,7 @@ function createC2DInstance({ rootNode, sharedWidget, matcherType, selectedRegion
   return c2dInstance;
 }
 
-async function initializeC2D() {
+export async function initializeC2D() {
   const isUrlMatched = await checkUrlMatch({ type: 'c2d' });
   if (!isUrlMatched) {
     console.log('[App Connect]URL not matched, C2D not initialized');
@@ -249,7 +249,7 @@ function Root() {
   return React.createElement(RcThemeProvider, null, React.createElement(App, null));
 }
 
-async function RenderQuickAccessButton() {
+export async function RenderQuickAccessButton() {
   const platformInfo = await chrome.storage.local.get('platform-info');
   const isUrlMatched = await checkUrlMatch({ type: 'quickAccessButton' });
   if (!isUrlMatched && platformInfo['platform-info']?.hostname) {
@@ -281,7 +281,7 @@ async function fetchBullhornUserinfo() {
   return { crm_extension_bullhornUsername, crm_extension_bullhorn_user_urls };
 }
 
-async function Initialize() {
+export async function Initialize() {
   // Unique: Pipedrive
   if (window.location.hostname.includes('pipedrive.com')) {
     let { c2dDelay } = await chrome.storage.local.get(
@@ -353,7 +353,7 @@ if (document.readyState !== 'loading') {
 }
 
 // Unique: Insightly
-function registerInsightlyApiKey() {
+export function registerInsightlyApiKey() {
   if (window.location.pathname === '/Users/UserSettings' && window.location.hostname.includes('insightly.com')) {
     const insightlyApiKey = document.querySelector('#apikey').innerHTML;
     const insightlyApiUrl = document.querySelector('#apiUrl').firstChild.innerHTML;
