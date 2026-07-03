@@ -1,6 +1,7 @@
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { seedStorage } from '../setup/storageHelpers';
+import { CONSTANTS } from '../../src/misc/constant';
 
 async function loadMessageLogger() {
   vi.resetModules();
@@ -14,6 +15,10 @@ async function loadMessageLogger() {
   const userCore = {
     getSMSPopSetting: vi.fn((settings) => ({ value: settings?.messageAutoPopup?.value ?? false })),
     getopenContactPageAfterCreationSetting: vi.fn((settings) => ({ value: settings?.openContactPageAfterCreation?.value ?? false })),
+    getUnknownContactPreferenceSetting: vi.fn((settings) => ({ value: settings?.unknownContactPreference?.value ?? 'skipLogging' })),
+    getMultipleContactsPreferenceSetting: vi.fn((settings) => ({ value: settings?.multipleContactsPreference?.value ?? 'skipLogging' })),
+    getNewContactTypeSetting: vi.fn((settings) => ({ value: settings?.newContactType?.value ?? null })),
+    getNewContactNamePrefixSetting: vi.fn((settings) => ({ value: settings?.newContactNamePrefix?.value ?? 'PlaceholderContact' })),
   };
   vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
 
@@ -134,7 +139,7 @@ const context = {
 };
 
 describe('messageLogger', () => {
-  it('rejects extension numbers and unsupported group SMS auto logs early', async () => {
+  it('rejects extension numbers and unsupported group auto logs early', async () => {
     seedStorage({ userSettings: {} });
     const { messageLogger, util, logCore } = await loadMessageLogger();
 
@@ -155,6 +160,7 @@ describe('messageLogger', () => {
     await messageLogger.onEvent({
       data: eventFor({
         conversation: conversation({
+          type: 'Fax',
           correspondents: [
             { phoneNumber: '+16505550100' },
             { phoneNumber: '+16505550200' },
@@ -164,8 +170,78 @@ describe('messageLogger', () => {
       ...context,
     });
     expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
-      message: expect.stringContaining('Group SMS is not supported'),
+      message: expect.stringContaining('Group messages of this type are not supported'),
     }));
+  });
+
+  it('auto logs group SMS members independently and reports skipped conflicts', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: true },
+      },
+    });
+    const { messageLogger, contactCore, logUtil, logCore, util } = await loadMessageLogger();
+
+    contactCore.getContact
+      .mockResolvedValueOnce({
+        contactInfo: [{ id: 'contact-1', type: 'Lead', name: 'Jane Smith' }],
+      })
+      .mockResolvedValueOnce({
+        contactInfo: [],
+      })
+      .mockResolvedValueOnce({
+        contactInfo: [
+          { id: 'contact-3a', type: 'Lead', name: 'Zoe Zeta' },
+          { id: 'contact-3b', type: 'Lead', name: 'Amy Alpha' },
+        ],
+      });
+    logUtil.getLogConflictInfo
+      .mockResolvedValueOnce({
+        hasConflict: false,
+        autoSelectAdditionalSubmission: { disposition: 'sms' },
+        requireManualDisposition: true,
+      })
+      .mockResolvedValueOnce({
+        hasConflict: true,
+        conflictType: CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE,
+        autoSelectAdditionalSubmission: {},
+        requireManualDisposition: false,
+      })
+      .mockResolvedValueOnce({
+        hasConflict: true,
+        conflictType: CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE,
+        autoSelectAdditionalSubmission: {},
+        requireManualDisposition: false,
+      });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          correspondents: [
+            { phoneNumber: '+16505550100' },
+            { phoneNumber: '+16505550200' },
+            { phoneNumber: '+16505550300' },
+          ],
+        }),
+      }),
+      ...context,
+    });
+
+    expect(contactCore.getContact).toHaveBeenCalledTimes(3);
+    expect(logCore.addLog).toHaveBeenCalledTimes(1);
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'contact-1',
+      contactName: 'Jane Smith',
+      contactPhoneNumber: '+16505550100',
+      additionalSubmission: { disposition: 'sms' },
+    }));
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      message: '2 group member(s) could not be auto-logged (no match or multiple matches). Please log them manually.',
+    }));
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('Manual disposition might be needed'),
+    }));
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
   });
 
   it('auto logs messages from stored preferences or contact match results', async () => {
