@@ -159,6 +159,7 @@ async function loadCreateLog() {
           type: 'Lead',
           name: 'Beta Contact',
           createdDate: '2026-07-01T08:00:00Z',
+          mostRecentActivityDate: '2026-07-01T08:00:00Z',
           additionalInfo: {
             Lead: {
               newCategory: [{ const: 'prospect' }],
@@ -221,6 +222,16 @@ async function loadCreateLog() {
         contact: [...existingContacts].sort((a, b) => new Date(a.createdDate) - new Date(b.createdDate))[0] ?? null,
         missingCreatedDate: false,
       };
+    }),
+    resolveMostRecentActivityContact: vi.fn((contactInfo = []) => {
+      const contactsWithActivityDate = (contactInfo || [])
+        .filter((contact) => !contact.isNewContact && contact.mostRecentActivityDate)
+        .map((contact) => ({
+          contact,
+          mostRecentActivityTimestamp: new Date(contact.mostRecentActivityDate).getTime(),
+        }))
+        .filter((contact) => !Number.isNaN(contact.mostRecentActivityTimestamp));
+      return [...contactsWithActivityDate].sort((a, b) => b.mostRecentActivityTimestamp - a.mostRecentActivityTimestamp)[0]?.contact ?? null;
     }),
   };
   vi.doMock('../../src/lib/logUtil.js', () => logUtil);
@@ -549,6 +560,35 @@ describe('callLogger createLog', () => {
       ...context,
     });
     expect(logCore.updateLog).toHaveBeenCalledWith(expect.objectContaining({
+      subject: 'Outbound Call to Alpha Contact',
+      note: 'cached note',
+    }));
+
+    userCore.getMultipleContactsPreferenceSetting.mockReturnValueOnce({ value: 'mostRecentActivity' });
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: true,
+      conflictType: 'Multiple contacts',
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+    await createLog.onEvent({
+      data: eventFor({
+        call: baseCall({ direction: 'Outbound' }),
+      }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550200',
+      userSettings: {},
+      existingCalls: [{ matched: true, sessionId: 'session-1', logData: { note: 'old note', subject: '' } }],
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+    expect(logUtil.resolveMostRecentActivityContact).toHaveBeenCalledWith(expect.arrayContaining([
+      expect.objectContaining({ id: 'contact-b', mostRecentActivityDate: '2026-07-01T08:00:00Z' }),
+      expect.objectContaining({ id: 'contact-a', mostRecentActivityDate: '2026-07-02T08:00:00Z' }),
+    ]));
+    expect(logCore.updateLog).toHaveBeenLastCalledWith(expect.objectContaining({
       subject: 'Outbound Call to Alpha Contact',
       note: 'cached note',
     }));

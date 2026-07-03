@@ -257,6 +257,17 @@ function resolveEarliestCreatedContact(contactInfo = []) {
     };
 }
 
+function resolveMostRecentActivityContact(contactInfo = []) {
+    const contactsWithActivityDate = getExistingContacts(contactInfo)
+        .map(contact => ({
+            contact,
+            mostRecentActivityTimestamp: parseContactDateValue(contact.mostRecentActivityDate)
+        }))
+        .filter(contact => contact.mostRecentActivityTimestamp !== null);
+    return [...contactsWithActivityDate]
+        .sort((a, b) => b.mostRecentActivityTimestamp - a.mostRecentActivityTimestamp)[0]?.contact ?? null;
+}
+
 async function getLogConflictInfo({
     platform,
     isAutoLog,
@@ -446,6 +457,7 @@ exports.logPageFormDataDefaulting = logPageFormDataDefaulting;
 exports.getExistingContacts = getExistingContacts;
 exports.parseContactDateValue = parseContactDateValue;
 exports.hasValidDateValue = hasValidDateValue;
+exports.resolveMostRecentActivityContact = resolveMostRecentActivityContact;
 exports.resolveEarliestCreatedContact = resolveEarliestCreatedContact;
 exports.addPendingRecordingSessionId = addPendingRecordingSessionId;
 exports.triggerPendingRecordingCheck = triggerPendingRecordingCheck;

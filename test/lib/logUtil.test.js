@@ -223,6 +223,69 @@ describe('logUtil', () => {
     });
   });
 
+  it('resolves earliest created and most recent activity contacts by parsed timestamps', async () => {
+    const logUtil = await loadLogUtil();
+    const contacts = [
+      {
+        id: 'old-created-new-activity',
+        createdDate: '1704067200',
+        mostRecentActivityDate: '20240103120000',
+      },
+      {
+        id: 'new-created-old-activity',
+        createdDate: '2024-01-02T00:00:00Z',
+        mostRecentActivityDate: '2024-01-02T12:00:00Z',
+      },
+      {
+        id: 'placeholder',
+        isNewContact: true,
+        createdDate: '2020-01-01T00:00:00Z',
+        mostRecentActivityDate: '2030-01-01T00:00:00Z',
+      },
+    ];
+
+    expect(logUtil.parseContactDateValue('1704067200')).toBe(logUtil.parseContactDateValue('2024-01-01T00:00:00Z'));
+    expect(logUtil.resolveEarliestCreatedContact(contacts)).toMatchObject({
+      contact: expect.objectContaining({ id: 'old-created-new-activity' }),
+      missingCreatedDate: false,
+    });
+    expect(logUtil.resolveMostRecentActivityContact(contacts)).toMatchObject({
+      id: 'old-created-new-activity',
+    });
+  });
+
+  it('resolves most recent activity for ISO timestamps with timezone offsets', async () => {
+    const logUtil = await loadLogUtil();
+    const contacts = [
+      {
+        id: 2289883081,
+        name: 'Da Prod',
+        phone: '+17206789819',
+        type: 'Person',
+        createdDate: '2025-09-29T15:03:01+08:00',
+        mostRecentActivityDate: '2025-11-06T16:07:22+08:00',
+      },
+      {
+        id: 2412269808,
+        name: 'Da Multi',
+        phone: '+17206789819',
+        type: 'Person',
+        createdDate: '2026-07-03T14:37:11+08:00',
+        mostRecentActivityDate: '2026-07-03T14:37:13+08:00',
+      },
+      {
+        id: 'createNewContact',
+        name: 'Create new contact...',
+        isNewContact: true,
+      },
+    ];
+
+    expect(logUtil.resolveMostRecentActivityContact(contacts)).toMatchObject({
+      id: 2412269808,
+      name: 'Da Multi',
+    });
+  });
+
   it('returns no conflict for manual logs and maps default message-log values', async () => {
     seedStorage({
       userSettings: {

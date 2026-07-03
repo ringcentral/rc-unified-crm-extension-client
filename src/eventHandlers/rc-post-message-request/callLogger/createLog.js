@@ -5,7 +5,7 @@ import userCore from '../../../core/user';
 import moment from 'moment';
 import logPage from '../../../components/logPage';
 import dispositionCore from '../../../core/disposition';
-import { getLogConflictInfo, logPageFormDataDefaulting, cacheLogPageData, getExistingContacts, resolveEarliestCreatedContact } from '../../../lib/logUtil';
+import { getLogConflictInfo, logPageFormDataDefaulting, cacheLogPageData, getExistingContacts, resolveEarliestCreatedContact, resolveMostRecentActivityContact } from '../../../lib/logUtil';
 import { CONSTANTS } from '../../../misc/constant';
 import { t } from '../../../i18n';
 
@@ -95,8 +95,8 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
                         hasConflict = false;
                         break;
                     case 'mostRecentActivity':
-                        defaultingContact = [...existingMatchedContacts].sort((a, b) => new Date(b.mostRecentActivityDate) - new Date(a.mostRecentActivityDate))[0];
-                        hasConflict = false;
+                        defaultingContact = resolveMostRecentActivityContact(callMatchedContact);
+                        hasConflict = !defaultingContact;
                         break;
                     case 'earliestCreated':
                         {
