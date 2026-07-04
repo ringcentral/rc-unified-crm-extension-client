@@ -27,6 +27,7 @@ const SUPPORTED_LOCALES = [
     'fi-FI',
     'fr-CA',
     'fr-FR',
+    'hi-IN',
     'it-IT',
     'ja-JP',
     'ko-KR',
@@ -90,6 +91,7 @@ const LOCALE_DISPLAY_NAMES = {
     'es-419': 'Español (Latinoamérica)',
     'fr-FR': 'Français',
     'fr-CA': 'Français (Canada)',
+    'hi-IN': 'हिन्दी',
     'it-IT': 'Italiano',
     'nl-NL': 'Nederlands',
     'pt-BR': 'Português (Brasil)',
@@ -108,6 +110,7 @@ const LOCALE_DISPLAY_NAMES = {
 const ACCEPT_LANGUAGE_MAP = {
     'en-AU': 'en-GB',
     'en-CA': 'en-US',
+    'hi-IN': 'en-US',
     'ko-KR': 'ko_KR'
 };
 

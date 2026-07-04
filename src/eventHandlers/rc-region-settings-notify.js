@@ -1,5 +1,7 @@
 import i18n from '../i18n';
 import embeddableServices from '../service/embeddableServices';
+import { syncLocaleToEmbeddable } from '../lib/embeddableLocale';
+import { refreshLocalizedCustomizedPageTitles } from '../service/customizedPageLocaleService';
 
 async function onEvent({data}){
     // get region settings from widget
@@ -8,29 +10,18 @@ async function onEvent({data}){
       return;
     }
 
-<<<<<<< Updated upstream
-    // If the user picked an explicit language, the region should not override it.
-    const { languageOverride } = await chrome.storage.local.get({ languageOverride: 'auto' });
-    const hasManualLanguage = languageOverride && languageOverride !== 'auto';
-
-    // Handle locale change and refresh UI strings
-    if (data.countryCode && !hasManualLanguage) {
-      await i18n.setLocale(data.countryCode);
-      // Re-register service to refresh UI strings with new locale
-      try {
-        const services = await embeddableServices.getServiceManifest();
-        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-          type: 'rc-adapter-register-third-party-service',
-          service: services
-        }, '*');
-      } catch (e) {
-        console.warn('[i18n] Failed to refresh service manifest after country code change:', e);
-      }
-=======
     try {
       await chrome.storage.local.set({ selectedRegion: data.countryCode });
     } catch (e) {
       console.warn('[i18n] Failed to persist selectedRegion:', e);
+    }
+
+    // If the user picked an explicit language, the region should not override it.
+    const { languageOverride } = await chrome.storage.local.get({ languageOverride: 'auto' });
+    const hasManualLanguage = languageOverride && languageOverride !== 'auto';
+    if (hasManualLanguage) {
+      await syncLocaleToEmbeddable(languageOverride);
+      return;
     }
 
     // Handle locale change and refresh UI strings.
@@ -40,6 +31,7 @@ async function onEvent({data}){
     // settings UI and makes it look like changes were not saved.
     const previousLocale = i18n.getLocale();
     const newLocale = await i18n.setLocale(data.countryCode);
+    await syncLocaleToEmbeddable(newLocale);
     if (newLocale === previousLocale) {
       return;
     }
@@ -52,9 +44,9 @@ async function onEvent({data}){
         type: 'rc-adapter-register-third-party-service',
         service: services
       }, '*');
+      await refreshLocalizedCustomizedPageTitles();
     } catch (e) {
       console.warn('[i18n] Failed to refresh service manifest after country code change:', e);
->>>>>>> Stashed changes
     }
 }
 

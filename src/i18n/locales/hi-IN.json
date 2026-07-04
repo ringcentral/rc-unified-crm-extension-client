@@ -1,0 +1,425 @@
+{
+  "common": {
+    "buttons": {
+      "save": "सहेजें",
+      "cancel": "रद्द करें",
+      "submit": "सबमिट करें",
+      "update": "अपडेट करें",
+      "connect": "कनेक्ट करें",
+      "open": "खोलें",
+      "logout": "लॉगआउट",
+      "select": "चुनें",
+      "schedule": "शेड्यूल करें",
+      "refresh": "रीफ़्रेश करें"
+    },
+    "labels": {
+      "admin": "(एडमिन)",
+      "version": "संस्करण",
+      "author": "लेखक",
+      "license": "लाइसेंस",
+      "warning": "चेतावनी",
+      "search": "खोजें",
+      "filter": "फ़िल्टर",
+      "contact": "संपर्क",
+      "none": "कोई नहीं",
+      "disabled": "अक्षम",
+      "private": "निजी",
+      "sharedWithYou": "आपसे साझा किया गया",
+      "all": "सभी",
+      "value": "मान",
+      "customizableByUser": "उपयोगकर्ता द्वारा अनुकूलन योग्य",
+      "licenseStatus": "लाइसेंस स्थिति"
+    },
+    "status": {
+      "online": "ऑनलाइन",
+      "offline": "ऑफ़लाइन"
+    }
+  },
+  "pages": {
+    "hostname": {
+      "setup": "सेटअप",
+      "select": "चुनें",
+      "inputHostname": "होस्टनेम दर्ज करें",
+      "next": "आगे",
+      "instructionTitle": "अपना {platform} खाता सेट करने के लिए नीचे दिए निर्देशों का पालन करें:",
+      "url": "{platform} URL",
+      "urlPlaceholder": "URL...",
+      "invalidUrl": "अमान्य URL! कृपया इसे इस फ़ॉर्मेट में दर्ज करें: \"{format}\""
+    },
+    "about": {
+      "title": "जानकारी",
+      "introduction": "RingCentral App Connect समर्थित CRM प्लेटफ़ॉर्म में पूर्ण वेब फ़ोन एम्बेड करता है.",
+      "chromeExtension": "ब्राउज़र एक्सटेंशन",
+      "extensionAuthor": "लेखक: RingCentral, Inc.",
+      "versionLabel": "संस्करण: {version}",
+      "eula": "अंतिम उपयोगकर्ता लाइसेंस अनुबंध",
+      "adapter": "कनेक्टर",
+      "adapterAuthor": "लेखक: {author}",
+      "website": "वेबसाइट",
+      "support": "सहायता"
+    },
+    "support": {
+      "title": "सहायता",
+      "documentation": "दस्तावेज़",
+      "releaseNotes": "रिलीज़ नोट्स",
+      "getSupport": "सहायता प्राप्त करें",
+      "writeReview": "समीक्षा लिखें",
+      "communityForums": "समुदाय फ़ोरम",
+      "serverStatus": "सर्वर स्थिति: {status}",
+      "versionLabel": "संस्करण: v{version}",
+      "rcAccountIdLabel": "RingCentral खाता ID: {accountId}",
+      "sendErrorReport": "त्रुटि रिपोर्ट भेजें",
+      "clearLogConflicts": "लॉग विरोध साफ़ करें",
+      "factoryResetWarning": "फ़ैक्टरी रीसेट इस एक्सटेंशन से CRM और RingCentral दोनों खातों को डिसकनेक्ट करेगा और आपको लॉगआउट कर देगा.",
+      "factoryReset": "फ़ैक्टरी रीसेट"
+    },
+    "admin": {
+      "title": "एडमिन",
+      "managedSettings": "प्रबंधित सेटिंग्स",
+      "plugins": "प्लगइन",
+      "serverSideLogging": "सर्वर-साइड लॉगिंग (बीटा)"
+    },
+    "managedSettings": {
+      "title": "प्रबंधित सेटिंग्स",
+      "general": "सामान्य",
+      "googleSheetsConfig": "Google Sheets कॉन्फ़िगरेशन",
+      "activityLogging": "गतिविधि लॉगिंग",
+      "callPop": "कॉल पॉप",
+      "advancedFeatures": "उन्नत सुविधाएं",
+      "customSettings": "कस्टम सेटिंग्स",
+      "plugins": "प्लगइन"
+    },
+    "generalSettings": {
+      "title": "सामान्य",
+      "appearance": "दिखावट",
+      "enabledDomains": "सक्षम डोमेन"
+    },
+    "platformSelection": {
+      "title": "प्लेटफ़ॉर्म चुनें",
+      "searchPlaceholder": "फ़िल्टर के साथ खोजें..."
+    },
+    "log": {
+      "saveTo": "{platform} में सहेजें",
+      "editLog": "लॉग संपादित करें",
+      "activityTitle": "गतिविधि शीर्षक",
+      "note": "नोट",
+      "scheduleCallback": "कॉलबैक शेड्यूल करें",
+      "callbackTime": "कॉलबैक समय",
+      "newContactName": "नया संपर्क नाम",
+      "contactType": "संपर्क प्रकार",
+      "searchContacts": "संपर्क खोजें",
+      "multipleContactsWarning": "कई संपर्क मिले. कृपया इस गतिविधि से जोड़ने के लिए संपर्क चुनें.",
+      "noContactWarning": "कोई संपर्क नहीं मिला. प्लेसहोल्डर संपर्क बनाने के लिए नाम दर्ज करें.",
+      "inboundCallFrom": "{name} से इनबाउंड {type}",
+      "outboundCallTo": "{name} को आउटबाउंड {type}",
+      "enterTitle": "शीर्षक दर्ज करें...",
+      "enterNote": "नोट दर्ज करें...",
+      "enterName": "नाम दर्ज करें...",
+      "addToCalldownList": "इस संपर्क को कॉल बैक सूची में जोड़ें"
+    },
+    "unloggedCalls": {
+      "title": "लॉग न की गई कॉल"
+    },
+    "feedback": {
+      "title": "फ़ीडबैक"
+    },
+    "reports": {
+      "title": "रिपोर्ट",
+      "userStats": "उपयोगकर्ता आंकड़े",
+      "companyStats": "कंपनी आंकड़े"
+    },
+    "schedule": {
+      "title": "कॉल बैक सूची में जोड़ें",
+      "phoneNumber": "फ़ोन नंबर",
+      "scheduleTime": "शेड्यूल समय"
+    },
+    "calldown": {
+      "title": "कॉल बैक",
+      "contacts": "संपर्क",
+      "filterByName": "नाम से फ़िल्टर करें",
+      "all": "सभी",
+      "notCalled": "कॉल नहीं किया गया",
+      "called": "कॉल किया गया",
+      "scheduled": "शेड्यूल किया गया",
+      "call": "कॉल",
+      "text": "संदेश",
+      "viewContact": "संपर्क देखें",
+      "edit": "संपादित करें",
+      "markComplete": "पूर्ण के रूप में चिह्नित करें",
+      "delete": "हटाएं"
+    },
+    "developerSettings": {
+      "title": "डेवलपर सेटिंग्स",
+      "clearPlatformInfoWarning": "यह वर्तमान CRM प्लेटफ़ॉर्म जानकारी साफ़ कर देगा ताकि नए CRM प्लेटफ़ॉर्म के साथ फिर से प्रारंभ किया जा सके.",
+      "clearPlatformInfo": "प्लेटफ़ॉर्म जानकारी साफ़ करें",
+      "checkInterfaceImplementations": "इंटरफ़ेस कार्यान्वयन जांचें"
+    },
+    "multiContactPrompt": {
+      "title": "खोलने के लिए संपर्क पर क्लिक करें",
+      "contacts": "संपर्क"
+    },
+    "pluginsManage": {
+      "title": "प्लगइन",
+      "installedPlugins": "इंस्टॉल किए गए प्लगइन",
+      "pluginMarket": "उपलब्ध प्लगइन"
+    }
+  },
+  "plugins": {
+    "title": "प्लगइन",
+    "configure": "कॉन्फ़िगर करें",
+    "configurePage": "प्लगइन कॉन्फ़िगर करें",
+    "install": "इंस्टॉल करें",
+    "uninstall": "अनइंस्टॉल करें",
+    "enable": "सक्षम करें",
+    "enablePlugin": "प्लगइन सक्षम करें",
+    "basicInfo": "मूल जानकारी",
+    "noPluginInstalled": "कोई प्लगइन इंस्टॉल नहीं है",
+    "by": "{author} द्वारा",
+    "pluginMarket": "उपलब्ध प्लगइन",
+    "searchPlaceholder": "फ़िल्टर के साथ खोजें...",
+    "explore": "एक्सप्लोर करें"
+  },
+  "settings": {
+    "preconfigure": {
+      "noCrmSelected": "कोई CRM चयनित नहीं"
+    },
+    "auth": {
+      "authorizedTitle": "लॉगआउट",
+      "unauthorizedTitle": "कनेक्ट करें",
+      "developedBy": "{author} द्वारा विकसित"
+    },
+    "buttons": {
+      "callLater": "कॉल बैक"
+    },
+    "logging": {
+      "groupName": "गतिविधि लॉगिंग",
+      "autoLogCall": "फ़ोन कॉल अपने-आप लॉग करें",
+      "autoLogCallDesc": "इस ऐप में कॉल समाप्त होने पर अपने-आप लॉग करें",
+      "autoLogSMS": "SMS बातचीत अपने-आप लॉग करें",
+      "autoLogSMSDesc": "इस ऐप में SMS भेजे या प्राप्त होने पर अपने-आप लॉग करें",
+      "autoLogVoicemail": "वॉइसमेल संदेश अपने-आप लॉग करें",
+      "autoLogVoicemailDesc": "इस ऐप में वॉइसमेल प्राप्त होने पर अपने-आप लॉग करें",
+      "autoLogInboundFax": "इनबाउंड फ़ैक्स अपने-आप लॉग करें",
+      "autoLogInboundFaxDesc": "इस ऐप में इनबाउंड फ़ैक्स प्राप्त होने पर अपने-आप लॉग करें",
+      "autoLogOutboundFax": "आउटबाउंड फ़ैक्स अपने-आप लॉग करें",
+      "autoLogOutboundFaxDesc": "इस ऐप में आउटबाउंड फ़ैक्स भेजे जाने पर अपने-आप लॉग करें",
+      "retroCallLogSync": "पूर्वव्यापी कॉल लॉग सिंक",
+      "retroCallLogSyncDesc": "छूटी हुई गतिविधि खोजने और लॉग करने के लिए समय-समय पर स्कैन करता है",
+      "disableRetroCallLogSync": "पूर्वव्यापी कॉल लॉग सिंक अक्षम करें",
+      "oneTimeLog": "एक-बार कॉल लॉगिंग",
+      "oneTimeLogDesc": "पूरी कॉल जानकारी उपलब्ध होने तक लॉगिंग में देरी करता है",
+      "enableOneTimeLog": "एक-बार कॉल लॉगिंग सक्षम करें",
+      "popupLogPageAfterCall": "(पुराना) कॉल के बाद कॉल लॉगिंग पेज खोलें",
+      "popupLogPageAfterCallDesc": "हर कॉल के बाद लॉगिंग फ़ॉर्म अपने-आप खोलें",
+      "popupLogPageAfterSMS": "(पुराना) संदेश के बाद SMS लॉगिंग पेज खोलें",
+      "popupLogPageAfterSMSDesc": "हर संदेश के बाद लॉगिंग फ़ॉर्म अपने-आप खोलें"
+    },
+    "callLogDetails": {
+      "groupName": "कॉल लॉग विवरण",
+      "agentNotes": "एजेंट द्वारा दर्ज नोट",
+      "agentNotesDesc": "अपने द्वारा मैन्युअल रूप से दर्ज नोट लॉग करें",
+      "agentNotesDescAdmin": "एजेंट उपयोगकर्ता द्वारा मैन्युअल रूप से दर्ज नोट लॉग करें",
+      "callSessionId": "कॉल सत्र ID",
+      "callSessionIdDesc": "RingCentral कॉल सत्र ID लॉग करें",
+      "rcUserName": "RingCentral उपयोगकर्ता नाम",
+      "rcUserNameDesc": "RingCentral उपयोगकर्ता नाम लॉग करें",
+      "rcNumber": "RingCentral फ़ोन नंबर",
+      "rcNumberDesc": "RingCentral फ़ोन नंबर लॉग करें",
+      "callSubject": "कॉल विषय",
+      "callSubjectDesc": "कॉल का सार बताने वाला छोटा वाक्य लॉग करें, जैसे 'इनबाउंड कॉल from...'",
+      "contactNumber": "संपर्क का फ़ोन नंबर",
+      "contactNumberDesc": "दूसरे सहभागी की संपर्क जानकारी लॉग करें",
+      "dateTime": "दिनांक और समय",
+      "dateTimeDesc": "कॉल का स्पष्ट आरंभ और अंत दिनांक/समय लॉग करें",
+      "dateFormat": "दिनांक फ़ॉर्मेट",
+      "dateFormatDesc": "कॉल लॉग में दिनांक और समय का फ़ॉर्मेट",
+      "callDuration": "कॉल अवधि",
+      "callDurationDesc": "कॉल अवधि मिनट और सेकंड में लॉग करें",
+      "callResult": "कॉल परिणाम",
+      "callResultDesc": "कॉल का परिणाम लॉग करें, जैसे कॉल कनेक्ट हुई",
+      "recordingLink": "रिकॉर्डिंग का लिंक",
+      "recordingLinkDesc": "यदि मौजूद हो, तो कॉल रिकॉर्डिंग का लिंक दें",
+      "smartSummary": "स्मार्ट सारांश",
+      "smartSummaryDesc": "यदि मौजूद हो, तो AI-जनित कॉल सारांश लॉग करें",
+      "transcript": "कॉल ट्रांसक्रिप्ट",
+      "transcriptDesc": "यदि मौजूद हो, तो AI-जनित कॉल ट्रांसक्रिप्ट लॉग करें",
+      "aiAssistantRequired": "AI Assistant आवश्यक",
+      "ringSenseTranscript": "ACE ट्रांसक्रिप्ट",
+      "ringSenseTranscriptDesc": "[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) आवश्यक. केवल सर्वर-साइड लॉगिंग.",
+      "ringSenseCallScore": "ACE कॉल स्कोर",
+      "ringSenseCallScoreDesc": "[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) आवश्यक. केवल सर्वर-साइड लॉगिंग.",
+      "ringSenseSummary": "ACE सारांश",
+      "ringSenseSummaryDesc": "[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) आवश्यक. केवल सर्वर-साइड लॉगिंग.",
+      "ringSenseBulletedSummary": "ACE बुलेट सारांश",
+      "ringSenseBulletedSummaryDesc": "[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) आवश्यक. केवल सर्वर-साइड लॉगिंग.",
+      "ringSenseRecordingLink": "ACE रिकॉर्डिंग लिंक",
+      "ringSenseRecordingLinkDesc": "[ACE license](https://www.ringcentral.com/ringsense.html?ref=AppConnect) आवश्यक. केवल सर्वर-साइड लॉगिंग.",
+      "callJourney": "कॉल यात्रा",
+      "callJourneyDesc": "केवल सर्वर-साइड लॉगिंग.",
+      "dateFormatGlobal24H": "वैश्विक - 24H (जैसे 2024-01-15 14:30:45)",
+      "dateFormatGlobal12H": "वैश्विक - 12H (जैसे 2024-01-15 02:30:45 PM)",
+      "dateFormatUS12H": "US - 12H (जैसे 01/15/2024 02:30:45 PM)",
+      "dateFormatUS24H": "US - 24H (जैसे 01/15/2024 14:30:45)",
+      "dateFormatEU24H": "EU - 24H (जैसे 15/01/2024 14:30:45)",
+      "dateFormatEU12H": "EU - 12H (जैसे 15/01/2024 02:30:45 PM)"
+    },
+    "autoLogPreferences": {
+      "groupName": "ऑटो लॉग प्राथमिकताएं",
+      "groupDesc": "ऑटो लॉगिंग स्थितियों के लिए प्राथमिकताएं सेट करें",
+      "unknownContact": "अज्ञात संपर्क",
+      "unknownContactHelper": "जब फ़ोन नंबर किसी संपर्क से मेल न खाए तो क्या करें",
+      "skipLogging": "लॉगिंग छोड़ें",
+      "createNewPlaceholder": "नया प्लेसहोल्डर संपर्क बनाएं",
+      "newContactType": "नया संपर्क प्रकार (नया संपर्क बनाते समय लागू)",
+      "newContactTypeHelper": "प्लेसहोल्डर संपर्क बनाते समय संपर्क प्रकार क्या होना चाहिए",
+      "newContactNamePrefix": "नए संपर्क नाम का उपसर्ग (नया संपर्क बनाते समय लागू)",
+      "newContactNamePrefixHelper": "नाम में Caller ID (यदि उपलब्ध हो) + फ़ोन नंबर होगा",
+      "multipleContacts": "कई संपर्क",
+      "multipleContactsHelper": "जब कई संपर्क फ़ोन नंबर से मेल खाते हों तो क्या करें",
+      "firstAlphabetical": "वर्णानुक्रम में पहला",
+      "mostRecentActivity": "सबसे हाल की गतिविधि"
+    },
+    "appearance": {
+      "groupName": "दिखावट",
+      "groupDesc": "डिस्प्ले और थीम प्राथमिकताएं बदलें",
+      "customizeTabs": "टैब अनुकूलित करें",
+      "customizeTabsDesc": "एक्सटेंशन इंटरफ़ेस में कौन से टैब दिखें, नियंत्रित करें",
+      "showChatTab": "चैट टैब दिखाएं",
+      "showMeetingsTab": "मीटिंग टैब दिखाएं",
+      "showTextTab": "संदेश टैब दिखाएं",
+      "showFaxTab": "फ़ैक्स टैब दिखाएं",
+      "showVoicemailTab": "वॉइसमेल टैब दिखाएं",
+      "showRecordingsTab": "रिकॉर्डिंग टैब दिखाएं",
+      "showContactsTab": "संपर्क टैब दिखाएं",
+      "showUserReportTab": "उपयोगकर्ता रिपोर्ट टैब दिखाएं",
+      "showCalldownTab": "कॉल बैक टैब दिखाएं",
+      "showAppointmentsTab": "अपॉइंटमेंट टैब दिखाएं",
+      "notificationLevel": "सूचना स्तर",
+      "notificationLevelDesc": "एक्सटेंशन में दिखाया जाने वाला सूचना स्तर चुनें.",
+      "notificationLevelSelectDesc": "किस प्रकार की सूचनाएं दिखानी हैं चुनें",
+      "success": "सफलता",
+      "warning": "चेतावनी",
+      "error": "त्रुटि",
+      "widgetSettings": "विजेट सेटिंग्स",
+      "widgetSettingsDesc": "विजेट सेटिंग्स बदलें",
+      "quickAccessButtonSize": "क्विक एक्सेस बटन आकार",
+      "small": "छोटा",
+      "medium": "मध्यम",
+      "large": "बड़ा",
+      "extraLarge": "बहुत बड़ा",
+      "phoneNumberFormat": "फ़ोन नंबर फ़ॉर्मेट"
+    },
+    "callPop": {
+      "groupName": "कॉल पॉप",
+      "incomingCallPop": "इनकमिंग कॉल पॉप",
+      "incomingCallPopHelper": "इनकमिंग कॉल के लिए कॉल पॉप कब ट्रिगर करना है चुनें.",
+      "outgoingCallPop": "आउटगोइंग कॉल पॉप",
+      "outgoingCallPopHelper": "आउटगोइंग कॉल के लिए कॉल पॉप कब ट्रिगर करना है चुनें.",
+      "onFirstRing": "पहली घंटी पर",
+      "onAnswer": "उत्तर देने पर",
+      "multiContactBehavior": "कई-संपर्क मिलान व्यवहार",
+      "multiContactBehaviorHelper": "जब कई संपर्क फ़ोन नंबर से मेल खाएं तो क्या करना है चुनें.",
+      "openAllMatches": "सभी मिलान खोलें",
+      "promptToSelect": "चुनने के लिए पूछें",
+      "allowExtensionLogging": "एक्सटेंशन नंबर लॉगिंग की अनुमति दें",
+      "managedByAdmin": "यह सेटिंग एडमिन द्वारा प्रबंधित है",
+      "contactCreatedCallPop": "संपर्क बनने पर कॉल पॉप",
+      "contactCreatedCallPopDesc": "संपर्क बनाने के तुरंत बाद उसे खोलें",
+      "openContactFromIncoming": "इनकमिंग कॉल से संपर्क खोलें",
+      "openContactFromOutgoing": "आउटगोइंग कॉल से संपर्क खोलें",
+      "openContactAfterCreating": "बनाने के बाद संपर्क खोलें",
+      "overridingNumberFormat": "ओवरराइडिंग नंबर फ़ॉर्मेट",
+      "overridingNumberFormatWarning": "कृपया अपना ओवरराइडिंग फ़ोन नंबर फ़ॉर्मेट दर्ज करें: (कृपया अंक दिखाने के लिए # का उपयोग करें, जैसे (###) ###-###)"
+    },
+    "enabledDomains": {
+      "groupName": "सक्षम डोमेन",
+      "groupDesc": "उन URL को प्रबंधित करें जिन पर App Connect सक्षम है",
+      "clickToDialWarning": "क्लिक-टू-डायल एक पॉपअप विजेट है जो उपयोगकर्ता के फ़ोन नंबर पर hover करने पर दिखेगा.",
+      "clickToDialMode": "क्लिक-टू-डायल सक्षम मोड",
+      "crmOnly": "केवल कनेक्टेड CRM के लिए सक्षम करें",
+      "whitelist": "डिफ़ॉल्ट रूप से ब्लॉक करें (फिर अनुमति वाली साइटों की सूची प्रबंधित करें)",
+      "blacklist": "डिफ़ॉल्ट रूप से अनुमति दें (फिर ब्लॉक की जाने वाली साइटों की सूची प्रबंधित करें)",
+      "clickToDialUrls": "क्लिक-टू-डायल URL",
+      "clickToDialUrlsHelper": "व्हाइटलिस्ट की जाने वाली पेज URL दर्ज करें. कई URL को कॉमा से अलग करें. वाइल्डकार्ड के रूप में * का उपयोग करें.",
+      "quickAccessWarning": "क्विक एक्सेस बटन स्क्रीन के नीचे दाईं ओर दिखाया जाता है.",
+      "quickAccessMode": "क्विक एक्सेस बटन सक्षम मोड",
+      "quickAccessUrls": "क्विक एक्सेस बटन URL"
+    },
+    "advanced": {
+      "groupName": "उन्नत सुविधाएं",
+      "developerMode": "डेवलपर मोड",
+      "developerModeDesc": "डेवलपर सेटिंग्स तक पहुंचने के लिए डेवलपर मोड सक्षम करें.",
+      "autoOpenExtension": "एक्सटेंशन अपने-आप खोलें",
+      "autoOpenExtensionDesc": "CRM पेज लोड होने पर एक्सटेंशन खोला जाएगा."
+    },
+    "numberFormatter": {
+      "title": "नंबर फ़ॉर्मैटर",
+      "phoneNumberAlternatives": "फ़ोन नंबर फ़ॉर्मेट विकल्प",
+      "info": "कृपया अपना ओवरराइडिंग फ़ोन नंबर फ़ॉर्मेट दर्ज करें: (कृपया अंक दिखाने के लिए # का उपयोग करें, जैसे (###) ###-###) [यह कैसे काम करता है](https://appconnect.labs.ringcentral.com/users/phone-number-formats/#how-it-works)",
+      "format1": "फ़ॉर्मेट 1",
+      "format2": "फ़ॉर्मेट 2",
+      "format3": "फ़ॉर्मेट 3"
+    },
+    "googleSheets": {
+      "config": "Google Sheets कॉन्फ़िग"
+    },
+    "language": {
+      "groupName": "भाषा",
+      "groupDesc": "एक्सटेंशन की प्रदर्शन भाषा चुनें",
+      "label": "प्रदर्शन भाषा",
+      "helper": "स्वचालित आपके RingCentral क्षेत्र का अनुसरण करता है. भाषा चुनने से यह ओवरराइड हो जाता है.",
+      "auto": "स्वचालित (RingCentral क्षेत्र का अनुसरण करें)"
+    }
+  },
+  "notifications": {
+    "success": {
+      "callLogAdded": "कॉल लॉग जोड़ा गया",
+      "messageLogAdded": "संदेश लॉग जोड़ा गया",
+      "callLogUpdated": "कॉल लॉग अपडेट किया गया",
+      "authorized": "सफलतापूर्वक अधिकृत.",
+      "unauthorized": "सफलतापूर्वक अनधिकृत.",
+      "openingContactPage": "संपर्क पेज खोजने और खोलने की कोशिश की जा रही है...",
+      "loggedOut": "सफलतापूर्वक लॉगआउट किया गया."
+    },
+    "warning": {
+      "callLogFailed": "कॉल लॉग सहेजने में विफल",
+      "callLogUpdateFailed": "कॉल लॉग अपडेट विफल",
+      "connectToCrm": "कृपया सेटिंग्स में जाकर CRM प्लेटफ़ॉर्म से कनेक्ट करें",
+      "apiKeyFailed": "API key पंजीकृत करने में विफल.",
+      "noContactFound": "कोई संपर्क नहीं मिला",
+      "extensionNumberNotLoggable": "एक्सटेंशन नंबर लॉग नहीं किए जा सकते",
+      "groupTypeNotSupported": "इस प्रकार के समूह संदेश ऑटो लॉग के लिए समर्थित नहीं हैं. कृपया मैन्युअल रूप से लॉग करें.",
+      "groupMembersSkipped": "{count} समूह सदस्य ऑटो-लॉग नहीं हो सके (कोई मिलान नहीं या कई मिलान). कृपया उन्हें मैन्युअल रूप से लॉग करें.",
+      "manualDispositionNeeded": "मैन्युअल डिस्पोज़िशन की आवश्यकता हो सकती है. कृपया लॉग किए गए संदेश को डिस्पोज़िशन में संपादित करें.",
+      "messageNotLogged": "संदेश लॉग नहीं हुआ. {details}.",
+      "voicemailNotLogged": "वॉइसमेल लॉग नहीं हुआ. {details}.",
+      "faxNotLogged": "फ़ैक्स लॉग नहीं हुआ. {details}."
+    },
+    "error": {
+      "wrongFormat": "गलत फ़ॉर्मेट: {field}",
+      "logoutFailed": "लॉगआउट करने में विफल."
+    }
+  },
+  "conflicts": {
+    "multipleContacts": "कई संपर्क",
+    "noMatchedContact": "कोई मेल खाता संपर्क नहीं है",
+    "multipleMatchedContacts": "कई मेल खाते संपर्क हैं",
+    "multipleAssociations": "कई संबद्ध \"{associations}\" हैं."
+  },
+  "dateFormats": {
+    "general12H": "2024-01-15 02:30:45 PM - सामान्य 12H",
+    "general24H": "2024-01-15 14:30:45 - सामान्य 24H",
+    "us12H": "01/15/2024 02:30:45 PM - US 12H",
+    "us24H": "01/15/2024 14:30:45 - US 24H",
+    "eu12H": "15/01/2024 02:30:45 PM - EU 12H",
+    "eu24H": "15/01/2024 14:30:45 - EU 24H"
+  },
+  "misc": {
+    "clickToDialCollision": "RingCentral for Google Browser एक्सटेंशन मिला है. आप अपने इच्छित व्यवहार के लिए क्लिक-टू-डायल प्राथमिकताएं अनुकूलित कर सकते हैं",
+    "clickToDialCollisionTitle": "क्लिक-टू-डायल काम नहीं कर सकता",
+    "configure": "कॉन्फ़िगर करें",
+    "pipedriveStep2": "(2/3) कृपया एक्सटेंशन में अपने RingCentral खाते से साइन इन करें. यदि कुछ नहीं होता है, तो इस पेज को रीफ़्रेश करें और कुछ सेकंड प्रतीक्षा करें.",
+    "pipedriveStep3": "(3/3) सेटअप पूरा हुआ. अब आप यह पेज बंद कर सकते हैं.",
+    "setup": "सेटअप"
+  }
+}

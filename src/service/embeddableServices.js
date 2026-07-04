@@ -455,8 +455,8 @@ async function getServiceManifest() {
             {
                 id: "openInstalledPluginListPage",
                 type: "button",
-                name: "Plugins",
-                buttonLabel: "Open",
+                name: t('plugins.title'),
+                buttonLabel: t('common.buttons.open'),
                 buttonType: "link",
             },
             {
