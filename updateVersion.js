@@ -12,10 +12,6 @@ const FILES_TO_UPDATE = [
     description: 'Package manifest'
   },
   {
-    path: 'package-lock.json',
-    description: 'Package lock'
-  },
-  {
     path: 'public/manifest.json',
     description: 'Public manifest'
   },
@@ -53,16 +49,16 @@ function updateVersionInFile(filePath, newVersion, description) {
     // Read and parse the JSON file
     const fileContent = fs.readFileSync(filePath, 'utf8');
     const jsonData = JSON.parse(fileContent);
-    
+
     // Store old version for logging
     const oldVersion = jsonData.version;
-    
+
     // Update version
     jsonData.version = newVersion;
-    
+
     // Write back to file with proper formatting
     fs.writeFileSync(filePath, JSON.stringify(jsonData, null, 2) + '\n');
-    
+
     console.log(`✅ ${description} (${filePath}): ${oldVersion} → ${newVersion}`);
     return true;
   } catch (error) {
@@ -76,7 +72,7 @@ function updateVersionInFile(filePath, newVersion, description) {
  */
 function main() {
   const args = process.argv.slice(2);
-  
+
   // Check if version argument is provided
   if (args.length === 0) {
     console.error('❌ Error: Version argument is required');
@@ -90,21 +86,21 @@ function main() {
     });
     process.exit(1);
   }
-  
+
   const newVersion = args[0];
-  
+
   // Validate version format
   if (!isValidVersion(newVersion)) {
     console.error(`❌ Error: Invalid version format "${newVersion}"`);
     console.log('Version should follow semantic versioning (e.g., 1.2.3, 2.0.0-beta.1)');
     process.exit(1);
   }
-  
+
   console.log(`🚀 Updating version to: ${newVersion}`);
   console.log('');
-  
+
   let allUpdatesSuccessful = true;
-  
+
   // Update each file
   for (const file of FILES_TO_UPDATE) {
     const success = updateVersionInFile(file.path, newVersion, file.description);
@@ -112,9 +108,9 @@ function main() {
       allUpdatesSuccessful = false;
     }
   }
-  
+
   console.log('');
-  
+
   if (allUpdatesSuccessful) {
     console.log('🎉 All files updated successfully!');
   } else {
