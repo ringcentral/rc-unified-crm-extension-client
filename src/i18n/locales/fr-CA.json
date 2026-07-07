@@ -277,7 +277,8 @@
       "multipleContacts": "Plusieurs contacts",
       "multipleContactsHelper": "Que faire lorsque plusieurs contacts correspondent au numéro de téléphone",
       "firstAlphabetical": "Premier par ordre alphabétique",
-      "mostRecentActivity": "Activité la plus récente"
+      "mostRecentActivity": "Activité la plus récente",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "Apparence",
@@ -392,7 +393,8 @@
       "manualDispositionNeeded": "Une disposition manuelle peut être nécessaire. Veuillez modifier le message enregistré pour la disposition.",
       "messageNotLogged": "Message non enregistré. {details}.",
       "voicemailNotLogged": "Messagerie vocale non enregistrée. {details}.",
-      "faxNotLogged": "Fax non enregistré. {details}."
+      "faxNotLogged": "Fax non enregistré. {details}.",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "Mauvais format : {field}",

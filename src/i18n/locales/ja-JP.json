@@ -277,7 +277,8 @@
       "multipleContacts": "複数の連絡先",
       "multipleContactsHelper": "複数の連絡先が電話番号と一致する場合の対応",
       "firstAlphabetical": "アルファベット順の最初",
-      "mostRecentActivity": "最新のアクティビティ"
+      "mostRecentActivity": "最新のアクティビティ",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "外観",
@@ -392,7 +393,8 @@
       "manualDispositionNeeded": "手動での処理が必要な場合があります。記録されたメッセージを編集して処理してください。",
       "messageNotLogged": "メッセージは記録されませんでした。{details}。",
       "voicemailNotLogged": "ボイスメールは記録されませんでした。{details}。",
-      "faxNotLogged": "ファックスは記録されませんでした。{details}。"
+      "faxNotLogged": "ファックスは記録されませんでした。{details}。",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "形式エラー：{field}",

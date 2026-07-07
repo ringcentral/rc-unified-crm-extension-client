@@ -277,7 +277,8 @@
       "multipleContacts": "Useita yhteystietoja",
       "multipleContactsHelper": "Mitä tehdä, kun useita yhteystietoja vastaa puhelinnumeroa",
       "firstAlphabetical": "Ensimmäinen aakkosjärjestyksessä",
-      "mostRecentActivity": "Viimeisin aktiviteetti"
+      "mostRecentActivity": "Viimeisin aktiviteetti",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "Ulkoasu",
@@ -392,7 +393,8 @@
       "manualDispositionNeeded": "Manuaalinen käsittely saattaa olla tarpeen. Muokkaa kirjattua viestiä käsittelyä varten.",
       "messageNotLogged": "Viestiä ei kirjattu. {details}.",
       "voicemailNotLogged": "Vastaajaviestiä ei kirjattu. {details}.",
-      "faxNotLogged": "Faksia ei kirjattu. {details}."
+      "faxNotLogged": "Faksia ei kirjattu. {details}.",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "Väärä muoto: {field}",

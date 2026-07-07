@@ -277,7 +277,8 @@
       "multipleContacts": "多个联系人",
       "multipleContactsHelper": "当多个联系人匹配电话号码时的操作",
       "firstAlphabetical": "按字母顺序第一个",
-      "mostRecentActivity": "最近活动"
+      "mostRecentActivity": "最近活动",
+      "earliestCreated": "最早创建"
     },
     "appearance": {
       "groupName": "外观",
@@ -392,7 +393,8 @@
       "manualDispositionNeeded": "可能需要手動處理。請編輯已記錄的訊息以進行處理。",
       "messageNotLogged": "訊息未記錄。{details}。",
       "voicemailNotLogged": "語音信箱未記錄。{details}。",
-      "faxNotLogged": "傳真未記錄。{details}。"
+      "faxNotLogged": "傳真未記錄。{details}。",
+      "earliestCreatedResolverMissingField": "通话未记录。最早创建联系人解析需要每个匹配联系人都包含创建时间。请联系您的 App Connect 开发者，在 connector 的 findContact 响应中添加 createdDate。"
     },
     "error": {
       "wrongFormat": "格式错误：{field}",

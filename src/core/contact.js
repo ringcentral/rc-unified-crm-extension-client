@@ -29,6 +29,7 @@ function getLocalCachedContact({ phoneNumber, platformName }) {
             type: c.contactType,
             phone: phoneNumber,
             isNewContact: c.isNewContact,
+            createdDate: c.createdDate,
             mostRecentActivityDate: c.mostRecentActivityDate,
             additionalInfo: c.additionalInfo
         });

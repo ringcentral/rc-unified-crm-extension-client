@@ -277,7 +277,8 @@
       "multipleContacts": "Meerdere contacten",
       "multipleContactsHelper": "Wat te doen wanneer meerdere contacten overeenkomen met het telefoonnummer",
       "firstAlphabetical": "Eerst alfabetisch",
-      "mostRecentActivity": "Meest recente activiteit"
+      "mostRecentActivity": "Meest recente activiteit",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "Uiterlijk",
@@ -392,7 +393,8 @@
       "manualDispositionNeeded": "Handmatige verwerking is mogelijk nodig. Bewerk het geregistreerde bericht om de verwerking in te stellen.",
       "messageNotLogged": "Bericht niet geregistreerd. {details}.",
       "voicemailNotLogged": "Voicemail niet geregistreerd. {details}.",
-      "faxNotLogged": "Fax niet geregistreerd. {details}."
+      "faxNotLogged": "Fax niet geregistreerd. {details}.",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "Verkeerd formaat: {field}",

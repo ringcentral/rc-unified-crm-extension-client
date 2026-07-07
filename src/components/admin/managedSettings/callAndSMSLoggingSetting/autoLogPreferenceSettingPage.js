@@ -89,6 +89,10 @@ function getAutoLogPreferenceSettingPageRender({ adminUserSettings, contactTypes
                                 {
                                     const: 'mostRecentActivity',
                                     title: t('settings.autoLogPreferences.mostRecentActivity')
+                                },
+                                {
+                                    const: 'earliestCreated',
+                                    title: t('settings.autoLogPreferences.earliestCreated')
                                 }
                             ]
                         }

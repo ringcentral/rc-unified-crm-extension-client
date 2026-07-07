@@ -277,7 +277,8 @@
       "multipleContacts": "여러 연락처",
       "multipleContactsHelper": "여러 연락처가 전화번호와 일치할 때 수행할 작업",
       "firstAlphabetical": "알파벳순 첫 번째",
-      "mostRecentActivity": "가장 최근 활동"
+      "mostRecentActivity": "가장 최근 활동",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "외관",
@@ -392,7 +393,8 @@
       "manualDispositionNeeded": "수동 처리가 필요할 수 있습니다. 기록된 메시지를 편집하여 처리하세요.",
       "messageNotLogged": "메시지가 기록되지 않았습니다. {details}.",
       "voicemailNotLogged": "음성 메일이 기록되지 않았습니다. {details}.",
-      "faxNotLogged": "팩스가 기록되지 않았습니다. {details}."
+      "faxNotLogged": "팩스가 기록되지 않았습니다. {details}.",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "잘못된 형식: {field}",
