@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import feedbackPage from '../../src/components/feedbackPage.ts';
 import supportPage from '../../src/components/supportPage.ts';

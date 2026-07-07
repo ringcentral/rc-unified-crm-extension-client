@@ -1,4 +1,3 @@
-// @ts-nocheck
 import logCore from '../../src/core/log.ts';
 import { loadModule } from '../helpers/loadModule';
 

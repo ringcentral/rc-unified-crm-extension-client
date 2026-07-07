@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { getManifest } from '../../service/manifestService';
 import { getPlatformInfo } from '../../service/platformService';
 import { getPlatformList } from '../../service/manifestService';
@@ -18,10 +17,16 @@ import settingsHandler from './settings';
 import customButtonClickHandler from './custom-button-click';
 import authCore from '../../core/auth';
 
-async function onEvent({ data }) {
+type UnknownRecord = Record<string, any>;
+
+type EventOptions = {
+  data: UnknownRecord;
+};
+
+async function onEvent({ data }: EventOptions) {
   const crmAuthed = await authCore.syncCrmAuthedFromStorage();
-  const manifest = await getManifest();
-  const platformInfo = await getPlatformInfo();
+  const manifest = await getManifest() as UnknownRecord;
+  const platformInfo = await getPlatformInfo() as UnknownRecord;
   const platformName = platformInfo?.platformName ?? '';;
   const platform = manifest?.platforms[platformName];
   if (!crmAuthed && (data.path === '/callLogger' || data.path === '/messageLogger')) {

@@ -1,10 +1,15 @@
-// @ts-nocheck
 import axios from 'axios';
 import { createDebounceHandler } from '../../../../lib/util';
 import appointmentCreatePage from '../../../../components/appointmentsPage/appointmentCreatePage';
 import appointmentEditPage from '../../../../components/appointmentsPage/appointmentEditPage';
 
 const debounceContactSearch = createDebounceHandler('appointmentContactSearch', 800);
+
+type UnknownRecord = Record<string, any>;
+
+function getWidgetFrameWindow(): Window {
+  return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
+}
 
 function durationIsoFromMinutes(totalMinutesRaw) {
   const totalMinutes = Number(totalMinutesRaw);
@@ -37,11 +42,11 @@ function renderPage({ isEdit, formData, manifest, platformName }) {
 }
 
 function postPage(page) {
-  const frame = document.querySelector('#rc-widget-adapter-frame').contentWindow;
+  const frame = getWidgetFrameWindow();
   frame.postMessage({ type: 'rc-adapter-register-customized-page', page }, '*');
 }
 
-async function handleDateTimeChange({ formData, manifest, platformName, isEdit }) {
+async function handleDateTimeChange({ formData, manifest, platformName, isEdit }: UnknownRecord) {
   const startVal = String(formData?.dateTime ?? '').trim();
   const endVal = String(formData?.endDateTime ?? '').trim();
   if (!startVal) return;
@@ -92,7 +97,7 @@ function dedupeContactsByIdType(contacts) {
   return Array.from(map.values());
 }
 
-async function onEvent({ data, manifest, platformName }) {
+async function onEvent({ data, manifest, platformName }: UnknownRecord) {
   const keys = Array.isArray(data?.body?.keys) ? data.body.keys : [];
   const formData = data?.body?.formData ?? {};
   const pageId = data?.body?.page?.id;

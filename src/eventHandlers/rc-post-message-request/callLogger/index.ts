@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { responseMessage, isObjectEmpty, showNotification } from '../../../lib/util';
 import logCore from '../../../core/log';
 import userCore from '../../../core/user';
@@ -9,11 +8,25 @@ import callLogSyncHandler from './callLogSync';
 import viewLogHandler from './viewLog';
 import createLogHandler from './createLog';
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+type UnknownRecord = Record<string, any>;
+
+type EventOptions = {
+    data: UnknownRecord;
+    manifest: UnknownRecord;
+    platformInfo?: UnknownRecord;
+    platformName: string;
+    platform: UnknownRecord;
+};
+
+function getWidgetFrameWindow(): Window {
+    return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
+}
+
+async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
     if (data.body?.call?.action) {
-        const isQueue = await chrome.storage.local.get(`is-call-queue-${data.body.call.sessionId}`);
+        const isQueue = await chrome.storage.local.get(`is-call-queue-${data.body.call.sessionId}`) as UnknownRecord;
         if ((data.body.call.result === 'Missed' && isQueue[`is-call-queue-${data.body.call.sessionId}`]?.isQueue) || (data.body.call.delegationType === 'QueueForwarding' && data.body.call.result === 'Answered Elsewhere')) {
-            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            getWidgetFrameWindow().postMessage({
                 type: 'rc-adapter-trigger-call-logger-match',
                 sessionIds: [data.body.call.sessionId]
             }, '*');
@@ -43,7 +56,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             return;
         }
         if (data.body?.call?.telephonyStatus === 'Ringing' && data.body?.call?.result === 'Disconnected') {
-            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            getWidgetFrameWindow().postMessage({
                 type: 'rc-adapter-trigger-call-logger-match',
                 sessionIds: [data.body.call.sessionId]
             }, '*');
@@ -61,7 +74,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             return;
         }
     }
-    const { userSettings } = await chrome.storage.local.get('userSettings');
+    const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
     const isFinalDataResult = data.body?.call?.action !== undefined;
     const isRecorded = !isObjectEmpty((await chrome.storage.local.get(`rec-link-${data.body.call.sessionId}`)));
     const hasRecording = !!data.body.call.recording?.link;
@@ -79,11 +92,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 showNotification({ level: 'warning', message: 'Call data is not yet ready. Please input your custom note while it is preparing data.', ttl: 3000 });
                 const cachedNote = await logCore.getCachedNote({ sessionId: data.body.call.sessionId });
                 const tempLogNotePageRender = tempLogNotePage.getTempLogNotePageRender({ sessionId: data.body.call.sessionId, cachedNote });
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                getWidgetFrameWindow().postMessage({
                     type: 'rc-adapter-register-customized-page',
                     page: tempLogNotePageRender
                 });
-                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                getWidgetFrameWindow().postMessage({
                     type: 'rc-adapter-navigate-to',
                     path: `/customized/${tempLogNotePageRender.id}`, // page id
                 }, '*');
@@ -121,11 +134,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         logType: 'Call',
         sessionIds: data.body.call.sessionId,
         requireDetails: false
-    });
+    }) as { callLogs?: UnknownRecord[] };
 
     let triggerTypeInUse = data.body.triggerType;
     // Translate: If no existing call log, create condition here to navigate to auto log
-    if (userCore.getAutoLogCallSetting(userSettings).value && data.body.triggerType === 'callLogSync' && !(existingCalls?.length > 0 && existingCalls[0]?.matched)) {
+    if (userCore.getAutoLogCallSetting(userSettings, false).value && data.body.triggerType === 'callLogSync' && !(existingCalls?.length > 0 && existingCalls[0]?.matched)) {
         triggerTypeInUse = 'createLog';
         isAutoLog = true;
     }
@@ -158,7 +171,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             break;
         // Case 2: call log sync
         case 'callLogSync':
-            await callLogSyncHandler.onEvent({ data, manifest, platformInfo, platformName, platform, existingCalls });
+            await (callLogSyncHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform, existingCalls });
             break;
         // Case 3: view log page
         case 'viewLog':
@@ -171,8 +184,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 logType: 'Call',
                 sessionIds: data.body.call.sessionId,
                 requireDetails: true
-            })).callLogs;
-        // eslint-disable-next-line no-fallthrough
+            }) as { callLogs?: UnknownRecord[] }).callLogs;
+            await createLogHandler.onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber });
+            break;
         case 'createLog':
             await createLogHandler.onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber });
             break;

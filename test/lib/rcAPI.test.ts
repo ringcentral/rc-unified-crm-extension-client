@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import { RcAPI } from '../../src/lib/rcAPI.ts';
 

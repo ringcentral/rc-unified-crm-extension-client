@@ -1,4 +1,3 @@
-// @ts-nocheck
 import c2dSchedulePageHandler from './pages/c2dSchedulePage';
 import editUserMappingPageHandler from './pages/editUserMappingPage';
 import userMappingPageHandler from './pages/userMappingPage';
@@ -49,8 +48,22 @@ import selectPluginHandler from '../../custom-button-click/plugins/selectPlugin'
 import appointmentsPageHandler from './appointmentsPage';
 import appointmentPageHandler from './appointmentPage';
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
-    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+type UnknownRecord = Record<string, any>;
+
+type EventOptions = {
+    data: UnknownRecord;
+    manifest: UnknownRecord;
+    platformInfo?: UnknownRecord;
+    platformName: string;
+    platform: UnknownRecord;
+};
+
+function getWidgetFrameWindow(): Window {
+    return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
+}
+
+async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
+    getWidgetFrameWindow().postMessage({
         type: 'rc-post-message-response',
         responseId: data.requestId,
         response: { data: 'ok' },
@@ -111,16 +124,16 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             await pluginAdminSettingsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform, pluginId });
             break;
         case 'managedAuthUserPage':
-            await managedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await (managedAuthUserPageHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'managedAuthUserEditPage':
-            await managedAuthUserEditPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await (managedAuthUserEditPageHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'installedPluginListPage':
             await selectPluginHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'appointmentsPage':
-            await appointmentsPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await (appointmentsPageHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'appointmentCreatePage':
         case 'appointmentEditPage':
@@ -149,13 +162,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             await managedAuthenticationHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'managedOAuth':
-            await managedOAuthHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await (managedOAuthHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'managedAuthOrg':
-            await managedAuthOrgHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await (managedAuthOrgHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'managedAuthUser':
-            await managedAuthUserHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await (managedAuthUserHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'pluginMarket':
             await pluginMarketListPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

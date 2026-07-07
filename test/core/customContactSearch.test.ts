@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import { showNotification } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';

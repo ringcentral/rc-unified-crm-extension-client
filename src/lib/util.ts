@@ -160,7 +160,7 @@ function cleanUpExpiredStorage(): void {
 const debounceStorage = new Map<string, UnknownRecord>();
 
 function createDebounceHandler(handlerKey: string, delay = 300) {
-  return function (request: unknown, handlerFunction: (request: unknown) => unknown | Promise<unknown>): void {
+  return function <Request>(request: Request, handlerFunction: (request: Request) => unknown | Promise<unknown>): void {
     // Get or create debounce object for this handler
     let debounceObj = debounceStorage.get(handlerKey);
 

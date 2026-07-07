@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node ./build.ts",
     "update": "node ./updateVersion.ts",
+    "lint": "eslint src build.ts updateVersion.ts eslint.config.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "pretest:e2e": "npm run build",

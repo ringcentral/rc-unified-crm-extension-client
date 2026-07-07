@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import contactCore from '../../src/core/contact.ts';
 import calldownPage from '../../src/components/calldownPage.ts';

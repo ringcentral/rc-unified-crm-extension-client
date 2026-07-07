@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { RangeObserver, LibPhoneNumberMatcher } from 'ringcentral-c2d';
 import CustomC2DWidget from '../../src/misc/CustomC2DWidget.ts';
 import userCore from '../../src/core/user.ts';

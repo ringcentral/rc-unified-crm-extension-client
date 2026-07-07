@@ -1,11 +1,16 @@
-// @ts-nocheck
 import { createDebounceHandler, responseMessage } from '../../../../lib/util';
 import appointmentsPage from '../../../../components/appointmentsPage/appointmentsPage';
 import userCore from '../../../../core/user';
 
 const debounceAppointmentsSearch = createDebounceHandler('appointmentsSearch', 300);
 
-async function onEvent({ data, manifest }) {
+type UnknownRecord = Record<string, any>;
+
+function getWidgetFrameWindow(): Window {
+  return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
+}
+
+async function onEvent({ data, manifest }: UnknownRecord) {
   const keys = Array.isArray(data?.body?.keys) ? data.body.keys : [];
   const hasTabKey = keys.some(k => k === 'tab');
   const hasSearchWithFiltersKey = keys.some(k => k === 'searchWithFilters');
@@ -16,7 +21,7 @@ async function onEvent({ data, manifest }) {
     return;
   }
 
-  const { userSettings } = await chrome.storage.local.get('userSettings');
+  const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
   if (!userCore.getShowAppointmentsTabSetting(userSettings).value) {
     return;
   }
@@ -29,7 +34,7 @@ async function onEvent({ data, manifest }) {
   // Compare against last state so we can distinguish typing vs filter dropdown changes.
   const { appointmentsLastState } = await chrome.storage.local.get({
     appointmentsLastState: { tab: 'upcoming', search: '', filter: 'All' },
-  });
+  }) as { appointmentsLastState: UnknownRecord };
   const lastTab = appointmentsLastState?.tab ?? 'upcoming';
   const lastSearch = appointmentsLastState?.search ?? '';
   const lastFilter = appointmentsLastState?.filter ?? 'All';
@@ -52,7 +57,7 @@ async function onEvent({ data, manifest }) {
         forceSync: false,
         userSettings,
       });
-      document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+      getWidgetFrameWindow().postMessage({
         type: 'rc-adapter-register-customized-page',
         page: updated,
       }, '*');
@@ -85,11 +90,11 @@ async function onEvent({ data, manifest }) {
       forceSync: false,
       userSettings,
     });
-    document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+    getWidgetFrameWindow().postMessage({
       type: 'rc-adapter-register-customized-page',
       page: updated,
     }, '*');
-    document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+    getWidgetFrameWindow().postMessage({
       type: 'rc-adapter-navigate-to',
       path: `/customizedTabs/${updated.id}`,
     }, '*');

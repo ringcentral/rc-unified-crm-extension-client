@@ -1,4 +1,3 @@
-// @ts-nocheck
 export async function loadModule(modulePath) {
   globalThis.exports = {};
   const module = await import(modulePath);

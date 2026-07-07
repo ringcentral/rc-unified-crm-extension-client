@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import { showNotification, getRcAccessToken, getRcCallLogIdentity, isObjectEmpty } from '../../src/lib/util.ts';
 import { trackSyncCallLog, trackSyncMessageLog } from '../../src/lib/analytics.ts';

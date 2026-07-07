@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import { getManifest } from '../../src/service/manifestService.ts';
 import { getPlatformInfo } from '../../src/service/platformService.ts';

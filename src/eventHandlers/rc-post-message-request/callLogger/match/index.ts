@@ -1,16 +1,28 @@
-// @ts-nocheck
 import logCore from '../../../../core/log';
 import userCore from '../../../../core/user';
 import { responseMessage, isObjectEmpty } from '../../../../lib/util';
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
-    let callLogMatchData = {};
-    let noLocalMatchedSessionIds = [];
-    const { userSettings } = await chrome.storage.local.get('userSettings');
+type UnknownRecord = Record<string, any>;
+
+type EventOptions = {
+    data: UnknownRecord;
+    manifest: UnknownRecord;
+    platformInfo?: UnknownRecord;
+    platformName?: string;
+    platform?: UnknownRecord;
+};
+
+async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
+    void platformInfo;
+    void platformName;
+    void platform;
+    let callLogMatchData: UnknownRecord = {};
+    let noLocalMatchedSessionIds: string[] = [];
+    const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
     // existingCallLogRecords: call logs in local storage
     const existingCallLogRecords = await chrome.storage.local.get(
         data.body.sessionIds.map(sessionId => `rc-crm-call-log-${sessionId}`)
-    );
+    ) as UnknownRecord;
     for (const sessionId of data.body.sessionIds) {
         // match existing records
         if (existingCallLogRecords[`rc-crm-call-log-${sessionId}`]) {
@@ -21,13 +33,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         }
     }
     if (noLocalMatchedSessionIds.length > 0) {
-        const { successful, callLogs } = await logCore.getLog({ serverUrl: manifest.serverUrl, logType: 'Call', sessionIds: noLocalMatchedSessionIds.toString(), requireDetails: false });
+        const { successful, callLogs = [] } = await logCore.getLog({ serverUrl: manifest.serverUrl, logType: 'Call', sessionIds: noLocalMatchedSessionIds.toString(), requireDetails: false }) as UnknownRecord;
         // Case: no local record, but online DB check says YES
         if (successful) {
-            const newLocalMatchedCallLogRecords = {};
+            const newLocalMatchedCallLogRecords: UnknownRecord = {};
             for (const sessionId of noLocalMatchedSessionIds) {
                 const correspondingLog = callLogs.find(l => l.sessionId === sessionId);
-                const isCallQueue = await chrome.storage.local.get({ [`is-call-queue-${sessionId}`]: { isQueue: false } });
+                const isCallQueue = await chrome.storage.local.get({ [`is-call-queue-${sessionId}`]: { isQueue: false } }) as UnknownRecord;
                 // Case: call queue but answered by someone else
                 if (isCallQueue[`is-call-queue-${sessionId}`]?.isQueue && isCallQueue[`is-call-queue-${sessionId}`]?.warning === 'Answered by someone else') {
                     callLogMatchData[sessionId] = [
@@ -80,7 +92,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             if (loggedSessionIds.includes(sessionId)) {
                 continue;
             }
-            const isCallLogDataReady = await chrome.storage.local.get(`call-log-data-ready-${sessionId}`);
+            const isCallLogDataReady = await chrome.storage.local.get(`call-log-data-ready-${sessionId}`) as UnknownRecord;
             if (!isObjectEmpty(isCallLogDataReady) && !isCallLogDataReady[`call-log-data-ready-${sessionId}`]?.isReady) {
                 callLogMatchData[sessionId] = [
                     {

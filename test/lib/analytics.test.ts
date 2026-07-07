@@ -1,4 +1,3 @@
-// @ts-nocheck
 import mixpanel from 'mixpanel-browser';
 import { loadModule } from '../helpers/loadModule';
 import { seedStorage } from '../setup/storageHelpers';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import authCore from '../../src/core/auth.ts';
 import userCore from '../../src/core/user.ts';
 import adminCore from '../../src/core/admin.ts';

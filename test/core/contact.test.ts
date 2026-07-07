@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import analytics from '../../src/lib/analytics.ts';
 import { showNotification } from '../../src/lib/util.ts';

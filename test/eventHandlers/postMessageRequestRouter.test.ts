@@ -1,4 +1,3 @@
-// @ts-nocheck
 import authCore from '../../src/core/auth.ts';
 import authorizeHandler from '../../src/eventHandlers/rc-post-message-request/authorize.ts';
 import customizedPageInputChangedHandler from '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/index.ts';

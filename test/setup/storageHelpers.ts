@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { getChromeStorageSnapshot, setChromeStorage } from './chromeMock';
 
 export function seedStorage(items) {

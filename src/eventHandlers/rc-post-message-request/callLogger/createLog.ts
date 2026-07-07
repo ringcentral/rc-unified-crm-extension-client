@@ -1,4 +1,3 @@
-// @ts-nocheck
 import contactCore from '../../../core/contact';
 import { showNotification, responseMessage, isObjectEmpty } from '../../../lib/util';
 import logCore from '../../../core/log';
@@ -10,11 +9,33 @@ import { getLogConflictInfo, logPageFormDataDefaulting, cacheLogPageData, getExi
 import { CONSTANTS } from '../../../misc/constant';
 import { t } from '../../../i18n';
 
-async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber }) {
+type UnknownRecord = Record<string, any>;
+
+type EventOptions = {
+    data: UnknownRecord;
+    triggerTypeInUse: string;
+    manifest: UnknownRecord;
+    platformInfo?: UnknownRecord;
+    platformName: string;
+    platform: UnknownRecord;
+    contactPhoneNumber: string;
+    userSettings: UnknownRecord;
+    existingCalls?: UnknownRecord[];
+    isAutoLog: boolean;
+    isCallAutoPopup: boolean;
+    isExtensionNumber: boolean;
+};
+
+function getWidgetFrameWindow(): Window {
+    return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
+}
+
+async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber }: EventOptions) {
+    void platformInfo;
     const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
     const cachedSearchContactKey = `rc-crm-search-contact-${contactPhoneNumber}`;
-    const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
-    const cachedContacts = storageObj[cachedSearchContactKey] || [];
+    const storageObj = await chrome.storage.local.get(cachedSearchContactKey) as UnknownRecord;
+    const cachedContacts = (storageObj[cachedSearchContactKey] || []) as UnknownRecord[];
     if (!callContactMatched) {
         window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
         // Unique: Google Sheets
@@ -80,7 +101,7 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
                         newContactName,
                         newContactType,
                         additionalSubmission
-                    });
+                    }) as UnknownRecord;
                     defaultingContact = newContactInfo.contactInfo;
                     hasConflict = false;
                 }
@@ -179,7 +200,7 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
                         contactType: defaultingContact?.type,
                         contactName: defaultingContact?.name
                     });
-                const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
+                const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null }) as { implementedInterfaces?: UnknownRecord | null };
                 const supportDisposition = implementedInterfaces?.upsertCallDisposition;
                 if (supportDisposition && !isObjectEmpty(autoSelectAdditionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                     await dispositionCore.upsertDisposition({
@@ -198,7 +219,7 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
     // Case: auto log OFF and manual -> open log page
     else if (data.body.redirect) {
         let loggedContactId = null;
-        const existingCallLogRecord = await chrome.storage.local.get(`rc-crm-call-log-${data.body.call.sessionId}`);
+        const existingCallLogRecord = await chrome.storage.local.get(`rc-crm-call-log-${data.body.call.sessionId}`) as UnknownRecord;
         if (existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`]) {
             loggedContactId = existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`].contact?.id ?? null;
         }
@@ -213,7 +234,7 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
             logInfo,
             loggedContactId
         });
-        const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
+        const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null }) as { implementedInterfaces?: UnknownRecord | null };
         const useContactSearch = implementedInterfaces?.findContactWithName;
         // add your codes here to log call to your service
         let callPage = logPage.getLogPageRender({
@@ -250,13 +271,13 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
                 });
             }
         }
-        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        getWidgetFrameWindow().postMessage({
             type: 'rc-adapter-update-call-log-page',
             page: callPage,
         }, '*');
 
         // navigate to call log page
-        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+        getWidgetFrameWindow().postMessage({
             type: 'rc-adapter-navigate-to',
             path: `/log/call/${data.body.call.sessionId}`,
         }, '*');

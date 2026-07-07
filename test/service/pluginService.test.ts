@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import { getManifest, getPluginList, getPluginDetails } from '../../src/service/manifestService.ts';
 import { getRcInfo, showNotification } from '../../src/lib/util.ts';

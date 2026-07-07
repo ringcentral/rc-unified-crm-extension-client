@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import userCore from '../../src/core/user.ts';
 import { listAppointments } from '../../src/service/appointmentService.ts';

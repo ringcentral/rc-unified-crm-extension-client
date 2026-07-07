@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { getRcInfo } from '../../src/lib/util.ts';

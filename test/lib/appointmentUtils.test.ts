@@ -1,4 +1,3 @@
-// @ts-nocheck
 import appointmentUtils from '../../src/lib/appointmentUtils.ts';
 
 const {

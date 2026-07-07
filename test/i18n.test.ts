@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { seedStorage } from './setup/storageHelpers';
 
 async function loadI18n() {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import adminPage from '../../src/components/admin/adminPage.ts';
 import authCore from '../../src/core/auth.ts';

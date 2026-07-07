@@ -1,4 +1,3 @@
-// @ts-nocheck
 import userCore from '../../src/core/user.ts';
 import logCore from '../../src/core/log.ts';
 import dispositionCore from '../../src/core/disposition.ts';

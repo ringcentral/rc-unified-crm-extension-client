@@ -1,4 +1,3 @@
-// @ts-nocheck
 import logService from '../../../service/logService';
 import { trackUpdateCallRecordingLink } from '../../../lib/analytics';
 import { removePendingRecordingSessionId } from '../../../lib/logUtil';

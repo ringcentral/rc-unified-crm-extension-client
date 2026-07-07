@@ -1,4 +1,3 @@
-// @ts-nocheck
 import userCore from '../../src/core/user.ts';
 import { seedStorage } from '../setup/storageHelpers';
 

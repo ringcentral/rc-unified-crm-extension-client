@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { afterEach, beforeEach, vi } from 'vitest';
 import { installChromeMock, resetChromeMock } from './chromeMock';
 import { resetWidgetFrameMock } from './widgetFrameMock';

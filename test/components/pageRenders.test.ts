@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import authCore from '../../src/core/auth.ts';
 import { loadModule } from '../helpers/loadModule';

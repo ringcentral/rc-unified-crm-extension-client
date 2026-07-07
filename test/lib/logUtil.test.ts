@@ -1,4 +1,3 @@
-// @ts-nocheck
 import logService from '../../src/service/logService.ts';
 import { getManifest } from '../../src/service/manifestService.ts';
 import { getPlatformInfo } from '../../src/service/platformService.ts';

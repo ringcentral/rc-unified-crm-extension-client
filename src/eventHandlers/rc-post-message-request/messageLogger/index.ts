@@ -1,4 +1,3 @@
-// @ts-nocheck
 import userCore from '../../../core/user';
 import { showNotification, responseMessage } from '../../../lib/util';
 import logCore from '../../../core/log';
@@ -9,11 +8,26 @@ import logPage from '../../../components/logPage';
 import groupLogPage from '../../../components/groupLogPage';
 import { CONSTANTS } from '../../../misc/constant';
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
-  const { userSettings } = await chrome.storage.local.get('userSettings');
+type UnknownRecord = Record<string, any>;
+
+type EventOptions = {
+  data: UnknownRecord;
+  manifest: UnknownRecord;
+  platformInfo?: UnknownRecord;
+  platformName: string;
+  platform: UnknownRecord;
+};
+
+function getWidgetFrameWindow(): Window {
+  return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
+}
+
+async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
+  void platformInfo;
+  const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
   console.log('message log request for', data.body.conversation.conversationLogId, data.body.triggerType);
   // Case: when auto log and auto pop turned ON, we need to know which event is for the conversation that user is looking at
-  const { autoPopupMainConverastionId } = await chrome.storage.local.get({ autoPopupMainConverastionId: null });
+  const { autoPopupMainConverastionId } = await chrome.storage.local.get({ autoPopupMainConverastionId: null }) as { autoPopupMainConverastionId?: string | null };
   if (!autoPopupMainConverastionId) {
     await chrome.storage.local.set({ autoPopupMainConverastionId: data.body.conversation.conversationId });
   }
@@ -29,10 +43,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
 
   const messageAutoPopup = userCore.getSMSPopSetting(userSettings).value;
   const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
-  const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId);
-  let getContactMatchResult = null;
+  const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId) as UnknownRecord;
+  let getContactMatchResult: any = null;
   let hasConflict = false;
-  let autoSelectAdditionalSubmission = {};
+  let autoSelectAdditionalSubmission: UnknownRecord = {};
   let requireManualDisposition = false;
   // Case: auto log
   if (data.body.triggerType === 'auto' && !messageAutoPopup) {
@@ -91,7 +105,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 newContactName,
                 newContactType,
                 additionalSubmission
-              });
+              }) as UnknownRecord;
               defaultingContact = newContactResp.contactInfo;
             }
             else {
@@ -107,7 +121,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
                 defaultingContact = [...existingContacts].sort((a, b) => a.name.localeCompare(b.name))[0];
                 break;
               case 'mostRecentActivity':
-                defaultingContact = [...existingContacts].sort((a, b) => new Date(b.mostRecentActivityDate) - new Date(a.mostRecentActivityDate))[0];
+                defaultingContact = [...existingContacts].sort((a, b) => new Date(b.mostRecentActivityDate).getTime() - new Date(a.mostRecentActivityDate).getTime())[0];
                 break;
               case 'skipLogging':
               default:
@@ -297,7 +311,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
           additionalSubmission[f.const] = data.body.formData[f.const];
         }
       }
-      let newContactInfo = {};
+      let newContactInfo: UnknownRecord = {};
       if (data.body.formData.contact === 'createNewContact' && data.body.redirect) {
         const newContactResp = await contactCore.createContact({
           serverUrl: manifest.serverUrl,
@@ -305,7 +319,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
           newContactName: data.body.formData.newContactName,
           newContactType: data.body.formData.newContactType,
           additionalSubmission
-        });
+        }) as UnknownRecord;
         newContactInfo = newContactResp.contactInfo;
         if (userCore.getopenContactPageAfterCreationSetting(userSettings).value) {
           await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
@@ -335,7 +349,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             additionalSubmission[f.const] = formData[f.const];
           }
         }
-        let newContactInfo = {};
+        let newContactInfo: UnknownRecord = {};
         if (formData.contact === 'createNewContact' && data.body.redirect) {
           const newContactResp = await contactCore.createContact({
             serverUrl: manifest.serverUrl,
@@ -343,7 +357,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             newContactName: formData.newContactName,
             newContactType: formData.newContactType,
             additionalSubmission
-          });
+          }) as UnknownRecord;
           newContactInfo = newContactResp.contactInfo;
           if (userCore.getopenContactPageAfterCreationSetting(userSettings).value) {
             await contactCore.openContactPage({ manifest, platformName, phoneNumber: formData.contactPhoneNumber, contactId: newContactInfo.id, contactType: data.body.formData.newContactType });
@@ -375,8 +389,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
           platformName
         });
         const cachedSearchContactKey = `rc-crm-search-contact-${data.body.conversation.correspondents[0].phoneNumber}`;
-        const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
-        const cachedContacts = storageObj[cachedSearchContactKey] || [];
+        const storageObj = await chrome.storage.local.get(cachedSearchContactKey) as UnknownRecord;
+        const cachedContacts = (storageObj[cachedSearchContactKey] || []) as UnknownRecord[];
 
         for (const cachedContact of cachedContacts) {
           if (!singleContactMatchResult?.contactInfo?.some(c => c.id === cachedContact.id)) {
@@ -399,7 +413,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         contactInfo: getContactMatchResult.contactInfo ?? [],
         getContactMatchResult
       });
-      const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
+      const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null }) as { implementedInterfaces?: UnknownRecord | null };
       const useContactSearch = implementedInterfaces?.findContactWithName;
       let messagePage = null;
       if (data.body.conversation.correspondents.length > 1) {
@@ -453,13 +467,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
           break;
       }
 
-      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+      getWidgetFrameWindow().postMessage({
         type: 'rc-adapter-update-messages-log-page',
         page: messagePage
       }, '*');
 
       // navigate to message log page
-      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+      getWidgetFrameWindow().postMessage({
         type: 'rc-adapter-navigate-to',
         path: `/log/messages/${data.body.conversation.conversationId}`, // conversation id that you received from message logger event
       }, '*');

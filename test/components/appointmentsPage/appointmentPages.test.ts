@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createAppointment, listAppointments, updateAppointment, updateAppointmentStatus } from '../../../src/service/appointmentService.ts';
 import userCore from '../../../src/core/user.ts';
 import { getPlatformInfo } from '../../../src/service/platformService.ts';

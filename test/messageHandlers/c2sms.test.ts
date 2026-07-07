@@ -1,4 +1,3 @@
-// @ts-nocheck
 import contactCore from '../../src/core/contact.ts';
 import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { loadModule } from '../helpers/loadModule';

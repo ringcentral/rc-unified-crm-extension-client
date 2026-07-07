@@ -1,4 +1,3 @@
-// @ts-nocheck
 import contactCore from '../../../core/contact';
 import userCore from '../../../core/user';
 import logCore from '../../../core/log';
@@ -8,8 +7,25 @@ import axios from 'axios';
 import dispositionCore from '../../../core/disposition';
 import logPage from '../../../components/logPage';
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform, contactPhoneNumber }) {
-    const { userSettings } = await chrome.storage.local.get('userSettings');
+type UnknownRecord = Record<string, any>;
+
+type EventOptions = {
+    data: UnknownRecord;
+    manifest: UnknownRecord;
+    platformInfo?: UnknownRecord;
+    platformName: string;
+    platform: UnknownRecord;
+    contactPhoneNumber: string;
+};
+
+function getWidgetFrameWindow(): Window {
+    return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
+}
+
+async function onEvent({ data, manifest, platformInfo, platformName, platform, contactPhoneNumber }: EventOptions) {
+    void platformInfo;
+    void platform;
+    const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
     let additionalSubmission = {};
     const additionalFields = manifest.platforms[platformName].page?.callLog?.additionalFields ?? [];
     const newContactAdditionalFields = manifest.platforms[platformName].page?.newContact?.additionalFields ?? [];
@@ -18,12 +34,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
             additionalSubmission[f.const] = data.body.formData[f.const];
         }
     }
-    const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null });
+    const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null }) as { implementedInterfaces?: UnknownRecord | null };
     const supportDisposition = implementedInterfaces?.upsertCallDisposition;
     switch (data.body.formData.triggerType) {
         // Case 1.1: create log
         case 'createLog':
-            let newContactInfo = {};
+            let newContactInfo: UnknownRecord = {};
             if (data.body.formData.contact === 'createNewContact') {
                 const createContactResult = await contactCore.createContact({
                     serverUrl: manifest.serverUrl,
@@ -31,7 +47,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                     newContactName: data.body.formData.newContactName,
                     newContactType: data.body.formData.newContactType,
                     additionalSubmission
-                });
+                }) as UnknownRecord;
                 newContactInfo = createContactResult.contactInfo;
                 const newContactReturnMessage = createContactResult.returnMessage;
                 showNotification({ level: newContactReturnMessage?.messageType, message: newContactReturnMessage?.message, ttl: newContactReturnMessage?.ttl, details: newContactReturnMessage?.details });
@@ -58,7 +74,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
             // Optional: schedule callback into Call Back after successful log creation
             try {
                 if (data.body.formData.scheduleCallback && data.body.formData.callbackDateTime) {
-                    const rcUserInfo = (await chrome.storage.local.get('rcUserInfo')).rcUserInfo;
+                    const rcUserInfo = ((await chrome.storage.local.get('rcUserInfo')) as { rcUserInfo?: UnknownRecord }).rcUserInfo;
                     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
                     const schedulePayload = {
                         contactId: newContactInfo?.id ?? data.body.formData.contact,
@@ -72,7 +88,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                     // Refresh Call Back tab data and badge right after scheduling
                     try {
                         const calldownPageRender = await calldownPage.getCalldownPageWithRecords({ manifest, filterStatus: 'All', userSettings });
-                        document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                        getWidgetFrameWindow().postMessage({
                             type: 'rc-adapter-register-customized-page',
                             page: calldownPageRender,
                         }, '*');
@@ -87,11 +103,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                     dispositions: { ...additionalSubmission, note: data.body.formData.note ?? "" }
                 });
                 // update unlogged call page list
-                let { unloggedCallPageDataCache } = await chrome.storage.local.get({ unloggedCallPageDataCache: null });
+                let { unloggedCallPageDataCache } = await chrome.storage.local.get({ unloggedCallPageDataCache: null }) as { unloggedCallPageDataCache?: UnknownRecord[] | null };
                 if (unloggedCallPageDataCache) {
                     unloggedCallPageDataCache = unloggedCallPageDataCache.filter(c => c.sessionId !== data.body.call.sessionId);
                     const unloggedCallPageRender = logPage.getUnloggedCallPageRender({ unloggedCalls: unloggedCallPageDataCache });
-                    document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                    getWidgetFrameWindow().postMessage({
                         type: 'rc-adapter-register-customized-page',
                         page: unloggedCallPageRender
                     });

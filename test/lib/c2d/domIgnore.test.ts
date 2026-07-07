@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createC2DNodeIgnorePredicate, DEFAULT_C2D_IGNORE_SELECTOR } from '../../../src/lib/c2d/domIgnore.ts';
 
 describe('c2d domIgnore', () => {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { loadModule } from '../helpers/loadModule';
 
 async function loadPage(modulePath) {

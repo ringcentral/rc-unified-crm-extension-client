@@ -25,7 +25,11 @@ Current migration state:
 - Build entry points are `src/content.ts`, `src/popup.ts`, `src/sw.ts`, and `src/root.tsx` in `build.ts`.
 - Vitest and Playwright configs are TypeScript.
 - `allowJs` is disabled in `tsconfig.json`.
+- Test and E2E files no longer use `@ts-nocheck`; their runtime correctness is guarded by Vitest and Playwright.
+- `npm run lint` covers `src`, `build.ts`, `updateVersion.ts`, and `eslint.config.ts`.
+- `strict` mode is enabled with explicit transitional exceptions for `noImplicitAny`, `strictNullChecks`, `strictPropertyInitialization`, and `useUnknownInCatchVariables`.
 - Extension runtime output filenames remain JavaScript in `dist/` and `public/manifest.json`.
+- `public/**/*.js` is treated as copied dependency/runtime asset content and is intentionally excluded from source conversion scope.
 
 Goal: introduce TypeScript as an incremental safety layer while preserving the current extension runtime behavior, build outputs, and framework stack. The migration MUST make runtime behavior safer to change, not destabilize the browser extension.
 
@@ -150,10 +154,11 @@ Exit gate: full unit/integration tests, `npm run build`, `npm run test:e2e`, and
 After most runtime code is converted and stable:
 
 - Make `npm run typecheck` a required CI/pre-merge gate.
-- Enable stricter compiler settings in small increments.
+- Keep `strict` enabled.
+- Remove transitional strict exceptions for `noImplicitAny`, `strictNullChecks`, `strictPropertyInitialization`, and `useUnknownInCatchVariables` only after explicit App Connect payload/schema/storage type models exist.
 - Reduce remaining `any` and type assertions at internal boundaries.
 - Keep explicit escape hatches only at integration edges, with comments explaining the boundary uncertainty.
-- Decide whether tests and build scripts must fully migrate to TypeScript or remain JavaScript support code.
+- Keep tests, E2E, and build scripts in TypeScript.
 
 Exit gate: strictness target accepted by owner and enforced in CI.
 
@@ -227,9 +232,8 @@ Runtime production monitoring for extension errors is NEEDS_REVIEW because the r
 ## Open Decisions
 
 - `NEEDS_OWNER`: confirm the owning team/person for the migration and final approval.
-- `NEEDS_REVIEW`: decide whether `npm run typecheck` starts as advisory or required from the first TS tooling PR.
-- `NEEDS_REVIEW`: decide final strictness target and timeline.
-- `NEEDS_REVIEW`: decide whether tests and Node build scripts are in scope for full TypeScript conversion.
+- `NEEDS_REVIEW`: decide whether `npm run typecheck` and `npm run lint` are required CI/pre-merge gates.
+- `NEEDS_REVIEW`: decide final timeline for removing the transitional strict exceptions.
 - `NEEDS_REVIEW`: decide package manager and lockfile policy separately from the TypeScript migration.
 
 ## Verification

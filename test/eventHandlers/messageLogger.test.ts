@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { seedStorage } from '../setup/storageHelpers';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import adminCore from '../../src/core/admin.ts';
 import { getRcAccessToken } from '../../src/lib/util.ts';

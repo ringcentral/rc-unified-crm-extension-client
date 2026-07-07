@@ -1,4 +1,3 @@
-// @ts-nocheck
 import http from 'node:http';
 
 export function startFixtureServer() {

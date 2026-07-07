@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { showNotification } from '../../../lib/util';
 import authCore from '../../../core/auth';
 import { responseMessage } from '../../../lib/util';
@@ -83,7 +82,17 @@ import appointmentOpenAppointmentHandler from './appointmentOpenAppointment';
 import appointmentCreateHandler from './appointmentCreate';
 import appointmentCreateSaveHandler from './appointmentCreateSave';
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+type UnknownRecord = Record<string, any>;
+
+type EventOptions = {
+    data: UnknownRecord;
+    manifest: UnknownRecord;
+    platformInfo?: UnknownRecord;
+    platformName: string;
+    platform: UnknownRecord;
+};
+
+async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
     // If user hides Appointments tab, block all appointment-related actions/APIs.
     try {
         const { userSettings } = await chrome.storage.local.get('userSettings');
@@ -126,10 +135,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         if (data.body.button.tabId === 'appointmentsPage') {
             switch (data.body.button.id) {
                 case 'appointmentsHeaderNew':
-                    await appointmentCreateHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+                    await (appointmentCreateHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
                     break;
                 case 'appointmentsHeaderRefresh':
-                    await appointmentRefreshListHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+                    await (appointmentRefreshListHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
                     break;
             }
         }
@@ -138,11 +147,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     // Form submit button (page header submit): button id is the page id
     // https://github.com/ringcentral/ringcentral-embeddable/blob/3.x/docs/integration/custom-tab.md#handle-button-clicked-and-input-changed-event
     if (data.body.button.id === 'appointmentEditPage') {
-        await appointmentSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+        await (appointmentSaveHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
         return;
     }
     if (data.body.button.id === 'appointmentCreatePage') {
-        await appointmentCreateSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+        await (appointmentCreateSaveHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
         return;
     }
     // button id is: {actionId}-{itemId}-action
@@ -151,34 +160,34 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     const listButtonItemId = listButtonActionIdAndItemId.split(`${listButtonActionId}-`)[1]; // {itemId}
     switch (listButtonActionId) {
         case 'appointmentCreateButton':
-            await appointmentCreateHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await (appointmentCreateHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'appointmentsRefreshButton':
-            await appointmentRefreshListHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await (appointmentRefreshListHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'appointmentRefresh':
-            await appointmentRefreshHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            await (appointmentRefreshHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
             break;
         case 'appointmentConfirm':
-            await appointmentConfirmHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            await (appointmentConfirmHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
             break;
         case 'appointmentCancel':
-            await appointmentCancelHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            await (appointmentCancelHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
             break;
         case 'appointmentEdit':
-            await appointmentEditHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            await (appointmentEditHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
             break;
         case 'appointmentOpenContact':
-            await appointmentOpenContactHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            await (appointmentOpenContactHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
             break;
         case 'appointmentSaveButton':
-            await appointmentSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+            await (appointmentSaveHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
             break;
         case 'appointmentCreateSaveButton':
-            await appointmentCreateSaveHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+            await (appointmentCreateSaveHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
             break;
         case 'appointmentOpenAppointment':
-            await appointmentOpenAppointmentHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            await (appointmentOpenAppointmentHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
             break;
         case 'callLater':
             await callLaterHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
@@ -223,7 +232,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             await authPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'managedOAuthSetupPage':
-            await managedOAuthSetupPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await (managedOAuthSetupPageHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'feedbackPage':
             await feedbackPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
@@ -376,19 +385,19 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             await generalHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
             break;
         case 'managedAuthOrgPage':
-            await managedAuthOrgPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await (managedAuthOrgPageHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'managedAuthUserEdit':
-            await managedAuthUserEditHandler.onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
+            await (managedAuthUserEditHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId });
             break;
         case 'deleteManagedOAuthAccount':
-            await deleteManagedOAuthAccountHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await (deleteManagedOAuthAccountHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'managedAuthUserPage':
-            await managedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await (managedAuthUserPageHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'managedAuthUserEditPage':
-            await managedAuthUserPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            await (managedAuthUserPageHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
     }
     if (data.body.button.id.startsWith('link-button-')) {

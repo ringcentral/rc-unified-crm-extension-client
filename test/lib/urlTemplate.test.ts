@@ -1,4 +1,3 @@
-// @ts-nocheck
 import urlTemplate from '../../src/lib/urlTemplate.ts';
 
 const { renderUrlTemplate, isSafeHttpUrl } = urlTemplate;

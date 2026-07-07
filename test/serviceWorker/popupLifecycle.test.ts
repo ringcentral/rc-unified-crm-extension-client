@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { readStorage, seedStorage } from '../setup/storageHelpers';
 
 async function loadServiceWorkerListeners() {

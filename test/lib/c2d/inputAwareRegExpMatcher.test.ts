@@ -1,4 +1,3 @@
-// @ts-nocheck
 vi.mock('ringcentral-c2d', () => ({
   RegExpPhoneNumberMatcher: class RegExpPhoneNumberMatcher {
     match() {

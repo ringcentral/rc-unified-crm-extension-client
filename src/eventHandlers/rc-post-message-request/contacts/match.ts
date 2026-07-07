@@ -1,15 +1,30 @@
-// @ts-nocheck
 import contactCore from '../../../core/contact';
 import { showNotification, responseMessage } from '../../../lib/util';
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
+type UnknownRecord = Record<string, any>;
+
+type EventOptions = {
+    data: UnknownRecord;
+    manifest: UnknownRecord;
+    platformInfo?: UnknownRecord;
+    platformName: string;
+    platform?: UnknownRecord;
+};
+
+function getWidgetFrameWindow(): Window & UnknownRecord {
+    return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow! as Window & UnknownRecord;
+}
+
+async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
+    void platformInfo;
+    void platform;
     console.log(`start contact matching for ${data.body.phoneNumbers.length} numbers...`);
-    const { userSettings } = await chrome.storage.local.get('userSettings');
-    let matchedContacts = {};
+    const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
+    let matchedContacts: UnknownRecord = {};
     // Case: this is a follow-up contact match event triggered by other functions so to register the matched contacts
-    const tempContactMatchTask = (await chrome.storage.local.get(`tempContactMatchTask-${data.body.phoneNumbers[0]}`))[`tempContactMatchTask-${data.body.phoneNumbers[0]}`];
+    const tempContactMatchTask = ((await chrome.storage.local.get(`tempContactMatchTask-${data.body.phoneNumbers[0]}`)) as UnknownRecord)[`tempContactMatchTask-${data.body.phoneNumbers[0]}`] as UnknownRecord[] & { phone?: string };
     if (data.body.phoneNumbers.length === 1 && tempContactMatchTask?.length > 0) {
-        const cachedMatching = document.querySelector("#rc-widget-adapter-frame").contentWindow.phone.contactMatcher.data[tempContactMatchTask.phone];
+        const cachedMatching = getWidgetFrameWindow().phone.contactMatcher.data[tempContactMatchTask.phone];
         const platformContactMatching = cachedMatching ? cachedMatching[platformName]?.data : [];
         const formattedMactchContacts = tempContactMatchTask.map(c => ({
             id: c.id,
@@ -28,8 +43,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
             additionalInfo: c.additionalInfo
         }));
         const cachedSearchContactKey = `rc-crm-search-contact-${data.body.phoneNumbers[0]}`;
-        const storageObj = await chrome.storage.local.get(cachedSearchContactKey);
-        const cachedContacts = storageObj[cachedSearchContactKey] || [];
+        const storageObj = await chrome.storage.local.get(cachedSearchContactKey) as UnknownRecord;
+        const cachedContacts = (storageObj[cachedSearchContactKey] || []) as UnknownRecord[];
         for (const cachedContact of cachedContacts) {
             if (!formattedMactchContacts.some(c => c.id === cachedContact.id)) {
                 formattedMactchContacts.unshift({
@@ -67,7 +82,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         // If not a direct number, but allow extension number logging, go ahead as well
         if (contactPhoneNumber.startsWith('+') || allowExtensionNumberLogging) {
             // query on 3rd party API to get the matched contact info and return
-            const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isFromManual: data.body.triggerFrom === 'manual', isExtensionNumber: !contactPhoneNumber.startsWith('+'), isForceRefresh: true, isToTriggerContactMatch: false });
+            const { matched: contactMatched, returnMessage: contactMatchReturnMessage, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isFromManual: data.body.triggerFrom === 'manual', isExtensionNumber: !contactPhoneNumber.startsWith('+'), isForceRefresh: true, isToTriggerContactMatch: false }) as UnknownRecord;
             if (contactMatched) {
                 if (!matchedContacts[contactPhoneNumber]) {
                     matchedContacts[contactPhoneNumber] = [];
@@ -116,7 +131,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
         if (data.body.phoneNumbers.length > 1) {
             const remainingPhoneNumbers = data.body.phoneNumbers.slice(1);
             // Do another contact match with remaining phone numbers
-            document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+            getWidgetFrameWindow().postMessage({
                 type: 'rc-adapter-trigger-contact-match',
                 phoneNumbers: remainingPhoneNumbers,
             }, '*');

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import contactCore from '../../src/core/contact.ts';
 import { getSchedulePageRender } from '../../src/components/schedulePage.ts';
 import { getManifest } from '../../src/service/manifestService.ts';

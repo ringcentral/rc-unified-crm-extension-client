@@ -1,4 +1,3 @@
-// @ts-nocheck
 import authCore from '../../src/core/auth.ts';
 import { showNotification } from '../../src/lib/util.ts';
 import { trackCrmAuthFail } from '../../src/lib/analytics.ts';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios from 'axios';
 import { openDB } from 'idb';
 import { getRcAccessToken, getRcInfo, setRcAdditionalSubmission, showNotification } from '../../src/lib/util.ts';

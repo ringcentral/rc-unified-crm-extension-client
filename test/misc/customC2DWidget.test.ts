@@ -1,4 +1,3 @@
-// @ts-nocheck
 import CustomC2DWidget from '../../src/misc/CustomC2DWidget.ts';
 
 async function flushIconLoad() {
