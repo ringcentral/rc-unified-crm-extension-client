@@ -19,7 +19,7 @@ jobs:
     steps:
       # 1. Checkout the repository code corresponding to the tag/branch
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         # fetch-depth: 0 is not strictly needed for tag checkouts but doesn't hurt
         # It ensures tags are available if needed for other steps.
         with:
@@ -27,9 +27,10 @@ jobs:
 
       # 2. Set up Node.js
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
-          node-version: '20' # Adjust as needed
+          node-version: '24' # Adjust as needed
+          package-manager-cache: false
 
       # 3. Install dependencies
       - name: Install dependencies
@@ -49,7 +50,7 @@ jobs:
 
       # 6. (Optional) Upload the zip file as a workflow artifact for debugging/record
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dist-package-${{ github.sha }} # Unique name using commit SHA
           path: dist.zip
