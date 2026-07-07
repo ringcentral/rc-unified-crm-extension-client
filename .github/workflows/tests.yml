@@ -20,6 +20,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run type check
+        run: npm run typecheck
+
+      - name: Run unit tests
+        run: npm test
+
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
