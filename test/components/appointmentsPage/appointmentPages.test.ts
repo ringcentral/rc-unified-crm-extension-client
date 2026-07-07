@@ -53,6 +53,15 @@ const manifest = {
   },
 };
 
+function pad2(n: number) {
+  return String(n).padStart(2, '0');
+}
+
+function toLocalDateTimeValue(dt: string | number | Date) {
+  const d = new Date(dt);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
 describe('appointment create page', () => {
   beforeEach(() => {
     vi.mocked(createAppointment).mockReset();
@@ -90,7 +99,7 @@ describe('appointment create page', () => {
       },
       formData: {
         title: 'Install router',
-        dateTime: '2026-07-03T16:30',
+        dateTime: toLocalDateTimeValue('2026-07-03T08:30:00.000Z'),
         participantContactIds: ['c1', 'c2'],
         status: 'confirmed',
       },
@@ -127,8 +136,8 @@ describe('appointment create page', () => {
     expect(page.schema.properties).not.toHaveProperty('title');
     expect(page.schema.properties).not.toHaveProperty('status');
     expect(page.formData).toMatchObject({
-      dateTime: '2026-07-03T16:30',
-      endDateTime: '2026-07-03T17:30',
+      dateTime: toLocalDateTimeValue('2026-07-03T08:30:00.000Z'),
+      endDateTime: toLocalDateTimeValue('2026-07-03T09:30:00.000Z'),
       participantContactIds: ['c3'],
     });
     expect(page.uiSchema.participantContactIds['ui:options'].enumOptions).toHaveLength(1);
