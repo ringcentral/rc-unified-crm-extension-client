@@ -64,7 +64,7 @@ async function loadSearchButtonHandler(modulePath) {
   const contactSearch = {
     getCustomContactSearchData: vi.fn(async ({ pageId }) => ({ id: pageId })),
   };
-  vi.doMock('../../src/core/customContactSearch.js', () => ({ default: contactSearch }));
+  vi.doMock('../../src/core/customContactSearch.ts', () => ({ default: contactSearch }));
   const handler = await loadModule(modulePath);
   return {
     handler,
@@ -83,7 +83,7 @@ async function loadSearchResultHandler(modulePath) {
     })),
     getUpdatedLogPageRender: vi.fn(() => ({ id: 'updatedLogPage' })),
   };
-  vi.doMock('../../src/components/logPage.js', () => ({ default: logPage }));
+  vi.doMock('../../src/components/logPage.ts', () => ({ default: logPage }));
   const handler = await loadModule(modulePath);
   return {
     handler,
@@ -111,7 +111,7 @@ describe('contact search custom-button and selection handlers', () => {
 
   it('opens call-log and message-log contact search result pages', async () => {
     let loaded = await loadSearchButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/contactSearch/contactSearchAdapterButtonCallLog.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/contactSearch/contactSearchAdapterButtonCallLog.ts',
     );
 
     await loaded.handler.onEvent({
@@ -144,7 +144,7 @@ describe('contact search custom-button and selection handlers', () => {
     ]));
 
     loaded = await loadSearchButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/contactSearch/contactSearchAdapterButtonMessageLog.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/contactSearch/contactSearchAdapterButtonMessageLog.ts',
     );
     await loaded.handler.onEvent({
       data: searchButtonData(),
@@ -178,7 +178,7 @@ describe('contact search custom-button and selection handlers', () => {
 
   it('writes a selected search contact back to the cached call-log page', async () => {
     const { handler, logPage } = await loadSearchResultHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/contactSearchResultCallLog.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/contactSearchResultCallLog.ts',
     );
 
     await handler.onEvent({
@@ -250,7 +250,7 @@ describe('contact search custom-button and selection handlers', () => {
       },
     });
     const { handler, logPage } = await loadSearchResultHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/contactSearchResultMessageLog.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/contactSearchResultMessageLog.ts',
     );
 
     await handler.onEvent({

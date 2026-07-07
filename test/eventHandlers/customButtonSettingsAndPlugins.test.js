@@ -99,7 +99,7 @@ async function loadButtonHandler(modulePath, overrides = {}) {
     saveManagedOAuthPendingValues: vi.fn(async () => {}),
     ...overrides.authCore,
   };
-  vi.doMock('../../src/core/auth.js', () => ({
+  vi.doMock('../../src/core/auth.ts', () => ({
     default: authCore,
     checkAuth: authCore.checkAuth,
   }));
@@ -131,7 +131,7 @@ async function loadButtonHandler(modulePath, overrides = {}) {
     }, {})),
     ...overrides.userCore,
   };
-  vi.doMock('../../src/core/user.js', () => ({
+  vi.doMock('../../src/core/user.ts', () => ({
     default: userCore,
     refreshUserSettings: userCore.refreshUserSettings,
     getUserSettingsOnline: userCore.getUserSettingsOnline,
@@ -157,7 +157,7 @@ async function loadButtonHandler(modulePath, overrides = {}) {
     uploadServerSideLoggingAdditionalFieldValues: vi.fn(async () => ({ successful: true })),
     ...overrides.adminCore,
   };
-  vi.doMock('../../src/core/admin.js', () => ({
+  vi.doMock('../../src/core/admin.ts', () => ({
     default: adminCore,
     uploadAdminSettings: adminCore.uploadAdminSettings,
     getAdminSettings: adminCore.getAdminSettings,
@@ -181,19 +181,19 @@ async function loadButtonHandler(modulePath, overrides = {}) {
     })),
     ...overrides.util,
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const analytics = {
     trackFactoryReset: vi.fn(),
     ...overrides.analytics,
   };
-  vi.doMock('../../src/lib/analytics.js', () => analytics);
+  vi.doMock('../../src/lib/analytics.ts', () => analytics);
 
   const platformService = {
     clearPlatformInfo: vi.fn(async () => {}),
     ...overrides.platformService,
   };
-  vi.doMock('../../src/service/platformService.js', () => platformService);
+  vi.doMock('../../src/service/platformService.ts', () => platformService);
 
   const manifestService = {
     getManifest: vi.fn(async () => baseManifest()),
@@ -207,13 +207,13 @@ async function loadButtonHandler(modulePath, overrides = {}) {
     })),
     ...overrides.manifestService,
   };
-  vi.doMock('../../src/service/manifestService.js', () => manifestService);
+  vi.doMock('../../src/service/manifestService.ts', () => manifestService);
 
   const embeddableServices = {
     getServiceManifest: vi.fn(async () => ({ id: 'service-manifest' })),
     ...overrides.embeddableServices,
   };
-  vi.doMock('../../src/service/embeddableServices.js', () => ({ default: embeddableServices }));
+  vi.doMock('../../src/service/embeddableServices.ts', () => ({ default: embeddableServices }));
 
   const pluginService = {
     getPluginLicenseStatus: vi.fn(async ({ pluginId }) => ({
@@ -223,37 +223,37 @@ async function loadButtonHandler(modulePath, overrides = {}) {
     })),
     ...overrides.pluginService,
   };
-  vi.doMock('../../src/service/pluginService.js', () => ({ default: pluginService }));
+  vi.doMock('../../src/service/pluginService.ts', () => ({ default: pluginService }));
 
   const reportPage = {
     getReportsPageRender: vi.fn((props) => ({ id: 'reportPage', props })),
     ...overrides.reportPage,
   };
-  vi.doMock('../../src/components/reportPage/reportPage.js', () => ({ default: reportPage }));
+  vi.doMock('../../src/components/reportPage/reportPage.ts', () => ({ default: reportPage }));
 
   const calldownPage = {
     getCalldownPageWithRecords: vi.fn(async (props) => ({ id: 'calldownPage', props })),
     ...overrides.calldownPage,
   };
-  vi.doMock('../../src/components/calldownPage.js', () => ({ default: calldownPage }));
+  vi.doMock('../../src/components/calldownPage.ts', () => ({ default: calldownPage }));
 
   const adminPage = {
     getAdminPageRender: vi.fn((props) => ({ id: 'adminPage', props })),
     ...overrides.adminPage,
   };
-  vi.doMock('../../src/components/admin/adminPage.js', () => ({ default: adminPage }));
+  vi.doMock('../../src/components/admin/adminPage.ts', () => ({ default: adminPage }));
 
   const hostnameInputPage = {
     getHostnameInputPageRender: vi.fn((props) => ({ id: 'hostnameInputPage', props })),
     ...overrides.hostnameInputPage,
   };
-  vi.doMock('../../src/components/hostnameInputPage.js', () => ({ default: hostnameInputPage }));
+  vi.doMock('../../src/components/hostnameInputPage.ts', () => ({ default: hostnameInputPage }));
 
   const managedAuthUserPage = {
     getManagedAuthUserPageRender: vi.fn((props) => ({ id: 'managedAuthUserPage', props })),
     ...overrides.managedAuthUserPage,
   };
-  vi.doMock('../../src/components/admin/managedAuthUserPage.js', () => ({ default: managedAuthUserPage }));
+  vi.doMock('../../src/components/admin/managedAuthUserPage.ts', () => ({ default: managedAuthUserPage }));
 
   const pluginPages = {
     getPluginAdminConfigurePageRender: vi.fn((props) => ({ id: 'pluginAdminConfigurePage', props })),
@@ -265,17 +265,17 @@ async function loadButtonHandler(modulePath, overrides = {}) {
     getPluginMarketListPageRender: vi.fn((props) => ({ id: 'pluginMarketListPage', props })),
     ...overrides.pluginPages,
   };
-  vi.doMock('../../src/components/pluginAdminConfigurePage.js', () => ({
+  vi.doMock('../../src/components/pluginAdminConfigurePage.ts', () => ({
     getPluginAdminConfigurePageRender: pluginPages.getPluginAdminConfigurePageRender,
   }));
-  vi.doMock('../../src/components/pluginConfigurePage.js', () => ({
+  vi.doMock('../../src/components/pluginConfigurePage.ts', () => ({
     getPluginConfigurePageRender: pluginPages.getPluginConfigurePageRender,
     getMergedPluginConfigFromFormData: pluginPages.getMergedPluginConfigFromFormData,
   }));
-  vi.doMock('../../src/components/installedPluginListPage.js', () => ({
+  vi.doMock('../../src/components/installedPluginListPage.ts', () => ({
     getInstalledPluginListPageRender: pluginPages.getInstalledPluginListPageRender,
   }));
-  vi.doMock('../../src/components/pluginMarketListPage.js', () => ({
+  vi.doMock('../../src/components/pluginMarketListPage.ts', () => ({
     getPluginMarketListPageRender: pluginPages.getPluginMarketListPageRender,
   }));
 
@@ -310,7 +310,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
 
   it('authenticates with an API key and registers report, calldown, and admin pages', async () => {
     const loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/authPage.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/authPage.ts',
     );
 
     await loaded.handler.onEvent({
@@ -342,7 +342,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
 
   it('stores selected platform host information and starts CRM connection unless managed OAuth blocks it', async () => {
     let loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/hostnameInputPage.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/hostnameInputPage.ts',
       {
         manifestService: {
           getManifest: vi.fn(async () => baseManifest()),
@@ -382,7 +382,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     ]));
 
     loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/hostnameInputPage.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/hostnameInputPage.ts',
       {
         authCore: {
           checkManagedOAuthBeforeCrmVisible: vi.fn(async () => ({ blocked: true })),
@@ -417,7 +417,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       },
     };
     let loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.ts',
     );
     vi.mocked(axios.get).mockResolvedValueOnce({ data: fixedManifest });
 
@@ -477,7 +477,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       },
     };
     loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.ts',
     );
     vi.mocked(axios.get).mockResolvedValueOnce({ data: dynamicManifest });
 
@@ -520,7 +520,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     ]));
 
     loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.ts',
     );
     vi.mocked(axios.get)
       .mockRejectedValueOnce({ response: { status: 404 } })
@@ -552,7 +552,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       rcUnifiedCrmExtJwt: 'jwt-1',
     });
     const loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/factoryResetButton.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/factoryResetButton.ts',
     );
 
     await loaded.handler.onEvent({
@@ -580,7 +580,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
 
   it('saves managed OAuth pending values and reports save failures', async () => {
     let loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/managedOAuthSetupPage.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/managedOAuthSetupPage.ts',
     );
 
     await loaded.handler.onEvent({
@@ -608,7 +608,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     expect(loaded.authCore.onUserClickConnectButton).toHaveBeenCalled();
 
     loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/managedOAuthSetupPage.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/managedOAuthSetupPage.ts',
       {
         authCore: {
           saveManagedOAuthPendingValues: vi.fn(async () => {
@@ -644,7 +644,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       },
     });
     let loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/adminSettingsFormSubmit.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/adminSettingsFormSubmit.ts',
     );
 
     await loaded.handler.onEvent({
@@ -685,7 +685,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       },
     });
     loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/adminSettingsFormSubmit.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/adminSettingsFormSubmit.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({ serverSideLogging: { enable: true } }, 'callLogDetailsSettingPage'),
@@ -704,7 +704,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     }));
 
     loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/adminSettingsFormSubmit.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/adminSettingsFormSubmit.ts',
       {
         adminCore: {
           uploadAdminSettings: vi.fn(async () => {
@@ -749,7 +749,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       },
     });
     let loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthUserPage.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthUserPage.ts',
     );
 
     await loaded.handler.onEvent({
@@ -789,7 +789,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
 
     loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthUserPage.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthUserPage.ts',
       {
         adminCore: {
           saveManagedAuthSettings: vi.fn(async () => {
@@ -812,7 +812,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
   it('enables and disables server-side logging while refreshing service manifest and extra fields', async () => {
     let responseMessage = vi.fn();
     let loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/saveServerSideLogging.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/saveServerSideLogging.ts',
     );
 
     await loaded.handler.onEvent({
@@ -855,7 +855,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
 
     responseMessage = vi.fn();
     loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/saveServerSideLogging.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/saveServerSideLogging.ts',
       {
         adminCore: {
           uploadServerSideLoggingAdditionalFieldValues: vi.fn(async () => ({
@@ -908,7 +908,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       },
     });
     let loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/selectPlugin.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/selectPlugin.ts',
     );
     vi.mocked(axios.get).mockResolvedValueOnce({
       data: {
@@ -948,7 +948,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
 
     loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/selectPlugin.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/selectPlugin.ts',
       {
         authCore: {
           checkAuth: vi.fn(async () => false),
@@ -970,7 +970,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     expect(loaded.pluginPages.getPluginConfigurePageRender).not.toHaveBeenCalled();
 
     loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/selectPlugin.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/selectPlugin.ts',
       {
         manifestService: {
           getPluginDetails: vi.fn(async ({ selectedPlugin }) => ({
@@ -1027,7 +1027,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       },
     });
     const loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/installedPluginListPage.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/installedPluginListPage.ts',
       {
         pluginService: {
           getPluginLicenseStatus: vi.fn(async ({ pluginId }) => ({
@@ -1084,7 +1084,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       },
     });
     let loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginAdminConfigButtons.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginAdminConfigButtons.ts',
     );
 
     await loaded.handler.onEvent({
@@ -1156,7 +1156,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       },
     });
     loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginAdminConfigButtons.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginAdminConfigButtons.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -1188,7 +1188,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       },
     });
     const loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginAdminConfigButtons.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginAdminConfigButtons.ts',
     );
     vi.mocked(axios.post).mockRejectedValueOnce({
       response: {
@@ -1222,7 +1222,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
 
   it('submits user plugin config and admin plugin detail settings', async () => {
     let loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginConfigurePageSubmit.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginConfigurePageSubmit.ts',
     );
 
     await loaded.handler.onEvent({
@@ -1278,7 +1278,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       },
     });
     loaded = await loadButtonHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginDetailsSettingPage.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginDetailsSettingPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({

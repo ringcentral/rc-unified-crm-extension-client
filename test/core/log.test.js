@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { showNotification, getRcAccessToken, getRcCallLogIdentity, isObjectEmpty } from '../../src/lib/util.js';
-import { trackSyncCallLog, trackSyncMessageLog } from '../../src/lib/analytics.js';
+import { showNotification, getRcAccessToken, getRcCallLogIdentity, isObjectEmpty } from '../../src/lib/util.ts';
+import { trackSyncCallLog, trackSyncMessageLog } from '../../src/lib/analytics.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
@@ -18,7 +18,7 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   showNotification: vi.fn(),
   getRcAccessToken: vi.fn(() => 'rc-access-token'),
   getRcCallLogIdentity: vi.fn(async () => ({
@@ -28,18 +28,18 @@ vi.mock('../../src/lib/util.js', () => ({
   isObjectEmpty: vi.fn((obj) => !obj || Object.keys(obj).length === 0),
 }));
 
-vi.mock('../../src/lib/analytics.js', () => ({
+vi.mock('../../src/lib/analytics.ts', () => ({
   trackSyncCallLog: vi.fn(),
   trackSyncMessageLog: vi.fn(),
 }));
 
-vi.mock('../../src/i18n/index.js', () => ({
+vi.mock('../../src/i18n/index.ts', () => ({
   t: vi.fn((key) => key),
 }));
 
 async function loadLogCore() {
   vi.resetModules();
-  return loadModule('../../src/core/log.js');
+  return loadModule('../../src/core/log.ts');
 }
 
 describe('log core', () => {

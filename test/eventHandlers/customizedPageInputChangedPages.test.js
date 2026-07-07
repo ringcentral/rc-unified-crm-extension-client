@@ -71,7 +71,7 @@ async function loadPageHandler(modulePath, overrides = {}) {
     })),
     ...overrides.util,
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const rcApiInstance = {
     getRcExtensionList: vi.fn(async () => [
@@ -82,7 +82,7 @@ async function loadPageHandler(modulePath, overrides = {}) {
   const RcAPI = vi.fn(function RcAPI() {
     return rcApiInstance;
   });
-  vi.doMock('../../src/lib/rcAPI.js', () => ({ RcAPI }));
+  vi.doMock('../../src/lib/rcAPI.ts', () => ({ RcAPI }));
 
   const contactCore = {
     getContact: vi.fn(async () => ({
@@ -90,7 +90,7 @@ async function loadPageHandler(modulePath, overrides = {}) {
       contactInfo: [{ id: 'contact-1', phoneNumber: '+16505550100' }],
     })),
   };
-  vi.doMock('../../src/core/contact.js', () => ({ default: contactCore }));
+  vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
 
   const logPage = {
     getUnloggedCallPageRender: vi.fn(({ unloggedCalls }) => ({
@@ -98,7 +98,7 @@ async function loadPageHandler(modulePath, overrides = {}) {
       unloggedCalls,
     })),
   };
-  vi.doMock('../../src/components/logPage.js', () => ({ default: logPage }));
+  vi.doMock('../../src/components/logPage.ts', () => ({ default: logPage }));
 
   const userCore = {
     getShowUserReportTabSetting: vi.fn(() => ({ value: true })),
@@ -106,7 +106,7 @@ async function loadPageHandler(modulePath, overrides = {}) {
     getShowAppointmentsTabSetting: vi.fn(() => ({ value: true })),
     ...overrides.userCore,
   };
-  vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+  vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
   const adminCore = {
     getAdminReportStats: vi.fn(async () => ({
@@ -120,7 +120,7 @@ async function loadPageHandler(modulePath, overrides = {}) {
     })),
     ...overrides.adminCore,
   };
-  vi.doMock('../../src/core/admin.js', () => ({ default: adminCore }));
+  vi.doMock('../../src/core/admin.ts', () => ({ default: adminCore }));
 
   const reportPage = {
     getReportsPageRender: vi.fn((props) => ({
@@ -128,7 +128,7 @@ async function loadPageHandler(modulePath, overrides = {}) {
       props,
     })),
   };
-  vi.doMock('../../src/components/reportPage/reportPage.js', () => ({ default: reportPage }));
+  vi.doMock('../../src/components/reportPage/reportPage.ts', () => ({ default: reportPage }));
 
   const appointmentCreatePage = {
     getAppointmentCreatePageRender: vi.fn((props) => ({
@@ -136,7 +136,7 @@ async function loadPageHandler(modulePath, overrides = {}) {
       props,
     })),
   };
-  vi.doMock('../../src/components/appointmentsPage/appointmentCreatePage.js', () => ({ default: appointmentCreatePage }));
+  vi.doMock('../../src/components/appointmentsPage/appointmentCreatePage.ts', () => ({ default: appointmentCreatePage }));
 
   const appointmentEditPage = {
     getAppointmentEditPageRender: vi.fn((props) => ({
@@ -144,7 +144,7 @@ async function loadPageHandler(modulePath, overrides = {}) {
       props,
     })),
   };
-  vi.doMock('../../src/components/appointmentsPage/appointmentEditPage.js', () => ({ default: appointmentEditPage }));
+  vi.doMock('../../src/components/appointmentsPage/appointmentEditPage.ts', () => ({ default: appointmentEditPage }));
 
   const appointmentsPage = {
     getAppointmentsPageWithRecords: vi.fn(async (props) => ({
@@ -152,7 +152,7 @@ async function loadPageHandler(modulePath, overrides = {}) {
       props,
     })),
   };
-  vi.doMock('../../src/components/appointmentsPage/appointmentsPage.js', () => ({ default: appointmentsPage }));
+  vi.doMock('../../src/components/appointmentsPage/appointmentsPage.ts', () => ({ default: appointmentsPage }));
 
   const calldownPage = {
     getCalldownPageWithRecords: vi.fn(async (props) => ({
@@ -160,7 +160,7 @@ async function loadPageHandler(modulePath, overrides = {}) {
       props,
     })),
   };
-  vi.doMock('../../src/components/calldownPage.js', () => ({ default: calldownPage }));
+  vi.doMock('../../src/components/calldownPage.ts', () => ({ default: calldownPage }));
 
   const handler = await loadModule(modulePath);
   return {
@@ -184,7 +184,7 @@ describe('customizedPage inputChanged page handlers', () => {
   it('opens unlogged calls from report summaries and reuses matched contact lookups', async () => {
     seedStorage({ isAdmin: true, userSettings: {} });
     const { handler, contactCore, logPage } = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/reportPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/reportPage.ts',
     );
 
     await handler.onEvent({
@@ -227,7 +227,7 @@ describe('customizedPage inputChanged page handlers', () => {
       rcUnifiedCrmExtJwt: 'jwt-1',
     });
     const { handler, adminCore, userCore, reportPage } = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/reportPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/reportPage.ts',
     );
 
     await handler.onEvent({
@@ -326,7 +326,7 @@ describe('customizedPage inputChanged page handlers', () => {
   it('recalculates appointment duration and searches participant contacts', async () => {
     seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
     const { handler, appointmentCreatePage, appointmentEditPage } = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentPage.ts',
     );
     vi.mocked(axios.get).mockResolvedValueOnce({
       data: {
@@ -415,7 +415,7 @@ describe('customizedPage inputChanged page handlers', () => {
       appointmentsLastState: { tab: 'upcoming', search: '', filter: 'All' },
     });
     const { handler, appointmentsPage, util } = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentsPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentsPage.ts',
     );
 
     await handler.onEvent({
@@ -470,7 +470,7 @@ describe('customizedPage inputChanged page handlers', () => {
       calldownLastState: { search: '', filter: 'All' },
     });
     const { handler, calldownPage, util } = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/calldownPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/calldownPage.ts',
     );
 
     await handler.onEvent({

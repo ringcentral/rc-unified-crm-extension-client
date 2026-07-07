@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { RcAPI } from '../../src/lib/rcAPI.js';
+import { RcAPI } from '../../src/lib/rcAPI.ts';
 
 vi.mock('axios', () => ({
   default: {

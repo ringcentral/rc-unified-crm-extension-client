@@ -4,7 +4,7 @@ let userCore;
 
 beforeEach(async () => {
   vi.resetModules();
-  userCore = await loadModule('../../src/core/user.js');
+  userCore = await loadModule('../../src/core/user.ts');
 });
 
 describe('user settings getters', () => {

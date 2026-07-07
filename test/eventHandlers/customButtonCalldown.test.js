@@ -51,7 +51,7 @@ async function loadCalldownHandler(modulePath, overrides = {}) {
     cacheCalldownContact: vi.fn(async () => {}),
     ...overrides.util,
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const contactCore = {
     getContact: vi.fn(async () => ({
@@ -67,13 +67,13 @@ async function loadCalldownHandler(modulePath, overrides = {}) {
     })),
     ...overrides.contactCore,
   };
-  vi.doMock('../../src/core/contact.js', () => ({ default: contactCore }));
+  vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
 
   const calldownPage = {
     getCalldownPageWithRecords: vi.fn(async (props) => ({ id: 'calldownPage', props })),
     ...overrides.calldownPage,
   };
-  vi.doMock('../../src/components/calldownPage.js', () => ({ default: calldownPage }));
+  vi.doMock('../../src/components/calldownPage.ts', () => ({ default: calldownPage }));
 
   const schedulePage = {
     getSchedulePageRender: vi.fn((props) => ({
@@ -84,12 +84,12 @@ async function loadCalldownHandler(modulePath, overrides = {}) {
       props,
     })),
   };
-  vi.doMock('../../src/components/schedulePage.js', () => schedulePage);
+  vi.doMock('../../src/components/schedulePage.ts', () => schedulePage);
 
   const logCore = {
     cacheCallNote: vi.fn(async () => {}),
   };
-  vi.doMock('../../src/core/log.js', () => ({ default: logCore }));
+  vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
   const handler = await loadModule(modulePath);
   return {
@@ -122,7 +122,7 @@ describe('custom-button calldown handlers', () => {
 
   it('opens calldown contacts from cached rows, phone matches, and fallback contact metadata', async () => {
     let loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionOpen.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionOpen.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),
@@ -138,7 +138,7 @@ describe('custom-button calldown handlers', () => {
     });
 
     loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionOpen.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionOpen.ts',
       {
         contactCore: {
           getContact: vi.fn(async () => ({ matched: false, contactInfo: [] })),
@@ -163,7 +163,7 @@ describe('custom-button calldown handlers', () => {
     });
 
     loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionOpen.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionOpen.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({}, {
@@ -180,7 +180,7 @@ describe('custom-button calldown handlers', () => {
     });
 
     loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionOpen.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionOpen.ts',
       {
         contactCore: {
           getContact: vi.fn(async () => ({
@@ -210,7 +210,7 @@ describe('custom-button calldown handlers', () => {
 
   it('opens schedule edit pages with resolved contacts and existing record data', async () => {
     const loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionEdit.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionEdit.ts',
     );
 
     await loaded.handler.onEvent({
@@ -240,7 +240,7 @@ describe('custom-button calldown handlers', () => {
     ]));
 
     const missing = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionEdit.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionEdit.ts',
     );
     await missing.handler.onEvent({
       data: dataFor(),
@@ -253,7 +253,7 @@ describe('custom-button calldown handlers', () => {
 
   it('places calls, sends SMS, completes, removes, and saves temporary notes', async () => {
     let loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionCall.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionCall.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),
@@ -273,7 +273,7 @@ describe('custom-button calldown handlers', () => {
     }));
 
     loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionText.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionText.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),
@@ -290,7 +290,7 @@ describe('custom-button calldown handlers', () => {
     });
 
     loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionComplete.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionComplete.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({ searchWithFilters: { search: 'Jane', filter: 'Open' } }),
@@ -302,7 +302,7 @@ describe('custom-button calldown handlers', () => {
     }));
 
     loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionRemove.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionRemove.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({ searchWithFilters: { search: 'Jane', filter: 'Open' } }),
@@ -312,7 +312,7 @@ describe('custom-button calldown handlers', () => {
     expect(axios.delete).toHaveBeenCalledWith('https://server.example/calldown/record-1');
 
     loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/saveTempNoteButton.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/saveTempNoteButton.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({ sessionId: 'session-1', note: 'Call later' }),
@@ -326,7 +326,7 @@ describe('custom-button calldown handlers', () => {
 
   it('schedules new and existing contacts and handles contact creation failures', async () => {
     let loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/scheduleSubmit.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/scheduleSubmit.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -360,7 +360,7 @@ describe('custom-button calldown handlers', () => {
     });
 
     loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/scheduleSubmit.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/scheduleSubmit.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -387,7 +387,7 @@ describe('custom-button calldown handlers', () => {
     });
 
     loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/scheduleSubmit.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/scheduleSubmit.ts',
       {
         contactCore: {
           createContact: vi.fn(async () => ({ contactInfo: {} })),
@@ -413,7 +413,7 @@ describe('custom-button calldown handlers', () => {
 
   it('starts schedule flows from calls, contacts, and messages', async () => {
     let loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/callLater.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/callLater.ts',
     );
     await loaded.handler.onEvent({
       data: {
@@ -451,7 +451,7 @@ describe('custom-button calldown handlers', () => {
     });
 
     loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/callLaterInContact.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/callLaterInContact.ts',
     );
     await loaded.handler.onEvent({
       data: {
@@ -473,7 +473,7 @@ describe('custom-button calldown handlers', () => {
     });
 
     loaded = await loadCalldownHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/callLaterInMessage.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/callLaterInMessage.ts',
     );
     await loaded.handler.onEvent({
       data: {

@@ -1,18 +1,18 @@
 import axios from 'axios';
-import authCore from '../../src/core/auth.js';
-import userCore from '../../src/core/user.js';
-import adminCore from '../../src/core/admin.js';
-import reportPage from '../../src/components/reportPage/reportPage.js';
-import calldownPage from '../../src/components/calldownPage.js';
-import appointmentsPage from '../../src/components/appointmentsPage/appointmentsPage.js';
-import releaseNotesPage from '../../src/components/releaseNotesPage.js';
-import pluginService from '../../src/service/pluginService.js';
-import logService from '../../src/service/logService.js';
-import { getManifest, getPlatformList } from '../../src/service/manifestService.js';
-import { getPlatformInfo } from '../../src/service/platformService.js';
-import { getRcInfo, setRcAdditionalSubmission, showNotification } from '../../src/lib/util.js';
-import { reset, identify, group, trackRcLogin, trackRcLogout } from '../../src/lib/analytics.js';
-import { RcAPI } from '../../src/lib/rcAPI.js';
+import authCore from '../../src/core/auth.ts';
+import userCore from '../../src/core/user.ts';
+import adminCore from '../../src/core/admin.ts';
+import reportPage from '../../src/components/reportPage/reportPage.ts';
+import calldownPage from '../../src/components/calldownPage.ts';
+import appointmentsPage from '../../src/components/appointmentsPage/appointmentsPage.ts';
+import releaseNotesPage from '../../src/components/releaseNotesPage.ts';
+import pluginService from '../../src/service/pluginService.ts';
+import logService from '../../src/service/logService.ts';
+import { getManifest, getPlatformList } from '../../src/service/manifestService.ts';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
+import { getRcInfo, setRcAdditionalSubmission, showNotification } from '../../src/lib/util.ts';
+import { reset, identify, group, trackRcLogin, trackRcLogout } from '../../src/lib/analytics.ts';
+import { RcAPI } from '../../src/lib/rcAPI.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
@@ -39,16 +39,16 @@ vi.mock('axios', () => ({
   default: axiosMock,
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
-vi.mock('../../src/service/manifestService.js', () => ({
+vi.mock('../../src/service/manifestService.ts', () => ({
   getManifest: vi.fn(),
   getPlatformList: vi.fn(),
 }));
 
-vi.mock('../../src/core/auth.js', () => ({
+vi.mock('../../src/core/auth.ts', () => ({
   default: {
     checkAndOpenPlatformSelectionPage: vi.fn(),
     apiKeyLogin: vi.fn(),
@@ -58,7 +58,7 @@ vi.mock('../../src/core/auth.js', () => ({
   },
 }));
 
-vi.mock('../../src/core/user.js', () => ({
+vi.mock('../../src/core/user.ts', () => ({
   default: {
     updateSSCLToken: vi.fn(),
     getShowUserReportTabSetting: vi.fn(),
@@ -70,46 +70,46 @@ vi.mock('../../src/core/user.js', () => ({
   },
 }));
 
-vi.mock('../../src/components/reportPage/reportPage.js', () => ({
+vi.mock('../../src/components/reportPage/reportPage.ts', () => ({
   default: {
     getReportsPageRender: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/calldownPage.js', () => ({
+vi.mock('../../src/components/calldownPage.ts', () => ({
   default: {
     getCalldownPageWithRecords: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/appointmentsPage/appointmentsPage.js', () => ({
+vi.mock('../../src/components/appointmentsPage/appointmentsPage.ts', () => ({
   default: {
     getAppointmentsPageRender: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/releaseNotesPage.js', () => ({
+vi.mock('../../src/components/releaseNotesPage.ts', () => ({
   default: {
     getReleaseNotesPageRender: vi.fn(),
   },
 }));
 
-vi.mock('../../src/lib/logUtil.js', () => ({
+vi.mock('../../src/lib/logUtil.ts', () => ({
   triggerPendingRecordingCheck: vi.fn(),
 }));
 
-vi.mock('../../src/misc/bullhorn.js', () => ({
+vi.mock('../../src/misc/bullhorn.ts', () => ({
   bullhornHeartbeat: vi.fn(),
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   showNotification: vi.fn(),
   getRcAccessToken: vi.fn(() => 'rc-access-token'),
   getRcInfo: vi.fn(),
   setRcAdditionalSubmission: vi.fn(),
 }));
 
-vi.mock('../../src/lib/analytics.js', () => ({
+vi.mock('../../src/lib/analytics.ts', () => ({
   reset: vi.fn(),
   identify: vi.fn(),
   group: vi.fn(),
@@ -117,23 +117,23 @@ vi.mock('../../src/lib/analytics.js', () => ({
   trackRcLogout: vi.fn(),
 }));
 
-vi.mock('../../src/core/admin.js', () => ({
+vi.mock('../../src/core/admin.ts', () => ({
   default: {
     refreshAdminSettings: vi.fn(),
   },
 }));
 
-vi.mock('../../src/service/logService.js', () => ({
+vi.mock('../../src/service/logService.ts', () => ({
   default: {
     forceCallLogMatcherCheck: vi.fn(),
   },
 }));
 
-vi.mock('../../src/lib/rcAPI.js', () => ({
+vi.mock('../../src/lib/rcAPI.ts', () => ({
   RcAPI: rcApiMocks.RcAPI,
 }));
 
-vi.mock('../../src/service/pluginService.js', () => ({
+vi.mock('../../src/service/pluginService.ts', () => ({
   default: {
     checkAndUpdatePluginVersion: vi.fn(),
   },
@@ -141,7 +141,7 @@ vi.mock('../../src/service/pluginService.js', () => ({
 
 async function loadLoginStatusHandler() {
   vi.resetModules();
-  return loadModule('../../src/eventHandlers/rc-login-status-notify.js');
+  return loadModule('../../src/eventHandlers/rc-login-status-notify.ts');
 }
 
 function appendWidgetContainer() {

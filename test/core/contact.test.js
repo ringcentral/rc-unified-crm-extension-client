@@ -1,8 +1,8 @@
 import axios from 'axios';
-import analytics from '../../src/lib/analytics.js';
-import { showNotification } from '../../src/lib/util.js';
-import { getManifest } from '../../src/service/manifestService.js';
-import multiContactPopPromptPage from '../../src/components/multiContactPopPromptPage.js';
+import analytics from '../../src/lib/analytics.ts';
+import { showNotification } from '../../src/lib/util.ts';
+import { getManifest } from '../../src/service/manifestService.ts';
+import multiContactPopPromptPage from '../../src/components/multiContactPopPromptPage.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetFrameWindow, getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
@@ -14,26 +14,26 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/lib/analytics.js', () => ({
+vi.mock('../../src/lib/analytics.ts', () => ({
   default: {
     createNewContact: vi.fn(),
     contactPop: vi.fn(),
   },
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   showNotification: vi.fn(),
 }));
 
-vi.mock('../../src/service/manifestService.js', () => ({
+vi.mock('../../src/service/manifestService.ts', () => ({
   getManifest: vi.fn(),
 }));
 
-vi.mock('../../src/i18n/index.js', () => ({
+vi.mock('../../src/i18n/index.ts', () => ({
   t: vi.fn((key) => key),
 }));
 
-vi.mock('../../src/components/multiContactPopPromptPage.js', () => ({
+vi.mock('../../src/components/multiContactPopPromptPage.ts', () => ({
   default: {
     getMultiContactPopPromptPageRender: vi.fn(() => ({ id: 'multiContactPopPromptPage' })),
   },
@@ -41,7 +41,7 @@ vi.mock('../../src/components/multiContactPopPromptPage.js', () => ({
 
 async function loadContactCore() {
   vi.resetModules();
-  return loadModule('../../src/core/contact.js');
+  return loadModule('../../src/core/contact.ts');
 }
 
 function manifest() {

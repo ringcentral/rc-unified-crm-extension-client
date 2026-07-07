@@ -11,7 +11,7 @@ vi.mock('axios', () => ({
 
 async function loadAppointmentService() {
   vi.resetModules();
-  return loadModule('../../src/service/appointmentService.js');
+  return loadModule('../../src/service/appointmentService.ts');
 }
 
 describe('appointmentService', () => {

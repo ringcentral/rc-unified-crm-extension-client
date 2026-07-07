@@ -9,7 +9,7 @@ vi.mock('ringcentral-c2d', () => ({
   },
 }));
 
-import InputAwareRegExpMatcher from '../../../src/lib/c2d/inputAwareRegExpMatcher.js';
+import InputAwareRegExpMatcher from '../../../src/lib/c2d/inputAwareRegExpMatcher.ts';
 
 describe('InputAwareRegExpMatcher', () => {
   it('keeps text matcher results unless either boundary node is ignored', () => {

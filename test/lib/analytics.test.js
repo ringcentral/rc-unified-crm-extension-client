@@ -38,7 +38,7 @@ async function loadAnalytics({ token = '', initThrows = false } = {}) {
       throw new Error('init failed');
     });
   }
-  return loadModule('../../src/lib/analytics.js');
+  return loadModule('../../src/lib/analytics.ts');
 }
 
 describe('analytics', () => {

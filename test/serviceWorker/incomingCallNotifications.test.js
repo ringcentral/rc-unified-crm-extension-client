@@ -2,7 +2,7 @@ import { readStorage, seedStorage } from '../setup/storageHelpers';
 
 async function loadServiceWorkerListeners() {
   vi.resetModules();
-  await import('../../src/sw.js');
+  await import('../../src/sw.ts');
   return {
     onMessage: chrome.runtime.onMessage.addListener.mock.calls.at(-1)[0],
     onButtonClicked: chrome.notifications.onButtonClicked.addListener.mock.calls.at(-1)[0],

@@ -1,26 +1,26 @@
-import logService from '../../src/service/logService.js';
-import { getManifest } from '../../src/service/manifestService.js';
-import { getPlatformInfo } from '../../src/service/platformService.js';
+import logService from '../../src/service/logService.ts';
+import { getManifest } from '../../src/service/manifestService.ts';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { loadModule } from '../helpers/loadModule';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
 
-vi.mock('../../src/service/logService.js', () => ({
+vi.mock('../../src/service/logService.ts', () => ({
   default: {
     syncCallData: vi.fn(),
   },
 }));
 
-vi.mock('../../src/service/manifestService.js', () => ({
+vi.mock('../../src/service/manifestService.ts', () => ({
   getManifest: vi.fn(),
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
 async function loadLogUtil() {
   vi.resetModules();
-  return loadModule('../../src/lib/logUtil.js');
+  return loadModule('../../src/lib/logUtil.ts');
 }
 
 function platform() {

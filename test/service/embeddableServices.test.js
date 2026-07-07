@@ -150,7 +150,7 @@ function manifest() {
 async function loadEmbeddableServices() {
   vi.resetModules();
   const userCore = userCoreProxy();
-  vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+  vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
   const authCore = {
     getLicenseStatus: vi.fn(async () => ({
       licenseStatus: 'Active',
@@ -158,20 +158,20 @@ async function loadEmbeddableServices() {
       licenseStatusDescription: 'Ready',
     })),
   };
-  vi.doMock('../../src/core/auth.js', () => ({ default: authCore }));
-  vi.doMock('../../src/service/platformService.js', () => ({
+  vi.doMock('../../src/core/auth.ts', () => ({ default: authCore }));
+  vi.doMock('../../src/service/platformService.ts', () => ({
     getPlatformInfo: vi.fn(async () => ({
       platformName: 'googleSheets',
       hostname: 'sheets.example',
     })),
   }));
-  vi.doMock('../../src/service/manifestService.js', () => ({
+  vi.doMock('../../src/service/manifestService.ts', () => ({
     getManifest: vi.fn(async () => manifest()),
   }));
-  vi.doMock('../../src/i18n/index.js', () => ({
+  vi.doMock('../../src/i18n/index.ts', () => ({
     t: vi.fn((key, values) => (values?.author ? `${key}:${values.author}` : key)),
   }));
-  const embeddableServices = await loadModule('../../src/service/embeddableServices.js');
+  const embeddableServices = await loadModule('../../src/service/embeddableServices.ts');
   return {
     embeddableServices,
     userCore,

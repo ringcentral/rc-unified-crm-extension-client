@@ -3,7 +3,7 @@ import { readStorage, seedStorage } from '../setup/storageHelpers';
 
 async function loadPlatformService() {
   vi.resetModules();
-  return loadModule('../../src/service/platformService.js');
+  return loadModule('../../src/service/platformService.ts');
 }
 
 describe('platformService', () => {

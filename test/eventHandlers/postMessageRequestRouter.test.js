@@ -1,93 +1,93 @@
-import authCore from '../../src/core/auth.js';
-import authorizeHandler from '../../src/eventHandlers/rc-post-message-request/authorize.js';
-import customizedPageInputChangedHandler from '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/index.js';
-import contactsMatchHandler from '../../src/eventHandlers/rc-post-message-request/contacts/match.js';
-import contactsViewHandler from '../../src/eventHandlers/rc-post-message-request/contacts/view.js';
-import callLoggerIndexHandler from '../../src/eventHandlers/rc-post-message-request/callLogger/index.js';
-import callLoggerInputChangedHandler from '../../src/eventHandlers/rc-post-message-request/callLogger/inputChanged/index.js';
-import callLoggerMatchHandler from '../../src/eventHandlers/rc-post-message-request/callLogger/match/index.js';
-import messageLoggerIndexHandler from '../../src/eventHandlers/rc-post-message-request/messageLogger/index.js';
-import messageLoggerInputChangedHandler from '../../src/eventHandlers/rc-post-message-request/messageLogger/inputChanged/index.js';
-import messageLoggerMatchHandler from '../../src/eventHandlers/rc-post-message-request/messageLogger/match/index.js';
-import settingsHandler from '../../src/eventHandlers/rc-post-message-request/settings.js';
-import customButtonClickHandler from '../../src/eventHandlers/rc-post-message-request/custom-button-click/index.js';
-import { getManifest, getPlatformList } from '../../src/service/manifestService.js';
-import { getPlatformInfo } from '../../src/service/platformService.js';
-import { responseMessage, showNotification } from '../../src/lib/util.js';
+import authCore from '../../src/core/auth.ts';
+import authorizeHandler from '../../src/eventHandlers/rc-post-message-request/authorize.ts';
+import customizedPageInputChangedHandler from '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/index.ts';
+import contactsMatchHandler from '../../src/eventHandlers/rc-post-message-request/contacts/match.ts';
+import contactsViewHandler from '../../src/eventHandlers/rc-post-message-request/contacts/view.ts';
+import callLoggerIndexHandler from '../../src/eventHandlers/rc-post-message-request/callLogger/index.ts';
+import callLoggerInputChangedHandler from '../../src/eventHandlers/rc-post-message-request/callLogger/inputChanged/index.ts';
+import callLoggerMatchHandler from '../../src/eventHandlers/rc-post-message-request/callLogger/match/index.ts';
+import messageLoggerIndexHandler from '../../src/eventHandlers/rc-post-message-request/messageLogger/index.ts';
+import messageLoggerInputChangedHandler from '../../src/eventHandlers/rc-post-message-request/messageLogger/inputChanged/index.ts';
+import messageLoggerMatchHandler from '../../src/eventHandlers/rc-post-message-request/messageLogger/match/index.ts';
+import settingsHandler from '../../src/eventHandlers/rc-post-message-request/settings.ts';
+import customButtonClickHandler from '../../src/eventHandlers/rc-post-message-request/custom-button-click/index.ts';
+import { getManifest, getPlatformList } from '../../src/service/manifestService.ts';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
+import { responseMessage, showNotification } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
 
-vi.mock('../../src/core/auth.js', () => ({
+vi.mock('../../src/core/auth.ts', () => ({
   default: {
     syncCrmAuthedFromStorage: vi.fn(),
     checkAndOpenPlatformSelectionPage: vi.fn(),
   },
 }));
 
-vi.mock('../../src/service/manifestService.js', () => ({
+vi.mock('../../src/service/manifestService.ts', () => ({
   getManifest: vi.fn(),
   getPlatformList: vi.fn(),
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   showNotification: vi.fn(),
   responseMessage: vi.fn(),
 }));
 
-vi.mock('../../src/eventHandlers/rc-post-message-request/authorize.js', () => ({
+vi.mock('../../src/eventHandlers/rc-post-message-request/authorize.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
 
-vi.mock('../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/index.js', () => ({
+vi.mock('../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/index.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
 
-vi.mock('../../src/eventHandlers/rc-post-message-request/contacts/match.js', () => ({
+vi.mock('../../src/eventHandlers/rc-post-message-request/contacts/match.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
 
-vi.mock('../../src/eventHandlers/rc-post-message-request/contacts/view.js', () => ({
+vi.mock('../../src/eventHandlers/rc-post-message-request/contacts/view.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
 
-vi.mock('../../src/eventHandlers/rc-post-message-request/callLogger/index.js', () => ({
+vi.mock('../../src/eventHandlers/rc-post-message-request/callLogger/index.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
 
-vi.mock('../../src/eventHandlers/rc-post-message-request/callLogger/inputChanged/index.js', () => ({
+vi.mock('../../src/eventHandlers/rc-post-message-request/callLogger/inputChanged/index.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
 
-vi.mock('../../src/eventHandlers/rc-post-message-request/callLogger/match/index.js', () => ({
+vi.mock('../../src/eventHandlers/rc-post-message-request/callLogger/match/index.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
 
-vi.mock('../../src/eventHandlers/rc-post-message-request/messageLogger/index.js', () => ({
+vi.mock('../../src/eventHandlers/rc-post-message-request/messageLogger/index.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
 
-vi.mock('../../src/eventHandlers/rc-post-message-request/messageLogger/inputChanged/index.js', () => ({
+vi.mock('../../src/eventHandlers/rc-post-message-request/messageLogger/inputChanged/index.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
 
-vi.mock('../../src/eventHandlers/rc-post-message-request/messageLogger/match/index.js', () => ({
+vi.mock('../../src/eventHandlers/rc-post-message-request/messageLogger/match/index.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
 
-vi.mock('../../src/eventHandlers/rc-post-message-request/settings.js', () => ({
+vi.mock('../../src/eventHandlers/rc-post-message-request/settings.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
 
-vi.mock('../../src/eventHandlers/rc-post-message-request/custom-button-click/index.js', () => ({
+vi.mock('../../src/eventHandlers/rc-post-message-request/custom-button-click/index.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
 
 async function loadPostMessageRouter() {
   vi.resetModules();
-  return loadModule('../../src/eventHandlers/rc-post-message-request/index.js');
+  return loadModule('../../src/eventHandlers/rc-post-message-request/index.ts');
 }
 
 function manifest() {

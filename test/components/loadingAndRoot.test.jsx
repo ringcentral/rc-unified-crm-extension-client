@@ -27,7 +27,7 @@ describe('Loading component and root entrypoint', () => {
 
   it('toggles the Juno loading state from widget postMessage events', async () => {
     vi.resetModules();
-    const Loading = (await import('../../src/components/loading.jsx')).default;
+    const Loading = (await import('../../src/components/loading.tsx')).default;
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -62,16 +62,16 @@ describe('Loading component and root entrypoint', () => {
     container.id = 'react-container';
     document.body.appendChild(container);
     const restoreLocale = vi.fn(() => Promise.resolve());
-    vi.doMock('../../src/i18n/index.js', () => ({
+    vi.doMock('../../src/i18n/index.ts', () => ({
       default: {
         restoreLocale,
       },
     }));
-    vi.doMock('../../src/components/note/expandableNote.jsx', () => ({
+    vi.doMock('../../src/components/note/expandableNote.tsx', () => ({
       default: () => <div data-component="ExpandableNote" />,
     }));
 
-    await import('../../src/root.jsx');
+    await import('../../src/root.tsx');
     await act(async () => {
       await Promise.resolve();
       await Promise.resolve();

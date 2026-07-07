@@ -33,7 +33,7 @@ async function loadMatchHandler(modulePath, overrides = {}) {
     openContactPage: vi.fn(async () => {}),
     ...overrides.contactCore,
   };
-  vi.doMock('../../src/core/contact.js', () => ({ default: contactCore }));
+  vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
 
   const logCore = {
     getLog: vi.fn(async () => ({
@@ -44,14 +44,14 @@ async function loadMatchHandler(modulePath, overrides = {}) {
     updateLog: vi.fn(async () => {}),
     ...overrides.logCore,
   };
-  vi.doMock('../../src/core/log.js', () => ({ default: logCore }));
+  vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
   const userCore = {
     getOneTimeLogSetting: vi.fn(() => ({ value: true })),
     getCallPopMultiMatchBehavior: vi.fn(() => ({ value: 'prompt' })),
     ...overrides.userCore,
   };
-  vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+  vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
   const util = {
     showNotification: vi.fn(),
@@ -65,7 +65,7 @@ async function loadMatchHandler(modulePath, overrides = {}) {
     }),
     ...overrides.util,
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const handler = await loadModule(modulePath);
   return {
@@ -106,7 +106,7 @@ describe('contact and call-log match handlers', () => {
       ],
     });
     const { handler, util } = await loadMatchHandler(
-      '../../src/eventHandlers/rc-post-message-request/contacts/match.js',
+      '../../src/eventHandlers/rc-post-message-request/contacts/match.ts',
     );
 
     await handler.onEvent({
@@ -133,7 +133,7 @@ describe('contact and call-log match handlers', () => {
 
   it('matches direct numbers, triggers remaining phone matches, and reports manual no-match notifications', async () => {
     let loaded = await loadMatchHandler(
-      '../../src/eventHandlers/rc-post-message-request/contacts/match.js',
+      '../../src/eventHandlers/rc-post-message-request/contacts/match.ts',
     );
     await loaded.handler.onEvent({
       data: {
@@ -175,7 +175,7 @@ describe('contact and call-log match handlers', () => {
     ]));
 
     loaded = await loadMatchHandler(
-      '../../src/eventHandlers/rc-post-message-request/contacts/match.js',
+      '../../src/eventHandlers/rc-post-message-request/contacts/match.ts',
       {
         contactCore: {
           getContact: vi.fn(async () => ({
@@ -250,7 +250,7 @@ describe('contact and call-log match handlers', () => {
       },
     });
     const { handler, logCore, util } = await loadMatchHandler(
-      '../../src/eventHandlers/rc-post-message-request/callLogger/match/index.js',
+      '../../src/eventHandlers/rc-post-message-request/callLogger/match/index.ts',
       {
         logCore: {
           getLog: vi.fn(async () => ({

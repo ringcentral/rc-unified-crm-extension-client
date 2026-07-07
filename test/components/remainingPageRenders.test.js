@@ -33,11 +33,11 @@ function plugins() {
 
 describe('plugin and developer page renderers', () => {
   it('renders installed plugin, admin plugin, plugin market, and developer settings pages', async () => {
-    const installedPluginListPage = await loadPage('../../src/components/installedPluginListPage.js');
-    const pluginAdminConfigurePage = await loadPage('../../src/components/pluginAdminConfigurePage.js');
-    const pluginMarketListPage = await loadPage('../../src/components/pluginMarketListPage.js');
-    const developerSettingsPage = await loadPage('../../src/components/developerSettingsPage/index.js');
-    const implementedInterfacesPage = await loadPage('../../src/components/developerSettingsPage/implementedInterfacesPage.js');
+    const installedPluginListPage = await loadPage('../../src/components/installedPluginListPage.ts');
+    const pluginAdminConfigurePage = await loadPage('../../src/components/pluginAdminConfigurePage.ts');
+    const pluginMarketListPage = await loadPage('../../src/components/pluginMarketListPage.ts');
+    const developerSettingsPage = await loadPage('../../src/components/developerSettingsPage/index.ts');
+    const implementedInterfacesPage = await loadPage('../../src/components/developerSettingsPage/implementedInterfacesPage.ts');
 
     const installed = installedPluginListPage.getInstalledPluginListPageRender({
       pluginList: plugins(),
@@ -111,8 +111,8 @@ describe('plugin and developer page renderers', () => {
 
 describe('google sheets and server-side logging page renderers', () => {
   it('renders user/admin Google Sheets pages and update-state helpers', async () => {
-    const googleSheetsPage = await loadPage('../../src/components/platformSpecific/googleSheetsPage.js');
-    const adminGoogleSheetsPage = await loadPage('../../src/components/admin/adminGoogleSheetsPage.js');
+    const googleSheetsPage = await loadPage('../../src/components/platformSpecific/googleSheetsPage.ts');
+    const adminGoogleSheetsPage = await loadPage('../../src/components/admin/adminGoogleSheetsPage.ts');
 
     const managedUserPage = googleSheetsPage.renderGoogleSheetsPage({
       userSettings: {
@@ -160,7 +160,7 @@ describe('google sheets and server-side logging page renderers', () => {
   });
 
   it('renders server-side logging with warning, sources, additional fields, and user mapping section', async () => {
-    const serverSideLoggingPage = await loadPage('../../src/components/admin/serverSideLoggingPage.js');
+    const serverSideLoggingPage = await loadPage('../../src/components/admin/serverSideLoggingPage.ts');
 
     const page = serverSideLoggingPage.getServerSideLoggingSettingPageRender({
       subscriptionLevel: 'Account',
@@ -225,8 +225,8 @@ describe('google sheets and server-side logging page renderers', () => {
 
 describe('user mapping and reports page renderers', () => {
   it('renders user mapping lists and edit forms with search/filter branches', async () => {
-    const userMappingPage = await loadPage('../../src/components/admin/userMappingPage/userMappingPage.js');
-    const editUserMappingPage = await loadPage('../../src/components/admin/userMappingPage/editUserMappingPage.js');
+    const userMappingPage = await loadPage('../../src/components/admin/userMappingPage/userMappingPage.ts');
+    const editUserMappingPage = await loadPage('../../src/components/admin/userMappingPage/editUserMappingPage.ts');
 
     const mappings = [
       {
@@ -289,7 +289,7 @@ describe('user mapping and reports page renderers', () => {
   });
 
   it('renders user and company report tabs with metrics, date ranges, and admin-only tab options', async () => {
-    const reportPage = await loadPage('../../src/components/reportPage/reportPage.js');
+    const reportPage = await loadPage('../../src/components/reportPage/reportPage.ts');
 
     const userPage = reportPage.getReportsPageRender({
       selectedTab: 'userReportTab',

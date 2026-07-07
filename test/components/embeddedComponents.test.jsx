@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
-import App from '../../src/components/embedded/index.jsx';
-import Navigator from '../../src/components/embedded/navigator.jsx';
-import QuickAccessButton from '../../src/components/embedded/quickAccessButton.jsx';
-import SetupButton from '../../src/components/embedded/setupButton.jsx';
-import { sendMessageToExtension } from '../../src/lib/sendMessage.js';
-import { trackMissingServiceWorker } from '../../src/lib/analytics.js';
+import App from '../../src/components/embedded/index.tsx';
+import Navigator from '../../src/components/embedded/navigator.tsx';
+import QuickAccessButton from '../../src/components/embedded/quickAccessButton.tsx';
+import SetupButton from '../../src/components/embedded/setupButton.tsx';
+import { sendMessageToExtension } from '../../src/lib/sendMessage.ts';
+import { trackMissingServiceWorker } from '../../src/lib/analytics.ts';
 import { seedStorage } from '../setup/storageHelpers';
 
 vi.mock('@ringcentral/juno', async () => {
@@ -58,19 +58,19 @@ vi.mock('@ringcentral/juno-icon', () => ({
   Settings: 'Settings',
 }));
 
-vi.mock('../../src/lib/sendMessage.js', () => ({
+vi.mock('../../src/lib/sendMessage.ts', () => ({
   sendMessageToExtension: vi.fn(),
 }));
 
-vi.mock('../../src/lib/analytics.js', () => ({
+vi.mock('../../src/lib/analytics.ts', () => ({
   trackMissingServiceWorker: vi.fn(),
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   isObjectEmpty: vi.fn((obj) => Object.keys(obj || {}).length === 0),
 }));
 
-vi.mock('../../src/i18n/index.js', () => ({
+vi.mock('../../src/i18n/index.ts', () => ({
   t: vi.fn((key) => key),
 }));
 

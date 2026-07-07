@@ -1,10 +1,10 @@
 import axios from 'axios';
-import contactCore from '../../src/core/contact.js';
-import calldownPage from '../../src/components/calldownPage.js';
-import { getSchedulePageRender } from '../../src/components/schedulePage.js';
-import { cacheCalldownContact } from '../../src/lib/util.js';
-import { getManifest } from '../../src/service/manifestService.js';
-import { getPlatformInfo } from '../../src/service/platformService.js';
+import contactCore from '../../src/core/contact.ts';
+import calldownPage from '../../src/components/calldownPage.ts';
+import { getSchedulePageRender } from '../../src/components/schedulePage.ts';
+import { cacheCalldownContact } from '../../src/lib/util.ts';
+import { getManifest } from '../../src/service/manifestService.ts';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { seedStorage } from '../setup/storageHelpers';
@@ -15,37 +15,37 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/core/contact.js', () => ({
+vi.mock('../../src/core/contact.ts', () => ({
   default: {
     getContact: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/calldownPage.js', () => ({
+vi.mock('../../src/components/calldownPage.ts', () => ({
   default: {
     getCalldownPageWithRecords: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/schedulePage.js', () => ({
+vi.mock('../../src/components/schedulePage.ts', () => ({
   getSchedulePageRender: vi.fn(),
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   cacheCalldownContact: vi.fn(),
 }));
 
-vi.mock('../../src/service/manifestService.js', () => ({
+vi.mock('../../src/service/manifestService.ts', () => ({
   getManifest: vi.fn(),
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
 async function loadC2scheduleHandler() {
   vi.resetModules();
-  return loadModule('../../src/messageHandlers/c2schedule.js');
+  return loadModule('../../src/messageHandlers/c2schedule.ts');
 }
 
 describe('c2schedule message handler', () => {

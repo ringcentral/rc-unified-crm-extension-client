@@ -1,32 +1,32 @@
-import contactCore from '../../src/core/contact.js';
-import { getSchedulePageRender } from '../../src/components/schedulePage.js';
-import { getManifest } from '../../src/service/manifestService.js';
-import { getPlatformInfo } from '../../src/service/platformService.js';
+import contactCore from '../../src/core/contact.ts';
+import { getSchedulePageRender } from '../../src/components/schedulePage.ts';
+import { getManifest } from '../../src/service/manifestService.ts';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 
-vi.mock('../../src/core/contact.js', () => ({
+vi.mock('../../src/core/contact.ts', () => ({
   default: {
     getLocalCachedContact: vi.fn(),
     getContact: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/schedulePage.js', () => ({
+vi.mock('../../src/components/schedulePage.ts', () => ({
   getSchedulePageRender: vi.fn(),
 }));
 
-vi.mock('../../src/service/manifestService.js', () => ({
+vi.mock('../../src/service/manifestService.ts', () => ({
   getManifest: vi.fn(),
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
 async function loadDialerStatusHandler() {
   vi.resetModules();
-  return loadModule('../../src/eventHandlers/rc-dialer-status-notify.js');
+  return loadModule('../../src/eventHandlers/rc-dialer-status-notify.ts');
 }
 
 function manifest() {

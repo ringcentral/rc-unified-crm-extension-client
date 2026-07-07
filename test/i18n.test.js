@@ -2,7 +2,7 @@ import { seedStorage } from './setup/storageHelpers';
 
 async function loadI18n() {
   vi.resetModules();
-  const module = await import('../src/i18n/index.js');
+  const module = await import('../src/i18n/index.ts');
   return module.default;
 }
 

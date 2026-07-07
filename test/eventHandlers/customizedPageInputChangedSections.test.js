@@ -3,22 +3,22 @@ import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
 
 const simpleSectionMocks = [
-  ['../../src/components/admin/generalSettingPage.js', 'getGeneralSettingPageRender', 'generalSettingPage'],
-  ['../../src/components/admin/managedSettingsPage.js', 'getManagedSettingsPageRender', 'managedSettingsPage'],
-  ['../../src/components/admin/generalSettings/appearancePage.js', 'getAppearancePageRender', 'appearancePage'],
-  ['../../src/components/admin/generalSettings/clickToDialMatcherSettingPage.js', 'getClickToDialMatcherSettingPageRender', 'clickToDialMatcherSettingPage'],
-  ['../../src/components/admin/generalSettings/customizeTabsSettingPage.js', 'getCustomizeTabsSettingPageRender', 'customizeTabsSettingPage'],
-  ['../../src/components/admin/generalSettings/widgetSettingsPage.js', 'getWidgetSettingsPageRender', 'widgetSettingsPage'],
-  ['../../src/components/admin/generalSettings/notificationLevelSettingPage.js', 'getNotificationLevelSettingPageRender', 'notificationLevelSettingPage'],
-  ['../../src/components/admin/generalSettings/phoneNumberFormatPage.js', 'getPhoneNumberFormatPageRender', 'phoneNumberFormatPage'],
-  ['../../src/components/admin/generalSettings/clickToDialEmbedPage.js', 'getClickToDialEmbedPageRender', 'clickToDialEmbedPage'],
-  ['../../src/components/admin/managedSettings/callAndSMSLoggingSettingPage.js', 'getCallAndSMSLoggingSettingPageRender', 'callAndSMSLoggingSettingPage'],
-  ['../../src/components/admin/managedSettings/contactSettingPage.js', 'getContactSettingPageRender', 'contactSettingPage'],
-  ['../../src/components/admin/managedSettings/advancedFeaturesSettingPage.js', 'getAdvancedFeaturesSettingPageRender', 'advancedFeaturesSettingPage'],
-  ['../../src/components/admin/managedSettings/customSettingsPage.js', 'getCustomSettingsPageRender', 'customSettingsPage'],
-  ['../../src/components/admin/managedSettings/callAndSMSLoggingSetting/autoLogPreferenceSettingPage.js', 'getAutoLogPreferenceSettingPageRender', 'autoLogPreferenceSettingPage'],
-  ['../../src/components/admin/managedOAuthAdminPage.js', 'getManagedOAuthAdminPageRender', 'managedOAuthAdminPage'],
-  ['../../src/components/admin/managedAuthOrgPage.js', 'getManagedAuthOrgPageRender', 'managedAuthOrgPage'],
+  ['../../src/components/admin/generalSettingPage.ts', 'getGeneralSettingPageRender', 'generalSettingPage'],
+  ['../../src/components/admin/managedSettingsPage.ts', 'getManagedSettingsPageRender', 'managedSettingsPage'],
+  ['../../src/components/admin/generalSettings/appearancePage.ts', 'getAppearancePageRender', 'appearancePage'],
+  ['../../src/components/admin/generalSettings/clickToDialMatcherSettingPage.ts', 'getClickToDialMatcherSettingPageRender', 'clickToDialMatcherSettingPage'],
+  ['../../src/components/admin/generalSettings/customizeTabsSettingPage.ts', 'getCustomizeTabsSettingPageRender', 'customizeTabsSettingPage'],
+  ['../../src/components/admin/generalSettings/widgetSettingsPage.ts', 'getWidgetSettingsPageRender', 'widgetSettingsPage'],
+  ['../../src/components/admin/generalSettings/notificationLevelSettingPage.ts', 'getNotificationLevelSettingPageRender', 'notificationLevelSettingPage'],
+  ['../../src/components/admin/generalSettings/phoneNumberFormatPage.ts', 'getPhoneNumberFormatPageRender', 'phoneNumberFormatPage'],
+  ['../../src/components/admin/generalSettings/clickToDialEmbedPage.ts', 'getClickToDialEmbedPageRender', 'clickToDialEmbedPage'],
+  ['../../src/components/admin/managedSettings/callAndSMSLoggingSettingPage.ts', 'getCallAndSMSLoggingSettingPageRender', 'callAndSMSLoggingSettingPage'],
+  ['../../src/components/admin/managedSettings/contactSettingPage.ts', 'getContactSettingPageRender', 'contactSettingPage'],
+  ['../../src/components/admin/managedSettings/advancedFeaturesSettingPage.ts', 'getAdvancedFeaturesSettingPageRender', 'advancedFeaturesSettingPage'],
+  ['../../src/components/admin/managedSettings/customSettingsPage.ts', 'getCustomSettingsPageRender', 'customSettingsPage'],
+  ['../../src/components/admin/managedSettings/callAndSMSLoggingSetting/autoLogPreferenceSettingPage.ts', 'getAutoLogPreferenceSettingPageRender', 'autoLogPreferenceSettingPage'],
+  ['../../src/components/admin/managedOAuthAdminPage.ts', 'getManagedOAuthAdminPageRender', 'managedOAuthAdminPage'],
+  ['../../src/components/admin/managedAuthOrgPage.ts', 'getManagedAuthOrgPageRender', 'managedAuthOrgPage'],
 ];
 
 async function loadSectionHandler(modulePath, overrides = {}) {
@@ -37,43 +37,43 @@ async function loadSectionHandler(modulePath, overrides = {}) {
   const callLogDetailsSettingPage = {
     getCallLogDetailsSettingPageRender: vi.fn((props) => ({ id: 'callLogDetailsSettingPage', props })),
   };
-  vi.doMock('../../src/components/admin/managedSettings/callAndSMSLoggingSetting/callLogDetailsSettingPage.js', () => ({
+  vi.doMock('../../src/components/admin/managedSettings/callAndSMSLoggingSetting/callLogDetailsSettingPage.ts', () => ({
     default: callLogDetailsSettingPage,
   }));
 
   const serverSideLoggingPage = {
     getServerSideLoggingSettingPageRender: vi.fn((props) => ({ id: 'serverSideLoggingSettingPage', props })),
   };
-  vi.doMock('../../src/components/admin/serverSideLoggingPage.js', () => ({ default: serverSideLoggingPage }));
+  vi.doMock('../../src/components/admin/serverSideLoggingPage.ts', () => ({ default: serverSideLoggingPage }));
 
   const managedAuthenticationPage = {
     getManagedAuthenticationPageRender: vi.fn((props) => ({ id: 'managedAuthenticationPage', props })),
   };
-  vi.doMock('../../src/components/admin/managedAuthenticationPage.js', () => ({ default: managedAuthenticationPage }));
+  vi.doMock('../../src/components/admin/managedAuthenticationPage.ts', () => ({ default: managedAuthenticationPage }));
 
   const managedAuthUserPage = {
     getManagedAuthUserPageRender: vi.fn((props) => ({ id: 'managedAuthUserPage', props })),
   };
-  vi.doMock('../../src/components/admin/managedAuthUserPage.js', () => ({ default: managedAuthUserPage }));
+  vi.doMock('../../src/components/admin/managedAuthUserPage.ts', () => ({ default: managedAuthUserPage }));
 
   const adminGoogleSheetsPage = {
     renderAdminGoogleSheetsPage: vi.fn((props) => ({ id: 'adminGoogleSheetsPage', props })),
   };
-  vi.doMock('../../src/components/admin/adminGoogleSheetsPage.js', () => ({ default: adminGoogleSheetsPage }));
+  vi.doMock('../../src/components/admin/adminGoogleSheetsPage.ts', () => ({ default: adminGoogleSheetsPage }));
 
   const userMappingPage = {
     getUserMappingPageRender: vi.fn((props) => ({ id: 'userMappingPage', props })),
   };
-  vi.doMock('../../src/components/admin/userMappingPage/userMappingPage.js', () => ({ default: userMappingPage }));
+  vi.doMock('../../src/components/admin/userMappingPage/userMappingPage.ts', () => ({ default: userMappingPage }));
 
   const pluginPages = {
     getPluginsSettingPageRender: vi.fn((props) => ({ id: 'pluginsSettingPage', props })),
     getInstalledPluginListPageRender: vi.fn((props) => ({ id: 'installedPluginListPage', props })),
   };
-  vi.doMock('../../src/components/admin/managedSettings/pluginsSettingPage.js', () => ({
+  vi.doMock('../../src/components/admin/managedSettings/pluginsSettingPage.ts', () => ({
     getPluginsSettingPageRender: pluginPages.getPluginsSettingPageRender,
   }));
-  vi.doMock('../../src/components/installedPluginListPage.js', () => ({
+  vi.doMock('../../src/components/installedPluginListPage.ts', () => ({
     getInstalledPluginListPageRender: pluginPages.getInstalledPluginListPageRender,
   }));
 
@@ -102,7 +102,7 @@ async function loadSectionHandler(modulePath, overrides = {}) {
     })),
     ...overrides.adminCore,
   };
-  vi.doMock('../../src/core/admin.js', () => ({ default: adminCore }));
+  vi.doMock('../../src/core/admin.ts', () => ({ default: adminCore }));
 
   const userCore = {
     getAllPluginSettings: vi.fn((settings = {}) => Object.keys(settings).reduce((result, key) => {
@@ -113,7 +113,7 @@ async function loadSectionHandler(modulePath, overrides = {}) {
     }, {})),
     ...overrides.userCore,
   };
-  vi.doMock('../../src/core/user.js', () => ({
+  vi.doMock('../../src/core/user.ts', () => ({
     default: userCore,
     getAllPluginSettings: userCore.getAllPluginSettings,
   }));
@@ -125,7 +125,7 @@ async function loadSectionHandler(modulePath, overrides = {}) {
     ]),
     ...overrides.manifestService,
   };
-  vi.doMock('../../src/service/manifestService.js', () => manifestService);
+  vi.doMock('../../src/service/manifestService.ts', () => manifestService);
 
   const pluginService = {
     getPluginLicenseStatus: vi.fn(async ({ pluginId }) => ({
@@ -136,7 +136,7 @@ async function loadSectionHandler(modulePath, overrides = {}) {
     })),
     ...overrides.pluginService,
   };
-  vi.doMock('../../src/service/pluginService.js', () => ({ default: pluginService }));
+  vi.doMock('../../src/service/pluginService.ts', () => ({ default: pluginService }));
 
   const util = {
     getRcContactInfo: vi.fn(async () => [
@@ -146,7 +146,7 @@ async function loadSectionHandler(modulePath, overrides = {}) {
     ]),
     ...overrides.util,
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const handler = await loadModule(modulePath);
   return {
@@ -190,6 +190,47 @@ const context = {
   },
 };
 
+const simpleSettingsSectionRoutes = [
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/generalSettings.ts', 'getGeneralSettingPageRender', 'generalSettingPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedSettings.ts', 'getManagedSettingsPageRender', 'managedSettingsPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/appearance.ts', 'getAppearancePageRender', 'appearancePage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/clickToDialMatcher.ts', 'getClickToDialMatcherSettingPageRender', 'clickToDialMatcherSettingPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/customizeTabs.ts', 'getCustomizeTabsSettingPageRender', 'customizeTabsSettingPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/widgetSettings.ts', 'getWidgetSettingsPageRender', 'widgetSettingsPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/notificationLevel.ts', 'getNotificationLevelSettingPageRender', 'notificationLevelSettingPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/phoneNumberFormat.ts', 'getPhoneNumberFormatPageRender', 'phoneNumberFormatPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/clickToDialEmbed.ts', 'getClickToDialEmbedPageRender', 'clickToDialEmbedPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/callAndSMSLogging.ts', 'getCallAndSMSLoggingSettingPageRender', 'callAndSMSLoggingSettingPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/contactSetting.ts', 'getContactSettingPageRender', 'contactSettingPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/advancedFeaturesSetting.ts', 'getAdvancedFeaturesSettingPageRender', 'advancedFeaturesSettingPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/customSettings.ts', 'getCustomSettingsPageRender', 'customSettingsPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/autoLogPreferences.ts', 'getAutoLogPreferenceSettingPageRender', 'autoLogPreferenceSettingPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedOAuth.ts', 'getManagedOAuthAdminPageRender', 'managedOAuthAdminPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedAuthOrg.ts', 'getManagedAuthOrgPageRender', 'managedAuthOrgPage'],
+];
+
+async function expectSimpleSectionRoutesToRender(routes) {
+  for (const [modulePath, fnName, pageId] of routes) {
+    const loaded = await loadSectionHandler(modulePath);
+    await loaded.handler.onEvent(context);
+    expect(loaded.pageMocks[fnName]).toHaveBeenCalled();
+    expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        message: expect.objectContaining({
+          type: 'rc-adapter-register-customized-page',
+          page: expect.objectContaining({ id: pageId }),
+        }),
+      }),
+      expect.objectContaining({
+        message: {
+          type: 'rc-adapter-navigate-to',
+          path: `/customized/${pageId}`,
+        },
+      }),
+    ]));
+  }
+}
+
 describe('customizedPage inputChanged section handlers', () => {
   beforeEach(() => {
     seedStorage({
@@ -222,50 +263,17 @@ describe('customizedPage inputChanged section handlers', () => {
     });
   });
 
-  it('renders simple settings section pages with stored admin settings', async () => {
-    const routes = [
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/generalSettings.js', 'getGeneralSettingPageRender', 'generalSettingPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedSettings.js', 'getManagedSettingsPageRender', 'managedSettingsPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/appearance.js', 'getAppearancePageRender', 'appearancePage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/clickToDialMatcher.js', 'getClickToDialMatcherSettingPageRender', 'clickToDialMatcherSettingPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/customizeTabs.js', 'getCustomizeTabsSettingPageRender', 'customizeTabsSettingPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/widgetSettings.js', 'getWidgetSettingsPageRender', 'widgetSettingsPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/notificationLevel.js', 'getNotificationLevelSettingPageRender', 'notificationLevelSettingPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/phoneNumberFormat.js', 'getPhoneNumberFormatPageRender', 'phoneNumberFormatPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/clickToDialEmbed.js', 'getClickToDialEmbedPageRender', 'clickToDialEmbedPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/callAndSMSLogging.js', 'getCallAndSMSLoggingSettingPageRender', 'callAndSMSLoggingSettingPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/contactSetting.js', 'getContactSettingPageRender', 'contactSettingPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/advancedFeaturesSetting.js', 'getAdvancedFeaturesSettingPageRender', 'advancedFeaturesSettingPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/customSettings.js', 'getCustomSettingsPageRender', 'customSettingsPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/autoLogPreferences.js', 'getAutoLogPreferenceSettingPageRender', 'autoLogPreferenceSettingPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedOAuth.js', 'getManagedOAuthAdminPageRender', 'managedOAuthAdminPage'],
-      ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedAuthOrg.js', 'getManagedAuthOrgPageRender', 'managedAuthOrgPage'],
-    ];
+  it('renders general settings section pages with stored admin settings', async () => {
+    await expectSimpleSectionRoutesToRender(simpleSettingsSectionRoutes.slice(0, 8));
+  });
 
-    for (const [modulePath, fnName, pageId] of routes) {
-      const loaded = await loadSectionHandler(modulePath);
-      await loaded.handler.onEvent(context);
-      expect(loaded.pageMocks[fnName]).toHaveBeenCalled();
-      expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
-        expect.objectContaining({
-          message: expect.objectContaining({
-            type: 'rc-adapter-register-customized-page',
-            page: expect.objectContaining({ id: pageId }),
-          }),
-        }),
-        expect.objectContaining({
-          message: {
-            type: 'rc-adapter-navigate-to',
-            path: `/customized/${pageId}`,
-          },
-        }),
-      ]));
-    }
+  it('renders managed settings section pages with stored admin settings', async () => {
+    await expectSimpleSectionRoutesToRender(simpleSettingsSectionRoutes.slice(8));
   });
 
   it('renders call log details with refreshed server-side logging subscription state and fallback state', async () => {
     let loaded = await loadSectionHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/callLogDetailsSetting.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/callLogDetailsSetting.ts',
     );
     await loaded.handler.onEvent(context);
     expect(loaded.adminCore.getServerSideLogging).toHaveBeenCalledWith({ platform: context.platform });
@@ -278,7 +286,7 @@ describe('customizedPage inputChanged section handlers', () => {
     });
 
     loaded = await loadSectionHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/callLogDetailsSetting.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/callLogDetailsSetting.ts',
       {
         adminCore: {
           getServerSideLogging: vi.fn(async () => {
@@ -295,7 +303,7 @@ describe('customizedPage inputChanged section handlers', () => {
 
   it('renders server-side logging, managed auth, admin Google Sheets, and user mapping sections', async () => {
     let loaded = await loadSectionHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/serverSideLoggingSetting.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/serverSideLoggingSetting.ts',
     );
     await loaded.handler.onEvent(context);
     expect(loaded.serverSideLoggingPage.getServerSideLoggingSettingPageRender).toHaveBeenCalledWith(expect.objectContaining({
@@ -309,7 +317,7 @@ describe('customizedPage inputChanged section handlers', () => {
     }));
 
     loaded = await loadSectionHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedAuthentication.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedAuthentication.ts',
     );
     await loaded.handler.onEvent(context);
     expect(loaded.managedAuthenticationPage.getManagedAuthenticationPageRender).toHaveBeenCalledWith({
@@ -318,7 +326,7 @@ describe('customizedPage inputChanged section handlers', () => {
     });
 
     loaded = await loadSectionHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedAuthUser.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedAuthUser.ts',
     );
     await loaded.handler.onEvent(context);
     expect(loaded.util.getRcContactInfo).toHaveBeenCalled();
@@ -331,7 +339,7 @@ describe('customizedPage inputChanged section handlers', () => {
     }));
 
     loaded = await loadSectionHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/googleSheetsAdminConfig.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/googleSheetsAdminConfig.ts',
     );
     await loaded.handler.onEvent(context);
     expect(loaded.adminGoogleSheetsPage.renderAdminGoogleSheetsPage).toHaveBeenCalledWith({
@@ -342,7 +350,7 @@ describe('customizedPage inputChanged section handlers', () => {
     });
 
     loaded = await loadSectionHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/userMapping.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/userMapping.ts',
     );
     await loaded.handler.onEvent(context);
     expect(loaded.adminCore.uploadAdminSettings).toHaveBeenCalledWith({
@@ -369,7 +377,7 @@ describe('customizedPage inputChanged section handlers', () => {
 
   it('renders admin plugin settings and installed plugin lists with license status', async () => {
     let loaded = await loadSectionHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/pluginsAdminConfig.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/pluginsAdminConfig.ts',
     );
     await loaded.handler.onEvent(context);
     expect(loaded.pluginPages.getPluginsSettingPageRender).toHaveBeenCalledWith({
@@ -377,7 +385,7 @@ describe('customizedPage inputChanged section handlers', () => {
     });
 
     loaded = await loadSectionHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/installedPlugins.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/installedPlugins.ts',
     );
     await loaded.handler.onEvent(context);
     expect(loaded.pluginService.getPluginLicenseStatus).toHaveBeenCalledWith(expect.objectContaining({

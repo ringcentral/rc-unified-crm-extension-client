@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { showNotification, getRcCallLogIdentity } from '../../src/lib/util.js';
+import { showNotification, getRcCallLogIdentity } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
 import { seedStorage } from '../setup/storageHelpers';
 
@@ -9,7 +9,7 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   showNotification: vi.fn(),
   getRcCallLogIdentity: vi.fn(async () => ({
     extensionNumber: '101',
@@ -19,7 +19,7 @@ vi.mock('../../src/lib/util.js', () => ({
 
 async function loadDispositionCore() {
   vi.resetModules();
-  return loadModule('../../src/core/disposition.js');
+  return loadModule('../../src/core/disposition.ts');
 }
 
 describe('disposition core', () => {

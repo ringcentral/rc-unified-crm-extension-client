@@ -1,0 +1,222 @@
+type UnknownRecord = Record<string, any>;
+
+function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin, subscribedByOtherAdmin, enableUserMapping, additionalFields = [], additionalFieldValues = {}, userPermissions = {}, sources = [] }: UnknownRecord): UnknownRecord {
+    const additionalProperties: UnknownRecord = {};
+    additionalFields.forEach((field: UnknownRecord) => {
+        additionalProperties[field.const] = {
+            type: 'string',
+            title: field.title,
+            description: field.description,
+        };
+        if (field.oneOf) {
+            additionalProperties[field.const].oneOf = field.oneOf;
+        }
+        if (field.enum) {
+            additionalProperties[field.const].enum = field.enum;
+        }
+        if (field.enumNames) {
+            additionalProperties[field.const].enumNames = field.enumNames;
+        }
+    });
+    const warningProperty: UnknownRecord = {};
+    const warningUiSchema: UnknownRecord = {};
+    if (subscribedByOtherAdmin) {
+        warningProperty.warning = {
+            type: 'string',
+            description: `Server side logging is currently managed by ${subscribedByOtherAdmin.name}`
+        }
+        warningUiSchema.warning = {
+            "ui:field": "admonition",
+            "ui:severity": "warning",  // "warning", "info", "error", "success"
+        }
+    }
+    const sourcesProperty: UnknownRecord = {};
+    const sourcesUiSchema: UnknownRecord = {};
+    let sourcesFormData = ['ex'];
+    if (userPermissions.ringCX && userPermissions.ringSenseInsights) {
+        sourcesFormData = sources;
+        sourcesProperty.sources = {
+            type: "array",
+            title: "ACE sources",
+            items: {
+                type: "string",
+            },
+            enum: [
+                'ex',
+                "cx",
+            ],
+            enumNames: [
+                'RingEX',
+                'RingCX (Experimental)',
+            ],
+        };
+        sourcesUiSchema.sources = {
+            "ui:widget": "checkboxes",
+            "ui:options": {
+                inline: true,
+                "enumOptions": [
+                    {
+                        "value": "ex",
+                        "label": "RingEX"
+                    },
+                    {
+                        "value": "cx",
+                        "label": "RingCX (Experimental)"
+                    },
+                ]
+            },
+        };
+    } else {
+        sourcesFormData = ['ex'];
+    }
+    const pageRender: UnknownRecord =
+    {
+        id: 'serverSideLoggingSetting',
+        title: 'Server side logging (Beta)',
+        type: 'page',
+        schema: {
+            type: 'object',
+            required: [],
+            properties: {
+                ...warningProperty,
+                serverSideLoggingHolder: {
+                    type: 'object',
+                    title: 'Server side logging',
+                    properties: {
+                        serverSideLogging: {
+                            type: 'string',
+                            title: 'Enable server side logging',
+                            readOnly: !!subscribedByOtherAdmin,
+                            oneOf: [
+                                {
+                                    const: 'Account',
+                                    title: 'Enable for account'
+                                },
+                                {
+                                    const: 'User',
+                                    title: 'Enable for admin only (trial mode)'
+                                },
+                                {
+                                    const: 'Disable',
+                                    title: 'Disable'
+                                }
+                            ]
+                        },
+                        activityRecordOwner: {
+                            readOnly: !!subscribedByOtherAdmin,
+                            title: 'Activity record owner (Who should be the owner of the activity record?)',
+                            type: 'string',
+                            oneOf: [
+                                {
+                                    const: 'user',
+                                    title: 'Agent/user (if possible)'
+                                },
+                                {
+                                    const: 'admin',
+                                    title: 'Admin'
+                                }
+                            ]
+                        },
+                        ...sourcesProperty,
+                        ...additionalProperties,
+                        saveServerSideLoggingButton: {
+                            type: 'string',
+                            title: 'Save'
+                        }
+                    }
+                },
+                doNotLogNumbersHolder: {
+                    readOnly: !!subscribedByOtherAdmin,
+                    type: 'object',
+                    title: 'Do not log numbers',
+                    properties: {
+                        doNotLogNumbers: {
+                            type: 'string',
+                            title: 'Do not log numbers (separated by comma)'
+                        },
+                        doNotLogNumbersWarning: {
+                            type: 'string',
+                            description: 'All numbers will be auto-formatted as E.164 standard. Eg. (123) 456-7890 -> +11234567890'
+                        },
+                        doNotLogNumbersSubmitButton: {
+                            type: 'string',
+                            title: 'Save'
+                        }
+                    }
+                },
+                ...(enableUserMapping ? {
+                    section: {
+                        type: 'string',
+                        oneOf: [
+                            {
+                                const: "userMapping",
+                                title: "User mapping",
+                            }
+                        ]
+                    }
+                } : {})
+            }
+        },
+        uiSchema: {
+            ...warningUiSchema,
+            doNotLogNumbersHolder: {
+                "ui:collapsible": true,
+                doNotLogNumbers: {
+                    "ui:placeholder": 'Enter do not log numbers, separated by comma',
+                    "ui:widget": "textarea", // show note input as textarea
+                },
+                doNotLogNumbersWarning: {
+                    "ui:field": "admonition",
+                    "ui:severity": "warning",  // "warning", "info", "error", "success"
+                },
+                doNotLogNumbersSubmitButton: {
+                    "ui:field": "button",
+                    "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                    "ui:fullWidth": true,
+                    "ui:disabled": !!subscribedByOtherAdmin
+                }
+            },
+            serverSideLoggingHolder: {
+                "ui:collapsible": true,
+                saveServerSideLoggingButton: {
+                    "ui:field": "button",
+                    "ui:variant": "contained", // "text", "outlined", "contained", "plain"
+                    "ui:fullWidth": true,
+                    "ui:disabled": !!subscribedByOtherAdmin
+                },
+                ...sourcesUiSchema,
+            },
+            section: {
+                "ui:field": "list",
+                "ui:navigation": true,
+                "ui:style": {
+                    marginTop: '-10px'
+                }
+            }
+        },
+        formData: {
+            serverSideLoggingHolder: {
+                serverSideLogging: subscriptionLevel,
+                activityRecordOwner: loggingByAdmin ? 'admin' : 'user',
+                sources: sourcesFormData,
+            },
+            doNotLogNumbersHolder: {
+                doNotLogNumbers: doNotLogNumbers,
+            },
+        }
+    };
+    additionalFields.forEach((field: UnknownRecord) => {
+        if (field.uiSchema) {
+            pageRender.uiSchema.serverSideLoggingHolder[field.const] = field.uiSchema;
+        }
+        if (typeof additionalFieldValues[field.const] !== 'undefined') {
+            pageRender.formData.serverSideLoggingHolder[field.const] = additionalFieldValues[field.const];
+        }
+    });
+    return pageRender;
+}
+
+export { getServerSideLoggingSettingPageRender };
+export default {
+    getServerSideLoggingSettingPageRender,
+};

@@ -1,4 +1,4 @@
-import urlTemplate from '../../src/lib/urlTemplate.js';
+import urlTemplate from '../../src/lib/urlTemplate.ts';
 
 const { renderUrlTemplate, isSafeHttpUrl } = urlTemplate;
 

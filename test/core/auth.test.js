@@ -1,19 +1,19 @@
 import axios from 'axios';
 import { openDB } from 'idb';
-import { getRcAccessToken, getRcInfo, setRcAdditionalSubmission, showNotification } from '../../src/lib/util.js';
-import { getPlatformInfo } from '../../src/service/platformService.js';
-import { getManifest } from '../../src/service/manifestService.js';
-import { trackCrmLogin, trackCrmLogout } from '../../src/lib/analytics.js';
-import platformSelectionPage from '../../src/components/platformSelectionPage.js';
-import authPage from '../../src/components/authPage.js';
-import managedOAuthSetupPage from '../../src/components/managedOAuthSetupPage.js';
-import managedOAuthMissingPage from '../../src/components/managedOAuthMissingPage.js';
-import { tryConnectToBullhorn } from '../../src/misc/bullhorn.js';
-import { getPluginConfigurePageRender } from '../../src/components/pluginConfigurePage.js';
-import pluginService from '../../src/service/pluginService.js';
-import embeddableServices from '../../src/service/embeddableServices.js';
-import adminCore from '../../src/core/admin.js';
-import userCore from '../../src/core/user.js';
+import { getRcAccessToken, getRcInfo, setRcAdditionalSubmission, showNotification } from '../../src/lib/util.ts';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
+import { getManifest } from '../../src/service/manifestService.ts';
+import { trackCrmLogin, trackCrmLogout } from '../../src/lib/analytics.ts';
+import platformSelectionPage from '../../src/components/platformSelectionPage.ts';
+import authPage from '../../src/components/authPage.ts';
+import managedOAuthSetupPage from '../../src/components/managedOAuthSetupPage.ts';
+import managedOAuthMissingPage from '../../src/components/managedOAuthMissingPage.ts';
+import { tryConnectToBullhorn } from '../../src/misc/bullhorn.ts';
+import { getPluginConfigurePageRender } from '../../src/components/pluginConfigurePage.ts';
+import pluginService from '../../src/service/pluginService.ts';
+import embeddableServices from '../../src/service/embeddableServices.ts';
+import adminCore from '../../src/core/admin.ts';
+import userCore from '../../src/core/user.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
@@ -29,83 +29,83 @@ vi.mock('idb', () => ({
   openDB: vi.fn(),
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   getRcAccessToken: vi.fn(() => 'rc-access-token'),
   getRcInfo: vi.fn(),
   showNotification: vi.fn(),
   setRcAdditionalSubmission: vi.fn(),
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
-vi.mock('../../src/service/manifestService.js', () => ({
+vi.mock('../../src/service/manifestService.ts', () => ({
   getManifest: vi.fn(),
 }));
 
-vi.mock('../../src/lib/analytics.js', () => ({
+vi.mock('../../src/lib/analytics.ts', () => ({
   trackCrmLogin: vi.fn(),
   trackCrmLogout: vi.fn(),
 }));
 
-vi.mock('../../src/components/platformSelectionPage.js', () => ({
+vi.mock('../../src/components/platformSelectionPage.ts', () => ({
   default: {
     getPlatformSelectionPageRender: vi.fn(() => ({ id: 'platformSelectionPage' })),
   },
 }));
 
-vi.mock('../../src/components/authPage.js', () => ({
+vi.mock('../../src/components/authPage.ts', () => ({
   default: {
     getAuthPageRender: vi.fn(() => ({ id: 'authPage' })),
   },
 }));
 
-vi.mock('../../src/components/managedOAuthSetupPage.js', () => ({
+vi.mock('../../src/components/managedOAuthSetupPage.ts', () => ({
   default: {
     getManagedOAuthSetupPageRender: vi.fn(() => ({ id: 'managedOAuthSetupPage' })),
   },
 }));
 
-vi.mock('../../src/components/managedOAuthMissingPage.js', () => ({
+vi.mock('../../src/components/managedOAuthMissingPage.ts', () => ({
   default: {
     getManagedOAuthMissingPageRender: vi.fn(() => ({ id: 'managedOAuthMissingPage' })),
   },
 }));
 
-vi.mock('../../src/components/pluginConfigurePage.js', () => ({
+vi.mock('../../src/components/pluginConfigurePage.ts', () => ({
   getMergedPluginConfigFromFormData: vi.fn(() => ({})),
   getPluginConfigurePageRender: vi.fn(() => ({ id: 'pluginConfigurePage' })),
 }));
 
-vi.mock('../../src/misc/bullhorn.js', () => ({
+vi.mock('../../src/misc/bullhorn.ts', () => ({
   tryConnectToBullhorn: vi.fn(),
 }));
 
-vi.mock('../../src/i18n/index.js', () => ({
+vi.mock('../../src/i18n/index.ts', () => ({
   t: vi.fn((key) => key),
 }));
 
-vi.mock('../../src/service/embeddableServices.js', () => ({
+vi.mock('../../src/service/embeddableServices.ts', () => ({
   default: {
     preconfigureServiceManifest: vi.fn(),
   },
 }));
 
-vi.mock('../../src/service/pluginService.js', () => ({
+vi.mock('../../src/service/pluginService.ts', () => ({
   default: {
     getPluginLicenseStatus: vi.fn(),
   },
 }));
 
-vi.mock('../../src/core/admin.js', () => ({
+vi.mock('../../src/core/admin.ts', () => ({
   default: {
     refreshAdminSettings: vi.fn(async () => ({})),
     authAppConnectServer: vi.fn(),
   },
 }));
 
-vi.mock('../../src/core/user.js', () => ({
+vi.mock('../../src/core/user.ts', () => ({
   default: {
     updateSSCLToken: vi.fn(),
   },
@@ -113,7 +113,7 @@ vi.mock('../../src/core/user.js', () => ({
 
 async function loadAuthCore() {
   vi.resetModules();
-  return loadModule('../../src/core/auth.js');
+  return loadModule('../../src/core/auth.ts');
 }
 
 function mockRcInfo() {

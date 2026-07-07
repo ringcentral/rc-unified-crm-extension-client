@@ -44,32 +44,32 @@ async function loadGoogleSheetsHandler(modulePath, overrides = {}) {
     })),
     ...overrides.userCore,
   };
-  vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+  vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
   const adminCore = {
     uploadAdminSettings: vi.fn(async () => {}),
     ...overrides.adminCore,
   };
-  vi.doMock('../../src/core/admin.js', () => ({ default: adminCore }));
+  vi.doMock('../../src/core/admin.ts', () => ({ default: adminCore }));
 
   const util = {
     showNotification: vi.fn(),
     getRcAccessToken: vi.fn(() => 'rc-access-token'),
     ...overrides.util,
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const googleSheetsPage = {
     renderGoogleSheetsPage: vi.fn(({ userSettings }) => ({ id: 'googleSheetsPage', userSettings })),
     ...overrides.googleSheetsPage,
   };
-  vi.doMock('../../src/components/platformSpecific/googleSheetsPage.js', () => ({ default: googleSheetsPage }));
+  vi.doMock('../../src/components/platformSpecific/googleSheetsPage.ts', () => ({ default: googleSheetsPage }));
 
   const adminGoogleSheetsPage = {
     renderAdminGoogleSheetsPage: vi.fn(({ adminSettings }) => ({ id: 'adminGoogleSheetsPage', adminSettings })),
     ...overrides.adminGoogleSheetsPage,
   };
-  vi.doMock('../../src/components/admin/adminGoogleSheetsPage.js', () => ({ default: adminGoogleSheetsPage }));
+  vi.doMock('../../src/components/admin/adminGoogleSheetsPage.ts', () => ({ default: adminGoogleSheetsPage }));
 
   const handler = await loadModule(modulePath);
   return {
@@ -95,7 +95,7 @@ describe('custom-button Google Sheets handlers', () => {
 
   it('opens user Google Sheets config, creates a sheet, selects an existing sheet, and removes it', async () => {
     let loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/googleSheetsConfig.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/googleSheetsConfig.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),
@@ -105,7 +105,7 @@ describe('custom-button Google Sheets handlers', () => {
     expect(loaded.googleSheetsPage.renderGoogleSheetsPage).toHaveBeenCalled();
 
     loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/newSheetButton.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/newSheetButton.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({ newSheetName: 'New Calls' }),
@@ -127,7 +127,7 @@ describe('custom-button Google Sheets handlers', () => {
     });
 
     loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/selectExistingSheetButton.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/selectExistingSheetButton.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),
@@ -142,7 +142,7 @@ describe('custom-button Google Sheets handlers', () => {
       },
     });
     loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/userGoogleSheetSelected.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/userGoogleSheetSelected.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({}, {
@@ -165,7 +165,7 @@ describe('custom-button Google Sheets handlers', () => {
     });
 
     loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/removeSheetButton.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/removeSheetButton.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),
@@ -189,7 +189,7 @@ describe('custom-button Google Sheets handlers', () => {
 
   it('handles user Google Sheets warning paths', async () => {
     let loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/newSheetButton.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/newSheetButton.ts',
     );
     vi.mocked(axios.post).mockResolvedValueOnce({
       status: 500,
@@ -211,7 +211,7 @@ describe('custom-button Google Sheets handlers', () => {
       },
     });
     loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/userGoogleSheetSelected.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/userGoogleSheetSelected.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({}, {
@@ -227,7 +227,7 @@ describe('custom-button Google Sheets handlers', () => {
     });
 
     loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/userGoogleSheetSelected.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/userGoogleSheetSelected.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),
@@ -242,7 +242,7 @@ describe('custom-button Google Sheets handlers', () => {
 
   it('creates, selects, and removes admin Google Sheets settings', async () => {
     let loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminNewSheetButton.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminNewSheetButton.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -274,7 +274,7 @@ describe('custom-button Google Sheets handlers', () => {
     });
 
     loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminSelectExistingSheetButton.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminSelectExistingSheetButton.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -297,7 +297,7 @@ describe('custom-button Google Sheets handlers', () => {
       },
     });
     loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminGoogleSheetSelected.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminGoogleSheetSelected.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({}, {
@@ -318,7 +318,7 @@ describe('custom-button Google Sheets handlers', () => {
     });
 
     loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminRemoveSheetButton.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminRemoveSheetButton.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),
@@ -343,7 +343,7 @@ describe('custom-button Google Sheets handlers', () => {
 
   it('reports admin Google Sheets selection and creation failures', async () => {
     let loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminNewSheetButton.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminNewSheetButton.ts',
     );
     vi.mocked(axios.post).mockRejectedValueOnce(new Error('network'));
     await loaded.handler.onEvent({
@@ -366,7 +366,7 @@ describe('custom-button Google Sheets handlers', () => {
       },
     });
     loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminGoogleSheetSelected.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminGoogleSheetSelected.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({}, {
@@ -382,7 +382,7 @@ describe('custom-button Google Sheets handlers', () => {
     });
 
     loaded = await loadGoogleSheetsHandler(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminGoogleSheetSelected.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminGoogleSheetSelected.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),

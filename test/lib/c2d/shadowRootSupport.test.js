@@ -1,4 +1,4 @@
-import { initializeShadowRootSupport } from '../../../src/lib/c2d/shadowRootSupport.js';
+import { initializeShadowRootSupport } from '../../../src/lib/c2d/shadowRootSupport.ts';
 
 const originalAttachShadow = Element.prototype.attachShadow;
 

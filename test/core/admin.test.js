@@ -1,10 +1,10 @@
 import axios from 'axios';
-import adminPage from '../../src/components/admin/adminPage.js';
-import authCore from '../../src/core/auth.js';
-import { RcAPI } from '../../src/lib/rcAPI.js';
-import { getRcAccessToken, getRcContactInfo, showNotification } from '../../src/lib/util.js';
-import { getManifest } from '../../src/service/manifestService.js';
-import { getPlatformInfo } from '../../src/service/platformService.js';
+import adminPage from '../../src/components/admin/adminPage.ts';
+import authCore from '../../src/core/auth.ts';
+import { RcAPI } from '../../src/lib/rcAPI.ts';
+import { getRcAccessToken, getRcContactInfo, showNotification } from '../../src/lib/util.ts';
+import { getManifest } from '../../src/service/manifestService.ts';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
@@ -27,23 +27,23 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/components/admin/adminPage.js', () => ({
+vi.mock('../../src/components/admin/adminPage.ts', () => ({
   default: {
     getAdminPageRender: vi.fn(() => ({ id: 'adminPage' })),
   },
 }));
 
-vi.mock('../../src/core/auth.js', () => ({
+vi.mock('../../src/core/auth.ts', () => ({
   default: {
     setAuth: vi.fn(),
   },
 }));
 
-vi.mock('../../src/lib/rcAPI.js', () => ({
+vi.mock('../../src/lib/rcAPI.ts', () => ({
   RcAPI: rcApiMocks.RcAPI,
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   getRcAccessToken: vi.fn(() => 'rc-access-token'),
   getRcContactInfo: vi.fn(async () => [
     { id: 'user-1', type: 'User' },
@@ -52,17 +52,17 @@ vi.mock('../../src/lib/util.js', () => ({
   showNotification: vi.fn(),
 }));
 
-vi.mock('../../src/service/manifestService.js', () => ({
+vi.mock('../../src/service/manifestService.ts', () => ({
   getManifest: vi.fn(),
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
 async function loadAdminCore() {
   vi.resetModules();
-  return loadModule('../../src/core/admin.js');
+  return loadModule('../../src/core/admin.ts');
 }
 
 function platform() {

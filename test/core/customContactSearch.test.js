@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { showNotification } from '../../src/lib/util.js';
+import { showNotification } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
 import { seedStorage } from '../setup/storageHelpers';
 
@@ -9,13 +9,13 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   showNotification: vi.fn(),
 }));
 
 async function loadCustomContactSearch() {
   vi.resetModules();
-  return loadModule('../../src/core/customContactSearch.js');
+  return loadModule('../../src/core/customContactSearch.ts');
 }
 
 describe('customContactSearch', () => {

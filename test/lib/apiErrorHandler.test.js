@@ -1,24 +1,24 @@
-import authCore from '../../src/core/auth.js';
-import { showNotification } from '../../src/lib/util.js';
-import { trackCrmAuthFail } from '../../src/lib/analytics.js';
+import authCore from '../../src/core/auth.ts';
+import { showNotification } from '../../src/lib/util.ts';
+import { trackCrmAuthFail } from '../../src/lib/analytics.ts';
 
-vi.mock('../../src/core/auth.js', () => ({
+vi.mock('../../src/core/auth.ts', () => ({
   default: {
     clearLocalCrmAuthState: vi.fn(),
   },
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   showNotification: vi.fn(),
 }));
 
-vi.mock('../../src/lib/analytics.js', () => ({
+vi.mock('../../src/lib/analytics.ts', () => ({
   trackCrmAuthFail: vi.fn(),
 }));
 
 async function loadApiErrorHandler() {
   vi.resetModules();
-  return import('../../src/lib/apiErrorHandler.js');
+  return import('../../src/lib/apiErrorHandler.ts');
 }
 
 describe('apiErrorHandler', () => {

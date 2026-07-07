@@ -2,7 +2,7 @@ import axios from 'axios';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage } from '../setup/storageHelpers';
-import { downloadTextFile } from '../../src/lib/util.js';
+import { downloadTextFile } from '../../src/lib/util.ts';
 
 vi.mock('axios', () => ({
   default: {
@@ -16,13 +16,13 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   downloadTextFile: vi.fn(),
 }));
 
 async function loadLogRecorder() {
   vi.resetModules();
-  return loadModule('../../src/lib/logRecorder.js');
+  return loadModule('../../src/lib/logRecorder.ts');
 }
 
 describe('logRecorder', () => {

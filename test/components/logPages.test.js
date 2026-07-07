@@ -1,7 +1,7 @@
-import logCore from '../../src/core/log.js';
+import logCore from '../../src/core/log.ts';
 import { loadModule } from '../helpers/loadModule';
 
-vi.mock('../../src/core/log.js', () => ({
+vi.mock('../../src/core/log.ts', () => ({
   default: {
     getConflictContentFromUnresolvedLog: vi.fn(),
   },
@@ -9,17 +9,17 @@ vi.mock('../../src/core/log.js', () => ({
 
 async function loadLogPageUtils() {
   vi.resetModules();
-  return loadModule('../../src/components/logPageUtils.js');
+  return loadModule('../../src/components/logPageUtils.ts');
 }
 
 async function loadLogPage() {
   vi.resetModules();
-  return loadModule('../../src/components/logPage.js');
+  return loadModule('../../src/components/logPage.ts');
 }
 
 async function loadGroupLogPage() {
   vi.resetModules();
-  return loadModule('../../src/components/groupLogPage.js');
+  return loadModule('../../src/components/groupLogPage.ts');
 }
 
 function manifest() {

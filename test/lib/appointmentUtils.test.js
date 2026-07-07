@@ -1,4 +1,4 @@
-import appointmentUtils from '../../src/lib/appointmentUtils.js';
+import appointmentUtils from '../../src/lib/appointmentUtils.ts';
 
 const {
   normalizeAttendees,

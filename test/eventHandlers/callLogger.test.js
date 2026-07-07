@@ -87,32 +87,32 @@ async function loadCallLoggerIndex() {
     isObjectEmpty: vi.fn((obj) => Object.keys(obj || {}).length === 0),
     showNotification: vi.fn(),
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const logCore = {
     getLog: vi.fn(async () => ({ callLogs: [] })),
     getCachedNote: vi.fn(async () => 'cached note'),
   };
-  vi.doMock('../../src/core/log.js', () => ({ default: logCore }));
+  vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
   const userCore = {
     getOneTimeLogSetting: vi.fn((settings) => ({ value: settings?.oneTimeLog?.value ?? false })),
     getCallPopSetting: vi.fn((settings) => ({ value: settings?.popupLogPageAfterCall?.value ?? false })),
     getAutoLogCallSetting: vi.fn((settings) => ({ value: settings?.autoLogCall?.value ?? false })),
   };
-  vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+  vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
   const tempLogNotePage = {
     getTempLogNotePageRender: vi.fn(() => ({ id: 'tempLogNotePage' })),
   };
-  vi.doMock('../../src/components/tempLogNotePage.js', () => ({ default: tempLogNotePage }));
+  vi.doMock('../../src/components/tempLogNotePage.ts', () => ({ default: tempLogNotePage }));
 
   const handlers = {};
   for (const [name, modulePath] of Object.entries({
-    logForm: '../../src/eventHandlers/rc-post-message-request/callLogger/logForm.js',
-    callLogSync: '../../src/eventHandlers/rc-post-message-request/callLogger/callLogSync.js',
-    viewLog: '../../src/eventHandlers/rc-post-message-request/callLogger/viewLog.js',
-    createLog: '../../src/eventHandlers/rc-post-message-request/callLogger/createLog.js',
+    logForm: '../../src/eventHandlers/rc-post-message-request/callLogger/logForm.ts',
+    callLogSync: '../../src/eventHandlers/rc-post-message-request/callLogger/callLogSync.ts',
+    viewLog: '../../src/eventHandlers/rc-post-message-request/callLogger/viewLog.ts',
+    createLog: '../../src/eventHandlers/rc-post-message-request/callLogger/createLog.ts',
   })) {
     vi.doMock(modulePath, () => {
       handlers[name] = {
@@ -122,7 +122,7 @@ async function loadCallLoggerIndex() {
     });
   }
 
-  const callLogger = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/index.js');
+  const callLogger = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/index.ts');
   return {
     callLogger,
     util,
@@ -135,14 +135,14 @@ async function loadCallLoggerIndex() {
 
 async function loadCreateLog() {
   vi.resetModules();
-  vi.doUnmock('../../src/eventHandlers/rc-post-message-request/callLogger/createLog.js');
+  vi.doUnmock('../../src/eventHandlers/rc-post-message-request/callLogger/createLog.ts');
   const util = {
     showNotification: vi.fn(),
     responseMessage: vi.fn(),
     isObjectEmpty: vi.fn((obj) => Object.keys(obj || {}).length === 0),
   };
-  vi.doMock('../../src/lib/util.js', () => util);
-  vi.doMock('../../src/i18n/index.js', () => ({
+  vi.doMock('../../src/lib/util.ts', () => util);
+  vi.doMock('../../src/i18n/index.ts', () => ({
     t: vi.fn((key) => (
       key === 'notifications.warning.earliestCreatedResolverMissingField'
         ? 'Call not logged because createdDate is missing.'
@@ -179,7 +179,7 @@ async function loadCreateLog() {
       contactInfo: { id: 'new-contact', type: 'Lead', name: 'Created Contact' },
     })),
   };
-  vi.doMock('../../src/core/contact.js', () => ({ default: contactCore }));
+  vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
 
   const logCore = {
     getCachedNote: vi.fn(async () => 'cached note'),
@@ -187,7 +187,7 @@ async function loadCreateLog() {
     updateLog: vi.fn(async () => ({})),
     getConflictContentFromUnresolvedLog: vi.fn(() => ({ description: 'Contact conflict' })),
   };
-  vi.doMock('../../src/core/log.js', () => ({ default: logCore }));
+  vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
   const userCore = {
     getUnknownContactPreferenceSetting: vi.fn(() => ({ value: 'createNewPlaceholderContact' })),
@@ -196,12 +196,12 @@ async function loadCreateLog() {
     getMultipleContactsPreferenceSetting: vi.fn(() => ({ value: 'firstAlphabetical' })),
     getOneTimeLogSetting: vi.fn(() => ({ value: false })),
   };
-  vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+  vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
   const dispositionCore = {
     upsertDisposition: vi.fn(async () => ({})),
   };
-  vi.doMock('../../src/core/disposition.js', () => ({ default: dispositionCore }));
+  vi.doMock('../../src/core/disposition.ts', () => ({ default: dispositionCore }));
 
   const logUtil = {
     getLogConflictInfo: vi.fn(async () => ({
@@ -234,14 +234,14 @@ async function loadCreateLog() {
       return [...contactsWithActivityDate].sort((a, b) => b.mostRecentActivityTimestamp - a.mostRecentActivityTimestamp)[0]?.contact ?? null;
     }),
   };
-  vi.doMock('../../src/lib/logUtil.js', () => logUtil);
+  vi.doMock('../../src/lib/logUtil.ts', () => logUtil);
 
   const logPage = {
     getLogPageRender: vi.fn(() => ({ id: 'callLogPage' })),
   };
-  vi.doMock('../../src/components/logPage.js', () => ({ default: logPage }));
+  vi.doMock('../../src/components/logPage.ts', () => ({ default: logPage }));
 
-  const createLog = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/createLog.js');
+  const createLog = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/createLog.ts');
   return {
     createLog,
     util,
@@ -256,7 +256,7 @@ async function loadCreateLog() {
 
 async function loadLogForm() {
   vi.resetModules();
-  vi.doUnmock('../../src/eventHandlers/rc-post-message-request/callLogger/logForm.js');
+  vi.doUnmock('../../src/eventHandlers/rc-post-message-request/callLogger/logForm.ts');
   vi.mocked(axios.post).mockReset();
   vi.mocked(axios.post).mockResolvedValue({ data: { ok: true } });
 
@@ -264,7 +264,7 @@ async function loadLogForm() {
     isObjectEmpty: vi.fn((obj) => Object.keys(obj || {}).length === 0),
     showNotification: vi.fn(),
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const contactCore = {
     createContact: vi.fn(async () => ({
@@ -273,36 +273,36 @@ async function loadLogForm() {
     })),
     openContactPage: vi.fn(async () => {}),
   };
-  vi.doMock('../../src/core/contact.js', () => ({ default: contactCore }));
+  vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
 
   const userCore = {
     getopenContactPageAfterCreationSetting: vi.fn((settings) => ({ value: settings?.openContactPageAfterCreation?.value ?? false })),
     getOneTimeLogSetting: vi.fn(() => ({ value: false })),
   };
-  vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+  vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
   const logCore = {
     addLog: vi.fn(async () => ({})),
     updateLog: vi.fn(async () => ({})),
   };
-  vi.doMock('../../src/core/log.js', () => ({ default: logCore }));
+  vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
   const calldownPage = {
     getCalldownPageWithRecords: vi.fn(async () => ({ id: 'calldownPage' })),
   };
-  vi.doMock('../../src/components/calldownPage.js', () => ({ default: calldownPage }));
+  vi.doMock('../../src/components/calldownPage.ts', () => ({ default: calldownPage }));
 
   const dispositionCore = {
     upsertDisposition: vi.fn(async () => ({})),
   };
-  vi.doMock('../../src/core/disposition.js', () => ({ default: dispositionCore }));
+  vi.doMock('../../src/core/disposition.ts', () => ({ default: dispositionCore }));
 
   const logPage = {
     getUnloggedCallPageRender: vi.fn(() => ({ id: 'unloggedCallPage' })),
   };
-  vi.doMock('../../src/components/logPage.js', () => ({ default: logPage }));
+  vi.doMock('../../src/components/logPage.ts', () => ({ default: logPage }));
 
-  const logForm = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/logForm.js');
+  const logForm = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/logForm.ts');
   return {
     logForm,
     util,

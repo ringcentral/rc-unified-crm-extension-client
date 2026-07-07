@@ -1,16 +1,16 @@
-import userCore from '../../src/core/user.js';
-import contactCore from '../../src/core/contact.js';
-import logCore from '../../src/core/log.js';
-import logPage from '../../src/components/logPage.js';
-import { getManifest } from '../../src/service/manifestService.js';
-import { getPlatformInfo } from '../../src/service/platformService.js';
-import { cacheLogPageData, logPageFormDataDefaulting } from '../../src/lib/logUtil.js';
-import { responseMessage } from '../../src/lib/util.js';
+import userCore from '../../src/core/user.ts';
+import contactCore from '../../src/core/contact.ts';
+import logCore from '../../src/core/log.ts';
+import logPage from '../../src/components/logPage.ts';
+import { getManifest } from '../../src/service/manifestService.ts';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
+import { cacheLogPageData, logPageFormDataDefaulting } from '../../src/lib/logUtil.ts';
+import { responseMessage } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
 
-vi.mock('../../src/core/user.js', () => ({
+vi.mock('../../src/core/user.ts', () => ({
   default: {
     getIncomingCallPop: vi.fn(),
     getOutgoingCallPop: vi.fn(),
@@ -19,46 +19,46 @@ vi.mock('../../src/core/user.js', () => ({
   },
 }));
 
-vi.mock('../../src/core/contact.js', () => ({
+vi.mock('../../src/core/contact.ts', () => ({
   default: {
     getContact: vi.fn(),
     openContactPage: vi.fn(),
   },
 }));
 
-vi.mock('../../src/core/log.js', () => ({
+vi.mock('../../src/core/log.ts', () => ({
   default: {
     uploadCacheNote: vi.fn(),
     getCachedNote: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/logPage.js', () => ({
+vi.mock('../../src/components/logPage.ts', () => ({
   default: {
     getLogPageRender: vi.fn(),
   },
 }));
 
-vi.mock('../../src/service/manifestService.js', () => ({
+vi.mock('../../src/service/manifestService.ts', () => ({
   getManifest: vi.fn(),
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
-vi.mock('../../src/lib/logUtil.js', () => ({
+vi.mock('../../src/lib/logUtil.ts', () => ({
   logPageFormDataDefaulting: vi.fn(),
   cacheLogPageData: vi.fn(),
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   responseMessage: vi.fn(),
 }));
 
 async function loadActiveCallHandler() {
   vi.resetModules();
-  return loadModule('../../src/eventHandlers/rc-active-call-notify.js');
+  return loadModule('../../src/eventHandlers/rc-active-call-notify.ts');
 }
 
 function manifest() {

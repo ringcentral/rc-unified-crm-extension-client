@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { getPlatformInfo } from '../../src/service/platformService.js';
-import { getRcInfo } from '../../src/lib/util.js';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
+import { getRcInfo } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
 
@@ -10,17 +10,17 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   getRcInfo: vi.fn(),
 }));
 
 async function loadManifestService() {
   vi.resetModules();
-  return loadModule('../../src/service/manifestService.js');
+  return loadModule('../../src/service/manifestService.ts');
 }
 
 function mockRcInfo(accountId = 'account-1') {

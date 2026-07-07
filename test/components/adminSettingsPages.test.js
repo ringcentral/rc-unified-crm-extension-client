@@ -138,10 +138,10 @@ function userSettings() {
 
 describe('managed settings page renderers', () => {
   it('renders high-level managed setting pages with saved values and optional fields', async () => {
-    const advancedPage = await loadPage('../../src/components/admin/managedSettings/advancedFeaturesSettingPage.js');
-    const loggingPage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSettingPage.js');
-    const contactPage = await loadPage('../../src/components/admin/managedSettings/contactSettingPage.js');
-    const pluginsPage = await loadPage('../../src/components/admin/managedSettings/pluginsSettingPage.js');
+    const advancedPage = await loadPage('../../src/components/admin/managedSettings/advancedFeaturesSettingPage.ts');
+    const loggingPage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSettingPage.ts');
+    const contactPage = await loadPage('../../src/components/admin/managedSettings/contactSettingPage.ts');
+    const pluginsPage = await loadPage('../../src/components/admin/managedSettings/pluginsSettingPage.ts');
 
     expect(advancedPage.getAdvancedFeaturesSettingPageRender({
       adminUserSettings: adminUserSettings(),
@@ -190,7 +190,7 @@ describe('managed settings page renderers', () => {
   });
 
   it('renders custom CRM settings for static, dynamic, checkbox, warning, and number-format fields', async () => {
-    const customSettingsPage = await loadPage('../../src/components/admin/managedSettings/customSettingsPage.js');
+    const customSettingsPage = await loadPage('../../src/components/admin/managedSettings/customSettingsPage.ts');
 
     expect(customSettingsPage.getCustomSettingsPageRender({ crmManifest: {} })).toBeNull();
 
@@ -248,8 +248,8 @@ describe('managed settings page renderers', () => {
   });
 
   it('renders call log detail and auto-log preference pages with permission-dependent controls', async () => {
-    const callLogDetailsPage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSetting/callLogDetailsSettingPage.js');
-    const autoLogPreferencePage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSetting/autoLogPreferenceSettingPage.js');
+    const callLogDetailsPage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSetting/callLogDetailsSettingPage.ts');
+    const autoLogPreferencePage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSetting/autoLogPreferenceSettingPage.ts');
 
     const disabled = callLogDetailsPage.getCallLogDetailsSettingPageRender({
       adminUserSettings: adminUserSettings(),
@@ -308,9 +308,9 @@ describe('managed settings page renderers', () => {
   });
 
   it('renders plugin detail settings and uncovered general setting pages', async () => {
-    const pluginDetailsPage = await loadPage('../../src/components/admin/managedSettings/pluginsSetting/pluginDetailsSettingPage.js');
-    const clickToDialEmbedPage = await loadPage('../../src/components/admin/generalSettings/clickToDialEmbedPage.js');
-    const customizeTabsPage = await loadPage('../../src/components/admin/generalSettings/customizeTabsSettingPage.js');
+    const pluginDetailsPage = await loadPage('../../src/components/admin/managedSettings/pluginsSetting/pluginDetailsSettingPage.ts');
+    const clickToDialEmbedPage = await loadPage('../../src/components/admin/generalSettings/clickToDialEmbedPage.ts');
+    const customizeTabsPage = await loadPage('../../src/components/admin/generalSettings/customizeTabsSettingPage.ts');
 
     const plugin = pluginDetailsPage.getPluginDetailsSettingPageRender({
       pluginId: 'plugin-1',

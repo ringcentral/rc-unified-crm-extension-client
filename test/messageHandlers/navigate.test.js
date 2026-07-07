@@ -1,10 +1,10 @@
 import axios from 'axios';
-import feedbackPage from '../../src/components/feedbackPage.js';
-import supportPage from '../../src/components/supportPage.js';
-import { trackOpenFeedback } from '../../src/lib/analytics.js';
-import { getRcInfo } from '../../src/lib/util.js';
-import { getManifest } from '../../src/service/manifestService.js';
-import { getPlatformInfo } from '../../src/service/platformService.js';
+import feedbackPage from '../../src/components/feedbackPage.ts';
+import supportPage from '../../src/components/supportPage.ts';
+import { trackOpenFeedback } from '../../src/lib/analytics.ts';
+import { getRcInfo } from '../../src/lib/util.ts';
+import { getManifest } from '../../src/service/manifestService.ts';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 
@@ -14,37 +14,37 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/components/feedbackPage.js', () => ({
+vi.mock('../../src/components/feedbackPage.ts', () => ({
   default: {
     getFeedbackPageRender: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/supportPage.js', () => ({
+vi.mock('../../src/components/supportPage.ts', () => ({
   default: {
     getSupportPageRender: vi.fn(),
   },
 }));
 
-vi.mock('../../src/lib/analytics.js', () => ({
+vi.mock('../../src/lib/analytics.ts', () => ({
   trackOpenFeedback: vi.fn(),
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   getRcInfo: vi.fn(),
 }));
 
-vi.mock('../../src/service/manifestService.js', () => ({
+vi.mock('../../src/service/manifestService.ts', () => ({
   getManifest: vi.fn(),
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
 async function loadNavigateHandler() {
   vi.resetModules();
-  return loadModule('../../src/messageHandlers/navigate.js');
+  return loadModule('../../src/messageHandlers/navigate.ts');
 }
 
 describe('navigate message handler', () => {

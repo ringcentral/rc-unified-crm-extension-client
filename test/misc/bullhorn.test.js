@@ -17,39 +17,39 @@ async function loadBullhorn(overrides = {}) {
     showNotification: vi.fn(),
     ...overrides.util,
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const analytics = {
     trackCrmAuthFail: vi.fn(),
     ...overrides.analytics,
   };
-  vi.doMock('../../src/lib/analytics.js', () => analytics);
+  vi.doMock('../../src/lib/analytics.ts', () => analytics);
 
   const embeddableServices = {
     getServiceManifest: vi.fn(async () => ({ id: 'service-manifest' })),
     ...overrides.embeddableServices,
   };
-  vi.doMock('../../src/service/embeddableServices.js', () => embeddableServices);
+  vi.doMock('../../src/service/embeddableServices.ts', () => embeddableServices);
 
   const manifestService = {
     getManifest: vi.fn(async () => ({ serverUrl: 'https://server.example' })),
     ...overrides.manifestService,
   };
-  vi.doMock('../../src/service/manifestService.js', () => manifestService);
+  vi.doMock('../../src/service/manifestService.ts', () => manifestService);
 
   const calldownPage = {
     getCalldownPageRender: vi.fn(() => ({ id: 'calldownPage' })),
     ...overrides.calldownPage,
   };
-  vi.doMock('../../src/components/calldownPage.js', () => ({ default: calldownPage }));
+  vi.doMock('../../src/components/calldownPage.ts', () => ({ default: calldownPage }));
 
   const userCore = {
     getShowCalldownTabSetting: vi.fn(() => ({ value: true })),
     ...overrides.userCore,
   };
-  vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+  vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
-  const bullhorn = await loadModule('../../src/misc/bullhorn.js');
+  const bullhorn = await loadModule('../../src/misc/bullhorn.ts');
   return {
     bullhorn,
     util,

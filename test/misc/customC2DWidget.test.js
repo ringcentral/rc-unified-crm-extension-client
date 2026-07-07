@@ -1,4 +1,4 @@
-import CustomC2DWidget from '../../src/misc/CustomC2DWidget.js';
+import CustomC2DWidget from '../../src/misc/CustomC2DWidget.ts';
 
 async function flushIconLoad() {
   await Promise.resolve();

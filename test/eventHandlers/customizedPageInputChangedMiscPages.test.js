@@ -93,38 +93,38 @@ async function loadPageHandler(modulePath, overrides = {}) {
     showNotification: vi.fn(),
     ...overrides.util,
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const authCore = {
     getManagedAuthState: vi.fn(async () => ({ allRequiredFieldsSatisfied: true })),
     ...overrides.authCore,
   };
-  vi.doMock('../../src/core/auth.js', () => ({ default: authCore }));
+  vi.doMock('../../src/core/auth.ts', () => ({ default: authCore }));
 
   const contactCore = {
     refreshContactPromptPage: vi.fn(),
     openContactPage: vi.fn(async () => {}),
     ...overrides.contactCore,
   };
-  vi.doMock('../../src/core/contact.js', () => ({ default: contactCore }));
+  vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
 
   const logCore = {
     getCachedNote: vi.fn(async () => 'cached note'),
     ...overrides.logCore,
   };
-  vi.doMock('../../src/core/log.js', () => ({ default: logCore }));
+  vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
   const adminCore = {
     uploadAdminSettings: vi.fn(async () => {}),
     ...overrides.adminCore,
   };
-  vi.doMock('../../src/core/admin.js', () => ({ default: adminCore }));
+  vi.doMock('../../src/core/admin.ts', () => ({ default: adminCore }));
 
   const userCore = {
     getPluginSetting: vi.fn((settings, pluginId) => settings?.[`plugin_${pluginId}`]?.value ?? settings?.[`plugin_${pluginId}`]),
     ...overrides.userCore,
   };
-  vi.doMock('../../src/core/user.js', () => ({
+  vi.doMock('../../src/core/user.ts', () => ({
     default: userCore,
     getPluginSetting: userCore.getPluginSetting,
   }));
@@ -138,75 +138,75 @@ async function loadPageHandler(modulePath, overrides = {}) {
     })),
     ...overrides.manifestService,
   };
-  vi.doMock('../../src/service/manifestService.js', () => manifestService);
+  vi.doMock('../../src/service/manifestService.ts', () => manifestService);
 
   const googleSheetsPage = {
     getUpdatedGoogleSheetsPage: vi.fn((props) => ({ id: 'googleSheetsPage', props })),
     ...overrides.googleSheetsPage,
   };
-  vi.doMock('../../src/components/platformSpecific/googleSheetsPage.js', () => ({ default: googleSheetsPage }));
+  vi.doMock('../../src/components/platformSpecific/googleSheetsPage.ts', () => ({ default: googleSheetsPage }));
 
   const adminGoogleSheetsPage = {
     getUpdatedAdminGoogleSheetsPage: vi.fn((props) => ({ id: 'adminGoogleSheetsPage', props })),
     ...overrides.adminGoogleSheetsPage,
   };
-  vi.doMock('../../src/components/admin/adminGoogleSheetsPage.js', () => ({ default: adminGoogleSheetsPage }));
+  vi.doMock('../../src/components/admin/adminGoogleSheetsPage.ts', () => ({ default: adminGoogleSheetsPage }));
 
   const platformSelectionPage = {
     getPlatformSelectionPageRender: vi.fn((props) => ({ id: 'platformSelectionPage', props })),
     ...overrides.platformSelectionPage,
   };
-  vi.doMock('../../src/components/platformSelectionPage.js', () => ({ default: platformSelectionPage }));
+  vi.doMock('../../src/components/platformSelectionPage.ts', () => ({ default: platformSelectionPage }));
 
   const hostnameInputPage = {
     getHostnameInputPageRender: vi.fn((props) => ({ id: 'hostnameInputPage', props })),
     ...overrides.hostnameInputPage,
   };
-  vi.doMock('../../src/components/hostnameInputPage.js', () => ({ default: hostnameInputPage }));
+  vi.doMock('../../src/components/hostnameInputPage.ts', () => ({ default: hostnameInputPage }));
 
   const logRecordSubmissionPage = {
     getLogRecordSubmissionPageRender: vi.fn((props) => ({ id: 'logRecordSubmissionPage', props })),
     ...overrides.logRecordSubmissionPage,
   };
-  vi.doMock('../../src/components/logRecordSubmissionPage.js', () => logRecordSubmissionPage);
+  vi.doMock('../../src/components/logRecordSubmissionPage.ts', () => logRecordSubmissionPage);
 
   const errorLogRecordPage = {
     getErrorLogRecordPageRender: vi.fn((props) => ({ id: 'errorLogRecordPage', props })),
     ...overrides.errorLogRecordPage,
   };
-  vi.doMock('../../src/components/errorLogRecordPage.js', () => errorLogRecordPage);
+  vi.doMock('../../src/components/errorLogRecordPage.ts', () => errorLogRecordPage);
 
   const logPage = {
     getLogPageRender: vi.fn((props) => ({ id: 'logPage', props })),
     getUpdatedLogPageRender: vi.fn((props) => ({ id: 'updatedLogPage', props })),
     ...overrides.logPage,
   };
-  vi.doMock('../../src/components/logPage.js', () => ({ default: logPage }));
+  vi.doMock('../../src/components/logPage.ts', () => ({ default: logPage }));
 
   const managedAuthUserPage = {
     getManagedAuthUserPageRender: vi.fn((props) => ({ id: 'managedAuthUserPage', props })),
   };
-  vi.doMock('../../src/components/admin/managedAuthUserPage.js', () => ({ default: managedAuthUserPage }));
+  vi.doMock('../../src/components/admin/managedAuthUserPage.ts', () => ({ default: managedAuthUserPage }));
 
   const managedAuthUserEditPage = {
     getManagedAuthUserEditPageRender: vi.fn((props) => ({ id: 'managedAuthUserEditPage', props })),
   };
-  vi.doMock('../../src/components/admin/managedAuthUserEditPage.js', () => ({ default: managedAuthUserEditPage }));
+  vi.doMock('../../src/components/admin/managedAuthUserEditPage.ts', () => ({ default: managedAuthUserEditPage }));
 
   const userMappingPage = {
     getUserMappingPageRender: vi.fn((props) => ({ id: 'userMappingPage', props })),
   };
-  vi.doMock('../../src/components/admin/userMappingPage/userMappingPage.js', () => ({ default: userMappingPage }));
+  vi.doMock('../../src/components/admin/userMappingPage/userMappingPage.ts', () => ({ default: userMappingPage }));
 
   const editUserMappingPage = {
     renderEditUserMappingPage: vi.fn((props) => ({ id: 'editUserMappingPage', props })),
   };
-  vi.doMock('../../src/components/admin/userMappingPage/editUserMappingPage.js', () => ({ default: editUserMappingPage }));
+  vi.doMock('../../src/components/admin/userMappingPage/editUserMappingPage.ts', () => ({ default: editUserMappingPage }));
 
   const pluginDetailsSettingPage = {
     getPluginDetailsSettingPageRender: vi.fn((props) => ({ id: 'pluginDetailsSettingPage', props })),
   };
-  vi.doMock('../../src/components/admin/managedSettings/pluginsSetting/pluginDetailsSettingPage.js', () => pluginDetailsSettingPage);
+  vi.doMock('../../src/components/admin/managedSettings/pluginsSetting/pluginDetailsSettingPage.ts', () => pluginDetailsSettingPage);
 
   const rcContacts = [
     { id: '101', type: 'User', name: 'Jane User' },
@@ -273,7 +273,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
 
   it('updates c2d schedule form state for new contacts and valid callback dates', async () => {
     const { handler } = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/c2dSchedulePage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/c2dSchedulePage.ts',
     );
     await handler.onEvent({
       data: dataFor({
@@ -335,7 +335,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
 
   it('renders simple page updates and debounced searches', async () => {
     let loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/googleSheetsPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/googleSheetsPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({ formData: { sheet: 'Sheet' } }),
@@ -347,7 +347,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     }));
 
     loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/logRecordSubmissionPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/logRecordSubmissionPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({ formData: { piiConsent: true } }),
@@ -358,7 +358,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     });
 
     loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/platformSelectionPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/platformSelectionPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -380,7 +380,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     });
 
     loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/hostnameInputPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/hostnameInputPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -409,7 +409,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
 
   it('renders managed auth user pages, mapping pages, error record updates, and developer URL navigation', async () => {
     let loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/managedAuthUserPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/managedAuthUserPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -428,7 +428,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     }));
 
     loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/managedAuthUserEditPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/managedAuthUserEditPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -446,7 +446,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     }));
 
     loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/userMappingPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/userMappingPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -468,7 +468,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     });
 
     loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/editUserMappingPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/editUserMappingPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -486,7 +486,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     }));
 
     loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/getErrorLogRecordPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/getErrorLogRecordPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -505,7 +505,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     });
 
     loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/developerSettingsPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/developerSettingsPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -527,7 +527,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       'rc-crm-search-contact-+16505550100': [{ id: 'cached', type: 'Lead', name: 'Cached', phone: '+16505550100' }],
     });
     let loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/contactSearchResultCallLog.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/contactSearchResultCallLog.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -560,7 +560,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     ]));
 
     loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/contactSearchResultMessageLog.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/contactSearchResultMessageLog.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -600,7 +600,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
 
   it('handles multi-contact prompt search/open, unlogged call opening, admin sheets, and plugin admin details', async () => {
     let loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/getMultiContactPopPromptPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/getMultiContactPopPromptPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -663,7 +663,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       return {};
     });
     loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/unloggedCallPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/unloggedCallPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -698,7 +698,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       },
     });
     loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/adminGoogleSheetsPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/adminGoogleSheetsPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -720,7 +720,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     expect(readStorage().adminSettings.userSettings.googleSheetsName.customizable).toBe(false);
 
     loaded = await loadPageHandler(
-      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/pluginAdminSettingsPage.js',
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/pluginAdminSettingsPage.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),

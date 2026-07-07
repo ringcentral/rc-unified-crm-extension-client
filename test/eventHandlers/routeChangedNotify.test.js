@@ -9,7 +9,7 @@ async function loadRouteChanged(overrides = {}) {
     trackPage: vi.fn(),
     ...overrides.analytics,
   };
-  vi.doMock('../../src/lib/analytics.js', () => analytics);
+  vi.doMock('../../src/lib/analytics.ts', () => analytics);
 
   const userCore = {
     getShowCalldownTabSetting: vi.fn(() => ({ value: true })),
@@ -17,20 +17,20 @@ async function loadRouteChanged(overrides = {}) {
     refreshUserSettings: vi.fn(async () => ({})),
     ...overrides.userCore,
   };
-  vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+  vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
   const calldownPage = {
     getCalldownPageWithRecords: vi.fn(async (props) => ({ id: 'calldownPage', props })),
     getCalldownPageRender: vi.fn(() => ({ id: 'calldownPage' })),
     ...overrides.calldownPage,
   };
-  vi.doMock('../../src/components/calldownPage.js', () => ({ default: calldownPage }));
+  vi.doMock('../../src/components/calldownPage.ts', () => ({ default: calldownPage }));
 
   const appointmentsPage = {
     getAppointmentsPageWithRecords: vi.fn(async (props) => ({ id: 'appointmentsPage', props })),
     ...overrides.appointmentsPage,
   };
-  vi.doMock('../../src/components/appointmentsPage/appointmentsPage.js', () => ({ default: appointmentsPage }));
+  vi.doMock('../../src/components/appointmentsPage/appointmentsPage.ts', () => ({ default: appointmentsPage }));
 
   const manifestService = {
     getManifest: vi.fn(async () => ({
@@ -47,15 +47,15 @@ async function loadRouteChanged(overrides = {}) {
     })),
     ...overrides.manifestService,
   };
-  vi.doMock('../../src/service/manifestService.js', () => manifestService);
+  vi.doMock('../../src/service/manifestService.ts', () => manifestService);
 
   const platformService = {
     getPlatformInfo: vi.fn(async () => ({ platformName: 'salesforce' })),
     ...overrides.platformService,
   };
-  vi.doMock('../../src/service/platformService.js', () => platformService);
+  vi.doMock('../../src/service/platformService.ts', () => platformService);
 
-  const handler = await loadModule('../../src/eventHandlers/rc-route-changed-notify.js');
+  const handler = await loadModule('../../src/eventHandlers/rc-route-changed-notify.ts');
   return {
     handler,
     analytics,

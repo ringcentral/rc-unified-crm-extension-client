@@ -1,6 +1,6 @@
 import axios from 'axios';
-import adminCore from '../../src/core/admin.js';
-import { getRcAccessToken } from '../../src/lib/util.js';
+import adminCore from '../../src/core/admin.ts';
+import { getRcAccessToken } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
 
 vi.mock('axios', () => ({
@@ -10,11 +10,11 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   getRcAccessToken: vi.fn(() => 'rc-access-token'),
 }));
 
-vi.mock('../../src/core/admin.js', () => ({
+vi.mock('../../src/core/admin.ts', () => ({
   default: {
     authServerSideLogging: vi.fn(),
   },
@@ -22,7 +22,7 @@ vi.mock('../../src/core/admin.js', () => ({
 
 async function loadUserCore() {
   vi.resetModules();
-  return loadModule('../../src/core/user.js');
+  return loadModule('../../src/core/user.ts');
 }
 
 describe('user server-side logging token update', () => {

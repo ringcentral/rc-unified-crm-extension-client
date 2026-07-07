@@ -1,14 +1,14 @@
-import userCore from '../../src/core/user.js';
-import logCore from '../../src/core/log.js';
-import dispositionCore from '../../src/core/disposition.js';
-import contactCore from '../../src/core/contact.js';
-import logUtil from '../../src/lib/logUtil.js';
-import { showNotification, dismissNotification, getRcAccessToken } from '../../src/lib/util.js';
+import userCore from '../../src/core/user.ts';
+import logCore from '../../src/core/log.ts';
+import dispositionCore from '../../src/core/disposition.ts';
+import contactCore from '../../src/core/contact.ts';
+import logUtil from '../../src/lib/logUtil.ts';
+import { showNotification, dismissNotification, getRcAccessToken } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { seedStorage } from '../setup/storageHelpers';
 
-vi.mock('../../src/core/user.js', () => ({
+vi.mock('../../src/core/user.ts', () => ({
   default: {
     getEnableRetroCallLogSync: vi.fn(() => ({ value: true })),
     getAutoLogCallSetting: vi.fn(() => ({ value: true })),
@@ -16,7 +16,7 @@ vi.mock('../../src/core/user.js', () => ({
   },
 }));
 
-vi.mock('../../src/core/log.js', () => ({
+vi.mock('../../src/core/log.ts', () => ({
   default: {
     getCachedNote: vi.fn(async () => 'cached note'),
     getLog: vi.fn(),
@@ -25,25 +25,25 @@ vi.mock('../../src/core/log.js', () => ({
   },
 }));
 
-vi.mock('../../src/core/disposition.js', () => ({
+vi.mock('../../src/core/disposition.ts', () => ({
   default: {
     upsertDisposition: vi.fn(),
   },
 }));
 
-vi.mock('../../src/core/contact.js', () => ({
+vi.mock('../../src/core/contact.ts', () => ({
   default: {
     getContact: vi.fn(),
   },
 }));
 
-vi.mock('../../src/lib/logUtil.js', () => ({
+vi.mock('../../src/lib/logUtil.ts', () => ({
   default: {
     getLogConflictInfo: vi.fn(),
   },
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   showNotification: vi.fn(async () => 'notification-id'),
   dismissNotification: vi.fn(),
   isObjectEmpty: vi.fn((obj) => !obj || Object.keys(obj).length === 0),
@@ -52,7 +52,7 @@ vi.mock('../../src/lib/util.js', () => ({
 
 async function loadLogService() {
   vi.resetModules();
-  return loadModule('../../src/service/logService.js');
+  return loadModule('../../src/service/logService.ts');
 }
 
 describe('logService', () => {

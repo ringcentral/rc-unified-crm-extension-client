@@ -3,38 +3,38 @@ import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
 
 const eventHandlerModules = {
-  rcTelephonySessionNotify: '../../src/eventHandlers/rc-telephony-session-notify.js',
-  rcCallingSettingsNotify: '../../src/eventHandlers/rc-calling-settings-notify.js',
-  rcRegionSettingsNotify: '../../src/eventHandlers/rc-region-settings-notify.js',
-  rcAdapterSideDrawerOpenNotify: '../../src/eventHandlers/rc-adapter-side-drawer-open-notify.js',
-  rcDialerStatusNotify: '../../src/eventHandlers/rc-dialer-status-notify.js',
-  rcWebphoneConnectionStatusNotify: '../../src/eventHandlers/rc-webphone-connection-status-notify.js',
-  rcAdapterPushAdapterState: '../../src/eventHandlers/rc-adapter-pushAdapterState.js',
-  rcLoginStatusNotify: '../../src/eventHandlers/rc-login-status-notify.js',
-  rcLoginPopupNotify: '../../src/eventHandlers/rc-login-popup-notify.js',
-  rcCallInitNotify: '../../src/eventHandlers/rc-call-init-notify.js',
-  rcCallStartNotify: '../../src/eventHandlers/rc-call-start-notify.js',
-  rcRingoutCallNotify: '../../src/eventHandlers/rc-ringout-call-notify.js',
-  rcActiveCallNotify: '../../src/eventHandlers/rc-active-call-notify.js',
-  rcAnalyticsTrackNotify: '../../src/eventHandlers/rc-analytics-track.js',
-  rcCallLoggerAutoLogNotify: '../../src/eventHandlers/rc-callLogger-auto-log-notify.js',
-  rcMessageLoggerAutoLogNotify: '../../src/eventHandlers/rc-messageLogger-auto-log-notify.js',
-  rcRouteChangedNotify: '../../src/eventHandlers/rc-route-changed-notify.js',
-  rcAdapterAiAssistantSettingsNotify: '../../src/eventHandlers/rc-adapter-ai-assistant-settings-notify.js',
-  rcPostMessageRequest: '../../src/eventHandlers/rc-post-message-request/index.js',
-  rcAdapterPhoneNumberFormatSettingsNotify: '../../src/eventHandlers/rc-adapter-phone-number-format-settings-notify.js',
+  rcTelephonySessionNotify: '../../src/eventHandlers/rc-telephony-session-notify.ts',
+  rcCallingSettingsNotify: '../../src/eventHandlers/rc-calling-settings-notify.ts',
+  rcRegionSettingsNotify: '../../src/eventHandlers/rc-region-settings-notify.ts',
+  rcAdapterSideDrawerOpenNotify: '../../src/eventHandlers/rc-adapter-side-drawer-open-notify.ts',
+  rcDialerStatusNotify: '../../src/eventHandlers/rc-dialer-status-notify.ts',
+  rcWebphoneConnectionStatusNotify: '../../src/eventHandlers/rc-webphone-connection-status-notify.ts',
+  rcAdapterPushAdapterState: '../../src/eventHandlers/rc-adapter-pushAdapterState.ts',
+  rcLoginStatusNotify: '../../src/eventHandlers/rc-login-status-notify.ts',
+  rcLoginPopupNotify: '../../src/eventHandlers/rc-login-popup-notify.ts',
+  rcCallInitNotify: '../../src/eventHandlers/rc-call-init-notify.ts',
+  rcCallStartNotify: '../../src/eventHandlers/rc-call-start-notify.ts',
+  rcRingoutCallNotify: '../../src/eventHandlers/rc-ringout-call-notify.ts',
+  rcActiveCallNotify: '../../src/eventHandlers/rc-active-call-notify.ts',
+  rcAnalyticsTrackNotify: '../../src/eventHandlers/rc-analytics-track.ts',
+  rcCallLoggerAutoLogNotify: '../../src/eventHandlers/rc-callLogger-auto-log-notify.ts',
+  rcMessageLoggerAutoLogNotify: '../../src/eventHandlers/rc-messageLogger-auto-log-notify.ts',
+  rcRouteChangedNotify: '../../src/eventHandlers/rc-route-changed-notify.ts',
+  rcAdapterAiAssistantSettingsNotify: '../../src/eventHandlers/rc-adapter-ai-assistant-settings-notify.ts',
+  rcPostMessageRequest: '../../src/eventHandlers/rc-post-message-request/index.ts',
+  rcAdapterPhoneNumberFormatSettingsNotify: '../../src/eventHandlers/rc-adapter-phone-number-format-settings-notify.ts',
 };
 
 const messageHandlerModules = {
-  oauthCallBack: '../../src/messageHandlers/oauthCallBack.js',
-  pipedriveCallbackUri: '../../src/messageHandlers/pipedriveCallbackUri.js',
-  c2sms: '../../src/messageHandlers/c2sms.js',
-  c2d: '../../src/messageHandlers/c2d.js',
-  c2schedule: '../../src/messageHandlers/c2schedule.js',
-  navigate: '../../src/messageHandlers/navigate.js',
-  insightlyAuth: '../../src/messageHandlers/insightlyAuth.js',
-  ringsenseRefTrack: '../../src/messageHandlers/ringsenseRefTrack.js',
-  controlCall: '../../src/messageHandlers/controlCall.js',
+  oauthCallBack: '../../src/messageHandlers/oauthCallBack.ts',
+  pipedriveCallbackUri: '../../src/messageHandlers/pipedriveCallbackUri.ts',
+  c2sms: '../../src/messageHandlers/c2sms.ts',
+  c2d: '../../src/messageHandlers/c2d.ts',
+  c2schedule: '../../src/messageHandlers/c2schedule.ts',
+  navigate: '../../src/messageHandlers/navigate.ts',
+  insightlyAuth: '../../src/messageHandlers/insightlyAuth.ts',
+  ringsenseRefTrack: '../../src/messageHandlers/ringsenseRefTrack.ts',
+  controlCall: '../../src/messageHandlers/controlCall.ts',
 };
 
 async function loadPopupRuntime() {
@@ -60,29 +60,29 @@ async function loadPopupRuntime() {
     checkC2DCollision: vi.fn(),
     showNotification: vi.fn(),
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const analytics = {
     setAuthor: vi.fn(),
   };
-  vi.doMock('../../src/lib/analytics.js', () => analytics);
+  vi.doMock('../../src/lib/analytics.ts', () => analytics);
 
   const authCore = {
     syncCrmAuthedFromStorage: vi.fn(async () => {}),
     clearLocalCrmAuthState: vi.fn(async () => {}),
   };
-  vi.doMock('../../src/core/auth.js', () => ({ default: authCore }));
+  vi.doMock('../../src/core/auth.ts', () => ({ default: authCore }));
 
   const apiErrorHandler = {
     handleApiError: vi.fn(async () => {}),
     registerCrmAuthCacheClearedHandler: vi.fn(),
   };
-  vi.doMock('../../src/lib/apiErrorHandler.js', () => ({ default: apiErrorHandler }));
+  vi.doMock('../../src/lib/apiErrorHandler.ts', () => ({ default: apiErrorHandler }));
 
   const embeddableServices = {
     getServiceManifest: vi.fn(async () => ({ name: 'service-manifest' })),
   };
-  vi.doMock('../../src/service/embeddableServices.js', () => ({ default: embeddableServices }));
+  vi.doMock('../../src/service/embeddableServices.ts', () => ({ default: embeddableServices }));
 
   const manifestService = {
     getManifest: vi.fn(async () => ({
@@ -91,23 +91,23 @@ async function loadPopupRuntime() {
     })),
     saveManifestUrl: vi.fn(async () => {}),
   };
-  vi.doMock('../../src/service/manifestService.js', () => manifestService);
+  vi.doMock('../../src/service/manifestService.ts', () => manifestService);
 
   const platformService = {
     getPlatformInfo: vi.fn(async () => ({ platformName: 'salesforce' })),
   };
-  vi.doMock('../../src/service/platformService.js', () => platformService);
+  vi.doMock('../../src/service/platformService.ts', () => platformService);
 
   const logRecorder = {
     isRecordingLogs: vi.fn(async () => false),
     logAction: vi.fn(),
   };
-  vi.doMock('../../src/lib/logRecorder.js', () => ({ default: logRecorder }));
+  vi.doMock('../../src/lib/logRecorder.ts', () => ({ default: logRecorder }));
 
   const i18n = {
     restoreLocale: vi.fn(),
   };
-  vi.doMock('../../src/i18n/index.js', () => ({ default: i18n }));
+  vi.doMock('../../src/i18n/index.ts', () => ({ default: i18n }));
 
   const eventHandlers = {};
   for (const [name, modulePath] of Object.entries(eventHandlerModules)) {
@@ -130,7 +130,7 @@ async function loadPopupRuntime() {
   }
 
   const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-  await loadModule('../../src/popup.js');
+  await loadModule('../../src/popup.ts');
   await Promise.resolve();
   await Promise.resolve();
 

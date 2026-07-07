@@ -1,10 +1,10 @@
 import axios from 'axios';
-import { getManifest } from '../../src/service/manifestService.js';
-import { getPlatformInfo } from '../../src/service/platformService.js';
-import adminCore from '../../src/core/admin.js';
-import embeddableServices from '../../src/service/embeddableServices.js';
-import reportPage from '../../src/components/reportPage/reportPage.js';
-import calldownPage from '../../src/components/calldownPage.js';
+import { getManifest } from '../../src/service/manifestService.ts';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
+import adminCore from '../../src/core/admin.ts';
+import embeddableServices from '../../src/service/embeddableServices.ts';
+import reportPage from '../../src/components/reportPage/reportPage.ts';
+import calldownPage from '../../src/components/calldownPage.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
@@ -16,37 +16,37 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   getRcAccessToken: vi.fn(() => 'rc-access-token'),
 }));
 
-vi.mock('../../src/service/manifestService.js', () => ({
+vi.mock('../../src/service/manifestService.ts', () => ({
   getManifest: vi.fn(),
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
-vi.mock('../../src/core/admin.js', () => ({
+vi.mock('../../src/core/admin.ts', () => ({
   default: {
     authServerSideLogging: vi.fn(),
   },
 }));
 
-vi.mock('../../src/service/embeddableServices.js', () => ({
+vi.mock('../../src/service/embeddableServices.ts', () => ({
   default: {
     getServiceManifest: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/reportPage/reportPage.js', () => ({
+vi.mock('../../src/components/reportPage/reportPage.ts', () => ({
   default: {
     getReportsPageRender: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/calldownPage.js', () => ({
+vi.mock('../../src/components/calldownPage.ts', () => ({
   default: {
     getCalldownPageWithRecords: vi.fn(),
   },
@@ -54,7 +54,7 @@ vi.mock('../../src/components/calldownPage.js', () => ({
 
 async function loadUserCore() {
   vi.resetModules();
-  return loadModule('../../src/core/user.js');
+  return loadModule('../../src/core/user.ts');
 }
 
 describe('user service behavior', () => {

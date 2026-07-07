@@ -41,7 +41,7 @@ vi.mock('@ringcentral/juno-icon', () => ({
   Check: 'Check',
 }));
 
-vi.mock('../../src/core/log.js', () => {
+vi.mock('../../src/core/log.ts', () => {
   const logCore = {
     cacheCallNote: vi.fn(),
     getLog: vi.fn(),
@@ -52,11 +52,11 @@ vi.mock('../../src/core/log.js', () => {
   };
 });
 
-vi.mock('../../src/lib/logUtil.js', () => ({
+vi.mock('../../src/lib/logUtil.ts', () => ({
   getCachedLogPageData: vi.fn(),
 }));
 
-vi.mock('../../src/components/logPage.js', () => ({
+vi.mock('../../src/components/logPage.ts', () => ({
   default: {
     getLogPageRender: vi.fn(),
   },
@@ -64,10 +64,10 @@ vi.mock('../../src/components/logPage.js', () => ({
 
 async function loadComponent() {
   vi.resetModules();
-  const componentModule = await import('../../src/components/note/expandableNote.jsx');
-  const logCore = await import('../../src/core/log.js');
-  const logUtil = await import('../../src/lib/logUtil.js');
-  const logPage = await import('../../src/components/logPage.js');
+  const componentModule = await import('../../src/components/note/expandableNote.tsx');
+  const logCore = await import('../../src/core/log.ts');
+  const logUtil = await import('../../src/lib/logUtil.ts');
+  const logPage = await import('../../src/components/logPage.ts');
   return {
     ExpandableNote: componentModule.default,
     logCore: logCore.default,

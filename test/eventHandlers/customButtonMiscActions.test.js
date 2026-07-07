@@ -62,12 +62,12 @@ async function loadAction(modulePath, overrides = {}) {
     ]),
     ...overrides.util,
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const analytics = {
     trackPage: vi.fn(),
   };
-  vi.doMock('../../src/lib/analytics.js', () => analytics);
+  vi.doMock('../../src/lib/analytics.ts', () => analytics);
 
   const logRecorder = {
     startRecordingLogs: vi.fn(async () => {}),
@@ -77,7 +77,7 @@ async function loadAction(modulePath, overrides = {}) {
     logBasicInfo: vi.fn(),
     ...overrides.logRecorder,
   };
-  vi.doMock('../../src/lib/logRecorder.js', () => ({ default: logRecorder }));
+  vi.doMock('../../src/lib/logRecorder.ts', () => ({ default: logRecorder }));
 
   const adminCore = {
     uploadAdminSettings: vi.fn(async () => {}),
@@ -88,24 +88,24 @@ async function loadAction(modulePath, overrides = {}) {
     updateServerSideDoNotLogNumbers: vi.fn(async () => {}),
     ...overrides.adminCore,
   };
-  vi.doMock('../../src/core/admin.js', () => ({ default: adminCore }));
+  vi.doMock('../../src/core/admin.ts', () => ({ default: adminCore }));
 
   const userCore = {
     refreshUserSettings: vi.fn(async ({ changedSettings } = {}) => ({ userSettings: changedSettings ?? {} })),
     ...overrides.userCore,
   };
-  vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+  vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
   const authCore = {
     handleThirdPartyOAuthWindow: vi.fn(),
     ...overrides.authCore,
   };
-  vi.doMock('../../src/core/auth.js', () => ({ default: authCore }));
+  vi.doMock('../../src/core/auth.ts', () => ({ default: authCore }));
 
   const embeddableServices = {
     getServiceManifest: vi.fn(async () => ({ id: 'service-manifest' })),
   };
-  vi.doMock('../../src/service/embeddableServices.js', () => ({ default: embeddableServices }));
+  vi.doMock('../../src/service/embeddableServices.ts', () => ({ default: embeddableServices }));
 
   const pluginService = {
     getPluginLicenseStatus: vi.fn(async () => ({
@@ -113,9 +113,9 @@ async function loadAction(modulePath, overrides = {}) {
       licenseStatusDescription: 'Licensed',
     })),
   };
-  vi.doMock('../../src/service/pluginService.js', () => ({ default: pluginService }));
+  vi.doMock('../../src/service/pluginService.ts', () => ({ default: pluginService }));
 
-  vi.doMock('../../src/i18n/index.js', () => ({
+  vi.doMock('../../src/i18n/index.ts', () => ({
     t: vi.fn((key) => key),
   }));
 
@@ -131,19 +131,19 @@ async function loadAction(modulePath, overrides = {}) {
     getPluginConfigurePageRender: vi.fn((props) => ({ id: 'pluginConfigurePage', props })),
     getMergedPluginConfigFromFormData: vi.fn((form) => ({ apiKey: form.apiKey?.value ?? form.apiKey })),
   };
-  vi.doMock('../../src/components/logRecordSubmissionPage.js', () => ({
+  vi.doMock('../../src/components/logRecordSubmissionPage.ts', () => ({
     getLogRecordSubmissionPageRender: pages.getLogRecordSubmissionPageRender,
   }));
-  vi.doMock('../../src/components/errorLogRecordPage.js', () => ({
+  vi.doMock('../../src/components/errorLogRecordPage.ts', () => ({
     getErrorLogRecordPageRender: pages.getErrorLogRecordPageRender,
   }));
-  vi.doMock('../../src/components/aboutPage.js', () => ({ default: { getAboutPageRender: pages.getAboutPageRender } }));
-  vi.doMock('../../src/components/developerSettingsPage/index.js', () => ({ default: { getDeveloperSettingsPageRender: pages.getDeveloperSettingsPageRender } }));
-  vi.doMock('../../src/components/developerSettingsPage/implementedInterfacesPage.js', () => ({ default: { getImplementedInterfacesPageRender: pages.getImplementedInterfacesPageRender } }));
-  vi.doMock('../../src/components/admin/managedAuthUserEditPage.js', () => ({ default: { getManagedAuthUserEditPageRender: pages.getManagedAuthUserEditPageRender } }));
-  vi.doMock('../../src/components/admin/userMappingPage/userMappingPage.js', () => ({ default: { getUserMappingPageRender: pages.getUserMappingPageRender } }));
-  vi.doMock('../../src/components/admin/userMappingPage/editUserMappingPage.js', () => ({ default: { renderEditUserMappingPage: pages.renderEditUserMappingPage } }));
-  vi.doMock('../../src/components/pluginConfigurePage.js', () => ({
+  vi.doMock('../../src/components/aboutPage.ts', () => ({ default: { getAboutPageRender: pages.getAboutPageRender } }));
+  vi.doMock('../../src/components/developerSettingsPage/index.ts', () => ({ default: { getDeveloperSettingsPageRender: pages.getDeveloperSettingsPageRender } }));
+  vi.doMock('../../src/components/developerSettingsPage/implementedInterfacesPage.ts', () => ({ default: { getImplementedInterfacesPageRender: pages.getImplementedInterfacesPageRender } }));
+  vi.doMock('../../src/components/admin/managedAuthUserEditPage.ts', () => ({ default: { getManagedAuthUserEditPageRender: pages.getManagedAuthUserEditPageRender } }));
+  vi.doMock('../../src/components/admin/userMappingPage/userMappingPage.ts', () => ({ default: { getUserMappingPageRender: pages.getUserMappingPageRender } }));
+  vi.doMock('../../src/components/admin/userMappingPage/editUserMappingPage.ts', () => ({ default: { renderEditUserMappingPage: pages.renderEditUserMappingPage } }));
+  vi.doMock('../../src/components/pluginConfigurePage.ts', () => ({
     getPluginConfigurePageRender: pages.getPluginConfigurePageRender,
     getMergedPluginConfigFromFormData: pages.getMergedPluginConfigFromFormData,
   }));
@@ -196,7 +196,7 @@ describe('custom-button miscellaneous action handlers', () => {
 
   it('handles navigation actions and banner dismissal/opening', async () => {
     let loaded = await loadAction(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/customizedBanner.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/customizedBanner.ts',
     );
     await loaded.handler.onEvent({
       data: {
@@ -226,19 +226,19 @@ describe('custom-button miscellaneous action handlers', () => {
       }),
     ]));
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/openAboutPage.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/openAboutPage.ts');
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest(), platformName: 'salesforce' });
     expect(loaded.pages.getAboutPageRender).toHaveBeenCalledWith({ platformName: 'salesforce', manifest: manifest() });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/openDeveloperSettingsPage.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/openDeveloperSettingsPage.ts');
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest() });
     expect(loaded.pages.getDeveloperSettingsPageRender).toHaveBeenCalled();
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/openImplementedInterfacesPageButton.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/openImplementedInterfacesPageButton.ts');
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest() });
     expect(loaded.pages.getImplementedInterfacesPageRender).toHaveBeenCalled();
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/feedbackPage.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/feedbackPage.ts');
     await loaded.handler.onEvent({
       data: dataFor({ rating: 'great service' }),
       manifest: manifest(),
@@ -246,7 +246,7 @@ describe('custom-button miscellaneous action handlers', () => {
     });
     expect(window.open).toHaveBeenCalledWith('https://feedback.example?name=Jane Agent&email=jane@example.test&crm=Salesforce&v=1.7.35&rating=great%20service', '_blank');
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/documentation.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/documentation.ts');
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest(), platform: { documentationUrl: 'https://docs.example' } });
     expect(window.open).toHaveBeenCalledWith('https://docs.example');
     expect(loaded.analytics.trackPage).toHaveBeenCalledWith('/documentation');
@@ -257,7 +257,7 @@ describe('custom-button miscellaneous action handlers', () => {
       ttl: 3000,
     });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/insightlyGetApiKey.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/insightlyGetApiKey.ts');
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -269,13 +269,13 @@ describe('custom-button miscellaneous action handlers', () => {
   });
 
   it('records and uploads error logs through the issue report flow', async () => {
-    let loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/reportIssueButton.js');
+    let loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/reportIssueButton.ts');
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest() });
     expect(loaded.pages.getErrorLogRecordPageRender).toHaveBeenCalledWith({
       email: 'agent@example.test',
     });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/errorLogRecordPageNextStep.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/errorLogRecordPageNextStep.ts');
     await loaded.handler.onEvent({
       data: dataFor({ email: 'agent@example.test', issueDescription: 'Broken flow' }),
       manifest: manifest(),
@@ -287,7 +287,7 @@ describe('custom-button miscellaneous action handlers', () => {
       issueDescription: 'Broken flow',
     });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/errorLogRecordPageStart.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/errorLogRecordPageStart.ts');
     await loaded.handler.onEvent({
       data: dataFor({ email: 'agent@example.test', issueDescription: 'Broken flow' }),
       manifest: manifest(),
@@ -298,7 +298,7 @@ describe('custom-button miscellaneous action handlers', () => {
       version: '1.7.35',
     }));
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/logRecordSubmit.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/logRecordSubmit.ts');
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest() });
     expect(loaded.logRecorder.logAction).toHaveBeenCalledWith({ name: 'user description', data: 'Broken flow' });
     expect(loaded.logRecorder.uploadLogs).toHaveBeenCalledWith({ serverUrl: 'https://server.example' });
@@ -309,7 +309,7 @@ describe('custom-button miscellaneous action handlers', () => {
     });
 
     loaded = await loadAction(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/logRecordSubmit.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/logRecordSubmit.ts',
       {
         logRecorder: {
           uploadLogs: vi.fn(async () => {
@@ -326,8 +326,8 @@ describe('custom-button miscellaneous action handlers', () => {
     });
   });
 
-  it('updates admin settings, managed auth, user mapping, and plugin action pages', async () => {
-    let loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/doNotLogNumbersSubmit.js');
+  it('updates admin settings and managed auth action pages', async () => {
+    let loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/doNotLogNumbersSubmit.ts');
     await loaded.handler.onEvent({
       data: dataFor({ doNotLogNumbersHolder: { doNotLogNumbers: '+16505550100' } }),
       manifest: manifest(),
@@ -339,7 +339,7 @@ describe('custom-button miscellaneous action handlers', () => {
     });
     expect(loaded.embeddableServices.getServiceManifest).toHaveBeenCalled();
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthOrgPage.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthOrgPage.ts');
     await loaded.handler.onEvent({
       data: dataFor({ clientId: 'client-id', clientSecret: '' }),
       manifest: manifest(),
@@ -351,7 +351,7 @@ describe('custom-button miscellaneous action handlers', () => {
       fieldsToRemove: ['clientSecret'],
     });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthUserEdit.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthUserEdit.ts');
     await loaded.handler.onEvent({
       data: dataFor({ userSearch: { search: 'Jane', filter: 'All' } }),
       listButtonItemId: '101',
@@ -360,14 +360,16 @@ describe('custom-button miscellaneous action handlers', () => {
       rcExtension: { id: '101', type: 'User', name: 'Jane User' },
     }));
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/deleteManagedOAuthAccount.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/deleteManagedOAuthAccount.ts');
     await loaded.handler.onEvent({ manifest: manifest(), platformName: 'salesforce' });
     expect(loaded.adminCore.deleteManagedOAuthAccount).toHaveBeenCalledWith({
       serverUrl: 'https://server.example',
       platformName: 'salesforce',
     });
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/usermappingRemove.js');
+  it('updates user mapping action pages', async () => {
+    let loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/usermappingRemove.ts');
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -386,7 +388,7 @@ describe('custom-button miscellaneous action handlers', () => {
       }),
     });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/usermappingEdit.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/usermappingEdit.ts');
     await loaded.handler.onEvent({
       data: dataFor({ allUserMapping: [{ crmUser: { id: 'crm-1' } }] }),
       platform: { displayName: 'Salesforce' },
@@ -396,7 +398,7 @@ describe('custom-button miscellaneous action handlers', () => {
       userMapping: { crmUser: { id: 'crm-1' } },
     }));
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/editUserMappingPage.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/editUserMappingPage.ts');
     await loaded.handler.onEvent({
       data: dataFor({
         crmUserId: 'crm-1',
@@ -472,11 +474,13 @@ describe('custom-button miscellaneous action handlers', () => {
       },
     });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/reinitializeUserMappingButton.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/reinitializeUserMappingButton.ts');
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest() });
     expect(loaded.adminCore.reinitializeUserMapping).toHaveBeenCalledWith({ serverUrl: 'https://server.example' });
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginConfigButtons.js');
+  it('updates plugin action pages', async () => {
+    let loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginConfigButtons.ts');
     await loaded.handler.onEvent({
       data: dataFor({
         pluginId: 'plugin-1',
@@ -512,7 +516,7 @@ describe('custom-button miscellaneous action handlers', () => {
       hasValidLicense: true,
     }));
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginLicenseRefreshButton.js');
+    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginLicenseRefreshButton.ts');
     await loaded.handler.onEvent({
       data: dataFor({
         pluginId: 'plugin-1',

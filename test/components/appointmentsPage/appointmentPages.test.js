@@ -1,39 +1,39 @@
-import { createAppointment, listAppointments, updateAppointment, updateAppointmentStatus } from '../../../src/service/appointmentService.js';
-import userCore from '../../../src/core/user.js';
-import { getPlatformInfo } from '../../../src/service/platformService.js';
+import { createAppointment, listAppointments, updateAppointment, updateAppointmentStatus } from '../../../src/service/appointmentService.ts';
+import userCore from '../../../src/core/user.ts';
+import { getPlatformInfo } from '../../../src/service/platformService.ts';
 import { loadModule } from '../../helpers/loadModule';
 import { seedStorage } from '../../setup/storageHelpers';
 
-vi.mock('../../../src/service/appointmentService.js', () => ({
+vi.mock('../../../src/service/appointmentService.ts', () => ({
   createAppointment: vi.fn(),
   listAppointments: vi.fn(),
   updateAppointment: vi.fn(),
   updateAppointmentStatus: vi.fn(),
 }));
 
-vi.mock('../../../src/core/user.js', () => ({
+vi.mock('../../../src/core/user.ts', () => ({
   default: {
     getShowAppointmentsTabSetting: vi.fn(),
   },
 }));
 
-vi.mock('../../../src/service/platformService.js', () => ({
+vi.mock('../../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
 async function loadCreatePage() {
   vi.resetModules();
-  return loadModule('../../../src/components/appointmentsPage/appointmentCreatePage.js');
+  return loadModule('../../../src/components/appointmentsPage/appointmentCreatePage.ts');
 }
 
 async function loadEditPage() {
   vi.resetModules();
-  return loadModule('../../../src/components/appointmentsPage/appointmentEditPage.js');
+  return loadModule('../../../src/components/appointmentsPage/appointmentEditPage.ts');
 }
 
 async function loadAppointmentsPage() {
   vi.resetModules();
-  return loadModule('../../../src/components/appointmentsPage/appointmentsPage.js');
+  return loadModule('../../../src/components/appointmentsPage/appointmentsPage.ts');
 }
 
 const manifest = {

@@ -1,27 +1,9 @@
-import { defineConfig } from 'vitest/config';
-import { transformWithEsbuild } from 'vite';
-
-function jsAsJsx() {
-  return {
-    name: 'app-connect-js-as-jsx',
-    async transform(code, id) {
-      if (!id.includes('/src/') && !id.includes('\\src\\')) {
-        return null;
-      }
-      if (!id.endsWith('.js')) {
-        return null;
-      }
-      return transformWithEsbuild(code, id, {
-        loader: 'jsx',
-        jsx: 'automatic',
-      });
-    },
-  };
-}
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  plugins: [jsAsJsx()],
   test: {
+    include: ['test/**/*.{test,spec}.{js,jsx,ts,tsx}'],
+    exclude: [...configDefaults.exclude, 'e2e/**'],
     environment: 'jsdom',
     setupFiles: ['./test/setup/index.js'],
     globals: true,
@@ -31,8 +13,8 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      include: ['src/**/*.{js,jsx}', 'build.js', 'updateVersion.js'],
-      exclude: ['dist/**', 'public/**', 'test/**'],
+      include: ['src/**/*.{ts,tsx}', 'build.js', 'updateVersion.js'],
+      exclude: ['dist/**', 'public/**', 'test/**', 'e2e/**'],
     },
   },
 });

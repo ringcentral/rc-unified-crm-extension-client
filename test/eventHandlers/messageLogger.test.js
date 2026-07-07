@@ -10,7 +10,7 @@ async function loadMessageLogger() {
     showNotification: vi.fn(),
     responseMessage: vi.fn(),
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const userCore = {
     getSMSPopSetting: vi.fn((settings) => ({ value: settings?.messageAutoPopup?.value ?? false })),
@@ -20,13 +20,13 @@ async function loadMessageLogger() {
     getNewContactTypeSetting: vi.fn((settings) => ({ value: settings?.newContactType?.value ?? null })),
     getNewContactNamePrefixSetting: vi.fn((settings) => ({ value: settings?.newContactNamePrefix?.value ?? 'PlaceholderContact' })),
   };
-  vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+  vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
   const logCore = {
     addLog: vi.fn(async () => ({})),
     getConflictContentFromUnresolvedLog: vi.fn(() => ({ description: 'Multiple contacts found' })),
   };
-  vi.doMock('../../src/core/log.js', () => ({ default: logCore }));
+  vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
   const contactCore = {
     getContact: vi.fn(async () => ({
@@ -37,7 +37,7 @@ async function loadMessageLogger() {
     })),
     openContactPage: vi.fn(async () => {}),
   };
-  vi.doMock('../../src/core/contact.js', () => ({ default: contactCore }));
+  vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
 
   const logUtil = {
     getLogConflictInfo: vi.fn(async () => ({
@@ -51,19 +51,19 @@ async function loadMessageLogger() {
     })),
     cacheLogPageData: vi.fn(async () => {}),
   };
-  vi.doMock('../../src/lib/logUtil.js', () => logUtil);
+  vi.doMock('../../src/lib/logUtil.ts', () => logUtil);
 
   const logPage = {
     getLogPageRender: vi.fn(() => ({ id: 'messageLogPage' })),
   };
-  vi.doMock('../../src/components/logPage.js', () => ({ default: logPage }));
+  vi.doMock('../../src/components/logPage.ts', () => ({ default: logPage }));
 
   const groupLogPage = {
     getGroupLogPageRender: vi.fn(() => ({ id: 'groupMessageLogPage' })),
   };
-  vi.doMock('../../src/components/groupLogPage.js', () => ({ default: groupLogPage }));
+  vi.doMock('../../src/components/groupLogPage.ts', () => ({ default: groupLogPage }));
 
-  const messageLogger = await loadModule('../../src/eventHandlers/rc-post-message-request/messageLogger/index.js');
+  const messageLogger = await loadModule('../../src/eventHandlers/rc-post-message-request/messageLogger/index.ts');
   return {
     messageLogger,
     util,

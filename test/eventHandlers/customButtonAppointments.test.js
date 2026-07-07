@@ -51,7 +51,7 @@ async function loadAppointmentButton(modulePath, overrides = {}) {
     }),
     ...overrides.util,
   };
-  vi.doMock('../../src/lib/util.js', () => util);
+  vi.doMock('../../src/lib/util.ts', () => util);
 
   const appointmentService = {
     updateAppointmentStatus: vi.fn(async () => ({ successful: true })),
@@ -65,9 +65,9 @@ async function loadAppointmentButton(modulePath, overrides = {}) {
     refreshAppointment: vi.fn(async () => ({ successful: true })),
     ...overrides.appointmentService,
   };
-  vi.doMock('../../src/service/appointmentService.js', () => appointmentService);
+  vi.doMock('../../src/service/appointmentService.ts', () => appointmentService);
 
-  vi.doMock('../../src/lib/appointmentUtils.js', () => ({
+  vi.doMock('../../src/lib/appointmentUtils.ts', () => ({
     extractAppointmentsListContext: vi.fn(() => ({
       tab: 'upcoming',
       searchWithFilters: { search: 'Jane', filter: 'All' },
@@ -79,7 +79,7 @@ async function loadAppointmentButton(modulePath, overrides = {}) {
     )).filter((attendee) => attendee?.id)),
   }));
 
-  vi.doMock('../../src/lib/urlTemplate.js', () => ({
+  vi.doMock('../../src/lib/urlTemplate.ts', () => ({
     renderUrlTemplate: vi.fn(({ template, values }) => ({
       url: template
         .replace('{hostname}', values.hostname ?? '')
@@ -94,27 +94,27 @@ async function loadAppointmentButton(modulePath, overrides = {}) {
     openContactPage: vi.fn(async () => {}),
     ...overrides.contactCore,
   };
-  vi.doMock('../../src/core/contact.js', () => ({ default: contactCore }));
+  vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
 
   const appointmentCreatePage = {
     getAppointmentCreatePageRender: vi.fn((props) => ({ id: 'appointmentCreatePage', props })),
     submitAppointmentCreate: vi.fn(async () => ({ successful: true })),
     ...overrides.appointmentCreatePage,
   };
-  vi.doMock('../../src/components/appointmentsPage/appointmentCreatePage.js', () => ({ default: appointmentCreatePage }));
+  vi.doMock('../../src/components/appointmentsPage/appointmentCreatePage.ts', () => ({ default: appointmentCreatePage }));
 
   const appointmentEditPage = {
     getAppointmentEditPageRender: vi.fn((props) => ({ id: 'appointmentEditPage', props })),
     saveAppointmentEdits: vi.fn(async () => ({ successful: true })),
     ...overrides.appointmentEditPage,
   };
-  vi.doMock('../../src/components/appointmentsPage/appointmentEditPage.js', () => ({ default: appointmentEditPage }));
+  vi.doMock('../../src/components/appointmentsPage/appointmentEditPage.ts', () => ({ default: appointmentEditPage }));
 
   const appointmentsPage = {
     getAppointmentsPageWithRecords: vi.fn(async (props) => ({ id: 'appointmentsPage', props })),
     ...overrides.appointmentsPage,
   };
-  vi.doMock('../../src/components/appointmentsPage/appointmentsPage.js', () => ({ default: appointmentsPage }));
+  vi.doMock('../../src/components/appointmentsPage/appointmentsPage.ts', () => ({ default: appointmentsPage }));
 
   const handler = await loadModule(modulePath);
   return {
@@ -144,7 +144,7 @@ describe('custom-button appointment handlers', () => {
 
   it('cancels and confirms appointments, refreshes the list, and responds to the widget', async () => {
     let loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentCancel.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentCancel.ts',
       {
         appointmentService: {
           updateAppointmentStatus: vi.fn(async () => ({
@@ -177,7 +177,7 @@ describe('custom-button appointment handlers', () => {
     expect(loaded.util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
 
     loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentConfirm.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentConfirm.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),
@@ -211,7 +211,7 @@ describe('custom-button appointment handlers', () => {
 
   it('reports appointment status update failures through notifications and response messages', async () => {
     const loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentCancel.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentCancel.ts',
       {
         appointmentService: {
           updateAppointmentStatus: vi.fn(async () => {
@@ -246,7 +246,7 @@ describe('custom-button appointment handlers', () => {
       userSettings: {},
     });
     const loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenAppointment.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenAppointment.ts',
     );
     vi.mocked(axios.get).mockResolvedValueOnce({ data: 'resolved.example' });
 
@@ -285,7 +285,7 @@ describe('custom-button appointment handlers', () => {
 
   it('creates and saves appointments, navigating back to refreshed list only on success', async () => {
     let loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentCreateSave.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentCreateSave.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({
@@ -312,7 +312,7 @@ describe('custom-button appointment handlers', () => {
     });
 
     loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentSave.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentSave.ts',
       {
         appointmentEditPage: {
           saveAppointmentEdits: vi.fn(async () => ({
@@ -340,7 +340,7 @@ describe('custom-button appointment handlers', () => {
     expect(loaded.appointmentsPage.getAppointmentsPageWithRecords).not.toHaveBeenCalled();
 
     loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentSave.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentSave.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({ title: 'Updated Appointment' }),
@@ -367,7 +367,7 @@ describe('custom-button appointment handlers', () => {
 
   it('opens appointment create/edit pages and refreshes appointment rows and lists', async () => {
     let loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentCreate.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentCreate.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),
@@ -396,7 +396,7 @@ describe('custom-button appointment handlers', () => {
     ]));
 
     loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentEdit.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentEdit.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),
@@ -421,7 +421,7 @@ describe('custom-button appointment handlers', () => {
     }));
 
     loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentRefresh.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentRefresh.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({}, { thirdPartyAppointmentId: 'appointment-1' }),
@@ -438,7 +438,7 @@ describe('custom-button appointment handlers', () => {
     }));
 
     loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentRefreshList.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentRefreshList.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor(),
@@ -451,7 +451,7 @@ describe('custom-button appointment handlers', () => {
 
   it('opens appointment contacts from URLs, attendees, explicit contact fields, and phone fallbacks', async () => {
     let loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenContact.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenContact.ts',
     );
     globalThis.open = vi.fn();
     await loaded.handler.onEvent({
@@ -471,7 +471,7 @@ describe('custom-button appointment handlers', () => {
       userSettings: {},
     });
     loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenContact.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenContact.ts',
     );
     vi.mocked(axios.get).mockResolvedValueOnce({ data: 'resolved.example' });
     await loaded.handler.onEvent({
@@ -492,7 +492,7 @@ describe('custom-button appointment handlers', () => {
     expect(open).toHaveBeenCalledWith('https://resolved.example/contacts/Lead/contact-1');
 
     loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenContact.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenContact.ts',
       {
         appointmentService: {
           listAppointments: vi.fn(async () => [
@@ -518,7 +518,7 @@ describe('custom-button appointment handlers', () => {
     });
 
     loaded = await loadAppointmentButton(
-      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenContact.js',
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenContact.ts',
     );
     await loaded.handler.onEvent({
       data: dataFor({}, {

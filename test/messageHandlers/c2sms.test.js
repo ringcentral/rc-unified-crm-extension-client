@@ -1,21 +1,21 @@
-import contactCore from '../../src/core/contact.js';
-import { getPlatformInfo } from '../../src/service/platformService.js';
+import contactCore from '../../src/core/contact.ts';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 
-vi.mock('../../src/core/contact.js', () => ({
+vi.mock('../../src/core/contact.ts', () => ({
   default: {
     getLocalCachedContact: vi.fn(),
   },
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
 async function loadC2smsHandler() {
   vi.resetModules();
-  return loadModule('../../src/messageHandlers/c2sms.js');
+  return loadModule('../../src/messageHandlers/c2sms.ts');
 }
 
 describe('c2sms message handler', () => {

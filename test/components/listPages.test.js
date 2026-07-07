@@ -1,7 +1,7 @@
 import axios from 'axios';
-import userCore from '../../src/core/user.js';
-import { listAppointments } from '../../src/service/appointmentService.js';
-import { getPlatformInfo } from '../../src/service/platformService.js';
+import userCore from '../../src/core/user.ts';
+import { listAppointments } from '../../src/service/appointmentService.ts';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetFrameWindow } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
@@ -12,7 +12,7 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/core/user.js', () => ({
+vi.mock('../../src/core/user.ts', () => ({
   default: {
     getShowAppointmentsTabSetting: vi.fn((settings) => ({
       value: settings?.showAppointmentsTab?.value ?? true,
@@ -23,11 +23,11 @@ vi.mock('../../src/core/user.js', () => ({
   },
 }));
 
-vi.mock('../../src/service/appointmentService.js', () => ({
+vi.mock('../../src/service/appointmentService.ts', () => ({
   listAppointments: vi.fn(),
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
@@ -70,7 +70,7 @@ describe('appointmentsPage', () => {
   });
 
   it('renders tab settings and hides the appointments page when the user disables it', async () => {
-    const appointmentsPage = await loadPage('../../src/components/appointmentsPage/appointmentsPage.js');
+    const appointmentsPage = await loadPage('../../src/components/appointmentsPage/appointmentsPage.ts');
 
     const page = appointmentsPage.getAppointmentsPageRender({
       manifest: manifest(),
@@ -122,7 +122,7 @@ describe('appointmentsPage', () => {
         participantName: 'Chris',
       },
     ]);
-    const appointmentsPage = await loadPage('../../src/components/appointmentsPage/appointmentsPage.js');
+    const appointmentsPage = await loadPage('../../src/components/appointmentsPage/appointmentsPage.ts');
 
     const page = await appointmentsPage.getAppointmentsPageWithRecords({
       manifest: manifest(),
@@ -164,7 +164,7 @@ describe('appointmentsPage', () => {
 
   it('returns a hidden appointments page without calling the server and renders empty state otherwise', async () => {
     vi.mocked(userCore.getShowAppointmentsTabSetting).mockReturnValue({ value: false });
-    const appointmentsPage = await loadPage('../../src/components/appointmentsPage/appointmentsPage.js');
+    const appointmentsPage = await loadPage('../../src/components/appointmentsPage/appointmentsPage.ts');
 
     const hidden = await appointmentsPage.getAppointmentsPageWithRecords({
       manifest: manifest(),
@@ -263,7 +263,7 @@ describe('calldownPage', () => {
         ],
       },
     });
-    const calldownPage = await loadPage('../../src/components/calldownPage.js');
+    const calldownPage = await loadPage('../../src/components/calldownPage.ts');
 
     const page = await calldownPage.getCalldownPageWithRecords({
       manifest: manifest(),
@@ -336,7 +336,7 @@ describe('calldownPage', () => {
         },
       })
       .mockRejectedValueOnce(new Error('network'));
-    const calldownPage = await loadPage('../../src/components/calldownPage.js');
+    const calldownPage = await loadPage('../../src/components/calldownPage.ts');
 
     const filtered = await calldownPage.getCalldownPageWithRecords({
       manifest: manifest(),

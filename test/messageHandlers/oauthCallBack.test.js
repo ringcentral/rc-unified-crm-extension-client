@@ -1,23 +1,23 @@
-import authCore from '../../src/core/auth.js';
-import userCore from '../../src/core/user.js';
-import adminCore from '../../src/core/admin.js';
-import reportPage from '../../src/components/reportPage/reportPage.js';
-import calldownPage from '../../src/components/calldownPage.js';
-import appointmentsPage from '../../src/components/appointmentsPage/appointmentsPage.js';
-import adminPage from '../../src/components/admin/adminPage.js';
-import { getManifest } from '../../src/service/manifestService.js';
-import { getPlatformInfo } from '../../src/service/platformService.js';
+import authCore from '../../src/core/auth.ts';
+import userCore from '../../src/core/user.ts';
+import adminCore from '../../src/core/admin.ts';
+import reportPage from '../../src/components/reportPage/reportPage.ts';
+import calldownPage from '../../src/components/calldownPage.ts';
+import appointmentsPage from '../../src/components/appointmentsPage/appointmentsPage.ts';
+import adminPage from '../../src/components/admin/adminPage.ts';
+import { getManifest } from '../../src/service/manifestService.ts';
+import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
 
-vi.mock('../../src/core/auth.js', () => ({
+vi.mock('../../src/core/auth.ts', () => ({
   default: {
     onAuthCallback: vi.fn(),
   },
 }));
 
-vi.mock('../../src/core/user.js', () => ({
+vi.mock('../../src/core/user.ts', () => ({
   default: {
     updateSSCLToken: vi.fn(),
     getShowUserReportTabSetting: vi.fn(),
@@ -27,48 +27,48 @@ vi.mock('../../src/core/user.js', () => ({
   },
 }));
 
-vi.mock('../../src/core/admin.js', () => ({
+vi.mock('../../src/core/admin.ts', () => ({
   default: {
     refreshAdminSettings: vi.fn(),
     authAppConnectServer: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/reportPage/reportPage.js', () => ({
+vi.mock('../../src/components/reportPage/reportPage.ts', () => ({
   default: {
     getReportsPageRender: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/calldownPage.js', () => ({
+vi.mock('../../src/components/calldownPage.ts', () => ({
   default: {
     getCalldownPageWithRecords: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/appointmentsPage/appointmentsPage.js', () => ({
+vi.mock('../../src/components/appointmentsPage/appointmentsPage.ts', () => ({
   default: {
     getAppointmentsPageRender: vi.fn(),
   },
 }));
 
-vi.mock('../../src/components/admin/adminPage.js', () => ({
+vi.mock('../../src/components/admin/adminPage.ts', () => ({
   default: {
     getAdminPageRender: vi.fn(),
   },
 }));
 
-vi.mock('../../src/service/manifestService.js', () => ({
+vi.mock('../../src/service/manifestService.ts', () => ({
   getManifest: vi.fn(),
 }));
 
-vi.mock('../../src/service/platformService.js', () => ({
+vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
 }));
 
 async function loadOauthCallbackHandler() {
   vi.resetModules();
-  return loadModule('../../src/messageHandlers/oauthCallBack.js');
+  return loadModule('../../src/messageHandlers/oauthCallBack.ts');
 }
 
 function mockManifest() {

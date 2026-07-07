@@ -70,8 +70,8 @@ async function runBuild() {
     }
 
     build({
-        entryPoints: ['src/content.js', 'src/popup.js', 'src/sw.js', 'src/root.jsx'],
-        loader: { '.js': 'jsx', '.png': 'dataurl' },
+        entryPoints: ['src/content.ts', 'src/popup.ts', 'src/sw.ts', 'src/root.tsx'],
+        loader: { '.js': 'jsx', '.ts': 'ts', '.tsx': 'tsx', '.png': 'dataurl' },
         bundle: true,
         jsx: 'automatic',
         write: true,

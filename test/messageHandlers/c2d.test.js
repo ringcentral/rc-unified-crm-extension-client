@@ -3,7 +3,7 @@ import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 
 async function loadC2dHandler() {
   vi.resetModules();
-  return loadModule('../../src/messageHandlers/c2d.js');
+  return loadModule('../../src/messageHandlers/c2d.ts');
 }
 
 describe('c2d message handler', () => {

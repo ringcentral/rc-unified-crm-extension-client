@@ -55,18 +55,18 @@ describe('miscellaneous top-level widget event handlers', () => {
       trackEditSettings: vi.fn(),
       trackConnectedCall: vi.fn(),
     };
-    vi.doMock('../../src/lib/analytics.js', () => analytics);
+    vi.doMock('../../src/lib/analytics.ts', () => analytics);
     const userCore = {
       refreshUserSettings: vi.fn(async () => {}),
     };
-    vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+    vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
     const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    let handler = await loadModule('../../src/eventHandlers/rc-call-init-notify.js');
+    let handler = await loadModule('../../src/eventHandlers/rc-call-init-notify.ts');
     await handler.onEvent({ data: {} });
     expect(analytics.trackPlacedCall).toHaveBeenCalled();
 
-    handler = await loadModule('../../src/eventHandlers/rc-call-start-notify.js');
+    handler = await loadModule('../../src/eventHandlers/rc-call-start-notify.ts');
     await handler.onEvent({
       data: {
         call: {
@@ -76,7 +76,7 @@ describe('miscellaneous top-level widget event handlers', () => {
     });
     expect(analytics.trackAnsweredCall).toHaveBeenCalled();
 
-    handler = await loadModule('../../src/eventHandlers/rc-messageLogger-auto-log-notify.js');
+    handler = await loadModule('../../src/eventHandlers/rc-messageLogger-auto-log-notify.ts');
     await handler.onEvent({
       data: {
         autoLog: true,
@@ -87,7 +87,7 @@ describe('miscellaneous top-level widget event handlers', () => {
       status: true,
     });
 
-    handler = await loadModule('../../src/eventHandlers/rc-ringout-call-notify.js');
+    handler = await loadModule('../../src/eventHandlers/rc-ringout-call-notify.ts');
     await handler.onEvent({
       data: {
         call: {
@@ -97,7 +97,7 @@ describe('miscellaneous top-level widget event handlers', () => {
     });
     expect(analytics.trackConnectedCall).toHaveBeenCalled();
 
-    handler = await loadModule('../../src/eventHandlers/rc-login-popup-notify.js');
+    handler = await loadModule('../../src/eventHandlers/rc-login-popup-notify.ts');
     await handler.onEvent({
       data: {
         oAuthUri: 'https://login.example/oauth',
@@ -108,7 +108,7 @@ describe('miscellaneous top-level widget event handlers', () => {
       oAuthUri: 'https://login.example/oauth',
     });
 
-    handler = await loadModule('../../src/eventHandlers/rc-adapter-side-drawer-open-notify.js');
+    handler = await loadModule('../../src/eventHandlers/rc-adapter-side-drawer-open-notify.ts');
     await handler.onEvent({
       data: {
         open: true,
@@ -119,7 +119,7 @@ describe('miscellaneous top-level widget event handlers', () => {
       opened: true,
     });
 
-    handler = await loadModule('../../src/eventHandlers/rc-calling-settings-notify.js');
+    handler = await loadModule('../../src/eventHandlers/rc-calling-settings-notify.ts');
     await handler.onEvent({
       data: {
         outboundCallControl: true,
@@ -129,7 +129,7 @@ describe('miscellaneous top-level widget event handlers', () => {
       outboundCallControl: true,
     });
 
-    handler = await loadModule('../../src/eventHandlers/rc-adapter-ai-assistant-settings-notify.js');
+    handler = await loadModule('../../src/eventHandlers/rc-adapter-ai-assistant-settings-notify.ts');
     await handler.onEvent({
       data: {
         showAiAssistantWidget: true,
@@ -148,7 +148,7 @@ describe('miscellaneous top-level widget event handlers', () => {
       isAvoidForceChange: true,
     });
 
-    handler = await loadModule('../../src/eventHandlers/rc-adapter-phone-number-format-settings-notify.js');
+    handler = await loadModule('../../src/eventHandlers/rc-adapter-phone-number-format-settings-notify.ts');
     await handler.onEvent({
       data: {
         formatType: 'National',
@@ -175,9 +175,9 @@ describe('miscellaneous top-level widget event handlers', () => {
     const authCore = {
       checkAuth: vi.fn(async () => true),
     };
-    vi.doMock('../../src/core/auth.js', () => ({ default: authCore }));
+    vi.doMock('../../src/core/auth.ts', () => ({ default: authCore }));
     globalThis.RCAdapter.showFeedback = vi.fn(({ onFeedback }) => onFeedback());
-    const handler = await loadModule('../../src/eventHandlers/rc-webphone-connection-status-notify.js');
+    const handler = await loadModule('../../src/eventHandlers/rc-webphone-connection-status-notify.ts');
 
     await handler.onEvent({
       data: {
@@ -203,13 +203,13 @@ describe('miscellaneous top-level widget event handlers', () => {
     const i18n = {
       setLocale: vi.fn(async () => {}),
     };
-    vi.doMock('../../src/i18n/index.js', () => ({ default: i18n }));
+    vi.doMock('../../src/i18n/index.ts', () => ({ default: i18n }));
     const embeddableServices = {
       getServiceManifest: vi.fn(async () => ({ id: 'localized-service' })),
     };
-    vi.doMock('../../src/service/embeddableServices.js', () => ({ default: embeddableServices }));
+    vi.doMock('../../src/service/embeddableServices.ts', () => ({ default: embeddableServices }));
 
-    const handler = await loadModule('../../src/eventHandlers/rc-region-settings-notify.js');
+    const handler = await loadModule('../../src/eventHandlers/rc-region-settings-notify.ts');
 
     await handler.onEvent({
       data: {
@@ -234,22 +234,22 @@ describe('miscellaneous top-level widget event handlers', () => {
     const analytics = {
       trackEditSettings: vi.fn(),
     };
-    vi.doMock('../../src/lib/analytics.js', () => analytics);
+    vi.doMock('../../src/lib/analytics.ts', () => analytics);
     const logService = {
       retroAutoCallLog: vi.fn(),
     };
-    vi.doMock('../../src/service/logService.js', () => ({ default: logService }));
-    vi.doMock('../../src/service/manifestService.js', () => ({
+    vi.doMock('../../src/service/logService.ts', () => ({ default: logService }));
+    vi.doMock('../../src/service/manifestService.ts', () => ({
       getManifest: vi.fn(async () => manifest()),
     }));
-    vi.doMock('../../src/service/platformService.js', () => ({
+    vi.doMock('../../src/service/platformService.ts', () => ({
       getPlatformInfo: vi.fn(async () => ({ platformName: 'salesforce' })),
     }));
     seedStorage({
       crmAuthed: true,
     });
 
-    const handler = await loadModule('../../src/eventHandlers/rc-callLogger-auto-log-notify.js');
+    const handler = await loadModule('../../src/eventHandlers/rc-callLogger-auto-log-notify.ts');
 
     await handler.onEvent({
       data: {
@@ -276,19 +276,19 @@ describe('miscellaneous top-level widget event handlers', () => {
     vi.resetModules();
     axios.defaults.timeout = undefined;
     const refreshManifest = vi.fn(async () => manifest());
-    vi.doMock('../../src/service/platformService.js', () => ({
+    vi.doMock('../../src/service/platformService.ts', () => ({
       getPlatformInfo: vi.fn(async () => ({ platformName: 'salesforce' })),
     }));
-    vi.doMock('../../src/service/manifestService.js', () => ({
+    vi.doMock('../../src/service/manifestService.ts', () => ({
       getManifest: vi.fn(async () => manifest()),
       refreshManifest,
     }));
     const embeddableServices = {
       getServiceManifest: vi.fn(async () => ({ id: 'updated-service' })),
     };
-    vi.doMock('../../src/service/embeddableServices.js', () => ({ default: embeddableServices }));
+    vi.doMock('../../src/service/embeddableServices.ts', () => ({ default: embeddableServices }));
 
-    const handler = await loadModule('../../src/eventHandlers/rc-adapter-pushAdapterState.js');
+    const handler = await loadModule('../../src/eventHandlers/rc-adapter-pushAdapterState.ts');
 
     await handler.onEvent({ data: {} });
 
@@ -310,13 +310,13 @@ describe('miscellaneous top-level widget event handlers', () => {
       trackCreateMeeting: vi.fn(),
       trackCallEnd: vi.fn(),
     };
-    vi.doMock('../../src/lib/analytics.js', () => analytics);
+    vi.doMock('../../src/lib/analytics.ts', () => analytics);
     seedStorage({
       callWith: 'softphone',
       callingMode: 'web',
       hasOngoingCall: true,
     });
-    const handler = await loadModule('../../src/eventHandlers/rc-analytics-track.js');
+    const handler = await loadModule('../../src/eventHandlers/rc-analytics-track.ts');
 
     await handler.onEvent({ data: { event: 'SMS: SMS sent successfully' } });
     await handler.onEvent({ data: { event: 'Meeting Scheduled' } });
@@ -346,19 +346,19 @@ describe('miscellaneous top-level widget event handlers', () => {
   it('records pending recordings, transfer state, and warm-transfer contact pop', async () => {
     vi.resetModules();
     const addPendingRecordingSessionId = vi.fn(async () => {});
-    vi.doMock('../../src/lib/logUtil.js', () => ({
+    vi.doMock('../../src/lib/logUtil.ts', () => ({
       addPendingRecordingSessionId,
     }));
     const openContactPage = vi.fn(async () => {});
-    vi.doMock('../../src/core/contact.js', () => ({
+    vi.doMock('../../src/core/contact.ts', () => ({
       openContactPage,
     }));
-    vi.doMock('../../src/core/user.js', () => ({
+    vi.doMock('../../src/core/user.ts', () => ({
       default: {
         getCallPopMultiMatchBehavior: vi.fn(() => ({ value: 'prompt' })),
       },
     }));
-    vi.doMock('../../src/service/manifestService.js', () => ({
+    vi.doMock('../../src/service/manifestService.ts', () => ({
       getManifest: vi.fn(async () => manifest()),
     }));
     seedStorage({
@@ -368,7 +368,7 @@ describe('miscellaneous top-level widget event handlers', () => {
       userSettings: {},
     });
     const popupContext = {};
-    const handler = await loadModule('../../src/eventHandlers/rc-telephony-session-notify.js');
+    const handler = await loadModule('../../src/eventHandlers/rc-telephony-session-notify.ts');
 
     await handler.onEvent({
       popupContext,
@@ -423,7 +423,7 @@ describe('miscellaneous top-level widget event handlers', () => {
 describe('thin message handlers and content helpers', () => {
   it('forwards extension control-call messages to the widget frame', async () => {
     vi.resetModules();
-    const handler = await loadModule('../../src/messageHandlers/controlCall.js');
+    const handler = await loadModule('../../src/messageHandlers/controlCall.ts');
     const sendResponse = vi.fn();
 
     await handler.onMessage({
@@ -454,10 +454,10 @@ describe('thin message handlers and content helpers', () => {
   it('tracks ringsense reference messages and acknowledges them', async () => {
     vi.resetModules();
     const trackRingSensePage = vi.fn();
-    vi.doMock('../../src/lib/analytics.js', () => ({
+    vi.doMock('../../src/lib/analytics.ts', () => ({
       trackRingSensePage,
     }));
-    const handler = await loadModule('../../src/messageHandlers/ringsenseRefTrack.js');
+    const handler = await loadModule('../../src/messageHandlers/ringsenseRefTrack.ts');
     const sendResponse = vi.fn();
 
     await handler.onMessage({
@@ -472,10 +472,10 @@ describe('thin message handlers and content helpers', () => {
   it('wraps chrome runtime sendMessage and reports invalid extension contexts', async () => {
     vi.resetModules();
     const trackChromeAPIError = vi.fn();
-    vi.doMock('../../src/lib/analytics.js', () => ({
+    vi.doMock('../../src/lib/analytics.ts', () => ({
       trackChromeAPIError,
     }));
-    const { sendMessageToExtension } = await import('../../src/lib/sendMessage.js');
+    const { sendMessageToExtension } = await import('../../src/lib/sendMessage.ts');
     const callback = vi.fn();
     chrome.runtime.sendMessage.mockReturnValueOnce(Promise.resolve({ ok: true }));
 
@@ -506,22 +506,22 @@ describe('miscellaneous rc-post-message-request handlers', () => {
     const userCore = {
       refreshUserSettings: vi.fn(async ({ changedSettings }) => changedSettings),
     };
-    vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+    vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
     const util = {
       showNotification: vi.fn(),
       responseMessage: vi.fn(),
     };
-    vi.doMock('../../src/lib/util.js', () => util);
+    vi.doMock('../../src/lib/util.ts', () => util);
     const embeddableServices = {
       getServiceManifest: vi.fn(async () => ({ id: 'developer-service' })),
     };
-    vi.doMock('../../src/service/embeddableServices.js', () => ({ default: embeddableServices }));
+    vi.doMock('../../src/service/embeddableServices.ts', () => ({ default: embeddableServices }));
     const appointmentsPage = {
       getAppointmentsPageRender: vi.fn(() => ({ id: 'appointmentsPage' })),
     };
-    vi.doMock('../../src/components/appointmentsPage/appointmentsPage.js', () => ({ default: appointmentsPage }));
+    vi.doMock('../../src/components/appointmentsPage/appointmentsPage.ts', () => ({ default: appointmentsPage }));
 
-    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/settings.js');
+    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/settings.ts');
 
     await handler.onEvent({
       data: {
@@ -643,21 +643,21 @@ describe('miscellaneous rc-post-message-request handlers', () => {
       updateSSCLToken: vi.fn(async () => {}),
       getShowCalldownTabSetting: vi.fn(() => ({ value: true })),
     };
-    vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+    vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
     const authCore = {
       onUserClickConnectButton: vi.fn(async () => {}),
       unAuthorize: vi.fn(async () => {}),
       refreshLicenseStatus: vi.fn(async () => {}),
     };
-    vi.doMock('../../src/core/auth.js', () => ({ default: authCore }));
+    vi.doMock('../../src/core/auth.ts', () => ({ default: authCore }));
     const calldownPage = {
       getCalldownPageRender: vi.fn(() => ({ id: 'calldownPage' })),
     };
-    vi.doMock('../../src/components/calldownPage.js', () => ({ default: calldownPage }));
+    vi.doMock('../../src/components/calldownPage.ts', () => ({ default: calldownPage }));
     const responseMessage = vi.fn();
-    vi.doMock('../../src/lib/util.js', () => ({ responseMessage }));
+    vi.doMock('../../src/lib/util.ts', () => ({ responseMessage }));
 
-    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/authorize.js');
+    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/authorize.ts');
 
     await handler.onEvent({
       data: {
@@ -718,13 +718,13 @@ describe('miscellaneous rc-post-message-request handlers', () => {
       { id: 'plugin-2', name: 'Available' },
     ];
     const getPluginMarketListPageRender = vi.fn(() => ({ id: 'pluginMarketListPage' }));
-    vi.doMock('../../src/components/pluginMarketListPage.js', () => ({
+    vi.doMock('../../src/components/pluginMarketListPage.ts', () => ({
       getPluginMarketListPageRender,
     }));
-    vi.doMock('../../src/service/manifestService.js', () => ({
+    vi.doMock('../../src/service/manifestService.ts', () => ({
       getPluginList: vi.fn(async () => pluginList),
     }));
-    vi.doMock('../../src/core/user.js', () => ({
+    vi.doMock('../../src/core/user.ts', () => ({
       getUserSettingsOnline: vi.fn(async () => ({
         'plugin_plugin-1': {
           value: {},
@@ -734,7 +734,7 @@ describe('miscellaneous rc-post-message-request handlers', () => {
         'plugin-1': {},
       })),
     }));
-    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/pluginMarketListPage.js');
+    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/pluginMarketListPage.ts');
 
     await handler.onEvent({
       data: {
@@ -778,18 +778,18 @@ describe('miscellaneous rc-post-message-request handlers', () => {
     const contactCore = {
       openContactPage: vi.fn(async () => {}),
     };
-    vi.doMock('../../src/core/contact.js', () => ({ default: contactCore }));
+    vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
     const util = {
       showNotification: vi.fn(),
       responseMessage: vi.fn(),
     };
-    vi.doMock('../../src/lib/util.js', () => util);
-    vi.doMock('../../src/core/user.js', () => ({
+    vi.doMock('../../src/lib/util.ts', () => util);
+    vi.doMock('../../src/core/user.ts', () => ({
       default: {
         getCallPopMultiMatchBehavior: vi.fn(() => ({ value: 'prompt' })),
       },
     }));
-    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/contacts/view.js');
+    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/contacts/view.ts');
     const data = {
       requestId: 'contact-view-1',
       body: {
@@ -837,18 +837,18 @@ describe('miscellaneous rc-post-message-request handlers', () => {
     const logCore = {
       cacheCallNote: vi.fn(async () => {}),
     };
-    vi.doMock('../../src/core/log.js', () => ({ default: logCore }));
+    vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
     const logPage = {
       getUpdatedLogPageRender: vi.fn(() => ({ id: 'callLogPage' })),
     };
-    vi.doMock('../../src/components/logPage.js', () => ({ default: logPage }));
+    vi.doMock('../../src/components/logPage.ts', () => ({ default: logPage }));
     const contactSearch = {
       getCustomContactSearch: vi.fn(() => ({ id: 'contactSearchPage' })),
     };
-    vi.doMock('../../src/core/customContactSearch.js', () => ({ default: contactSearch }));
+    vi.doMock('../../src/core/customContactSearch.ts', () => ({ default: contactSearch }));
     const responseMessage = vi.fn();
-    vi.doMock('../../src/lib/util.js', () => ({ responseMessage }));
-    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/inputChanged/index.js');
+    vi.doMock('../../src/lib/util.ts', () => ({ responseMessage }));
+    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/inputChanged/index.ts');
 
     await handler.onEvent({
       data: {
@@ -904,14 +904,14 @@ describe('miscellaneous rc-post-message-request handlers', () => {
     const logPage = {
       getUpdatedLogPageRender: vi.fn(() => ({ id: 'messageLogPage' })),
     };
-    vi.doMock('../../src/components/logPage.js', () => ({ default: logPage }));
+    vi.doMock('../../src/components/logPage.ts', () => ({ default: logPage }));
     const contactSearch = {
       getCustomContactSearch: vi.fn(() => ({ id: 'messageContactSearchPage' })),
     };
-    vi.doMock('../../src/core/customContactSearch.js', () => ({ default: contactSearch }));
+    vi.doMock('../../src/core/customContactSearch.ts', () => ({ default: contactSearch }));
     const responseMessage = vi.fn();
-    vi.doMock('../../src/lib/util.js', () => ({ responseMessage }));
-    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/messageLogger/inputChanged/index.js');
+    vi.doMock('../../src/lib/util.ts', () => ({ responseMessage }));
+    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/messageLogger/inputChanged/index.ts');
 
     await handler.onEvent({
       data: {
@@ -964,7 +964,7 @@ describe('miscellaneous rc-post-message-request handlers', () => {
       responseMessage: vi.fn(),
       isObjectEmpty: vi.fn((obj) => Object.keys(obj || {}).length === 0),
     };
-    vi.doMock('../../src/lib/util.js', () => util);
+    vi.doMock('../../src/lib/util.ts', () => util);
     seedStorage({
       'rc-crm-conversation-log-log-1': {
         contact: {
@@ -973,7 +973,7 @@ describe('miscellaneous rc-post-message-request handlers', () => {
       },
       'rc-crm-conversation-log-log-2': {},
     });
-    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/messageLogger/match/index.js');
+    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/messageLogger/match/index.ts');
 
     await handler.onEvent({
       data: {
@@ -997,16 +997,16 @@ describe('miscellaneous rc-post-message-request handlers', () => {
     const logService = {
       syncCallData: vi.fn(async () => {}),
     };
-    vi.doMock('../../src/service/logService.js', () => ({ default: logService }));
+    vi.doMock('../../src/service/logService.ts', () => ({ default: logService }));
     const trackUpdateCallRecordingLink = vi.fn();
-    vi.doMock('../../src/lib/analytics.js', () => ({
+    vi.doMock('../../src/lib/analytics.ts', () => ({
       trackUpdateCallRecordingLink,
     }));
     const removePendingRecordingSessionId = vi.fn(async () => {});
-    vi.doMock('../../src/lib/logUtil.js', () => ({
+    vi.doMock('../../src/lib/logUtil.ts', () => ({
       removePendingRecordingSessionId,
     }));
-    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/callLogSync.js');
+    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/callLogSync.ts');
 
     await handler.onEvent({
       data: {
@@ -1054,18 +1054,18 @@ describe('miscellaneous rc-post-message-request handlers', () => {
     const logCore = {
       openLog: vi.fn(),
     };
-    vi.doMock('../../src/core/log.js', () => ({ default: logCore }));
+    vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
     const contactCore = {
       openContactPage: vi.fn(async () => {}),
     };
-    vi.doMock('../../src/core/contact.js', () => ({ default: contactCore }));
-    vi.doMock('../../src/core/user.js', () => ({
+    vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
+    vi.doMock('../../src/core/user.ts', () => ({
       default: {
         getCallPopMultiMatchBehavior: vi.fn(() => ({ value: 'prompt' })),
       },
     }));
-    vi.doMock('../../src/lib/util.js', () => ({ responseMessage: vi.fn() }));
-    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/viewLog.js');
+    vi.doMock('../../src/lib/util.ts', () => ({ responseMessage: vi.fn() }));
+    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/viewLog.ts');
 
     await handler.onEvent({
       data: {

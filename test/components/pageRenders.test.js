@@ -1,5 +1,5 @@
 import axios from 'axios';
-import authCore from '../../src/core/auth.js';
+import authCore from '../../src/core/auth.ts';
 import { loadModule } from '../helpers/loadModule';
 
 vi.mock('axios', () => ({
@@ -8,7 +8,7 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/core/auth.js', () => ({
+vi.mock('../../src/core/auth.ts', () => ({
   default: {
     isAdminManagedOAuthEnabled: vi.fn(),
   },
@@ -82,10 +82,10 @@ function manifest() {
 
 describe('basic page renderers', () => {
   it('renders about, support, feedback, and auth pages from manifest configuration', async () => {
-    const aboutPage = await loadPage('../../src/components/aboutPage.js');
-    const supportPage = await loadPage('../../src/components/supportPage.js');
-    const feedbackPage = await loadPage('../../src/components/feedbackPage.js');
-    const authPage = await loadPage('../../src/components/authPage.js');
+    const aboutPage = await loadPage('../../src/components/aboutPage.ts');
+    const supportPage = await loadPage('../../src/components/supportPage.ts');
+    const feedbackPage = await loadPage('../../src/components/feedbackPage.ts');
+    const authPage = await loadPage('../../src/components/authPage.ts');
 
     const about = aboutPage.getAboutPageRender({ manifest: manifest(), platformName: 'salesforce' });
     expect(about).toMatchObject({
@@ -162,15 +162,15 @@ describe('basic page renderers', () => {
   });
 
   it('renders setup, selection, schedule, temporary-note, and error-record pages', async () => {
-    const hostnamePage = await loadPage('../../src/components/hostnameInputPage.js');
-    const platformSelectionPage = await loadPage('../../src/components/platformSelectionPage.js');
-    const managedOAuthSetupPage = await loadPage('../../src/components/managedOAuthSetupPage.js');
-    const managedOAuthMissingPage = await loadPage('../../src/components/managedOAuthMissingPage.js');
-    const multiContactPromptPage = await loadPage('../../src/components/multiContactPopPromptPage.js');
-    const logRecordSubmissionPage = await loadPage('../../src/components/logRecordSubmissionPage.js');
-    const tempLogNotePage = await loadPage('../../src/components/tempLogNotePage.js');
-    const schedulePage = await loadPage('../../src/components/schedulePage.js');
-    const errorLogRecordPage = await loadPage('../../src/components/errorLogRecordPage.js');
+    const hostnamePage = await loadPage('../../src/components/hostnameInputPage.ts');
+    const platformSelectionPage = await loadPage('../../src/components/platformSelectionPage.ts');
+    const managedOAuthSetupPage = await loadPage('../../src/components/managedOAuthSetupPage.ts');
+    const managedOAuthMissingPage = await loadPage('../../src/components/managedOAuthMissingPage.ts');
+    const multiContactPromptPage = await loadPage('../../src/components/multiContactPopPromptPage.ts');
+    const logRecordSubmissionPage = await loadPage('../../src/components/logRecordSubmissionPage.ts');
+    const tempLogNotePage = await loadPage('../../src/components/tempLogNotePage.ts');
+    const schedulePage = await loadPage('../../src/components/schedulePage.ts');
+    const errorLogRecordPage = await loadPage('../../src/components/errorLogRecordPage.ts');
 
     const dynamicHost = hostnamePage.getHostnameInputPageRender({
       platform: {
@@ -303,8 +303,8 @@ describe('basic page renderers', () => {
   });
 
   it('renders plugin configuration, release notes, and release-note empty states', async () => {
-    const pluginConfigurePage = await loadPage('../../src/components/pluginConfigurePage.js');
-    const releaseNotesPage = await loadPage('../../src/components/releaseNotesPage.js');
+    const pluginConfigurePage = await loadPage('../../src/components/pluginConfigurePage.ts');
+    const releaseNotesPage = await loadPage('../../src/components/releaseNotesPage.ts');
 
     const plugin = {
       name: 'vendor.workflow',
@@ -425,11 +425,11 @@ describe('admin page renderers', () => {
 
   it('renders admin navigation pages with optional sections', async () => {
     vi.mocked(authCore.isAdminManagedOAuthEnabled).mockReturnValue(true);
-    const adminPage = await loadPage('../../src/components/admin/adminPage.js');
-    const generalSettingPage = await loadPage('../../src/components/admin/generalSettingPage.js');
-    const managedSettingsPage = await loadPage('../../src/components/admin/managedSettingsPage.js');
-    const managedAuthenticationPage = await loadPage('../../src/components/admin/managedAuthenticationPage.js');
-    const managedOAuthAdminPage = await loadPage('../../src/components/admin/managedOAuthAdminPage.js');
+    const adminPage = await loadPage('../../src/components/admin/adminPage.ts');
+    const generalSettingPage = await loadPage('../../src/components/admin/generalSettingPage.ts');
+    const managedSettingsPage = await loadPage('../../src/components/admin/managedSettingsPage.ts');
+    const managedAuthenticationPage = await loadPage('../../src/components/admin/managedAuthenticationPage.ts');
+    const managedOAuthAdminPage = await loadPage('../../src/components/admin/managedOAuthAdminPage.ts');
 
     const admin = adminPage.getAdminPageRender({ platform: manifest().platforms.salesforce });
     expect(admin.schema.properties.section.oneOf.map((item) => item.const)).toEqual([
@@ -475,9 +475,9 @@ describe('admin page renderers', () => {
   });
 
   it('renders managed auth org/user pages with stored values, search, and filter branches', async () => {
-    const managedAuthOrgPage = await loadPage('../../src/components/admin/managedAuthOrgPage.js');
-    const managedAuthUserPage = await loadPage('../../src/components/admin/managedAuthUserPage.js');
-    const managedAuthUserEditPage = await loadPage('../../src/components/admin/managedAuthUserEditPage.js');
+    const managedAuthOrgPage = await loadPage('../../src/components/admin/managedAuthOrgPage.ts');
+    const managedAuthUserPage = await loadPage('../../src/components/admin/managedAuthUserPage.ts');
+    const managedAuthUserEditPage = await loadPage('../../src/components/admin/managedAuthUserEditPage.ts');
 
     const userFields = [
       { const: 'apiKey', title: 'API key', type: 'string', description: 'Key' },
@@ -547,11 +547,11 @@ describe('admin page renderers', () => {
   });
 
   it('renders general setting detail pages with defaults and saved admin settings', async () => {
-    const appearancePage = await loadPage('../../src/components/admin/generalSettings/appearancePage.js');
-    const c2dMatcherPage = await loadPage('../../src/components/admin/generalSettings/clickToDialMatcherSettingPage.js');
-    const notificationLevelPage = await loadPage('../../src/components/admin/generalSettings/notificationLevelSettingPage.js');
-    const phoneNumberFormatPage = await loadPage('../../src/components/admin/generalSettings/phoneNumberFormatPage.js');
-    const widgetSettingsPage = await loadPage('../../src/components/admin/generalSettings/widgetSettingsPage.js');
+    const appearancePage = await loadPage('../../src/components/admin/generalSettings/appearancePage.ts');
+    const c2dMatcherPage = await loadPage('../../src/components/admin/generalSettings/clickToDialMatcherSettingPage.ts');
+    const notificationLevelPage = await loadPage('../../src/components/admin/generalSettings/notificationLevelSettingPage.ts');
+    const phoneNumberFormatPage = await loadPage('../../src/components/admin/generalSettings/phoneNumberFormatPage.ts');
+    const widgetSettingsPage = await loadPage('../../src/components/admin/generalSettings/widgetSettingsPage.ts');
 
     expect(appearancePage.getAppearancePageRender().schema.properties.section.oneOf.map((item) => item.const)).toEqual([
       'customizeTabs',

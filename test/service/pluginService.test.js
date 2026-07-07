@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { getManifest, getPluginList, getPluginDetails } from '../../src/service/manifestService.js';
-import { getRcInfo, showNotification } from '../../src/lib/util.js';
+import { getManifest, getPluginList, getPluginDetails } from '../../src/service/manifestService.ts';
+import { getRcInfo, showNotification } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
 import { seedStorage } from '../setup/storageHelpers';
 
@@ -10,20 +10,20 @@ vi.mock('axios', () => ({
   },
 }));
 
-vi.mock('../../src/service/manifestService.js', () => ({
+vi.mock('../../src/service/manifestService.ts', () => ({
   getManifest: vi.fn(),
   getPluginList: vi.fn(),
   getPluginDetails: vi.fn(),
 }));
 
-vi.mock('../../src/lib/util.js', () => ({
+vi.mock('../../src/lib/util.ts', () => ({
   getRcInfo: vi.fn(),
   showNotification: vi.fn(),
 }));
 
 async function loadPluginService() {
   vi.resetModules();
-  return loadModule('../../src/service/pluginService.js');
+  return loadModule('../../src/service/pluginService.ts');
 }
 
 describe('pluginService', () => {

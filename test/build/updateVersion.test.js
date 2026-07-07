@@ -51,7 +51,6 @@ describe('updateVersion', () => {
   it('targets every release artifact that carries the extension version', () => {
     expect(FILES_TO_UPDATE.map((file) => file.path)).toEqual([
       'package.json',
-      'package-lock.json',
       'public/manifest.json',
       'src/manifest.json',
     ]);

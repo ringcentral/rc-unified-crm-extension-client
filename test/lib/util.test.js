@@ -9,13 +9,13 @@ vi.mock('idb', () => ({
   openDB,
 }));
 
-vi.mock('../../src/i18n/index.js', () => ({
+vi.mock('../../src/i18n/index.ts', () => ({
   t: vi.fn((key) => key),
 }));
 
 async function loadUtil() {
   vi.resetModules();
-  return loadModule('../../src/lib/util.js');
+  return loadModule('../../src/lib/util.ts');
 }
 
 describe('util', () => {
