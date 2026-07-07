@@ -407,7 +407,6 @@ async function authServerSideLogging({ platform }: UnknownRecord): Promise<any> 
 async function authAppConnectServer({ serverUrl }: UnknownRecord): Promise<any> {
     try {
         const rcAccessToken = getRcAccessToken();
-        // eslint-disable-next-line no-undef
         const rcClientId = process.env.RC_CLIENT_ID;
         const rcAPI = new RcAPI();
         const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });

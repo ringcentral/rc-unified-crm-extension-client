@@ -81,9 +81,6 @@ function buildAdditionalFieldsSchema({ allAdditionalFields, contact, logInfo }: 
                 break;
             }
             case 'checkbox': {
-                if (contact?.additionalInfo?.[f.const] === undefined) {
-                    contact.additionalInfo[f.const] = false;
-                }
                 additionalFields[f.const] = {
                     title: f.title,
                     type: 'boolean',

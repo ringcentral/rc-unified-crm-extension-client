@@ -4,8 +4,8 @@
   "description": "![image](https://user-images.githubusercontent.com/7036536/190325756-35ef367d-1557-4833-84aa-b09f5d6717ab.png)",
   "main": "background.js",
   "scripts": {
-    "build": "node ./build.js",
-    "update": "node ./updateVersion.js",
+    "build": "node ./build.ts",
+    "update": "node ./updateVersion.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "pretest:e2e": "npm run build",
@@ -46,6 +46,7 @@
     "@eslint/js": "^9.22.0",
     "@playwright/test": "^1.61.1",
     "@types/chrome": "^0.2.2",
+    "@types/node": "^26.0.1",
     "@types/react": "^17.0.93",
     "@types/react-dom": "^17.0.26",
     "@vitest/coverage-v8": "^4.1.9",
@@ -56,8 +57,10 @@
     "esbuild-sass-plugin": "^3.7.0",
     "eslint": "^9.22.0",
     "globals": "^16.0.0",
+    "jiti": "^2.7.0",
     "jsdom": "^29.1.1",
     "typescript": "^6.0.3",
+    "typescript-eslint": "^8.62.1",
     "vite": "^8.1.0",
     "vitest": "^4.1.9"
   }

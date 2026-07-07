@@ -10,7 +10,7 @@ tags: [typescript, migration, browser-extension, quality]
 
 ## Background & Goals
 
-The App Connect client is a Chrome Manifest V3 browser extension built with esbuild and tested with Vitest and Playwright. The current source is mostly JavaScript and JSX:
+The App Connect client is a Chrome Manifest V3 browser extension built with esbuild and tested with Vitest and Playwright. Historical migration baseline:
 
 - `src/`: 247 `.js` files and 7 `.jsx` files.
 - `test/` and `e2e/`: 78 `.js` files and 3 `.jsx` files.
@@ -18,6 +18,14 @@ The App Connect client is a Chrome Manifest V3 browser extension built with esbu
 - Vitest currently treats source `.js` files as JSX through `vitest.config.mjs`.
 - There is no `tsconfig` or TypeScript dependency in `package.json`.
 - Existing quality gates are `npm test`, `npm run build`, `npm run test:e2e`, and `npm run test:coverage`.
+
+Current migration state:
+
+- `src/`, `test/`, `e2e/`, and root project tooling are TypeScript or TSX.
+- Build entry points are `src/content.ts`, `src/popup.ts`, `src/sw.ts`, and `src/root.tsx` in `build.ts`.
+- Vitest and Playwright configs are TypeScript.
+- `allowJs` is disabled in `tsconfig.json`.
+- Extension runtime output filenames remain JavaScript in `dist/` and `public/manifest.json`.
 
 Goal: introduce TypeScript as an incremental safety layer while preserving the current extension runtime behavior, build outputs, and framework stack. The migration MUST make runtime behavior safer to change, not destabilize the browser extension.
 
@@ -131,9 +139,9 @@ Exit gate for each handler group: related handler tests, `test/popup/popupRuntim
 Convert higher-risk modules only after contract and handler types have stabilized.
 
 - Convert `src/core` and `src/service` modules after their payload and storage types exist.
-- Convert `src/content.js`, `src/popup.js`, `src/sw.js`, and `src/root.jsx` last because they own extension runtime startup.
+- Convert `src/content.ts`, `src/popup.ts`, `src/sw.ts`, and `src/root.tsx` last because they own extension runtime startup.
 - Preserve esbuild output filenames when entry files are renamed to `.ts` or `.tsx`.
-- Keep `build.js` and `updateVersion.js` in JavaScript until app migration is stable, or migrate them under a separate Node-oriented `tsconfig` with dedicated tests.
+- Keep `build.ts` and `updateVersion.ts` covered by Node-oriented tests because they own packaging and versioning behavior.
 
 Exit gate: full unit/integration tests, `npm run build`, `npm run test:e2e`, and manual unpacked-extension smoke verification.
 
@@ -201,7 +209,7 @@ Runtime production monitoring for extension errors is NEEDS_REVIEW because the r
 
 ## Reviewer Focus
 
-- Any PR that touches `build.js`, `vitest.config.mjs`, `public/manifest.json`, `src/sw.js`, `src/content.js`, or `src/popup.js` requires extra review.
+- Any PR that touches `build.ts`, `vitest.config.ts`, `public/manifest.json`, `src/sw.ts`, `src/content.ts`, or `src/popup.ts` requires extra review.
 - Reject migration PRs that combine type conversion with feature logic changes.
 - Watch for hidden behavior changes from default exports, CommonJS/ESM interop, JSX transform differences, JSON imports, and explicit `.js` test imports.
 - Watch for unsafe casts around Chrome storage, widget messages, server manifest data, CRM API responses, and DOM globals.

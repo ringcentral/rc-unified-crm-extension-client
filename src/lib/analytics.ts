@@ -7,11 +7,9 @@ declare const process: {
     env: Record<string, string | undefined>;
 };
 
-// eslint-disable-next-line no-undef
 let useAnalytics = !!process.env.MIXPANEL_TOKEN;
 if (useAnalytics) {
     try {
-        // eslint-disable-next-line no-undef
         mixpanel.init(process.env.MIXPANEL_TOKEN, { persistence: 'localStorage' });
     }
     catch (e) {
@@ -39,18 +37,18 @@ function reset() {
     mixpanel.reset();
 }
 
-function identify({ platformName, rcAccountId, extensionId }: AnalyticsPayload = {}) {
+function identify({ platformName: nextPlatformName, rcAccountId, extensionId }: AnalyticsPayload = {}) {
     if (!useAnalytics) {
         return;
     }
     mixpanel.identify(extensionId);
     mixpanel.people.set({
-        crmPlatform: platformName,
+        crmPlatform: nextPlatformName,
         rcAccountId,
         version,
         author
     });
-    platformName = platformName;
+    platformName = nextPlatformName;
 }
 
 function group({ rcAccountId }: AnalyticsPayload = {}) {

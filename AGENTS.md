@@ -11,10 +11,10 @@ This project is `rc-unified-crm-extension-client/`, the browser extension client
   - `npm.cmd test`
   - `npm.cmd run test:coverage`
   - `npm.cmd run build`
-- For any change under `src/`, `public/`, `build.js`, `updateVersion.js`, or manifest files, run:
+- For any change under `src/`, `public/`, `build.ts`, `updateVersion.ts`, or manifest files, run:
   - `npm.cmd run build`
 - ESLint is currently a diagnostic command, not a clean gate, because baseline lint failures exist. When lint-sensitive files are touched, run and report:
-  - `npx.cmd eslint src build.js updateVersion.js eslint.config.mjs`
+  - `npx.cmd eslint src build.ts updateVersion.ts eslint.config.ts`
 - If no focused test exists for changed behavior, add or update one under `test/`, unless the behavior requires real browser-extension automation and is explicitly recorded as deferred.
 - Mock Chrome APIs, widget frames, storage, IndexedDB/localStorage, Axios, and network boundaries. Do not depend on a real browser extension runtime unless the task explicitly asks for browser E2E work.
 - Final summaries must list the exact verification commands run and any skipped commands with the reason.

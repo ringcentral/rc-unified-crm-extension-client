@@ -50,7 +50,7 @@ export default () => {
                 if (!isOpen) {
                     setIsOpen(true);
                     setNote('');
-                    if (!!e.data.sessionId) {
+                    if (e.data.sessionId) {
                         setSessionId(e.data.sessionId);
                     }
                 }

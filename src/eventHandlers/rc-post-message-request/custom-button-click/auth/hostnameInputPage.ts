@@ -43,8 +43,8 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
       isPrivate: !!data.body.button.formData.isPrivate,
     },
   });
-  manifest = await getManifest(true) as UnknownRecord;
-  await saveManifest({ manifest: manifest as any });
+  const refreshedManifest = await getManifest(true) as UnknownRecord;
+  await saveManifest({ manifest: refreshedManifest as any });
   getWidgetFrameWindow().postMessage({
     type: 'rc-adapter-register-third-party-service',
     service: (await embeddableServices.getServiceManifest()),
@@ -53,9 +53,9 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
     type: 'rc-adapter-navigate-to',
     path: '/settings',
   }, '*');
-  const selectedPlatform = manifest.platforms[data.body.button.formData.platformId];
+  const selectedPlatform = refreshedManifest.platforms[data.body.button.formData.platformId];
   const managedOAuthResult = await authCore.checkManagedOAuthBeforeCrmVisible({
-    manifest,
+    manifest: refreshedManifest,
     platformName: data.body.button.formData.platformId,
     platform: selectedPlatform,
   });
@@ -65,7 +65,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   await authCore.onUserClickConnectButton({
     platform: selectedPlatform,
     platformName: data.body.button.formData.platformId,
-    manifest,
+    manifest: refreshedManifest,
   });
 }
 

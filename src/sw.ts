@@ -114,6 +114,7 @@ async function shouldSkipIncomingCallNotification(callId) {
   const recentNotifications = storage[RECENT_INCOMING_CALL_NOTIFICATIONS_KEY] ?? {};
   const activeNotifications = Object.keys(recentNotifications).reduce((result, id) => {
     if (recentNotifications[id] > now) {
+      // eslint-disable-next-line no-param-reassign
       result[id] = recentNotifications[id];
     }
     return result;

@@ -32,11 +32,9 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
     return;
   }
-  if (!listButtonItemId) {
-    listButtonItemId = data.body.formData.plugins;
-  }
-  const selectedPluginId = listButtonItemId.split('=')[0];
-  const selectedPluginAccess = listButtonItemId.split('=')[1];
+  const resolvedListButtonItemId = listButtonItemId ?? data.body.formData.plugins;
+  const selectedPluginId = resolvedListButtonItemId.split('=')[0];
+  const selectedPluginAccess = resolvedListButtonItemId.split('=')[1];
   const formData = data.body?.button?.formData ?? data.body.formData;
   const selectedPlugin = formData.pluginList.find((plugin: UnknownRecord) => plugin.id === selectedPluginId);
   const userSettings = await getUserSettingsOnline({ serverUrl: manifest.serverUrl });

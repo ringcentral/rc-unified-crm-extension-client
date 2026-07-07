@@ -41,7 +41,7 @@ function hasCandidatePhoneValue(element: unknown): element is ValueNode {
   if (!value) return false;
   // Keep it permissive for international formats, but avoid probing
   // on short numeric values like zip codes.
-  return /\d[\d\s()+\-]{5,}\d/.test(value);
+  return /\d[\d\s()+-]{5,}\d/.test(value);
 }
 
 export function initializeShadowRootSupport({
