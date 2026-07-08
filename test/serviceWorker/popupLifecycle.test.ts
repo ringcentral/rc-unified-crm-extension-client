@@ -90,6 +90,39 @@ describe('service worker popup lifecycle', () => {
     expect(chrome.windows.create).not.toHaveBeenCalled();
   });
 
+  it('expands and restores the popup width when the side widget opens and closes', async () => {
+    seedStorage({ popupWindowId: 15 });
+    const { onMessage } = await loadServiceWorkerListeners();
+
+    vi.mocked(chrome.windows.get).mockResolvedValueOnce({
+      id: 15,
+      state: 'normal',
+      focused: true,
+      width: 450,
+      height: 848,
+    });
+
+    onMessage({ type: 'sideWidgetOpen', opened: true }, {}, vi.fn());
+
+    await vi.waitFor(() => {
+      expect(chrome.windows.update).toHaveBeenCalledWith(15, { width: 750 });
+    });
+
+    vi.mocked(chrome.windows.get).mockResolvedValueOnce({
+      id: 15,
+      state: 'normal',
+      focused: true,
+      width: 750,
+      height: 848,
+    });
+
+    onMessage({ type: 'sideWidgetOpen', opened: false }, {}, vi.fn());
+
+    await vi.waitFor(() => {
+      expect(chrome.windows.update).toHaveBeenLastCalledWith(15, { width: 450 });
+    });
+  });
+
   it('cleans popup state when the popup window closes and persists bounds changes', async () => {
     seedStorage({
       popupWindowId: 12,

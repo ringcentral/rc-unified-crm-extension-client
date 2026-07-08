@@ -176,6 +176,30 @@ function e2eCallLogManifest(serverOrigin) {
   };
 }
 
+function e2eAppointmentManifest(serverOrigin) {
+  const manifest = e2eCallLogManifest(serverOrigin);
+  return {
+    ...manifest,
+    platforms: {
+      salesforce: {
+        ...manifest.platforms.salesforce,
+        page: {
+          ...manifest.platforms.salesforce.page,
+          appointment: {
+            supported: true,
+            title: 'Service Visits',
+            showConfirm: true,
+            status: {
+              isVisible: true,
+              value: ['scheduled', 'confirmed', 'canceled', 'tentative'],
+            },
+          },
+        },
+      },
+    },
+  };
+}
+
 function e2eCallLogEvent() {
   return {
     type: 'rc-post-message-request',
@@ -199,6 +223,86 @@ function e2eCallLogEvent() {
         to: {
           phoneNumber: '+16505550200',
           name: 'App Connect Agent',
+        },
+      },
+    },
+  };
+}
+
+function e2eAppointmentFormData(overrides = {}) {
+  return {
+    thirdPartyAppointmentId: 'e2e-appt-1',
+    title: 'E2E appointment',
+    dateTime: '2026-07-08T09:00',
+    duration: 'PT45M',
+    summary: 'Appointment from extension E2E',
+    participantName: 'E2E Caller',
+    participantContactId: 'e2e-contact-1',
+    participantContactType: 'Lead',
+    participantContactIds: ['e2e-contact-1'],
+    participantContacts: [
+      {
+        id: 'e2e-contact-1',
+        type: 'Lead',
+        name: 'E2E Caller',
+      },
+    ],
+    status: 'scheduled',
+    returnTab: 'upcoming',
+    returnSearch: '',
+    returnFilter: 'All',
+    ...overrides,
+  };
+}
+
+function e2eAppointmentCreateEvent() {
+  return {
+    type: 'rc-post-message-request',
+    requestId: 'e2e-appointment-create-request',
+    path: '/custom-button-click',
+    body: {
+      button: {
+        id: 'appointmentCreatePage',
+        type: 'submit',
+        formData: e2eAppointmentFormData({
+          thirdPartyAppointmentId: undefined,
+          title: 'Created E2E appointment',
+        }),
+      },
+    },
+  };
+}
+
+function e2eAppointmentEditEvent() {
+  return {
+    type: 'rc-post-message-request',
+    requestId: 'e2e-appointment-edit-request',
+    path: '/custom-button-click',
+    body: {
+      button: {
+        id: 'appointmentEditPage',
+        type: 'submit',
+        formData: e2eAppointmentFormData({
+          title: 'Updated E2E appointment',
+          status: 'tentative',
+        }),
+      },
+    },
+  };
+}
+
+function e2eAppointmentStatusEvent(actionId, requestId) {
+  return {
+    type: 'rc-post-message-request',
+    requestId,
+    path: '/custom-button-click',
+    body: {
+      button: {
+        id: `${actionId}-e2e-appt-1-action`,
+        formData: {
+          returnTab: 'upcoming',
+          returnSearch: '',
+          returnFilter: 'All',
         },
       },
     },
@@ -490,6 +594,28 @@ async function seedOAuthState(extension, serverOrigin, overrides = {}) {
       },
       serverSideLogging: {
         enable: false,
+      },
+    },
+    ...overrides,
+  };
+  await seedExtensionStorage(extension, state);
+  return state;
+}
+
+async function seedAppointmentState(extension, serverOrigin, overrides = {}) {
+  const state = {
+    ...defaultExtensionState,
+    customCrmManifest: e2eAppointmentManifest(serverOrigin),
+    'platform-info': {
+      platformName: 'salesforce',
+      hostname: '127.0.0.1',
+    },
+    rcUnifiedCrmExtJwt: 'e2e-crm-jwt',
+    crmAuthed: true,
+    userSettings: {
+      ...defaultExtensionState.userSettings,
+      showAppointmentsTab: {
+        value: true,
       },
     },
     ...overrides,
@@ -1152,6 +1278,86 @@ test.describe('App Connect extension smoke', () => {
       phoneNumber: '+16505550100',
       contactType: 'Lead',
     });
+  });
+
+  test('creates, updates, confirms, and cancels appointments through the popup appointment flow', async () => {
+    const state = await seedAppointmentState(extension, server.origin);
+    const popupPage = await openPopupPage(extension);
+    await refreshExtensionStateInPopup(popupPage, state);
+    await installWidgetMessageCapture(popupPage);
+    server.clearRequests();
+
+    await popupPage.evaluate((event) => window.postMessage(event, '*'), e2eAppointmentCreateEvent());
+
+    await expect.poll(() => server.requests.find((request) => (
+      request.method === 'POST' && request.path === '/appointments'
+    ))).toBeTruthy();
+    const createRequest = server.requests.find((request) => (
+      request.method === 'POST' && request.path === '/appointments'
+    ));
+    expect(createRequest.body).toMatchObject({
+      title: 'Created E2E appointment',
+      participantName: 'E2E Caller',
+      contactId: 'e2e-contact-1',
+      contactType: 'Lead',
+      status: 'scheduled',
+      durationMinutes: 45,
+    });
+    await expect.poll(() => server.requests.some((request) => (
+      request.method === 'GET' && request.path === '/appointments'
+    ))).toBe(true);
+
+    server.clearRequests();
+    await popupPage.evaluate((event) => window.postMessage(event, '*'), e2eAppointmentEditEvent());
+
+    await expect.poll(() => server.requests.find((request) => (
+      request.method === 'PATCH' && request.path === '/appointments/e2e-appt-1'
+    ))).toBeTruthy();
+    const editRequest = server.requests.find((request) => (
+      request.method === 'PATCH' && request.path === '/appointments/e2e-appt-1'
+    ));
+    expect(editRequest.body).toMatchObject({
+      title: 'Updated E2E appointment',
+      participantName: 'E2E Caller',
+      contactId: 'e2e-contact-1',
+      contactType: 'Lead',
+      status: 'tentative',
+      durationMinutes: 45,
+    });
+    await expect.poll(() => server.requests.some((request) => (
+      request.method === 'GET' && request.path === '/appointments'
+    ))).toBe(true);
+
+    server.clearRequests();
+    await popupPage.evaluate((event) => window.postMessage(event, '*'), e2eAppointmentStatusEvent(
+      'appointmentConfirm',
+      'e2e-appointment-confirm-request',
+    ));
+
+    await expect.poll(() => server.requests.some((request) => (
+      request.method === 'POST' && request.path === '/appointments/e2e-appt-1/confirm'
+    ))).toBe(true);
+    await expect.poll(() => server.requests.some((request) => (
+      request.method === 'GET' && request.path === '/appointments'
+    ))).toBe(true);
+
+    server.clearRequests();
+    await popupPage.evaluate((event) => window.postMessage(event, '*'), e2eAppointmentStatusEvent(
+      'appointmentCancel',
+      'e2e-appointment-cancel-request',
+    ));
+
+    await expect.poll(() => server.requests.some((request) => (
+      request.method === 'POST' && request.path === '/appointments/e2e-appt-1/cancel'
+    ))).toBe(true);
+    await expect.poll(() => getWidgetMessages(popupPage)).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        message: expect.objectContaining({
+          type: 'rc-adapter-register-customized-page',
+          page: expect.objectContaining({ id: 'appointmentsPage' }),
+        }),
+      }),
+    ]));
   });
 
   test('does not call CRM logging APIs when CRM auth is missing', async () => {

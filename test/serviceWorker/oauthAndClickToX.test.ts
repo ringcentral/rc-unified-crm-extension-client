@@ -23,6 +23,7 @@ describe('service worker OAuth and click-to-X flows', () => {
     vi.mocked(chrome.windows.update).mockReset().mockResolvedValue({ id: 11 });
     vi.mocked(chrome.windows.remove).mockReset().mockResolvedValue();
     vi.mocked(chrome.tabs.query).mockReset().mockResolvedValue([]);
+    vi.mocked(chrome.tabs.sendMessage).mockReset().mockResolvedValue({ result: 'ok' });
     vi.mocked(chrome.runtime.sendMessage).mockReset().mockResolvedValue({ result: 'ok' });
     vi.mocked(chrome.alarms.create).mockReset();
   });
@@ -67,6 +68,82 @@ describe('service worker OAuth and click-to-X flows', () => {
     });
     expect(chrome.windows.remove).toHaveBeenCalledWith(31);
     expect(readStorage()).not.toHaveProperty('loginWindowInfo');
+  });
+
+  it('opens third-party OAuth windows with callback polling state', async () => {
+    const { onMessage } = await loadServiceWorkerListeners();
+    const sendResponse = vi.fn();
+
+    onMessage({
+      type: 'openThirdPartyAuthWindow',
+      oAuthUri: 'https://crm.example/oauth',
+    }, {}, sendResponse);
+
+    expect(sendResponse).toHaveBeenCalledWith({ result: 'ok' });
+    await vi.waitFor(() => {
+      expect(chrome.windows.create).toHaveBeenCalledWith({
+        url: 'https://crm.example/oauth',
+        type: 'popup',
+        width: 600,
+        height: 600,
+      });
+    });
+    expect(readStorage().loginWindowInfo).toEqual({
+      platform: 'thirdParty',
+      id: 31,
+    });
+    await vi.waitFor(() => {
+      expect(chrome.alarms.create).toHaveBeenCalledWith('oauthCheck', expect.objectContaining({
+        when: expect.any(Number),
+      }));
+    });
+  });
+
+  it('relays Pipedrive direct-page callback state between installation page and popup', async () => {
+    const { onMessage } = await loadServiceWorkerListeners();
+    const openResponse = vi.fn();
+
+    onMessage({
+      type: 'openPopupWindowOnPipedriveDirectPage',
+      platform: 'pipedrive',
+      hostname: 'acme.pipedrive.com',
+    }, { tab: { id: 42 } }, openResponse);
+
+    expect(openResponse).toHaveBeenCalledWith({ result: 'ok' });
+    await vi.waitFor(() => {
+      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(42, { action: 'needCallbackUri' });
+    });
+    expect(readStorage()['platform-info']).toEqual({
+      platformName: 'pipedrive',
+      hostname: 'acme.pipedrive.com',
+    });
+
+    const callbackResponse = vi.fn();
+    onMessage({
+      type: 'pipedriveCallbackUri',
+      callbackUri: 'https://pipedrive.example/callback?code=abc',
+    }, {}, callbackResponse);
+
+    expect(callbackResponse).toHaveBeenCalledWith({ result: 'ok' });
+    expect(chrome.runtime.sendMessage).toHaveBeenLastCalledWith({
+      type: 'pipedriveCallbackUri',
+      pipedriveCallbackUri: 'https://pipedrive.example/callback?code=abc',
+    });
+
+    const requestResponse = vi.fn();
+    onMessage({ type: 'popupWindowRequestPipedriveCallbackUri' }, {}, requestResponse);
+
+    expect(requestResponse).toHaveBeenCalledWith({ result: 'ok' });
+    expect(chrome.runtime.sendMessage).toHaveBeenLastCalledWith({
+      type: 'pipedriveCallbackUri',
+      pipedriveCallbackUri: 'https://pipedrive.example/callback?code=abc',
+    });
+
+    const doneResponse = vi.fn();
+    onMessage({ type: 'pipedriveAltAuthDone' }, {}, doneResponse);
+
+    expect(doneResponse).toHaveBeenCalledWith({ result: 'ok' });
+    expect(chrome.tabs.sendMessage).toHaveBeenLastCalledWith(42, { action: 'pipedriveAltAuthDone' });
   });
 
   it('caches the latest cold-start click-to-X request and returns it once', async () => {

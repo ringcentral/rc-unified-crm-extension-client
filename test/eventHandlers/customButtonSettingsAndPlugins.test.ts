@@ -572,6 +572,81 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
   });
 
+  it('walks first-run dynamic connector selection through hostname capture and CRM connect', async () => {
+    const dynamicManifest = dynamicConnectorManifest();
+    const selectLoaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.ts',
+    );
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: dynamicManifest });
+
+    await selectLoaded.handler.onEvent({
+      data: dataFor({
+        platformList: [
+          {
+            id: 'salesforce',
+            name: 'salesforce',
+            displayName: 'Salesforce',
+          },
+        ],
+      }, 'selectPlatform'),
+      manifest: baseManifest(),
+      platformName: 'salesforce',
+      platform: baseManifest().platforms.salesforce,
+      listButtonItemId: 'salesforce=private',
+    });
+
+    expect(selectLoaded.hostnameInputPage.getHostnameInputPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      connectorId: 'salesforce',
+      isPrivate: true,
+      platform: dynamicManifest.platforms.salesforce,
+    }));
+    expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        message: {
+          type: 'rc-adapter-navigate-to',
+          path: '/customized/hostnameInputPage',
+        },
+      }),
+    ]));
+
+    const hostnameLoaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/hostnameInputPage.ts',
+      {
+        manifestService: {
+          getManifest: vi.fn(async () => dynamicManifest),
+        },
+      },
+    );
+
+    await hostnameLoaded.handler.onEvent({
+      data: dataFor({
+        platformId: 'salesforce',
+        platformDisplayName: 'Salesforce',
+        url: 'https://crm.example/lightning',
+        connectorId: 'salesforce',
+        isPrivate: true,
+      }, 'hostnameInputPage'),
+      manifest: dynamicManifest,
+      platformName: 'salesforce',
+      platform: dynamicManifest.platforms.salesforce,
+    });
+
+    expect(readStorage()['platform-info']).toEqual({
+      platformName: 'salesforce',
+      platformDisplayName: 'Salesforce',
+      hostname: 'crm.example',
+      connectorId: 'salesforce',
+      isPrivate: true,
+    });
+    expect(hostnameLoaded.manifestService.saveManifest).toHaveBeenCalledWith({ manifest: dynamicManifest });
+    expect(hostnameLoaded.embeddableServices.getServiceManifest).toHaveBeenCalled();
+    expect(hostnameLoaded.authCore.onUserClickConnectButton).toHaveBeenCalledWith({
+      platform: dynamicManifest.platforms.salesforce,
+      platformName: 'salesforce',
+      manifest: dynamicManifest,
+    });
+  });
+
   it('resets CRM authorization state and records factory reset analytics', async () => {
     seedStorage({
       rcUnifiedCrmExtJwt: 'jwt-1',
@@ -631,6 +706,73 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       level: 'success',
     }));
     expect(loaded.authCore.onUserClickConnectButton).toHaveBeenCalled();
+  });
+
+  it('walks managed OAuth first use from blocked fixed connector to pending credentials and connect', async () => {
+    const blockedHostLoaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/hostnameInputPage.ts',
+      {
+        authCore: {
+          checkManagedOAuthBeforeCrmVisible: vi.fn(async () => ({ blocked: true })),
+        },
+      },
+    );
+
+    await blockedHostLoaded.handler.onEvent({
+      data: dataFor({
+        platformId: 'fixedcrm',
+        platformDisplayName: 'Fixed CRM',
+      }, 'hostnameInputPage'),
+      manifest: baseManifest(),
+      platformName: 'fixedcrm',
+      platform: baseManifest().platforms.fixedcrm,
+    });
+
+    expect(readStorage()['platform-info']).toEqual(expect.objectContaining({
+      platformName: 'fixedcrm',
+      hostname: 'fixed.example',
+    }));
+    expect(blockedHostLoaded.authCore.onUserClickConnectButton).not.toHaveBeenCalled();
+
+    const setupLoaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/managedOAuthSetupPage.ts',
+    );
+
+    await setupLoaded.handler.onEvent({
+      data: dataFor({
+        clientId: 'client-id',
+        clientSecret: 'secret',
+        accessTokenUri: 'https://oauth.example/token',
+        authorizationUri: 'https://oauth.example/auth',
+        redirectUri: 'https://app.example/callback',
+        scopes: 'read write',
+        hostname: 'fixed.example',
+      }, 'managedOAuthSetupPage'),
+      manifest: baseManifest(),
+      platformName: 'fixedcrm',
+      platform: baseManifest().platforms.fixedcrm,
+    });
+
+    expect(setupLoaded.authCore.saveManagedOAuthPendingValues).toHaveBeenCalledWith({
+      serverUrl: 'https://server.example',
+      values: {
+        clientId: 'client-id',
+        clientSecret: 'secret',
+        accessTokenUri: 'https://oauth.example/token',
+        authorizationUri: 'https://oauth.example/auth',
+        redirectUri: 'https://app.example/callback',
+        scopes: 'read write',
+        hostname: 'fixed.example',
+      },
+    });
+    expect(setupLoaded.authCore.onUserClickConnectButton).toHaveBeenCalledWith({
+      platform: baseManifest().platforms.fixedcrm,
+      platformName: 'fixedcrm',
+      manifest: baseManifest(),
+    });
+    expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ message: { type: 'rc-adapter-navigate-to', path: 'goBack' } }),
+    ]));
   });
 
   it('reports managed OAuth pending value save failures', async () => {
@@ -1196,6 +1338,114 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     expect(loaded.pluginPages.getInstalledPluginListPageRender).toHaveBeenCalledWith(expect.objectContaining({
       isFromAdmin: true,
     }));
+  });
+
+  it('walks plugin install, license-backed selection, and user configuration update', async () => {
+    const installLoaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginAdminConfigButtons.ts',
+    );
+
+    await installLoaded.handler.onEvent({
+      data: dataFor({
+        pluginId: 'plugin-1',
+        access: 'admin',
+        ownerRcAccountId: 'owner-account-1',
+        plugin: pluginList()[0],
+      }, 'pluginAdminConfigButtons'),
+      manifest: baseManifest(),
+      platformName: 'salesforce',
+      platform: baseManifest().platforms.salesforce,
+      buttonId: 'installButton',
+    });
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'https://server.example/plugin/register',
+      expect.objectContaining({
+        pluginId: 'plugin-1',
+        pluginAccess: 'admin',
+        rcAccountId: '1001',
+      }),
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
+
+    seedStorage({
+      userSettings: {
+        'plugin_plugin-1': {
+          value: {
+            name: 'Plugin One',
+            requireLicense: true,
+            config: {
+              apiKey: { value: 'saved-key' },
+            },
+          },
+        },
+      },
+    });
+    const selectLoaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/selectPlugin.ts',
+    );
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        returnMessage: {
+          messageType: 'success',
+          message: 'Plugin authorized',
+        },
+      },
+    });
+
+    await selectLoaded.handler.onEvent({
+      data: dataFor({ pluginList: pluginList(), isFromAdmin: false }, 'selectPlugin'),
+      manifest: baseManifest(),
+      platformName: 'salesforce',
+      platform: baseManifest().platforms.salesforce,
+      listButtonItemId: 'plugin-1=user',
+    });
+
+    expect(selectLoaded.pluginService.getPluginLicenseStatus).toHaveBeenCalledWith(expect.objectContaining({
+      pluginId: 'plugin-1',
+    }));
+    expect(selectLoaded.pluginPages.getPluginConfigurePageRender).toHaveBeenCalledWith(expect.objectContaining({
+      pluginId: 'plugin-1',
+      hasValidLicense: true,
+      isLoggedIn: true,
+      config: {
+        apiKey: { value: 'saved-key' },
+      },
+    }));
+
+    const configLoaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginConfigurePageSubmit.ts',
+    );
+
+    await configLoaded.handler.onEvent({
+      data: dataFor({
+        pluginId: 'plugin-1',
+        plugin: pluginList()[0],
+        isAsync: true,
+        phase: 'postSave',
+        access: 'user',
+        supportedLogTypes: ['CallLog'],
+        apiKey: { value: 'updated-key' },
+      }, 'pluginConfigurePage'),
+      manifest: baseManifest(),
+      platformName: 'salesforce',
+      platform: baseManifest().platforms.salesforce,
+    });
+
+    expect(configLoaded.userCore.refreshUserSettings).toHaveBeenCalledWith({
+      changedSettings: {
+        'plugin_plugin-1': {
+          value: expect.objectContaining({
+            name: 'Plugin One',
+            config: {
+              apiKey: 'updated-key',
+            },
+          }),
+          isCustomizable: true,
+        },
+      },
+    });
   });
 
   it('removes an admin plugin, unregisters it remotely, and refreshes the installed list', async () => {

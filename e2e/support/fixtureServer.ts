@@ -208,6 +208,117 @@ export function startFixtureServer() {
       return;
     }
 
+    if (request.method === 'GET' && url.pathname === '/appointments') {
+      sendJson(response, {
+        successful: true,
+        appointments: [
+          {
+            id: 'e2e-appt-1',
+            thirdPartyAppointmentId: 'e2e-appt-1',
+            title: 'E2E appointment',
+            status: 'scheduled',
+            startTime: '2026-07-08T16:00:00Z',
+            durationMinutes: 45,
+            participantName: 'E2E Caller',
+            contactId: 'e2e-contact-1',
+            contactType: 'Lead',
+            contactName: 'E2E Caller',
+          },
+        ],
+        returnMessage: {
+          messageType: 'success',
+          message: 'Appointments loaded',
+          ttl: 3000,
+        },
+      });
+      return;
+    }
+
+    if (request.method === 'POST' && url.pathname === '/appointments') {
+      sendJson(response, {
+        successful: true,
+        appointmentId: 'e2e-created-appt-1',
+        appointment: {
+          id: 'e2e-created-appt-1',
+          ...body,
+        },
+        returnMessage: {
+          messageType: 'success',
+          message: 'Appointment created',
+          ttl: 3000,
+        },
+      });
+      return;
+    }
+
+    if (request.method === 'PATCH' && url.pathname === '/appointments/e2e-appt-1') {
+      sendJson(response, {
+        successful: true,
+        appointmentId: 'e2e-appt-1',
+        appointment: {
+          id: 'e2e-appt-1',
+          ...body,
+        },
+        returnMessage: {
+          messageType: 'success',
+          message: 'Appointment updated',
+          ttl: 3000,
+        },
+      });
+      return;
+    }
+
+    if (request.method === 'POST' && url.pathname === '/appointments/e2e-appt-1/status') {
+      sendJson(response, {
+        successful: true,
+        appointmentId: 'e2e-appt-1',
+        appointment: {
+          id: 'e2e-appt-1',
+          status: body?.status,
+        },
+        returnMessage: {
+          messageType: 'success',
+          message: 'Appointment status updated',
+          ttl: 3000,
+        },
+      });
+      return;
+    }
+
+    if (request.method === 'POST' && url.pathname === '/appointments/e2e-appt-1/confirm') {
+      sendJson(response, {
+        successful: true,
+        appointmentId: 'e2e-appt-1',
+        appointment: {
+          id: 'e2e-appt-1',
+          status: 'confirmed',
+        },
+        returnMessage: {
+          messageType: 'success',
+          message: 'Appointment confirmed',
+          ttl: 3000,
+        },
+      });
+      return;
+    }
+
+    if (request.method === 'POST' && url.pathname === '/appointments/e2e-appt-1/cancel') {
+      sendJson(response, {
+        successful: true,
+        appointmentId: 'e2e-appt-1',
+        appointment: {
+          id: 'e2e-appt-1',
+          status: 'canceled',
+        },
+        returnMessage: {
+          messageType: 'success',
+          message: 'Appointment canceled',
+          ttl: 3000,
+        },
+      });
+      return;
+    }
+
     if (request.method === 'GET' && url.pathname === '/oauth-callback') {
       sendJson(response, {
         successful: true,
