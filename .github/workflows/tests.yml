@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -26,8 +30,17 @@ jobs:
       - name: Run type check
         run: npm run typecheck
 
-      - name: Run unit tests
-        run: npm test
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          use_oidc: true
+          files: ./coverage/lcov.info
+          name: client
+          flags: client
+          fail_ci_if_error: true
 
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
