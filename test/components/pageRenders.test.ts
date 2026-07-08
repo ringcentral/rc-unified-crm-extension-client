@@ -80,14 +80,50 @@ function manifest() {
   };
 }
 
-describe('basic page renderers', () => {
-  it('renders about, support, feedback, and auth pages from manifest configuration', async () => {
-    const aboutPage = await loadPage('../../src/components/aboutPage.ts');
-    const supportPage = await loadPage('../../src/components/supportPage.ts');
-    const feedbackPage = await loadPage('../../src/components/feedbackPage.ts');
-    const authPage = await loadPage('../../src/components/authPage.ts');
+function workflowPlugin() {
+  return {
+    name: 'vendor.workflow',
+    displayName: 'Workflow Plugin',
+    description: 'Adds custom workflow fields.',
+    iconUrl: 'https://plugin.example/icon.png',
+    isAsync: true,
+    phase: 'beta',
+    supportedLogTypes: ['Call', 'Message'],
+    showAuthorizationButton: true,
+    requireLicense: true,
+    pageContent: [
+      {
+        const: 'region',
+        type: 'selection',
+        title: 'Region',
+        required: true,
+        oneOf: [{ const: 'us', title: 'United States' }],
+      },
+      {
+        const: 'scopes',
+        type: 'selection',
+        title: 'Scopes',
+        multiSelect: true,
+        oneOf: [
+          { const: 'read', title: 'Read' },
+          { const: 'write', title: 'Write' },
+        ],
+      },
+      {
+        const: 'hiddenField',
+        type: 'string',
+        title: 'Hidden',
+        hidden: true,
+      },
+    ],
+  };
+}
 
+describe('basic page renderers', () => {
+  it('renders about page author and version metadata from manifest configuration', async () => {
+    const aboutPage = await loadPage('../../src/components/aboutPage.ts');
     const about = aboutPage.getAboutPageRender({ manifest: manifest(), platformName: 'salesforce' });
+
     expect(about).toMatchObject({
       id: 'aboutPage',
       schema: {
@@ -105,6 +141,10 @@ describe('basic page renderers', () => {
         },
       },
     });
+  });
+
+  it('renders support page actions from manifest and online state', async () => {
+    const supportPage = await loadPage('../../src/components/supportPage.ts');
 
     const support = supportPage.getSupportPageRender({
       manifest: manifest(),
@@ -117,6 +157,10 @@ describe('basic page renderers', () => {
       clearLogConflictsButton: expect.any(Object),
       factoryResetButton: expect.any(Object),
     });
+  });
+
+  it('renders feedback page schema and version form data', async () => {
+    const feedbackPage = await loadPage('../../src/components/feedbackPage.ts');
 
     const feedback = feedbackPage.getFeedbackPageRender({
       version: '1.7.35',
@@ -136,6 +180,10 @@ describe('basic page renderers', () => {
     expect(feedback.schema.required).toEqual(['comment']);
     expect(feedback.schema.properties.rating.oneOf).toHaveLength(1);
     expect(feedback.formData.version).toBe('1.7.35');
+  });
+
+  it('renders user auth page with only visible fields', async () => {
+    const authPage = await loadPage('../../src/components/authPage.ts');
 
     const userAuth = authPage.getAuthPageRender({
       manifest: manifest(),
@@ -148,6 +196,10 @@ describe('basic page renderers', () => {
     expect(userAuth.schema.properties).toHaveProperty('warning');
     expect(userAuth.schema.properties).not.toHaveProperty('secret');
     expect(userAuth.formData.apiUrl).toBe('https://crm.example');
+  });
+
+  it('renders admin auth page with managed hidden fields', async () => {
+    const authPage = await loadPage('../../src/components/authPage.ts');
 
     const adminAuth = authPage.getAuthPageRender({
       manifest: manifest(),
@@ -161,17 +213,8 @@ describe('basic page renderers', () => {
     expect(adminAuth.uiSchema.secret).toEqual({ 'ui:widget': 'password' });
   });
 
-  it('renders setup, selection, schedule, temporary-note, and error-record pages', async () => {
+  it('renders dynamic hostname input pages with validation and private connector metadata', async () => {
     const hostnamePage = await loadPage('../../src/components/hostnameInputPage.ts');
-    const platformSelectionPage = await loadPage('../../src/components/platformSelectionPage.ts');
-    const managedOAuthSetupPage = await loadPage('../../src/components/managedOAuthSetupPage.ts');
-    const managedOAuthMissingPage = await loadPage('../../src/components/managedOAuthMissingPage.ts');
-    const multiContactPromptPage = await loadPage('../../src/components/multiContactPopPromptPage.ts');
-    const logRecordSubmissionPage = await loadPage('../../src/components/logRecordSubmissionPage.ts');
-    const tempLogNotePage = await loadPage('../../src/components/tempLogNotePage.ts');
-    const schedulePage = await loadPage('../../src/components/schedulePage.ts');
-    const errorLogRecordPage = await loadPage('../../src/components/errorLogRecordPage.ts');
-
     const dynamicHost = hostnamePage.getHostnameInputPageRender({
       platform: {
         name: 'salesforce',
@@ -188,6 +231,7 @@ describe('basic page renderers', () => {
       connectorId: 'connector-1',
       isPrivate: true,
     });
+
     expect(dynamicHost.schema.required).toContain('url');
     expect(dynamicHost.uiSchema.url['ui:help']).toEqual(expect.any(String));
     expect(dynamicHost.formData).toMatchObject({
@@ -195,6 +239,10 @@ describe('basic page renderers', () => {
       connectorId: 'connector-1',
       isPrivate: true,
     });
+  });
+
+  it('renders selectable hostname input pages', async () => {
+    const hostnamePage = await loadPage('../../src/components/hostnameInputPage.ts');
 
     const selectableHost = hostnamePage.getHostnameInputPageRender({
       platform: {
@@ -210,6 +258,10 @@ describe('basic page renderers', () => {
       const: 'prod',
       title: 'Production',
     });
+  });
+
+  it('renders hostname input pages with schema overrides', async () => {
+    const hostnamePage = await loadPage('../../src/components/hostnameInputPage.ts');
 
     const overriddenHost = hostnamePage.getHostnameInputPageRender({
       platform: {
@@ -222,6 +274,10 @@ describe('basic page renderers', () => {
       },
     });
     expect(overriddenHost.schema.properties).toHaveProperty('customField');
+  });
+
+  it('renders filtered platform selection pages', async () => {
+    const platformSelectionPage = await loadPage('../../src/components/platformSelectionPage.ts');
 
     const selection = platformSelectionPage.getPlatformSelectionPageRender({
       platformList: [
@@ -244,6 +300,10 @@ describe('basic page renderers', () => {
     });
     expect(selection.schema.properties.platforms.oneOf).toHaveLength(1);
     expect(selection.formData.platforms).toBe('p2=private');
+  });
+
+  it('renders managed OAuth setup pages with pending credentials', async () => {
+    const managedOAuthSetupPage = await loadPage('../../src/components/managedOAuthSetupPage.ts');
 
     const oauth = managedOAuthSetupPage.getManagedOAuthSetupPageRender({
       platform: {
@@ -266,8 +326,16 @@ describe('basic page renderers', () => {
       clientId: 'client-1',
       hostname: 'crm.example',
     });
+  });
+
+  it('renders managed OAuth missing pages without submit buttons', async () => {
+    const managedOAuthMissingPage = await loadPage('../../src/components/managedOAuthMissingPage.ts');
 
     expect(managedOAuthMissingPage.getManagedOAuthMissingPageRender().uiSchema.submitButtonOptions.norender).toBe(true);
+  });
+
+  it('renders multi-contact prompt pages filtered by search word', async () => {
+    const multiContactPromptPage = await loadPage('../../src/components/multiContactPopPromptPage.ts');
 
     const prompt = multiContactPromptPage.getMultiContactPopPromptPageRender({
       searchWord: 'alex',
@@ -279,13 +347,26 @@ describe('basic page renderers', () => {
     expect(prompt.schema.properties.contactList.oneOf).toEqual([
       expect.objectContaining({ const: 2, title: 'Alex Green' }),
     ]);
+  });
+
+  it('renders log-record submission buttons from PII consent state', async () => {
+    const logRecordSubmissionPage = await loadPage('../../src/components/logRecordSubmissionPage.ts');
 
     expect(logRecordSubmissionPage.getLogRecordSubmissionPageRender({ piiConsent: false }).uiSchema.logRecordSubmitButton['ui:disabled']).toBe(true);
     expect(logRecordSubmissionPage.getLogRecordSubmissionPageRender({ piiConsent: true }).uiSchema.logRecordSubmitButton['ui:disabled']).toBe(false);
+  });
+
+  it('renders temporary log note pages with cached note form data', async () => {
+    const tempLogNotePage = await loadPage('../../src/components/tempLogNotePage.ts');
+
     expect(tempLogNotePage.getTempLogNotePageRender({ cachedNote: 'Draft', sessionId: 'session-1' }).formData).toEqual({
       note: 'Draft',
       sessionId: 'session-1',
     });
+  });
+
+  it('renders schedule pages for new-contact callbacks', async () => {
+    const schedulePage = await loadPage('../../src/components/schedulePage.ts');
 
     const scheduled = schedulePage.getSchedulePageRender({
       phoneNumber: '+16505550100',
@@ -296,56 +377,23 @@ describe('basic page renderers', () => {
     });
     expect(scheduled.schema.required).toEqual(['callbackDateTime']);
     expect(scheduled.formData.newContactType).toBe('Lead');
+  });
+
+  it('renders error log record pages for each step', async () => {
+    const errorLogRecordPage = await loadPage('../../src/components/errorLogRecordPage.ts');
 
     expect(errorLogRecordPage.getErrorLogRecordPageRender({ step: 1, email: 'user@example.test' }).uiSchema.getErrorLogRecordPageNextStepButton['ui:disabled']).toBe(true);
     expect(errorLogRecordPage.getErrorLogRecordPageRender({ step: 2 }).schema.properties).toHaveProperty('errorLogRecordPageStartButton');
     expect(errorLogRecordPage.getErrorLogRecordPageRender({ step: 3 }).title).toBe('Recording in process');
   });
 
-  it('renders plugin configuration, release notes, and release-note empty states', async () => {
+  it('renders plugin configuration pages with config schema and license state', async () => {
     const pluginConfigurePage = await loadPage('../../src/components/pluginConfigurePage.ts');
-    const releaseNotesPage = await loadPage('../../src/components/releaseNotesPage.ts');
 
-    const plugin = {
-      name: 'vendor.workflow',
-      displayName: 'Workflow Plugin',
-      description: 'Adds custom workflow fields.',
-      iconUrl: 'https://plugin.example/icon.png',
-      isAsync: true,
-      phase: 'beta',
-      supportedLogTypes: ['Call', 'Message'],
-      showAuthorizationButton: true,
-      requireLicense: true,
-      pageContent: [
-        {
-          const: 'region',
-          type: 'selection',
-          title: 'Region',
-          required: true,
-          oneOf: [{ const: 'us', title: 'United States' }],
-        },
-        {
-          const: 'scopes',
-          type: 'selection',
-          title: 'Scopes',
-          multiSelect: true,
-          oneOf: [
-            { const: 'read', title: 'Read' },
-            { const: 'write', title: 'Write' },
-          ],
-        },
-        {
-          const: 'hiddenField',
-          type: 'string',
-          title: 'Hidden',
-          hidden: true,
-        },
-      ],
-    };
     const page = pluginConfigurePage.getPluginConfigurePageRender({
       pluginId: 'plugin-1',
       pluginAccess: 'private',
-      plugin,
+      plugin: workflowPlugin(),
       config: {
         region: { value: 'us', customizable: false },
         scopes: { value: ['read'] },
@@ -381,6 +429,10 @@ describe('basic page renderers', () => {
       region: { value: 'us', customizable: true },
       scopes: { value: ['read', 'write'] },
     });
+  });
+
+  it('renders release notes with global and platform-specific entries', async () => {
+    const releaseNotesPage = await loadPage('../../src/components/releaseNotesPage.ts');
 
     vi.mocked(axios.get).mockResolvedValueOnce({
       data: {
@@ -401,15 +453,23 @@ describe('basic page renderers', () => {
     });
     expect(releasePage.schema.properties).toHaveProperty('Feature-0');
     expect(releasePage.formData['link-button-Open']).toBe('https://docs.example');
+  });
 
+  it('returns null for release notes when there are no newer entries', async () => {
+    const releaseNotesPage = await loadPage('../../src/components/releaseNotesPage.ts');
     vi.mocked(axios.get).mockResolvedValueOnce({ data: {} });
+
     await expect(releaseNotesPage.getReleaseNotesPageRender({
       manifest: manifest(),
       platformName: 'salesforce',
       registeredVersion: '1.7.35',
     })).resolves.toBeNull();
+  });
 
+  it('returns null when release notes cannot be loaded', async () => {
+    const releaseNotesPage = await loadPage('../../src/components/releaseNotesPage.ts');
     vi.mocked(axios.get).mockRejectedValueOnce(new Error('network'));
+
     await expect(releaseNotesPage.getReleaseNotesPageRender({
       manifest: manifest(),
       platformName: 'salesforce',
@@ -423,15 +483,11 @@ describe('admin page renderers', () => {
     vi.mocked(authCore.isAdminManagedOAuthEnabled).mockReset();
   });
 
-  it('renders admin navigation pages with optional sections', async () => {
+  it('renders admin page navigation with optional sections', async () => {
     vi.mocked(authCore.isAdminManagedOAuthEnabled).mockReturnValue(true);
     const adminPage = await loadPage('../../src/components/admin/adminPage.ts');
-    const generalSettingPage = await loadPage('../../src/components/admin/generalSettingPage.ts');
-    const managedSettingsPage = await loadPage('../../src/components/admin/managedSettingsPage.ts');
-    const managedAuthenticationPage = await loadPage('../../src/components/admin/managedAuthenticationPage.ts');
-    const managedOAuthAdminPage = await loadPage('../../src/components/admin/managedOAuthAdminPage.ts');
-
     const admin = adminPage.getAdminPageRender({ platform: manifest().platforms.salesforce });
+
     expect(admin.schema.properties.section.oneOf.map((item) => item.const)).toEqual([
       'managedSettings',
       'managedAuthentication',
@@ -439,12 +495,19 @@ describe('admin page renderers', () => {
       'serverSideLoggingSetting',
       'plugins',
     ]);
+  });
 
+  it('renders general setting navigation pages', async () => {
+    const generalSettingPage = await loadPage('../../src/components/admin/generalSettingPage.ts');
     expect(generalSettingPage.getGeneralSettingPageRender().schema.properties.section.oneOf.map((item) => item.const)).toEqual([
       'appearance',
       'clickToDialMatcher',
       'clickToDialEmbed',
     ]);
+  });
+
+  it('renders managed settings navigation with CRM-specific sections', async () => {
+    const managedSettingsPage = await loadPage('../../src/components/admin/managedSettingsPage.ts');
 
     const managedSettings = managedSettingsPage.getManagedSettingsPageRender({
       crmManifest: {
@@ -456,7 +519,10 @@ describe('admin page renderers', () => {
       'googleSheetsAdminConfig',
       'customSettings',
     ]));
+  });
 
+  it('renders managed authentication navigation from available field groups', async () => {
+    const managedAuthenticationPage = await loadPage('../../src/components/admin/managedAuthenticationPage.ts');
     const managedAuth = managedAuthenticationPage.getManagedAuthenticationPageRender({
       hasOrgFields: true,
       hasUserFields: true,
@@ -465,8 +531,12 @@ describe('admin page renderers', () => {
       'managedAuthOrg',
       'managedAuthUser',
     ]);
+  });
 
+  it('renders managed OAuth admin page delete action', async () => {
+    const managedOAuthAdminPage = await loadPage('../../src/components/admin/managedOAuthAdminPage.ts');
     const oauthAdmin = managedOAuthAdminPage.getManagedOAuthAdminPageRender();
+
     expect(oauthAdmin.uiSchema.submitButtonOptions.norender).toBe(true);
     expect(oauthAdmin.schema.properties.managedOAuthAccount.oneOf[0].actions[0]).toMatchObject({
       id: 'deleteManagedOAuthAccount',
@@ -474,10 +544,8 @@ describe('admin page renderers', () => {
     });
   });
 
-  it('renders managed auth org/user pages with stored values, search, and filter branches', async () => {
+  it('renders managed auth org page with stored and edited values', async () => {
     const managedAuthOrgPage = await loadPage('../../src/components/admin/managedAuthOrgPage.ts');
-    const managedAuthUserPage = await loadPage('../../src/components/admin/managedAuthUserPage.ts');
-    const managedAuthUserEditPage = await loadPage('../../src/components/admin/managedAuthUserEditPage.ts');
 
     const userFields = [
       { const: 'apiKey', title: 'API key', type: 'string', description: 'Key' },
@@ -514,6 +582,27 @@ describe('admin page renderers', () => {
       title: 'API key',
       type: 'string',
     });
+  });
+
+  it('renders managed auth user list with configured-field filters', async () => {
+    const managedAuthUserPage = await loadPage('../../src/components/admin/managedAuthUserPage.ts');
+    const userFields = [
+      { const: 'apiKey', title: 'API key', type: 'string', description: 'Key' },
+      { const: 'region', title: 'Region', type: 'string' },
+    ];
+    const userValues = [
+      {
+        rcExtensionId: 'ext-1',
+        fields: {
+          apiKey: { hasValue: true, value: 'secret' },
+          region: { hasValue: false },
+        },
+      },
+    ];
+    const extensions = [
+      { id: 'ext-1', name: 'Jane Smith' },
+      { id: 'ext-2', firstName: 'Alex', lastName: 'Green' },
+    ];
 
     const userPage = managedAuthUserPage.getManagedAuthUserPageRender({
       userFields,
@@ -529,7 +618,27 @@ describe('admin page renderers', () => {
         meta: 'Configured',
       }),
     ]);
+  });
 
+  it('renders managed auth user edit page with stored values and return filters', async () => {
+    const managedAuthUserEditPage = await loadPage('../../src/components/admin/managedAuthUserEditPage.ts');
+    const userFields = [
+      { const: 'apiKey', title: 'API key', type: 'string', description: 'Key' },
+      { const: 'region', title: 'Region', type: 'string' },
+    ];
+    const userValues = [
+      {
+        rcExtensionId: 'ext-1',
+        fields: {
+          apiKey: { hasValue: true, value: 'secret' },
+          region: { hasValue: false },
+        },
+      },
+    ];
+    const extensions = [
+      { id: 'ext-1', name: 'Jane Smith' },
+      { id: 'ext-2', firstName: 'Alex', lastName: 'Green' },
+    ];
     const edit = managedAuthUserEditPage.getManagedAuthUserEditPageRender({
       userFields,
       userValues,
@@ -546,12 +655,8 @@ describe('admin page renderers', () => {
     });
   });
 
-  it('renders general setting detail pages with defaults and saved admin settings', async () => {
+  it('renders appearance setting detail page navigation', async () => {
     const appearancePage = await loadPage('../../src/components/admin/generalSettings/appearancePage.ts');
-    const c2dMatcherPage = await loadPage('../../src/components/admin/generalSettings/clickToDialMatcherSettingPage.ts');
-    const notificationLevelPage = await loadPage('../../src/components/admin/generalSettings/notificationLevelSettingPage.ts');
-    const phoneNumberFormatPage = await loadPage('../../src/components/admin/generalSettings/phoneNumberFormatPage.ts');
-    const widgetSettingsPage = await loadPage('../../src/components/admin/generalSettings/widgetSettingsPage.ts');
 
     expect(appearancePage.getAppearancePageRender().schema.properties.section.oneOf.map((item) => item.const)).toEqual([
       'customizeTabs',
@@ -559,6 +664,10 @@ describe('admin page renderers', () => {
       'notificationLevel',
       'phoneNumberFormat',
     ]);
+  });
+
+  it('renders click-to-dial matcher settings with defaults and saved values', async () => {
+    const c2dMatcherPage = await loadPage('../../src/components/admin/generalSettings/clickToDialMatcherSettingPage.ts');
     expect(c2dMatcherPage.getClickToDialMatcherSettingPageRender({}).formData.c2dMatcherType).toEqual({
       customizable: true,
       value: 'libPhone',
@@ -571,6 +680,10 @@ describe('admin page renderers', () => {
       customizable: false,
       value: 'regExp',
     });
+  });
+
+  it('renders notification level settings with saved values', async () => {
+    const notificationLevelPage = await loadPage('../../src/components/admin/generalSettings/notificationLevelSettingPage.ts');
     expect(notificationLevelPage.getNotificationLevelSettingPageRender({
       adminUserSettings: {
         notificationLevelSetting: { customizable: false, value: ['error'] },
@@ -579,6 +692,10 @@ describe('admin page renderers', () => {
       customizable: false,
       value: ['error'],
     });
+  });
+
+  it('renders phone number format settings with saved templates', async () => {
+    const phoneNumberFormatPage = await loadPage('../../src/components/admin/generalSettings/phoneNumberFormatPage.ts');
     expect(phoneNumberFormatPage.getPhoneNumberFormatPageRender({
       adminUserSettings: {
         phoneNumberDisplayFormatType: { customizable: false, value: 'custom' },
@@ -588,6 +705,10 @@ describe('admin page renderers', () => {
       phoneNumberDisplayFormatType: { customizable: false, value: 'custom' },
       phoneNumberDisplayFormatTemplate: { customizable: false, value: '(###) ###-####' },
     });
+  });
+
+  it('renders widget settings with saved quick access size', async () => {
+    const widgetSettingsPage = await loadPage('../../src/components/admin/generalSettings/widgetSettingsPage.ts');
     expect(widgetSettingsPage.getWidgetSettingsPageRender({
       adminUserSettings: {
         quickAccessButtonSize: { customizable: false, value: 'small' },

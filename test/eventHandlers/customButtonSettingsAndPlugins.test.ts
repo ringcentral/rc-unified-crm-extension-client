@@ -82,6 +82,41 @@ function pluginList() {
   ];
 }
 
+function fixedConnectorManifest() {
+  return {
+    serverUrl: 'https://server.example',
+    platforms: {
+      salesforce: {
+        name: 'salesforce',
+        displayName: 'Salesforce',
+        environment: {
+          type: 'fixed',
+          url: 'https://crm.example/app',
+        },
+      },
+    },
+  };
+}
+
+function dynamicConnectorManifest() {
+  return {
+    serverUrl: 'https://server.example',
+    platforms: {
+      salesforce: {
+        name: 'salesforce',
+        displayName: 'Salesforce',
+        environment: {
+          type: 'dynamic',
+          url: 'https://*.example',
+        },
+        auth: {
+          type: 'apiKey',
+        },
+      },
+    },
+  };
+}
+
 async function loadButtonHandler(modulePath, overrides = {}) {
   vi.resetModules();
   vi.mocked(axios.get).mockReset().mockResolvedValue({ data: { successful: true } });
@@ -340,8 +375,8 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     ]));
   });
 
-  it('stores selected platform host information and starts CRM connection unless managed OAuth blocks it', async () => {
-    let loaded = await loadButtonHandler(
+  it('stores selected dynamic platform host information and starts CRM connection', async () => {
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/hostnameInputPage.ts',
       {
         manifestService: {
@@ -380,8 +415,10 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       expect.objectContaining({ message: expect.objectContaining({ type: 'rc-adapter-register-third-party-service' }) }),
       expect.objectContaining({ message: { type: 'rc-adapter-navigate-to', path: '/settings' } }),
     ]));
+  });
 
-    loaded = await loadButtonHandler(
+  it('stores fixed platform host information without connecting when managed OAuth blocks visibility', async () => {
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/hostnameInputPage.ts',
       {
         authCore: {
@@ -389,6 +426,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         },
       },
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         platformId: 'fixedcrm',
@@ -402,23 +440,11 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     expect(loaded.authCore.onUserClickConnectButton).not.toHaveBeenCalled();
   });
 
-  it('selects public, shared, and dynamic platforms from connector manifests', async () => {
-    const fixedManifest = {
-      serverUrl: 'https://server.example',
-      platforms: {
-        salesforce: {
-          name: 'salesforce',
-          displayName: 'Salesforce',
-          environment: {
-            type: 'fixed',
-            url: 'https://crm.example/app',
-          },
-        },
-      },
-    };
-    let loaded = await loadButtonHandler(
+  it('selects a public fixed connector manifest and connects immediately', async () => {
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.ts',
     );
+    const fixedManifest = fixedConnectorManifest();
     vi.mocked(axios.get).mockResolvedValueOnce({ data: fixedManifest });
 
     await loaded.handler.onEvent({
@@ -459,26 +485,13 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       platformName: 'salesforce',
       manifest: fixedManifest,
     });
+  });
 
-    const dynamicManifest = {
-      serverUrl: 'https://server.example',
-      platforms: {
-        salesforce: {
-          name: 'salesforce',
-          displayName: 'Salesforce',
-          environment: {
-            type: 'dynamic',
-            url: 'https://*.example',
-          },
-          auth: {
-            type: 'apiKey',
-          },
-        },
-      },
-    };
-    loaded = await loadButtonHandler(
+  it('selects a private dynamic connector manifest and opens hostname input', async () => {
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.ts',
     );
+    const dynamicManifest = dynamicConnectorManifest();
     vi.mocked(axios.get).mockResolvedValueOnce({ data: dynamicManifest });
 
     await loaded.handler.onEvent({
@@ -518,13 +531,18 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         },
       }),
     ]));
+    expect(loaded.authCore.onUserClickConnectButton).not.toHaveBeenCalled();
+  });
 
-    loaded = await loadButtonHandler(
+  it('falls back to shared connector manifest URL when the first shared lookup is unavailable', async () => {
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.ts',
     );
+    const dynamicManifest = dynamicConnectorManifest();
     vi.mocked(axios.get)
       .mockRejectedValueOnce({ response: { status: 404 } })
       .mockResolvedValueOnce({ data: dynamicManifest });
+
     await loaded.handler.onEvent({
       data: dataFor({
         platformList: [
@@ -578,8 +596,8 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     ]));
   });
 
-  it('saves managed OAuth pending values and reports save failures', async () => {
-    let loaded = await loadButtonHandler(
+  it('saves managed OAuth pending values and continues CRM connection', async () => {
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/managedOAuthSetupPage.ts',
     );
 
@@ -606,8 +624,10 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       level: 'success',
     }));
     expect(loaded.authCore.onUserClickConnectButton).toHaveBeenCalled();
+  });
 
-    loaded = await loadButtonHandler(
+  it('reports managed OAuth pending value save failures', async () => {
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/managedOAuthSetupPage.ts',
       {
         authCore: {
@@ -617,6 +637,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         },
       },
     );
+
     await loaded.handler.onEvent({
       data: dataFor({}, 'managedOAuthSetupPage'),
       manifest: baseManifest(),
@@ -630,7 +651,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
   });
 
-  it('saves admin settings, maps custom number format overrides, and refreshes server-side logging subscriptions', async () => {
+  it('saves admin settings and maps custom number format overrides', async () => {
     seedStorage({
       adminSettings: {
         userSettings: {
@@ -643,7 +664,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         },
       },
     });
-    let loaded = await loadButtonHandler(
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/adminSettingsFormSubmit.ts',
     );
 
@@ -675,7 +696,9 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       message: 'Settings saved.',
       ttl: 3000,
     });
+  });
 
+  it('refreshes server-side logging subscriptions after admin call-log settings save', async () => {
     const responseMessage = vi.fn();
     seedStorage({
       adminSettings: {
@@ -684,9 +707,10 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         },
       },
     });
-    loaded = await loadButtonHandler(
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/adminSettingsFormSubmit.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({ serverSideLogging: { enable: true } }, 'callLogDetailsSettingPage'),
       manifest: baseManifest(),
@@ -702,8 +726,10 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       loggingByAdmin: true,
       silence: true,
     }));
+  });
 
-    loaded = await loadButtonHandler(
+  it('reports admin setting upload failures', async () => {
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/adminSettingsFormSubmit.ts',
       {
         adminCore: {
@@ -713,6 +739,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         },
       },
     );
+
     await loaded.handler.onEvent({
       data: dataFor({ anySetting: true }, 'customSettingsPage'),
       manifest: baseManifest(),
@@ -727,7 +754,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
   });
 
-  it('updates managed-auth user field values and handles save failures', async () => {
+  it('updates managed-auth user field values and re-renders filtered users', async () => {
     seedStorage({
       managedAuthSettings: {
         userFields: [
@@ -748,7 +775,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         ],
       },
     });
-    let loaded = await loadButtonHandler(
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthUserPage.ts',
     );
 
@@ -787,8 +814,10 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       message: 'User managed authentication updated.',
       ttl: 3000,
     });
+  });
 
-    loaded = await loadButtonHandler(
+  it('reports managed-auth user field save failures', async () => {
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthUserPage.ts',
       {
         adminCore: {
@@ -798,6 +827,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         },
       },
     );
+
     await loaded.handler.onEvent({
       data: dataFor({ rcExtensionId: '101' }, 'managedAuthUserPage'),
       manifest: baseManifest(),
@@ -809,9 +839,9 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
   });
 
-  it('enables and disables server-side logging while refreshing service manifest and extra fields', async () => {
-    let responseMessage = vi.fn();
-    let loaded = await loadButtonHandler(
+  it('enables server-side logging, refreshes service manifest, and uploads extra fields', async () => {
+    const responseMessage = vi.fn();
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/saveServerSideLogging.ts',
     );
 
@@ -852,9 +882,11 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       message: 'Server side logging do not log numbers updated.',
       ttl: 5000,
     });
+  });
 
-    responseMessage = vi.fn();
-    loaded = await loadButtonHandler(
+  it('disables server-side logging and reports extra-field update warnings', async () => {
+    const responseMessage = vi.fn();
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/saveServerSideLogging.ts',
       {
         adminCore: {
@@ -895,7 +927,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
   });
 
-  it('renders selected plugin configuration pages and handles authorization-state failures', async () => {
+  it('renders selected user plugin configuration with saved config and license status', async () => {
     seedStorage({
       userSettings: {
         'plugin_plugin-1': {
@@ -907,7 +939,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         },
       },
     });
-    let loaded = await loadButtonHandler(
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/selectPlugin.ts',
     );
     vi.mocked(axios.get).mockResolvedValueOnce({
@@ -946,8 +978,10 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       message: 'Connected',
       ttl: 3000,
     });
+  });
 
-    loaded = await loadButtonHandler(
+  it('warns and skips plugin configuration rendering when CRM auth is missing', async () => {
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/selectPlugin.ts',
       {
         authCore: {
@@ -955,6 +989,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         },
       },
     );
+
     await loaded.handler.onEvent({
       data: dataFor({ pluginList: pluginList() }, 'selectPlugin'),
       manifest: baseManifest(),
@@ -968,8 +1003,21 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       ttl: 5000,
     });
     expect(loaded.pluginPages.getPluginConfigurePageRender).not.toHaveBeenCalled();
+  });
 
-    loaded = await loadButtonHandler(
+  it('renders admin plugin configuration after reporting authorization-state failures', async () => {
+    seedStorage({
+      userSettings: {
+        'plugin_plugin-1': {
+          value: {
+            config: {
+              apiKey: { value: 'saved-key' },
+            },
+          },
+        },
+      },
+    });
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/selectPlugin.ts',
       {
         manifestService: {
@@ -991,6 +1039,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         },
       },
     });
+
     await loaded.handler.onEvent({
       data: dataFor({ pluginList: pluginList(), isFromAdmin: true }, 'selectPlugin'),
       manifest: baseManifest(),
@@ -1070,7 +1119,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     ]));
   });
 
-  it('installs and removes admin plugins, refreshing detail, market, and installed pages', async () => {
+  it('installs an admin plugin, registers it remotely, and refreshes plugin pages', async () => {
     seedStorage({
       adminSettings: {
         userSettings: {},
@@ -1083,7 +1132,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         },
       },
     });
-    let loaded = await loadButtonHandler(
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginAdminConfigButtons.ts',
     );
 
@@ -1136,7 +1185,9 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     expect(loaded.pluginPages.getInstalledPluginListPageRender).toHaveBeenCalledWith(expect.objectContaining({
       isFromAdmin: true,
     }));
+  });
 
+  it('removes an admin plugin, unregisters it remotely, and refreshes the installed list', async () => {
     seedStorage({
       adminSettings: {
         userSettings: {
@@ -1155,7 +1206,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         },
       },
     });
-    loaded = await loadButtonHandler(
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginAdminConfigButtons.ts',
     );
     await loaded.handler.onEvent({
@@ -1220,8 +1271,8 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
   });
 
-  it('submits user plugin config and admin plugin detail settings', async () => {
-    let loaded = await loadButtonHandler(
+  it('submits user plugin configuration settings', async () => {
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginConfigurePageSubmit.ts',
     );
 
@@ -1260,7 +1311,9 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       message: 'Configuration is updated.',
       ttl: 3000,
     });
+  });
 
+  it('submits admin plugin detail settings and locks hidden config fields', async () => {
     seedStorage({
       adminSettings: {
         userSettings: {
@@ -1277,9 +1330,10 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         },
       },
     });
-    loaded = await loadButtonHandler(
+    const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginDetailsSettingPage.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         pluginId: 'plugin-1',

@@ -120,10 +120,11 @@ describe('custom-button calldown handlers', () => {
     });
   });
 
-  it('opens calldown contacts from cached rows, phone matches, and fallback contact metadata', async () => {
-    let loaded = await loadCalldownHandler(
+  it('opens calldown contacts from cached row contact metadata', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionOpen.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -136,8 +137,10 @@ describe('custom-button calldown handlers', () => {
       contactId: 'contact-1',
       contactType: 'Lead',
     });
+  });
 
-    loaded = await loadCalldownHandler(
+  it('opens calldown fallback contact metadata when phone matching misses', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionOpen.ts',
       {
         contactCore: {
@@ -146,6 +149,7 @@ describe('custom-button calldown handlers', () => {
         },
       },
     );
+
     await loaded.handler.onEvent({
       data: dataFor({}, {
         contactId: 'fallback-contact',
@@ -161,10 +165,13 @@ describe('custom-button calldown handlers', () => {
       contactId: 'fallback-contact',
       contactType: 'Account',
     });
+  });
 
-    loaded = await loadCalldownHandler(
+  it('opens the matched calldown contact for a phone number', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionOpen.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({}, {
         phoneNumber: '+16505550300',
@@ -178,8 +185,10 @@ describe('custom-button calldown handlers', () => {
       contactId: 'contact-1',
       contactType: 'Lead',
     });
+  });
 
-    loaded = await loadCalldownHandler(
+  it('falls back to phone lookup when the matched calldown contact is only a new-contact placeholder', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionOpen.ts',
       {
         contactCore: {
@@ -193,6 +202,7 @@ describe('custom-button calldown handlers', () => {
         },
       },
     );
+
     await loaded.handler.onEvent({
       data: dataFor({}, {
         phoneNumber: '+16505550400',
@@ -208,7 +218,7 @@ describe('custom-button calldown handlers', () => {
     });
   });
 
-  it('opens schedule edit pages with resolved contacts and existing record data', async () => {
+  it('opens the schedule edit page with resolved contacts and existing record data', async () => {
     const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionEdit.ts',
     );
@@ -238,10 +248,13 @@ describe('custom-button calldown handlers', () => {
         targetOrigin: '*',
       },
     ]));
+  });
 
+  it('turns off log modal loading when a calldown edit record is missing', async () => {
     const missing = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionEdit.ts',
     );
+
     await missing.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -251,10 +264,11 @@ describe('custom-button calldown handlers', () => {
     expect(window.postMessage).toHaveBeenCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
   });
 
-  it('places calls, sends SMS, completes, removes, and saves temporary notes', async () => {
-    let loaded = await loadCalldownHandler(
+  it('places a calldown call and marks the record called', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionCall.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -271,10 +285,13 @@ describe('custom-button calldown handlers', () => {
     expect(axios.patch).toHaveBeenCalledWith('https://server.example/calldown/record-1?rcAccountId=account-1', expect.objectContaining({
       status: 'called',
     }));
+  });
 
-    loaded = await loadCalldownHandler(
+  it('starts a calldown SMS conversation from the selected row', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionText.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -286,12 +303,15 @@ describe('custom-button calldown handlers', () => {
         phoneNumber: '+16505550100',
         conversation: true,
       },
-      targetOrigin: '*',
-    });
+        targetOrigin: '*',
+      });
+  });
 
-    loaded = await loadCalldownHandler(
+  it('marks a calldown record complete from the selected row', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionComplete.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({ searchWithFilters: { search: 'Jane', filter: 'Open' } }),
       manifest: manifest(),
@@ -300,20 +320,26 @@ describe('custom-button calldown handlers', () => {
     expect(axios.patch).toHaveBeenCalledWith('https://server.example/calldown/record-1?rcAccountId=account-1', expect.objectContaining({
       status: 'called',
     }));
+  });
 
-    loaded = await loadCalldownHandler(
+  it('removes a calldown record from the selected row', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionRemove.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({ searchWithFilters: { search: 'Jane', filter: 'Open' } }),
       manifest: manifest(),
       listButtonItemId: 'record-1',
     });
     expect(axios.delete).toHaveBeenCalledWith('https://server.example/calldown/record-1');
+  });
 
-    loaded = await loadCalldownHandler(
+  it('saves temporary call notes by session ID', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/saveTempNoteButton.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({ sessionId: 'session-1', note: 'Call later' }),
       manifest: manifest(),
@@ -324,10 +350,11 @@ describe('custom-button calldown handlers', () => {
     });
   });
 
-  it('schedules new and existing contacts and handles contact creation failures', async () => {
-    let loaded = await loadCalldownHandler(
+  it('creates a new CRM contact before scheduling a calldown record', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/scheduleSubmit.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         phone: '+16505550100',
@@ -358,10 +385,13 @@ describe('custom-button calldown handlers', () => {
       phoneNumber: '+16505550100',
       contactType: 'Lead',
     });
+  });
 
-    loaded = await loadCalldownHandler(
+  it('updates an existing calldown record for a selected contact', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/scheduleSubmit.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         phone: '+16505550100',
@@ -385,8 +415,10 @@ describe('custom-button calldown handlers', () => {
       message: 'Schedule updated successfully',
       ttl: 3000,
     });
+  });
 
-    loaded = await loadCalldownHandler(
+  it('warns and skips scheduling when new-contact creation fails', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/scheduleSubmit.ts',
       {
         contactCore: {
@@ -394,6 +426,7 @@ describe('custom-button calldown handlers', () => {
         },
       },
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         phone: '+16505550100',
@@ -409,12 +442,14 @@ describe('custom-button calldown handlers', () => {
       message: 'Contact creation failed',
       ttl: 3000,
     });
+    expect(axios.post).not.toHaveBeenCalled();
   });
 
-  it('starts schedule flows from calls, contacts, and messages', async () => {
-    let loaded = await loadCalldownHandler(
+  it('warns when scheduling an inbound call from an extension number', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/callLater.ts',
     );
+
     await loaded.handler.onEvent({
       data: {
         requestId: 'request-1',
@@ -432,6 +467,15 @@ describe('custom-button calldown handlers', () => {
       message: 'Extension numbers cannot be scheduled',
       ttl: 3000,
     });
+    expect(chrome.runtime.sendMessage).not.toHaveBeenCalledWith(expect.objectContaining({
+      type: 'c2schedule',
+    }));
+  });
+
+  it('starts a schedule flow from an outbound call phone number', async () => {
+    const loaded = await loadCalldownHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/callLater.ts',
+    );
 
     await loaded.handler.onEvent({
       data: {
@@ -449,10 +493,13 @@ describe('custom-button calldown handlers', () => {
       type: 'c2schedule',
       phoneNumber: '+16505550100',
     });
+  });
 
-    loaded = await loadCalldownHandler(
+  it('starts a schedule flow from the direct number on a contact', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/callLaterInContact.ts',
     );
+
     await loaded.handler.onEvent({
       data: {
         body: {
@@ -471,10 +518,13 @@ describe('custom-button calldown handlers', () => {
       type: 'c2schedule',
       phoneNumber: '+16505550200',
     });
+  });
 
-    loaded = await loadCalldownHandler(
+  it('starts a schedule flow from an outbound message phone number', async () => {
+    const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/callLaterInMessage.ts',
     );
+
     await loaded.handler.onEvent({
       data: {
         body: {

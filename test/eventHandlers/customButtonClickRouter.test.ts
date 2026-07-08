@@ -136,6 +136,19 @@ function eventFor(button, requestId = 'request-1') {
   };
 }
 
+async function expectActionRoutesTo(router, handlers, routes) {
+  for (const [id, handlerName] of routes) {
+    await router.onEvent({
+      data: eventFor({ id }),
+      ...baseContext,
+    });
+    expect(handlers[handlerName].onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      data: eventFor({ id }),
+      ...baseContext,
+    }));
+  }
+}
+
 const baseContext = {
   manifest: {
     serverUrl: 'https://server.example',
@@ -178,7 +191,7 @@ describe('custom button click router', () => {
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
   });
 
-  it('routes appointment header, form-submit, and list actions', async () => {
+  it('routes appointment header actions', async () => {
     const { router, handlers, util } = await loadRouter();
 
     await router.onEvent({
@@ -204,6 +217,16 @@ describe('custom button click router', () => {
       }),
       ...baseContext,
     });
+
+    expect(handlers.customizedBanner.onEvent).toHaveBeenCalled();
+    expect(handlers.appointmentCreate.onEvent).toHaveBeenCalledTimes(1);
+    expect(handlers.appointmentRefreshList.onEvent).toHaveBeenCalledTimes(1);
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('routes appointment form-submit pages', async () => {
+    const { router, handlers } = await loadRouter();
+
     await router.onEvent({
       data: eventFor({ id: 'appointmentEditPage' }),
       ...baseContext,
@@ -213,7 +236,14 @@ describe('custom button click router', () => {
       ...baseContext,
     });
 
-    for (const [id, name] of [
+    expect(handlers.appointmentSave.onEvent).toHaveBeenCalledTimes(1);
+    expect(handlers.appointmentCreateSave.onEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('routes appointment row and list actions', async () => {
+    const { router, handlers } = await loadRouter();
+
+    await expectActionRoutesTo(router, handlers, [
       ['appointmentCreateButton-item-1-action', 'appointmentCreate'],
       ['appointmentsRefreshButton-item-1-action', 'appointmentRefreshList'],
       ['appointmentRefresh-appt-1-action', 'appointmentRefresh'],
@@ -224,26 +254,13 @@ describe('custom button click router', () => {
       ['appointmentSaveButton-appt-1-action', 'appointmentSave'],
       ['appointmentCreateSaveButton-appt-1-action', 'appointmentCreateSave'],
       ['appointmentOpenAppointment-appt-1-action', 'appointmentOpenAppointment'],
-    ]) {
-      await router.onEvent({
-        data: eventFor({ id }),
-        ...baseContext,
-      });
-      expect(handlers[name].onEvent).toHaveBeenCalled();
-    }
-
-    expect(handlers.customizedBanner.onEvent).toHaveBeenCalled();
-    expect(handlers.appointmentCreate.onEvent).toHaveBeenCalledTimes(2);
-    expect(handlers.appointmentRefreshList.onEvent).toHaveBeenCalledTimes(2);
-    expect(handlers.appointmentSave.onEvent).toHaveBeenCalledTimes(2);
-    expect(handlers.appointmentCreateSave.onEvent).toHaveBeenCalledTimes(2);
-    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+    ]);
   });
 
-  it('routes calldown, auth, navigation, error logging, admin, google sheets, contact search, plugin, and user mapping actions', async () => {
-    const { router, handlers, authCore, platformService, util } = await loadRouter();
+  it('routes calldown, auth, navigation, and error-log actions to their handlers', async () => {
+    const { router, handlers } = await loadRouter();
 
-    const routes = [
+    await expectActionRoutesTo(router, handlers, [
       ['callLater-item-action', 'callLater'],
       ['callLaterInMessage-item-action', 'callLaterInMessage'],
       ['callLaterInContact-item-action', 'callLaterInContact'],
@@ -254,56 +271,40 @@ describe('custom button click router', () => {
       ['calldownActionEdit-row-1-action', 'calldownActionEdit'],
       ['calldownActionComplete-row-1-action', 'calldownActionComplete'],
       ['calldownActionRemove-row-1-action', 'calldownActionRemove'],
-      ['editUserMappingPage-row-1-action', 'editUserMappingPage'],
       ['hostnameInputPage-row-1-action', 'hostnameInputPage'],
       ['insightlyGetApiKey-row-1-action', 'insightlyGetApiKey'],
       ['authPage-row-1-action', 'authPage'],
       ['managedOAuthSetupPage-row-1-action', 'managedOAuthSetupPage'],
+      ['selectPlatform-p1=private-action', 'selectPlatform'],
+      ['factoryResetButton-row-1-action', 'factoryResetButton'],
       ['feedbackPage-row-1-action', 'feedbackPage'],
-      ['openInstalledPluginListPage-row-1-action', 'openInstalledPluginListPage'],
       ['openAboutPage-row-1-action', 'openAboutPage'],
       ['openDeveloperSettingsPage-row-1-action', 'openDeveloperSettingsPage'],
-      ['reinitializeUserMappingButton-row-1-action', 'reinitializeUserMappingButton'],
-      ['factoryResetButton-row-1-action', 'factoryResetButton'],
       ['reportIssueButton-row-1-action', 'reportIssueButton'],
       ['documentation-row-1-action', 'documentation'],
-      ['saveServerSideLoggingButton-row-1-action', 'saveServerSideLoggingButton'],
-      ['doNotLogNumbersSubmitButton-row-1-action', 'doNotLogNumbersSubmitButton'],
-      ['openImplementedInterfacesPageButton-row-1-action', 'openImplementedInterfacesPageButton'],
-      ['saveTempNoteButton-row-1-action', 'saveTempNoteButton'],
-      ['googleSheetsConfig-row-1-action', 'googleSheetsConfig'],
-      ['newSheetButton-row-1-action', 'newSheetButton'],
-      ['selectExistingSheetButton-row-1-action', 'selectExistingSheetButton'],
-      ['removeSheetButton-row-1-action', 'removeSheetButton'],
-      ['adminNewSheetButton-row-1-action', 'adminNewSheetButton'],
-      ['adminSelectExistingSheetButton-row-1-action', 'adminSelectExistingSheetButton'],
-      ['adminGoogleSheetSelected-row-1-action', 'adminGoogleSheetSelected'],
-      ['userGoogleSheetSelected-row-1-action', 'userGoogleSheetSelected'],
-      ['adminRemoveSheetButton-row-1-action', 'adminRemoveSheetButton'],
-      ['contactSearchAdapterButtonCallLog-row-1-action', 'contactSearchAdapterButtonCallLog'],
-      ['contactSearchAdapterButtonMessageLog-row-1-action', 'contactSearchAdapterButtonMessageLog'],
-      ['usermappingEdit-map-1-action', 'usermappingEdit'],
-      ['usermappingRemove-map-1-action', 'usermappingRemove'],
-      ['selectPlatform-p1=private-action', 'selectPlatform'],
       ['getErrorLogRecordPageNextStepButton-row-1-action', 'getErrorLogRecordPageNextStepButton'],
       ['errorLogRecordPageStartButton-row-1-action', 'errorLogRecordPageStartButton'],
       ['logRecordSubmitButton-row-1-action', 'logRecordSubmitButton'],
-      ['selectPlugin-plugin-1-action', 'selectPlugin'],
-      ['pluginLicenseRefreshButton-plugin-1-action', 'pluginLicenseRefreshButton'],
+    ]);
+  });
+
+  it('routes admin setting actions', async () => {
+    const { router, handlers } = await loadRouter();
+
+    await expectActionRoutesTo(router, handlers, [
+      ['saveServerSideLoggingButton-row-1-action', 'saveServerSideLoggingButton'],
+      ['doNotLogNumbersSubmitButton-row-1-action', 'doNotLogNumbersSubmitButton'],
+      ['openImplementedInterfacesPageButton-row-1-action', 'openImplementedInterfacesPageButton'],
       ['managedAuthOrgPage-row-1-action', 'managedAuthOrgPage'],
       ['managedAuthUserEdit-row-1-action', 'managedAuthUserEdit'],
       ['deleteManagedOAuthAccount-row-1-action', 'deleteManagedOAuthAccount'],
       ['managedAuthUserPage-row-1-action', 'managedAuthUserPage'],
       ['managedAuthUserEditPage-row-1-action', 'managedAuthUserPage'],
-    ];
+    ]);
+  });
 
-    for (const [id, handlerName] of routes) {
-      await router.onEvent({
-        data: eventFor({ id }),
-        ...baseContext,
-      });
-      expect(handlers[handlerName].onEvent).toHaveBeenCalled();
-    }
+  it('routes direct settings pages to the general settings handler', async () => {
+    const { router, handlers } = await loadRouter();
 
     for (const id of [
       'callAndSMSLoggingSettingPage-row-1-action',
@@ -325,6 +326,10 @@ describe('custom button click router', () => {
       });
     }
     expect(handlers.generalSettings.onEvent).toHaveBeenCalledTimes(12);
+  });
+
+  it('refreshes license status from the router refresh action', async () => {
+    const { router, authCore } = await loadRouter();
 
     await router.onEvent({
       data: eventFor({
@@ -333,6 +338,10 @@ describe('custom button click router', () => {
       ...baseContext,
     });
     expect(authCore.refreshLicenseStatus).toHaveBeenCalledWith({ serverUrl: 'https://server.example' });
+  });
+
+  it('clears platform info from the router clear action', async () => {
+    const { router, platformService, util } = await loadRouter();
 
     await router.onEvent({
       data: eventFor({
@@ -346,7 +355,33 @@ describe('custom button click router', () => {
     }));
   });
 
-  it('handles local browser actions, submit-only plugin routes, and plugin custom buttons', async () => {
+  it('routes google sheets, contact search, plugin, and user mapping actions', async () => {
+    const { router, handlers } = await loadRouter();
+
+    await expectActionRoutesTo(router, handlers, [
+      ['saveTempNoteButton-row-1-action', 'saveTempNoteButton'],
+      ['googleSheetsConfig-row-1-action', 'googleSheetsConfig'],
+      ['newSheetButton-row-1-action', 'newSheetButton'],
+      ['selectExistingSheetButton-row-1-action', 'selectExistingSheetButton'],
+      ['removeSheetButton-row-1-action', 'removeSheetButton'],
+      ['adminNewSheetButton-row-1-action', 'adminNewSheetButton'],
+      ['adminSelectExistingSheetButton-row-1-action', 'adminSelectExistingSheetButton'],
+      ['adminGoogleSheetSelected-row-1-action', 'adminGoogleSheetSelected'],
+      ['userGoogleSheetSelected-row-1-action', 'userGoogleSheetSelected'],
+      ['adminRemoveSheetButton-row-1-action', 'adminRemoveSheetButton'],
+      ['contactSearchAdapterButtonCallLog-row-1-action', 'contactSearchAdapterButtonCallLog'],
+      ['contactSearchAdapterButtonMessageLog-row-1-action', 'contactSearchAdapterButtonMessageLog'],
+      ['openInstalledPluginListPage-row-1-action', 'openInstalledPluginListPage'],
+      ['selectPlugin-plugin-1-action', 'selectPlugin'],
+      ['pluginLicenseRefreshButton-plugin-1-action', 'pluginLicenseRefreshButton'],
+      ['editUserMappingPage-row-1-action', 'editUserMappingPage'],
+      ['reinitializeUserMappingButton-row-1-action', 'reinitializeUserMappingButton'],
+      ['usermappingEdit-map-1-action', 'usermappingEdit'],
+      ['usermappingRemove-map-1-action', 'usermappingRemove'],
+    ]);
+  });
+
+  it('opens the local support popup through the extension runtime', async () => {
     const { router, handlers } = await loadRouter();
 
     await router.onEvent({
@@ -357,6 +392,11 @@ describe('custom button click router', () => {
       type: 'openPopupWindow',
       navigationPath: '/support',
     });
+    expect(handlers.pluginConfigurePageSubmit.onEvent).not.toHaveBeenCalled();
+  });
+
+  it('opens community, release notes, support, and review URLs', async () => {
+    const { router } = await loadRouter();
 
     for (const [id, expectedUrl] of [
       ['openCommunityPageButton-row-1-action', 'https://community.ringcentral.com/groups/app-connect-22'],
@@ -374,6 +414,10 @@ describe('custom button click router', () => {
         expect(window.open).toHaveBeenCalledWith(expectedUrl);
       }
     }
+  });
+
+  it('opens user and admin Google Sheet info URLs from form data', async () => {
+    const { router } = await loadRouter();
 
     await router.onEvent({
       data: eventFor({
@@ -391,6 +435,10 @@ describe('custom button click router', () => {
     });
     expect(window.open).toHaveBeenCalledWith('https://sheet.example', '_blank');
     expect(window.open).toHaveBeenCalledWith('https://admin-sheet.example', '_blank');
+  });
+
+  it('opens plugin link-button URLs from form data', async () => {
+    const { router } = await loadRouter();
 
     await router.onEvent({
       data: eventFor({
@@ -400,6 +448,10 @@ describe('custom button click router', () => {
       ...baseContext,
     });
     expect(window.open).toHaveBeenCalledWith('https://docs.example', '_blank');
+  });
+
+  it('routes submit-only plugin pages to their handlers', async () => {
+    const { router, handlers } = await loadRouter();
 
     await router.onEvent({
       data: eventFor({
@@ -425,6 +477,10 @@ describe('custom button click router', () => {
     expect(handlers.pluginConfigurePageSubmit.onEvent).toHaveBeenCalled();
     expect(handlers.pluginMarketListPage.onEvent).toHaveBeenCalled();
     expect(handlers.pluginDetailsSettingPage.onEvent).toHaveBeenCalled();
+  });
+
+  it('routes user and admin plugin custom buttons to the correct handlers', async () => {
+    const { router, handlers } = await loadRouter();
 
     await router.onEvent({
       data: eventFor({

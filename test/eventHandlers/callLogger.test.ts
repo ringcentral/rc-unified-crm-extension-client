@@ -316,12 +316,12 @@ async function loadLogForm() {
 }
 
 describe('callLogger index', () => {
-  it('handles queue calls, one-time log wait state, extension blocking, and trigger dispatch', async () => {
-    const { callLogger, util, logCore, tempLogNotePage, handlers } = await loadCallLoggerIndex();
-
+  it('notifies and triggers matching when a missed queue call was answered elsewhere', async () => {
+    const { callLogger, util } = await loadCallLoggerIndex();
     seedStorage({
       'is-call-queue-session-1': { isQueue: true },
     });
+
     await callLogger.onEvent({
       data: eventFor({
         redirect: true,
@@ -339,8 +339,12 @@ describe('callLogger index', () => {
     expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
       message: expect.stringContaining('answered by someone else'),
     }));
+  });
 
+  it('acknowledges ringing queue calls without dispatching a log handler', async () => {
+    const { callLogger, util, handlers } = await loadCallLoggerIndex();
     seedStorage({});
+
     await callLogger.onEvent({
       data: eventFor({
         call: baseCall({ queueCall: true, result: 'Ringing' }),
@@ -348,7 +352,11 @@ describe('callLogger index', () => {
       ...context,
     });
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+    expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+  });
 
+  it('opens one-time log wait state as a temporary note page', async () => {
+    const { callLogger, logCore, tempLogNotePage } = await loadCallLoggerIndex();
     seedStorage({
       userSettings: {
         oneTimeLog: { value: true },
@@ -376,7 +384,11 @@ describe('callLogger index', () => {
         targetOrigin: '*',
       },
     ]));
+    expect(logCore.getCachedNote).toHaveBeenCalledWith({ sessionId: 'session-1' });
+  });
 
+  it('blocks extension-number logging when extension logging is disabled', async () => {
+    const { callLogger, util } = await loadCallLoggerIndex();
     seedStorage({
       userSettings: {
         allowExtensionNumberLogging: { value: false },
@@ -393,7 +405,10 @@ describe('callLogger index', () => {
     expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
       message: 'Extension numbers cannot be logged',
     }));
+  });
 
+  it('dispatches call-log sync to createLog when auto logging is enabled and no log exists', async () => {
+    const { callLogger, logCore, handlers } = await loadCallLoggerIndex();
     seedStorage({
       userSettings: {
         autoLogCall: { value: true },
@@ -410,19 +425,31 @@ describe('callLogger index', () => {
       triggerTypeInUse: 'createLog',
       isAutoLog: true,
     }));
+  });
 
+  it('dispatches viewLog when matched logs already exist', async () => {
+    const { callLogger, logCore, handlers } = await loadCallLoggerIndex();
     logCore.getLog.mockResolvedValueOnce({ callLogs: [{ matched: true, sessionId: 'session-1' }] });
+
     await callLogger.onEvent({
       data: eventFor({ triggerType: 'viewLog' }),
       ...context,
     });
     expect(handlers.viewLog.onEvent).toHaveBeenCalled();
+  });
+
+  it('dispatches logForm trigger types to the log form handler', async () => {
+    const { callLogger, handlers } = await loadCallLoggerIndex();
 
     await callLogger.onEvent({
       data: eventFor({ triggerType: 'logForm' }),
       ...context,
     });
     expect(handlers.logForm.onEvent).toHaveBeenCalled();
+  });
+
+  it('acknowledges ringing presence updates without logging', async () => {
+    const { callLogger, util, handlers } = await loadCallLoggerIndex();
 
     await callLogger.onEvent({
       data: eventFor({
@@ -432,12 +459,13 @@ describe('callLogger index', () => {
       ...context,
     });
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+    expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
   });
 });
 
 describe('callLogger createLog', () => {
-  it('returns early when contact matching fails and opens manual call log pages when redirected', async () => {
-    const { createLog, contactCore, util, logUtil, logPage } = await loadCreateLog();
+  it('returns early when contact matching fails', async () => {
+    const { createLog, contactCore, util, logCore } = await loadCreateLog();
     contactCore.getContact.mockResolvedValueOnce({
       matched: false,
       returnMessage: { messageType: 'warning', message: 'No match', ttl: 3000 },
@@ -460,7 +488,11 @@ describe('callLogger createLog', () => {
       message: 'No match',
     }));
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+    expect(logCore.addLog).not.toHaveBeenCalled();
+  });
 
+  it('opens a manual call log page when redirected', async () => {
+    const { createLog, logUtil, logPage } = await loadCreateLog();
     await createLog.onEvent({
       data: eventFor({
         redirect: true,
@@ -499,13 +531,13 @@ describe('callLogger createLog', () => {
     ]));
   });
 
-  it('auto logs unknown and multiple-contact conflict resolutions', async () => {
+  it('auto creates an unknown contact and logs the call with disposition data', async () => {
     seedStorage({
       implementedInterfaces: {
         upsertCallDisposition: true,
       },
     });
-    const { createLog, contactCore, logCore, userCore, dispositionCore, logUtil, util } = await loadCreateLog();
+    const { createLog, contactCore, logCore, dispositionCore, logUtil } = await loadCreateLog();
 
     logUtil.getLogConflictInfo.mockResolvedValueOnce({
       hasConflict: true,
@@ -538,7 +570,15 @@ describe('callLogger createLog', () => {
     expect(dispositionCore.upsertDisposition).toHaveBeenCalledWith(expect.objectContaining({
       dispositions: { disposition: 'demo', note: 'cached note' },
     }));
+  });
 
+  it('auto updates the first alphabetical contact when manual disposition is required', async () => {
+    seedStorage({
+      implementedInterfaces: {
+        upsertCallDisposition: true,
+      },
+    });
+    const { createLog, logCore, userCore, logUtil } = await loadCreateLog();
     userCore.getMultipleContactsPreferenceSetting.mockReturnValueOnce({ value: 'firstAlphabetical' });
     logUtil.getLogConflictInfo.mockResolvedValueOnce({
       hasConflict: true,
@@ -563,7 +603,15 @@ describe('callLogger createLog', () => {
       subject: 'Outbound Call to Alpha Contact',
       note: 'cached note',
     }));
+  });
 
+  it('auto updates the most recently active contact for multiple-contact conflicts', async () => {
+    seedStorage({
+      implementedInterfaces: {
+        upsertCallDisposition: true,
+      },
+    });
+    const { createLog, logCore, userCore, logUtil } = await loadCreateLog();
     userCore.getMultipleContactsPreferenceSetting.mockReturnValueOnce({ value: 'mostRecentActivity' });
     logUtil.getLogConflictInfo.mockResolvedValueOnce({
       hasConflict: true,
@@ -592,7 +640,15 @@ describe('callLogger createLog', () => {
       subject: 'Outbound Call to Alpha Contact',
       note: 'cached note',
     }));
+  });
 
+  it('auto updates the earliest-created contact for multiple-contact conflicts', async () => {
+    seedStorage({
+      implementedInterfaces: {
+        upsertCallDisposition: true,
+      },
+    });
+    const { createLog, logCore, userCore, logUtil } = await loadCreateLog();
     userCore.getMultipleContactsPreferenceSetting.mockReturnValueOnce({ value: 'earliestCreated' });
     logUtil.getLogConflictInfo.mockResolvedValueOnce({
       hasConflict: true,
@@ -621,7 +677,15 @@ describe('callLogger createLog', () => {
       subject: 'Outbound Call to Beta Contact',
       note: 'cached note',
     }));
+  });
 
+  it('warns and skips auto logging when earliest-created contact comparison lacks createdDate', async () => {
+    seedStorage({
+      implementedInterfaces: {
+        upsertCallDisposition: true,
+      },
+    });
+    const { createLog, contactCore, logCore, userCore, logUtil, util } = await loadCreateLog();
     userCore.getMultipleContactsPreferenceSetting.mockReturnValueOnce({ value: 'earliestCreated' });
     logUtil.getLogConflictInfo.mockResolvedValueOnce({
       hasConflict: true,
@@ -636,8 +700,6 @@ describe('callLogger createLog', () => {
         { id: 'contact-a', type: 'Lead', name: 'Alpha Contact' },
       ],
     });
-    const addLogCallsBeforeMissingCreatedDate = logCore.addLog.mock.calls.length;
-    const updateLogCallsBeforeMissingCreatedDate = logCore.updateLog.mock.calls.length;
     await createLog.onEvent({
       data: eventFor({
         call: baseCall({ direction: 'Outbound' }),
@@ -655,8 +717,8 @@ describe('callLogger createLog', () => {
       level: 'warning',
       message: expect.stringContaining('createdDate'),
     }));
-    expect(logCore.addLog).toHaveBeenCalledTimes(addLogCallsBeforeMissingCreatedDate);
-    expect(logCore.updateLog).toHaveBeenCalledTimes(updateLogCallsBeforeMissingCreatedDate);
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(logCore.updateLog).not.toHaveBeenCalled();
   });
 });
 

@@ -333,10 +333,11 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     expect(page.uiSchema.scheduleSubmit['ui:disabled']).toBe(false);
   });
 
-  it('renders simple page updates and debounced searches', async () => {
-    let loaded = await loadPageHandler(
+  it('updates the Google Sheets customized page from current form data', async () => {
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/googleSheetsPage.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({ formData: { sheet: 'Sheet' } }),
       ...context,
@@ -345,10 +346,13 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       formData: { sheet: 'Sheet' },
       userSettings: {},
     }));
+  });
 
-    loaded = await loadPageHandler(
+  it('updates the log-record submission page with PII consent state', async () => {
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/logRecordSubmissionPage.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({ formData: { piiConsent: true } }),
       ...context,
@@ -356,10 +360,13 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     expect(loaded.logRecordSubmissionPage.getLogRecordSubmissionPageRender).toHaveBeenCalledWith({
       piiConsent: true,
     });
+  });
 
-    loaded = await loadPageHandler(
+  it('filters platform selection page results by search text and selected platform', async () => {
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/platformSelectionPage.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         formData: {
@@ -378,10 +385,13 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       selectedPlatform: 'salesforce=public',
       filter: 'All',
     });
+  });
 
-    loaded = await loadPageHandler(
+  it('validates hostname input and refreshes managed-auth state for private connectors', async () => {
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/hostnameInputPage.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         keys: ['url'],
@@ -407,10 +417,11 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     }));
   });
 
-  it('renders managed auth user pages, mapping pages, error record updates, and developer URL navigation', async () => {
-    let loaded = await loadPageHandler(
+  it('renders managed-auth user page search results', async () => {
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/managedAuthUserPage.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         formData: {
@@ -426,10 +437,13 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       searchWord: 'Jane',
       filter: 'Configured',
     }));
+  });
 
-    loaded = await loadPageHandler(
+  it('renders the managed-auth user edit page for the selected extension', async () => {
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/managedAuthUserEditPage.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         formData: {
@@ -444,10 +458,13 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       rcExtension: { id: '101', type: 'User', name: 'Jane User' },
       searchWord: 'Jane',
     }));
+  });
 
-    loaded = await loadPageHandler(
+  it('renders user mapping page search results', async () => {
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/userMappingPage.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         formData: {
@@ -466,10 +483,13 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       searchWord: 'Jane',
       filter: 'Mapped',
     });
+  });
 
-    loaded = await loadPageHandler(
+  it('updates selected RC extensions on the edit user mapping page', async () => {
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/editUserMappingPage.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         formData: {
@@ -484,10 +504,13 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     expect(loaded.editUserMappingPage.renderEditUserMappingPage).toHaveBeenCalledWith(expect.objectContaining({
       selectedRcExtensionId: ['101'],
     }));
+  });
 
-    loaded = await loadPageHandler(
+  it('updates the error log record page as issue details change', async () => {
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/getErrorLogRecordPage.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         keys: ['issueDescription'],
@@ -503,10 +526,13 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       email: 'user@example.test',
       issueDescription: 'Something broke',
     });
+  });
 
-    loaded = await loadPageHandler(
+  it('opens developer documentation for the selected implemented interface', async () => {
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/developerSettingsPage.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         formData: {
@@ -518,7 +544,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     expect(window.open).toHaveBeenCalledWith('https://appconnect.labs.ringcentral.com/developers/interfaces/getUserList', '_blank');
   });
 
-  it('updates contact search result log pages and cached search contacts', async () => {
+  it('updates call-log contact search result pages and caches the selected contact', async () => {
     seedStorage({
       cacheLogPageData: {
         id: 'log-1',
@@ -526,9 +552,10 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       },
       'rc-crm-search-contact-+16505550100': [{ id: 'cached', type: 'Lead', name: 'Cached', phone: '+16505550100' }],
     });
-    let loaded = await loadPageHandler(
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/contactSearchResultCallLog.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         page: {
@@ -558,10 +585,20 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     expect(readStorage()['rc-crm-search-contact-+16505550100']).toEqual(expect.arrayContaining([
       expect.objectContaining({ id: 'selected' }),
     ]));
+  });
 
-    loaded = await loadPageHandler(
+  it('updates message-log contact search result pages and navigates back to the message log', async () => {
+    seedStorage({
+      cacheLogPageData: {
+        id: 'log-1',
+        contactInfo: [{ id: 'existing', type: 'Lead', name: 'Existing' }],
+      },
+      'rc-crm-search-contact-+16505550200': [{ id: 'cached', type: 'Lead', name: 'Cached', phone: '+16505550200' }],
+    });
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/contactSearchResultMessageLog.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         keys: ['contactList'],
@@ -598,8 +635,8 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     ]));
   });
 
-  it('handles multi-contact prompt search/open, unlogged call opening, admin sheets, and plugin admin details', async () => {
-    let loaded = await loadPageHandler(
+  it('refreshes the multi-contact prompt when the search text changes', async () => {
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/getMultiContactPopPromptPage.ts',
     );
     await loaded.handler.onEvent({
@@ -620,6 +657,12 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       contactInfo: [{ id: 'contact-1' }],
       searchWord: 'Jane',
     });
+  });
+
+  it('opens the selected contact from the multi-contact prompt', async () => {
+    const loaded = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/getMultiContactPopPromptPage.ts',
+    );
 
     await loaded.handler.onEvent({
       data: dataFor({
@@ -638,7 +681,9 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       contactId: 'contact-1',
     });
     expect(loaded.util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
 
+  it('opens a cached unlogged call as a create-log page with contact search enabled', async () => {
     const record = { sessionId: 'call-1' };
     vi.mocked(chrome.storage.local.get).mockImplementation(async (keys) => {
       if (typeof keys === 'object' && Object.prototype.hasOwnProperty.call(keys, 'unloggedCallPageDataCache')) {
@@ -662,7 +707,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       }
       return {};
     });
-    loaded = await loadPageHandler(
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/unloggedCallPage.ts',
     );
     await loaded.handler.onEvent({
@@ -681,7 +726,9 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       contactPhoneNumber: '+16505550100',
       useContactSearch: true,
     }));
+  });
 
+  it('enforces admin Google Sheets settings for all users', async () => {
     mockStorageGetFromSnapshot();
     seedStorage({
       adminSettings: {
@@ -697,7 +744,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
         },
       },
     });
-    loaded = await loadPageHandler(
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/adminGoogleSheetsPage.ts',
     );
     await loaded.handler.onEvent({
@@ -718,8 +765,10 @@ describe('customizedPage inputChanged remaining page handlers', () => {
       ttl: 3000,
     });
     expect(readStorage().adminSettings.userSettings.googleSheetsName.customizable).toBe(false);
+  });
 
-    loaded = await loadPageHandler(
+  it('renders plugin admin details from stored admin plugin settings', async () => {
+    const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/pluginAdminSettingsPage.ts',
     );
     await loaded.handler.onEvent({

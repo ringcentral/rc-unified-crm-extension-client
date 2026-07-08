@@ -194,10 +194,11 @@ describe('custom-button miscellaneous action handlers', () => {
     });
   });
 
-  it('handles navigation actions and banner dismissal/opening', async () => {
-    let loaded = await loadAction(
+  it('stores the banner dismissal timestamp', async () => {
+    const loaded = await loadAction(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/customizedBanner.ts',
     );
+
     await loaded.handler.onEvent({
       data: {
         body: {
@@ -211,6 +212,12 @@ describe('custom-button miscellaneous action handlers', () => {
       manifest: manifest(),
     });
     expect(readStorage().myBannerDismissedDate).toEqual(expect.any(Number));
+  });
+
+  it('opens the log-record submission page from the customized banner', async () => {
+    const loaded = await loadAction(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/customizedBanner.ts',
+    );
 
     await loaded.handler.onEvent({
       data: dataFor({}, false),
@@ -225,39 +232,68 @@ describe('custom-button miscellaneous action handlers', () => {
         },
       }),
     ]));
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/openAboutPage.ts');
+  it('opens the about page with platform context', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/openAboutPage.ts');
+
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest(), platformName: 'salesforce' });
+
     expect(loaded.pages.getAboutPageRender).toHaveBeenCalledWith({ platformName: 'salesforce', manifest: manifest() });
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/openDeveloperSettingsPage.ts');
+  it('opens the developer settings page', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/openDeveloperSettingsPage.ts');
+
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest() });
+
     expect(loaded.pages.getDeveloperSettingsPageRender).toHaveBeenCalled();
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/openImplementedInterfacesPageButton.ts');
+  it('opens the implemented interfaces page', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/openImplementedInterfacesPageButton.ts');
+
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest() });
-    expect(loaded.pages.getImplementedInterfacesPageRender).toHaveBeenCalled();
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/feedbackPage.ts');
+    expect(loaded.pages.getImplementedInterfacesPageRender).toHaveBeenCalled();
+  });
+
+  it('opens the configured feedback URL with encoded user and rating context', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/feedbackPage.ts');
+
     await loaded.handler.onEvent({
       data: dataFor({ rating: 'great service' }),
       manifest: manifest(),
       platformName: 'salesforce',
     });
     expect(window.open).toHaveBeenCalledWith('https://feedback.example?name=Jane Agent&email=jane@example.test&crm=Salesforce&v=1.7.35&rating=great%20service', '_blank');
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/documentation.ts');
+  it('opens documentation and tracks the documentation page', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/documentation.ts');
+
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest(), platform: { documentationUrl: 'https://docs.example' } });
+
     expect(window.open).toHaveBeenCalledWith('https://docs.example');
     expect(loaded.analytics.trackPage).toHaveBeenCalledWith('/documentation');
+  });
+
+  it('warns when documentation URL is missing', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/navigation/documentation.ts');
+
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest(), platform: {} });
+
     expect(loaded.util.showNotification).toHaveBeenCalledWith({
       level: 'warning',
       message: 'Documentation URL is not set',
       ttl: 3000,
     });
+    expect(window.open).not.toHaveBeenCalled();
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/insightlyGetApiKey.ts');
+  it('opens the Insightly API key settings page from platform hostname', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/insightlyGetApiKey.ts');
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -268,14 +304,19 @@ describe('custom-button miscellaneous action handlers', () => {
     expect(window.open).toHaveBeenCalledWith('https://insightly.example/Users/UserSettings');
   });
 
-  it('records and uploads error logs through the issue report flow', async () => {
-    let loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/reportIssueButton.ts');
+  it('opens the issue report page with the current RC user email', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/reportIssueButton.ts');
+
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest() });
+
     expect(loaded.pages.getErrorLogRecordPageRender).toHaveBeenCalledWith({
       email: 'agent@example.test',
     });
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/errorLogRecordPageNextStep.ts');
+  it('stores issue description before moving the issue report flow to step two', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/errorLogRecordPageNextStep.ts');
+
     await loaded.handler.onEvent({
       data: dataFor({ email: 'agent@example.test', issueDescription: 'Broken flow' }),
       manifest: manifest(),
@@ -286,8 +327,11 @@ describe('custom-button miscellaneous action handlers', () => {
       email: 'agent@example.test',
       issueDescription: 'Broken flow',
     });
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/errorLogRecordPageStart.ts');
+  it('starts recording logs with basic extension context', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/errorLogRecordPageStart.ts');
+
     await loaded.handler.onEvent({
       data: dataFor({ email: 'agent@example.test', issueDescription: 'Broken flow' }),
       manifest: manifest(),
@@ -297,9 +341,16 @@ describe('custom-button miscellaneous action handlers', () => {
     expect(loaded.logRecorder.logBasicInfo).toHaveBeenCalledWith(expect.objectContaining({
       version: '1.7.35',
     }));
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/logRecordSubmit.ts');
+  it('uploads recorded logs and notifies success', async () => {
+    seedStorage({
+      issueDescription: 'Broken flow',
+    });
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/logRecordSubmit.ts');
+
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest() });
+
     expect(loaded.logRecorder.logAction).toHaveBeenCalledWith({ name: 'user description', data: 'Broken flow' });
     expect(loaded.logRecorder.uploadLogs).toHaveBeenCalledWith({ serverUrl: 'https://server.example' });
     expect(loaded.util.showNotification).toHaveBeenCalledWith({
@@ -307,8 +358,10 @@ describe('custom-button miscellaneous action handlers', () => {
       message: 'Successfully uploaded.',
       ttl: 3000,
     });
+  });
 
-    loaded = await loadAction(
+  it('notifies failure when recorded log upload fails', async () => {
+    const loaded = await loadAction(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/logRecordSubmit.ts',
       {
         logRecorder: {
@@ -318,7 +371,9 @@ describe('custom-button miscellaneous action handlers', () => {
         },
       },
     );
+
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest() });
+
     expect(loaded.util.showNotification).toHaveBeenCalledWith({
       level: 'error',
       message: 'Failed to upload logs. Please try again.',
@@ -326,8 +381,9 @@ describe('custom-button miscellaneous action handlers', () => {
     });
   });
 
-  it('updates admin settings and managed auth action pages', async () => {
-    let loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/doNotLogNumbersSubmit.ts');
+  it('updates server-side do-not-log numbers and reloads the service manifest', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/doNotLogNumbersSubmit.ts');
+
     await loaded.handler.onEvent({
       data: dataFor({ doNotLogNumbersHolder: { doNotLogNumbers: '+16505550100' } }),
       manifest: manifest(),
@@ -338,8 +394,11 @@ describe('custom-button miscellaneous action handlers', () => {
       doNotLogNumbers: '+16505550100',
     });
     expect(loaded.embeddableServices.getServiceManifest).toHaveBeenCalled();
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthOrgPage.ts');
+  it('saves managed-auth org settings and removes blank secret fields', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthOrgPage.ts');
+
     await loaded.handler.onEvent({
       data: dataFor({ clientId: 'client-id', clientSecret: '' }),
       manifest: manifest(),
@@ -350,8 +409,11 @@ describe('custom-button miscellaneous action handlers', () => {
       values: { clientId: 'client-id' },
       fieldsToRemove: ['clientSecret'],
     });
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthUserEdit.ts');
+  it('opens managed-auth user edit page for the selected extension', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthUserEdit.ts');
+
     await loaded.handler.onEvent({
       data: dataFor({ userSearch: { search: 'Jane', filter: 'All' } }),
       listButtonItemId: '101',
@@ -359,17 +421,22 @@ describe('custom-button miscellaneous action handlers', () => {
     expect(loaded.pages.getManagedAuthUserEditPageRender).toHaveBeenCalledWith(expect.objectContaining({
       rcExtension: { id: '101', type: 'User', name: 'Jane User' },
     }));
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/deleteManagedOAuthAccount.ts');
+  it('deletes the managed OAuth account for the current platform', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/deleteManagedOAuthAccount.ts');
+
     await loaded.handler.onEvent({ manifest: manifest(), platformName: 'salesforce' });
+
     expect(loaded.adminCore.deleteManagedOAuthAccount).toHaveBeenCalledWith({
       serverUrl: 'https://server.example',
       platformName: 'salesforce',
     });
   });
 
-  it('updates user mapping action pages', async () => {
-    let loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/usermappingRemove.ts');
+  it('removes RC extension assignments from a selected CRM user mapping', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/usermappingRemove.ts');
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -387,8 +454,11 @@ describe('custom-button miscellaneous action handlers', () => {
         ],
       }),
     });
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/usermappingEdit.ts');
+  it('opens the user-mapping edit page for the selected CRM user', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/usermappingEdit.ts');
+
     await loaded.handler.onEvent({
       data: dataFor({ allUserMapping: [{ crmUser: { id: 'crm-1' } }] }),
       platform: { displayName: 'Salesforce' },
@@ -397,8 +467,11 @@ describe('custom-button miscellaneous action handlers', () => {
     expect(loaded.pages.renderEditUserMappingPage).toHaveBeenCalledWith(expect.objectContaining({
       userMapping: { crmUser: { id: 'crm-1' } },
     }));
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/editUserMappingPage.ts');
+  it('updates an existing user mapping and re-renders the mapping page', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/editUserMappingPage.ts');
+
     await loaded.handler.onEvent({
       data: dataFor({
         crmUserId: 'crm-1',
@@ -425,7 +498,9 @@ describe('custom-button miscellaneous action handlers', () => {
       userMapping: [{ crmUser: { id: 'crm-1' }, rcUser: [] }],
       platformDisplayName: 'Salesforce',
     });
+  });
 
+  it('removes an existing user mapping when its RC extension list becomes empty', async () => {
     seedStorage({
       adminSettings: {
         userMappings: [
@@ -436,6 +511,8 @@ describe('custom-button miscellaneous action handlers', () => {
         ],
       },
     });
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/editUserMappingPage.ts');
+
     await loaded.handler.onEvent({
       data: dataFor({
         crmUserId: 'crm-1',
@@ -450,10 +527,14 @@ describe('custom-button miscellaneous action handlers', () => {
         userMappings: [],
       },
     });
+  });
 
+  it('creates a new user mapping when no admin settings exist', async () => {
     seedStorage({
       adminSettings: {},
     });
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/editUserMappingPage.ts');
+
     await loaded.handler.onEvent({
       data: dataFor({
         crmUserId: 2,
@@ -473,14 +554,19 @@ describe('custom-button miscellaneous action handlers', () => {
         ],
       },
     });
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/reinitializeUserMappingButton.ts');
+  it('reinitializes user mapping from the server', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/userMapping/reinitializeUserMappingButton.ts');
+
     await loaded.handler.onEvent({ data: dataFor(), manifest: manifest() });
+
     expect(loaded.adminCore.reinitializeUserMapping).toHaveBeenCalledWith({ serverUrl: 'https://server.example' });
   });
 
-  it('updates plugin action pages', async () => {
-    let loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginConfigButtons.ts');
+  it('opens plugin OAuth and caches the plugin config form data', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginConfigButtons.ts');
+
     await loaded.handler.onEvent({
       data: dataFor({
         pluginId: 'plugin-1',
@@ -496,6 +582,10 @@ describe('custom-button miscellaneous action handlers', () => {
     });
     expect(loaded.authCore.handleThirdPartyOAuthWindow).toHaveBeenCalledWith('https://plugin.example/auth');
     expect(readStorage().cachedPluginConfigFormData.pluginId).toBe('plugin-1');
+  });
+
+  it('logs out plugin config and renders the plugin configuration page as logged out', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginConfigButtons.ts');
 
     await loaded.handler.onEvent({
       data: dataFor({
@@ -515,8 +605,11 @@ describe('custom-button miscellaneous action handlers', () => {
       isLoggedIn: false,
       hasValidLicense: true,
     }));
+  });
 
-    loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginLicenseRefreshButton.ts');
+  it('refreshes plugin license status on the plugin configuration page', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginLicenseRefreshButton.ts');
+
     await loaded.handler.onEvent({
       data: dataFor({
         pluginId: 'plugin-1',

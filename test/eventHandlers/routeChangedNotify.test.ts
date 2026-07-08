@@ -94,7 +94,7 @@ describe('route changed notify handler', () => {
     expect(readStorage().autoPopupMainConverastionId).toBeNull();
   });
 
-  it('refreshes or hides the calldown tab when navigating to it', async () => {
+  it('refreshes the calldown tab when CRM is authorized and the tab is enabled', async () => {
     seedStorage({
       crmAuthed: true,
       rcUnifiedCrmExtJwt: 'jwt-1',
@@ -102,7 +102,7 @@ describe('route changed notify handler', () => {
         showCalldownTab: { value: true },
       },
     });
-    let loaded = await loadRouteChanged();
+    const loaded = await loadRouteChanged();
 
     await loaded.handler.onEvent({
       data: {
@@ -123,14 +123,17 @@ describe('route changed notify handler', () => {
         }),
       }),
     ]));
+  });
 
+  it('hides the calldown tab when CRM is not authorized', async () => {
     seedStorage({
       crmAuthed: false,
       userSettings: {
         showCalldownTab: { value: true },
       },
     });
-    loaded = await loadRouteChanged();
+    const loaded = await loadRouteChanged();
+
     await loaded.handler.onEvent({
       data: {
         path: '/customizedTabs/calldownPage',
@@ -151,7 +154,7 @@ describe('route changed notify handler', () => {
     ]));
   });
 
-  it('refreshes appointments only when CRM auth, support, and user setting allow it', async () => {
+  it('refreshes appointments when CRM auth, support, and user setting allow it', async () => {
     seedStorage({
       crmAuthed: true,
       rcUnifiedCrmExtJwt: 'jwt-1',
@@ -173,8 +176,17 @@ describe('route changed notify handler', () => {
       forceSync: false,
     }));
     expect(window.postMessage).toHaveBeenCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
+  });
 
-    loaded = await loadRouteChanged({
+  it('skips appointment refresh when the platform does not support appointments', async () => {
+    seedStorage({
+      crmAuthed: true,
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      userSettings: {
+        showAppointmentsTab: { value: true },
+      },
+    });
+    const loaded = await loadRouteChanged({
       manifestService: {
         getManifest: vi.fn(async () => ({
           platforms: {
@@ -189,6 +201,7 @@ describe('route changed notify handler', () => {
         })),
       },
     });
+
     await loaded.handler.onEvent({
       data: {
         path: '/customizedTabs/appointmentsPage',

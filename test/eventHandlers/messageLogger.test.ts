@@ -299,11 +299,10 @@ describe('messageLogger', () => {
     }));
   });
 
-  it('handles voicemail and fax auto-log conflicts and manual-disposition warnings', async () => {
+  it('warns when voicemail auto logging hits a conflict requiring manual disposition', async () => {
     seedStorage({
       userSettings: {
         autoLogVoicemail: { value: true },
-        autoLogOutboundFax: { value: true },
       },
     });
     const { messageLogger, logUtil, util, logCore } = await loadMessageLogger();
@@ -329,6 +328,16 @@ describe('messageLogger', () => {
     expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
       message: expect.stringContaining('Manual disposition might be needed'),
     }));
+    expect(logCore.addLog).not.toHaveBeenCalled();
+  });
+
+  it('auto logs outbound fax messages with selected additional submission', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogOutboundFax: { value: true },
+      },
+    });
+    const { messageLogger, logUtil, logCore } = await loadMessageLogger();
 
     logUtil.getLogConflictInfo.mockResolvedValueOnce({
       hasConflict: false,
@@ -352,7 +361,7 @@ describe('messageLogger', () => {
     }));
   });
 
-  it('submits single and grouped manual message log forms', async () => {
+  it('submits a manual message log form for a new contact and opens it after creation', async () => {
     seedStorage({
       userSettings: {
         openContactPageAfterCreation: { value: true },
@@ -394,6 +403,13 @@ describe('messageLogger', () => {
       contactType: 'Lead',
       contactName: 'New Contact',
     }));
+  });
+
+  it('submits a grouped manual message log form section for an existing contact', async () => {
+    seedStorage({
+      userSettings: {},
+    });
+    const { messageLogger, logCore } = await loadMessageLogger();
 
     await messageLogger.onEvent({
       data: eventFor({
@@ -422,7 +438,7 @@ describe('messageLogger', () => {
     }));
   });
 
-  it('opens single and group message log pages with cached contacts and defaulted form data', async () => {
+  it('opens a single message log page with cached contacts and defaulted form data', async () => {
     seedStorage({
       userSettings: {
         messageAutoPopup: { value: true },
@@ -434,7 +450,7 @@ describe('messageLogger', () => {
         { id: 'cached-contact', type: 'Lead', name: 'Cached Contact' },
       ],
     });
-    const { messageLogger, logUtil, logPage, groupLogPage } = await loadMessageLogger();
+    const { messageLogger, logUtil, logPage } = await loadMessageLogger();
 
     await messageLogger.onEvent({
       data: eventFor({
@@ -482,6 +498,21 @@ describe('messageLogger', () => {
         targetOrigin: '*',
       },
     ]));
+  });
+
+  it('opens a group message log page with fax-specific defaulted form data', async () => {
+    seedStorage({
+      userSettings: {
+        messageAutoPopup: { value: true },
+      },
+      implementedInterfaces: {
+        findContactWithName: true,
+      },
+      'rc-crm-search-contact-+16505550100': [
+        { id: 'cached-contact', type: 'Lead', name: 'Cached Contact' },
+      ],
+    });
+    const { messageLogger, logUtil, groupLogPage } = await loadMessageLogger();
 
     await messageLogger.onEvent({
       data: eventFor({

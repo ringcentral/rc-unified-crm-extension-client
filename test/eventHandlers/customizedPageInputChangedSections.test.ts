@@ -271,11 +271,13 @@ describe('customizedPage inputChanged section handlers', () => {
     await expectSimpleSectionRoutesToRender(simpleSettingsSectionRoutes.slice(8));
   });
 
-  it('renders call log details with refreshed server-side logging subscription state and fallback state', async () => {
-    let loaded = await loadSectionHandler(
+  it('renders call log details with refreshed server-side logging subscription state', async () => {
+    const loaded = await loadSectionHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/callLogDetailsSetting.ts',
     );
+
     await loaded.handler.onEvent(context);
+
     expect(loaded.adminCore.getServerSideLogging).toHaveBeenCalledWith({ platform: context.platform });
     expect(loaded.callLogDetailsSettingPage.getCallLogDetailsSettingPageRender).toHaveBeenCalledWith({
       adminUserSettings: expect.objectContaining({
@@ -284,8 +286,10 @@ describe('customizedPage inputChanged section handlers', () => {
       userPermissions: { edit: true },
       serverSideLoggingSubscribed: true,
     });
+  });
 
-    loaded = await loadSectionHandler(
+  it('renders call log details with server-side logging fallback when subscription lookup fails', async () => {
+    const loaded = await loadSectionHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/callLogDetailsSetting.ts',
       {
         adminCore: {
@@ -295,17 +299,21 @@ describe('customizedPage inputChanged section handlers', () => {
         },
       },
     );
+
     await loaded.handler.onEvent(context);
+
     expect(loaded.callLogDetailsSettingPage.getCallLogDetailsSettingPageRender).toHaveBeenCalledWith(expect.objectContaining({
       serverSideLoggingSubscribed: false,
     }));
   });
 
-  it('renders server-side logging, managed auth, admin Google Sheets, and user mapping sections', async () => {
-    let loaded = await loadSectionHandler(
+  it('renders server-side logging section with subscription and additional field values', async () => {
+    const loaded = await loadSectionHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/serverSideLoggingSetting.ts',
     );
+
     await loaded.handler.onEvent(context);
+
     expect(loaded.serverSideLoggingPage.getServerSideLoggingSettingPageRender).toHaveBeenCalledWith(expect.objectContaining({
       subscriptionLevel: 'Account',
       doNotLogNumbers: ['+16505550100'],
@@ -315,20 +323,28 @@ describe('customizedPage inputChanged section handlers', () => {
       sources: ['Voice'],
       userPermissions: { edit: true },
     }));
+  });
 
-    loaded = await loadSectionHandler(
+  it('renders managed authentication section availability', async () => {
+    const loaded = await loadSectionHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedAuthentication.ts',
     );
+
     await loaded.handler.onEvent(context);
+
     expect(loaded.managedAuthenticationPage.getManagedAuthenticationPageRender).toHaveBeenCalledWith({
       hasOrgFields: true,
       hasUserFields: true,
     });
+  });
 
-    loaded = await loadSectionHandler(
+  it('renders managed auth user section with RC extension choices', async () => {
+    const loaded = await loadSectionHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedAuthUser.ts',
     );
+
     await loaded.handler.onEvent(context);
+
     expect(loaded.util.getRcContactInfo).toHaveBeenCalled();
     expect(loaded.managedAuthUserPage.getManagedAuthUserPageRender).toHaveBeenCalledWith(expect.objectContaining({
       userFields: [{ const: 'clientSecret' }],
@@ -337,22 +353,30 @@ describe('customizedPage inputChanged section handlers', () => {
         { id: '201', type: 'Department', name: 'Support Team' },
       ],
     }));
+  });
 
-    loaded = await loadSectionHandler(
+  it('renders admin Google Sheets configuration section', async () => {
+    const loaded = await loadSectionHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/googleSheetsAdminConfig.ts',
     );
+
     await loaded.handler.onEvent(context);
+
     expect(loaded.adminGoogleSheetsPage.renderAdminGoogleSheetsPage).toHaveBeenCalledWith({
       manifest: context.manifest,
       adminSettings: expect.objectContaining({
         userSettings: expect.any(Object),
       }),
     });
+  });
 
-    loaded = await loadSectionHandler(
+  it('renders user mapping section and persists normalized admin mappings', async () => {
+    const loaded = await loadSectionHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/userMapping.ts',
     );
+
     await loaded.handler.onEvent(context);
+
     expect(loaded.adminCore.uploadAdminSettings).toHaveBeenCalledWith({
       serverUrl: 'https://server.example',
       adminSettings: expect.objectContaining({
@@ -375,19 +399,25 @@ describe('customizedPage inputChanged section handlers', () => {
     });
   });
 
-  it('renders admin plugin settings and installed plugin lists with license status', async () => {
-    let loaded = await loadSectionHandler(
+  it('renders admin plugin settings section with installed plugins', async () => {
+    const loaded = await loadSectionHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/pluginsAdminConfig.ts',
     );
+
     await loaded.handler.onEvent(context);
+
     expect(loaded.pluginPages.getPluginsSettingPageRender).toHaveBeenCalledWith({
       installedPluginList: [expect.objectContaining({ id: 'plugin-1' })],
     });
+  });
 
-    loaded = await loadSectionHandler(
+  it('renders installed plugin list section with license status', async () => {
+    const loaded = await loadSectionHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/installedPlugins.ts',
     );
+
     await loaded.handler.onEvent(context);
+
     expect(loaded.pluginService.getPluginLicenseStatus).toHaveBeenCalledWith(expect.objectContaining({
       pluginId: 'plugin-1',
     }));

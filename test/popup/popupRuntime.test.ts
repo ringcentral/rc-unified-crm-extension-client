@@ -205,7 +205,7 @@ describe('popup runtime', () => {
     expect(runtime.embeddableServices.getServiceManifest).toHaveBeenCalledTimes(2);
   });
 
-  it('adds authorization, strips jwtToken query params, logs axios traffic, and handles refreshed tokens', async () => {
+  it('adds authorization from jwtToken query params and logs API requests', async () => {
     const runtime = await loadPopupRuntime();
     runtime.logRecorder.isRecordingLogs.mockResolvedValue(true);
 
@@ -221,17 +221,30 @@ describe('popup runtime', () => {
     expect(runtime.logRecorder.logAction).toHaveBeenCalledWith(expect.objectContaining({
       name: 'API_REQUEST',
     }));
+  });
 
+  it('skips authorization when a request opts out', async () => {
+    const runtime = await loadPopupRuntime();
     const skipped = await runtime.requestInterceptors[0].fulfilled({
       url: '/public',
       skipAuthorization: true,
     });
     expect(skipped.headers).toBeUndefined();
+  });
+
+  it('logs request interceptor errors before rethrowing', async () => {
+    const runtime = await loadPopupRuntime();
+    runtime.logRecorder.isRecordingLogs.mockResolvedValue(true);
 
     await expect(runtime.requestInterceptors[0].rejected(new Error('request failed'))).rejects.toThrow('request failed');
     expect(runtime.logRecorder.logAction).toHaveBeenCalledWith(expect.objectContaining({
       name: 'API_REQUEST_ERROR',
     }));
+  });
+
+  it('stores refreshed JWT tokens from successful responses and logs API responses', async () => {
+    const runtime = await loadPopupRuntime();
+    runtime.logRecorder.isRecordingLogs.mockResolvedValue(true);
 
     await expect(runtime.responseInterceptors[0].fulfilled({
       headers: {
@@ -250,8 +263,13 @@ describe('popup runtime', () => {
     expect(runtime.logRecorder.logAction).toHaveBeenCalledWith(expect.objectContaining({
       name: 'API_RESPONSE',
     }));
+  });
 
+  it('handles response errors, clears CRM auth on 401, and stores refreshed error tokens', async () => {
+    const runtime = await loadPopupRuntime();
+    runtime.logRecorder.isRecordingLogs.mockResolvedValue(true);
     const authError = new Error('unauthorized');
+
     authError.config = {
       url: '/records?jwtToken=expired',
       headers: { Authorization: 'Bearer expired' },

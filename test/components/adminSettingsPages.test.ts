@@ -137,11 +137,8 @@ function userSettings() {
 }
 
 describe('managed settings page renderers', () => {
-  it('renders high-level managed setting pages with saved values and optional fields', async () => {
+  it('renders advanced feature settings with saved values', async () => {
     const advancedPage = await loadPage('../../src/components/admin/managedSettings/advancedFeaturesSettingPage.ts');
-    const loggingPage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSettingPage.ts');
-    const contactPage = await loadPage('../../src/components/admin/managedSettings/contactSettingPage.ts');
-    const pluginsPage = await loadPage('../../src/components/admin/managedSettings/pluginsSettingPage.ts');
 
     expect(advancedPage.getAdvancedFeaturesSettingPageRender({
       adminUserSettings: adminUserSettings(),
@@ -150,6 +147,10 @@ describe('managed settings page renderers', () => {
       developerMode: { customizable: false, value: true },
       popupLogPageAfterCall: { customizable: false, value: true },
     });
+  });
+
+  it('renders call and SMS logging setting navigation with saved values', async () => {
+    const loggingPage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSettingPage.ts');
 
     const logging = loggingPage.getCallAndSMSLoggingSettingPageRender({
       adminUserSettings: adminUserSettings(),
@@ -163,6 +164,10 @@ describe('managed settings page renderers', () => {
       enableRetroCallLogSync: { customizable: false, value: false },
       oneTimeLog: { customizable: false, value: true },
     });
+  });
+
+  it('renders contact settings with extension-number logging controls', async () => {
+    const contactPage = await loadPage('../../src/components/admin/managedSettings/contactSettingPage.ts');
 
     const contact = contactPage.getContactSettingPageRender({
       adminUserSettings: adminUserSettings(),
@@ -176,6 +181,10 @@ describe('managed settings page renderers', () => {
       multiContactMatchBehavior: { customizable: false, value: 'openAllMatches' },
       allowExtensionNumberLogging: { customizable: false, value: true },
     });
+  });
+
+  it('renders plugin setting navigation from installed plugins', async () => {
+    const pluginsPage = await loadPage('../../src/components/admin/managedSettings/pluginsSettingPage.ts');
 
     const plugins = pluginsPage.getPluginsSettingPageRender({
       installedPluginList: [
@@ -247,9 +256,8 @@ describe('managed settings page renderers', () => {
     });
   });
 
-  it('renders call log detail and auto-log preference pages with permission-dependent controls', async () => {
+  it('renders call log detail pages with AI and RingSense controls disabled by permissions', async () => {
     const callLogDetailsPage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSetting/callLogDetailsSettingPage.ts');
-    const autoLogPreferencePage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSetting/autoLogPreferenceSettingPage.ts');
 
     const disabled = callLogDetailsPage.getCallLogDetailsSettingPageRender({
       adminUserSettings: adminUserSettings(),
@@ -268,7 +276,10 @@ describe('managed settings page renderers', () => {
     expect(disabled.uiSchema.addCallLogAiNote['ui:disabled']).toBe(true);
     expect(disabled.uiSchema.addCallLogRingSenseRecordingTranscript['ui:disabled']).toBe(true);
     expect(disabled.schema.properties.addCallLogAiNote.properties.value.description).toEqual(expect.any(String));
+  });
 
+  it('renders call log detail pages with AI and RingSense controls enabled by permissions', async () => {
+    const callLogDetailsPage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSetting/callLogDetailsSettingPage.ts');
     const enabled = callLogDetailsPage.getCallLogDetailsSettingPageRender({
       adminUserSettings: {},
       userPermissions: {
@@ -281,7 +292,10 @@ describe('managed settings page renderers', () => {
     expect(enabled.uiSchema.addCallLogRingSenseRecordingTranscript['ui:disabled']).toBe(false);
     expect(enabled.schema.properties.addCallLogAiNote.properties.value.description).toBe('');
     expect(enabled.formData.logDateFormat.value).toBe('YYYY-MM-DD hh:mm:ss A');
+  });
 
+  it('renders auto-log preference pages with saved contact preferences', async () => {
+    const autoLogPreferencePage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSetting/autoLogPreferenceSettingPage.ts');
     const preferences = autoLogPreferencePage.getAutoLogPreferenceSettingPageRender({
       adminUserSettings: adminUserSettings(),
       contactTypes: [
@@ -299,7 +313,10 @@ describe('managed settings page renderers', () => {
       multipleContactsPreference: { customizable: false, value: 'firstAlphabetical' },
       newContactNamePrefix: { customizable: false, value: 'AutoCreated' },
     });
+  });
 
+  it('renders auto-log preference defaults from available contact types', async () => {
+    const autoLogPreferencePage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSetting/autoLogPreferenceSettingPage.ts');
     const defaults = autoLogPreferencePage.getAutoLogPreferenceSettingPageRender({
       adminUserSettings: {},
       contactTypes: [{ value: 'Lead', display: 'Lead' }],
@@ -307,10 +324,8 @@ describe('managed settings page renderers', () => {
     expect(defaults.formData.newContactType.value).toEqual({ value: 'Lead', display: 'Lead' });
   });
 
-  it('renders plugin detail settings and uncovered general setting pages', async () => {
+  it('renders plugin detail settings with hidden config fields', async () => {
     const pluginDetailsPage = await loadPage('../../src/components/admin/managedSettings/pluginsSetting/pluginDetailsSettingPage.ts');
-    const clickToDialEmbedPage = await loadPage('../../src/components/admin/generalSettings/clickToDialEmbedPage.ts');
-    const customizeTabsPage = await loadPage('../../src/components/admin/generalSettings/customizeTabsSettingPage.ts');
 
     const plugin = pluginDetailsPage.getPluginDetailsSettingPageRender({
       pluginId: 'plugin-1',
@@ -360,7 +375,10 @@ describe('managed settings page renderers', () => {
       uniqueItems: true,
     });
     expect(plugin.uiSchema.secret.customizable).toEqual({ 'ui:widget': 'hidden' });
+  });
 
+  it('renders click-to-dial embed settings with saved URL lists', async () => {
+    const clickToDialEmbedPage = await loadPage('../../src/components/admin/generalSettings/clickToDialEmbedPage.ts');
     const embed = clickToDialEmbedPage.getClickToDialEmbedPageRender({
       adminUserSettings: adminUserSettings(),
     });
@@ -371,7 +389,10 @@ describe('managed settings page renderers', () => {
       quickAccessButtonUrls: { customizable: false, value: ['https://blocked.example'] },
     });
     expect(embed.uiSchema.clickToDialUrls.value['ui:options'].orderable).toBe(false);
+  });
 
+  it('renders customize-tabs settings with appointment tab title from manifest', async () => {
+    const customizeTabsPage = await loadPage('../../src/components/admin/generalSettings/customizeTabsSettingPage.ts');
     const tabs = customizeTabsPage.getCustomizeTabsSettingPageRender({
       adminUserSettings: adminUserSettings(),
       manifest: {
@@ -393,7 +414,10 @@ describe('managed settings page renderers', () => {
       showChatTab: { customizable: false, value: false },
       showAppointmentsTab: { customizable: false, value: false },
     });
+  });
 
+  it('hides customize-tabs appointment settings when appointments are unsupported', async () => {
+    const customizeTabsPage = await loadPage('../../src/components/admin/generalSettings/customizeTabsSettingPage.ts');
     const tabsWithoutAppointments = customizeTabsPage.getCustomizeTabsSettingPageRender({
       adminUserSettings: {},
       manifest: {

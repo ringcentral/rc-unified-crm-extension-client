@@ -109,8 +109,8 @@ describe('contact search custom-button and selection handlers', () => {
     });
   });
 
-  it('opens call-log and message-log contact search result pages', async () => {
-    let loaded = await loadSearchButtonHandler(
+  it('opens call-log contact search result pages', async () => {
+    const loaded = await loadSearchButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/contactSearch/contactSearchAdapterButtonCallLog.ts',
     );
 
@@ -142,10 +142,13 @@ describe('contact search custom-button and selection handlers', () => {
         targetOrigin: '*',
       },
     ]));
+  });
 
-    loaded = await loadSearchButtonHandler(
+  it('opens message-log contact search result pages', async () => {
+    const loaded = await loadSearchButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/contactSearch/contactSearchAdapterButtonMessageLog.ts',
     );
+
     await loaded.handler.onEvent({
       data: searchButtonData(),
       ...context(),

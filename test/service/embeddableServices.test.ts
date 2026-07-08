@@ -179,6 +179,27 @@ async function loadEmbeddableServices() {
   };
 }
 
+async function loadAuthedAdminServiceManifest() {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-01-15T08:00:00Z'));
+  seedStorage({
+    isAdmin: true,
+    crmAuthed: true,
+    developerMode: true,
+    crmUserInfo: { name: 'CRM User' },
+    userPermissions: {},
+    userSettings: {
+      allowExtensionNumberLogging: { value: true, customizable: false },
+    },
+  });
+  const loaded = await loadEmbeddableServices();
+  const service = await loaded.embeddableServices.getServiceManifest();
+  return {
+    ...loaded,
+    service,
+  };
+}
+
 describe('embeddableServices', () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -202,22 +223,8 @@ describe('embeddableServices', () => {
     });
   });
 
-  it('builds the full embedded service manifest from platform, settings, license, and permissions', async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-01-15T08:00:00Z'));
-    seedStorage({
-      isAdmin: true,
-      crmAuthed: true,
-      developerMode: true,
-      crmUserInfo: { name: 'CRM User' },
-      userPermissions: {},
-      userSettings: {
-        allowExtensionNumberLogging: { value: true, customizable: false },
-      },
-    });
-    const { embeddableServices, authCore } = await loadEmbeddableServices();
-
-    const service = await embeddableServices.getServiceManifest();
+  it('builds authorized service identity and license metadata', async () => {
+    const { service, authCore } = await loadAuthedAdminServiceManifest();
 
     expect(service).toMatchObject({
       name: 'googleSheets',
@@ -235,6 +242,10 @@ describe('embeddableServices', () => {
       }),
     });
     expect(authCore.getLicenseStatus).toHaveBeenCalledWith({ serverUrl: 'https://server.example' });
+  });
+
+  it('posts phone-number format and SMS typing side effects to the widget', async () => {
+    await loadAuthedAdminServiceManifest();
 
     expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
       {
@@ -255,6 +266,10 @@ describe('embeddableServices', () => {
         targetOrigin: '*',
       },
     ]));
+  });
+
+  it('builds visible custom connector settings and filters hidden or unauthorized entries', async () => {
+    const { service } = await loadAuthedAdminServiceManifest();
 
     const settingIds = service.settings.map((item) => item.id);
     expect(settingIds).toEqual(expect.arrayContaining([
@@ -287,6 +302,10 @@ describe('embeddableServices', () => {
       ],
     });
     expect(visibleOptions.items.map((item) => item.id)).not.toContain('deniedByPermission');
+  });
+
+  it('adds built-in appointment and extension-number settings for supported platforms', async () => {
+    const { service } = await loadAuthedAdminServiceManifest();
 
     const appearanceGroup = service.settings.find((item) => item.id === 'appearance');
     const tabsSection = appearanceGroup.items.find((item) => item.id === 'tabs');

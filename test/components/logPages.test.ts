@@ -122,6 +122,54 @@ function richMessageManifest() {
   return next;
 }
 
+async function createAdvancedCallLogPage() {
+  const logPage = await loadLogPage();
+  const contactWithContactTypeFields = {
+    ...newContact(),
+    additionalInfo: {
+      ...newContact().additionalInfo,
+      Contact: {
+        newCategory: [
+          { const: 'customer', title: 'Customer' },
+        ],
+      },
+    },
+  };
+  const basePage = logPage.getLogPageRender({
+    id: 'session-advanced',
+    manifest: manifest(),
+    logType: 'Call',
+    triggerType: 'createLog',
+    platformName: 'salesforce',
+    direction: 'Outbound',
+    contactInfo: [contactWithContactTypeFields, existingContact()],
+    logInfo: {},
+    contactPhoneNumber: '+16505550100',
+    useContactSearch: true,
+  });
+
+  return {
+    logPage,
+    basePage,
+  };
+}
+
+function updateCallLogPage(logPage, page, keys, formData) {
+  return logPage.getUpdatedLogPageRender({
+    manifest: manifest(),
+    logType: 'Call',
+    platformName: 'salesforce',
+    updateData: {
+      keys,
+      page,
+      formData: {
+        ...page.formData,
+        ...formData,
+      },
+    },
+  });
+}
+
 describe('logPageUtils', () => {
   it('builds contact options, contact warnings, new-contact widgets, and additional field schema', async () => {
     const utils = await loadLogPageUtils();
@@ -352,80 +400,50 @@ describe('logPage', () => {
     expect(editedTitle.schema.properties.activityTitle.manuallyEdited).toBe(true);
   });
 
-  it('handles call-log scheduling cancellation, past callback dates, existing contact switches, and new-contact type changes', async () => {
+  it('clears callback date and required state when scheduling is cancelled', async () => {
     vi.setSystemTime(new Date('2026-07-03T08:00:00.000Z'));
-    const logPage = await loadLogPage();
-    const contactWithContactTypeFields = {
-      ...newContact(),
-      additionalInfo: {
-        ...newContact().additionalInfo,
-        Contact: {
-          newCategory: [
-            { const: 'customer', title: 'Customer' },
-          ],
-        },
-      },
-    };
-    const basePage = logPage.getLogPageRender({
-      id: 'session-advanced',
-      manifest: manifest(),
-      logType: 'Call',
-      triggerType: 'createLog',
-      platformName: 'salesforce',
-      direction: 'Outbound',
-      contactInfo: [contactWithContactTypeFields, existingContact()],
-      logInfo: {},
-      contactPhoneNumber: '+16505550100',
-      useContactSearch: true,
+    const { logPage, basePage } = await createAdvancedCallLogPage();
+
+    const scheduled = updateCallLogPage(logPage, basePage, ['scheduleCallback'], {
+      scheduleCallback: true,
+      callbackDateTime: '',
+    });
+    const unscheduled = updateCallLogPage(logPage, scheduled, ['scheduleCallback'], {
+      scheduleCallback: false,
+      callbackDateTime: '2026-07-04T10:00:00',
     });
 
-    const scheduled = logPage.getUpdatedLogPageRender({
-      manifest: manifest(),
-      logType: 'Call',
-      platformName: 'salesforce',
-      updateData: {
-        keys: ['scheduleCallback'],
-        page: basePage,
-        formData: { ...basePage.formData, scheduleCallback: true, callbackDateTime: '' },
-      },
-    });
-    const unscheduled = logPage.getUpdatedLogPageRender({
-      manifest: manifest(),
-      logType: 'Call',
-      platformName: 'salesforce',
-      updateData: {
-        keys: ['scheduleCallback'],
-        page: scheduled,
-        formData: { ...scheduled.formData, scheduleCallback: false, callbackDateTime: '2026-07-04T10:00:00' },
-      },
-    });
     expect(unscheduled.formData.callbackDateTime).toBe('');
     expect(unscheduled.schema.required).not.toContain('callbackDateTime');
     expect(unscheduled.uiSchema.submitButtonOptions['ui:disabled']).toBe(false);
+  });
 
-    const pastCallback = logPage.getUpdatedLogPageRender({
-      manifest: manifest(),
-      logType: 'Call',
-      platformName: 'salesforce',
-      updateData: {
-        keys: ['callbackDateTime'],
-        page: scheduled,
-        formData: { ...scheduled.formData, scheduleCallback: true, callbackDateTime: '2026-07-02T10:00:00' },
-      },
+  it('clears past callback dates and disables call-log submission', async () => {
+    vi.setSystemTime(new Date('2026-07-03T08:00:00.000Z'));
+    const { logPage, basePage } = await createAdvancedCallLogPage();
+    const scheduled = updateCallLogPage(logPage, basePage, ['scheduleCallback'], {
+      scheduleCallback: true,
+      callbackDateTime: '',
     });
+
+    const pastCallback = updateCallLogPage(logPage, scheduled, ['callbackDateTime'], {
+      scheduleCallback: true,
+      callbackDateTime: '2026-07-02T10:00:00',
+    });
+
     expect(pastCallback.formData.callbackDateTime).toBe('');
     expect(pastCallback.uiSchema.submitButtonOptions['ui:disabled']).toBe(true);
+  });
 
-    const existing = logPage.getUpdatedLogPageRender({
-      manifest: manifest(),
-      logType: 'Call',
-      platformName: 'salesforce',
-      updateData: {
-        keys: ['contact'],
-        page: pastCallback,
-        formData: { ...pastCallback.formData, contact: 'contact-1', activityTitle: 'Outbound Call to ' },
-      },
+  it('switches from new-contact fields back to existing-contact call-log fields', async () => {
+    vi.setSystemTime(new Date('2026-07-03T08:00:00.000Z'));
+    const { logPage, basePage } = await createAdvancedCallLogPage();
+
+    const existing = updateCallLogPage(logPage, basePage, ['contact'], {
+      contact: 'contact-1',
+      activityTitle: 'Outbound Call to ',
     });
+
     expect(existing.formData).toMatchObject({
       contact: 'contact-1',
       contactName: 'Jane Smith',
@@ -435,55 +453,44 @@ describe('logPage', () => {
     expect(existing.uiSchema.newContactName).toEqual({ 'ui:widget': 'hidden' });
     expect(existing.schema.required).not.toContain('newContactName');
     expect(existing.schema.required).toEqual(expect.arrayContaining(['disposition', 'followUp', 'caseId']));
+  });
 
-    const searchContact = logPage.getUpdatedLogPageRender({
-      manifest: manifest(),
-      logType: 'Call',
-      platformName: 'salesforce',
-      updateData: {
-        keys: ['contact'],
-        page: existing,
-        formData: { ...existing.formData, contact: 'searchContact' },
-      },
+  it('removes contact-dependent fields when switching to contact search', async () => {
+    vi.setSystemTime(new Date('2026-07-03T08:00:00.000Z'));
+    const { logPage, basePage } = await createAdvancedCallLogPage();
+    const existing = updateCallLogPage(logPage, basePage, ['contact'], {
+      contact: 'contact-1',
+      activityTitle: 'Outbound Call to ',
     });
+
+    const searchContact = updateCallLogPage(logPage, existing, ['contact'], {
+      contact: 'searchContact',
+    });
+
     expect(searchContact.formData.contact).toBe('searchContact');
     expect(searchContact.schema.properties).not.toHaveProperty('disposition');
+  });
 
-    const newContactAgain = logPage.getUpdatedLogPageRender({
-      manifest: manifest(),
-      logType: 'Call',
-      platformName: 'salesforce',
-      updateData: {
-        keys: ['contact'],
-        page: searchContact,
-        formData: { ...searchContact.formData, contact: 'new-contact', activityTitle: 'Outbound Call to ' },
-      },
+  it('updates new-contact names and removes type-specific fields after contact type changes', async () => {
+    vi.setSystemTime(new Date('2026-07-03T08:00:00.000Z'));
+    const { logPage, basePage } = await createAdvancedCallLogPage();
+
+    const newContactAgain = updateCallLogPage(logPage, basePage, ['contact'], {
+      contact: 'new-contact',
+      activityTitle: 'Outbound Call to ',
     });
-    const renamed = logPage.getUpdatedLogPageRender({
-      manifest: manifest(),
-      logType: 'Call',
-      platformName: 'salesforce',
-      updateData: {
-        keys: ['newContactName'],
-        page: newContactAgain,
-        formData: { ...newContactAgain.formData, newContactName: 'Manual New Lead' },
-      },
+    const renamed = updateCallLogPage(logPage, newContactAgain, ['newContactName'], {
+      newContactName: 'Manual New Lead',
     });
     expect(renamed.formData.newContactName).toBe('Manual New Lead');
 
     renamed.schema.properties.newOnly = { title: 'New Only', type: 'string' };
     renamed.formData.newOnly = 'lead-only';
     renamed.uiSchema.newOnly = {};
-    const contactTypeChanged = logPage.getUpdatedLogPageRender({
-      manifest: manifest(),
-      logType: 'Call',
-      platformName: 'salesforce',
-      updateData: {
-        keys: ['newContactType'],
-        page: renamed,
-        formData: { ...renamed.formData, newContactType: 'Contact' },
-      },
+    const contactTypeChanged = updateCallLogPage(logPage, renamed, ['newContactType'], {
+      newContactType: 'Contact',
     });
+
     expect(contactTypeChanged.schema.properties.newCategory.oneOf).toEqual([
       { const: 'default-new', title: 'Default New' },
       { const: 'none', title: expect.any(String) },

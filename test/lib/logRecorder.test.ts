@@ -64,29 +64,67 @@ describe('logRecorder', () => {
     expect(axios.defaults.headers.common['is-debug']).toBe(false);
   });
 
-  it('records basic info, user descriptions, API requests, API responses, and navigation actions', async () => {
+  it('records basic environment info separately from action details', async () => {
     const logRecorder = await loadLogRecorder();
     await logRecorder.startRecordingLogs();
 
     logRecorder.logBasicInfo({ platform: 'salesforce' });
+
+    expect(logRecorder.getLog()).toMatchObject({
+      basicInfo: { platform: 'salesforce' },
+      summary: [],
+      details: [],
+    });
+  });
+
+  it('records API request and response summaries without query parameters', async () => {
+    const logRecorder = await loadLogRecorder();
+    await logRecorder.startRecordingLogs();
+
     logRecorder.logAction({ name: 'API_REQUEST', data: { method: 'post', url: 'https://api.example/path?token=hidden' } });
     logRecorder.logAction({ name: 'API_RESPONSE', data: { status: 201, url: 'https://api.example/path?token=hidden' } });
+
+    expect(logRecorder.getLog()).toMatchObject({
+      summary: [
+        'API_REQUEST: POST https://api.example/path',
+        'API_RESPONSE: 201 https://api.example/path',
+      ],
+      details: [
+        expect.objectContaining({
+          timestamp: '2026-07-03T12:00:00.000Z',
+          name: 'API_REQUEST',
+          data: { method: 'post', url: 'https://api.example/path?token=hidden' },
+        }),
+        expect.objectContaining({
+          name: 'API_RESPONSE',
+          data: { status: 201, url: 'https://api.example/path?token=hidden' },
+        }),
+      ],
+    });
+  });
+
+  it('places user descriptions before navigation summaries while preserving action details', async () => {
+    const logRecorder = await loadLogRecorder();
+    await logRecorder.startRecordingLogs();
+
     logRecorder.logAction({ name: 'NAVIGATE', data: { path: '/settings' } });
     logRecorder.logAction({ name: 'user description', data: 'Something broke' });
 
     expect(logRecorder.getLog()).toMatchObject({
-      basicInfo: { platform: 'salesforce' },
       summary: [
         'User description: Something broke',
-        'API_REQUEST: POST https://api.example/path',
-        'API_RESPONSE: 201 https://api.example/path',
         'NAVIGATE: /settings',
       ],
       details: [
-        expect.objectContaining({ timestamp: '2026-07-03T12:00:00.000Z', name: 'API_REQUEST' }),
-        expect.objectContaining({ name: 'API_RESPONSE' }),
-        expect.objectContaining({ name: 'NAVIGATE' }),
-        expect.objectContaining({ name: 'user description' }),
+        expect.objectContaining({
+          timestamp: '2026-07-03T12:00:00.000Z',
+          name: 'NAVIGATE',
+          data: { path: '/settings' },
+        }),
+        expect.objectContaining({
+          name: 'user description',
+          data: 'Something broke',
+        }),
       ],
     });
   });

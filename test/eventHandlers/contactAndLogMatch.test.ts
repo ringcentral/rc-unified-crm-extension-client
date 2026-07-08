@@ -131,11 +131,12 @@ describe('contact and call-log match handlers', () => {
     });
   });
 
-  it('matches direct numbers, triggers remaining phone matches, and reports manual no-match notifications', async () => {
-    let loaded = await loadMatchHandler(
+  it('matches the first direct number and triggers remaining phone matches', async () => {
+    const { handler, contactCore, util } = await loadMatchHandler(
       '../../src/eventHandlers/rc-post-message-request/contacts/match.ts',
     );
-    await loaded.handler.onEvent({
+
+    await handler.onEvent({
       data: {
         requestId: 'request-2',
         body: {
@@ -147,14 +148,14 @@ describe('contact and call-log match handlers', () => {
       platformName: 'salesforce',
     });
 
-    expect(loaded.contactCore.getContact).toHaveBeenCalledWith(expect.objectContaining({
+    expect(contactCore.getContact).toHaveBeenCalledWith(expect.objectContaining({
       phoneNumber: '+16505550100',
       isFromManual: false,
       isExtensionNumber: false,
       isForceRefresh: true,
       isToTriggerContactMatch: false,
     }));
-    expect(loaded.util.responseMessage).toHaveBeenCalledWith('request-2', {
+    expect(util.responseMessage).toHaveBeenCalledWith('request-2', {
       data: {
         '+16505550100': [
           expect.objectContaining({
@@ -173,8 +174,10 @@ describe('contact and call-log match handlers', () => {
         },
       }),
     ]));
+  });
 
-    loaded = await loadMatchHandler(
+  it('skips manual extension-number contact matches when extension logging is disabled', async () => {
+    const { handler, contactCore, util } = await loadMatchHandler(
       '../../src/eventHandlers/rc-post-message-request/contacts/match.ts',
       {
         contactCore: {
@@ -191,7 +194,8 @@ describe('contact and call-log match handlers', () => {
         },
       },
     );
-    await loaded.handler.onEvent({
+
+    await handler.onEvent({
       data: {
         requestId: 'request-3',
         body: {
@@ -202,14 +206,36 @@ describe('contact and call-log match handlers', () => {
       manifest: manifest(),
       platformName: 'salesforce',
     });
-    expect(loaded.contactCore.getContact).not.toHaveBeenCalled();
 
+    expect(contactCore.getContact).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('request-3', { data: {} });
+  });
+
+  it('matches manual extension numbers and shows the CRM no-match warning when enabled', async () => {
     seedStorage({
       userSettings: {
         allowExtensionNumberLogging: { value: true },
       },
     });
-    await loaded.handler.onEvent({
+    const { handler, contactCore, util } = await loadMatchHandler(
+      '../../src/eventHandlers/rc-post-message-request/contacts/match.ts',
+      {
+        contactCore: {
+          getContact: vi.fn(async () => ({
+            matched: false,
+            returnMessage: {
+              messageType: 'warning',
+              message: 'No contact',
+              ttl: 3000,
+              details: ['Try another number'],
+            },
+            contactInfo: [],
+          })),
+        },
+      },
+    );
+
+    await handler.onEvent({
       data: {
         requestId: 'request-4',
         body: {
@@ -220,12 +246,13 @@ describe('contact and call-log match handlers', () => {
       manifest: manifest(),
       platformName: 'salesforce',
     });
-    expect(loaded.contactCore.getContact).toHaveBeenCalledWith(expect.objectContaining({
+
+    expect(contactCore.getContact).toHaveBeenCalledWith(expect.objectContaining({
       phoneNumber: '101',
       isFromManual: true,
       isExtensionNumber: true,
     }));
-    expect(loaded.util.showNotification).toHaveBeenCalledWith({
+    expect(util.showNotification).toHaveBeenCalledWith({
       level: 'warning',
       message: 'No contact',
       ttl: 3000,

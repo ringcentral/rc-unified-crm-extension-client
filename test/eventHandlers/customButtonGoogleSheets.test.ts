@@ -93,20 +93,24 @@ describe('custom-button Google Sheets handlers', () => {
     });
   });
 
-  it('opens user Google Sheets config, creates a sheet, selects an existing sheet, and removes it', async () => {
-    let loaded = await loadGoogleSheetsHandler(
+  it('opens the user Google Sheets config page with refreshed settings', async () => {
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/googleSheetsConfig.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
     });
     expect(loaded.userCore.refreshUserSettings).toHaveBeenCalledWith({});
     expect(loaded.googleSheetsPage.renderGoogleSheetsPage).toHaveBeenCalled();
+  });
 
-    loaded = await loadGoogleSheetsHandler(
+  it('creates a user Google Sheet and stores the created sheet settings', async () => {
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/newSheetButton.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({ newSheetName: 'New Calls' }),
       manifest: manifest(),
@@ -125,25 +129,31 @@ describe('custom-button Google Sheets handlers', () => {
       message: 'New sheet created successfully',
       ttl: 5000,
     });
+  });
 
-    loaded = await loadGoogleSheetsHandler(
+  it('starts user Google Sheet picker flow', async () => {
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/selectExistingSheetButton.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
     });
     expect(readStorage().pendingUserGoogleSheetsSelection.timestamp).toEqual(expect.any(Number));
     expect(window.open).toHaveBeenCalledWith('https://server.example/googleSheets/filePicker?token=jwt-1', '_blank');
+  });
 
+  it('stores a picked user Google Sheet and clears pending selection state', async () => {
     seedStorage({
       pendingUserGoogleSheetsSelection: {
         timestamp: Date.now(),
       },
     });
-    loaded = await loadGoogleSheetsHandler(
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/userGoogleSheetSelected.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({}, {
         sheetName: 'Picked Sheet',
@@ -163,10 +173,13 @@ describe('custom-button Google Sheets handlers', () => {
       message: 'Google Sheet "Picked Sheet" selected successfully',
       ttl: 3000,
     });
+  });
 
-    loaded = await loadGoogleSheetsHandler(
+  it('removes user Google Sheet settings and returns to the config page', async () => {
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/removeSheetButton.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -187,8 +200,8 @@ describe('custom-button Google Sheets handlers', () => {
     ]));
   });
 
-  it('handles user Google Sheets warning paths', async () => {
-    let loaded = await loadGoogleSheetsHandler(
+  it('warns when user Google Sheet creation returns a non-success response', async () => {
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/newSheetButton.ts',
     );
     vi.mocked(axios.post).mockResolvedValueOnce({
@@ -204,15 +217,18 @@ describe('custom-button Google Sheets handlers', () => {
       message: 'Failed to create new sheet',
       ttl: 5000,
     });
+  });
 
+  it('warns when a picked user Google Sheet arrives after selection state expires', async () => {
     seedStorage({
       pendingUserGoogleSheetsSelection: {
         timestamp: Date.now() - 301000,
       },
     });
-    loaded = await loadGoogleSheetsHandler(
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/userGoogleSheetSelected.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({}, {
         sheetName: 'Expired Sheet',
@@ -225,10 +241,13 @@ describe('custom-button Google Sheets handlers', () => {
       message: 'Sheet selection expired, please try again',
       ttl: 3000,
     });
+  });
 
-    loaded = await loadGoogleSheetsHandler(
+  it('warns when user Google Sheet selection is missing sheet details', async () => {
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/userGoogleSheetSelected.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -240,10 +259,11 @@ describe('custom-button Google Sheets handlers', () => {
     });
   });
 
-  it('creates, selects, and removes admin Google Sheets settings', async () => {
-    let loaded = await loadGoogleSheetsHandler(
+  it('creates an enforced admin Google Sheet and persists admin settings', async () => {
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminNewSheetButton.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         newSheetName: 'Admin Calls',
@@ -272,10 +292,13 @@ describe('custom-button Google Sheets handlers', () => {
       message: 'Admin Google Sheet "Created Sheet" created successfully and enforced for all users',
       ttl: 5000,
     });
+  });
 
-    loaded = await loadGoogleSheetsHandler(
+  it('starts enforced admin Google Sheet picker flow', async () => {
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminSelectExistingSheetButton.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         forceGoogleSheets: {
@@ -286,7 +309,9 @@ describe('custom-button Google Sheets handlers', () => {
     });
     expect(readStorage().pendingAdminGoogleSheetsSelection.forceGoogleSheets).toBe(true);
     expect(window.open).toHaveBeenCalledWith('https://server.example/admin/googleSheets/filePicker?jwtToken=jwt-1&rcAccessToken=rc-access-token', '_blank');
+  });
 
+  it('stores a picked enforced admin Google Sheet and clears pending selection state', async () => {
     seedStorage({
       pendingAdminGoogleSheetsSelection: {
         forceGoogleSheets: true,
@@ -296,9 +321,10 @@ describe('custom-button Google Sheets handlers', () => {
         userSettings: {},
       },
     });
-    loaded = await loadGoogleSheetsHandler(
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminGoogleSheetSelected.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({}, {
         sheetName: 'Picked Admin Sheet',
@@ -316,10 +342,13 @@ describe('custom-button Google Sheets handlers', () => {
       message: 'Admin Google Sheet "Picked Admin Sheet" selected successfully and enforced for all users',
       ttl: 5000,
     });
+  });
 
-    loaded = await loadGoogleSheetsHandler(
+  it('removes admin Google Sheet settings and clears user settings', async () => {
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminRemoveSheetButton.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -341,11 +370,12 @@ describe('custom-button Google Sheets handlers', () => {
     });
   });
 
-  it('reports admin Google Sheets selection and creation failures', async () => {
-    let loaded = await loadGoogleSheetsHandler(
+  it('warns when admin Google Sheet creation fails', async () => {
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminNewSheetButton.ts',
     );
     vi.mocked(axios.post).mockRejectedValueOnce(new Error('network'));
+
     await loaded.handler.onEvent({
       data: dataFor({ newSheetName: 'Broken Admin Sheet' }),
       manifest: manifest(),
@@ -355,7 +385,9 @@ describe('custom-button Google Sheets handlers', () => {
       message: 'Failed to create new sheet',
       ttl: 5000,
     });
+  });
 
+  it('warns when a picked admin Google Sheet arrives after selection state expires', async () => {
     seedStorage({
       pendingAdminGoogleSheetsSelection: {
         forceGoogleSheets: false,
@@ -365,9 +397,10 @@ describe('custom-button Google Sheets handlers', () => {
         userSettings: {},
       },
     });
-    loaded = await loadGoogleSheetsHandler(
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminGoogleSheetSelected.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({}, {
         sheetName: 'Expired Admin Sheet',
@@ -380,10 +413,13 @@ describe('custom-button Google Sheets handlers', () => {
       message: 'Sheet selection expired, please try again',
       ttl: 3000,
     });
+  });
 
-    loaded = await loadGoogleSheetsHandler(
+  it('warns when admin Google Sheet selection is missing sheet details', async () => {
+    const loaded = await loadGoogleSheetsHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/googleSheets/adminGoogleSheetSelected.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),

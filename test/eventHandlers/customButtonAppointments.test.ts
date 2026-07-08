@@ -142,8 +142,8 @@ describe('custom-button appointment handlers', () => {
     });
   });
 
-  it('cancels and confirms appointments, refreshes the list, and responds to the widget', async () => {
-    let loaded = await loadAppointmentButton(
+  it('cancels an appointment and reports provider warning details', async () => {
+    const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentCancel.ts',
       {
         appointmentService: {
@@ -175,10 +175,13 @@ describe('custom-button appointment handlers', () => {
       details: 'No-op',
     });
     expect(loaded.util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
 
-    loaded = await loadAppointmentButton(
+  it('confirms an appointment and refreshes the appointments list page', async () => {
+    const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentConfirm.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -234,7 +237,7 @@ describe('custom-button appointment handlers', () => {
     expect(loaded.util.responseMessage).toHaveBeenCalledWith('request-1', { error: 'service unavailable' });
   });
 
-  it('opens appointment URLs from templates, fallback URLs, and warns when no link exists', async () => {
+  it('opens appointment URLs from configured templates', async () => {
     seedStorage({
       rcUnifiedCrmExtJwt: 'jwt-1',
       'platform-info': {
@@ -257,7 +260,12 @@ describe('custom-button appointment handlers', () => {
     });
     expect(axios.get).toHaveBeenCalledWith('https://server.example/hostname?jwtToken=jwt-1');
     expect(open).toHaveBeenCalledWith('https://resolved.example/appointments/id%20with%20spaces?ats=ats.example', '_blank');
+  });
 
+  it('opens fallback appointment URLs when configured appointment pages are disabled', async () => {
+    const loaded = await loadAppointmentButton(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenAppointment.ts',
+    );
     await loaded.handler.onEvent({
       data: dataFor({ appointmentUrl: 'https://fallback.example/appointment' }),
       manifest: {
@@ -267,7 +275,12 @@ describe('custom-button appointment handlers', () => {
       platformName: 'salesforce',
     });
     expect(open).toHaveBeenCalledWith('https://fallback.example/appointment', '_blank');
+  });
 
+  it('warns when no appointment link is available', async () => {
+    const loaded = await loadAppointmentButton(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenAppointment.ts',
+    );
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: {
@@ -281,12 +294,14 @@ describe('custom-button appointment handlers', () => {
       message: 'No appointment link available.',
       ttl: 3000,
     });
+    expect(open).not.toHaveBeenCalled();
   });
 
-  it('creates and saves appointments, navigating back to refreshed list only on success', async () => {
-    let loaded = await loadAppointmentButton(
+  it('creates an appointment and returns to a refreshed appointments list', async () => {
+    const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentCreateSave.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({
         title: 'New Appointment',
@@ -310,8 +325,10 @@ describe('custom-button appointment handlers', () => {
       message: 'Appointment created.',
       ttl: 3000,
     });
+  });
 
-    loaded = await loadAppointmentButton(
+  it('shows validation details and stays on the edit page when appointment save fails', async () => {
+    const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentSave.ts',
       {
         appointmentEditPage: {
@@ -338,10 +355,22 @@ describe('custom-button appointment handlers', () => {
       details: 'Title required',
     });
     expect(loaded.appointmentsPage.getAppointmentsPageWithRecords).not.toHaveBeenCalled();
+    expect(getWidgetPostMessages()).not.toEqual(expect.arrayContaining([
+      {
+        message: {
+          type: 'rc-adapter-navigate-to',
+          path: '/customizedTabs/appointmentsPage',
+        },
+        targetOrigin: '*',
+      },
+    ]));
+  });
 
-    loaded = await loadAppointmentButton(
+  it('saves appointment edits and navigates back to the appointments list', async () => {
+    const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentSave.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({ title: 'Updated Appointment' }),
       manifest: manifest(),
@@ -365,10 +394,11 @@ describe('custom-button appointment handlers', () => {
     ]));
   });
 
-  it('opens appointment create/edit pages and refreshes appointment rows and lists', async () => {
-    let loaded = await loadAppointmentButton(
+  it('opens the appointment create page with current list context', async () => {
+    const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentCreate.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -394,10 +424,13 @@ describe('custom-button appointment handlers', () => {
         targetOrigin: '*',
       },
     ]));
+  });
 
-    loaded = await loadAppointmentButton(
+  it('opens the appointment edit page for the selected row', async () => {
+    const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentEdit.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -419,10 +452,13 @@ describe('custom-button appointment handlers', () => {
         returnFilter: 'All',
       }),
     }));
+  });
 
-    loaded = await loadAppointmentButton(
+  it('refreshes a selected appointment row and re-renders the current list', async () => {
+    const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentRefresh.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({}, { thirdPartyAppointmentId: 'appointment-1' }),
       manifest: manifest(),
@@ -436,10 +472,13 @@ describe('custom-button appointment handlers', () => {
     expect(loaded.appointmentsPage.getAppointmentsPageWithRecords).toHaveBeenCalledWith(expect.objectContaining({
       forceSync: false,
     }));
+  });
 
-    loaded = await loadAppointmentButton(
+  it('force-refreshes the appointments list', async () => {
+    const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentRefreshList.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -449,11 +488,12 @@ describe('custom-button appointment handlers', () => {
     }));
   });
 
-  it('opens appointment contacts from URLs, attendees, explicit contact fields, and phone fallbacks', async () => {
-    let loaded = await loadAppointmentButton(
+  it('opens appointment contacts from direct contact URLs', async () => {
+    const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenContact.ts',
     );
     globalThis.open = vi.fn();
+
     await loaded.handler.onEvent({
       data: dataFor({}, {
         contactUrl: 'https://crm.example/contact/direct',
@@ -462,7 +502,10 @@ describe('custom-button appointment handlers', () => {
       platformName: 'salesforce',
     });
     expect(open).toHaveBeenCalledWith('https://crm.example/contact/direct');
+    expect(loaded.contactCore.openContactPage).not.toHaveBeenCalled();
+  });
 
+  it('opens appointment attendee contacts through configured URL templates', async () => {
     seedStorage({
       rcUnifiedCrmExtJwt: 'jwt-1',
       'platform-info': {
@@ -470,10 +513,11 @@ describe('custom-button appointment handlers', () => {
       },
       userSettings: {},
     });
-    loaded = await loadAppointmentButton(
+    const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenContact.ts',
     );
     vi.mocked(axios.get).mockResolvedValueOnce({ data: 'resolved.example' });
+
     await loaded.handler.onEvent({
       data: dataFor({}, {
         attendees: [{ id: 'contact-1', type: 'Lead' }],
@@ -490,8 +534,11 @@ describe('custom-button appointment handlers', () => {
     });
     expect(axios.get).toHaveBeenCalledWith('https://server.example/hostname?jwtToken=jwt-1');
     expect(open).toHaveBeenCalledWith('https://resolved.example/contacts/Lead/contact-1');
+    expect(loaded.contactCore.openContactPage).not.toHaveBeenCalled();
+  });
 
-    loaded = await loadAppointmentButton(
+  it('falls back to selected appointment attendees when no contact data is in the event', async () => {
+    const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenContact.ts',
       {
         appointmentService: {
@@ -504,6 +551,7 @@ describe('custom-button appointment handlers', () => {
         },
       },
     );
+
     await loaded.handler.onEvent({
       data: dataFor(),
       manifest: manifest(),
@@ -516,10 +564,13 @@ describe('custom-button appointment handlers', () => {
       contactId: 'fallback-contact',
       contactType: 'Contact',
     });
+  });
 
-    loaded = await loadAppointmentButton(
+  it('opens explicit appointment contact fields through contact core', async () => {
+    const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenContact.ts',
     );
+
     await loaded.handler.onEvent({
       data: dataFor({}, {
         contactId: 'explicit-contact',
@@ -534,6 +585,12 @@ describe('custom-button appointment handlers', () => {
       contactId: 'explicit-contact',
       contactType: 'Account',
     });
+  });
+
+  it('falls back to phone-number contact lookup when only a phone number is available', async () => {
+    const loaded = await loadAppointmentButton(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentOpenContact.ts',
+    );
 
     await loaded.handler.onEvent({
       data: dataFor({}, {

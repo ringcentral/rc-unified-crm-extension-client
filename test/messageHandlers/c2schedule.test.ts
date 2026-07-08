@@ -48,6 +48,41 @@ async function loadC2scheduleHandler() {
   return loadModule('../../src/messageHandlers/c2schedule.ts');
 }
 
+function seedScheduleStorage() {
+  seedStorage({
+    rcUserInfo: { rcAccountId: 'account-1' },
+    userSettings: { showCalldownTab: { value: true } },
+  });
+}
+
+function mockMatchedScheduleContacts() {
+  vi.mocked(contactCore.getContact).mockResolvedValueOnce({
+    contactInfo: [
+      { id: 'contact-1', name: 'Jane Smith', type: 'Lead' },
+      { id: 'new-1', name: 'New', isNewContact: true },
+    ],
+  });
+}
+
+function dispatchSchedulePageSubmit() {
+  window.dispatchEvent(new MessageEvent('message', {
+    data: {
+      type: 'rc-post-message-request',
+      path: '/custom-button-click',
+      requestId: 'request-1',
+      body: {
+        page: { id: 'c2dSchedulePage' },
+        formData: {
+          phone: '+16505550100',
+          contact: 'contact-1',
+          note: 'Call later',
+          callbackDateTime: '2026-07-02T10:00:00Z',
+        },
+      },
+    },
+  }));
+}
+
 describe('c2schedule message handler', () => {
   beforeEach(() => {
     vi.mocked(axios.post).mockReset();
@@ -66,62 +101,59 @@ describe('c2schedule message handler', () => {
     vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'salesforce' });
   });
 
-  it('registers a schedule page and submits callback details from the page event', async () => {
-    seedStorage({
-      rcUserInfo: { rcAccountId: 'account-1' },
-      userSettings: { showCalldownTab: { value: true } },
-    });
-    vi.mocked(contactCore.getContact).mockResolvedValueOnce({
-      contactInfo: [
-        { id: 'contact-1', name: 'Jane Smith', type: 'Lead' },
-        { id: 'new-1', name: 'New', isNewContact: true },
-      ],
-    });
-    vi.mocked(axios.post).mockResolvedValueOnce({ data: { id: 'callback-1' } });
+  it('registers a schedule page with matched contact options', async () => {
+    seedScheduleStorage();
+    mockMatchedScheduleContacts();
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     const sendResponse = vi.fn();
+    const handler = await loadC2scheduleHandler();
+
+    try {
+      await handler.onMessage({
+        request: { phoneNumber: '+16505550100' },
+        sendResponse,
+      });
+
+      expect(getSchedulePageRender).toHaveBeenCalledWith({
+        phoneNumber: '+16505550100',
+        listOneOf: [
+          { const: 'contact-1', title: 'Jane Smith' },
+          { const: 'newContact', title: 'Create new contact' },
+        ],
+        isDefaultNew: false,
+        preselect: 'contact-1',
+        contactTypes: ['Lead', 'Contact'],
+      });
+      expect(getWidgetPostMessages()).toContainEqual({
+        message: { type: 'rc-adapter-register-customized-page', page: { id: 'c2dSchedulePage' } },
+        targetOrigin: '*',
+      });
+      expect(getWidgetPostMessages()).toContainEqual({
+        message: { type: 'rc-adapter-navigate-to', path: '/customized/c2dSchedulePage' },
+        targetOrigin: '*',
+      });
+      expect(sendResponse).toHaveBeenCalledWith({ result: 'ok' });
+    } finally {
+      const messageListener = addEventListenerSpy.mock.calls.find(([type]) => type === 'message')?.[1] as EventListener | undefined;
+      if (messageListener) {
+        window.removeEventListener('message', messageListener);
+      }
+      addEventListenerSpy.mockRestore();
+    }
+  });
+
+  it('submits callback details from the schedule page event', async () => {
+    seedScheduleStorage();
+    mockMatchedScheduleContacts();
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { id: 'callback-1' } });
     const handler = await loadC2scheduleHandler();
 
     await handler.onMessage({
       request: { phoneNumber: '+16505550100' },
-      sendResponse,
+      sendResponse: vi.fn(),
     });
 
-    expect(getSchedulePageRender).toHaveBeenCalledWith({
-      phoneNumber: '+16505550100',
-      listOneOf: [
-        { const: 'contact-1', title: 'Jane Smith' },
-        { const: 'newContact', title: 'Create new contact' },
-      ],
-      isDefaultNew: false,
-      preselect: 'contact-1',
-      contactTypes: ['Lead', 'Contact'],
-    });
-    expect(getWidgetPostMessages()).toContainEqual({
-      message: { type: 'rc-adapter-register-customized-page', page: { id: 'c2dSchedulePage' } },
-      targetOrigin: '*',
-    });
-    expect(getWidgetPostMessages()).toContainEqual({
-      message: { type: 'rc-adapter-navigate-to', path: '/customized/c2dSchedulePage' },
-      targetOrigin: '*',
-    });
-    expect(sendResponse).toHaveBeenCalledWith({ result: 'ok' });
-
-    window.dispatchEvent(new MessageEvent('message', {
-      data: {
-        type: 'rc-post-message-request',
-        path: '/custom-button-click',
-        requestId: 'request-1',
-        body: {
-          page: { id: 'c2dSchedulePage' },
-          formData: {
-            phone: '+16505550100',
-            contact: 'contact-1',
-            note: 'Call later',
-            callbackDateTime: '2026-07-02T10:00:00Z',
-          },
-        },
-      },
-    }));
+    dispatchSchedulePageSubmit();
 
     await vi.waitFor(() => {
       expect(axios.post).toHaveBeenCalledWith(

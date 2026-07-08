@@ -32,13 +32,8 @@ function plugins() {
 }
 
 describe('plugin and developer page renderers', () => {
-  it('renders installed plugin, admin plugin, plugin market, and developer settings pages', async () => {
+  it('renders installed plugin list pages with license warnings and empty state', async () => {
     const installedPluginListPage = await loadPage('../../src/components/installedPluginListPage.ts');
-    const pluginAdminConfigurePage = await loadPage('../../src/components/pluginAdminConfigurePage.ts');
-    const pluginMarketListPage = await loadPage('../../src/components/pluginMarketListPage.ts');
-    const developerSettingsPage = await loadPage('../../src/components/developerSettingsPage/index.ts');
-    const implementedInterfacesPage = await loadPage('../../src/components/developerSettingsPage/implementedInterfacesPage.ts');
-
     const installed = installedPluginListPage.getInstalledPluginListPageRender({
       pluginList: plugins(),
       isFromAdmin: true,
@@ -56,6 +51,10 @@ describe('plugin and developer page renderers', () => {
       isFromAdmin: false,
     });
     expect(emptyInstalled.schema.properties.helperText).toEqual(expect.any(Object));
+  });
+
+  it('renders admin plugin configure pages for installed and uninstalled plugins', async () => {
+    const pluginAdminConfigurePage = await loadPage('../../src/components/pluginAdminConfigurePage.ts');
 
     const adminInstalled = pluginAdminConfigurePage.getPluginAdminConfigurePageRender({
       pluginId: 'private-plugin',
@@ -81,6 +80,10 @@ describe('plugin and developer page renderers', () => {
       installed: false,
     });
     expect(adminUninstalled.schema.properties.basicInfo.oneOf[0].actions[0].id).toBe('installButton');
+  });
+
+  it('renders filtered plugin market pages', async () => {
+    const pluginMarketListPage = await loadPage('../../src/components/pluginMarketListPage.ts');
 
     const market = pluginMarketListPage.getPluginMarketListPageRender({
       pluginList: plugins(),
@@ -90,11 +93,19 @@ describe('plugin and developer page renderers', () => {
     expect(market.schema.properties.plugins.oneOf).toEqual([
       expect.objectContaining({ const: 'private-plugin=private' }),
     ]);
+  });
+
+  it('renders developer settings page admin-only controls', async () => {
+    const developerSettingsPage = await loadPage('../../src/components/developerSettingsPage/index.ts');
 
     const developer = developerSettingsPage.getDeveloperSettingsPageRender({ isAdmin: true });
     expect(developer.schema.properties).toHaveProperty('reinitializeUserMappingButton');
     expect(developerSettingsPage.getDeveloperSettingsPageRender({ isAdmin: false }).schema.properties)
       .not.toHaveProperty('reinitializeUserMappingButton');
+  });
+
+  it('renders implemented interfaces status pages', async () => {
+    const implementedInterfacesPage = await loadPage('../../src/components/developerSettingsPage/implementedInterfacesPage.ts');
 
     const interfaces = implementedInterfacesPage.getImplementedInterfacesPageRender({
       implementedInterfaces: {
@@ -110,10 +121,8 @@ describe('plugin and developer page renderers', () => {
 });
 
 describe('google sheets and server-side logging page renderers', () => {
-  it('renders user/admin Google Sheets pages and update-state helpers', async () => {
+  it('renders managed user Google Sheets pages', async () => {
     const googleSheetsPage = await loadPage('../../src/components/platformSpecific/googleSheetsPage.ts');
-    const adminGoogleSheetsPage = await loadPage('../../src/components/admin/adminGoogleSheetsPage.ts');
-
     const managedUserPage = googleSheetsPage.renderGoogleSheetsPage({
       userSettings: {
         googleSheetsName: { customizable: false, value: 'Admin Sheet' },
@@ -123,6 +132,10 @@ describe('google sheets and server-side logging page renderers', () => {
     expect(managedUserPage.schema.properties.warning.description).toContain('managed by your administrator');
     expect(managedUserPage.uiSchema.removeSheetButton['ui:disabled']).toBe(true);
     expect(managedUserPage.formData.sheetUrl).toBe('https://sheet.example');
+  });
+
+  it('enables user Google Sheets create button after a sheet name is entered', async () => {
+    const googleSheetsPage = await loadPage('../../src/components/platformSpecific/googleSheetsPage.ts');
 
     const emptyUserPage = googleSheetsPage.renderGoogleSheetsPage({
       userSettings: {},
@@ -133,7 +146,10 @@ describe('google sheets and server-side logging page renderers', () => {
       page: emptyUserPage,
       formData: { newSheetName: 'New Sheet' },
     }).uiSchema.newSheetButton).not.toHaveProperty('ui:disabled');
+  });
 
+  it('renders existing admin Google Sheets settings', async () => {
+    const adminGoogleSheetsPage = await loadPage('../../src/components/admin/adminGoogleSheetsPage.ts');
     const adminExisting = adminGoogleSheetsPage.renderAdminGoogleSheetsPage({
       adminSettings: {
         userSettings: {
@@ -144,7 +160,10 @@ describe('google sheets and server-side logging page renderers', () => {
     });
     expect(adminExisting.schema.properties).toHaveProperty('adminRemoveSheetButton');
     expect(adminExisting.formData.forceGoogleSheets.customizable).toBe(false);
+  });
 
+  it('updates admin Google Sheets create button from sheet name state', async () => {
+    const adminGoogleSheetsPage = await loadPage('../../src/components/admin/adminGoogleSheetsPage.ts');
     const adminNew = adminGoogleSheetsPage.renderAdminGoogleSheetsPage({
       adminSettings: {},
     });
@@ -211,7 +230,10 @@ describe('google sheets and server-side logging page renderers', () => {
       owner: 'admin',
     });
     expect(page.uiSchema.serverSideLoggingHolder.region).toEqual({ 'ui:widget': 'select' });
+  });
 
+  it('renders server-side logging defaults without RingCX permissions', async () => {
+    const serverSideLoggingPage = await loadPage('../../src/components/admin/serverSideLoggingPage.ts');
     const noCxPage = serverSideLoggingPage.getServerSideLoggingSettingPageRender({
       subscriptionLevel: 'Disable',
       doNotLogNumbers: '',
@@ -224,10 +246,8 @@ describe('google sheets and server-side logging page renderers', () => {
 });
 
 describe('user mapping and reports page renderers', () => {
-  it('renders user mapping lists and edit forms with search/filter branches', async () => {
+  it('renders mapped user mapping lists with search and mapped filters', async () => {
     const userMappingPage = await loadPage('../../src/components/admin/userMappingPage/userMappingPage.ts');
-    const editUserMappingPage = await loadPage('../../src/components/admin/userMappingPage/editUserMappingPage.ts');
-
     const mappings = [
       {
         crmUser: { id: 'crm-1', name: 'Jane CRM', email: 'jane@example.test' },
@@ -255,7 +275,23 @@ describe('user mapping and reports page renderers', () => {
         description: 'Jane RC - ext: 101 (+1 others)',
       }),
     ]);
+  });
 
+  it('renders unmapped user mapping lists', async () => {
+    const userMappingPage = await loadPage('../../src/components/admin/userMappingPage/userMappingPage.ts');
+    const mappings = [
+      {
+        crmUser: { id: 'crm-1', name: 'Jane CRM', email: 'jane@example.test' },
+        rcUser: [
+          { extensionId: 'ext-1', name: 'Jane RC', extensionNumber: '101' },
+          { extensionId: 'ext-2', name: 'Backup RC', extensionNumber: '102' },
+        ],
+      },
+      {
+        crmUser: { id: 'crm-2', name: 'Alex CRM', email: 'alex@example.test' },
+        rcUser: [],
+      },
+    ];
     const unmapped = userMappingPage.getUserMappingPageRender({
       userMapping: mappings,
       platformDisplayName: 'Salesforce',
@@ -268,7 +304,19 @@ describe('user mapping and reports page renderers', () => {
         description: '(Unknown)',
       }),
     ]);
+  });
 
+  it('renders edit user mapping pages with selected RC extensions', async () => {
+    const editUserMappingPage = await loadPage('../../src/components/admin/userMappingPage/editUserMappingPage.ts');
+    const mappings = [
+      {
+        crmUser: { id: 'crm-1', name: 'Jane CRM', email: 'jane@example.test' },
+        rcUser: [
+          { extensionId: 'ext-1', name: 'Jane RC', extensionNumber: '101' },
+          { extensionId: 'ext-2', name: 'Backup RC', extensionNumber: '102' },
+        ],
+      },
+    ];
     const edit = editUserMappingPage.renderEditUserMappingPage({
       userMapping: mappings[0],
       platformDisplayName: 'Salesforce',
@@ -288,9 +336,8 @@ describe('user mapping and reports page renderers', () => {
     expect(edit.uiSchema.rcExtensionList['ui:options'].enumOptions).toHaveLength(2);
   });
 
-  it('renders user and company report tabs with metrics, date ranges, and admin-only tab options', async () => {
+  it('renders user report tabs with metrics, date ranges, and admin-only tab options', async () => {
     const reportPage = await loadPage('../../src/components/reportPage/reportPage.ts');
-
     const userPage = reportPage.getReportsPageRender({
       selectedTab: 'userReportTab',
       selectedRcExtension: 'me',
@@ -328,7 +375,10 @@ describe('user mapping and reports page renderers', () => {
     expect(userPage.schema.properties).toHaveProperty('unloggedCallSummary');
     expect(userPage.formData.unloggedCalls).toEqual([{ sessionId: 'call-1' }]);
     expect(userPage.schema.properties.rcExtensionList.enum).toEqual(['ext-1', 'me']);
+  });
 
+  it('renders company report tabs with selected grouping and SMS metrics', async () => {
+    const reportPage = await loadPage('../../src/components/reportPage/reportPage.ts');
     const companyPage = reportPage.getReportsPageRender({
       selectedTab: 'companyReportTab',
       selectedGroupKey: 'department',
@@ -366,7 +416,10 @@ describe('user mapping and reports page renderers', () => {
       itemKeyEnums: 'Sales',
       smsActivitySummary: 'smsMessageReceivedCount',
     });
+  });
 
+  it('renders company report tabs with read-only N/A item selection when no item keys exist', async () => {
+    const reportPage = await loadPage('../../src/components/reportPage/reportPage.ts');
     const companyWithoutItems = reportPage.getReportsPageRender({
       selectedTab: 'companyReportTab',
       groupKeys: [],

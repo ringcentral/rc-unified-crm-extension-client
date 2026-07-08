@@ -189,6 +189,32 @@ function rcInfo() {
   };
 }
 
+function loggedInEventData() {
+  return {
+    loggedIn: true,
+    loginNumber: '+16505550100',
+    contractedCountryCode: 'US',
+    features: {
+      smartNote: true,
+      ringSenseInsights: true,
+      ringCX: false,
+      sms: true,
+    },
+  };
+}
+
+async function notifyLoggedInWithCrmJwt() {
+  seedStorage({
+    rcUnifiedCrmExtJwt: 'crm-jwt',
+    userSettings: { showAppointmentsTab: { value: true } },
+  });
+  const handler = await loadLoginStatusHandler();
+
+  await handler.onEvent({
+    data: loggedInEventData(),
+  });
+}
+
 describe('rc-login-status-notify event handler', () => {
   beforeEach(() => {
     appendWidgetContainer();
@@ -230,26 +256,8 @@ describe('rc-login-status-notify event handler', () => {
     });
   });
 
-  it('initializes logged-in CRM state, page tabs, analytics identity, and refresh sync', async () => {
-    seedStorage({
-      rcUnifiedCrmExtJwt: 'crm-jwt',
-      userSettings: { showAppointmentsTab: { value: true } },
-    });
-    const handler = await loadLoginStatusHandler();
-
-    await handler.onEvent({
-      data: {
-        loggedIn: true,
-        loginNumber: '+16505550100',
-        contractedCountryCode: 'US',
-        features: {
-          smartNote: true,
-          ringSenseInsights: true,
-          ringCX: false,
-          sms: true,
-        },
-      },
-    });
+  it('stores logged-in feature permissions and updates widget authorization status', async () => {
+    await notifyLoggedInWithCrmJwt();
 
     expect(readStorage().userPermissions).toEqual({
       aiNote: true,
@@ -258,6 +266,19 @@ describe('rc-login-status-notify event handler', () => {
       sms: true,
       c2sms: true,
     });
+    expect(getWidgetPostMessages()).toContainEqual({
+      message: {
+        type: 'rc-adapter-update-authorization-status',
+        authorized: true,
+      },
+      targetOrigin: '*',
+    });
+    expect(trackRcLogin).toHaveBeenCalled();
+  });
+
+  it('registers report, calldown, and appointments tabs after login', async () => {
+    await notifyLoggedInWithCrmJwt();
+
     expect(reportPage.getReportsPageRender).toHaveBeenCalledWith({
       userStats: { calls: 4 },
       userSettings: {},
@@ -273,6 +294,11 @@ describe('rc-login-status-notify event handler', () => {
       showConfirm: false,
       userSettings: { showAppointmentsTab: { value: true } },
     }));
+  });
+
+  it('sets analytics identity and RingCentral request headers after login', async () => {
+    await notifyLoggedInWithCrmJwt();
+
     expect(identify).toHaveBeenCalledWith({
       extensionId: 'extension-1',
       rcAccountId: 'account-1',
@@ -284,6 +310,11 @@ describe('rc-login-status-notify event handler', () => {
       'rc-account-id': 'account-1',
       'developer-author-name': 'App Connect Team',
     });
+  });
+
+  it('refreshes admin settings, plugin settings, preload settings, and SSCL token after login', async () => {
+    await notifyLoggedInWithCrmJwt();
+
     expect(adminCore.refreshAdminSettings).toHaveBeenCalled();
     expect(pluginService.checkAndUpdatePluginVersion).toHaveBeenCalled();
     expect(userCore.refreshUserSettings).toHaveBeenCalledWith({
@@ -294,14 +325,6 @@ describe('rc-login-status-notify event handler', () => {
       platform: manifest().platforms.salesforce,
       token: 'crm-jwt',
     });
-    expect(getWidgetPostMessages()).toContainEqual({
-      message: {
-        type: 'rc-adapter-update-authorization-status',
-        authorized: true,
-      },
-      targetOrigin: '*',
-    });
-    expect(trackRcLogin).toHaveBeenCalled();
     expect(userCore.preloadUserSettingsFromAdmin).toHaveBeenCalledWith({
       serverUrl: 'https://server.example',
     });

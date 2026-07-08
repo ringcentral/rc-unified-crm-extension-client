@@ -213,16 +213,14 @@ describe('rc-active-call-notify event handler', () => {
     expect(readStorage()['call-log-data-ready-session-2'].isReady).toBe(false);
   });
 
-  it('opens outbound call-pop paths on answer, first ring, and final outbound log defaulting', async () => {
+  it('opens outbound call-pop when outgoing pop is configured for answer', async () => {
     seedStorage({
       userSettings: {
         allowExtensionNumberLogging: { value: true },
       },
       implementedInterfaces: {},
     });
-    vi.mocked(userCore.getOutgoingCallPop)
-      .mockReturnValueOnce({ value: 'onAnswer' })
-      .mockReturnValueOnce({ value: 'onFirstRing' });
+    vi.mocked(userCore.getOutgoingCallPop).mockReturnValue({ value: 'onAnswer' });
     const handler = await loadActiveCallHandler();
 
     await handler.onEvent({
@@ -259,6 +257,17 @@ describe('rc-active-call-notify event handler', () => {
         note: '',
       },
     }));
+  });
+
+  it('opens outbound call-pop when outgoing pop is configured for first ring', async () => {
+    seedStorage({
+      userSettings: {
+        allowExtensionNumberLogging: { value: true },
+      },
+      implementedInterfaces: {},
+    });
+    vi.mocked(userCore.getOutgoingCallPop).mockReturnValue({ value: 'onFirstRing' });
+    const handler = await loadActiveCallHandler();
 
     await handler.onEvent({
       popupContext: {},
@@ -281,8 +290,18 @@ describe('rc-active-call-notify event handler', () => {
       platformName: 'salesforce',
       phoneNumber: '+16505550400',
       multiContactMatchBehavior: 'prompt',
-      fromCallPop: true,
+        fromCallPop: true,
+      });
+  });
+
+  it('defaults outbound final call log pages', async () => {
+    seedStorage({
+      userSettings: {
+        allowExtensionNumberLogging: { value: true },
+      },
+      implementedInterfaces: {},
     });
+    const handler = await loadActiveCallHandler();
 
     await handler.onEvent({
       popupContext: {},

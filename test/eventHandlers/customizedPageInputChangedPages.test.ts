@@ -220,7 +220,7 @@ describe('customizedPage inputChanged page handlers', () => {
     ]));
   });
 
-  it('renders user and company report pages, validates admin extension selections, and handles bad custom ranges', async () => {
+  it('ignores invalid admin report extension selections before rendering', async () => {
     seedStorage({
       isAdmin: true,
       userSettings: {},
@@ -242,6 +242,19 @@ describe('customizedPage inputChanged page handlers', () => {
       platformName: 'salesforce',
     });
     expect(reportPage.getReportsPageRender).not.toHaveBeenCalled();
+    expect(adminCore.getAdminReportStats).not.toHaveBeenCalled();
+    expect(userCore.getUserReportStats).not.toHaveBeenCalled();
+  });
+
+  it('fetches company report stats with the account timezone and selected group key', async () => {
+    seedStorage({
+      isAdmin: true,
+      userSettings: {},
+      rcUnifiedCrmExtJwt: 'jwt-1',
+    });
+    const { handler, adminCore, reportPage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/reportPage.ts',
+    );
 
     await handler.onEvent({
       data: dataFor({
@@ -263,6 +276,28 @@ describe('customizedPage inputChanged page handlers', () => {
       timezone: 'Asia/Shanghai',
       groupBy: 'day',
     }));
+    expect(reportPage.getReportsPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      selectedTab: 'companyReportTab',
+      selectedRcExtension: 'extension-1',
+      companyStats: expect.objectContaining({
+        groupedBy: 'day',
+        dateRange: 'Last 7 days',
+        startDate: '2026-07-01',
+        endDate: '2026-07-03',
+      }),
+      userStats: undefined,
+    }));
+  });
+
+  it('fetches current-user report stats for the user report tab', async () => {
+    seedStorage({
+      isAdmin: true,
+      userSettings: {},
+      rcUnifiedCrmExtJwt: 'jwt-1',
+    });
+    const { handler, adminCore, userCore, reportPage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/reportPage.ts',
+    );
 
     await handler.onEvent({
       data: dataFor({
@@ -281,6 +316,27 @@ describe('customizedPage inputChanged page handlers', () => {
     expect(userCore.getUserReportStats).toHaveBeenCalledWith(expect.objectContaining({
       dateRange: 'Last 30 days',
     }));
+    expect(adminCore.getUserExtensionReportStats).not.toHaveBeenCalled();
+    expect(reportPage.getReportsPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      selectedTab: 'userReportTab',
+      selectedRcExtension: 'me',
+      userStats: expect.objectContaining({
+        loggedCallCount: 2,
+        dateRange: 'Last 30 days',
+      }),
+      companyStats: undefined,
+    }));
+  });
+
+  it('updates the selected company report item without refetching stats', async () => {
+    seedStorage({
+      isAdmin: true,
+      userSettings: {},
+      rcUnifiedCrmExtJwt: 'jwt-1',
+    });
+    const { handler, adminCore, userCore, reportPage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/reportPage.ts',
+    );
 
     await handler.onEvent({
       data: dataFor({
@@ -305,6 +361,19 @@ describe('customizedPage inputChanged page handlers', () => {
       selectedItemKey: 'calls',
       companyStats: expect.objectContaining({ groupedBy: 'user' }),
     }));
+    expect(adminCore.getAdminReportStats).not.toHaveBeenCalled();
+    expect(userCore.getUserReportStats).not.toHaveBeenCalled();
+  });
+
+  it('stops report loading without rendering when a custom date range is invalid', async () => {
+    seedStorage({
+      isAdmin: true,
+      userSettings: {},
+      rcUnifiedCrmExtJwt: 'jwt-1',
+    });
+    const { handler, adminCore, userCore, reportPage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/reportPage.ts',
+    );
 
     await handler.onEvent({
       data: dataFor({
@@ -321,21 +390,16 @@ describe('customizedPage inputChanged page handlers', () => {
       platformName: 'salesforce',
     });
     expect(window.postMessage).toHaveBeenCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
+    expect(reportPage.getReportsPageRender).not.toHaveBeenCalled();
+    expect(adminCore.getAdminReportStats).not.toHaveBeenCalled();
+    expect(userCore.getUserReportStats).not.toHaveBeenCalled();
   });
 
-  it('recalculates appointment duration and searches participant contacts', async () => {
+  it('normalizes appointment create end time when start time is after end time', async () => {
     seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
-    const { handler, appointmentCreatePage, appointmentEditPage } = await loadPageHandler(
+    const { handler, appointmentCreatePage } = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentPage.ts',
     );
-    vi.mocked(axios.get).mockResolvedValueOnce({
-      data: {
-        contact: [
-          { id: 'candidate-1', type: 'Lead', name: 'Existing', email: 'existing@example.test' },
-          { id: 'candidate-2', type: 'Lead', name: 'New Person', email: 'new@example.test' },
-        ],
-      },
-    });
 
     await handler.onEvent({
       data: dataFor({
@@ -356,6 +420,13 @@ describe('customizedPage inputChanged page handlers', () => {
       }),
       appointmentTitle: 'CRM Appointments',
     }));
+  });
+
+  it('recalculates appointment edit duration from end time changes', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const { handler, appointmentEditPage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentPage.ts',
+    );
 
     await handler.onEvent({
       data: dataFor({
@@ -374,6 +445,21 @@ describe('customizedPage inputChanged page handlers', () => {
         duration: 'PT1H30M',
       }),
     }));
+  });
+
+  it('searches appointment participant contacts and keeps selected candidates', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const { handler, appointmentCreatePage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentPage.ts',
+    );
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        contact: [
+          { id: 'candidate-1', type: 'Lead', name: 'Existing', email: 'existing@example.test' },
+          { id: 'candidate-2', type: 'Lead', name: 'New Person', email: 'new@example.test' },
+        ],
+      },
+    });
 
     await handler.onEvent({
       data: dataFor({
@@ -408,13 +494,13 @@ describe('customizedPage inputChanged page handlers', () => {
     }));
   });
 
-  it('refreshes appointments immediately for tab/filter changes and debounces search changes', async () => {
+  it('ignores appointment page refresh events without list filters', async () => {
     seedStorage({
       userSettings: {},
       rcUnifiedCrmExtJwt: 'jwt-1',
       appointmentsLastState: { tab: 'upcoming', search: '', filter: 'All' },
     });
-    const { handler, appointmentsPage, util } = await loadPageHandler(
+    const { handler, appointmentsPage } = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentsPage.ts',
     );
 
@@ -423,6 +509,17 @@ describe('customizedPage inputChanged page handlers', () => {
       manifest: manifest(),
     });
     expect(appointmentsPage.getAppointmentsPageWithRecords).not.toHaveBeenCalled();
+  });
+
+  it('refreshes appointments for search/filter changes', async () => {
+    seedStorage({
+      userSettings: {},
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      appointmentsLastState: { tab: 'upcoming', search: '', filter: 'All' },
+    });
+    const { handler, appointmentsPage, util } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentsPage.ts',
+    );
 
     await handler.onEvent({
       data: dataFor({
@@ -441,6 +538,17 @@ describe('customizedPage inputChanged page handlers', () => {
       searchWithFilters: { search: 'Jane', filter: 'All' },
       forceSync: false,
     }));
+  });
+
+  it('refreshes appointments immediately for tab changes and remembers list state', async () => {
+    seedStorage({
+      userSettings: {},
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      appointmentsLastState: { tab: 'upcoming', search: '', filter: 'All' },
+    });
+    const { handler } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentsPage.ts',
+    );
 
     await handler.onEvent({
       data: dataFor({
@@ -464,7 +572,7 @@ describe('customizedPage inputChanged page handlers', () => {
     ]));
   });
 
-  it('refreshes calldown list for debounced search, filter changes, errors, and other changes', async () => {
+  it('refreshes calldown list for search text changes', async () => {
     seedStorage({
       userSettings: {},
       calldownLastState: { search: '', filter: 'All' },
@@ -487,6 +595,16 @@ describe('customizedPage inputChanged page handlers', () => {
       searchWithFilters: { search: 'Jane', filter: 'All' },
     }));
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('shows calldown loading state for filter changes', async () => {
+    seedStorage({
+      userSettings: {},
+      calldownLastState: { search: 'Jane', filter: 'All' },
+    });
+    const { handler } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/calldownPage.ts',
+    );
 
     await handler.onEvent({
       data: dataFor({
@@ -499,8 +617,18 @@ describe('customizedPage inputChanged page handlers', () => {
     });
     expect(window.postMessage).toHaveBeenCalledWith({ type: 'rc-log-modal-loading-on' }, '*');
     expect(window.postMessage).toHaveBeenCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
+  });
 
+  it('responds with calldown refresh errors', async () => {
+    seedStorage({
+      userSettings: {},
+      calldownLastState: { search: '', filter: 'All' },
+    });
+    const { handler, calldownPage, util } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/calldownPage.ts',
+    );
     calldownPage.getCalldownPageWithRecords.mockRejectedValueOnce(new Error('calldown failed'));
+
     await handler.onEvent({
       data: dataFor({
         keys: ['searchWithFilters'],
@@ -511,8 +639,18 @@ describe('customizedPage inputChanged page handlers', () => {
       manifest: manifest(),
     });
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { error: 'calldown failed' });
+  });
 
+  it('refreshes calldown list for non-search changes with legacy filters', async () => {
+    seedStorage({
+      userSettings: {},
+      calldownLastState: { search: '', filter: 'All' },
+    });
+    const { handler, calldownPage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/calldownPage.ts',
+    );
     calldownPage.getCalldownPageWithRecords.mockResolvedValueOnce({ id: 'calldownPage' });
+
     await handler.onEvent({
       data: dataFor({
         keys: ['rowAction'],
