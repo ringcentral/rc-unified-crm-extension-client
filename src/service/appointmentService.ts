@@ -17,7 +17,7 @@ type AppointmentListResponse =
 
 interface AppointmentRequestBase {
   serverUrl: string;
-  jwtToken: string;
+  jwtToken?: string;
 }
 
 interface ListAppointmentsOptions extends AppointmentRequestBase {
@@ -61,6 +61,12 @@ function normalizeAppointmentsResponse(data: AppointmentListResponse): Appointme
   return [];
 }
 
+function getJwtAuthorizationConfig(jwtToken?: string) {
+  return jwtToken
+    ? { headers: { Authorization: `Bearer ${jwtToken}` } }
+    : {};
+}
+
 export async function listAppointments({
   serverUrl,
   jwtToken,
@@ -70,8 +76,8 @@ export async function listAppointments({
 }: ListAppointmentsOptions): Promise<AppointmentRecord[]> {
   try {
     const { data } = await axios.get(`${serverUrl}/appointments`, {
+      ...getJwtAuthorizationConfig(jwtToken),
       params: {
-        jwtToken,
         range,
         mineOnly: mineOnly ? 'true' : 'false',
         forceSync: forceSync ? 'true' : 'false',
@@ -94,18 +100,18 @@ export async function updateAppointmentStatus({
   const normalized = String(status || '').toLowerCase();
   try {
     if (normalized === 'confirmed') {
-      const { data } = await axios.post(`${serverUrl}/appointments/${appointmentId}/confirm`, null, { params: { jwtToken } });
+      const { data } = await axios.post(`${serverUrl}/appointments/${appointmentId}/confirm`, null, getJwtAuthorizationConfig(jwtToken));
       return data;
     }
     if (normalized === 'canceled' || normalized === 'cancelled') {
-      const { data } = await axios.post(`${serverUrl}/appointments/${appointmentId}/cancel`, null, { params: { jwtToken } });
+      const { data } = await axios.post(`${serverUrl}/appointments/${appointmentId}/cancel`, null, getJwtAuthorizationConfig(jwtToken));
       return data;
     }
   } catch (e) {
     // continue to fallback
   }
   try {
-    const { data } = await axios.post(`${serverUrl}/appointments/${appointmentId}/status`, { status: normalized }, { params: { jwtToken } });
+    const { data } = await axios.post(`${serverUrl}/appointments/${appointmentId}/status`, { status: normalized }, getJwtAuthorizationConfig(jwtToken));
     return data;
   } catch (e) {
     return null;
@@ -119,7 +125,7 @@ export async function updateAppointment({
   patch,
 }: UpdateAppointmentOptions): Promise<unknown | null> {
   try {
-    const { data } = await axios.patch(`${serverUrl}/appointments/${appointmentId}`, patch, { params: { jwtToken } });
+    const { data } = await axios.patch(`${serverUrl}/appointments/${appointmentId}`, patch, getJwtAuthorizationConfig(jwtToken));
     return data;
   } catch (e) {
     return null;
@@ -131,9 +137,8 @@ export async function refreshAppointment({
   jwtToken,
   appointmentId,
 }: AppointmentIdOptions): Promise<unknown | null> {
-  console.log('refreshAppointment', serverUrl, jwtToken, appointmentId);
   try {
-    const { data } = await axios.get(`${serverUrl}/appointments/${appointmentId}/refresh`, { params: { jwtToken } });
+    const { data } = await axios.get(`${serverUrl}/appointments/${appointmentId}/refresh`, getJwtAuthorizationConfig(jwtToken));
     return data;
   } catch (e) {
     return null;
@@ -146,7 +151,7 @@ export async function createAppointment({
   payload,
 }: CreateAppointmentOptions): Promise<unknown | null> {
   try {
-    const { data } = await axios.post(`${serverUrl}/appointments`, payload, { params: { jwtToken } });
+    const { data } = await axios.post(`${serverUrl}/appointments`, payload, getJwtAuthorizationConfig(jwtToken));
     return data;
   } catch (e) {
     return null;

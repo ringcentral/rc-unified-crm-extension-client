@@ -218,9 +218,28 @@ describe('popup runtime', () => {
     });
     expect(request.url).toBe('https://api.example/records?search=Jane');
     expect(request.headers.Authorization).toBe('Bearer url-token');
+    expect(request.params).toEqual({ page: 1 });
     expect(runtime.logRecorder.logAction).toHaveBeenCalledWith(expect.objectContaining({
       name: 'API_REQUEST',
     }));
+  });
+
+  it('moves jwtToken axios params into authorization before the request is sent', async () => {
+    const runtime = await loadPopupRuntime();
+
+    const request = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records',
+      baseURL: 'https://api.example',
+      method: 'get',
+      params: {
+        jwtToken: 'params-token',
+        search: 'Jane',
+      },
+    });
+
+    expect(request.url).toBe('/records');
+    expect(request.params).toEqual({ search: 'Jane' });
+    expect(request.headers.Authorization).toBe('Bearer params-token');
   });
 
   it('skips authorization when a request opts out', async () => {

@@ -119,12 +119,17 @@ export async function getCustomContactSearchData({
     formData?.appointmentCreateDraft?.emailMandatoryInAttendee ??
     formData?.appointmentEditDraft?.emailMandatoryInAttendee;
   const appointmentEmailFilter = appointment && resolvedEmailMandatoryInAttendee !== false;
-  const contactRes = await axios.get(`${serverUrl}/custom/contact/search`, {
+  const requestConfig: UnknownRecord = {
     params: {
-      jwtToken: rcUnifiedCrmExtJwt,
       name: contactSearch ?? '',
     },
-  });
+  };
+  if (rcUnifiedCrmExtJwt) {
+    requestConfig.headers = {
+      Authorization: `Bearer ${rcUnifiedCrmExtJwt}`,
+    };
+  }
+  const contactRes = await axios.get(`${serverUrl}/custom/contact/search`, requestConfig);
   const data = contactRes.data as ContactSearchResponse;
   if (data.contact.length === 0) {
     showNotification({

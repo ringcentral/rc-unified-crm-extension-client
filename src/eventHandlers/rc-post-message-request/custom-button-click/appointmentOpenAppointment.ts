@@ -31,7 +31,11 @@ export async function onEvent({ data, manifest, platformName, listButtonItemId }
       const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as { rcUnifiedCrmExtJwt?: string };
       const platformInfo = await chrome.storage.local.get('platform-info') as UnknownRecord;
       if (platformInfo?.['platform-info']?.hostname === 'temp' && rcUnifiedCrmExtJwt) {
-        const hostnameRes = await axios.get(`${manifest.serverUrl}/hostname?jwtToken=${rcUnifiedCrmExtJwt}`);
+        const hostnameRes = await axios.get(`${manifest.serverUrl}/hostname`, {
+          headers: {
+            Authorization: `Bearer ${rcUnifiedCrmExtJwt}`,
+          },
+        });
         platformInfo['platform-info'].hostname = hostnameRes.data;
         await chrome.storage.local.set(platformInfo);
       }

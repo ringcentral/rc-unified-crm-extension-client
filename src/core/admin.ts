@@ -23,6 +23,12 @@ function getWidgetFrame(): UnknownRecord {
     return document.querySelector("#rc-widget-adapter-frame") as UnknownRecord;
 }
 
+function getJwtAuthorizationConfig(jwtToken?: string): UnknownRecord {
+    return jwtToken
+        ? { headers: { Authorization: `Bearer ${jwtToken}` } }
+        : {};
+}
+
 async function getAdminSettings({ serverUrl }: UnknownRecord): Promise<UnknownRecord | null> {
     try {
         const rcAccessToken = getRcAccessToken();
@@ -500,7 +506,8 @@ async function getManagedAuthSettings({ serverUrl }: UnknownRecord): Promise<any
     const { rcUnifiedCrmExtJwt } = await chromeStorageLocal.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
     const response = await axios.get(
-        `${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        `${serverUrl}/admin/managedAuth?rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        getJwtAuthorizationConfig(rcUnifiedCrmExtJwt),
     );
     await chrome.storage.local.set({ managedAuthSettings: response.data });
     return response.data;
@@ -519,14 +526,15 @@ async function saveManagedAuthSettings({
     const { rcUnifiedCrmExtJwt } = await chromeStorageLocal.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
     const response = await axios.post(
-        `${serverUrl}/admin/managedAuth?jwtToken=${rcUnifiedCrmExtJwt}&rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        `${serverUrl}/admin/managedAuth?rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
         {
             scope,
             values,
             rcExtensionId,
             rcUserName,
             fieldsToRemove
-        }
+        },
+        getJwtAuthorizationConfig(rcUnifiedCrmExtJwt),
     );
     if (refreshAfterSave) {
         await getManagedAuthSettings({ serverUrl });

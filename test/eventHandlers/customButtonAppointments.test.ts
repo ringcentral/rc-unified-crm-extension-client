@@ -258,7 +258,11 @@ describe('custom-button appointment handlers', () => {
       manifest: manifest(),
       platformName: 'salesforce',
     });
-    expect(axios.get).toHaveBeenCalledWith('https://server.example/hostname?jwtToken=jwt-1');
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/hostname', {
+      headers: {
+        Authorization: 'Bearer jwt-1',
+      },
+    });
     expect(open).toHaveBeenCalledWith('https://resolved.example/appointments/id%20with%20spaces?ats=ats.example', '_blank');
   });
 
@@ -532,7 +536,11 @@ describe('custom-button appointment handlers', () => {
       },
       platformName: 'salesforce',
     });
-    expect(axios.get).toHaveBeenCalledWith('https://server.example/hostname?jwtToken=jwt-1');
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/hostname', {
+      headers: {
+        Authorization: 'Bearer jwt-1',
+      },
+    });
     expect(open).toHaveBeenCalledWith('https://resolved.example/contacts/Lead/contact-1');
     expect(loaded.contactCore.openContactPage).not.toHaveBeenCalled();
   });

@@ -81,6 +81,29 @@ function extractJwtTokenFromUrl(url, baseURL) {
   }
 }
 
+function extractJwtTokenFromParams(params) {
+  if (!params) {
+    return { sanitizedParams: params, jwtToken: null };
+  }
+  if (params instanceof URLSearchParams) {
+    const jwtToken = params.get('jwtToken');
+    if (!params.has('jwtToken')) {
+      return { sanitizedParams: params, jwtToken: null };
+    }
+    const sanitizedParams = new URLSearchParams(params);
+    sanitizedParams.delete('jwtToken');
+    return { sanitizedParams, jwtToken };
+  }
+  if (typeof params === 'object' && !Array.isArray(params)) {
+    if (!Object.prototype.hasOwnProperty.call(params, 'jwtToken')) {
+      return { sanitizedParams: params, jwtToken: null };
+    }
+    const { jwtToken, ...sanitizedParams } = params;
+    return { sanitizedParams, jwtToken };
+  }
+  return { sanitizedParams: params, jwtToken: null };
+}
+
 async function persistRefreshedJwtToken(headers) {
   const refreshedToken = headers?.['x-refreshed-jwt-token'] || headers?.['X-Refreshed-Jwt-Token'];
   if (refreshedToken) {
@@ -94,12 +117,16 @@ axios.interceptors.request.use(
   async (config) => {
     const requestConfig = config as UnknownRecord;
     const { sanitizedUrl, jwtToken: tokenFromUrl } = extractJwtTokenFromUrl(requestConfig.url, requestConfig.baseURL);
+    const { sanitizedParams, jwtToken: tokenFromParams } = extractJwtTokenFromParams(requestConfig.params);
     if (tokenFromUrl) {
       requestConfig.url = sanitizedUrl;
     }
+    if (tokenFromParams !== null) {
+      requestConfig.params = sanitizedParams;
+    }
     if (!requestConfig.skipAuthorization) {
       const { rcUnifiedCrmExtJwt } = await chromeStorageLocal.get({ rcUnifiedCrmExtJwt: null });
-      const tokenToUse = tokenFromUrl || rcUnifiedCrmExtJwt;
+      const tokenToUse = tokenFromUrl || tokenFromParams || rcUnifiedCrmExtJwt;
       if (tokenToUse) {
         requestConfig.headers = requestConfig.headers || {};
         if (!requestConfig.headers.Authorization && !requestConfig.headers.authorization) {

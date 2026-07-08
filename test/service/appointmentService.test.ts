@@ -45,8 +45,10 @@ describe('appointmentService', () => {
     })).resolves.toEqual([]);
 
     expect(axios.get).toHaveBeenNthCalledWith(1, 'https://server.example/appointments', {
+      headers: {
+        Authorization: 'Bearer jwt-1',
+      },
       params: {
-        jwtToken: 'jwt-1',
         range: 'past',
         mineOnly: 'false',
         forceSync: 'true',
@@ -80,9 +82,21 @@ describe('appointmentService', () => {
       status: 'tentative',
     })).resolves.toEqual({ status: 'tentative' });
 
-    expect(axios.post).toHaveBeenNthCalledWith(1, 'https://server.example/appointments/appt-1/confirm', null, { params: { jwtToken: 'jwt-1' } });
-    expect(axios.post).toHaveBeenNthCalledWith(2, 'https://server.example/appointments/appt-1/cancel', null, { params: { jwtToken: 'jwt-1' } });
-    expect(axios.post).toHaveBeenNthCalledWith(3, 'https://server.example/appointments/appt-1/status', { status: 'tentative' }, { params: { jwtToken: 'jwt-1' } });
+    expect(axios.post).toHaveBeenNthCalledWith(1, 'https://server.example/appointments/appt-1/confirm', null, {
+      headers: {
+        Authorization: 'Bearer jwt-1',
+      },
+    });
+    expect(axios.post).toHaveBeenNthCalledWith(2, 'https://server.example/appointments/appt-1/cancel', null, {
+      headers: {
+        Authorization: 'Bearer jwt-1',
+      },
+    });
+    expect(axios.post).toHaveBeenNthCalledWith(3, 'https://server.example/appointments/appt-1/status', { status: 'tentative' }, {
+      headers: {
+        Authorization: 'Bearer jwt-1',
+      },
+    });
   });
 
   it('updates, refreshes, and creates appointments with null-on-error behavior', async () => {
@@ -113,5 +127,21 @@ describe('appointmentService', () => {
       jwtToken: 'jwt-1',
       payload: { title: 'New' },
     })).resolves.toBeNull();
+
+    expect(axios.patch).toHaveBeenCalledWith('https://server.example/appointments/appt-1', { title: 'Updated' }, {
+      headers: {
+        Authorization: 'Bearer jwt-1',
+      },
+    });
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/appointments/appt-1/refresh', {
+      headers: {
+        Authorization: 'Bearer jwt-1',
+      },
+    });
+    expect(axios.post).toHaveBeenNthCalledWith(1, 'https://server.example/appointments', { title: 'New' }, {
+      headers: {
+        Authorization: 'Bearer jwt-1',
+      },
+    });
   });
 });

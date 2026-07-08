@@ -477,8 +477,10 @@ describe('customizedPage inputChanged page handlers', () => {
     });
     await flushAsyncHandlers();
     expect(axios.get).toHaveBeenCalledWith('https://server.example/custom/contact/search', {
+      headers: {
+        Authorization: 'Bearer jwt-1',
+      },
       params: {
-        jwtToken: 'jwt-1',
         name: 'Jane',
       },
     });

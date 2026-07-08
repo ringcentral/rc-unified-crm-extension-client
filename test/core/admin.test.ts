@@ -234,13 +234,21 @@ describe('admin core', () => {
       platformName: 'salesforce',
     })).resolves.toEqual({ deleted: true });
 
-    expect(axios.get).toHaveBeenNthCalledWith(1, 'https://server.example/admin/managedAuth?jwtToken=jwt-1&rcAccessToken=rc-access-token&connectorId=connector-1&isPrivate=true');
-    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/managedAuth?jwtToken=jwt-1&rcAccessToken=rc-access-token&connectorId=connector-1&isPrivate=true', {
+    expect(axios.get).toHaveBeenNthCalledWith(1, 'https://server.example/admin/managedAuth?rcAccessToken=rc-access-token&connectorId=connector-1&isPrivate=true', {
+      headers: {
+        Authorization: 'Bearer jwt-1',
+      },
+    });
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/managedAuth?rcAccessToken=rc-access-token&connectorId=connector-1&isPrivate=true', {
       scope: 'account',
       values: { apiKey: 'secret' },
       rcExtensionId: undefined,
       rcUserName: undefined,
       fieldsToRemove: ['oldKey'],
+    }, {
+      headers: {
+        Authorization: 'Bearer jwt-1',
+      },
     });
     expect(axios.delete).toHaveBeenCalledWith('https://server.example/admin/managedOAuth/account?rcAccessToken=rc-access-token&platform=salesforce');
   });

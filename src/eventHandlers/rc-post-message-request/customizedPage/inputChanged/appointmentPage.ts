@@ -136,12 +136,17 @@ async function onEvent({ data, manifest, platformName }: UnknownRecord) {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     try {
       const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
-      const contactRes = await axios.get(`${manifest.serverUrl}/custom/contact/search`, {
+      const requestConfig: UnknownRecord = {
         params: {
-          jwtToken: rcUnifiedCrmExtJwt,
           name: searchText,
         },
-      });
+      };
+      if (rcUnifiedCrmExtJwt) {
+        requestConfig.headers = {
+          Authorization: `Bearer ${rcUnifiedCrmExtJwt}`,
+        };
+      }
+      const contactRes = await axios.get(`${manifest.serverUrl}/custom/contact/search`, requestConfig);
 
       const contactInfo = contactRes.data?.contact ?? [];
       const normalizedContacts = contactInfo
