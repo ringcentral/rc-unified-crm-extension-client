@@ -206,6 +206,13 @@ async function loadButtonHandler(modulePath, overrides = {}) {
       { id: 'account', type: 'Company', name: 'Acme' },
     ]),
     getRcAccessToken: vi.fn(() => 'rc-access-token'),
+    getRcAccessTokenHeaderConfig: vi.fn((config = {}) => ({
+      ...config,
+      headers: {
+        ...(config.headers ?? {}),
+        'X-RC-Access-Token': 'rc-access-token',
+      },
+    })),
     getRcInfo: vi.fn(async () => ({
       value: {
         cachedData: {
@@ -1171,12 +1178,16 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         }),
       }),
     }));
-    expect(axios.post).toHaveBeenCalledWith('https://server.example/plugin/register?rcAccessToken=rc-access-token', expect.objectContaining({
-      pluginId: 'plugin-1',
-      pluginAccess: 'admin',
-      rcAccountId: '1001',
-      ownerRcAccountId: 'owner-account-1',
-    }));
+    expect(axios.post).toHaveBeenCalledWith(
+      'https://server.example/plugin/register',
+      expect.objectContaining({
+        pluginId: 'plugin-1',
+        pluginAccess: 'admin',
+        rcAccountId: '1001',
+        ownerRcAccountId: 'owner-account-1',
+      }),
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
     expect(loaded.pluginPages.getPluginAdminConfigurePageRender).toHaveBeenCalledWith(expect.objectContaining({
       pluginId: 'plugin-1',
       installed: true,
@@ -1222,7 +1233,14 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       buttonId: 'removeButton',
     });
 
-    expect(axios.delete).toHaveBeenCalledWith(expect.stringContaining('/plugin/unregister?rcAccessToken=rc-access-token'));
+    expect(axios.delete).toHaveBeenCalledWith('https://server.example/plugin/unregister', {
+      headers: { 'X-RC-Access-Token': 'rc-access-token' },
+      params: {
+        rcAccountId: '1001',
+        pluginName: 'Plugin One',
+        pluginId: 'plugin-1',
+      },
+    });
     expect(loaded.userCore.refreshUserSettings).toHaveBeenCalledWith({
       settingKeysToRemove: ['plugin_plugin-1'],
     });

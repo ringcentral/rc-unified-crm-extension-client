@@ -45,6 +45,13 @@ vi.mock('../../src/lib/rcAPI.ts', () => ({
 
 vi.mock('../../src/lib/util.ts', () => ({
   getRcAccessToken: vi.fn(() => 'rc-access-token'),
+  getRcAccessTokenHeaderConfig: vi.fn((config = {}) => ({
+    ...config,
+    headers: {
+      ...(config.headers ?? {}),
+      'X-RC-Access-Token': 'rc-access-token',
+    },
+  })),
   getRcContactInfo: vi.fn(async () => [
     { id: 'user-1', type: 'User' },
     { id: 'site-1', type: 'Site' },
@@ -117,10 +124,14 @@ describe('admin core', () => {
       adminSettings: { userSettings: {} },
     });
 
-    expect(axios.get).toHaveBeenCalledWith('https://server.example/admin/settings?rcAccessToken=rc-access-token');
-    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/settings?rcAccessToken=rc-access-token', {
-      adminSettings: { userSettings: {} },
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/admin/settings', {
+      headers: { 'X-RC-Access-Token': 'rc-access-token' },
     });
+    expect(axios.post).toHaveBeenCalledWith(
+      'https://server.example/admin/settings',
+      { adminSettings: { userSettings: {} } },
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
     expect(readStorage().adminSettings).toEqual({ userSettings: {} });
   });
 
@@ -234,12 +245,13 @@ describe('admin core', () => {
       platformName: 'salesforce',
     })).resolves.toEqual({ deleted: true });
 
-    expect(axios.get).toHaveBeenNthCalledWith(1, 'https://server.example/admin/managedAuth?rcAccessToken=rc-access-token&connectorId=connector-1&isPrivate=true', {
+    expect(axios.get).toHaveBeenNthCalledWith(1, 'https://server.example/admin/managedAuth?connectorId=connector-1&isPrivate=true', {
       headers: {
         Authorization: 'Bearer jwt-1',
+        'X-RC-Access-Token': 'rc-access-token',
       },
     });
-    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/managedAuth?rcAccessToken=rc-access-token&connectorId=connector-1&isPrivate=true', {
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=connector-1&isPrivate=true', {
       scope: 'account',
       values: { apiKey: 'secret' },
       rcExtensionId: undefined,
@@ -248,9 +260,12 @@ describe('admin core', () => {
     }, {
       headers: {
         Authorization: 'Bearer jwt-1',
+        'X-RC-Access-Token': 'rc-access-token',
       },
     });
-    expect(axios.delete).toHaveBeenCalledWith('https://server.example/admin/managedOAuth/account?rcAccessToken=rc-access-token&platform=salesforce');
+    expect(axios.delete).toHaveBeenCalledWith('https://server.example/admin/managedOAuth/account?platform=salesforce', {
+      headers: { 'X-RC-Access-Token': 'rc-access-token' },
+    });
   });
 
   it('returns null when admin settings cannot be loaded', async () => {
@@ -409,18 +424,28 @@ describe('admin core', () => {
     await expect(adminCore.getUserMapping({ serverUrl: 'https://server.example' })).resolves.toEqual({ mappings: [] });
     await expect(adminCore.reinitializeUserMapping({ serverUrl: 'https://server.example' })).resolves.toEqual({ reinitialized: true });
 
-    expect(axios.post).toHaveBeenNthCalledWith(1, 'https://server.example/admin/userMapping?rcAccessToken=rc-access-token', {
-      rcExtensionList: [
-        { id: 'user-1', type: 'User' },
-        { id: 'department-1', type: 'Department' },
-      ],
-    });
-    expect(axios.post).toHaveBeenNthCalledWith(2, 'https://server.example/admin/reinitializeUserMapping?rcAccountId=account-1&rcAccessToken=rc-access-token', {
-      rcExtensionList: [
-        { id: 'user-1', type: 'User' },
-        { id: 'department-1', type: 'Department' },
-      ],
-    });
+    expect(axios.post).toHaveBeenNthCalledWith(
+      1,
+      'https://server.example/admin/userMapping',
+      {
+        rcExtensionList: [
+          { id: 'user-1', type: 'User' },
+          { id: 'department-1', type: 'Department' },
+        ],
+      },
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
+    expect(axios.post).toHaveBeenNthCalledWith(
+      2,
+      'https://server.example/admin/reinitializeUserMapping?rcAccountId=account-1',
+      {
+        rcExtensionList: [
+          { id: 'user-1', type: 'User' },
+          { id: 'department-1', type: 'Department' },
+        ],
+      },
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
   });
 
   it('authenticates App Connect server and ignores auth failures', async () => {

@@ -104,6 +104,16 @@ describe('util', () => {
     }));
     await expect(util.getRcContactInfo()).resolves.toEqual([{ id: 'company-contact-1' }]);
     expect(util.getRcAccessToken()).toBe('token-1');
+    expect(util.getRcAccessTokenHeaderConfig({
+      headers: { Authorization: 'Bearer jwt-1' },
+      params: { platform: 'salesforce' },
+    })).toEqual({
+      headers: {
+        Authorization: 'Bearer jwt-1',
+        'X-RC-Access-Token': 'token-1',
+      },
+      params: { platform: 'salesforce' },
+    });
     await expect(util.getRcUserInfo()).resolves.toEqual({ rcExtensionId: 'hashed-ext-1' });
     await expect(util.getRcCallLogIdentity()).resolves.toEqual({
       extensionNumber: '101',

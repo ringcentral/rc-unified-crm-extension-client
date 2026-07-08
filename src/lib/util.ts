@@ -78,6 +78,17 @@ function getRcAccessToken(): string {
   return JSON.parse(localStorage.getItem('sdk-rc-widgetplatform') ?? '{}').access_token;
 }
 
+function getRcAccessTokenHeaderConfig(config: UnknownRecord = {}): UnknownRecord {
+  const rcAccessToken = getRcAccessToken();
+  return {
+    ...config,
+    headers: {
+      ...(config.headers ?? {}),
+      'X-RC-Access-Token': rcAccessToken,
+    },
+  };
+}
+
 async function getRcContactInfo(): Promise<UnknownRecord[]> {
   const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform') ?? '{}').owner_id;
   const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
@@ -245,6 +256,7 @@ export {
   getRcUserInfo,
   getRcCallLogIdentity,
   getRcAccessToken,
+  getRcAccessTokenHeaderConfig,
   getRcContactInfo,
   checkC2DCollision,
   downloadTextFile,

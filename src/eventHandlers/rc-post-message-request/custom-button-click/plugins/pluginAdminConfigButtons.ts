@@ -5,7 +5,7 @@ import { getAdminSettings, uploadAdminSettings } from '../../../../core/admin';
 import { getPluginAdminConfigurePageRender } from '../../../../components/pluginAdminConfigurePage';
 import { getInstalledPluginListPageRender } from '../../../../components/installedPluginListPage';
 import { getPluginMarketListPageRender } from '../../../../components/pluginMarketListPage';
-import { getRcAccessToken, getRcInfo, showNotification } from '../../../../lib/util';
+import { getRcAccessTokenHeaderConfig, getRcInfo, showNotification } from '../../../../lib/util';
 
 type UnknownRecord = Record<string, any>;
 
@@ -59,17 +59,16 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
         };
         await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings: adminSettingsForInstall });
         try {
-          const rcAccessToken = getRcAccessToken();
           const rcInfo = await getRcInfo();
           const rcAccountId = rcInfo?.value?.cachedData?.accountInfo?.id?.toString()
             || rcInfo?.value?.cachedData?.extensionInfo?.account?.id?.toString();
-          await axios.post(`${manifest.serverUrl}/plugin/register?rcAccessToken=${rcAccessToken}`, {
+          await axios.post(`${manifest.serverUrl}/plugin/register`, {
             pluginId: data.body.button.formData.pluginId,
             pluginAccess: data.body.button.formData.access,
             pluginName: data.body.button.formData.plugin.name,
             rcAccountId,
             ownerRcAccountId: data.body.button.formData.ownerRcAccountId,
-          });
+          }, getRcAccessTokenHeaderConfig());
         } catch (registerError) {
           adminSettingsForInstall.userSettings[`plugin_${data.body.button.formData.pluginId}`].isRemoved = true;
           await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings: adminSettingsForInstall });
@@ -129,12 +128,16 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
         adminSettingsForRemove.userSettings[`plugin_${data.body.button.formData.pluginId}`].isRemoved = true;
         await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings: adminSettingsForRemove });
         try {
-          const rcAccessToken = getRcAccessToken();
           const rcInfo = await getRcInfo();
           const rcAccountId = rcInfo?.value?.cachedData?.accountInfo?.id?.toString()
             || rcInfo?.value?.cachedData?.extensionInfo?.account?.id?.toString();
-          await axios.delete(`${manifest.serverUrl}/plugin/unregister?rcAccessToken=${rcAccessToken}
-                        &rcAccountId=${rcAccountId}&pluginName=${data.body.button.formData.plugin.name}&pluginId=${data.body.button.formData.pluginId}`);
+          await axios.delete(`${manifest.serverUrl}/plugin/unregister`, getRcAccessTokenHeaderConfig({
+            params: {
+              rcAccountId,
+              pluginName: data.body.button.formData.plugin.name,
+              pluginId: data.body.button.formData.pluginId,
+            },
+          }));
         }
         catch (unregisterError) {
           console.error(unregisterError);

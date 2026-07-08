@@ -31,6 +31,13 @@ vi.mock('idb', () => ({
 
 vi.mock('../../src/lib/util.ts', () => ({
   getRcAccessToken: vi.fn(() => 'rc-access-token'),
+  getRcAccessTokenHeaderConfig: vi.fn((config = {}) => ({
+    ...config,
+    headers: {
+      ...(config.headers ?? {}),
+      'X-RC-Access-Token': 'rc-access-token',
+    },
+  })),
   getRcInfo: vi.fn(),
   showNotification: vi.fn(),
   setRcAdditionalSubmission: vi.fn(),
@@ -228,7 +235,9 @@ describe('auth core', () => {
       platformName: 'salesforce',
     })).resolves.toBeNull();
 
-    expect(axios.get).toHaveBeenNthCalledWith(1, 'https://server.example/oauthManagedAuthState?platform=salesforce&rcAccessToken=rc-access-token');
+    expect(axios.get).toHaveBeenNthCalledWith(1, 'https://server.example/oauthManagedAuthState?platform=salesforce', {
+      headers: { 'X-RC-Access-Token': 'rc-access-token' },
+    });
   });
 
   it('gets managed API-key auth state with connector and RingCentral identity context', async () => {
@@ -253,7 +262,8 @@ describe('auth core', () => {
     })).resolves.toEqual({ allRequiredFieldsSatisfied: true });
 
     expect(axios.get).toHaveBeenCalledWith(
-      'https://server.example/apiKeyManagedAuthState?platform=salesforce&connectorId=connector-1&isPrivate=true&rcAccountId=account-2&rcExtensionId=extension-2&rcAccessToken=rc-access-token',
+      'https://server.example/apiKeyManagedAuthState?platform=salesforce&connectorId=connector-1&isPrivate=true&rcAccountId=account-2&rcExtensionId=extension-2',
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
     );
   });
 
@@ -286,22 +296,26 @@ describe('auth core', () => {
       useLicense: false,
     })).resolves.toBe('jwt-1');
 
-    expect(axios.post).toHaveBeenCalledWith('https://server.example/apiKeyLogin?state=platform=salesforce', {
-      apiKey: 'api-key',
-      platform: 'salesforce',
-      hostname: 'crm.example',
-      proxyId: 'proxy-1',
-      rcAccessToken: 'rc-access-token',
-      connectorId: 'connector-1',
-      isPrivate: true,
-      rcAccountId: 'account-1',
-      rcExtensionId: 'extension-1',
-      userEmail: 'user@example.test',
-      additionalInfo: {
-        apiUrl: 'https://crm.example/api',
-        rcUser: 'Jane Doe',
+    expect(axios.post).toHaveBeenCalledWith(
+      'https://server.example/apiKeyLogin?state=platform=salesforce',
+      {
+        apiKey: 'api-key',
+        platform: 'salesforce',
+        hostname: 'crm.example',
+        proxyId: 'proxy-1',
+        rcAccessToken: 'rc-access-token',
+        connectorId: 'connector-1',
+        isPrivate: true,
+        rcAccountId: 'account-1',
+        rcExtensionId: 'extension-1',
+        userEmail: 'user@example.test',
+        additionalInfo: {
+          apiUrl: 'https://crm.example/api',
+          rcUser: 'Jane Doe',
+        },
       },
-    });
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
     expect(readStorage()).toMatchObject({
       rcUnifiedCrmExtJwt: 'jwt-1',
       crmUserInfo: { name: 'CRM User' },

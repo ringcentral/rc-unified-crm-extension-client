@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getRcAccessToken, getRcInfo, showNotification, setRcAdditionalSubmission } from '../lib/util';
+import { getRcAccessToken, getRcAccessTokenHeaderConfig, getRcInfo, showNotification, setRcAdditionalSubmission } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest as getManifestBase } from '../service/manifestService';
 import { trackCrmLogin, trackCrmLogout } from '../lib/analytics';
@@ -161,9 +161,9 @@ async function onUserClickConnectButton({ platform, platformName, manifest }: Un
 
 async function getManagedOAuthState({ serverUrl, platformName }: UnknownRecord): Promise<any> {
     try {
-        const rcAccessToken = getRcAccessToken();
         const response = await axios.get(
-            `${serverUrl}/oauthManagedAuthState?platform=${encodeURIComponent(platformName)}&rcAccessToken=${encodeURIComponent(rcAccessToken ?? '')}`
+            `${serverUrl}/oauthManagedAuthState?platform=${encodeURIComponent(platformName)}`,
+            getRcAccessTokenHeaderConfig(),
         );
         return response.data;
     }
@@ -173,10 +173,10 @@ async function getManagedOAuthState({ serverUrl, platformName }: UnknownRecord):
 }
 
 async function saveManagedOAuthPendingValues({ serverUrl, values }: UnknownRecord): Promise<any> {
-    const rcAccessToken = getRcAccessToken();
     const response = await axios.post(
-        `${serverUrl}/admin/managedOAuth/cache?rcAccessToken=${encodeURIComponent(rcAccessToken ?? '')}`,
-        { values }
+        `${serverUrl}/admin/managedOAuth/cache`,
+        { values },
+        getRcAccessTokenHeaderConfig(),
     );
     return response.data;
 }
@@ -219,12 +219,12 @@ async function checkManagedOAuthBeforeCrmVisible({ manifest, platformName, platf
 
 async function getManagedAuthState({ serverUrl, platformName, connectorId = null, isPrivate = false, rcInfo = null, rcExtensionId = null, rcAccountId = null }: UnknownRecord): Promise<any> {
     try {
-        const rcAccessToken = getRcAccessToken();
         const resolvedRcInfo = rcInfo ?? await getRcInfo();
         const resolvedRcAccountId = rcAccountId ?? resolvedRcInfo?.value?.cachedData?.extensionInfo?.account?.id;
         const resolvedRcExtensionId = rcExtensionId ?? resolvedRcInfo?.value?.cachedData?.extensionInfo?.id;
         const response = await axios.get(
-            `${serverUrl}/apiKeyManagedAuthState?platform=${encodeURIComponent(platformName)}&connectorId=${encodeURIComponent(connectorId ?? '')}&isPrivate=${encodeURIComponent(isPrivate ? 'true' : 'false')}&rcAccountId=${encodeURIComponent(resolvedRcAccountId ?? '')}&rcExtensionId=${encodeURIComponent(resolvedRcExtensionId ?? '')}&rcAccessToken=${encodeURIComponent(rcAccessToken ?? '')}`
+            `${serverUrl}/apiKeyManagedAuthState?platform=${encodeURIComponent(platformName)}&connectorId=${encodeURIComponent(connectorId ?? '')}&isPrivate=${encodeURIComponent(isPrivate ? 'true' : 'false')}&rcAccountId=${encodeURIComponent(resolvedRcAccountId ?? '')}&rcExtensionId=${encodeURIComponent(resolvedRcExtensionId ?? '')}`,
+            getRcAccessTokenHeaderConfig(),
         );
         return response.data;
     }
@@ -279,7 +279,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }: UnknownR
                 ...formData,
                 ...rcAdditionalSubmission
             }
-        });
+        }, getRcAccessTokenHeaderConfig());
         setAuth(true);
         showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? t('notifications.success.authorized'), ttl: res.data.returnMessage?.ttl ?? 3000 });
         await chrome.storage.local.set({

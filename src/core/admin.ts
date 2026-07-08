@@ -4,7 +4,7 @@ import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import { RcAPI } from '../lib/rcAPI';
 import { parsePhoneNumber } from 'awesome-phonenumber';
-import { getRcAccessToken, getRcContactInfo, showNotification } from '../lib/util';
+import { getRcAccessToken, getRcAccessTokenHeaderConfig, getRcContactInfo, showNotification } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest as getManifestBase } from '../service/manifestService';
 
@@ -31,9 +31,10 @@ function getJwtAuthorizationConfig(jwtToken?: string): UnknownRecord {
 
 async function getAdminSettings({ serverUrl }: UnknownRecord): Promise<UnknownRecord | null> {
     try {
-        const rcAccessToken = getRcAccessToken();
         const getAdminSettingsResponse = await axios.get(
-            `${serverUrl}/admin/settings?rcAccessToken=${rcAccessToken}`);
+            `${serverUrl}/admin/settings`,
+            getRcAccessTokenHeaderConfig(),
+        );
         return getAdminSettingsResponse.data;
     }
     catch (e) {
@@ -42,12 +43,13 @@ async function getAdminSettings({ serverUrl }: UnknownRecord): Promise<UnknownRe
 }
 
 async function uploadAdminSettings({ serverUrl, adminSettings }: UnknownRecord): Promise<any> {
-    const rcAccessToken = getRcAccessToken();
     const uploadAdminSettingsResponse = await axios.post(
-        `${serverUrl}/admin/settings?rcAccessToken=${rcAccessToken}`,
+        `${serverUrl}/admin/settings`,
         {
             adminSettings
-        });
+        },
+        getRcAccessTokenHeaderConfig(),
+    );
     await chrome.storage.local.set({ adminSettings });
 }
 
@@ -475,39 +477,38 @@ async function getUserExtensionReportStats({ serverUrl, rcExtensionId, timezone,
 
 async function getUserMapping({ serverUrl }: UnknownRecord): Promise<any> {
     const { rcUserInfo } = (await chromeStorageLocal.get('rcUserInfo'));
-    const rcAccessToken = getRcAccessToken();
     const rcExtensionList = (await getRcContactInfo()).filter(rc => rc.type == 'User' || rc.type == 'Department');
     const userMappingResp = await axios.post(
-        `${serverUrl}/admin/userMapping?rcAccessToken=${rcAccessToken}`,
+        `${serverUrl}/admin/userMapping`,
         {
             rcExtensionList
-        }
+        },
+        getRcAccessTokenHeaderConfig(),
     );
     return userMappingResp.data;
 }
 
 async function reinitializeUserMapping({ serverUrl }: UnknownRecord): Promise<any> {
     const { rcUserInfo } = (await chromeStorageLocal.get('rcUserInfo'));
-    const rcAccessToken = getRcAccessToken();
     const rcAccountId = rcUserInfo?.rcAccountId ?? '';
     const manifest = await getManifest();
     const rcExtensionList = (await getRcContactInfo()).filter(rc => rc.type == 'User' || rc.type == 'Department');
     const reinitializeUserMappingResp = await axios.post(
-        `${manifest.serverUrl}/admin/reinitializeUserMapping?rcAccountId=${rcAccountId}&rcAccessToken=${rcAccessToken}`,
+        `${manifest.serverUrl}/admin/reinitializeUserMapping?rcAccountId=${rcAccountId}`,
         {
             rcExtensionList
-        }
+        },
+        getRcAccessTokenHeaderConfig(),
     );
     return reinitializeUserMappingResp.data;
 }
 
 async function getManagedAuthSettings({ serverUrl }: UnknownRecord): Promise<any> {
-    const rcAccessToken = getRcAccessToken();
     const { rcUnifiedCrmExtJwt } = await chromeStorageLocal.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
     const response = await axios.get(
-        `${serverUrl}/admin/managedAuth?rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
-        getJwtAuthorizationConfig(rcUnifiedCrmExtJwt),
+        `${serverUrl}/admin/managedAuth?connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        getRcAccessTokenHeaderConfig(getJwtAuthorizationConfig(rcUnifiedCrmExtJwt)),
     );
     await chrome.storage.local.set({ managedAuthSettings: response.data });
     return response.data;
@@ -522,11 +523,10 @@ async function saveManagedAuthSettings({
     fieldsToRemove = [],
     refreshAfterSave = true
 }: UnknownRecord): Promise<any> {
-    const rcAccessToken = getRcAccessToken();
     const { rcUnifiedCrmExtJwt } = await chromeStorageLocal.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
     const response = await axios.post(
-        `${serverUrl}/admin/managedAuth?rcAccessToken=${rcAccessToken}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        `${serverUrl}/admin/managedAuth?connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
         {
             scope,
             values,
@@ -534,7 +534,7 @@ async function saveManagedAuthSettings({
             rcUserName,
             fieldsToRemove
         },
-        getJwtAuthorizationConfig(rcUnifiedCrmExtJwt),
+        getRcAccessTokenHeaderConfig(getJwtAuthorizationConfig(rcUnifiedCrmExtJwt)),
     );
     if (refreshAfterSave) {
         await getManagedAuthSettings({ serverUrl });
@@ -543,9 +543,9 @@ async function saveManagedAuthSettings({
 }
 
 async function deleteManagedOAuthAccount({ serverUrl, platformName }: UnknownRecord): Promise<any> {
-    const rcAccessToken = getRcAccessToken();
     const response = await axios.delete(
-        `${serverUrl}/admin/managedOAuth/account?rcAccessToken=${encodeURIComponent(rcAccessToken ?? '')}&platform=${encodeURIComponent(platformName)}`
+        `${serverUrl}/admin/managedOAuth/account?platform=${encodeURIComponent(platformName)}`,
+        getRcAccessTokenHeaderConfig(),
     );
     return response.data;
 }
