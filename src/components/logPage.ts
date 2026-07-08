@@ -478,7 +478,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             break;
         case 'newContactType':
             // deprecated
-            const contactTypeDependentFields = manifest.platforms[platformName].page?.newContact?.additionalFields?.filter(f => f.contactTypeDependent);
+            const contactTypeDependentFields = manifest.platforms[platformName].page?.newContact?.additionalFields?.filter(f => f.contactTypeDependent) ?? [];
             for (const f of contactTypeDependentFields) {
                 page.schema.properties[f.const].oneOf = [
                     ...contact.additionalInfo[page.formData.newContactType][f.const],
