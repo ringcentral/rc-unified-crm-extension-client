@@ -26,20 +26,13 @@ function findSettingValue(setting, settingId) {
 }
 
 function getLanguageSettingValue(body) {
-    const settingValue = findSettingValue(body?.setting, 'language');
-    if (settingValue !== undefined) {
-      return settingValue;
-    }
-    if (!Array.isArray(body?.settings)) {
-      return undefined;
-    }
-    for (const setting of body.settings) {
-      const value = findSettingValue(setting, 'language');
-      if (value !== undefined) {
-        return value;
-      }
-    }
-    return undefined;
+    // Only inspect the specific setting that changed (body.setting). The widget
+    // echoes the full settings tree in body.settings on every save, so scanning
+    // that whole array would match the always-present `language` option and route
+    // every settings save through the language-change branch below - preventing the
+    // real setting from being uploaded and triggering redundant locale/service
+    // re-registration (which makes the widget re-sync call history and call /callLog).
+    return findSettingValue(body?.setting, 'language');
 }
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
@@ -47,6 +40,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
     if (selectedLanguageSetting !== undefined) {
       // Language is stored locally (works even before CRM auth) and takes precedence over the RingCentral region.
       const selectedLanguage = selectedLanguageSetting ?? 'auto';
+      const { languageOverride: previousLanguageOverride } = await chrome.storage.local.get({ languageOverride: 'auto' });
+      // If the language did not actually change, ack without re-initializing i18n or
+      // re-registering the service, so we don't cause needless widget churn.
+      if ((previousLanguageOverride ?? 'auto') === selectedLanguage) {
+        responseMessage(data.requestId, { data: 'ok' });
+        return;
+      }
       await chrome.storage.local.set({ languageOverride: selectedLanguage });
       let locale;
       if (selectedLanguage === 'auto') {

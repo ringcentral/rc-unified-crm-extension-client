@@ -201,9 +201,12 @@ describe('miscellaneous top-level widget event handlers', () => {
   it('persists region settings and refreshes localized service manifest', async () => {
     vi.resetModules();
     const i18n = {
-      setLocale: vi.fn(async () => {}),
+      getLocale: vi.fn(() => 'en-US'),
+      setLocale: vi.fn(async () => 'en-CA'),
     };
     vi.doMock('../../src/i18n/index.js', () => ({ default: i18n }));
+    vi.doMock('../../src/lib/embeddableLocale.js', () => ({ syncLocaleToEmbeddable: vi.fn(async () => {}) }));
+    vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles: vi.fn(async () => {}) }));
     const embeddableServices = {
       getServiceManifest: vi.fn(async () => ({ id: 'localized-service' })),
     };
@@ -283,6 +286,9 @@ describe('miscellaneous top-level widget event handlers', () => {
       getManifest: vi.fn(async () => manifest()),
       refreshManifest,
     }));
+    vi.doMock('../../src/i18n/index.js', () => ({ default: { restoreLocale: vi.fn(async () => 'en-US') } }));
+    vi.doMock('../../src/lib/embeddableLocale.js', () => ({ syncLocaleToEmbeddable: vi.fn(async () => {}) }));
+    vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles: vi.fn(async () => {}) }));
     const embeddableServices = {
       getServiceManifest: vi.fn(async () => ({ id: 'updated-service' })),
     };
@@ -635,6 +641,172 @@ describe('miscellaneous rc-post-message-request handlers', () => {
       message: 'Settings saved.',
       ttl: 3000,
     });
+  });
+
+  it('saves a non-language setting normally even when the language option is present in the settings tree', async () => {
+    vi.resetModules();
+    const userCore = {
+      refreshUserSettings: vi.fn(async ({ changedSettings }) => changedSettings),
+    };
+    vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+    const util = {
+      showNotification: vi.fn(),
+      responseMessage: vi.fn(),
+    };
+    vi.doMock('../../src/lib/util.js', () => util);
+    const embeddableServices = {
+      getServiceManifest: vi.fn(async () => ({ id: 'service' })),
+    };
+    vi.doMock('../../src/service/embeddableServices.js', () => ({ default: embeddableServices }));
+    const appointmentsPage = {
+      getAppointmentsPageRender: vi.fn(() => ({ id: 'appointmentsPage' })),
+    };
+    vi.doMock('../../src/components/appointmentsPage/appointmentsPage.js', () => ({ default: appointmentsPage }));
+    const i18n = {
+      init: vi.fn(async () => 'en-US'),
+      applyLocaleCode: vi.fn(async () => 'de-DE'),
+    };
+    vi.doMock('../../src/i18n/index.js', () => ({ default: i18n, ...i18n }));
+    const syncLocaleToEmbeddable = vi.fn(async () => {});
+    vi.doMock('../../src/lib/embeddableLocale.js', () => ({ syncLocaleToEmbeddable }));
+    const refreshLocalizedCustomizedPageTitles = vi.fn(async () => {});
+    vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles }));
+
+    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/settings.js');
+
+    // The widget echoes the full settings tree - including the always-present
+    // `language` option - on every save. Toggling a different setting must NOT be
+    // treated as a language change (which would early-return and never persist).
+    await handler.onEvent({
+      data: {
+        requestId: 'settings-non-language',
+        body: {
+          setting: {
+            id: 'autoLogCall',
+            value: true,
+          },
+          settings: [
+            {
+              id: 'language',
+              type: 'section',
+              items: [
+                { id: 'language', type: 'option', value: 'auto' },
+              ],
+            },
+            { id: 'autoLogCall', value: true },
+          ],
+        },
+      },
+      ...baseContext(),
+    });
+
+    expect(userCore.refreshUserSettings).toHaveBeenCalledWith({
+      changedSettings: expect.objectContaining({
+        autoLogCall: { value: true },
+      }),
+    });
+    expect(syncLocaleToEmbeddable).not.toHaveBeenCalled();
+    expect(i18n.init).not.toHaveBeenCalled();
+    expect(i18n.applyLocaleCode).not.toHaveBeenCalled();
+    expect(readStorage().languageOverride).toBeUndefined();
+    expect(util.responseMessage).toHaveBeenCalledWith('settings-non-language', { data: 'ok' });
+  });
+
+  it('applies a language change and does not persist unrelated user settings', async () => {
+    vi.resetModules();
+    seedStorage({ languageOverride: 'auto' });
+    const userCore = {
+      refreshUserSettings: vi.fn(async ({ changedSettings }) => changedSettings),
+    };
+    vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+    const util = {
+      showNotification: vi.fn(),
+      responseMessage: vi.fn(),
+    };
+    vi.doMock('../../src/lib/util.js', () => util);
+    const embeddableServices = {
+      getServiceManifest: vi.fn(async () => ({ id: 'service' })),
+    };
+    vi.doMock('../../src/service/embeddableServices.js', () => ({ default: embeddableServices }));
+    const i18n = {
+      init: vi.fn(async () => 'en-US'),
+      applyLocaleCode: vi.fn(async () => 'de-DE'),
+    };
+    vi.doMock('../../src/i18n/index.js', () => ({ default: i18n, ...i18n }));
+    const syncLocaleToEmbeddable = vi.fn(async () => {});
+    vi.doMock('../../src/lib/embeddableLocale.js', () => ({ syncLocaleToEmbeddable }));
+    const refreshLocalizedCustomizedPageTitles = vi.fn(async () => {});
+    vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles }));
+
+    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/settings.js');
+
+    await handler.onEvent({
+      data: {
+        requestId: 'settings-language',
+        body: {
+          setting: {
+            id: 'language',
+            value: 'de-DE',
+          },
+          settings: [],
+        },
+      },
+      ...baseContext(),
+    });
+
+    expect(readStorage().languageOverride).toBe('de-DE');
+    expect(i18n.applyLocaleCode).toHaveBeenCalledWith('de-DE');
+    expect(syncLocaleToEmbeddable).toHaveBeenCalled();
+    expect(userCore.refreshUserSettings).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('settings-language', { data: 'ok' });
+  });
+
+  it('acks a language save without re-initializing i18n when the language did not change', async () => {
+    vi.resetModules();
+    seedStorage({ languageOverride: 'de-DE' });
+    const userCore = {
+      refreshUserSettings: vi.fn(async ({ changedSettings }) => changedSettings),
+    };
+    vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
+    const util = {
+      showNotification: vi.fn(),
+      responseMessage: vi.fn(),
+    };
+    vi.doMock('../../src/lib/util.js', () => util);
+    const embeddableServices = {
+      getServiceManifest: vi.fn(async () => ({ id: 'service' })),
+    };
+    vi.doMock('../../src/service/embeddableServices.js', () => ({ default: embeddableServices }));
+    const i18n = {
+      init: vi.fn(async () => 'en-US'),
+      applyLocaleCode: vi.fn(async () => 'de-DE'),
+    };
+    vi.doMock('../../src/i18n/index.js', () => ({ default: i18n, ...i18n }));
+    const syncLocaleToEmbeddable = vi.fn(async () => {});
+    vi.doMock('../../src/lib/embeddableLocale.js', () => ({ syncLocaleToEmbeddable }));
+    const refreshLocalizedCustomizedPageTitles = vi.fn(async () => {});
+    vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles }));
+
+    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/settings.js');
+
+    await handler.onEvent({
+      data: {
+        requestId: 'settings-language-noop',
+        body: {
+          setting: {
+            id: 'language',
+            value: 'de-DE',
+          },
+          settings: [],
+        },
+      },
+      ...baseContext(),
+    });
+
+    expect(i18n.applyLocaleCode).not.toHaveBeenCalled();
+    expect(syncLocaleToEmbeddable).not.toHaveBeenCalled();
+    expect(userCore.refreshUserSettings).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('settings-language-noop', { data: 'ok' });
   });
 
   it('connects CRM when unauthorized and disconnects CRM with hidden calldown page when authorized', async () => {
