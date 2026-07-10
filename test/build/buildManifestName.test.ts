@@ -1,7 +1,21 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import buildModule from '../../build.ts';
+
+type BuildModule = {
+  getManifestNameForBranch(options: {
+    name: string;
+    currentBranch: string;
+    isBranchedFromBeta: boolean;
+  }): string;
+  updateManifestNameForBranch(options: {
+    manifestPath: string;
+    currentBranch: string;
+    isBranchedFromBeta: boolean;
+  }): { name: string };
+};
+
+const buildModule = require('../../build.ts') as BuildModule;
 
 const { getManifestNameForBranch, updateManifestNameForBranch } = buildModule;
 

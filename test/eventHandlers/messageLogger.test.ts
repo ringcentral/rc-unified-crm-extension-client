@@ -12,7 +12,7 @@ async function loadMessageLogger() {
   };
   vi.doMock('../../src/lib/util.ts', () => util);
 
-  const userCore = {
+  const userCore: Record<string, any> = {
     getSMSPopSetting: vi.fn((settings) => ({ value: settings?.messageAutoPopup?.value ?? false })),
     getopenContactPageAfterCreationSetting: vi.fn((settings) => ({ value: settings?.openContactPageAfterCreation?.value ?? false })),
     getUnknownContactPreferenceSetting: vi.fn((settings) => ({ value: settings?.unknownContactPreference?.value ?? 'skipLogging' })),
@@ -22,13 +22,13 @@ async function loadMessageLogger() {
   };
   vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
-  const logCore = {
+  const logCore: Record<string, any> = {
     addLog: vi.fn(async () => ({})),
     getConflictContentFromUnresolvedLog: vi.fn(() => ({ description: 'Multiple contacts found' })),
   };
   vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
-  const contactCore = {
+  const contactCore: Record<string, any> = {
     getContact: vi.fn(async () => ({
       contactInfo: [{ id: 'contact-1', type: 'Lead', name: 'Jane Smith' }],
     })),
@@ -39,7 +39,7 @@ async function loadMessageLogger() {
   };
   vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
 
-  const logUtil = {
+  const logUtil: Record<string, any> = {
     getLogConflictInfo: vi.fn(async () => ({
       hasConflict: false,
       autoSelectAdditionalSubmission: { disposition: 'sms' },
@@ -99,7 +99,7 @@ function manifest() {
   };
 }
 
-function conversation(overrides = {}) {
+function conversation(overrides: Record<string, any> = {}) {
   return {
     conversationId: 'conversation-1',
     conversationLogId: 'conversation-log-1',
@@ -119,7 +119,7 @@ function conversation(overrides = {}) {
   };
 }
 
-function eventFor(overrides = {}) {
+function eventFor(overrides: Record<string, any> = {}) {
   return {
     requestId: 'request-1',
     body: {

@@ -39,7 +39,7 @@ function dataFor(formData = {}, additionalInfo = {}) {
   };
 }
 
-async function loadCalldownHandler(modulePath, overrides = {}) {
+async function loadCalldownHandler(modulePath, overrides: Record<string, any> = {}) {
   vi.resetModules();
   vi.mocked(axios.post).mockReset().mockResolvedValue({ data: { ok: true } });
   vi.mocked(axios.patch).mockReset().mockResolvedValue({ data: { ok: true } });

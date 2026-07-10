@@ -117,7 +117,7 @@ function dynamicConnectorManifest() {
   };
 }
 
-async function loadButtonHandler(modulePath, overrides = {}) {
+async function loadButtonHandler(modulePath, overrides: Record<string, any> = {}) {
   vi.resetModules();
   vi.mocked(axios.get).mockReset().mockResolvedValue({ data: { successful: true } });
   vi.mocked(axios.post).mockReset().mockResolvedValue({ data: { successful: true } });

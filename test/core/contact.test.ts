@@ -64,7 +64,7 @@ function manifest() {
 describe('contact core', () => {
   beforeEach(() => {
     vi.mocked(getManifest).mockResolvedValue(manifest());
-    vi.spyOn(window, 'open').mockImplementation(() => ({ blur: vi.fn() }));
+    vi.spyOn(window, 'open').mockImplementation(() => ({ blur: vi.fn() }) as unknown as Window);
     vi.spyOn(window, 'focus').mockImplementation(() => {});
   });
 
@@ -494,7 +494,7 @@ describe('contact core', () => {
       },
       contactInfo: null,
     });
-    expect(axios.get.mock.calls[0][0]).toContain('isExtension=true&isForceRefreshAccountData=true');
+    expect(vi.mocked(axios.get).mock.calls[0][0]).toContain('isExtension=true&isForceRefreshAccountData=true');
   });
 
   it('returns connect-to-CRM warning when creating contacts without JWT', async () => {

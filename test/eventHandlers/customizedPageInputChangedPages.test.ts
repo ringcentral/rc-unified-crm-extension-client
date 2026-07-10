@@ -28,7 +28,7 @@ function manifest() {
   };
 }
 
-function dataFor(overrides = {}) {
+function dataFor(overrides: Record<string, any> = {}) {
   return {
     requestId: 'request-1',
     body: {
@@ -45,13 +45,13 @@ async function flushAsyncHandlers() {
   await Promise.resolve();
 }
 
-async function loadPageHandler(modulePath, overrides = {}) {
+async function loadPageHandler(modulePath, overrides: Record<string, any> = {}) {
   vi.resetModules();
   vi.mocked(axios.get).mockReset();
   const util = {
     createDebounceHandler: vi.fn(() => async (request, handler) => handler(request)),
     responseMessage: vi.fn((responseId, response) => {
-      document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+      document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame').contentWindow.postMessage({
         type: 'rc-post-message-response',
         responseId,
         response,
@@ -154,7 +154,7 @@ async function loadPageHandler(modulePath, overrides = {}) {
   };
   vi.doMock('../../src/components/appointmentsPage/appointmentsPage.ts', () => ({ default: appointmentsPage }));
 
-  const calldownPage = {
+  const calldownPage: Record<string, any> = {
     getCalldownPageWithRecords: vi.fn(async (props) => ({
       id: 'calldownPage',
       props,

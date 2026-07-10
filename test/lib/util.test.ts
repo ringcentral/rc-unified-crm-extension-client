@@ -124,8 +124,8 @@ describe('util', () => {
 
   it('detects click-to-dial extension collision once and opens help from notification action', async () => {
     const util = await loadUtil();
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => {});
-    vi.mocked(fetch).mockResolvedValue({ status: 200 });
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 200 }));
 
     await util.checkC2DCollision();
 

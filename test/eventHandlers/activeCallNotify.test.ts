@@ -61,6 +61,10 @@ async function loadActiveCallHandler() {
   return loadModule('../../src/eventHandlers/rc-active-call-notify.ts');
 }
 
+function setting<T>(value: T) {
+  return { value, readOnly: false, readOnlyReason: '' };
+}
+
 function manifest() {
   return {
     serverUrl: 'https://server.example',
@@ -81,10 +85,10 @@ describe('rc-active-call-notify event handler', () => {
       contactInfo: [{ id: 'contact-1', name: 'Jane Smith', type: 'Lead' }],
     });
     vi.mocked(contactCore.openContactPage).mockReset();
-    vi.mocked(userCore.getIncomingCallPop).mockReset().mockReturnValue({ value: 'onFirstRing' });
-    vi.mocked(userCore.getOutgoingCallPop).mockReset().mockReturnValue({ value: 'off' });
-    vi.mocked(userCore.getCallPopMultiMatchBehavior).mockReset().mockReturnValue({ value: 'prompt' });
-    vi.mocked(userCore.getCallPopSetting).mockReset().mockReturnValue({ value: true });
+    vi.mocked(userCore.getIncomingCallPop).mockReset().mockReturnValue(setting('onFirstRing'));
+    vi.mocked(userCore.getOutgoingCallPop).mockReset().mockReturnValue(setting('off'));
+    vi.mocked(userCore.getCallPopMultiMatchBehavior).mockReset().mockReturnValue(setting('prompt'));
+    vi.mocked(userCore.getCallPopSetting).mockReset().mockReturnValue(setting(true));
     vi.mocked(logCore.uploadCacheNote).mockReset();
     vi.mocked(logCore.getCachedNote).mockReset().mockResolvedValue('cached note');
     vi.mocked(logPage.getLogPageRender).mockReset().mockReturnValue({ id: 'callLogPage' });
@@ -220,7 +224,7 @@ describe('rc-active-call-notify event handler', () => {
       },
       implementedInterfaces: {},
     });
-    vi.mocked(userCore.getOutgoingCallPop).mockReturnValue({ value: 'onAnswer' });
+    vi.mocked(userCore.getOutgoingCallPop).mockReturnValue(setting('onAnswer'));
     const handler = await loadActiveCallHandler();
 
     await handler.onEvent({
@@ -264,7 +268,7 @@ describe('rc-active-call-notify event handler', () => {
       userSettings: {},
       implementedInterfaces: {},
     });
-    vi.mocked(userCore.getIncomingCallPop).mockReturnValue({ value: 'onAnswer' });
+    vi.mocked(userCore.getIncomingCallPop).mockReturnValue(setting('onAnswer'));
     const handler = await loadActiveCallHandler();
 
     await handler.onEvent({
@@ -319,7 +323,7 @@ describe('rc-active-call-notify event handler', () => {
       },
       implementedInterfaces: {},
     });
-    vi.mocked(userCore.getOutgoingCallPop).mockReturnValue({ value: 'onAnswer' });
+    vi.mocked(userCore.getOutgoingCallPop).mockReturnValue(setting('onAnswer'));
     const handler = await loadActiveCallHandler();
     const popupContext = { transferOnHold: 'telephony-transfer-out' };
 
@@ -354,7 +358,7 @@ describe('rc-active-call-notify event handler', () => {
       },
       implementedInterfaces: {},
     });
-    vi.mocked(userCore.getOutgoingCallPop).mockReturnValue({ value: 'onFirstRing' });
+    vi.mocked(userCore.getOutgoingCallPop).mockReturnValue(setting('onFirstRing'));
     const handler = await loadActiveCallHandler();
 
     await handler.onEvent({
@@ -479,7 +483,7 @@ describe('rc-active-call-notify event handler', () => {
       userSettings: {},
       implementedInterfaces: {},
     });
-    vi.mocked(userCore.getCallPopSetting).mockReturnValue({ value: false });
+    vi.mocked(userCore.getCallPopSetting).mockReturnValue(setting(false));
     const handler = await loadActiveCallHandler();
 
     await handler.onEvent({

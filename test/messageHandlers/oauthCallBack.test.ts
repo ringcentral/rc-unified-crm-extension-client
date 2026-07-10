@@ -94,8 +94,16 @@ describe('oauthCallBack message handler', () => {
   beforeEach(() => {
     vi.mocked(authCore.onAuthCallback).mockReset();
     vi.mocked(userCore.updateSSCLToken).mockReset();
-    vi.mocked(userCore.getShowUserReportTabSetting).mockReset().mockReturnValue({ value: true });
-    vi.mocked(userCore.getShowCalldownTabSetting).mockReset().mockReturnValue({ value: true });
+    vi.mocked(userCore.getShowUserReportTabSetting).mockReset().mockReturnValue({
+      value: true,
+      readOnly: false,
+      readOnlyReason: '',
+    });
+    vi.mocked(userCore.getShowCalldownTabSetting).mockReset().mockReturnValue({
+      value: true,
+      readOnly: false,
+      readOnlyReason: '',
+    });
     vi.mocked(userCore.getUserReportStats).mockReset().mockResolvedValue({ totalCalls: 2 });
     vi.mocked(userCore.refreshUserSettings).mockReset().mockResolvedValue({});
     vi.mocked(adminCore.refreshAdminSettings).mockReset().mockResolvedValue({ adminSettings: { userSettings: {} } });

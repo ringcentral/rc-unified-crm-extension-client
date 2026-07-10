@@ -2,7 +2,7 @@ import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { seedStorage } from '../setup/storageHelpers';
 
-function setting(value = false, overrides = {}) {
+function setting(value: unknown = false, overrides: Record<string, unknown> = {}) {
   return {
     value,
     readOnly: false,
@@ -12,7 +12,7 @@ function setting(value = false, overrides = {}) {
   };
 }
 
-function userCoreProxy(overrides = {}) {
+function userCoreProxy(overrides: Record<PropertyKey, any> = {}) {
   const fns = new Map();
   return new Proxy({}, {
     get(_target, prop) {
@@ -160,6 +160,10 @@ async function loadEmbeddableServices({
     hostname: 'sheets.example',
   },
   userCoreOverrides = {},
+}: {
+  manifestValue?: Record<string, any>;
+  platformInfo?: { platformName: string; hostname?: string };
+  userCoreOverrides?: Record<PropertyKey, any>;
 } = {}) {
   vi.resetModules();
   const userCore = userCoreProxy(userCoreOverrides);

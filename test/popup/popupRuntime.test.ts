@@ -37,7 +37,64 @@ const messageHandlerModules = {
   controlCall: '../../src/messageHandlers/controlCall.ts',
 };
 
-async function loadPopupRuntime(options = {}) {
+type EventHandlerName = keyof typeof eventHandlerModules;
+type MessageHandlerName = keyof typeof messageHandlerModules;
+
+type PopupRuntimeOptions = {
+  implementedInterfaces?: Record<string, unknown> | null;
+  manifest?: {
+    serverUrl?: string;
+    author?: { name: string };
+  } | null;
+  platformInfo?: { platformName: string } | null;
+  serviceManifest?: unknown;
+};
+
+function createEventHandlerMock() {
+  return {
+    onEvent: vi.fn(async (_event?: unknown) => {}),
+  };
+}
+
+function createMessageHandlerMock() {
+  return {
+    onMessage: vi.fn(async (_message?: unknown) => {}),
+  };
+}
+
+type EventHandlerMock = ReturnType<typeof createEventHandlerMock>;
+type MessageHandlerMock = ReturnType<typeof createMessageHandlerMock>;
+type PopupMessageListener = (event: { data: unknown }) => Promise<void>;
+
+type MockHttpError = Error & {
+  config?: {
+    url?: string;
+    baseURL?: string;
+    headers?: Record<string, string>;
+    skipAuthorization?: boolean;
+  };
+  response?: {
+    status: number;
+    statusText?: string;
+    data: Record<string, any>;
+    headers?: Record<string, string>;
+  };
+};
+
+function mockHttpError(message: string): MockHttpError {
+  return new Error(message) as MockHttpError;
+}
+
+function getPopupMessageListener(
+  listener: EventListenerOrEventListenerObject | undefined,
+): PopupMessageListener {
+  if (typeof listener !== 'function') {
+    throw new Error('Popup message listener was not registered');
+  }
+  return ({ data }) => Promise.resolve(listener(new MessageEvent('message', { data })));
+}
+
+async function loadPopupRuntime(options: PopupRuntimeOptions = {}) {
   vi.resetModules();
   const {
     implementedInterfaces = { findContactWithName: true },
@@ -51,8 +108,9 @@ async function loadPopupRuntime(options = {}) {
 
   const requestInterceptors = [];
   const responseInterceptors = [];
+  const axiosDefaults: { timeout?: number } = {};
   const axiosMock = {
-    defaults: {},
+    defaults: axiosDefaults,
     get: vi.fn(async () => ({ data: implementedInterfaces })),
     interceptors: {
       request: {
@@ -115,23 +173,23 @@ async function loadPopupRuntime(options = {}) {
   };
   vi.doMock('../../src/i18n/index.ts', () => ({ default: i18n }));
 
-  const eventHandlers = {};
-  for (const [name, modulePath] of Object.entries(eventHandlerModules)) {
+  const eventHandlers: Partial<Record<EventHandlerName, EventHandlerMock>> = {};
+  for (const name of Object.keys(eventHandlerModules) as EventHandlerName[]) {
+    const modulePath = eventHandlerModules[name];
     vi.doMock(modulePath, () => {
-      eventHandlers[name] = {
-        onEvent: vi.fn(async () => {}),
-      };
-      return { default: eventHandlers[name] };
+      const handler = createEventHandlerMock();
+      eventHandlers[name] = handler;
+      return { default: handler };
     });
   }
 
-  const messageHandlers = {};
-  for (const [name, modulePath] of Object.entries(messageHandlerModules)) {
+  const messageHandlers: Partial<Record<MessageHandlerName, MessageHandlerMock>> = {};
+  for (const name of Object.keys(messageHandlerModules) as MessageHandlerName[]) {
+    const modulePath = messageHandlerModules[name];
     vi.doMock(modulePath, () => {
-      messageHandlers[name] = {
-        onMessage: vi.fn(async () => {}),
-      };
-      return { default: messageHandlers[name] };
+      const handler = createMessageHandlerMock();
+      messageHandlers[name] = handler;
+      return { default: handler };
     });
   }
 
@@ -140,7 +198,9 @@ async function loadPopupRuntime(options = {}) {
   await Promise.resolve();
   await Promise.resolve();
 
-  const messageListener = addEventListenerSpy.mock.calls.find(([eventName]) => eventName === 'message')?.[1];
+  const messageListener = getPopupMessageListener(
+    addEventListenerSpy.mock.calls.find(([eventName]) => eventName === 'message')?.[1],
+  );
   const runtimeMessageListener = chrome.runtime.onMessage.addListener.mock.calls[0]?.[0];
   const storageChangeListener = chrome.storage.onChanged.addListener.mock.calls[0]?.[0];
   const crmAuthCacheClearedHandler = apiErrorHandler.registerCrmAuthCacheClearedHandler.mock.calls[0]?.[0];
@@ -425,7 +485,7 @@ describe('popup runtime', () => {
   it('handles response errors, clears CRM auth on 401, and stores refreshed error tokens', async () => {
     const runtime = await loadPopupRuntime();
     runtime.logRecorder.isRecordingLogs.mockResolvedValue(true);
-    const authError = new Error('unauthorized');
+    const authError = mockHttpError('unauthorized');
 
     authError.config = {
       url: '/records?jwtToken=expired',
@@ -471,7 +531,7 @@ describe('popup runtime', () => {
         headers: {},
       },
     ]) {
-      const error = new Error('unauthorized');
+      const error = mockHttpError('unauthorized');
       error.config = config;
       error.response = {
         status: 401,
@@ -486,7 +546,7 @@ describe('popup runtime', () => {
 
   it('does not clear CRM auth for non-401 response errors', async () => {
     const runtime = await loadPopupRuntime();
-    const error = new Error('server failed');
+    const error = mockHttpError('server failed');
     error.config = {
       url: '/records?jwtToken=expired',
       headers: { Authorization: 'Bearer expired' },
@@ -547,7 +607,7 @@ describe('popup runtime', () => {
       ['rc-adapter-ai-assistant-settings-notify', 'rcAdapterAiAssistantSettingsNotify'],
       ['rc-post-message-request', 'rcPostMessageRequest'],
       ['rc-adapter-phone-number-format-settings-notify', 'rcAdapterPhoneNumberFormatSettingsNotify'],
-    ];
+    ] as const;
 
     for (const [type, handlerName] of messageRoutes) {
       await runtime.messageListener({ data: { type, path: '/settings' } });
@@ -572,7 +632,7 @@ describe('popup runtime', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    const returnMessageError = new Error('server failed');
+    const returnMessageError = mockHttpError('server failed');
     returnMessageError.response = {
       status: 500,
       data: {
@@ -599,7 +659,7 @@ describe('popup runtime', () => {
     await runtime.messageListener({ data: { type: 'rc-call-start-notify' } });
     expect(console.error).toHaveBeenCalledWith(expect.any(Error));
 
-    const unauthorized = new Error('unauthorized');
+    const unauthorized = mockHttpError('unauthorized');
     unauthorized.response = {
       status: 401,
       data: {},
@@ -631,7 +691,7 @@ describe('popup runtime', () => {
       ['insightlyAuth', 'insightlyAuth'],
       ['ringsenseRefTrack', 'ringsenseRefTrack'],
       ['controlCall', 'controlCall'],
-    ]) {
+    ] as const) {
       await runtime.runtimeMessageListener({ type }, {}, sendResponse);
       expect(runtime.messageHandlers[handlerName].onMessage).toHaveBeenCalledWith({
         request: { type },
@@ -694,7 +754,7 @@ describe('popup runtime', () => {
     const runtime = await loadPopupRuntime();
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    const notFound = new Error('not found');
+    const notFound = mockHttpError('not found');
     notFound.response = {
       status: 404,
       data: {

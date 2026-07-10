@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 
-const storageData = {};
-const storageListeners = new Set();
+const storageData: Record<string, any> = {};
+const storageListeners = new Set<(changes: Record<string, any>, areaName: string) => void>();
 
 function clone(value) {
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
@@ -47,7 +47,11 @@ function emitStorageChanges(changes) {
 export const chromeMock = {
   storage: {
     local: {
-      get: vi.fn(async (keys) => getStorageResult(keys)),
+      get: vi.fn((keys, callback) => {
+        const result = getStorageResult(keys);
+        callback?.(result);
+        return Promise.resolve(result);
+      }),
       set: vi.fn(async (items) => {
         const changes = {};
         for (const [key, value] of Object.entries(items || {})) {

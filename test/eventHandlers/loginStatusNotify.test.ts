@@ -22,7 +22,7 @@ const rcApiMocks = vi.hoisted(() => {
   const getUserInfo = vi.fn();
   return {
     getUserInfo,
-    RcAPI: vi.fn(function RcAPI() {
+    RcAPI: vi.fn(function RcAPI(this: { getUserInfo: typeof getUserInfo }) {
       this.getUserInfo = getUserInfo;
     }),
   };
@@ -151,7 +151,7 @@ function appendWidgetContainer() {
   document.body.appendChild(widget);
 }
 
-function manifest() {
+function manifest(): Record<string, any> {
   return {
     serverUrl: 'https://server.example',
     version: '1.7.35',
@@ -190,6 +190,10 @@ function rcInfo() {
   };
 }
 
+function setting<T>(value: T) {
+  return { value, readOnly: false, readOnlyReason: '' };
+}
+
 function loggedInEventData() {
   return {
     loggedIn: true,
@@ -219,7 +223,9 @@ async function notifyLoggedInWithCrmJwt() {
 describe('rc-login-status-notify event handler', () => {
   beforeEach(() => {
     appendWidgetContainer();
-    vi.spyOn(globalThis, 'setInterval').mockReturnValue(1);
+    vi.spyOn(globalThis, 'setInterval').mockReturnValue(
+      1 as unknown as ReturnType<typeof setInterval>,
+    );
     axios.defaults.headers.common = {};
     vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'salesforce' });
     vi.mocked(getManifest).mockReset().mockResolvedValue(manifest());
@@ -229,8 +235,8 @@ describe('rc-login-status-notify event handler', () => {
     vi.mocked(authCore.setAuth).mockReset();
     vi.mocked(authCore.isAdminManagedOAuthEnabled).mockReset().mockReturnValue(false);
     vi.mocked(authCore.checkManagedOAuthBeforeCrmVisible).mockReset();
-    vi.mocked(userCore.getShowUserReportTabSetting).mockReset().mockReturnValue({ value: true });
-    vi.mocked(userCore.getShowCalldownTabSetting).mockReset().mockReturnValue({ value: true });
+    vi.mocked(userCore.getShowUserReportTabSetting).mockReset().mockReturnValue(setting(true));
+    vi.mocked(userCore.getShowCalldownTabSetting).mockReset().mockReturnValue(setting(true));
     vi.mocked(userCore.getUserReportStats).mockReset().mockResolvedValue({ calls: 4 });
     vi.mocked(userCore.refreshUserSettings).mockReset().mockResolvedValue({ refreshed: true });
     vi.mocked(userCore.refreshUserInfo).mockReset();
@@ -506,8 +512,8 @@ describe('rc-login-status-notify event handler', () => {
         },
       },
     });
-    vi.mocked(userCore.getShowUserReportTabSetting).mockReturnValueOnce({ value: false });
-    vi.mocked(userCore.getShowCalldownTabSetting).mockReturnValueOnce({ value: false });
+    vi.mocked(userCore.getShowUserReportTabSetting).mockReturnValueOnce(setting(false));
+    vi.mocked(userCore.getShowCalldownTabSetting).mockReturnValueOnce(setting(false));
     const handler = await loadLoginStatusHandler();
 
     await handler.onEvent({

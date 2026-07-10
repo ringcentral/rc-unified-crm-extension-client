@@ -50,8 +50,12 @@ async function loadNavigateHandler() {
 describe('navigate message handler', () => {
   beforeEach(() => {
     vi.mocked(axios.get).mockReset();
-    vi.mocked(feedbackPage.getFeedbackPageRender).mockReset().mockReturnValue({ id: 'feedbackPage' });
-    vi.mocked(supportPage.getSupportPageRender).mockReset().mockReturnValue({ id: 'supportPage' });
+    vi.mocked(feedbackPage.getFeedbackPageRender).mockReset().mockReturnValue(
+      { id: 'feedbackPage' } as unknown as ReturnType<typeof feedbackPage.getFeedbackPageRender>,
+    );
+    vi.mocked(supportPage.getSupportPageRender).mockReset().mockReturnValue(
+      { id: 'supportPage' } as unknown as ReturnType<typeof supportPage.getSupportPageRender>,
+    );
     vi.mocked(trackOpenFeedback).mockReset();
     vi.mocked(getRcInfo).mockReset().mockResolvedValue({
       value: {

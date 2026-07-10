@@ -1,7 +1,18 @@
 import http from 'node:http';
 
+const defaultFixtureUserSettings = {
+  autoLogCall: { value: true },
+  autoLogSMS: { value: true },
+  quickAccessButtonSize: { value: 'small' },
+  showCalldownTab: { value: false },
+  showUserReportTab: { value: false },
+  showAppointmentsTab: { value: false },
+  serverSideLogging: { enable: false },
+};
+
 export function startFixtureServer() {
   const requests = [];
+  let fixtureUserSettings = defaultFixtureUserSettings;
   const html = `<!doctype html>
 <html lang="en">
   <head>
@@ -344,15 +355,7 @@ export function startFixtureServer() {
     }
 
     if (request.method === 'GET' && url.pathname === '/user/settings') {
-      sendJson(response, {
-        autoLogCall: { value: true },
-        autoLogSMS: { value: true },
-        quickAccessButtonSize: { value: 'small' },
-        showCalldownTab: { value: false },
-        showUserReportTab: { value: false },
-        showAppointmentsTab: { value: false },
-        serverSideLogging: { enable: false },
-      });
+      sendJson(response, fixtureUserSettings);
       return;
     }
 
@@ -374,14 +377,25 @@ export function startFixtureServer() {
     server.once('error', reject);
     server.listen(0, '127.0.0.1', () => {
       server.off('error', reject);
-      const { port } = server.address();
+      const address = server.address();
+      if (!address || typeof address === 'string') {
+        reject(new Error('Fixture server did not bind to a TCP port'));
+        return;
+      }
+      const { port } = address;
       resolve({
         origin: `http://127.0.0.1:${port}`,
         requests,
         clearRequests: () => {
           requests.length = 0;
         },
-        close: () => new Promise((closeResolve, closeReject) => {
+        setUserSettings: (overrides = {}) => {
+          fixtureUserSettings = {
+            ...defaultFixtureUserSettings,
+            ...overrides,
+          };
+        },
+        close: () => new Promise<void>((closeResolve, closeReject) => {
           server.close((error) => (error ? closeReject(error) : closeResolve()));
         }),
       });

@@ -57,8 +57,8 @@ describe('InputAwareRegExpMatcher', () => {
         <option selected value="+1 650 555 0102">Phone</option>
       </select>
     `;
-    document.querySelector('#phone-textarea').value = '+1 650 555 0101';
-    document.querySelector('#phone-select').value = '+1 650 555 0102';
+    document.querySelector<HTMLTextAreaElement>('#phone-textarea').value = '+1 650 555 0101';
+    document.querySelector<HTMLSelectElement>('#phone-select').value = '+1 650 555 0102';
 
     const matcher = new InputAwareRegExpMatcher({
       textMatcher: { match: vi.fn(() => []) },

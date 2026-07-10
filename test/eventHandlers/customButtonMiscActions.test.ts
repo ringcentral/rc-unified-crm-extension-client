@@ -40,7 +40,7 @@ function dataFor(formData = {}, dismissed = false) {
   };
 }
 
-async function loadAction(modulePath, overrides = {}) {
+async function loadAction(modulePath, overrides: Record<string, any> = {}) {
   vi.resetModules();
   vi.mocked(axios.get).mockReset().mockResolvedValue({ data: { authUrl: 'https://plugin.example/auth' } });
   vi.mocked(axios.post).mockReset().mockResolvedValue({ data: { successful: true } });

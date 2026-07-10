@@ -8,7 +8,7 @@ function manifest() {
   };
 }
 
-async function loadMatchHandler(modulePath, overrides = {}) {
+async function loadMatchHandler(modulePath, overrides: Record<string, any> = {}) {
   vi.resetModules();
 
   const contactCore = {
@@ -57,7 +57,7 @@ async function loadMatchHandler(modulePath, overrides = {}) {
     showNotification: vi.fn(),
     isObjectEmpty: vi.fn((obj) => Object.keys(obj || {}).length === 0),
     responseMessage: vi.fn((responseId, response) => {
-      document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+      document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame').contentWindow.postMessage({
         type: 'rc-post-message-response',
         responseId,
         response,

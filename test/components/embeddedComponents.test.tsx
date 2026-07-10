@@ -10,7 +10,7 @@ import { trackMissingServiceWorker } from '../../src/lib/analytics.ts';
 import { seedStorage } from '../setup/storageHelpers';
 
 vi.mock('@ringcentral/juno', async () => {
-  const React = await vi.importActual('react');
+  const React = await vi.importActual<typeof import('react')>('react');
   const buttonFor = (displayName) => function MockButton({
     children,
     onClick,
@@ -22,7 +22,7 @@ vi.mock('@ringcentral/juno', async () => {
     variant,
     symbol,
     className,
-  }) {
+  }: Record<string, any>) {
     return React.createElement(
       'button',
       {
@@ -44,7 +44,7 @@ vi.mock('@ringcentral/juno', async () => {
   return {
     RcButton: buttonFor('RcButton'),
     RcIconButton: buttonFor('RcIconButton'),
-    RcIcon: ({ symbol }) => React.createElement('span', { 'data-icon': symbol?.name ?? symbol ?? '' }),
+    RcIcon: ({ symbol }: Record<string, any>) => React.createElement('span', { 'data-icon': symbol?.name ?? symbol ?? '' }),
   };
 });
 
@@ -182,7 +182,7 @@ describe('embedded components', () => {
     });
     localStorage.setItem('rcQuickAccessButtonTransform', 'translate(0px, 25px)');
     const requestAnimationFrameSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-      return setTimeout(() => callback(performance.now()), 0);
+      return window.setTimeout(() => callback(performance.now()), 0);
     });
     const cancelAnimationFrameSpy = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id) => {
       clearTimeout(id);

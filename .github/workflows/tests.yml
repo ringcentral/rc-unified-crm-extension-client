@@ -30,6 +30,12 @@ jobs:
       - name: Run type check
         run: npm run typecheck
 
+      - name: Run unit test type check
+        run: npm run typecheck:test
+
+      - name: Run E2E type check
+        run: npm run typecheck:e2e
+
       - name: Run unit tests with coverage
         run: npm run test:coverage
 

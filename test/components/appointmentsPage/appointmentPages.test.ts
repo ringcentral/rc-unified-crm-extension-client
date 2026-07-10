@@ -881,7 +881,11 @@ describe('appointments page tab', () => {
   beforeEach(() => {
     vi.mocked(listAppointments).mockReset();
     vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'salesforce' });
-    vi.mocked(userCore.getShowAppointmentsTabSetting).mockReset().mockReturnValue({ value: true });
+    vi.mocked(userCore.getShowAppointmentsTabSetting).mockReset().mockReturnValue({
+      value: true,
+      readOnly: false,
+      readOnlyReason: '',
+    });
   });
 
   it('normalizes filter options and hides the tab when user settings disable appointments', async () => {
@@ -898,7 +902,11 @@ describe('appointments page tab', () => {
     });
     expect(defaultPage.uiSchema.searchWithFilters['ui:filters']).toEqual(['All', 'Scheduled', 'Canceled']);
 
-    vi.mocked(userCore.getShowAppointmentsTabSetting).mockReturnValueOnce({ value: false });
+    vi.mocked(userCore.getShowAppointmentsTabSetting).mockReturnValueOnce({
+      value: false,
+      readOnly: false,
+      readOnlyReason: '',
+    });
     const page = pageModule.getAppointmentsPageRender({
       manifest,
       platformName: 'salesforce',
@@ -928,7 +936,11 @@ describe('appointments page tab', () => {
         showAppointmentsTab: { value: false },
       },
     });
-    vi.mocked(userCore.getShowAppointmentsTabSetting).mockReturnValueOnce({ value: false });
+    vi.mocked(userCore.getShowAppointmentsTabSetting).mockReturnValueOnce({
+      value: false,
+      readOnly: false,
+      readOnlyReason: '',
+    });
     const pageModule = await loadAppointmentsPage();
 
     const page = await pageModule.getAppointmentsPageWithRecords({

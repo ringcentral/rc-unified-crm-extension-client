@@ -61,7 +61,7 @@ describe('log core', () => {
       },
     });
     const logCore = await loadLogCore();
-    const logInfo = {
+    const logInfo: Record<string, any> = {
       sessionId: 'session-1',
       recording: {
         contentUri: 'https://recording.example/content',
@@ -134,7 +134,7 @@ describe('log core', () => {
       },
     });
     const logCore = await loadLogCore();
-    const logInfo = {
+    const logInfo: Record<string, any> = {
       type: 'SMS',
       conversationLogId: 'conversation-1',
       messages: [
@@ -213,7 +213,7 @@ describe('log core', () => {
       },
     });
     const logCore = await loadLogCore();
-    const logInfo = {
+    const logInfo: Record<string, any> = {
       sessionId: 'session-2',
     };
 
@@ -410,7 +410,7 @@ describe('log core', () => {
         },
       });
     const logCore = await loadLogCore();
-    const faxInfo = {
+    const faxInfo: Record<string, any> = {
       type: 'Fax',
       conversationLogId: 'fax-conversation',
       messages: [],
@@ -430,7 +430,7 @@ describe('log core', () => {
     }));
     expect(readStorage()['rc-crm-conversation-log-fax-conversation']).toEqual({ logged: true });
 
-    const smsInfo = {
+    const smsInfo: Record<string, any> = {
       type: 'SMS',
       conversationLogId: 'sms-conversation',
       messages: [

@@ -647,7 +647,7 @@ describe('logUtil', () => {
     const logUtil = await loadLogUtil();
     await logUtil.addPendingRecordingSessionId({ sessionId: 'session-1' });
     await logUtil.addPendingRecordingSessionId({ sessionId: 'session-1' });
-    RCAdapter.getCallLog.mockResolvedValueOnce({
+    vi.mocked(RCAdapter.getCallLog!).mockResolvedValueOnce({
       call: { sessionId: 'session-1' },
     });
 
@@ -662,7 +662,7 @@ describe('logUtil', () => {
 
   it('keeps pending recordings when none are ready and skips empty pending checks', async () => {
     const logUtil = await loadLogUtil();
-    RCAdapter.getCallLog.mockClear();
+    vi.mocked(RCAdapter.getCallLog!).mockClear();
     vi.mocked(logService.syncCallData).mockClear();
 
     await logUtil.triggerPendingRecordingCheck({ serverUrl: 'https://server.example' });
@@ -672,7 +672,7 @@ describe('logUtil', () => {
     seedStorage({
       pendingRecordings: ['session-pending'],
     });
-    RCAdapter.getCallLog.mockResolvedValueOnce(null);
+    vi.mocked(RCAdapter.getCallLog!).mockResolvedValueOnce(null);
 
     await logUtil.triggerPendingRecordingCheck({ serverUrl: 'https://server.example' });
 

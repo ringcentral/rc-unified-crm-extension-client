@@ -64,6 +64,13 @@ vi.mock('../../src/components/calldownPage.ts', () => ({
   },
 }));
 
+function getPostedUserSettings(body: unknown): unknown {
+  if (!body || typeof body !== 'object' || !('userSettings' in body)) {
+    throw new TypeError('Expected POST body to contain userSettings');
+  }
+  return body.userSettings;
+}
+
 async function loadUserCore() {
   vi.resetModules();
   return loadModule('../../src/core/user.ts');
@@ -125,7 +132,7 @@ describe('user service behavior', () => {
         { direction: 'Inbound' },
       ],
     });
-    globalThis.RCAdapter.getUnloggedCalls.mockResolvedValueOnce({
+    vi.mocked(RCAdapter.getUnloggedCalls!).mockResolvedValueOnce({
       calls: [
         { id: 'before-range', startTime: '2025-12-31T23:59:59Z' },
         { id: 'inside-range', startTime: '2026-01-01T12:00:00Z' },
@@ -167,7 +174,7 @@ describe('user service behavior', () => {
       customStartDate: '2026-01-01T00:00:00Z',
       customEndDate: '2026-01-03T00:00:00Z',
     });
-    expect(globalThis.RCAdapter.getUnloggedCalls).toHaveBeenCalledWith(100, 1);
+    expect(RCAdapter.getUnloggedCalls).toHaveBeenCalledWith(100, 1);
   });
 
   it('uses zero report stats when no calls match the range', async () => {
@@ -177,7 +184,7 @@ describe('user service behavior', () => {
       ],
     });
     rcApiMocks.instance.getRcSMSLog.mockResolvedValueOnce({ records: [] });
-    globalThis.RCAdapter.getUnloggedCalls.mockResolvedValueOnce({ calls: [], hasMore: false });
+    vi.mocked(RCAdapter.getUnloggedCalls!).mockResolvedValueOnce({ calls: [], hasMore: false });
     const userCore = await loadUserCore();
 
     await expect(userCore.getUserReportStats({
@@ -272,7 +279,7 @@ describe('user service behavior', () => {
     seedStorage({ selectedRegion: 'US' });
     vi.mocked(axios.post).mockImplementationOnce(async (_url, body) => ({
       data: {
-        userSettings: body.userSettings,
+        userSettings: getPostedUserSettings(body),
       },
     }));
     const userCore = await loadUserCore();
@@ -440,7 +447,7 @@ describe('user service behavior', () => {
     });
     vi.mocked(axios.post).mockImplementationOnce(async (_url, body) => ({
       data: {
-        userSettings: body.userSettings,
+        userSettings: getPostedUserSettings(body),
       },
     }));
     const userCore = await loadUserCore();
@@ -495,7 +502,7 @@ describe('user service behavior', () => {
     });
     vi.mocked(axios.post).mockImplementationOnce(async (_url, body) => ({
       data: {
-        userSettings: body.userSettings,
+        userSettings: getPostedUserSettings(body),
       },
     }));
     const userCore = await loadUserCore();

@@ -126,7 +126,9 @@ describe('ExpandableNote', () => {
     expect(container.querySelector('[data-component="RcDrawer"]').dataset.open).toBe('true');
     const textarea = container.querySelector('textarea');
     await act(async () => {
-      Simulate.change(textarea, { target: { value: 'Follow up next week' } });
+      Simulate.change(textarea, {
+        target: { value: 'Follow up next week' } as unknown as EventTarget,
+      });
     });
 
     expect(cacheCallNote).toHaveBeenCalledWith({

@@ -77,8 +77,16 @@ describe('CRM-specific callback handlers', () => {
     vi.mocked(authCore.checkAuth).mockReset();
     vi.mocked(authCore.onAuthCallback).mockReset();
     vi.mocked(userCore.updateSSCLToken).mockReset();
-    vi.mocked(userCore.getShowUserReportTabSetting).mockReset().mockReturnValue({ value: false });
-    vi.mocked(userCore.getShowCalldownTabSetting).mockReset().mockReturnValue({ value: false });
+    vi.mocked(userCore.getShowUserReportTabSetting).mockReset().mockReturnValue({
+      value: false,
+      readOnly: false,
+      readOnlyReason: '',
+    });
+    vi.mocked(userCore.getShowCalldownTabSetting).mockReset().mockReturnValue({
+      value: false,
+      readOnly: false,
+      readOnlyReason: '',
+    });
     vi.mocked(userCore.getUserReportStats).mockReset().mockResolvedValue({});
     vi.mocked(userCore.refreshUserSettings).mockReset().mockResolvedValue({});
     vi.mocked(adminCore.refreshAdminSettings).mockReset().mockResolvedValue({});
@@ -148,8 +156,16 @@ describe('CRM-specific callback handlers', () => {
     });
     vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'insightly' });
     vi.mocked(authCore.apiKeyLogin).mockResolvedValueOnce('insightly-token');
-    vi.mocked(userCore.getShowUserReportTabSetting).mockReturnValue({ value: true });
-    vi.mocked(userCore.getShowCalldownTabSetting).mockReturnValue({ value: true });
+    vi.mocked(userCore.getShowUserReportTabSetting).mockReturnValue({
+      value: true,
+      readOnly: false,
+      readOnlyReason: '',
+    });
+    vi.mocked(userCore.getShowCalldownTabSetting).mockReturnValue({
+      value: true,
+      readOnly: false,
+      readOnlyReason: '',
+    });
     vi.mocked(userCore.getUserReportStats).mockResolvedValueOnce({ loggedCalls: 3 });
     vi.mocked(adminCore.refreshAdminSettings).mockResolvedValueOnce({ adminSettings: { enabled: true } });
     const handler = await loadInsightlyHandler();
@@ -284,8 +300,16 @@ describe('CRM-specific callback handlers', () => {
     vi.mocked(authCore.onAuthCallback).mockResolvedValueOnce('pipedrive-token-2');
     vi.mocked(getManifest).mockReset().mockResolvedValue(pipedriveManifest);
     vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'pipedrive' });
-    vi.mocked(userCore.getShowUserReportTabSetting).mockReturnValue({ value: true });
-    vi.mocked(userCore.getShowCalldownTabSetting).mockReturnValue({ value: true });
+    vi.mocked(userCore.getShowUserReportTabSetting).mockReturnValue({
+      value: true,
+      readOnly: false,
+      readOnlyReason: '',
+    });
+    vi.mocked(userCore.getShowCalldownTabSetting).mockReturnValue({
+      value: true,
+      readOnly: false,
+      readOnlyReason: '',
+    });
     vi.mocked(userCore.getUserReportStats).mockResolvedValueOnce({ loggedCalls: 5 });
     vi.mocked(adminCore.refreshAdminSettings).mockResolvedValueOnce({
       adminSettings: { enabled: true },
@@ -361,7 +385,11 @@ describe('CRM-specific callback handlers', () => {
     });
     vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'pipedrive' });
     vi.mocked(userCore.updateSSCLToken).mockRejectedValueOnce(ssclError);
-    vi.mocked(userCore.getShowCalldownTabSetting).mockReturnValue({ value: true });
+    vi.mocked(userCore.getShowCalldownTabSetting).mockReturnValue({
+      value: true,
+      readOnly: false,
+      readOnlyReason: '',
+    });
     vi.mocked(calldownPage.getCalldownPageWithRecords).mockRejectedValueOnce(new Error('calldown failed'));
     const handler = await loadPipedriveHandler();
 

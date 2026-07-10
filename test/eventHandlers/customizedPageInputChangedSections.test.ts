@@ -21,7 +21,7 @@ const simpleSectionMocks = [
   ['../../src/components/admin/managedAuthOrgPage.ts', 'getManagedAuthOrgPageRender', 'managedAuthOrgPage'],
 ];
 
-async function loadSectionHandler(modulePath, overrides = {}) {
+async function loadSectionHandler(modulePath, overrides: Record<string, any> = {}) {
   vi.resetModules();
 
   const pageMocks = {};

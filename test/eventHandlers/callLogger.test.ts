@@ -9,7 +9,7 @@ vi.mock('axios', () => ({
   },
 }));
 
-function baseCall(overrides = {}) {
+function baseCall(overrides: Record<string, any> = {}) {
   return {
     sessionId: 'session-1',
     telephonySessionId: 'telephony-1',
@@ -30,7 +30,7 @@ function baseCall(overrides = {}) {
   };
 }
 
-function eventFor(overrides = {}) {
+function eventFor(overrides: Record<string, any> = {}) {
   return {
     requestId: 'request-1',
     body: {
@@ -107,7 +107,7 @@ async function loadCallLoggerIndex() {
   };
   vi.doMock('../../src/components/tempLogNotePage.ts', () => ({ default: tempLogNotePage }));
 
-  const handlers = {};
+  const handlers: Record<string, any> = {};
   for (const [name, modulePath] of Object.entries({
     logForm: '../../src/eventHandlers/rc-post-message-request/callLogger/logForm.ts',
     callLogSync: '../../src/eventHandlers/rc-post-message-request/callLogger/callLogSync.ts',
@@ -150,7 +150,7 @@ async function loadCreateLog() {
     )),
   }));
 
-  const contactCore = {
+  const contactCore: Record<string, any> = {
     getContact: vi.fn(async () => ({
       matched: true,
       contactInfo: [
@@ -181,7 +181,7 @@ async function loadCreateLog() {
   };
   vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
 
-  const logCore = {
+  const logCore: Record<string, any> = {
     getCachedNote: vi.fn(async () => 'cached note'),
     addLog: vi.fn(async () => ({})),
     updateLog: vi.fn(async () => ({})),
@@ -189,7 +189,7 @@ async function loadCreateLog() {
   };
   vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
-  const userCore = {
+  const userCore: Record<string, any> = {
     getUnknownContactPreferenceSetting: vi.fn(() => ({ value: 'createNewPlaceholderContact' })),
     getNewContactNamePrefixSetting: vi.fn(() => ({ value: 'Auto ' })),
     getNewContactTypeSetting: vi.fn(() => ({ value: 'Lead' })),
@@ -203,7 +203,7 @@ async function loadCreateLog() {
   };
   vi.doMock('../../src/core/disposition.ts', () => ({ default: dispositionCore }));
 
-  const logUtil = {
+  const logUtil: Record<string, any> = {
     getLogConflictInfo: vi.fn(async () => ({
       hasConflict: false,
       autoSelectAdditionalSubmission: { disposition: 'demo' },
@@ -219,7 +219,9 @@ async function loadCreateLog() {
         return { contact: null, missingCreatedDate: true };
       }
       return {
-        contact: [...existingContacts].sort((a, b) => new Date(a.createdDate) - new Date(b.createdDate))[0] ?? null,
+        contact: [...existingContacts].sort(
+          (a, b) => new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime(),
+        )[0] ?? null,
         missingCreatedDate: false,
       };
     }),
@@ -275,7 +277,7 @@ async function loadLogForm() {
   };
   vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
 
-  const userCore = {
+  const userCore: Record<string, any> = {
     getopenContactPageAfterCreationSetting: vi.fn((settings) => ({ value: settings?.openContactPageAfterCreation?.value ?? false })),
     getOneTimeLogSetting: vi.fn((settings) => ({ value: settings?.oneTimeLog?.value ?? false })),
   };

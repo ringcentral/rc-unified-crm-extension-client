@@ -1,7 +1,15 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import updateVersionModule from '../../updateVersion.ts';
+
+type UpdateVersionModule = {
+  FILES_TO_UPDATE: Array<{ path: string; description: string }>;
+  isValidVersion(version: string): boolean;
+  updateVersionInFile(filePath: string, newVersion: string, description: string): boolean;
+  main(): void;
+};
+
+const updateVersionModule = require('../../updateVersion.ts') as UpdateVersionModule;
 
 const {
   FILES_TO_UPDATE,

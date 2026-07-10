@@ -2,7 +2,7 @@ import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
 
-async function loadRouteChanged(overrides = {}) {
+async function loadRouteChanged(overrides: Record<string, any> = {}) {
   vi.resetModules();
 
   const analytics = {

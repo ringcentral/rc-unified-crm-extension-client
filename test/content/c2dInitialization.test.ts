@@ -7,16 +7,29 @@ import ReactDOM from 'react-dom';
 import { seedStorage } from '../setup/storageHelpers';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 
-const widgetHandlers = vi.hoisted(() => ({}));
+type WidgetHandlerName = 'call' | 'text' | 'schedule';
+type WidgetHandler = (phoneNumber: string) => void;
+
+const widgetHandlers = vi.hoisted(() => (
+  {} as Partial<Record<WidgetHandlerName, WidgetHandler>>
+));
+
+function userSetting<T>(value: T) {
+  return {
+    value,
+    readOnly: false,
+    readOnlyReason: '',
+  };
+}
 
 vi.mock('ringcentral-c2d', () => ({
-  RangeObserver: vi.fn(function RangeObserver(options) {
+  RangeObserver: vi.fn(function RangeObserver(this: { options: unknown }, options) {
     this.options = options;
   }),
-  LibPhoneNumberMatcher: vi.fn(function LibPhoneNumberMatcher(options) {
+  LibPhoneNumberMatcher: vi.fn(function LibPhoneNumberMatcher(this: { options: unknown }, options) {
     this.options = options;
   }),
-  RegExpPhoneNumberMatcher: vi.fn(function RegExpPhoneNumberMatcher(options) {
+  RegExpPhoneNumberMatcher: vi.fn(function RegExpPhoneNumberMatcher(this: { options: unknown }, options) {
     this.options = options;
   }),
   defaultExclusions: [{ name: 'default-exclusion' }],
@@ -29,7 +42,10 @@ vi.mock('../../src/components/embedded', () => ({
 }));
 
 vi.mock('../../src/misc/CustomC2DWidget.ts', () => ({
-  default: vi.fn(function CustomC2DWidget() {
+  default: vi.fn(function CustomC2DWidget(this: {
+    on: (event: WidgetHandlerName, callback: WidgetHandler) => void;
+    update: () => void;
+  }) {
     this.on = vi.fn((event, callback) => {
       widgetHandlers[event] = callback;
     });
@@ -88,8 +104,8 @@ async function loadContentSeams() {
     'platform-info': { platformName: 'salesforce', hostname: 'localhost' },
     userSettings: {},
   });
-  vi.mocked(userCore.getClickToDialEmbedMode).mockReturnValue({ value: 'disabled' });
-  vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReturnValue({ value: 'disabled' });
+  vi.mocked(userCore.getClickToDialEmbedMode).mockReturnValue(userSetting('disabled'));
+  vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReturnValue(userSetting('disabled'));
   vi.resetModules();
   const module = await import('../../src/content.ts');
   await Promise.resolve();
@@ -98,26 +114,29 @@ async function loadContentSeams() {
 
 describe('content click-to-dial initialization', () => {
   beforeEach(() => {
-    Object.keys(widgetHandlers).forEach((key) => {
+    (Object.keys(widgetHandlers) as WidgetHandlerName[]).forEach((key) => {
       delete widgetHandlers[key];
     });
     window.history.pushState({}, '', '/crm/contact');
     window.clickToDialInstances = [];
     window.clickToDialObservers = [];
     window.clickToDialShadowRootPollers = [];
-    window.RingCentralC2D = vi.fn(function RingCentralC2D(options) {
+    window.RingCentralC2D = vi.fn(function RingCentralC2D(this: {
+      widget: NonNullable<typeof window.clickToDialInject>['widget'];
+      observer: unknown;
+    }, options) {
       this.widget = options.widget;
       this.observer = options.observer;
-    });
+    }) as unknown as NonNullable<typeof window.RingCentralC2D>;
     vi.mocked(RangeObserver).mockClear();
     vi.mocked(LibPhoneNumberMatcher).mockClear();
     vi.mocked(CustomC2DWidget).mockClear();
     vi.mocked(sendMessageToExtension).mockReset();
     vi.mocked(initializeShadowRootSupport).mockReset();
-    vi.mocked(userCore.getClickToDialEmbedMode).mockReset().mockReturnValue({ value: 'disabled' });
-    vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReset().mockReturnValue({ value: 'disabled' });
-    vi.mocked(userCore.getClickToDialUrls).mockReset().mockReturnValue({ value: [] });
-    vi.mocked(userCore.getQuickAccessButtonUrls).mockReset().mockReturnValue({ value: [] });
+    vi.mocked(userCore.getClickToDialEmbedMode).mockReset().mockReturnValue(userSetting('disabled'));
+    vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReset().mockReturnValue(userSetting('disabled'));
+    vi.mocked(userCore.getClickToDialUrls).mockReset().mockReturnValue(userSetting([]));
+    vi.mocked(userCore.getQuickAccessButtonUrls).mockReset().mockReturnValue(userSetting([]));
   });
 
   it('initializes C2D with matcher settings, SMS permission, ignore selector, and shadow-root support', async () => {
@@ -137,8 +156,8 @@ describe('content click-to-dial initialization', () => {
       },
       userSettings: {},
     });
-    vi.mocked(userCore.getClickToDialEmbedMode).mockReturnValue({ value: 'whitelist' });
-    vi.mocked(userCore.getClickToDialUrls).mockReturnValue({ value: ['*crm*'] });
+    vi.mocked(userCore.getClickToDialEmbedMode).mockReturnValue(userSetting('whitelist'));
+    vi.mocked(userCore.getClickToDialUrls).mockReturnValue(userSetting(['*crm*']));
 
     await initializeC2D();
 
@@ -164,9 +183,9 @@ describe('content click-to-dial initialization', () => {
     }));
     expect(window.clickToDialInstances).toContain(window.clickToDialInject);
 
-    widgetHandlers.call('+16505550100');
-    widgetHandlers.text('+16505550200');
-    widgetHandlers.schedule('+16505550300');
+    widgetHandlers.call!('+16505550100');
+    widgetHandlers.text!('+16505550200');
+    widgetHandlers.schedule!('+16505550300');
 
     expect(sendMessageToExtension).toHaveBeenCalledWith({
       type: 'c2d',
@@ -200,8 +219,8 @@ describe('content click-to-dial initialization', () => {
       },
       userSettings: {},
     });
-    vi.mocked(userCore.getClickToDialEmbedMode).mockReturnValue({ value: 'whitelist' });
-    vi.mocked(userCore.getClickToDialUrls).mockReturnValue({ value: ['*crm*'] });
+    vi.mocked(userCore.getClickToDialEmbedMode).mockReturnValue(userSetting('whitelist'));
+    vi.mocked(userCore.getClickToDialUrls).mockReturnValue(userSetting(['*crm*']));
 
     await initializeC2D();
 
@@ -262,21 +281,21 @@ describe('content click-to-dial initialization', () => {
       userSettings: {},
     });
 
-    vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReturnValueOnce({ value: 'whitelist' });
-    vi.mocked(userCore.getQuickAccessButtonUrls).mockReturnValueOnce({ value: ['*no-match*'] });
+    vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReturnValueOnce(userSetting('whitelist'));
+    vi.mocked(userCore.getQuickAccessButtonUrls).mockReturnValueOnce(userSetting(['*no-match*']));
     await RenderQuickAccessButton();
 
     expect(ReactDOM.render).not.toHaveBeenCalled();
 
-    vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReturnValueOnce({ value: 'whitelist' });
-    vi.mocked(userCore.getQuickAccessButtonUrls).mockReturnValueOnce({ value: ['*crm*'] });
+    vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReturnValueOnce(userSetting('whitelist'));
+    vi.mocked(userCore.getQuickAccessButtonUrls).mockReturnValueOnce(userSetting(['*crm*']));
     await RenderQuickAccessButton();
 
     expect(document.getElementById('rc-crm-extension-quick-access-button')).toBeTruthy();
     expect(ReactDOM.render).toHaveBeenCalled();
 
-    vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReturnValueOnce({ value: 'whitelist' });
-    vi.mocked(userCore.getQuickAccessButtonUrls).mockReturnValueOnce({ value: ['*crm*'] });
+    vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReturnValueOnce(userSetting('whitelist'));
+    vi.mocked(userCore.getQuickAccessButtonUrls).mockReturnValueOnce(userSetting(['*crm*']));
     await RenderQuickAccessButton();
 
     expect(document.querySelectorAll('#rc-crm-extension-quick-access-button')).toHaveLength(1);

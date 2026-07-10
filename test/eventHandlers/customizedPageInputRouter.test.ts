@@ -53,7 +53,7 @@ const handlerModules = {
 
 async function loadRouter() {
   vi.resetModules();
-  const handlers = {};
+  const handlers: Record<string, any> = {};
   for (const [name, modulePath] of Object.entries(handlerModules)) {
     vi.doMock(modulePath, () => {
       handlers[name] = {
@@ -66,7 +66,15 @@ async function loadRouter() {
   return { router, handlers };
 }
 
-function eventFor({ pageId, section, requestId = 'request-1' }) {
+function eventFor({
+  pageId,
+  section,
+  requestId = 'request-1',
+}: {
+  pageId: string;
+  section?: string;
+  requestId?: string;
+}) {
   return {
     requestId,
     body: {

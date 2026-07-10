@@ -68,7 +68,7 @@ async function seedRingCentralWidgetIdentity(page) {
 
 async function seedRingCentralWidgetIndexedDb(page) {
   await page.evaluate(async () => {
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const request = indexedDB.open('rc-widget-storage-e2e-owner', 2);
       request.onupgradeneeded = () => {
         const db = request.result;
@@ -129,7 +129,9 @@ async function registerPopupWindowForRuntimeMessages(popupPage) {
 async function installWidgetMessageCapture(popupPage) {
   await popupPage.evaluate(() => {
     window.__e2eWidgetMessages = [];
-    const frame = document.querySelector('#rc-widget-adapter-frame');
+    const frame = document.querySelector<HTMLIFrameElement & {
+      __e2ePostMessagePatched?: boolean;
+    }>('#rc-widget-adapter-frame');
     if (!frame?.contentWindow) {
       throw new Error('Widget frame is not ready');
     }
@@ -138,13 +140,13 @@ async function installWidgetMessageCapture(popupPage) {
     }
     const widgetWindow = frame.contentWindow;
     const originalPostMessage = widgetWindow.postMessage.bind(widgetWindow);
-    widgetWindow.postMessage = (message, targetOrigin, transfer) => {
+    widgetWindow.postMessage = ((message, targetOrigin, transfer) => {
       window.__e2eWidgetMessages.push({ message, targetOrigin });
       if (transfer) {
         return originalPostMessage(message, targetOrigin, transfer);
       }
       return originalPostMessage(message, targetOrigin);
-    };
+    }) as typeof widgetWindow.postMessage;
     frame.__e2ePostMessagePatched = true;
   });
 }
@@ -644,6 +646,7 @@ test.describe('App Connect extension smoke', () => {
 
   test.beforeEach(async () => {
     server.clearRequests();
+    server.setUserSettings();
     extension = await launchExtensionContext();
     await seedExtensionStorage(extension, defaultExtensionState);
   });
@@ -1281,10 +1284,29 @@ test.describe('App Connect extension smoke', () => {
   });
 
   test('creates, updates, confirms, and cancels appointments through the popup appointment flow', async () => {
+    server.setUserSettings({
+      showAppointmentsTab: {
+        value: true,
+      },
+    });
     const state = await seedAppointmentState(extension, server.origin);
+    server.clearRequests();
     const popupPage = await openPopupPage(extension);
     await refreshExtensionStateInPopup(popupPage, state);
     await installWidgetMessageCapture(popupPage);
+
+    await expect.poll(() => ({
+      downloaded: server.requests.some((request) => (
+        request.method === 'GET' && request.path === '/user/settings'
+      )),
+      uploaded: server.requests.some((request) => (
+        request.method === 'POST' && request.path === '/user/settings'
+      )),
+    })).toEqual({ downloaded: true, uploaded: true });
+    await expect.poll(async () => {
+      const storage = await readExtensionStorage(extension, ['userSettings']);
+      return storage.userSettings?.showAppointmentsTab?.value;
+    }).toBe(true);
     server.clearRequests();
 
     await popupPage.evaluate((event) => window.postMessage(event, '*'), e2eAppointmentCreateEvent());

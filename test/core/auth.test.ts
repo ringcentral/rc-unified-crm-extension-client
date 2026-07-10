@@ -1126,7 +1126,7 @@ describe('auth core', () => {
           },
         },
       })),
-    });
+    } as unknown as Awaited<ReturnType<typeof openDB>>);
     vi.mocked(axios.get)
       .mockResolvedValueOnce({
         data: {
@@ -1186,7 +1186,7 @@ describe('auth core', () => {
           },
         },
       })),
-    });
+    } as unknown as Awaited<ReturnType<typeof openDB>>);
     vi.mocked(axios.get).mockResolvedValueOnce({
       data: {
         returnMessage: {
@@ -1246,7 +1246,7 @@ describe('auth core', () => {
           },
         },
       })),
-    });
+    } as unknown as Awaited<ReturnType<typeof openDB>>);
     vi.mocked(axios.get).mockResolvedValueOnce({
       data: {
         jwtToken: 'bullhorn-jwt',

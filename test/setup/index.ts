@@ -9,7 +9,7 @@ beforeEach(() => {
   resetChromeMock();
   resetWidgetFrameMock();
   vi.spyOn(window, 'postMessage').mockImplementation(() => {});
-  globalThis.RCAdapter = {
+  (globalThis as typeof globalThis & { RCAdapter: typeof RCAdapter }).RCAdapter = {
     alertMessage: vi.fn(async () => 'notification-id'),
     dismissAlertMessage: vi.fn(),
     setAutoLog: vi.fn(),

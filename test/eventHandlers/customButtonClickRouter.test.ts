@@ -73,7 +73,7 @@ const handlerModules = {
 
 async function loadRouter() {
   vi.resetModules();
-  const handlers = {};
+  const handlers: Record<string, any> = {};
   for (const [name, modulePath] of Object.entries(handlerModules)) {
     vi.doMock(modulePath, () => {
       handlers[name] = {
@@ -136,7 +136,11 @@ function eventFor(button, requestId = 'request-1') {
   };
 }
 
-async function expectActionRoutesTo(router, handlers, routes) {
+async function expectActionRoutesTo(
+  router: Record<string, any>,
+  handlers: Record<string, any>,
+  routes: string[][],
+) {
   for (const [id, handlerName] of routes) {
     await router.onEvent({
       data: eventFor({ id }),

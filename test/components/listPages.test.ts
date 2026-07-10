@@ -62,6 +62,8 @@ describe('appointmentsPage', () => {
     vi.mocked(getPlatformInfo).mockReset();
     vi.mocked(userCore.getShowAppointmentsTabSetting).mockImplementation((settings) => ({
       value: settings?.showAppointmentsTab?.value ?? true,
+      readOnly: false,
+      readOnlyReason: '',
     }));
   });
 
@@ -163,7 +165,11 @@ describe('appointmentsPage', () => {
   });
 
   it('returns a hidden appointments page without calling the server and renders empty state otherwise', async () => {
-    vi.mocked(userCore.getShowAppointmentsTabSetting).mockReturnValue({ value: false });
+    vi.mocked(userCore.getShowAppointmentsTabSetting).mockReturnValue({
+      value: false,
+      readOnly: false,
+      readOnlyReason: '',
+    });
     const appointmentsPage = await loadPage('../../src/components/appointmentsPage/appointmentsPage.ts');
 
     const hidden = await appointmentsPage.getAppointmentsPageWithRecords({
@@ -178,7 +184,11 @@ describe('appointmentsPage', () => {
     expect(hidden.unreadCount).toBe(0);
     expect(listAppointments).not.toHaveBeenCalled();
 
-    vi.mocked(userCore.getShowAppointmentsTabSetting).mockReturnValue({ value: true });
+    vi.mocked(userCore.getShowAppointmentsTabSetting).mockReturnValue({
+      value: true,
+      readOnly: false,
+      readOnlyReason: '',
+    });
     vi.mocked(listAppointments).mockResolvedValue([]);
     const empty = await appointmentsPage.getAppointmentsPageWithRecords({
       manifest: manifest(),
@@ -204,6 +214,8 @@ describe('calldownPage', () => {
     vi.mocked(axios.get).mockReset();
     vi.mocked(userCore.getShowCalldownTabSetting).mockImplementation((settings) => ({
       value: settings?.showCalldownTab?.value ?? true,
+      readOnly: false,
+      readOnlyReason: '',
     }));
   });
 

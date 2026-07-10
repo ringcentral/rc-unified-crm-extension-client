@@ -37,13 +37,13 @@ function dataFor(formData = {}, additionalInfo = {}) {
   };
 }
 
-async function loadAppointmentButton(modulePath, overrides = {}) {
+async function loadAppointmentButton(modulePath, overrides: Record<string, any> = {}) {
   vi.resetModules();
   vi.mocked(axios.get).mockReset();
   const util = {
     showNotification: vi.fn(),
     responseMessage: vi.fn((responseId, response) => {
-      document.querySelector('#rc-widget-adapter-frame').contentWindow.postMessage({
+      document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame').contentWindow.postMessage({
         type: 'rc-post-message-response',
         responseId,
         response,

@@ -9,7 +9,7 @@ vi.mock('axios', () => ({
   },
 }));
 
-async function loadBullhorn(overrides = {}) {
+async function loadBullhorn(overrides: Record<string, any> = {}) {
   vi.resetModules();
   vi.mocked(axios.get).mockReset();
 

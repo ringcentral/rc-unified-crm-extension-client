@@ -139,7 +139,7 @@ describe('user settings getters', () => {
   });
 
   it('returns defaults for logging, call pop, AI, report, appointment, and formatting settings', () => {
-    const defaults = [
+    const defaults: Array<[string, unknown]> = [
       ['getAutoLogVoicemailSetting', false],
       ['getAutoLogInboundFaxSetting', false],
       ['getAutoLogOutboundFaxSetting', false],
@@ -226,7 +226,7 @@ describe('user settings getters', () => {
       phoneNumberDisplayFormatTemplate: { value: '(###) ###-####', customizable: false },
       quickAccessButtonSize: { value: 'small', customizable: false },
     };
-    const expectations = [
+    const expectations: Array<[string, unknown]> = [
       ['getAutoLogVoicemailSetting', true],
       ['getAutoLogInboundFaxSetting', true],
       ['getAutoLogOutboundFaxSetting', true],
@@ -277,7 +277,7 @@ describe('user settings getters', () => {
   });
 
   it('keeps explicitly customizable settings editable without admin warning text', () => {
-    const cases = [
+    const cases: Array<[string, string, unknown]> = [
       ['getAutoLogCallSetting', 'autoLogCall', true],
       ['getAutoLogSMSSetting', 'autoLogSMS', true],
       ['getAutoLogVoicemailSetting', 'autoLogVoicemail', true],

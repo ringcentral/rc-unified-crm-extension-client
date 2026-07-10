@@ -10,7 +10,49 @@ on:
       - '*' # Matches any tag (e.g., v1.0.0, v2.3-alpha)
 
 jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run source type check
+        run: npm run typecheck
+
+      - name: Run unit test type check
+        run: npm run typecheck:test
+
+      - name: Run E2E type check
+        run: npm run typecheck:e2e
+
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: xvfb-run --auto-servernum npm run test:e2e
+        env:
+          E2E_BROWSER_CHANNEL: chromium
+
   build-and-release: # Renamed job for clarity
+    needs: verify
     runs-on: ubuntu-latest
     # Required permissions for the softprops/action-gh-release action
     permissions:

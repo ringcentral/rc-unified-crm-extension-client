@@ -67,8 +67,8 @@ describe('RcAPI', () => {
       records: [{ id: 'call-3' }],
     });
 
-    expect(axios.get.mock.calls[0][0]).toContain('dateFrom=2026-07-02T12:00:00.000Z');
-    expect(axios.get.mock.calls[2][0]).toContain('dateFrom=2026-07-01T00:00:00Z&dateTo=2026-07-02T00:00:00Z');
+    expect(vi.mocked(axios.get).mock.calls[0][0]).toContain('dateFrom=2026-07-02T12:00:00.000Z');
+    expect(vi.mocked(axios.get).mock.calls[2][0]).toContain('dateFrom=2026-07-01T00:00:00Z&dateTo=2026-07-02T00:00:00Z');
   });
 
   it('paginates SMS logs for supported date ranges', async () => {
@@ -84,8 +84,8 @@ describe('RcAPI', () => {
       records: [{ id: 'sms-1' }, { id: 'sms-2' }],
     });
 
-    expect(axios.get.mock.calls[0][0]).toContain('message-store?dateFrom=2026-06-26T12:00:00.000Z');
-    expect(axios.get.mock.calls[1][0]).toContain('page=2');
+    expect(vi.mocked(axios.get).mock.calls[0][0]).toContain('message-store?dateFrom=2026-06-26T12:00:00.000Z');
+    expect(vi.mocked(axios.get).mock.calls[1][0]).toContain('page=2');
   });
 
   it('loads, normalizes, and caches RingCentral user extensions', async () => {

@@ -8,9 +8,9 @@ async function flushIconLoad() {
 
 describe('CustomC2DWidget', () => {
   beforeEach(() => {
-    globalThis.fetch = vi.fn(async () => ({
-      text: async () => '<svg><path fill="#000" stroke="#111"></path><path fill="none"></path></svg>',
-    }));
+    globalThis.fetch = vi.fn(async () => new Response(
+      '<svg><path fill="#000" stroke="#111"></path><path fill="none"></path></svg>',
+    ));
   });
 
   afterEach(() => {
@@ -173,9 +173,7 @@ describe('CustomC2DWidget', () => {
   });
 
   it('ignores fetched icon responses without SVG content', async () => {
-    vi.mocked(fetch).mockResolvedValue({
-      text: async () => '<span>No icon</span>',
-    });
+    vi.mocked(fetch).mockResolvedValue(new Response('<span>No icon</span>'));
     const widget = new CustomC2DWidget();
     await flushIconLoad();
 

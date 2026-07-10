@@ -215,7 +215,10 @@ describe('miscellaneous top-level widget event handlers', () => {
       checkAuth: vi.fn(async () => true),
     };
     vi.doMock('../../src/core/auth.ts', () => ({ default: authCore }));
-    globalThis.RCAdapter.showFeedback = vi.fn(({ onFeedback }) => onFeedback());
+    const showFeedback = vi.fn((
+      options: Parameters<NonNullable<typeof RCAdapter.showFeedback>>[0],
+    ) => options.onFeedback?.());
+    RCAdapter.showFeedback = showFeedback;
     const handler = await loadModule('../../src/eventHandlers/rc-webphone-connection-status-notify.ts');
 
     await handler.onEvent({
@@ -225,7 +228,7 @@ describe('miscellaneous top-level widget event handlers', () => {
     });
 
     expect(authCore.checkAuth).toHaveBeenCalled();
-    expect(globalThis.RCAdapter.showFeedback).toHaveBeenCalled();
+    expect(showFeedback).toHaveBeenCalled();
     expect(window.postMessage).toHaveBeenCalledWith({
       path: '/custom-button-click',
       type: 'rc-post-message-request',
@@ -269,7 +272,9 @@ describe('miscellaneous top-level widget event handlers', () => {
 
   it('starts retro auto-call-log polling only when CRM is authorized', async () => {
     vi.resetModules();
-    vi.spyOn(globalThis, 'setInterval').mockReturnValue(123);
+    const intervalSpy = vi.spyOn(globalThis, 'setInterval').mockReturnValue(
+      123 as unknown as ReturnType<typeof setInterval>,
+    );
     const analytics = {
       trackEditSettings: vi.fn(),
     };
@@ -303,7 +308,7 @@ describe('miscellaneous top-level widget event handlers', () => {
     expect(readStorage().retroAutoCallLogMaxAttempt).toBe(10);
     expect(readStorage().retroAutoCallLogIntervalId).toBe(123);
     expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 60000);
-    setInterval.mock.calls[0][0]();
+    intervalSpy.mock.calls[0][0]();
     expect(logService.retroAutoCallLog).toHaveBeenCalledWith({
       manifest: manifest(),
       platformName: 'salesforce',
@@ -406,7 +411,7 @@ describe('miscellaneous top-level widget event handlers', () => {
       },
       userSettings: {},
     });
-    const popupContext = {};
+    const popupContext: Record<string, any> = {};
     const handler = await loadModule('../../src/eventHandlers/rc-telephony-session-notify.ts');
 
     await handler.onEvent({

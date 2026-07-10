@@ -27,7 +27,7 @@ function dataFor(formData = {}, bodyOverrides = {}) {
   };
 }
 
-async function loadGoogleSheetsHandler(modulePath, overrides = {}) {
+async function loadGoogleSheetsHandler(modulePath, overrides: Record<string, any> = {}) {
   vi.resetModules();
   vi.mocked(axios.post).mockReset().mockResolvedValue({
     status: 200,

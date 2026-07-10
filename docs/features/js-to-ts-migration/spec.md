@@ -25,8 +25,9 @@ Current migration state:
 - Build entry points are `src/content.ts`, `src/popup.ts`, `src/sw.ts`, and `src/root.tsx` in `build.ts`.
 - Vitest and Playwright configs are TypeScript.
 - `allowJs` is disabled in `tsconfig.json`.
-- Test and E2E files no longer use `@ts-nocheck`; their runtime correctness is guarded by Vitest and Playwright.
-- `npm run lint` covers `src`, `build.ts`, `updateVersion.ts`, and `eslint.config.ts`.
+- Test and E2E files no longer use `@ts-nocheck`; separate TypeScript projects check them before Vitest and Playwright verify runtime behavior.
+- `npm run lint`, source/test/E2E type checks, coverage, and Playwright are required in pull-request and release workflows.
+- npm remains the package manager, but the root `package-lock.json` is intentionally not committed because developer environments may resolve through different registries; CI installs from `package.json` with `npm install` against its configured registry.
 - `strict` mode is enabled with explicit transitional exceptions for `noImplicitAny`, `strictNullChecks`, `strictPropertyInitialization`, and `useUnknownInCatchVariables`.
 - Extension runtime output filenames remain JavaScript in `dist/` and `public/manifest.json`.
 - `public/**/*.js` is treated as copied dependency/runtime asset content and is intentionally excluded from source conversion scope.
@@ -39,7 +40,7 @@ Goal: introduce TypeScript as an incremental safety layer while preserving the c
 - Do not upgrade React, Juno, esbuild, Vitest, Playwright, or the Chrome extension manifest model unless a separate reviewed change requires it.
 - Do not change `public/manifest.json` permissions, `manifest_version`, content-script match policy, externally connectable hosts, or extension output filenames as part of type conversion.
 - Do not change App Connect server APIs, platform manifest behavior, CRM connector behavior, or message payload semantics.
-- Do not introduce a package-manager migration or lockfile policy change in the same PR as TypeScript enablement. The repository currently has no lockfile; dependency reproducibility needs a separate owner decision.
+- Do not migrate away from npm as part of TypeScript work. Root lockfiles MUST NOT be committed; dependency compatibility is verified by CI installation plus the required lint, type, unit, build, and E2E gates.
 
 ## Migration Principles
 
@@ -136,7 +137,7 @@ Move through the event-driven surface by route group, not by mechanical folder r
 - Preserve the router behavior in `popup.js`; router refactors need separate review.
 - Use discriminated unions for message payloads where tests confirm the contract.
 
-Exit gate for each handler group: related handler tests, `test/popup/popupRuntime.test.js`, full unit suite, build, and extension E2E pass when the slice affects runtime messaging.
+Exit gate for each handler group: related handler tests, `test/popup/popupRuntime.test.ts`, full unit suite, build, and extension E2E pass when the slice affects runtime messaging.
 
 ### Phase 5: Convert Core, Services, and Entry Points
 
@@ -153,7 +154,7 @@ Exit gate: full unit/integration tests, `npm run build`, `npm run test:e2e`, and
 
 After most runtime code is converted and stable:
 
-- Make `npm run typecheck` a required CI/pre-merge gate.
+- Keep source, unit-test, and E2E TypeScript checks as required CI/pre-merge and release gates.
 - Keep `strict` enabled.
 - Remove transitional strict exceptions for `noImplicitAny`, `strictNullChecks`, `strictPropertyInitialization`, and `useUnknownInCatchVariables` only after explicit App Connect payload/schema/storage type models exist.
 - Reduce remaining `any` and type assertions at internal boundaries.
@@ -164,7 +165,7 @@ Exit gate: strictness target accepted by owner and enforced in CI.
 
 ## Compatibility Strategy
 
-- Preserve JavaScript interoperability through `allowJs` during migration.
+- Keep authored source, tests, E2E, and root tooling TypeScript-only with `allowJs` disabled; copied `public/**/*.js` runtime assets remain outside authored-source scope.
 - Preserve current esbuild bundling and copied `public` assets.
 - Preserve current Vitest/jsdom setup and Chrome mock behavior.
 - Normalize explicit `.js` local imports before file renames where needed.
@@ -177,20 +178,20 @@ Required gates:
 
 | Change type | Required verification |
 | --- | --- |
-| Tooling-only TS setup | `npm test`, `npm run build`, `npm run test:e2e`, `npm run typecheck` |
-| Leaf utility/component conversion | Focused tests, `npm test`, `npm run build`, `npm run typecheck` |
-| Event/message handler conversion | Focused handler tests, `test/popup/popupRuntime.test.js`, `npm test`, `npm run build`, `npm run test:e2e`, `npm run typecheck` |
-| Service worker/content/popup entry conversion | Service worker tests, content tests, popup tests, `npm test`, `npm run build`, `npm run test:e2e`, unpacked-extension smoke test |
-| Strictness increase | `npm test`, `npm run build`, `npm run test:e2e`, `npm run test:coverage`, `npm run typecheck` |
+| Tooling-only TS setup | `npm run lint`, all three type checks, `npm test`, `npm run build`, `npm run test:e2e` |
+| Leaf utility/component conversion | Focused tests, source and test type checks, `npm test`, `npm run build` |
+| Event/message handler conversion | Focused handler tests, `test/popup/popupRuntime.test.ts`, all three type checks, `npm test`, `npm run build`, `npm run test:e2e` |
+| Service worker/content/popup entry conversion | Service worker tests, content tests, popup tests, all three type checks, `npm test`, `npm run build`, `npm run test:e2e`, unpacked-extension smoke test |
+| Strictness increase | `npm run lint`, all three type checks, `npm test`, `npm run build`, `npm run test:e2e`, `npm run test:coverage` |
 
 Tests that already guard high-risk areas:
 
 - Service worker behavior: `test/serviceWorker/*`
-- Popup runtime messaging: `test/popup/popupRuntime.test.js`
+- Popup runtime messaging: `test/popup/popupRuntime.test.ts`
 - Content script and click-to-dial behavior: `test/content/*`, `test/lib/c2d/*`
 - Event routers and handlers: `test/eventHandlers/*`
 - Message handlers: `test/messageHandlers/*`
-- Extension E2E smoke: `e2e/client-extension.spec.js`
+- Extension E2E smoke: `e2e/client-extension.spec.ts`
 
 ## Rollout & Rollback
 
@@ -232,15 +233,15 @@ Runtime production monitoring for extension errors is NEEDS_REVIEW because the r
 ## Open Decisions
 
 - `NEEDS_OWNER`: confirm the owning team/person for the migration and final approval.
-- `NEEDS_REVIEW`: decide whether `npm run typecheck` and `npm run lint` are required CI/pre-merge gates.
 - `NEEDS_REVIEW`: decide final timeline for removing the transitional strict exceptions.
-- `NEEDS_REVIEW`: decide package manager and lockfile policy separately from the TypeScript migration.
+
+Resolved implementation decisions are encoded in `package.json`, `.gitignore`, TypeScript project configs, and GitHub workflows: npm is retained, root lockfiles remain environment-local, CI uses `npm install`, and lint plus source/test/E2E type checks are blocking gates.
 
 ## Verification
 
-- Rule: migration must not change extension runtime behavior -> `npm test`, `npm run build`, `npm run test:e2e`, and unpacked-extension smoke test.
-- Rule: message payload behavior must remain compatible -> `test/eventHandlers/*`, `test/messageHandlers/*`, `test/popup/popupRuntime.test.js`, and `src/eventHandlers/ARCHITECTURE.md` review.
+- Rule: migration must not change extension runtime behavior -> `npm test`, `npm run test:coverage`, `npm run build`, `npm run test:e2e`, and unpacked-extension smoke test.
+- Rule: message payload behavior must remain compatible -> `test/eventHandlers/*`, `test/messageHandlers/*`, `test/popup/popupRuntime.test.ts`, and `src/eventHandlers/ARCHITECTURE.md` review.
 - Rule: service worker and content script startup must remain intact -> `test/serviceWorker/*`, `test/content/*`, `test/lib/c2d/*`, `npm run test:e2e`.
-- Rule: type safety must improve without hiding unknown contracts -> `npm run typecheck` once added, reviewer inspection of casts and `any`.
+- Rule: type safety must improve without hiding unknown contracts -> `npm run typecheck`, `npm run typecheck:test`, `npm run typecheck:e2e`, and reviewer inspection of casts and `any`.
 - Rule: generated extension artifact must remain compatible with the manifest -> `npm run build` plus manual inspection of `dist/manifest.json` and expected bundle files. Scripted artifact comparison is `NEEDS_TEST`.
 

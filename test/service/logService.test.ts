@@ -58,7 +58,11 @@ async function loadLogService() {
 describe('logService', () => {
   it('does not run retro auto-log when the user disabled retro sync', async () => {
     seedStorage({ userSettings: {} });
-    vi.mocked(userCore.getEnableRetroCallLogSync).mockReturnValueOnce({ value: false });
+    vi.mocked(userCore.getEnableRetroCallLogSync).mockReturnValueOnce({
+      value: false,
+      readOnly: false,
+      readOnlyReason: '',
+    });
     const service = await loadLogService();
 
     await service.retroAutoCallLog({
@@ -75,7 +79,7 @@ describe('logService', () => {
       userSettings: {},
       implementedInterfaces: { upsertCallDisposition: true },
     });
-    RCAdapter.getUnloggedCalls.mockResolvedValueOnce({
+    vi.mocked(RCAdapter.getUnloggedCalls!).mockResolvedValueOnce({
       calls: [
         {
           sessionId: 'session-1',
@@ -141,7 +145,7 @@ describe('logService', () => {
         },
       },
     });
-    RCAdapter.getUnloggedCalls.mockResolvedValueOnce({
+    vi.mocked(RCAdapter.getUnloggedCalls!).mockResolvedValueOnce({
       calls: [{ sessionId: 'session-1' }, { sessionId: 'session-2' }],
       hasMore: false,
     });
@@ -202,7 +206,7 @@ describe('logService', () => {
       retroAutoCallLogMaxAttempt: 0,
       retroAutoCallLogIntervalId: 123,
     });
-    RCAdapter.getUnloggedCalls.mockClear();
+    vi.mocked(RCAdapter.getUnloggedCalls!).mockClear();
     vi.mocked(showNotification).mockClear();
     const service = await loadLogService();
 
@@ -230,7 +234,7 @@ describe('logService', () => {
     vi.mocked(logCore.getLog).mockReset();
     vi.mocked(logCore.addLog).mockClear();
     vi.mocked(showNotification).mockClear();
-    RCAdapter.getUnloggedCalls.mockReset().mockResolvedValueOnce({
+    vi.mocked(RCAdapter.getUnloggedCalls!).mockReset().mockResolvedValueOnce({
       calls: [
         {
           sessionId: 'session-unmatched',
@@ -311,7 +315,7 @@ describe('logService', () => {
         },
       },
     });
-    RCAdapter.getUnloggedCalls.mockReset();
+    vi.mocked(RCAdapter.getUnloggedCalls!).mockReset();
     const service = await loadLogService();
 
     await service.forceCallLogMatcherCheck();

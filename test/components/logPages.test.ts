@@ -105,7 +105,7 @@ function newContact() {
 }
 
 function richMessageManifest() {
-  const next = manifest();
+  const next: any = manifest();
   next.platforms.salesforce.page.messageLog.additionalFields = [
     { const: 'messageType', title: 'Message Type', type: 'selection', required: true, contactDependent: true },
     { const: 'missingSelection', title: 'Missing Selection', type: 'selection', contactDependent: true },
@@ -833,7 +833,7 @@ describe('logPage', () => {
       format: 'date-time',
     });
 
-    const customManifest = manifest();
+    const customManifest: any = manifest();
     customManifest.platforms.salesforce.page.callLog.additionalFields.push({
       const: 'missingFlag',
       title: 'Missing Flag',

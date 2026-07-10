@@ -13,7 +13,7 @@ const rcApiMocks = vi.hoisted(() => {
   const getInteropCode = vi.fn(async () => 'interop-code');
   return {
     getInteropCode,
-    RcAPI: vi.fn(function RcAPI() {
+    RcAPI: vi.fn(function RcAPI(this: { getInteropCode: typeof getInteropCode }) {
       this.getInteropCode = getInteropCode;
     }),
   };
