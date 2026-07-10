@@ -277,7 +277,7 @@ async function loadLogForm() {
 
   const userCore = {
     getopenContactPageAfterCreationSetting: vi.fn((settings) => ({ value: settings?.openContactPageAfterCreation?.value ?? false })),
-    getOneTimeLogSetting: vi.fn(() => ({ value: false })),
+    getOneTimeLogSetting: vi.fn((settings) => ({ value: settings?.oneTimeLog?.value ?? false })),
   };
   vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
@@ -355,6 +355,59 @@ describe('callLogger index', () => {
     expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
   });
 
+  it('handles queue-forwarded calls answered elsewhere without requiring cached queue state', async () => {
+    const { callLogger, util, handlers } = await loadCallLoggerIndex();
+    seedStorage({});
+
+    await callLogger.onEvent({
+      data: eventFor({
+        call: baseCall({
+          delegationType: 'QueueForwarding',
+          result: 'Answered Elsewhere',
+        }),
+      }),
+      ...context,
+    });
+
+    expect(getWidgetPostMessages()).toContainEqual({
+      message: {
+        type: 'rc-adapter-trigger-call-logger-match',
+        sessionIds: ['session-1'],
+      },
+      targetOrigin: '*',
+    });
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+    expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+  });
+
+  it('marks ringing queue calls as answered elsewhere after disconnect', async () => {
+    const { callLogger, util } = await loadCallLoggerIndex();
+    seedStorage({});
+
+    await callLogger.onEvent({
+      data: eventFor({
+        redirect: true,
+        call: baseCall({
+          queueCall: true,
+          telephonyStatus: 'Ringing',
+          result: 'Disconnected',
+        }),
+      }),
+      ...context,
+    });
+
+    expect(getWidgetPostMessages()).toContainEqual({
+      message: {
+        type: 'rc-adapter-trigger-call-logger-match',
+        sessionIds: ['session-1'],
+      },
+      targetOrigin: '*',
+    });
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('answered by someone else'),
+    }));
+  });
+
   it('opens one-time log wait state as a temporary note page', async () => {
     const { callLogger, logCore, tempLogNotePage } = await loadCallLoggerIndex();
     seedStorage({
@@ -407,6 +460,30 @@ describe('callLogger index', () => {
     }));
   });
 
+  it('allows outbound extension-number logging when explicitly enabled', async () => {
+    const { callLogger, handlers } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        allowExtensionNumberLogging: { value: true },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        triggerType: 'logForm',
+        call: baseCall({
+          direction: 'Outbound',
+          to: { extensionNumber: '202' },
+        }),
+      }),
+      ...context,
+    });
+
+    expect(handlers.logForm.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      contactPhoneNumber: '202',
+    }));
+  });
+
   it('dispatches call-log sync to createLog when auto logging is enabled and no log exists', async () => {
     const { callLogger, logCore, handlers } = await loadCallLoggerIndex();
     seedStorage({
@@ -438,6 +515,23 @@ describe('callLogger index', () => {
     expect(handlers.viewLog.onEvent).toHaveBeenCalled();
   });
 
+  it('switches createLog to editLog when a matched log already exists', async () => {
+    const { callLogger, logCore, handlers } = await loadCallLoggerIndex();
+    logCore.getLog
+      .mockResolvedValueOnce({ callLogs: [{ matched: true, sessionId: 'session-1' }] })
+      .mockResolvedValueOnce({ callLogs: [{ matched: true, sessionId: 'session-1', logData: { note: 'existing' } }] });
+
+    await callLogger.onEvent({
+      data: eventFor({ triggerType: 'createLog' }),
+      ...context,
+    });
+
+    expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      triggerTypeInUse: 'editLog',
+      existingCalls: [{ matched: true, sessionId: 'session-1', logData: { note: 'existing' } }],
+    }));
+  });
+
   it('dispatches logForm trigger types to the log form handler', async () => {
     const { callLogger, handlers } = await loadCallLoggerIndex();
 
@@ -460,6 +554,23 @@ describe('callLogger index', () => {
     });
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
     expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+  });
+
+  it('auto logs call-connected presence updates', async () => {
+    const { callLogger, handlers } = await loadCallLoggerIndex();
+
+    await callLogger.onEvent({
+      data: eventFor({
+        triggerType: 'presenceUpdate',
+        call: baseCall({ result: 'CallConnected' }),
+      }),
+      ...context,
+    });
+
+    expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      triggerTypeInUse: 'createLog',
+      isAutoLog: true,
+    }));
   });
 });
 
@@ -489,6 +600,30 @@ describe('callLogger createLog', () => {
     }));
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
     expect(logCore.addLog).not.toHaveBeenCalled();
+  });
+
+  it('returns early without a platform notification when non-Google contact matching fails', async () => {
+    const { createLog, contactCore, util } = await loadCreateLog();
+    contactCore.getContact.mockResolvedValueOnce({
+      matched: false,
+      returnMessage: { messageType: 'warning', message: 'No match', ttl: 3000 },
+      contactInfo: [],
+    });
+
+    await createLog.onEvent({
+      data: eventFor(),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: false,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(util.showNotification).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
   });
 
   it('opens a manual call log page when redirected', async () => {
@@ -569,6 +704,74 @@ describe('callLogger createLog', () => {
     }));
     expect(dispositionCore.upsertDisposition).toHaveBeenCalledWith(expect.objectContaining({
       dispositions: { disposition: 'demo', note: 'cached note' },
+    }));
+  });
+
+  it('uses cached contacts, toNumberEntity, and empty note fallback during auto logging', async () => {
+    seedStorage({
+      'rc-crm-search-contact-+16505550100': [
+        { id: 'contact-b', type: 'Lead', name: 'Duplicate Cached' },
+        { id: 'cached-contact', type: 'Lead', name: 'Cached Contact' },
+      ],
+    });
+    const { createLog, logCore, dispositionCore } = await loadCreateLog();
+    logCore.getCachedNote.mockResolvedValueOnce(null);
+
+    await createLog.onEvent({
+      data: eventFor({
+        call: baseCall({
+          toNumberEntity: 'contact-a',
+        }),
+      }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'contact-a',
+      contactName: 'Alpha Contact',
+      subject: 'Inbound Call from Alpha Contact',
+      note: '',
+    }));
+    expect(dispositionCore.upsertDisposition).not.toHaveBeenCalled();
+  });
+
+  it('warns instead of creating placeholders when unknown-contact preference skips logging', async () => {
+    const { createLog, contactCore, logCore, logUtil, userCore, util } = await loadCreateLog();
+    userCore.getUnknownContactPreferenceSetting.mockReturnValueOnce({ value: 'skipLogging' });
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: true,
+      conflictType: 'Unknown contact',
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+    contactCore.getContact.mockResolvedValueOnce({
+      matched: true,
+      contactInfo: [],
+    });
+
+    await createLog.onEvent({
+      data: eventFor(),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(contactCore.createContact).not.toHaveBeenCalled();
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('Call not logged. Contact conflict.'),
     }));
   });
 
@@ -720,6 +923,188 @@ describe('callLogger createLog', () => {
     expect(logCore.addLog).not.toHaveBeenCalled();
     expect(logCore.updateLog).not.toHaveBeenCalled();
   });
+
+  it('opens an inbound manual call page with cached logged contact id', async () => {
+    seedStorage({
+      'rc-crm-call-log-session-1': {
+        contact: {
+          id: 'logged-contact',
+        },
+      },
+      implementedInterfaces: {
+        findContactWithName: true,
+      },
+    });
+    const { createLog, logUtil, logPage } = await loadCreateLog();
+
+    await createLog.onEvent({
+      data: eventFor({
+        redirect: true,
+        call: baseCall({ direction: 'Inbound' }),
+      }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: false,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(logUtil.cacheLogPageData).toHaveBeenCalledWith(expect.objectContaining({
+      loggedContactId: 'logged-contact',
+    }));
+    expect(logPage.getLogPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      loggedContactId: 'logged-contact',
+      useContactSearch: true,
+    }));
+    expect(logUtil.logPageFormDataDefaulting).toHaveBeenCalledWith(expect.objectContaining({
+      caseType: 'inboundCall',
+      logType: 'callLog',
+    }));
+  });
+
+  it('auto creates outbound placeholder contacts without optional new-contact config', async () => {
+    const { createLog, contactCore, logCore, logUtil } = await loadCreateLog();
+    contactCore.getContact.mockResolvedValueOnce({
+      matched: true,
+      contactInfo: [
+        {
+          id: 'unknown-template',
+          type: 'Lead',
+          name: '',
+          additionalInfo: {},
+        },
+      ],
+    });
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: true,
+      conflictType: 'Unknown contact',
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+
+    await createLog.onEvent({
+      data: eventFor({
+        call: baseCall({
+          direction: 'Outbound',
+          to: {
+            phoneNumber: '+16505550200',
+            name: '',
+          },
+        }),
+      }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550200',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+      platform: {
+        contactTypes: [{ value: 'Lead', display: 'Lead' }],
+        page: {},
+      },
+    });
+
+    expect(contactCore.createContact).toHaveBeenCalledWith(expect.objectContaining({
+      phoneNumber: '+16505550200',
+      newContactName: expect.stringContaining('+16505550200'),
+      additionalSubmission: {},
+    }));
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'new-contact',
+      subject: 'Outbound Call to Created Contact',
+    }));
+  });
+
+  it('warns for skipped multiple-contact auto conflicts and unmatched toNumberEntity values', async () => {
+    const { createLog, logCore, logUtil, userCore, util } = await loadCreateLog();
+    userCore.getMultipleContactsPreferenceSetting.mockReturnValueOnce({ value: 'skipLogging' });
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: true,
+      conflictType: 'Multiple contacts',
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+
+    await createLog.onEvent({
+      data: eventFor({
+        call: baseCall({
+          toNumberEntity: 'missing-contact',
+        }),
+      }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(logCore.updateLog).not.toHaveBeenCalled();
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('Call not logged. Contact conflict.'),
+    }));
+  });
+
+  it('uses existing call notes when cached notes are unavailable during auto update', async () => {
+    const { createLog, logCore, logUtil } = await loadCreateLog();
+    logCore.getCachedNote.mockResolvedValueOnce(null);
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: false,
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+
+    await createLog.onEvent({
+      data: eventFor({
+        call: baseCall({ direction: 'Outbound' }),
+      }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550200',
+      userSettings: {},
+      existingCalls: [{ matched: true, sessionId: 'session-1', logData: { note: 'existing note', subject: '' } }],
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(logCore.updateLog).toHaveBeenCalledWith(expect.objectContaining({
+      note: 'existing note',
+      subject: 'Outbound Call to Beta Contact',
+    }));
+  });
+
+  it('opens redirected edit call pages without create-log defaulting', async () => {
+    const { createLog, logUtil, logPage } = await loadCreateLog();
+
+    await createLog.onEvent({
+      data: eventFor({
+        redirect: true,
+        call: baseCall({ direction: 'Inbound' }),
+      }),
+      triggerTypeInUse: 'editLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: false,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(logPage.getLogPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      triggerType: 'editLog',
+    }));
+    expect(logUtil.logPageFormDataDefaulting).not.toHaveBeenCalled();
+  });
 });
 
 describe('callLogger logForm', () => {
@@ -826,5 +1211,86 @@ describe('callLogger logForm', () => {
     expect(dispositionCore.upsertDisposition).toHaveBeenCalledWith(expect.objectContaining({
       dispositions: { disposition: 'support', note: 'Updated note' },
     }));
+  });
+
+  it('creates existing-contact logs without optional callback or disposition work', async () => {
+    seedStorage({
+      userSettings: {},
+      implementedInterfaces: {
+        upsertCallDisposition: true,
+      },
+      rcUserInfo: {},
+    });
+    const { logForm, contactCore, logCore, dispositionCore, calldownPage } = await loadLogForm();
+    vi.mocked(axios.post).mockRejectedValueOnce(new Error('schedule failed'));
+
+    await logForm.onEvent({
+      data: eventFor({
+        formData: {
+          triggerType: 'createLog',
+          contact: 'contact-1',
+          contactName: 'Existing Contact',
+          contactType: 'Lead',
+          newContactName: '',
+          newContactType: '',
+          activityTitle: undefined,
+          note: undefined,
+          disposition: 'none',
+          scheduleCallback: true,
+          callbackDateTime: '2026-07-04T10:00:00',
+        },
+      }),
+      contactPhoneNumber: '+16505550100',
+      ...context,
+    });
+
+    expect(contactCore.createContact).not.toHaveBeenCalled();
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      subject: '',
+      note: '',
+      contactId: 'contact-1',
+      contactType: 'Lead',
+      contactName: 'Existing Contact',
+      additionalSubmission: {},
+    }));
+    expect(calldownPage.getCalldownPageWithRecords).not.toHaveBeenCalled();
+    expect(dispositionCore.upsertDisposition).not.toHaveBeenCalled();
+  });
+
+  it('updates existing call logs without disposition when one-time logging is enabled', async () => {
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: true },
+      },
+      implementedInterfaces: {
+        upsertCallDisposition: true,
+      },
+    });
+    const { logForm, logCore, dispositionCore } = await loadLogForm();
+
+    await logForm.onEvent({
+      data: eventFor({
+        formData: {
+          triggerType: 'editLog',
+          contact: 'contact-1',
+          contactName: 'Jane',
+          contactType: 'Lead',
+          newContactName: '',
+          newContactType: '',
+          activityTitle: undefined,
+          note: undefined,
+          disposition: 'support',
+        },
+      }),
+      contactPhoneNumber: '+16505550100',
+      ...context,
+    });
+
+    expect(logCore.updateLog).toHaveBeenCalledWith(expect.objectContaining({
+      subject: '',
+      note: '',
+      sessionId: 'session-1',
+    }));
+    expect(dispositionCore.upsertDisposition).not.toHaveBeenCalled();
   });
 });

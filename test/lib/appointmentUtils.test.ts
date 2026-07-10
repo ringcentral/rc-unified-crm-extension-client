@@ -24,6 +24,13 @@ describe('appointmentUtils', () => {
     ]);
   });
 
+  it('normalizes single attendee values and skips objects without ids', () => {
+    expect(normalizeAttendees('solo-contact')).toEqual([
+      { id: 'solo-contact', name: '', type: '' },
+    ]);
+    expect(normalizeAttendees({ name: 'Missing id' })).toEqual([]);
+  });
+
   it('formats attendee names compactly', () => {
     expect(formatAttendeeNames([])).toBe('');
     expect(formatAttendeeNames([{ name: 'Jane' }])).toBe('Jane');
@@ -57,6 +64,33 @@ describe('appointmentUtils', () => {
       attendees: [{ id: 'c-1', name: 'Jane', type: 'Contact' }],
       participantName: 'Jane',
     });
+  });
+
+  it('prefers explicit participant names and supports start time fallbacks', () => {
+    expect(toCanonicalAppointment({
+      id: 'appointment-1',
+      title: 'Status visit',
+      participantName: 'Explicit Name',
+      startTimeUtc: '2026-07-02T08:00:00Z',
+      startTime: '2026-07-02T09:00:00Z',
+      attendees: [{ id: 'c-1', name: 'Ignored Name' }],
+      durationMinutes: 0,
+      status: 'confirmed',
+    })).toEqual(expect.objectContaining({
+      id: 'appointment-1',
+      participantName: 'Explicit Name',
+      startTimeUtc: '2026-07-02T08:00:00Z',
+      durationMinutes: 0,
+      status: 'confirmed',
+    }));
+
+    expect(toCanonicalAppointment({
+      id: 'appointment-2',
+      when: '2026-07-03T08:00:00Z',
+    })).toEqual(expect.objectContaining({
+      startTimeUtc: '2026-07-03T08:00:00Z',
+      participantName: '',
+    }));
   });
 
   it('extracts list context from nested page or button payloads', () => {

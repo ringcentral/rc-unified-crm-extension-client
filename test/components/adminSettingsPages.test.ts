@@ -166,6 +166,22 @@ describe('managed settings page renderers', () => {
     });
   });
 
+  it('renders call and SMS logging setting defaults when admin settings are missing', async () => {
+    const loggingPage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSettingPage.ts');
+
+    const logging = loggingPage.getCallAndSMSLoggingSettingPageRender({});
+
+    expect(logging.formData).toMatchObject({
+      autoLogCall: { customizable: true, value: false },
+      autoLogSMS: { customizable: true, value: false },
+      autoLogVoicemail: { customizable: true, value: false },
+      autoLogInboundFax: { customizable: true, value: false },
+      autoLogOutboundFax: { customizable: true, value: false },
+      enableRetroCallLogSync: { customizable: true, value: true },
+      oneTimeLog: { customizable: true, value: false },
+    });
+  });
+
   it('renders contact settings with extension-number logging controls', async () => {
     const contactPage = await loadPage('../../src/components/admin/managedSettings/contactSettingPage.ts');
 

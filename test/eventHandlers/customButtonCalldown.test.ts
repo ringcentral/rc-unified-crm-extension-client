@@ -287,6 +287,74 @@ describe('custom-button calldown handlers', () => {
     }));
   });
 
+  it('places a calldown call from button metadata without cached rows or account id', async () => {
+    seedStorage({
+      rcUserInfo: {},
+      calldownListCache: [],
+      userSettings: {},
+    });
+    const loaded = await loadCalldownHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionCall.ts',
+    );
+
+    await loaded.handler.onEvent({
+      data: {
+        requestId: 'request-1',
+        body: {
+          button: {
+            additionalInfo: {
+              recordId: 'metadata-record',
+              phoneNumber: '+16505550999',
+            },
+          },
+          formData: {
+            searchWithFilters: { search: 'metadata', filter: 'Called' },
+          },
+        },
+      },
+      manifest: manifest(),
+    });
+
+    expect(getWidgetPostMessages()).toContainEqual({
+      message: {
+        type: 'rc-adapter-new-call',
+        phoneNumber: '+16505550999',
+        toCall: true,
+      },
+      targetOrigin: '*',
+    });
+    expect(axios.patch).toHaveBeenCalledWith('https://server.example/calldown/metadata-record', expect.objectContaining({
+      status: 'called',
+    }));
+    expect(loaded.calldownPage.getCalldownPageWithRecords).toHaveBeenCalledWith(expect.objectContaining({
+      filterStatus: 'Called',
+      searchWithFilters: {
+        search: 'metadata',
+        filter: 'Called',
+      },
+    }));
+  });
+
+  it('does nothing when calldown call action cannot resolve a phone number', async () => {
+    seedStorage({
+      calldownListCache: [],
+      rcUserInfo: {},
+    });
+    const loaded = await loadCalldownHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionCall.ts',
+    );
+
+    await loaded.handler.onEvent({
+      data: dataFor({ records: 'missing-record' }),
+      manifest: manifest(),
+    });
+
+    expect(axios.patch).not.toHaveBeenCalled();
+    expect(getWidgetPostMessages()).not.toContainEqual(expect.objectContaining({
+      message: expect.objectContaining({ type: 'rc-adapter-new-call' }),
+    }));
+  });
+
   it('starts a calldown SMS conversation from the selected row', async () => {
     const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/calldownActionText.ts',
@@ -387,6 +455,65 @@ describe('custom-button calldown handlers', () => {
     });
   });
 
+  it('skips schedule submission when required fields are missing', async () => {
+    const loaded = await loadCalldownHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/scheduleSubmit.ts',
+    );
+
+    await loaded.handler.onEvent({
+      data: dataFor({
+        phone: '+16505550100',
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+    await loaded.handler.onEvent({
+      data: dataFor({
+        callbackDateTime: '2026-07-04T10:30:00',
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+
+    expect(axios.post).not.toHaveBeenCalled();
+    expect(axios.patch).not.toHaveBeenCalled();
+    expect(window.postMessage).not.toHaveBeenCalledWith({ type: 'rc-log-modal-loading-on' }, '*');
+  });
+
+  it('creates a new CRM contact while editing an existing calldown record', async () => {
+    seedStorage({
+      rcUserInfo: {},
+      userSettings: {},
+    });
+    const loaded = await loadCalldownHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/scheduleSubmit.ts',
+    );
+
+    await loaded.handler.onEvent({
+      data: dataFor({
+        phone: '+16505550100',
+        callbackDateTime: '2026-07-04T10:30:00',
+        note: 'Updated with new contact',
+        contact: 'newContact',
+        newContactName: 'Fallback Type Lead',
+        editingRecordId: 'record-2',
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+
+    expect(loaded.contactCore.createContact).toHaveBeenCalledWith(expect.objectContaining({
+      newContactType: 'Lead',
+    }));
+    expect(axios.patch).toHaveBeenCalledWith('https://server.example/calldown/record-2?rcAccountId=', {
+      phoneNumber: '+16505550100',
+      scheduledAt: '2026-07-04T10:30:00',
+      contactId: 'created-contact',
+      contactType: 'Lead',
+      note: 'Updated with new contact',
+    });
+  });
+
   it('updates an existing calldown record for a selected contact', async () => {
     const loaded = await loadCalldownHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/scheduleSubmit.ts',
@@ -414,6 +541,42 @@ describe('custom-button calldown handlers', () => {
       level: 'success',
       message: 'Schedule updated successfully',
       ttl: 3000,
+    });
+  });
+
+  it('schedules selected contacts with default contact type when CRM lookup misses', async () => {
+    const loaded = await loadCalldownHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/calldown/scheduleSubmit.ts',
+      {
+        contactCore: {
+          getContact: vi.fn(async () => ({ matched: false, contactInfo: [] })),
+        },
+      },
+    );
+
+    await loaded.handler.onEvent({
+      data: dataFor({
+        phone: '+16505550100',
+        callbackDateTime: '2026-07-04T10:30:00',
+        note: 'Lookup missed',
+        contact: 'contact-missing',
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/calldown?rcAccountId=account-1', {
+      phoneNumber: '+16505550100',
+      scheduledAt: '2026-07-04T10:30:00',
+      contactId: 'contact-missing',
+      contactType: 'Contact',
+      note: 'Lookup missed',
+    });
+    expect(loaded.util.cacheCalldownContact).toHaveBeenCalledWith({
+      contactId: 'contact-missing',
+      contactName: '',
+      phoneNumber: '+16505550100',
+      contactType: 'Contact',
     });
   });
 

@@ -447,6 +447,78 @@ describe('customizedPage inputChanged page handlers', () => {
     }));
   });
 
+  it('handles appointment date-time early returns and whole-hour durations', async () => {
+    const { handler, appointmentCreatePage, appointmentEditPage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentPage.ts',
+    );
+
+    await handler.onEvent({
+      data: dataFor({
+        keys: ['dateTime'],
+        page: { id: 'appointmentCreatePage' },
+        formData: {},
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+    await handler.onEvent({
+      data: dataFor({
+        keys: ['dateTime'],
+        page: { id: 'appointmentCreatePage' },
+        formData: {
+          dateTime: 'not-a-date',
+        },
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+    expect(appointmentCreatePage.getAppointmentCreatePageRender).not.toHaveBeenCalled();
+
+    await handler.onEvent({
+      data: dataFor({
+        keys: ['endDateTime'],
+        page: { id: 'appointmentEditPage' },
+        formData: {
+          dateTime: '2026-07-03T10:00:00',
+          endDateTime: '2026-07-03T12:00:00',
+        },
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+
+    expect(appointmentEditPage.getAppointmentEditPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      initialFormData: expect.objectContaining({
+        duration: 'PT2H',
+      }),
+    }));
+  });
+
+  it('defaults appointment end time when end time is missing', async () => {
+    const { handler, appointmentCreatePage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentPage.ts',
+    );
+
+    await handler.onEvent({
+      data: dataFor({
+        keys: ['dateTime'],
+        page: { id: 'appointmentCreatePage' },
+        formData: {
+          dateTime: '2026-07-03T10:00:00',
+        },
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+
+    expect(appointmentCreatePage.getAppointmentCreatePageRender).toHaveBeenCalledWith(expect.objectContaining({
+      initialFormData: expect.objectContaining({
+        endDateTime: '2026-07-03T10:00:00',
+        duration: 'PT0M',
+      }),
+    }));
+  });
+
   it('searches appointment participant contacts and keeps selected candidates', async () => {
     seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
     const { handler, appointmentCreatePage } = await loadPageHandler(
@@ -496,6 +568,187 @@ describe('customizedPage inputChanged page handlers', () => {
     }));
   });
 
+  it('ignores appointment participant changes that do not contain a search query', async () => {
+    const { handler, appointmentCreatePage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentPage.ts',
+    );
+
+    await handler.onEvent({
+      data: dataFor({
+        keys: [],
+        formData: {},
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+    await handler.onEvent({
+      data: dataFor({
+        keys: ['participantContactIds'],
+        formData: {
+          participantContactIds: 'not-an-array',
+          participantCandidates: 'not-an-array',
+        },
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+    await handler.onEvent({
+      data: dataFor({
+        keys: ['participantContactIds'],
+        formData: {
+          participantContactIds: ['candidate-1'],
+          participantCandidates: [{ id: 'candidate-1' }],
+        },
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+    await handler.onEvent({
+      data: dataFor({
+        keys: ['participantContactIds'],
+        formData: {
+          participantContactIds: ['   '],
+          participantCandidates: [],
+        },
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+
+    expect(axios.get).not.toHaveBeenCalled();
+    expect(appointmentCreatePage.getAppointmentCreatePageRender).not.toHaveBeenCalled();
+  });
+
+  it('searches appointment participants without JWT and falls back to default appointment config', async () => {
+    const { handler, appointmentCreatePage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentPage.ts',
+    );
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: {} });
+
+    await handler.onEvent({
+      data: dataFor({
+        keys: ['participantContactIds'],
+        page: { id: 'appointmentCreatePage' },
+        formData: {
+          participantContactIds: ['Jane'],
+          participantCandidates: [],
+          emailMandatoryInAttendee: false,
+        },
+      }),
+      manifest: {
+        serverUrl: 'https://server.example',
+        platforms: {},
+      },
+      platformName: 'salesforce',
+    });
+    await flushAsyncHandlers();
+
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/custom/contact/search', {
+      params: {
+        name: 'Jane',
+      },
+    });
+    expect(appointmentCreatePage.getAppointmentCreatePageRender).toHaveBeenCalledWith(expect.objectContaining({
+      appointmentTitle: 'Appointments',
+      statusConfig: undefined,
+      titleFieldConfig: undefined,
+      initialFormData: expect.objectContaining({
+        participantCandidates: [],
+        participantContactIds: [],
+        emailMandatoryInAttendee: false,
+      }),
+    }));
+  });
+
+  it('dedupes appointment participant candidates while preserving confirmed email checks', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const { handler, appointmentCreatePage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentPage.ts',
+    );
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        contact: [
+          null,
+          { id: 'candidate-1', type: 'Lead', name: 'Ignored', email: 'ignored@example.test' },
+          { id: 'candidate-2', type: null, name: null },
+          { id: '', type: 'Lead', name: 'No Id' },
+        ],
+      },
+    });
+
+    await handler.onEvent({
+      data: dataFor({
+        keys: ['participantContactIds'],
+        page: { id: 'appointmentCreatePage' },
+        formData: {
+          participantContactIds: ['candidate-1', 'New person'],
+          participantCandidates: [
+            null,
+            { id: 'candidate-1' },
+            {
+              id: 'candidate-1',
+              type: 'Contact',
+              name: 'Existing Person',
+              email: 'existing@example.test',
+              emailChecked: true,
+            },
+          ],
+        },
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+    await flushAsyncHandlers();
+
+    expect(appointmentCreatePage.getAppointmentCreatePageRender).toHaveBeenCalledWith(expect.objectContaining({
+      initialFormData: expect.objectContaining({
+        participantCandidates: [
+          {
+            id: 'candidate-1',
+            type: 'Contact',
+            name: 'Existing Person',
+            email: 'existing@example.test',
+            emailChecked: true,
+          },
+          {
+            id: 'candidate-2',
+            type: '',
+            name: '',
+            emailChecked: true,
+          },
+        ],
+      }),
+    }));
+  });
+
+  it('turns off appointment participant loading when search fails', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const searchError = new Error('search failed');
+    const { handler, appointmentCreatePage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentPage.ts',
+    );
+    vi.mocked(axios.get).mockRejectedValueOnce(searchError);
+
+    await handler.onEvent({
+      data: dataFor({
+        keys: ['participantContactIds'],
+        page: { id: 'appointmentCreatePage' },
+        formData: {
+          participantContactIds: ['Jane'],
+          participantCandidates: [],
+        },
+      }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+    });
+    await flushAsyncHandlers();
+
+    expect(console.error).toHaveBeenCalledWith('Appointment participant search failed:', searchError);
+    expect(window.postMessage).toHaveBeenCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
+    expect(appointmentCreatePage.getAppointmentCreatePageRender).not.toHaveBeenCalled();
+  });
+
   it('ignores appointment page refresh events without list filters', async () => {
     seedStorage({
       userSettings: {},
@@ -510,6 +763,35 @@ describe('customizedPage inputChanged page handlers', () => {
       data: dataFor({ keys: ['appointments'], formData: {} }),
       manifest: manifest(),
     });
+    expect(appointmentsPage.getAppointmentsPageWithRecords).not.toHaveBeenCalled();
+  });
+
+  it('ignores appointment refreshes when the appointments tab is hidden by settings', async () => {
+    seedStorage({
+      userSettings: { showAppointmentsTab: { value: false } },
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      appointmentsLastState: { tab: 'upcoming', search: '', filter: 'All' },
+    });
+    const { handler, appointmentsPage } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentsPage.ts',
+      {
+        userCore: {
+          getShowAppointmentsTabSetting: vi.fn(() => ({ value: false })),
+        },
+      },
+    );
+
+    await handler.onEvent({
+      data: dataFor({
+        keys: ['searchWithFilters'],
+        formData: {
+          tab: 'upcoming',
+          searchWithFilters: { search: 'Jane', filter: 'All' },
+        },
+      }),
+      manifest: manifest(),
+    });
+
     expect(appointmentsPage.getAppointmentsPageWithRecords).not.toHaveBeenCalled();
   });
 
@@ -540,6 +822,47 @@ describe('customizedPage inputChanged page handlers', () => {
       searchWithFilters: { search: 'Jane', filter: 'All' },
       forceSync: false,
     }));
+  });
+
+  it('refreshes appointments immediately for filter changes and reports refresh errors', async () => {
+    seedStorage({
+      userSettings: {},
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      appointmentsLastState: { tab: 'upcoming', search: 'Jane', filter: 'All' },
+    });
+    const { handler, appointmentsPage, util } = await loadPageHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/appointmentsPage.ts',
+    );
+
+    await handler.onEvent({
+      data: dataFor({
+        keys: ['searchWithFilters'],
+        formData: {
+          tab: 'upcoming',
+          searchWithFilters: { search: 'Jane', filter: 'Canceled' },
+        },
+      }),
+      manifest: manifest(),
+    });
+
+    expect(window.postMessage).toHaveBeenCalledWith({ type: 'rc-log-modal-loading-on' }, '*');
+    expect(window.postMessage).toHaveBeenCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
+    expect(readStorage().appointmentsLastState).toEqual({ tab: 'upcoming', search: 'Jane', filter: 'Canceled' });
+
+    appointmentsPage.getAppointmentsPageWithRecords.mockRejectedValueOnce(new Error('refresh failed'));
+    await handler.onEvent({
+      data: dataFor({
+        requestId: 'request-error',
+        keys: ['tab'],
+        formData: {
+          tab: 'past',
+          searchWithFilters: { search: 'Jane', filter: 'Canceled' },
+        },
+      }),
+      manifest: manifest(),
+    });
+
+    expect(util.responseMessage).toHaveBeenLastCalledWith('request-1', { error: 'refresh failed' });
   });
 
   it('refreshes appointments immediately for tab changes and remembers list state', async () => {

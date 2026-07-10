@@ -166,6 +166,105 @@ describe('logUtil', () => {
     ]));
   });
 
+  it('leaves defaults unset when settings are missing or custom values are disallowed', async () => {
+    seedStorage({
+      userSettings: {
+        inboundDisposition: { value: 'Custom value' },
+        defaultFlag: { value: false },
+        allowBullhornCustomNoteAction: { value: false },
+      },
+    });
+    const logUtil = await loadLogUtil();
+
+    await expect(logUtil.logPageFormDataDefaulting({
+      platform: {
+        name: 'salesforce',
+        page: {
+          callLog: {
+            additionalFields: [],
+          },
+        },
+      },
+      targetPage: {
+        schema: { properties: {} },
+        formData: {},
+      },
+      caseType: 'inboundCall',
+      logType: 'callLog',
+    })).resolves.toMatchObject({
+      formData: {},
+    });
+
+    const result = await logUtil.logPageFormDataDefaulting({
+      platform: {
+        ...platform(),
+        name: 'bullhorn',
+        page: {
+          callLog: {
+            additionalFields: [
+              {
+                const: 'disposition',
+                defaultSettingId: 'defaultDisposition',
+                defaultSettingValues: {
+                  inboundCall: { settingId: 'inboundDisposition' },
+                },
+                allowCustomValue: true,
+              },
+              {
+                const: 'missingDefault',
+                defaultSettingId: 'missingSetting',
+                defaultSettingValues: {
+                  inboundCall: { settingId: 'missingValue' },
+                },
+              },
+              {
+                const: 'flag',
+                defaultSettingId: 'flagSetting',
+                defaultSettingValues: {
+                  inboundCall: { settingId: 'defaultFlag' },
+                },
+              },
+            ],
+          },
+        },
+        settings: [
+          ...platform().settings,
+          {
+            id: 'flagSetting',
+            items: [
+              {
+                id: 'differentFlag',
+                defaultValue: true,
+              },
+            ],
+          },
+        ],
+      },
+      targetPage: {
+        schema: {
+          properties: {
+            disposition: {
+              oneOf: [
+                { const: 'Demo', title: 'Demo' },
+              ],
+            },
+            flag: {
+              type: 'boolean',
+            },
+          },
+        },
+        formData: {},
+      },
+      caseType: 'inboundCall',
+      logType: 'callLog',
+    });
+
+    expect(result.formData).toEqual({});
+    expect(result.schema.properties.disposition.oneOf).toEqual([
+      { const: 'Demo', title: 'Demo' },
+    ]);
+  });
+
   it('classifies unknown and multiple contact conflicts for auto logging', async () => {
     const logUtil = await loadLogUtil();
 
@@ -192,6 +291,70 @@ describe('logUtil', () => {
     })).resolves.toMatchObject({
       hasConflict: true,
       conflictType: 'Multiple contacts',
+    });
+  });
+
+  it('uses to-number contacts and numeric default values for outbound call conflicts', async () => {
+    seedStorage({
+      userSettings: {
+        outboundDisposition: { value: 2 },
+      },
+    });
+    const logUtil = await loadLogUtil();
+
+    await expect(logUtil.getLogConflictInfo({
+      platform: {
+        name: 'salesforce',
+        page: {
+          callLog: {
+            additionalFields: [
+              {
+                const: 'disposition',
+                defaultSettingId: 'defaultDisposition',
+                defaultSettingValues: {
+                  outboundCall: { settingId: 'outboundDisposition' },
+                },
+              },
+            ],
+          },
+        },
+        settings: [
+          {
+            id: 'defaultDisposition',
+            items: [
+              {
+                id: 'outboundDisposition',
+                defaultValue: 1,
+              },
+            ],
+          },
+        ],
+      },
+      isAutoLog: true,
+      contactInfo: [
+        {
+          id: 'to-number',
+          isNewContact: false,
+          toNumberEntity: true,
+          additionalInfo: {
+            disposition: [
+              { const: 1, title: 'One' },
+              { const: 2, title: 'Two' },
+            ],
+          },
+        },
+        {
+          id: 'other-contact',
+          isNewContact: false,
+        },
+      ],
+      logType: 'callLog',
+      direction: 'Outbound',
+    })).resolves.toMatchObject({
+      hasConflict: false,
+      autoSelectAdditionalSubmission: {
+        disposition: 2,
+      },
     });
   });
 
@@ -223,6 +386,29 @@ describe('logUtil', () => {
     });
   });
 
+  it('parses supported contact date formats and rejects invalid dates', async () => {
+    const logUtil = await loadLogUtil();
+    const date = new Date('2026-07-03T08:00:00.000Z');
+
+    expect(logUtil.parseContactDateValue(undefined)).toBeNull();
+    expect(logUtil.parseContactDateValue(null)).toBeNull();
+    expect(logUtil.parseContactDateValue(' ')).toBeNull();
+    expect(logUtil.parseContactDateValue(date)).toBe(date.getTime());
+    expect(logUtil.parseContactDateValue('20260703')).toBe(Date.UTC(2026, 6, 3));
+    expect(logUtil.parseContactDateValue('20260703080910')).toBe(Date.UTC(2026, 6, 3, 8, 9, 10));
+    expect(logUtil.parseContactDateValue('2026/07/03 08:09:10')).toBe(Date.UTC(2026, 6, 3, 8, 9, 10));
+    expect(logUtil.parseContactDateValue('2026-07-03T08:09:10+0800')).toBe(Date.parse('2026-07-03T08:09:10.000+08:00'));
+    expect(logUtil.parseContactDateValue('/Date(1783065600000+0000)/')).toBe(1783065600000);
+    expect(logUtil.parseContactDateValue('July 3, 2026 08:00:00 UTC')).toBe(Date.parse('July 3, 2026 08:00:00 UTC'));
+    expect(logUtil.parseContactDateValue('1783065600000000000')).toBe(1783065600000);
+    expect(logUtil.parseContactDateValue('1783065600000000')).toBe(1783065600000);
+    expect(logUtil.parseContactDateValue('1783065600')).toBe(1783065600000);
+    expect(logUtil.parseContactDateValue('not-a-date')).toBeNull();
+    expect(logUtil.parseContactDateValue('2026-02-30T08:00:00Z')).toBeNull();
+    expect(logUtil.hasValidDateValue('2026-07-03')).toBe(true);
+    expect(logUtil.hasValidDateValue('')).toBe(false);
+  });
+
   it('resolves earliest created and most recent activity contacts by parsed timestamps', async () => {
     const logUtil = await loadLogUtil();
     const contacts = [
@@ -252,6 +438,25 @@ describe('logUtil', () => {
     expect(logUtil.resolveMostRecentActivityContact(contacts)).toMatchObject({
       id: 'old-created-new-activity',
     });
+  });
+
+  it('reports missing created dates and empty activity matches', async () => {
+    const logUtil = await loadLogUtil();
+
+    expect(logUtil.resolveEarliestCreatedContact([
+      { id: 'missing-created', createdDate: '' },
+    ])).toEqual({
+      contact: null,
+      missingCreatedDate: true,
+    });
+    expect(logUtil.resolveEarliestCreatedContact([])).toEqual({
+      contact: null,
+      missingCreatedDate: false,
+    });
+    expect(logUtil.resolveMostRecentActivityContact([
+      { id: 'new-contact', isNewContact: true, mostRecentActivityDate: '2030-01-01T00:00:00Z' },
+      { id: 'invalid-activity', mostRecentActivityDate: 'not-a-date' },
+    ])).toBeNull();
   });
 
   it('resolves most recent activity for ISO timestamps with timezone offsets', async () => {
@@ -455,6 +660,26 @@ describe('logUtil', () => {
     expect(readStorage().pendingRecordings).toEqual([]);
   });
 
+  it('keeps pending recordings when none are ready and skips empty pending checks', async () => {
+    const logUtil = await loadLogUtil();
+    RCAdapter.getCallLog.mockClear();
+    vi.mocked(logService.syncCallData).mockClear();
+
+    await logUtil.triggerPendingRecordingCheck({ serverUrl: 'https://server.example' });
+    expect(RCAdapter.getCallLog).not.toHaveBeenCalled();
+    expect(logService.syncCallData).not.toHaveBeenCalled();
+
+    seedStorage({
+      pendingRecordings: ['session-pending'],
+    });
+    RCAdapter.getCallLog.mockResolvedValueOnce(null);
+
+    await logUtil.triggerPendingRecordingCheck({ serverUrl: 'https://server.example' });
+
+    expect(logService.syncCallData).not.toHaveBeenCalled();
+    expect(readStorage().pendingRecordings).toEqual(['session-pending']);
+  });
+
   it('removes pending recording ids using the current storage update behavior', async () => {
     seedStorage({
       pendingRecordings: ['session-1', 'session-2'],
@@ -484,6 +709,30 @@ describe('logUtil', () => {
     await expect(logUtil.getCachedLogPageData()).resolves.toMatchObject({
       id: 'page-1',
       manifest: { serverUrl: 'https://server.example' },
+      platformName: 'salesforce',
+    });
+  });
+
+  it('caches log page data without resolving already provided manifest and platform', async () => {
+    vi.mocked(getManifest).mockClear();
+    vi.mocked(getPlatformInfo).mockClear();
+    const logUtil = await loadLogUtil();
+
+    await logUtil.cacheLogPageData({
+      id: 'page-2',
+      manifest: { serverUrl: 'https://provided.example' },
+      logType: 'messageLog',
+      triggerType: 'manual',
+      platformName: 'salesforce',
+      direction: '',
+      contactInfo: [{ id: 'contact-1' }],
+    });
+
+    expect(getManifest).not.toHaveBeenCalled();
+    expect(getPlatformInfo).not.toHaveBeenCalled();
+    await expect(logUtil.getCachedLogPageData()).resolves.toMatchObject({
+      id: 'page-2',
+      manifest: { serverUrl: 'https://provided.example' },
       platformName: 'salesforce',
     });
   });

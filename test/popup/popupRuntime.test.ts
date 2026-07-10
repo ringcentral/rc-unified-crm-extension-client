@@ -37,14 +37,23 @@ const messageHandlerModules = {
   controlCall: '../../src/messageHandlers/controlCall.ts',
 };
 
-async function loadPopupRuntime() {
+async function loadPopupRuntime(options = {}) {
   vi.resetModules();
+  const {
+    implementedInterfaces = { findContactWithName: true },
+    manifest = {
+      serverUrl: 'https://server.example',
+      author: { name: 'CRM Author' },
+    },
+    platformInfo = { platformName: 'salesforce' },
+    serviceManifest = { name: 'service-manifest' },
+  } = options;
 
   const requestInterceptors = [];
   const responseInterceptors = [];
   const axiosMock = {
     defaults: {},
-    get: vi.fn(async () => ({ data: { findContactWithName: true } })),
+    get: vi.fn(async () => ({ data: implementedInterfaces })),
     interceptors: {
       request: {
         use: vi.fn((fulfilled, rejected) => requestInterceptors.push({ fulfilled, rejected })),
@@ -80,21 +89,18 @@ async function loadPopupRuntime() {
   vi.doMock('../../src/lib/apiErrorHandler.ts', () => ({ default: apiErrorHandler }));
 
   const embeddableServices = {
-    getServiceManifest: vi.fn(async () => ({ name: 'service-manifest' })),
+    getServiceManifest: vi.fn(async () => serviceManifest),
   };
   vi.doMock('../../src/service/embeddableServices.ts', () => ({ default: embeddableServices }));
 
   const manifestService = {
-    getManifest: vi.fn(async () => ({
-      serverUrl: 'https://server.example',
-      author: { name: 'CRM Author' },
-    })),
+    getManifest: vi.fn(async () => manifest),
     saveManifestUrl: vi.fn(async () => {}),
   };
   vi.doMock('../../src/service/manifestService.ts', () => manifestService);
 
   const platformService = {
-    getPlatformInfo: vi.fn(async () => ({ platformName: 'salesforce' })),
+    getPlatformInfo: vi.fn(async () => platformInfo),
   };
   vi.doMock('../../src/service/platformService.ts', () => platformService);
 
@@ -205,6 +211,42 @@ describe('popup runtime', () => {
     expect(runtime.embeddableServices.getServiceManifest).toHaveBeenCalledTimes(2);
   });
 
+  it('initializes without custom manifest URL, author, platform info, or implemented interfaces', async () => {
+    await chrome.storage.local.clear();
+    seedStorage({ rcUnifiedCrmExtJwt: 'stored-token' });
+
+    const runtime = await loadPopupRuntime({
+      manifest: { serverUrl: 'https://server.example' },
+      platformInfo: null,
+    });
+
+    expect(runtime.manifestService.saveManifestUrl).not.toHaveBeenCalled();
+    expect(runtime.analytics.setAuthor).toHaveBeenCalledWith('');
+    expect(runtime.axiosMock.get).not.toHaveBeenCalled();
+    expect(readStorage().implementedInterfaces).toBeUndefined();
+  });
+
+  it('initializes when manifest lookup returns nothing', async () => {
+    await chrome.storage.local.clear();
+    const runtime = await loadPopupRuntime({
+      manifest: null,
+      platformInfo: null,
+    });
+
+    expect(runtime.manifestService.saveManifestUrl).not.toHaveBeenCalled();
+    expect(runtime.analytics.setAuthor).not.toHaveBeenCalled();
+    expect(runtime.axiosMock.get).not.toHaveBeenCalled();
+  });
+
+  it('skips implemented interface storage when the server returns no data', async () => {
+    const runtime = await loadPopupRuntime({
+      implementedInterfaces: null,
+    });
+
+    expect(runtime.axiosMock.get).toHaveBeenCalledWith('https://server.example/implementedInterfaces?platform=salesforce');
+    expect(readStorage().implementedInterfaces).toBeUndefined();
+  });
+
   it('adds authorization from jwtToken query params and logs API requests', async () => {
     const runtime = await loadPopupRuntime();
     runtime.logRecorder.isRecordingLogs.mockResolvedValue(true);
@@ -242,6 +284,63 @@ describe('popup runtime', () => {
     expect(request.headers.Authorization).toBe('Bearer params-token');
   });
 
+  it('handles URLSearchParams tokens, malformed URLs, and existing auth headers', async () => {
+    const runtime = await loadPopupRuntime();
+
+    const relativeUrlRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records?jwtToken=relative-token&search=Jane',
+      params: new URLSearchParams('search=Jane'),
+      headers: {},
+    });
+    expect(relativeUrlRequest.url).toBe('/records?search=Jane');
+    expect(relativeUrlRequest.params.get('search')).toBe('Jane');
+    expect(relativeUrlRequest.headers.Authorization).toBe('Bearer relative-token');
+
+    const searchParamsRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records',
+      baseURL: 'https://api.example',
+      params: new URLSearchParams('jwtToken=params-token&search=Jane'),
+      headers: {},
+    });
+    expect(searchParamsRequest.params.get('jwtToken')).toBeNull();
+    expect(searchParamsRequest.params.get('search')).toBe('Jane');
+    expect(searchParamsRequest.headers.Authorization).toBe('Bearer params-token');
+
+    const existingHeaderRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records',
+      params: { search: 'Jane' },
+      headers: {
+        authorization: 'Bearer existing-token',
+      },
+    });
+    expect(existingHeaderRequest.headers.authorization).toBe('Bearer existing-token');
+    expect(existingHeaderRequest.headers.Authorization).toBeUndefined();
+
+    const malformedUrlRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: 'http://[bad',
+      params: ['not', 'an', 'object'],
+      headers: {},
+    });
+    expect(malformedUrlRequest.url).toBe('http://[bad');
+    expect(malformedUrlRequest.params).toEqual(['not', 'an', 'object']);
+    expect(malformedUrlRequest.headers.Authorization).toBe('Bearer stored-token');
+  });
+
+  it('keeps request inputs unchanged when no JWT is available', async () => {
+    const runtime = await loadPopupRuntime();
+    await chrome.storage.local.set({ rcUnifiedCrmExtJwt: null });
+
+    const request = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records',
+      params: new URLSearchParams('search=Jane'),
+      headers: {},
+    });
+
+    expect(request.url).toBe('/records');
+    expect(request.params.get('search')).toBe('Jane');
+    expect(request.headers.Authorization).toBeUndefined();
+  });
+
   it('skips authorization when a request opts out', async () => {
     const runtime = await loadPopupRuntime();
     const skipped = await runtime.requestInterceptors[0].fulfilled({
@@ -249,6 +348,20 @@ describe('popup runtime', () => {
       skipAuthorization: true,
     });
     expect(skipped.headers).toBeUndefined();
+  });
+
+  it('uses stored JWT authorization when request token inputs are absent', async () => {
+    const runtime = await loadPopupRuntime();
+
+    const request = await runtime.requestInterceptors[0].fulfilled({
+      url: undefined,
+      params: null,
+      headers: {},
+    });
+
+    expect(request.url).toBeUndefined();
+    expect(request.params).toBeNull();
+    expect(request.headers.Authorization).toBe('Bearer stored-token');
   });
 
   it('logs request interceptor errors before rethrowing', async () => {
@@ -259,6 +372,13 @@ describe('popup runtime', () => {
     expect(runtime.logRecorder.logAction).toHaveBeenCalledWith(expect.objectContaining({
       name: 'API_REQUEST_ERROR',
     }));
+  });
+
+  it('rethrows request interceptor errors without logging when recording is disabled', async () => {
+    const runtime = await loadPopupRuntime();
+
+    await expect(runtime.requestInterceptors[0].rejected(new Error('request failed'))).rejects.toThrow('request failed');
+    expect(runtime.logRecorder.logAction).not.toHaveBeenCalled();
   });
 
   it('stores refreshed JWT tokens from successful responses and logs API responses', async () => {
@@ -282,6 +402,24 @@ describe('popup runtime', () => {
     expect(runtime.logRecorder.logAction).toHaveBeenCalledWith(expect.objectContaining({
       name: 'API_RESPONSE',
     }));
+  });
+
+  it('leaves JWT storage unchanged when responses have no refreshed token', async () => {
+    const runtime = await loadPopupRuntime();
+
+    await expect(runtime.responseInterceptors[0].fulfilled({
+      headers: {},
+      config: {
+        url: '/records',
+      },
+      status: 204,
+      statusText: 'No Content',
+      data: null,
+    })).resolves.toMatchObject({
+      status: 204,
+    });
+
+    expect(readStorage().rcUnifiedCrmExtJwt).toBe('stored-token');
   });
 
   it('handles response errors, clears CRM auth on 401, and stores refreshed error tokens', async () => {
@@ -308,6 +446,80 @@ describe('popup runtime', () => {
     expect(runtime.logRecorder.logAction).toHaveBeenCalledWith(expect.objectContaining({
       name: 'API_RESPONSE_ERROR',
     }));
+  });
+
+  it('does not clear CRM auth for guarded 401 response errors', async () => {
+    const runtime = await loadPopupRuntime();
+
+    for (const config of [
+      {
+        url: '/unAuthorize?jwtToken=expired',
+        headers: { Authorization: 'Bearer expired' },
+      },
+      {
+        url: '/records?jwtToken=expired',
+        headers: { Authorization: 'Bearer expired' },
+        skipAuthorization: true,
+      },
+      {
+        url: '/records',
+        headers: {},
+      },
+      {
+        url: '/records',
+        baseURL: 'https://api.example',
+        headers: {},
+      },
+    ]) {
+      const error = new Error('unauthorized');
+      error.config = config;
+      error.response = {
+        status: 401,
+        statusText: 'Unauthorized',
+        data: { error: 'invalid' },
+      };
+      await expect(runtime.responseInterceptors[0].rejected(error)).rejects.toThrow('unauthorized');
+    }
+
+    expect(runtime.authCore.clearLocalCrmAuthState).not.toHaveBeenCalled();
+  });
+
+  it('does not clear CRM auth for non-401 response errors', async () => {
+    const runtime = await loadPopupRuntime();
+    const error = new Error('server failed');
+    error.config = {
+      url: '/records?jwtToken=expired',
+      headers: { Authorization: 'Bearer expired' },
+    };
+    error.response = {
+      status: 500,
+      statusText: 'Server Error',
+      data: { error: 'failed' },
+    };
+
+    await expect(runtime.responseInterceptors[0].rejected(error)).rejects.toThrow('server failed');
+
+    expect(runtime.authCore.clearLocalCrmAuthState).not.toHaveBeenCalled();
+  });
+
+  it('refreshes service manifest on local CRM auth changes without forcing JWT sync', async () => {
+    const runtime = await loadPopupRuntime();
+    runtime.authCore.syncCrmAuthedFromStorage.mockClear();
+    runtime.embeddableServices.getServiceManifest.mockClear();
+
+    await runtime.storageChangeListener({
+      crmAuthed: { newValue: false },
+    }, 'local');
+
+    expect(runtime.authCore.syncCrmAuthedFromStorage).not.toHaveBeenCalled();
+    expect(runtime.embeddableServices.getServiceManifest).toHaveBeenCalledTimes(1);
+    expect(getWidgetPostMessages()).toContainEqual({
+      message: {
+        type: 'rc-adapter-register-third-party-service',
+        service: { name: 'service-manifest' },
+      },
+      targetOrigin: '*',
+    });
   });
 
   it('routes embeddable window messages and records selected message events', async () => {
@@ -440,5 +652,63 @@ describe('popup runtime', () => {
     runtime.messageHandlers.navigate.onMessage.mockRejectedValueOnce(new Error('navigation failed'));
     await runtime.runtimeMessageListener({ type: 'navigate' }, {}, sendResponse);
     expect(window.postMessage).toHaveBeenCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
+  });
+
+  it('skips message recording when log recording is disabled', async () => {
+    const runtime = await loadPopupRuntime();
+    const sendResponse = vi.fn();
+
+    await runtime.messageListener({ data: { type: 'rc-login-status-notify' } });
+    for (const type of [
+      'rc-active-call-notify',
+      'rc-analytics-track',
+      'rc-callLogger-auto-log-notify',
+      'rc-messageLogger-auto-log-notify',
+      'rc-route-changed-notify',
+      'rc-adapter-phone-number-format-settings-notify',
+    ]) {
+      await runtime.messageListener({ data: { type } });
+    }
+    await runtime.messageListener({ data: null });
+
+    await runtime.runtimeMessageListener({ type: 'oauthCallBack' }, {}, sendResponse);
+    for (const type of [
+      'pipedriveCallbackUri',
+      'c2sms',
+      'c2d',
+      'c2schedule',
+      'navigate',
+      'insightlyAuth',
+    ]) {
+      await runtime.runtimeMessageListener({ type }, {}, sendResponse);
+    }
+
+    expect(runtime.eventHandlers.rcLoginStatusNotify.onEvent).toHaveBeenCalled();
+    expect(runtime.messageHandlers.oauthCallBack.onMessage).toHaveBeenCalled();
+    expect(runtime.messageHandlers.insightlyAuth.onMessage).toHaveBeenCalled();
+    expect(runtime.logRecorder.logAction).not.toHaveBeenCalled();
+    expect(sendResponse).toHaveBeenCalledWith({ result: 'ok' });
+  });
+
+  it('treats 404 return-message event errors as generic errors', async () => {
+    const runtime = await loadPopupRuntime();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const notFound = new Error('not found');
+    notFound.response = {
+      status: 404,
+      data: {
+        returnMessage: {
+          level: 'warning',
+          message: 'Not found',
+        },
+      },
+    };
+
+    runtime.eventHandlers.rcLoginPopupNotify.onEvent.mockRejectedValueOnce(notFound);
+    await runtime.messageListener({ data: { type: 'rc-login-popup-notify' } });
+
+    expect(runtime.util.showNotification).not.toHaveBeenCalled();
+    expect(console.error).toHaveBeenCalledWith(notFound);
   });
 });

@@ -362,4 +362,77 @@ describe('calldownPage', () => {
     });
     expect(failed.schema.properties.records.oneOf).toEqual([]);
   });
+
+  it('uses legacy calldown filters and renders fallback names without widget matcher data', async () => {
+    seedStorage({
+      calldownContactCache: {
+        'contact-1': {
+          contactName: 'Cached Jane',
+          phoneNumber: '+16505550100',
+        },
+      },
+    });
+    vi.spyOn(document, 'querySelector').mockReturnValueOnce(null);
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        items: [
+          {
+            id: 'row-1',
+            contactId: 'contact-1',
+            contactName: '',
+            phoneNumber: '',
+            status: 'scheduled',
+            scheduledAt: '2026-07-03T12:00:00Z',
+            lastCallAt: '2026-07-02T12:00:00Z',
+          },
+          {
+            id: 'row-2',
+            contactId: undefined,
+            contactName: '',
+            phoneNumber: '+16505550200',
+            status: '',
+          },
+        ],
+      },
+    });
+    const calldownPage = await loadPage('../../src/components/calldownPage.ts');
+
+    const page = await calldownPage.getCalldownPageWithRecords({
+      manifest: manifest(),
+      filterName: '65055502',
+      filterStatus: 'All',
+    });
+
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/calldown', {
+      params: { status: 'All' },
+    });
+    expect(page.unreadCount).toBe(1);
+    expect(page.schema.properties.records.oneOf).toEqual([
+      expect.objectContaining({
+        const: 'row-2',
+        title: '+16505550200',
+        description: '+16505550200',
+        authorName: 'Not Called',
+      }),
+    ]);
+    expect(readStorage().calldownContactCache).toEqual({
+      'contact-1': {
+        contactName: 'Cached Jane',
+        phoneNumber: '+16505550100',
+      },
+    });
+  });
+
+  it('keeps the calldown list empty when the API returns a non-array payload', async () => {
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { items: null } });
+    const calldownPage = await loadPage('../../src/components/calldownPage.ts');
+
+    const page = await calldownPage.getCalldownPageWithRecords({
+      manifest: manifest(),
+      searchWithFilters: {},
+    });
+
+    expect(page.schema.properties.records.oneOf).toEqual([]);
+    expect(readStorage().calldownListCache).toEqual([]);
+  });
 });

@@ -247,6 +247,82 @@ describe('log core', () => {
     });
   });
 
+  it('uses fallback call-log notifications and all overriding phone formats', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      userSettings: {
+        overridingPhoneNumberFormat2: { value: 'format-2' },
+        overridingPhoneNumberFormat3: { value: 'format-3' },
+      },
+    });
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        logId: 'log-3',
+      },
+    });
+    const logCore = await loadLogCore();
+
+    await logCore.addLog({
+      serverUrl: 'https://server.example',
+      logType: 'Call',
+      logInfo: { sessionId: 'session-3' },
+      note: '',
+      contactId: 'contact-3',
+      additionalSubmission: {},
+    });
+
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/callLog', expect.objectContaining({
+      overridingFormat: ['format-2', 'format-3'],
+    }));
+    expect(trackSyncCallLog).toHaveBeenCalledWith({ hasNote: false });
+    expect(showNotification).toHaveBeenCalledWith({
+      level: 'success',
+      message: 'notifications.success.callLogAdded',
+      ttl: 3000,
+      details: undefined,
+    });
+  });
+
+  it('uses fallback unsuccessful call-log notifications and can suppress them', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    vi.mocked(axios.post)
+      .mockResolvedValueOnce({
+        data: {
+          successful: false,
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          successful: false,
+        },
+      });
+    const logCore = await loadLogCore();
+
+    await logCore.addLog({
+      serverUrl: 'https://server.example',
+      logType: 'Call',
+      logInfo: { sessionId: 'session-4' },
+      additionalSubmission: {},
+    });
+    expect(showNotification).toHaveBeenCalledWith({
+      level: 'warning',
+      message: 'notifications.warning.callLogFailed',
+      ttl: 3000,
+      details: undefined,
+    });
+
+    vi.mocked(showNotification).mockClear();
+    await logCore.addLog({
+      serverUrl: 'https://server.example',
+      logType: 'Call',
+      logInfo: { sessionId: 'session-5' },
+      additionalSubmission: {},
+      isShowNotification: false,
+    });
+    expect(showNotification).not.toHaveBeenCalled();
+  });
+
   it('gets and updates call logs with RingCentral identity fields', async () => {
     seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
     vi.mocked(axios.get).mockResolvedValueOnce({
@@ -288,6 +364,171 @@ describe('log core', () => {
       hashedExtensionId: 'hash-1',
     }));
     expect(axios.defaults.headers.common.Authorization).toBe('Bearer jwt-1');
+  });
+
+  it('keeps existing bearer auth when getting call logs without details', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-2' });
+    axios.defaults.headers.common.Authorization = 'Bearer existing';
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        logs: [],
+        returnMessage: {},
+      },
+    });
+    const logCore = await loadLogCore();
+
+    await expect(logCore.getLog({
+      serverUrl: 'https://server.example',
+      logType: 'Call',
+      sessionIds: 'session-2',
+      requireDetails: false,
+    })).resolves.toEqual({
+      successful: true,
+      callLogs: [],
+    });
+
+    expect(axios.defaults.headers.common.Authorization).toBe('Bearer existing');
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/callLog?sessionIds=session-2&requireDetails=false&extensionNumber=101&hashedExtensionId=hash-1');
+  });
+
+  it('handles message log variants without MMS or main log ids', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      userSettings: {},
+    });
+    vi.mocked(axios.post)
+      .mockResolvedValueOnce({
+        data: {
+          successful: true,
+          logIds: [],
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          successful: false,
+        },
+      });
+    const logCore = await loadLogCore();
+    const faxInfo = {
+      type: 'Fax',
+      conversationLogId: 'fax-conversation',
+      messages: [],
+    };
+
+    await logCore.addLog({
+      serverUrl: 'https://server.example',
+      logType: 'Message',
+      logInfo: faxInfo,
+      isMain: false,
+      additionalSubmission: {},
+    });
+    expect(faxInfo.rcAccessToken).toBe('rc-access-token');
+    expect(trackSyncMessageLog).not.toHaveBeenCalled();
+    expect(showNotification).not.toHaveBeenCalledWith(expect.objectContaining({
+      message: 'notifications.success.messageLogAdded',
+    }));
+    expect(readStorage()['rc-crm-conversation-log-fax-conversation']).toEqual({ logged: true });
+
+    const smsInfo = {
+      type: 'SMS',
+      conversationLogId: 'sms-conversation',
+      messages: [
+        { attachments: [{ type: 'TextAttachment' }] },
+      ],
+    };
+    await logCore.addLog({
+      serverUrl: 'https://server.example',
+      logType: 'Message',
+      logInfo: smsInfo,
+      isMain: true,
+      additionalSubmission: {},
+    });
+    expect(smsInfo.rcAccessToken).toBeUndefined();
+    expect(readStorage()['rc-crm-conversation-log-sms-conversation']).toBeUndefined();
+  });
+
+  it('uses fallback message-log notifications when log ids are returned', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        logIds: ['message-log-2'],
+      },
+    });
+    const logCore = await loadLogCore();
+
+    await logCore.addLog({
+      serverUrl: 'https://server.example',
+      logType: 'Message',
+      logInfo: {
+        type: 'SMS',
+        conversationLogId: 'conversation-2',
+        messages: [{ attachments: [] }],
+      },
+      isMain: true,
+      additionalSubmission: {},
+    });
+
+    expect(showNotification).toHaveBeenCalledWith({
+      level: 'success',
+      message: 'notifications.success.messageLogAdded',
+      ttl: 3000,
+      details: undefined,
+    });
+  });
+
+  it('skips update requests without JWT and can suppress update notifications', async () => {
+    const logCore = await loadLogCore();
+
+    await logCore.updateLog({
+      serverUrl: 'https://server.example',
+      logType: 'Call',
+      sessionId: 'session-no-auth',
+      isShowNotification: true,
+    });
+
+    expect(axios.patch).not.toHaveBeenCalled();
+
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    vi.mocked(axios.patch).mockResolvedValueOnce({
+      data: {},
+    });
+    await logCore.updateLog({
+      serverUrl: 'https://server.example',
+      logType: 'Call',
+      sessionId: 'session-silent',
+      isShowNotification: false,
+    });
+
+    expect(axios.patch).toHaveBeenCalledWith('https://server.example/callLog', expect.objectContaining({
+      sessionId: 'session-silent',
+    }));
+    expect(showNotification).not.toHaveBeenCalledWith(expect.objectContaining({
+      message: 'notifications.warning.callLogUpdateFailed',
+    }));
+  });
+
+  it('uses fallback update notification messages', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    vi.mocked(axios.patch).mockResolvedValueOnce({
+      data: {},
+    });
+    const logCore = await loadLogCore();
+
+    await logCore.updateLog({
+      serverUrl: 'https://server.example',
+      logType: 'Call',
+      sessionId: 'session-update',
+      isShowNotification: true,
+    });
+
+    expect(showNotification).toHaveBeenCalledWith({
+      level: 'warning',
+      message: 'notifications.warning.callLogUpdateFailed',
+      ttl: 3000,
+      details: undefined,
+    });
   });
 
   it('caches and uploads call notes only when JWT and note exist', async () => {

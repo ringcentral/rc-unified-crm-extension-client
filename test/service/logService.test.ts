@@ -196,4 +196,154 @@ describe('logService', () => {
       transcript: 'Transcript',
     }));
   });
+
+  it('finishes retro auto-log immediately when max attempts are exhausted', async () => {
+    seedStorage({
+      retroAutoCallLogMaxAttempt: 0,
+      retroAutoCallLogIntervalId: 123,
+    });
+    RCAdapter.getUnloggedCalls.mockClear();
+    vi.mocked(showNotification).mockClear();
+    const service = await loadLogService();
+
+    await service.retroAutoCallLog({
+      manifest: { serverUrl: 'https://server.example' },
+      platformName: 'salesforce',
+      platform: { name: 'salesforce' },
+    });
+
+    expect(RCAdapter.getUnloggedCalls).not.toHaveBeenCalled();
+    expect(showNotification).toHaveBeenCalledWith({
+      level: 'success',
+      message: 'Historical call syncing finished. 0 call(s) synced.',
+      ttl: 5000,
+    });
+  });
+
+  it('skips retro calls that are unmatched, conflicted, or already matched', async () => {
+    seedStorage({
+      userSettings: {},
+      retroAutoCallLogNotificationId: 'existing-notification',
+    });
+    vi.mocked(contactCore.getContact).mockReset();
+    vi.mocked(logUtil.getLogConflictInfo).mockReset();
+    vi.mocked(logCore.getLog).mockReset();
+    vi.mocked(logCore.addLog).mockClear();
+    vi.mocked(showNotification).mockClear();
+    RCAdapter.getUnloggedCalls.mockReset().mockResolvedValueOnce({
+      calls: [
+        {
+          sessionId: 'session-unmatched',
+          direction: 'Outbound',
+          from: { phoneNumber: '16505550100' },
+          to: { phoneNumber: '18005550100' },
+        },
+        {
+          sessionId: 'session-conflict',
+          direction: 'Inbound',
+          from: { phoneNumber: '16505550200' },
+          to: { phoneNumber: '18005550200' },
+        },
+        {
+          sessionId: 'session-existing',
+          direction: 'Outbound',
+          from: { phoneNumber: '16505550300' },
+          to: { phoneNumber: '18005550300' },
+        },
+      ],
+      hasMore: true,
+    });
+    vi.mocked(contactCore.getContact)
+      .mockResolvedValueOnce({
+        matched: false,
+        contactInfo: [],
+      })
+      .mockResolvedValueOnce({
+        matched: true,
+        contactInfo: [{ id: 'contact-2', name: 'Conflict Contact', type: 'Lead' }],
+      })
+      .mockResolvedValueOnce({
+        matched: true,
+        contactInfo: [{ id: 'contact-3', name: 'Existing Contact', type: 'Lead' }],
+      });
+    vi.mocked(logUtil.getLogConflictInfo)
+      .mockResolvedValueOnce({
+        hasConflict: true,
+        autoSelectAdditionalSubmission: {},
+      })
+      .mockResolvedValueOnce({
+        hasConflict: false,
+        autoSelectAdditionalSubmission: {},
+      });
+    vi.mocked(logCore.getLog).mockResolvedValueOnce({
+      callLogs: [{ sessionId: 'session-existing', matched: true }],
+    });
+    const service = await loadLogService();
+
+    await service.retroAutoCallLog({
+      manifest: { serverUrl: 'https://server.example' },
+      platformName: 'salesforce',
+      platform: { name: 'salesforce' },
+    });
+
+    expect(contactCore.getContact).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      phoneNumber: '18005550100',
+    }));
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(showNotification).not.toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('Attempting to sync'),
+    }));
+    expect(getWidgetPostMessages()).toContainEqual({
+      message: {
+        type: 'rc-adapter-trigger-call-logger-match',
+        sessionIds: ['session-existing'],
+      },
+      targetOrigin: '*',
+    });
+  });
+
+  it('does not force call-log matcher check when server-side logging or CRM auth is off', async () => {
+    seedStorage({
+      crmAuthed: false,
+      userSettings: {
+        serverSideLogging: {
+          enable: true,
+        },
+      },
+    });
+    RCAdapter.getUnloggedCalls.mockReset();
+    const service = await loadLogService();
+
+    await service.forceCallLogMatcherCheck();
+
+    expect(RCAdapter.getUnloggedCalls).not.toHaveBeenCalled();
+  });
+
+  it('syncs call data without recording fields when no recording link is ready', async () => {
+    vi.mocked(logCore.updateLog).mockClear();
+    const service = await loadLogService();
+
+    await service.syncCallData({
+      serverUrl: 'https://server.example',
+      dataBody: {
+        call: {
+          sessionId: 'session-no-recording',
+          direction: 'Outbound',
+          from: { phoneNumber: '16505550100' },
+          to: { phoneNumber: '18005550100' },
+        },
+      },
+    });
+
+    expect(logCore.updateLog).toHaveBeenCalledWith(expect.objectContaining({
+      serverUrl: 'https://server.example',
+      logType: 'Call',
+      sessionId: 'session-no-recording',
+      note: 'cached note',
+      direction: 'Outbound',
+    }));
+    expect(logCore.updateLog).toHaveBeenCalledWith(expect.not.objectContaining({
+      recordingLink: expect.anything(),
+    }));
+  });
 });

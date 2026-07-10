@@ -60,7 +60,7 @@ export async function onEvent({ data, manifest, listButtonItemId }: EventOptions
     responseMessage(data.requestId, { data: 'ok' });
   } catch (e) {
     const message = getErrorMessage(e);
-    showNotification({ level: 'error', message: message ?? 'Failed to cancel appointment.', ttl: 3000 });
+    showNotification({ level: 'error', message, ttl: 3000 });
     responseMessage(data.requestId, { error: message });
   } finally {
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');

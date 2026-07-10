@@ -13,6 +13,7 @@ import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { getRcInfo, setRcAdditionalSubmission, showNotification } from '../../src/lib/util.ts';
 import { reset, identify, group, trackRcLogin, trackRcLogout } from '../../src/lib/analytics.ts';
 import { RcAPI } from '../../src/lib/rcAPI.ts';
+import { bullhornHeartbeat } from '../../src/misc/bullhorn.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
@@ -474,5 +475,125 @@ describe('rc-login-status-notify event handler', () => {
       platformName: 'salesforce',
       platform: manifest().platforms.salesforce,
     });
+  });
+
+  it('keeps optional tabs hidden and skips server-backed RC user sync when manifest has no server URL', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'crm-jwt',
+      userSettings: { showAppointmentsTab: { value: false } },
+    });
+    vi.mocked(getRcInfo).mockResolvedValue({
+      value: {
+        cachedData: {
+          extensionFeatures: { records: [] },
+          extensionInfo: {
+            id: 'extension-local',
+            name: 'RC User',
+            contact: { email: 'rc@example.test' },
+            account: { id: 'account-local' },
+          },
+        },
+      },
+    });
+    vi.mocked(getManifest).mockResolvedValueOnce({
+      version: '1.7.35',
+      platforms: {
+        salesforce: {
+          name: 'salesforce',
+          page: {
+            appointment: { supported: false },
+          },
+        },
+      },
+    });
+    vi.mocked(userCore.getShowUserReportTabSetting).mockReturnValueOnce({ value: false });
+    vi.mocked(userCore.getShowCalldownTabSetting).mockReturnValueOnce({ value: false });
+    const handler = await loadLoginStatusHandler();
+
+    await handler.onEvent({
+      data: loggedInEventData(),
+    });
+
+    expect(readStorage().userPermissions).toEqual({
+      aiNote: true,
+      ringSenseInsights: true,
+      ringCX: false,
+      sms: true,
+    });
+    expect(reportPage.getReportsPageRender).not.toHaveBeenCalled();
+    expect(calldownPage.getCalldownPageWithRecords).not.toHaveBeenCalled();
+    expect(appointmentsPage.getAppointmentsPageRender).not.toHaveBeenCalled();
+    expect(rcApiMocks.getUserInfo).not.toHaveBeenCalled();
+  });
+
+  it('starts Bullhorn heartbeat when the authenticated CRM platform is Bullhorn', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'crm-jwt',
+    });
+    const bullhornManifest = {
+      serverUrl: 'https://server.example',
+      version: '1.7.35',
+      platforms: {
+        bullhorn: {
+          name: 'bullhorn',
+        },
+      },
+    };
+    vi.mocked(getPlatformInfo).mockResolvedValueOnce({ platformName: 'bullhorn' });
+    vi.mocked(getManifest).mockResolvedValueOnce(bullhornManifest);
+    const handler = await loadLoginStatusHandler();
+
+    await handler.onEvent({
+      data: loggedInEventData(),
+    });
+
+    expect(bullhornHeartbeat).toHaveBeenCalledWith({
+      platform: bullhornManifest.platforms.bullhorn,
+    });
+  });
+
+  it('tracks RC login and logout transitions after initial state is known', async () => {
+    seedStorage({
+      rcLoginStatus: false,
+    });
+    const handler = await loadLoginStatusHandler();
+
+    await handler.onEvent({
+      data: loggedInEventData(),
+    });
+    expect(trackRcLogin).toHaveBeenCalled();
+    expect(readStorage().rcLoginStatus).toBe(true);
+
+    seedStorage({
+      rcLoginStatus: true,
+    });
+    await handler.onEvent({
+      data: { loggedIn: false, features: {} },
+    });
+    expect(trackRcLogout).not.toHaveBeenCalled();
+
+    seedStorage({
+      rcLoginStatus: true,
+    });
+    await handler.onEvent({
+      data: { loggedIn: false, features: {} },
+    });
+    expect(trackRcLogout).toHaveBeenCalled();
+    expect(readStorage().rcLoginStatus).toBe(false);
+  });
+
+  it('does not show release notes when there is no rendered release-note page', async () => {
+    seedStorage({
+      'rc-crm-extension-version': '1.7.34',
+    });
+    vi.mocked(releaseNotesPage.getReleaseNotesPageRender).mockResolvedValueOnce(null);
+    const handler = await loadLoginStatusHandler();
+
+    await handler.onEvent({
+      data: { loggedIn: false, features: {} },
+    });
+
+    expect(showNotification).not.toHaveBeenCalled();
+    expect(readStorage()['rc-crm-extension-version']).toBe('1.7.34');
   });
 });

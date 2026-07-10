@@ -142,6 +142,7 @@ function mockRcInfo() {
 
 describe('auth core', () => {
   beforeEach(() => {
+    localStorage.clear();
     mockRcInfo();
     vi.mocked(getPlatformInfo).mockResolvedValue({
       platformName: 'salesforce',
@@ -205,6 +206,40 @@ describe('auth core', () => {
     );
   });
 
+  it('builds OAuth URLs without scopes and uses connector custom state/default redirect', async () => {
+    const authCore = await loadAuthCore();
+
+    expect(authCore.buildOAuthUrl({
+      authorizationUri: 'https://crm.example/oauth',
+      clientId: 'client',
+      redirectUri: 'https://redirect.example/callback',
+      platformName: 'salesforce',
+    })).toBe(
+      'https://crm.example/oauth?response_type=code&client_id=client&state=platform=salesforce&redirect_uri=https%3A%2F%2Fredirect.example%2Fcallback',
+    );
+
+    await authCore.onUserClickConnectButton({
+      manifest: { serverUrl: 'https://server.example' },
+      platformName: 'custom',
+      platform: {
+        name: 'custom',
+        auth: {
+          type: 'oauth',
+          oauth: {
+            authUrl: 'https://crm.example/oauth',
+            clientId: 'client',
+            customState: 'custom-state',
+          },
+        },
+      },
+    });
+
+    expect(chrome.runtime.sendMessage).toHaveBeenLastCalledWith({
+      type: 'openThirdPartyAuthWindow',
+      oAuthUri: 'https://crm.example/oauth?response_type=code&client_id=client&state=custom-state&redirect_uri=https%3A%2F%2Fringcentral.github.io%2Fringcentral-embeddable%2Fredirect.html',
+    });
+  });
+
   it('detects admin-managed OAuth only for enabled OAuth manifests', async () => {
     const authCore = await loadAuthCore();
 
@@ -240,6 +275,27 @@ describe('auth core', () => {
     });
   });
 
+  it('saves managed OAuth pending values and allows non-managed OAuth visibility', async () => {
+    const authCore = await loadAuthCore();
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { saved: true } });
+
+    await expect(authCore.saveManagedOAuthPendingValues({
+      serverUrl: 'https://server.example',
+      values: { clientId: 'client-id' },
+    })).resolves.toEqual({ saved: true });
+    await expect(authCore.checkManagedOAuthBeforeCrmVisible({
+      manifest: { serverUrl: 'https://server.example' },
+      platformName: 'salesforce',
+      platform: { auth: { type: 'oauth', oauth: {} } },
+    })).resolves.toEqual({ blocked: false });
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'https://server.example/admin/managedOAuth/cache',
+      { values: { clientId: 'client-id' } },
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
+  });
+
   it('gets managed API-key auth state with connector and RingCentral identity context', async () => {
     const authCore = await loadAuthCore();
     vi.mocked(axios.get).mockResolvedValueOnce({ data: { allRequiredFieldsSatisfied: true } });
@@ -263,6 +319,39 @@ describe('auth core', () => {
 
     expect(axios.get).toHaveBeenCalledWith(
       'https://server.example/apiKeyManagedAuthState?platform=salesforce&connectorId=connector-1&isPrivate=true&rcAccountId=account-2&rcExtensionId=extension-2',
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
+  });
+
+  it('gets managed API-key auth state from resolved RingCentral identity fallbacks', async () => {
+    const authCore = await loadAuthCore();
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { allRequiredFieldsSatisfied: false } });
+
+    await expect(authCore.getManagedAuthState({
+      serverUrl: 'https://server.example',
+      platformName: 'salesforce',
+    })).resolves.toEqual({ allRequiredFieldsSatisfied: false });
+
+    expect(axios.get).toHaveBeenCalledWith(
+      'https://server.example/apiKeyManagedAuthState?platform=salesforce&connectorId=&isPrivate=false&rcAccountId=account-1&rcExtensionId=extension-1',
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
+  });
+
+  it('returns null for failed managed API-key auth state lookups', async () => {
+    const authCore = await loadAuthCore();
+    vi.mocked(axios.get).mockRejectedValueOnce(new Error('network'));
+
+    await expect(authCore.getManagedAuthState({
+      serverUrl: 'https://server.example',
+      platformName: 'sales force',
+      rcInfo: {},
+      rcAccountId: 'account id',
+      rcExtensionId: 'extension id',
+    })).resolves.toBeNull();
+
+    expect(axios.get).toHaveBeenCalledWith(
+      'https://server.example/apiKeyManagedAuthState?platform=sales%20force&connectorId=&isPrivate=false&rcAccountId=account%20id&rcExtensionId=extension%20id',
       { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
     );
   });
@@ -332,6 +421,109 @@ describe('auth core', () => {
     ]));
   });
 
+  it('shows server API-key login failures without changing local auth state', async () => {
+    seedStorage({
+      'platform-info': {
+        platformName: 'salesforce',
+        hostname: 'crm.example',
+      },
+    });
+    vi.mocked(axios.post).mockRejectedValueOnce({
+      response: {
+        data: {
+          returnMessage: {
+            message: 'Bad API key',
+            messageType: 'error',
+          },
+        },
+      },
+    });
+    const authCore = await loadAuthCore();
+
+    await expect(authCore.apiKeyLogin({
+      serverUrl: 'https://server.example',
+      apiKey: 'bad-key',
+      formData: {},
+      useLicense: false,
+    })).resolves.toBeUndefined();
+
+    expect(readStorage().rcUnifiedCrmExtJwt).toBeUndefined();
+    expect(showNotification).toHaveBeenCalledWith({
+      level: 'error',
+      message: 'Bad API key',
+      ttl: 3000,
+    });
+  });
+
+  it('shows default API-key login failure notifications when the server omits returnMessage', async () => {
+    seedStorage({
+      'platform-info': {
+        platformName: 'salesforce',
+        hostname: 'crm.example',
+      },
+    });
+    vi.mocked(axios.post).mockRejectedValueOnce(new Error('offline'));
+    const authCore = await loadAuthCore();
+
+    await expect(authCore.apiKeyLogin({
+      serverUrl: 'https://server.example',
+      apiKey: 'bad-key',
+      formData: {},
+      useLicense: false,
+    })).resolves.toBeUndefined();
+
+    expect(showNotification).toHaveBeenCalledWith({
+      level: 'warning',
+      message: 'Failed to register api key.',
+      ttl: 3000,
+    });
+  });
+
+  it('refreshes license status after API-key login when licensing is enabled', async () => {
+    seedStorage({
+      'platform-info': {
+        platformName: 'salesforce',
+        hostname: 'crm.example',
+      },
+    });
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: {
+        jwtToken: 'jwt-licensed',
+        name: 'Licensed User',
+      },
+    });
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        isLicenseValid: true,
+        licenseStatus: 'Active',
+        licenseStatusDescription: 'Ready',
+      },
+    });
+    const authCore = await loadAuthCore();
+
+    await expect(authCore.apiKeyLogin({
+      serverUrl: 'https://server.example',
+      apiKey: 'api-key',
+      formData: {},
+      useLicense: true,
+    })).resolves.toBe('jwt-licensed');
+
+    expect(showNotification).toHaveBeenCalledWith({
+      level: 'success',
+      message: 'notifications.success.authorized',
+      ttl: 3000,
+    });
+    expect(getWidgetPostMessages()).toContainEqual({
+      message: {
+        type: 'rc-adapter-refresh-license-status',
+        licenseStatus: 'License: Active',
+        licenseStatusColor: 'inherit',
+        licenseDescription: 'Ready',
+      },
+      targetOrigin: '*',
+    });
+  });
+
   it('clears local CRM auth state and Bullhorn-specific state without deleting unrelated storage', async () => {
     seedStorage({
       rcUnifiedCrmExtJwt: 'jwt-1',
@@ -361,6 +553,21 @@ describe('auth core', () => {
     });
   });
 
+  it('clears local CRM auth state without Bullhorn cleanup when no JWT existed', async () => {
+    seedStorage({
+      'platform-info': { platformName: 'salesforce' },
+      crmAuthed: false,
+    });
+    const authCore = await loadAuthCore();
+
+    await expect(authCore.clearLocalCrmAuthState()).resolves.toBe(false);
+
+    expect(readStorage()).toEqual({
+      'platform-info': { platformName: 'salesforce' },
+    });
+    expect(chrome.storage.local.remove).not.toHaveBeenCalledWith('crm_extension_bullhornUsername');
+  });
+
   it('syncs crmAuthed from stored JWT presence', async () => {
     seedStorage({
       rcUnifiedCrmExtJwt: 'jwt-1',
@@ -371,6 +578,16 @@ describe('auth core', () => {
     await expect(authCore.syncCrmAuthedFromStorage()).resolves.toBe(true);
 
     expect(readStorage().crmAuthed).toBe(true);
+  });
+
+  it('does not rewrite crmAuthed when stored auth already matches JWT state', async () => {
+    seedStorage({ crmAuthed: false });
+    const authCore = await loadAuthCore();
+    const setCallCount = vi.mocked(chrome.storage.local.set).mock.calls.length;
+
+    await expect(authCore.syncCrmAuthedFromStorage()).resolves.toBe(false);
+
+    expect(vi.mocked(chrome.storage.local.set).mock.calls.length).toBe(setCallCount);
   });
 
   it('calls unauthorize endpoint and then clears local auth state', async () => {
@@ -393,6 +610,55 @@ describe('auth core', () => {
 
     expect(axios.post).toHaveBeenCalledWith('https://server.example/unAuthorize');
     expect(trackCrmLogout).toHaveBeenCalled();
+    expect(readStorage().rcUnifiedCrmExtJwt).toBeUndefined();
+  });
+
+  it('shows default unauthorize notification when the server omits returnMessage', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      'platform-info': { platformName: 'salesforce' },
+    });
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: {} });
+    const authCore = await loadAuthCore();
+
+    await authCore.unAuthorize({ serverUrl: 'https://server.example' });
+
+    expect(showNotification).toHaveBeenCalledWith({
+      level: 'success',
+      message: 'notifications.success.unauthorized',
+      ttl: 3000,
+    });
+  });
+
+  it('suppresses unauthorized notifications when requested', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      'platform-info': { platformName: 'salesforce' },
+    });
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: {} });
+    const authCore = await loadAuthCore();
+
+    await authCore.unAuthorize({
+      serverUrl: 'https://server.example',
+      isShowNotification: false,
+    });
+
+    expect(trackCrmLogout).toHaveBeenCalled();
+    expect(showNotification).not.toHaveBeenCalled();
+    expect(readStorage().rcUnifiedCrmExtJwt).toBeUndefined();
+  });
+
+  it('still clears local auth state when unauthorize endpoint fails', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      'platform-info': { platformName: 'salesforce' },
+    });
+    vi.mocked(axios.post).mockRejectedValueOnce(new Error('offline'));
+    const authCore = await loadAuthCore();
+
+    await authCore.unAuthorize({ serverUrl: 'https://server.example' });
+
+    expect(trackCrmLogout).not.toHaveBeenCalled();
     expect(readStorage().rcUnifiedCrmExtJwt).toBeUndefined();
   });
 
@@ -488,6 +754,37 @@ describe('auth core', () => {
     });
   });
 
+  it('loads missing connect-button context and warns when managed OAuth values are missing', async () => {
+    vi.mocked(getPlatformInfo).mockResolvedValueOnce({
+      platformName: 'managed',
+    });
+    vi.mocked(getManifest).mockResolvedValueOnce({
+      serverUrl: 'https://server.example',
+      platforms: {
+        managed: {
+          name: 'managed',
+          auth: {
+            type: 'oauth',
+            oauth: {
+              adminManaged: { enabled: true },
+            },
+          },
+        },
+      },
+    });
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { isAdmin: false } });
+    const authCore = await loadAuthCore();
+
+    await authCore.onUserClickConnectButton({});
+
+    expect(getManifest).toHaveBeenCalledWith(true);
+    expect(showNotification).toHaveBeenCalledWith({
+      level: 'warning',
+      message: 'Authorization information is not provided. Please contact the admin user.',
+      ttl: 60000,
+    });
+  });
+
   it('blocks managed OAuth connectors until account OAuth exists', async () => {
     const authCore = await loadAuthCore();
     const platform = {
@@ -535,6 +832,40 @@ describe('auth core', () => {
       'managedOAuthSetupPage',
       'managedOAuthMissingPage',
     ]));
+  });
+
+  it('renders managed OAuth setup with empty pending values and skips platform selection when configured', async () => {
+    vi.mocked(getPlatformInfo).mockResolvedValueOnce({ platformName: 'salesforce' });
+    const authCore = await loadAuthCore();
+    const platform = {
+      auth: {
+        type: 'oauth',
+        oauth: {
+          adminManaged: { enabled: true },
+        },
+      },
+    };
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { isAdmin: true } });
+
+    await expect(authCore.checkManagedOAuthBeforeCrmVisible({
+      manifest: { serverUrl: 'https://server.example' },
+      platformName: 'salesforce',
+      platform,
+    })).resolves.toEqual({
+      blocked: true,
+      state: { isAdmin: true },
+    });
+
+    expect(managedOAuthSetupPage.getManagedOAuthSetupPageRender).toHaveBeenCalledWith({
+      platform,
+      pendingValues: {},
+    });
+
+    await authCore.checkAndOpenPlatformSelectionPage({
+      platformList: [{ id: 'salesforce', name: 'salesforce' }],
+    });
+
+    expect(embeddableServices.preconfigureServiceManifest).not.toHaveBeenCalled();
   });
 
   it('uses managed API-key auth when all required fields are already satisfied', async () => {
@@ -592,6 +923,54 @@ describe('auth core', () => {
     });
   });
 
+  it('stores false auth when managed API-key login returns no JWT and skips admin sync without settings', async () => {
+    seedStorage({
+      'platform-info': {
+        connectorId: 'connector-1',
+        isPrivate: false,
+        platformName: 'salesforce',
+        hostname: 'crm.example',
+      },
+    });
+    const authCore = await loadAuthCore();
+
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { allRequiredFieldsSatisfied: true } });
+    vi.mocked(axios.post).mockRejectedValueOnce(new Error('offline'));
+    await authCore.onUserClickConnectButton({
+      manifest: { serverUrl: 'https://server.example' },
+      platformName: 'salesforce',
+      platform: {
+        name: 'salesforce',
+        useLicense: false,
+        auth: { type: 'apiKey' },
+      },
+    });
+    expect(readStorage().crmAuthed).toBe(false);
+    expect(userCore.updateSSCLToken).not.toHaveBeenCalled();
+
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { allRequiredFieldsSatisfied: true } });
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: {
+        jwtToken: 'jwt-no-admin-settings',
+        name: 'CRM User',
+      },
+    });
+    await authCore.onUserClickConnectButton({
+      manifest: { serverUrl: 'https://server.example' },
+      platformName: 'salesforce',
+      platform: {
+        name: 'salesforce',
+        useLicense: false,
+        auth: { type: 'apiKey' },
+      },
+    });
+
+    expect(userCore.updateSSCLToken).toHaveBeenCalledWith(expect.objectContaining({
+      token: 'jwt-no-admin-settings',
+    }));
+    expect(adminCore.authAppConnectServer).not.toHaveBeenCalled();
+  });
+
   it('opens API-key auth page when managed fields are not complete', async () => {
     seedStorage({
       'platform-info': {
@@ -628,6 +1007,42 @@ describe('auth core', () => {
       },
       targetOrigin: '*',
     });
+  });
+
+  it('opens API-key auth page with null visible fields and non-admin RingCentral context', async () => {
+    seedStorage({
+      'platform-info': {
+        connectorId: 'connector-1',
+        isPrivate: false,
+      },
+    });
+    vi.mocked(axios.get).mockRejectedValueOnce(new Error('network'));
+    vi.mocked(getRcInfo).mockResolvedValue({
+      value: {
+        cachedData: {
+          extensionInfo: {
+            permissions: {
+              admin: { enabled: false },
+            },
+          },
+        },
+      },
+    });
+    const authCore = await loadAuthCore();
+
+    await authCore.onUserClickConnectButton({
+      manifest: { serverUrl: 'https://server.example' },
+      platformName: 'salesforce',
+      platform: {
+        name: 'salesforce',
+        auth: { type: 'apiKey' },
+      },
+    });
+
+    expect(authPage.getAuthPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      visibleFieldConsts: null,
+      isAdmin: false,
+    }));
   });
 
   it('opens platform selection when no platform is configured', async () => {
@@ -751,6 +1166,112 @@ describe('auth core', () => {
     });
   });
 
+  it('returns early for connector OAuth callbacks without a JWT token', async () => {
+    localStorage.setItem('sdk-rc-widgetplatform', JSON.stringify({ owner_id: 'ext-1' }));
+    seedStorage({
+      'platform-info': {
+        platformName: 'salesforce',
+        hostname: 'crm.example',
+      },
+    });
+    vi.mocked(openDB).mockResolvedValue({
+      get: vi.fn(async () => ({
+        value: {
+          cachedData: {
+            extensionInfo: {
+              id: 'extension-1',
+              account: { id: 'account-1' },
+              contact: { email: 'user@example.test' },
+            },
+          },
+        },
+      })),
+    });
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        returnMessage: {
+          message: 'Needs another step',
+          messageType: 'warning',
+          ttl: 5000,
+        },
+      },
+    });
+    const authCore = await loadAuthCore();
+
+    await expect(authCore.onAuthCallback({
+      serverUrl: 'https://server.example',
+      callbackUri: 'https://redirect.example/callback?state=platform%3Dsalesforce&code=abc',
+      useLicense: true,
+    })).resolves.toBeUndefined();
+
+    expect(showNotification).toHaveBeenCalledWith({
+      level: 'warning',
+      message: 'Needs another step',
+      ttl: 5000,
+    });
+    expect(trackCrmLogin).not.toHaveBeenCalled();
+    expect(readStorage().rcUnifiedCrmExtJwt).toBeUndefined();
+  });
+
+  it('handles Bullhorn OAuth callbacks with Bullhorn token and API URLs', async () => {
+    localStorage.setItem('sdk-rc-widgetplatform', JSON.stringify({ owner_id: 'ext-1' }));
+    seedStorage({
+      'platform-info': {
+        platformName: 'bullhorn',
+        hostname: 'bh.example',
+      },
+      crm_extension_bullhorn_user_urls: {
+        oauthUrl: 'https://auth.bullhorn.example',
+        restUrl: 'https://rest.bullhorn.example',
+      },
+      crm_extension_bullhornUsername: 'bullhorn-user',
+    });
+    vi.mocked(getManifest).mockResolvedValueOnce({
+      serverUrl: 'https://server.example',
+      platforms: {
+        bullhorn: {
+          name: 'bullhorn',
+        },
+      },
+    });
+    vi.mocked(openDB).mockResolvedValue({
+      get: vi.fn(async () => ({
+        value: {
+          cachedData: {
+            extensionInfo: {
+              id: 'extension-1',
+              account: { id: 'account-1' },
+              contact: { email: 'user@example.test' },
+            },
+          },
+        },
+      })),
+    });
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        jwtToken: 'bullhorn-jwt',
+        name: 'Bullhorn User',
+      },
+    });
+    const authCore = await loadAuthCore();
+
+    await expect(authCore.onAuthCallback({
+      serverUrl: 'https://server.example',
+      callbackUri: 'https://redirect.example/callback?state=platform%3Dbullhorn&code=abc',
+      useLicense: false,
+    })).resolves.toBe('bullhorn-jwt');
+
+    const callbackUrl = vi.mocked(axios.get).mock.calls[0][0] as string;
+    expect(callbackUrl).toContain('tokenUrl=https%3A%2F%2Fauth.bullhorn.example%2Ftoken');
+    expect(callbackUrl).toContain('apiUrl=https%3A%2F%2Frest.bullhorn.example');
+    expect(callbackUrl).toContain('username=bullhorn-user');
+    expect(callbackUrl).not.toContain('proxyId');
+    expect(readStorage()).toMatchObject({
+      rcUnifiedCrmExtJwt: 'bullhorn-jwt',
+      crmUserInfo: { name: 'Bullhorn User' },
+    });
+  });
+
   it('checks auth state and exposes license helpers', async () => {
     seedStorage({
       rcUnifiedCrmExtJwt: 'jwt-1',
@@ -779,6 +1300,21 @@ describe('auth core', () => {
       licenseStatus: 'Active',
       licenseStatusColor: 'inherit',
       licenseStatusDescription: 'Ready',
+    });
+  });
+
+  it('updates auth status without admin suffix when account is not admin', async () => {
+    const authCore = await loadAuthCore();
+
+    authCore.setAuth(true, 'CRM User', false);
+
+    expect(getWidgetPostMessages()).toContainEqual({
+      message: {
+        type: 'rc-adapter-update-authorization-status',
+        authorized: true,
+        authorizedAccount: 'CRM User ',
+      },
+      targetOrigin: undefined,
     });
   });
 });

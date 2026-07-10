@@ -47,6 +47,20 @@ describe('user server-side logging token update', () => {
     expect(axios.post).not.toHaveBeenCalled();
   });
 
+  it('does nothing when online user settings are missing server-side logging config', async () => {
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: null });
+    const userCore = await loadUserCore();
+
+    await userCore.updateSSCLToken({
+      serverUrl: 'https://server.example',
+      platform: { serverSideLogging: { url: 'https://ssl.example' } },
+      token: 'crm-token',
+    });
+
+    expect(adminCore.authServerSideLogging).not.toHaveBeenCalled();
+    expect(axios.post).not.toHaveBeenCalled();
+  });
+
   it('authenticates server-side logging and updates CRM token when enabled', async () => {
     vi.mocked(axios.get).mockResolvedValueOnce({ data: { serverSideLogging: { enable: true } } });
     vi.mocked(adminCore.authServerSideLogging).mockResolvedValueOnce('ssl-token');

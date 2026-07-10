@@ -593,28 +593,296 @@ describe('logPage', () => {
     });
   });
 
+  it('renders fallback edit and new-contact-only log pages', async () => {
+    const logPage = await loadLogPage();
+    const noContactTypesManifest = manifest();
+    delete noContactTypesManifest.platforms.salesforce.contactTypes;
+
+    const editPage = logPage.getLogPageRender({
+      id: 'log-fallback',
+      manifest: manifest(),
+      logType: 'Call',
+      triggerType: 'editLog',
+      platformName: 'salesforce',
+      direction: 'Inbound',
+      contactInfo: [existingContact()],
+      logInfo: null,
+      loggedContactId: null,
+      contactPhoneNumber: '+16505550100',
+      useContactSearch: false,
+    });
+
+    expect(editPage.formData).toMatchObject({
+      contact: 'contact-1',
+      activityTitle: '',
+      note: '',
+    });
+
+    const newOnly = logPage.getLogPageRender({
+      id: 'new-only',
+      manifest: noContactTypesManifest,
+      logType: 'Message',
+      triggerType: 'manual',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [newContact()],
+      logInfo: {},
+      contactPhoneNumber: '+16505550199',
+      useContactSearch: false,
+    });
+
+    expect(newOnly.schema.required).toEqual(expect.arrayContaining(['newCategory', 'newContactName']));
+    expect(newOnly.schema.properties.warning).toBeDefined();
+    expect(newOnly.schema.properties.newContactType.oneOf).toEqual([]);
+    expect(newOnly.uiSchema.newContactType).toEqual({ 'ui:widget': 'hidden' });
+  });
+
+  it('renders log pages with fallback contacts and no additional field config', async () => {
+    const logPage = await loadLogPage();
+    const minimalManifest = {
+      platforms: {
+        salesforce: {
+          displayName: 'Salesforce',
+          page: {
+            callLog: {},
+            messageLog: {},
+          },
+        },
+      },
+    };
+
+    const callPage = logPage.getLogPageRender({
+      id: 'fallback-contact',
+      manifest: minimalManifest,
+      logType: 'Call',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [{ id: 'fallback-id', type: 'Lead' }],
+      logInfo: null,
+      contactPhoneNumber: '+16505550100',
+      useContactSearch: false,
+    });
+
+    expect(callPage.schema.properties.newContactType.oneOf).toEqual([]);
+    expect(callPage.formData).toMatchObject({
+      contact: 'fallback-id',
+      contactName: '',
+      isUnresolved: false,
+      note: '',
+    });
+    expect(callPage.schema.properties).not.toHaveProperty('disposition');
+
+    const editPage = logPage.getLogPageRender({
+      id: 'fallback-edit',
+      manifest: minimalManifest,
+      logType: 'Call',
+      triggerType: 'editLog',
+      platformName: 'salesforce',
+      direction: 'Inbound',
+      contactInfo: [{ id: 'edit-contact', type: 'Contact' }],
+      logInfo: null,
+      loggedContactId: undefined,
+      contactPhoneNumber: '+16505550101',
+      useContactSearch: false,
+    });
+
+    expect(editPage.formData).toMatchObject({
+      contact: 'edit-contact',
+      activityTitle: '',
+      note: '',
+    });
+  });
+
+  it('handles callback updates with omitted required state and hidden date widgets', async () => {
+    const logPage = await loadLogPage();
+    const page = logPage.getLogPageRender({
+      id: 'session-callback-optional',
+      manifest: manifest(),
+      logType: 'Call',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [existingContact()],
+      logInfo: {},
+      contactPhoneNumber: '+16505550100',
+      useContactSearch: false,
+    });
+    page.schema.required = undefined;
+
+    const unscheduled = logPage.getUpdatedLogPageRender({
+      manifest: manifest(),
+      logType: 'Call',
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['scheduleCallback'],
+        page,
+        formData: { ...page.formData, scheduleCallback: false, callbackDateTime: '2026-07-04T10:00:00' },
+      },
+    });
+
+    expect(unscheduled.formData.callbackDateTime).toBe('');
+    expect(unscheduled.schema.required).toBeUndefined();
+
+    const unchangedHiddenDate = logPage.getUpdatedLogPageRender({
+      manifest: manifest(),
+      logType: 'Call',
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['callbackDateTime'],
+        page: unscheduled,
+        formData: { ...unscheduled.formData, scheduleCallback: false, callbackDateTime: '' },
+      },
+    });
+
+    expect(unchangedHiddenDate.uiSchema.callbackDateTime).toEqual({ 'ui:widget': 'hidden' });
+    expect(unchangedHiddenDate.uiSchema.submitButtonOptions['ui:disabled']).toBe(false);
+  });
+
+  it('keeps manually edited titles and clears contact type when no platform types exist', async () => {
+    const logPage = await loadLogPage();
+    const noContactTypesManifest = manifest();
+    noContactTypesManifest.platforms.salesforce.contactTypes = [];
+    const page = logPage.getLogPageRender({
+      id: 'session-no-types',
+      manifest: noContactTypesManifest,
+      logType: 'Call',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [existingContact(), newContact()],
+      logInfo: {},
+      contactPhoneNumber: '+16505550100',
+      useContactSearch: false,
+    });
+    page.schema.properties.activityTitle.manuallyEdited = true;
+
+    const newContactPage = logPage.getUpdatedLogPageRender({
+      manifest: noContactTypesManifest,
+      logType: 'Call',
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['contact'],
+        page,
+        formData: { ...page.formData, contact: 'new-contact', activityTitle: 'Manual title' },
+      },
+    });
+
+    expect(newContactPage.formData).toMatchObject({
+      newContactType: '',
+      activityTitle: 'Manual title',
+    });
+    expect(newContactPage.uiSchema.newContactType).toEqual({ 'ui:widget': 'hidden' });
+
+    const existingPage = logPage.getUpdatedLogPageRender({
+      manifest: noContactTypesManifest,
+      logType: 'Call',
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['contact'],
+        page: newContactPage,
+        formData: { ...newContactPage.formData, contact: 'contact-1', activityTitle: 'Manual title' },
+      },
+    });
+
+    expect(existingPage.formData.activityTitle).toBe('Manual title');
+    expect(existingPage.formData.newContactType).toBe('');
+  });
+
+  it('updates defensive callback state and contact-dependent missing fields', async () => {
+    const logPage = await loadLogPage();
+    const page = logPage.getLogPageRender({
+      id: 'session-defensive',
+      manifest: manifest(),
+      logType: 'Call',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Inbound',
+      contactInfo: [existingContact(), existingContact({
+        id: 'contact-2',
+        name: 'No Flag',
+        type: 'Contact',
+        toNumberEntity: false,
+        additionalInfo: {
+          disposition: [{ const: 'support', title: 'Support' }],
+          priority: [{ const: 'normal', title: 'Normal' }],
+        },
+      })],
+      logInfo: {},
+      contactPhoneNumber: '+16505550100',
+      useContactSearch: false,
+    });
+    page.schema.required = undefined;
+    delete page.schema.properties.callbackDateTime;
+
+    const scheduled = logPage.getUpdatedLogPageRender({
+      manifest: manifest(),
+      logType: 'Call',
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['scheduleCallback'],
+        page,
+        formData: { ...page.formData, scheduleCallback: true, callbackDateTime: '' },
+      },
+    });
+
+    expect(scheduled.schema.required).toEqual(['callbackDateTime']);
+    expect(scheduled.schema.properties.callbackDateTime).toMatchObject({
+      title: expect.any(String),
+      type: 'string',
+      format: 'date-time',
+    });
+
+    const customManifest = manifest();
+    customManifest.platforms.salesforce.page.callLog.additionalFields.push({
+      const: 'missingFlag',
+      title: 'Missing Flag',
+      type: 'checkbox',
+      contactDependent: true,
+      required: true,
+      defaultValue: true,
+    });
+    const switched = logPage.getUpdatedLogPageRender({
+      manifest: customManifest,
+      logType: 'Call',
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['contact'],
+        page: scheduled,
+        formData: { ...scheduled.formData, contact: 'contact-2' },
+      },
+    });
+
+    expect(switched.schema.properties).not.toHaveProperty('missingFlag');
+    expect(switched.schema.properties).toHaveProperty('hiddenForLead');
+    expect(switched.formData.contactName).toBe('No Flag');
+  });
+
   it('renders unlogged call list metadata and duration formatting', async () => {
     vi.mocked(logCore.getConflictContentFromUnresolvedLog)
       .mockReturnValueOnce({ title: 'Inbound Jane', description: 'No match', type: 'Call' })
-      .mockReturnValueOnce({ title: 'Message Alex', description: '', type: 'Message' });
+      .mockReturnValueOnce({ title: 'Message Alex', description: '', type: 'Message' })
+      .mockReturnValueOnce({ title: 'Outbound Pat', description: '', type: 'Call' });
     const logPage = await loadLogPage();
 
     const page = logPage.getUnloggedCallPageRender({
       unloggedCalls: [
         { sessionId: 'call-1', startTime: '2026-07-03T08:00:00Z', duration: 65, direction: 'Inbound' },
         { sessionId: 'msg-1', startTime: '2026-07-02T08:00:00Z', duration: 3661, direction: 'Outbound' },
+        { sessionId: 'call-2', startTime: '2026-07-02T09:00:00Z', duration: 9, direction: 'Outbound' },
       ],
     });
 
     expect(page).toMatchObject({
       id: 'unloggedCallPage',
-      unreadCount: 2,
+      unreadCount: 3,
       schema: {
         properties: {
           record: {
             oneOf: [
               expect.objectContaining({ const: 'call-1', title: 'Inbound Jane', description: '01:05 - No match' }),
               expect.objectContaining({ const: 'msg-1', title: 'Message Alex', description: '01:01:01' }),
+              expect.objectContaining({ const: 'call-2', title: 'Outbound Pat', description: '00:09' }),
             ],
           },
         },
@@ -802,6 +1070,144 @@ describe('groupLogPage', () => {
     expect(contactTypeChanged.schema.properties.section_0.properties.newCategory.oneOf).toEqual([
       { const: 'prospect', title: 'Prospect' },
       { const: 'none', title: expect.any(String) },
+    ]);
+  });
+
+  it('switches grouped existing contacts to new-contact fields with no type config', async () => {
+    const groupLogPage = await loadGroupLogPage();
+    const groupedManifest = manifest();
+    groupedManifest.platforms.salesforce.contactTypes = [];
+    delete groupedManifest.platforms.salesforce.page.newContact.additionalFields;
+    const page = groupLogPage.getGroupLogPageRender({
+      id: 'group-no-types',
+      manifest: groupedManifest,
+      platformName: 'salesforce',
+      correspondentsData: [
+        {
+          phoneNumber: '+16505550500',
+          displayName: 'Fallback',
+          contactInfo: [
+            existingContact(),
+            {
+              ...newContact(),
+              additionalInfo: {
+                ...newContact().additionalInfo,
+                messageType: [{ const: 'sms', title: 'SMS' }],
+              },
+            },
+          ],
+        },
+      ],
+      useContactSearch: false,
+    });
+
+    const updated = groupLogPage.getUpdatedGroupLogPageRender({
+      manifest: groupedManifest,
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['section_0', 'contact'],
+        page,
+        formData: {
+          ...page.formData,
+          section_0: {
+            ...page.formData.section_0,
+            contact: 'new-contact',
+          },
+        },
+      },
+    });
+
+    expect(updated.formData.section_0).toMatchObject({
+      contact: 'new-contact',
+      newContactType: '',
+      contactName: 'New Contact',
+      messageType: 'sms',
+    });
+    expect(updated.schema.properties.section_0.required).toEqual(expect.arrayContaining(['newContactName', 'messageType']));
+    expect(updated.uiSchema.section_0.newContactType).toEqual({ 'ui:widget': 'hidden' });
+  });
+
+  it('handles grouped update fallbacks for missing sections, contacts, and optional form buckets', async () => {
+    const groupLogPage = await loadGroupLogPage();
+    const page = groupLogPage.getGroupLogPageRender({
+      id: 'group-fallbacks',
+      manifest: manifest(),
+      platformName: 'salesforce',
+      correspondentsData: [
+        {
+          phoneNumber: '+16505550600',
+          displayName: 'Jane',
+          contactInfo: [existingContact()],
+        },
+      ],
+      useContactSearch: false,
+    });
+
+    const missingFieldKey = groupLogPage.getUpdatedGroupLogPageRender({
+      manifest: manifest(),
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['section_0'],
+        page,
+        formData: page.formData,
+      },
+    });
+    expect(missingFieldKey).toBe(page);
+
+    delete page.uiSchema.section_0;
+    delete page.formData.section_0;
+    const missingContact = groupLogPage.getUpdatedGroupLogPageRender({
+      manifest: manifest(),
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['section_0', 'contact'],
+        page,
+        formData: page.formData,
+      },
+    });
+
+    expect(missingContact.uiSchema.section_0).toEqual({});
+    expect(missingContact.formData.section_0).toEqual({});
+  });
+
+  it('collects grouped form data with empty optional field definitions and new-contact labels', async () => {
+    const groupLogPage = await loadGroupLogPage();
+    const minimalManifest = {
+      platforms: {
+        salesforce: {
+          page: {},
+        },
+      },
+    };
+
+    expect(groupLogPage.collectGroupLogFormData({
+      section_0: {
+        contact: 'new-contact',
+        contactType: 'Lead',
+        contactName: 'Fallback Lead',
+        newContactName: 'Created Lead',
+        newContactType: 'Contact',
+        contactPhoneNumber: '+16505550700',
+      },
+      section_1: {
+        contact: 'contact-1',
+        contactType: 'Lead',
+        contactName: 'Jane Smith',
+        newContactName: '',
+        newContactType: '',
+        contactPhoneNumber: '+16505550701',
+      },
+    }, minimalManifest, 'salesforce')).toEqual([
+      expect.objectContaining({
+        contactType: 'Contact',
+        contactName: 'Created Lead',
+        additionalSubmission: {},
+      }),
+      expect.objectContaining({
+        contactType: 'Lead',
+        contactName: 'Jane Smith',
+        additionalSubmission: {},
+      }),
     ]);
   });
 

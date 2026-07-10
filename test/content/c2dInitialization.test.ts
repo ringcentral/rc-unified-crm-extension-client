@@ -3,7 +3,9 @@ import CustomC2DWidget from '../../src/misc/CustomC2DWidget.ts';
 import userCore from '../../src/core/user.ts';
 import { sendMessageToExtension } from '../../src/lib/sendMessage.ts';
 import { initializeShadowRootSupport } from '../../src/lib/c2d/shadowRootSupport.ts';
+import ReactDOM from 'react-dom';
 import { seedStorage } from '../setup/storageHelpers';
+import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 
 const widgetHandlers = vi.hoisted(() => ({}));
 
@@ -12,6 +14,9 @@ vi.mock('ringcentral-c2d', () => ({
     this.options = options;
   }),
   LibPhoneNumberMatcher: vi.fn(function LibPhoneNumberMatcher(options) {
+    this.options = options;
+  }),
+  RegExpPhoneNumberMatcher: vi.fn(function RegExpPhoneNumberMatcher(options) {
     this.options = options;
   }),
   defaultExclusions: [{ name: 'default-exclusion' }],
@@ -175,5 +180,141 @@ describe('content click-to-dial initialization', () => {
       type: 'c2schedule',
       phoneNumber: '+16505550300',
     });
+  });
+
+  it('initializes C2D storage arrays and defaults SMS permission and ignore selector', async () => {
+    const { initializeC2D } = await loadContentSeams();
+    delete window.clickToDialInstances;
+    delete window.clickToDialObservers;
+    delete window.clickToDialShadowRootPollers;
+    seedStorage({
+      renderQuickAccessButton: false,
+      userPermissions: {},
+      c2dMatcherType: 'libPhone',
+      selectedRegion: null,
+      'platform-info': { platformName: 'salesforce', hostname: 'localhost' },
+      customCrmManifest: {
+        platforms: {
+          salesforce: {},
+        },
+      },
+      userSettings: {},
+    });
+    vi.mocked(userCore.getClickToDialEmbedMode).mockReturnValue({ value: 'whitelist' });
+    vi.mocked(userCore.getClickToDialUrls).mockReturnValue({ value: ['*crm*'] });
+
+    await initializeC2D();
+
+    expect(window.clickToDialInstances).toEqual([window.clickToDialInject]);
+    expect(window.clickToDialObservers).toEqual([]);
+    expect(window.clickToDialShadowRootPollers).toEqual([]);
+    expect(window.clickToDialInject.widget.update).toHaveBeenCalledWith({ enableC2Text: false });
+    expect(initializeShadowRootSupport).toHaveBeenCalledWith(expect.objectContaining({
+      c2dIgnoreSelector: '',
+      selectedRegion: null,
+      pollerStore: window.clickToDialShadowRootPollers,
+    }));
+  });
+
+  it('creates regexp/default matcher instances and reuses shared widgets without duplicate handlers', async () => {
+    const { createC2DInstance } = await loadContentSeams();
+    const sharedWidget = {
+      on: vi.fn(),
+      update: vi.fn(),
+    };
+
+    createC2DInstance({
+      rootNode: document.body,
+      sharedWidget,
+      matcherType: 'regExp',
+      selectedRegion: 'US',
+      c2dIgnoreSelector: '.ignore-phone',
+    });
+
+    expect(window.RingCentralC2D).toHaveBeenLastCalledWith(expect.objectContaining({
+      widget: sharedWidget,
+      observer: expect.any(RangeObserver),
+    }));
+    expect(sharedWidget.on).not.toHaveBeenCalled();
+
+    createC2DInstance({
+      rootNode: document.body,
+      matcherType: 'unknown',
+      selectedRegion: 'CA',
+      c2dIgnoreSelector: '',
+    });
+
+    expect(LibPhoneNumberMatcher).toHaveBeenCalledWith(expect.objectContaining({
+      countryCode: 'CA',
+      validDomExclusions: expect.any(Array),
+    }));
+  });
+
+  it('renders or skips the quick access button based on URL activation', async () => {
+    const { RenderQuickAccessButton } = await loadContentSeams();
+    seedStorage({
+      'platform-info': { platformName: 'salesforce', hostname: 'localhost' },
+      customCrmManifest: {
+        platforms: {
+          salesforce: {},
+        },
+      },
+      userSettings: {},
+    });
+
+    vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReturnValueOnce({ value: 'whitelist' });
+    vi.mocked(userCore.getQuickAccessButtonUrls).mockReturnValueOnce({ value: ['*no-match*'] });
+    await RenderQuickAccessButton();
+
+    expect(ReactDOM.render).not.toHaveBeenCalled();
+
+    vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReturnValueOnce({ value: 'whitelist' });
+    vi.mocked(userCore.getQuickAccessButtonUrls).mockReturnValueOnce({ value: ['*crm*'] });
+    await RenderQuickAccessButton();
+
+    expect(document.getElementById('rc-crm-extension-quick-access-button')).toBeTruthy();
+    expect(ReactDOM.render).toHaveBeenCalled();
+
+    vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReturnValueOnce({ value: 'whitelist' });
+    vi.mocked(userCore.getQuickAccessButtonUrls).mockReturnValueOnce({ value: ['*crm*'] });
+    await RenderQuickAccessButton();
+
+    expect(document.querySelectorAll('#rc-crm-extension-quick-access-button')).toHaveLength(1);
+    expect(ReactDOM.render).toHaveBeenCalledTimes(2);
+  });
+
+  it('handles content-script runtime messages', async () => {
+    await loadContentSeams();
+    const listener = chrome.runtime.onMessage.addListener.mock.calls[0][0];
+    const sendResponse = vi.fn();
+
+    listener({ action: 'openAppWindow' }, {}, sendResponse);
+    expect(window.postMessage).toHaveBeenCalledWith({
+      type: 'rc-adapter-syncMinimized',
+      minimized: false,
+    }, '*');
+    expect(getWidgetPostMessages()).toContainEqual({
+      message: {
+        type: 'rc-adapter-syncMinimized',
+        minimized: false,
+      },
+      targetOrigin: '*',
+    });
+    expect(sendResponse).toHaveBeenLastCalledWith('ok');
+
+    listener({ action: 'needCallbackUri' }, {}, sendResponse);
+    expect(sendMessageToExtension).toHaveBeenCalledWith({
+      type: 'pipedriveCallbackUri',
+      callbackUri: window.location.href,
+    });
+
+    document.body.insertAdjacentHTML('beforeend', '<div id="rc-stepper"></div>');
+    listener({ action: 'pipedriveAltAuthDone' }, {}, sendResponse);
+    expect(document.querySelector('#rc-stepper').innerHTML).toBe('(3/3) Setup finished. You can close this page now.');
+
+    document.cookie = 'bullhorn=%7B%22username%22%3A%22bh-user%22%2C%22masterUserId%22%3A1%7D';
+    sendResponse.mockClear();
+    listener({ action: 'fetchBullhornUsername' }, {}, sendResponse);
+    expect(sendResponse).toHaveBeenCalledWith({ bullhornUsername: 'bh-user' });
   });
 });

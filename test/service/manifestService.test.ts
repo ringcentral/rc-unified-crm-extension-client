@@ -66,6 +66,18 @@ describe('manifestService', () => {
     expect(axios.get).toHaveBeenNthCalledWith(2, 'https://appconnect.labs.ringcentral.com/public-api/connectors/internal?access=internal&type=connector&accountId=account-1');
   });
 
+  it('caches platform list results and handles empty catalog payloads', async () => {
+    vi.mocked(axios.get)
+      .mockResolvedValueOnce({ data: null })
+      .mockResolvedValueOnce({ data: null });
+    const manifestService = await loadManifestService();
+
+    await expect(manifestService.getPlatformList()).resolves.toEqual([]);
+    await expect(manifestService.getPlatformList()).resolves.toEqual([]);
+
+    expect(axios.get).toHaveBeenCalledTimes(2);
+  });
+
   it('merges public, shared, and private plugin lists with access markers', async () => {
     vi.mocked(axios.get)
       .mockResolvedValueOnce({ data: { connectors: [{ id: 'public-plugin' }] } })
@@ -85,6 +97,15 @@ describe('manifestService', () => {
 
     expect(axios.get).toHaveBeenNthCalledWith(1, 'https://appconnect.labs.ringcentral.com/public-api/connectors?type=plugin');
     expect(axios.get).toHaveBeenNthCalledWith(2, 'https://appconnect.labs.ringcentral.com/public-api/connectors/internal?access=internal&type=plugin&accountId=account-1');
+  });
+
+  it('returns an empty plugin list when catalog payloads omit connector arrays', async () => {
+    vi.mocked(axios.get)
+      .mockResolvedValueOnce({ data: null })
+      .mockResolvedValueOnce({ data: {} });
+    const manifestService = await loadManifestService();
+
+    await expect(manifestService.getPluginList()).resolves.toEqual([]);
   });
 
   it('loads plugin details with access-specific catalog URLs', async () => {
@@ -107,6 +128,27 @@ describe('manifestService', () => {
     expect(axios.get).toHaveBeenNthCalledWith(1, 'https://appconnect.labs.ringcentral.com/public-api/connectors/public-plugin/manifest?type=plugin');
     expect(axios.get).toHaveBeenNthCalledWith(2, 'https://appconnect.labs.ringcentral.com/public-api/connectors/shared-plugin/manifest?access=internal&type=plugin&accountId=shared-account');
     expect(axios.get).toHaveBeenNthCalledWith(3, 'https://appconnect.labs.ringcentral.com/public-api/connectors/private-plugin/manifest?access=internal&type=plugin&accountId=account-1');
+  });
+
+  it('loads plugin details with explicit plugin id and returns undefined for unsupported access', async () => {
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        platforms: {
+          '': { name: 'Fallback Plugin' },
+        },
+      },
+    });
+    const manifestService = await loadManifestService();
+
+    await expect(manifestService.getPluginDetails({
+      pluginId: 'explicit-plugin',
+      selectedPlugin: { id: 'catalog-id', access: 'public' },
+    })).resolves.toEqual({ name: 'Fallback Plugin' });
+    await expect(manifestService.getPluginDetails({
+      selectedPlugin: { id: 'unknown-plugin', access: 'unknown' },
+    })).resolves.toBeUndefined();
+
+    expect(axios.get).toHaveBeenCalledWith('https://appconnect.labs.ringcentral.com/public-api/connectors/explicit-plugin/manifest?type=plugin');
   });
 
   it('saves manifest URL in local storage', async () => {
@@ -151,6 +193,41 @@ describe('manifestService', () => {
     expect(saved.serverUrl).toBe('https://meta.example');
     expect(saved.platforms.salesforce.embedUrls[0]).toBe('https://acme.example/*');
     expect(readStorage().customCrmManifest).toEqual(saved);
+  });
+
+  it('ignores non-matching overrides and creates nested override paths', async () => {
+    const manifestService = await loadManifestService();
+    const manifest = {
+      serverUrl: 'https://default.example',
+      platforms: {
+        salesforce: {
+          override: [
+            {
+              triggerType: 'meta',
+            },
+            {
+              triggerType: 'hostname',
+              triggerValue: 'other.example',
+              overrideObjects: [
+                { path: 'embedUrls.0', value: 'https://other.example/*' },
+              ],
+            },
+            {
+              triggerType: 'hostname',
+              triggerValue: 'acme.example',
+              overrideObjects: [
+                { path: 'nested.child.value', value: 'created' },
+              ],
+            },
+          ],
+        },
+      },
+    };
+
+    const saved = await manifestService.saveManifest({ manifest });
+
+    expect(saved.platforms.salesforce).not.toHaveProperty('embedUrls');
+    expect(saved.platforms.salesforce.nested.child.value).toBe('created');
   });
 
   it('refreshes a manifest from the stored manifest URL', async () => {
@@ -223,5 +300,42 @@ describe('manifestService', () => {
     await expect(manifestService.getManifest()).resolves.toMatchObject({
       serverUrl: 'https://meta.example',
     });
+  });
+
+  it('returns cached session manifest unless force refresh is requested', async () => {
+    const manifestService = await loadManifestService();
+
+    await manifestService.saveManifest({
+      manifest: {
+        serverUrl: 'https://session.example',
+        platforms: {
+          salesforce: {},
+        },
+      },
+    });
+    seedStorage({
+      customCrmManifest: {
+        serverUrl: 'https://storage.example',
+        platforms: {
+          salesforce: {},
+        },
+      },
+    });
+
+    await expect(manifestService.getManifest()).resolves.toMatchObject({
+      serverUrl: 'https://session.example',
+    });
+    await expect(manifestService.getManifest(true)).resolves.toMatchObject({
+      serverUrl: 'https://storage.example',
+    });
+  });
+
+  it('returns stored string manifests without applying overrides', async () => {
+    seedStorage({
+      customCrmManifest: 'https://string-manifest.example/manifest.json',
+    });
+    const manifestService = await loadManifestService();
+
+    await expect(manifestService.getManifest(true)).resolves.toBe('https://string-manifest.example/manifest.json');
   });
 });

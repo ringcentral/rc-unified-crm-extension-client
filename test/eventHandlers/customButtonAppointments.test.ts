@@ -177,6 +177,23 @@ describe('custom-button appointment handlers', () => {
     expect(loaded.util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
   });
 
+  it('refreshes cancel pages without status updates when no appointment id is available', async () => {
+    const loaded = await loadAppointmentButton(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentCancel.ts',
+    );
+
+    await loaded.handler.onEvent({
+      data: dataFor(),
+      manifest: manifest(),
+    });
+
+    expect(loaded.appointmentService.updateAppointmentStatus).not.toHaveBeenCalled();
+    expect(loaded.appointmentsPage.getAppointmentsPageWithRecords).toHaveBeenCalledWith(expect.objectContaining({
+      forceSync: false,
+    }));
+    expect(loaded.util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
   it('confirms an appointment and refreshes the appointments list page', async () => {
     const loaded = await loadAppointmentButton(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentConfirm.ts',
@@ -210,6 +227,148 @@ describe('custom-button appointment handlers', () => {
         targetOrigin: '*',
       },
     ]));
+  });
+
+  it('confirms appointments from additional info and reports provider messages', async () => {
+    const loaded = await loadAppointmentButton(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentConfirm.ts',
+      {
+        appointmentService: {
+          updateAppointmentStatus: vi.fn(async () => ({
+            returnMessage: {
+              messageType: 'warning',
+              message: 'Already confirmed',
+              ttl: 4000,
+              details: 'Provider skipped duplicate confirmation',
+            },
+          })),
+        },
+      },
+    );
+
+    await loaded.handler.onEvent({
+      data: dataFor({}, { thirdPartyAppointmentId: 'appointment-3' }),
+      manifest: manifest(),
+    });
+
+    expect(loaded.appointmentService.updateAppointmentStatus).toHaveBeenCalledWith(expect.objectContaining({
+      appointmentId: 'appointment-3',
+      status: 'confirmed',
+    }));
+    expect(loaded.util.showNotification).toHaveBeenCalledWith({
+      level: 'warning',
+      message: 'Already confirmed',
+      ttl: 4000,
+      details: 'Provider skipped duplicate confirmation',
+    });
+    expect(loaded.util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('refreshes confirm pages without status updates when no appointment id is available', async () => {
+    const loaded = await loadAppointmentButton(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentConfirm.ts',
+    );
+
+    await loaded.handler.onEvent({
+      data: dataFor(),
+      manifest: manifest(),
+    });
+
+    expect(loaded.appointmentService.updateAppointmentStatus).not.toHaveBeenCalled();
+    expect(loaded.appointmentsPage.getAppointmentsPageWithRecords).toHaveBeenCalledWith(expect.objectContaining({
+      forceSync: false,
+    }));
+    expect(loaded.util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('reports null appointment confirmation responses', async () => {
+    const loaded = await loadAppointmentButton(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentConfirm.ts',
+      {
+        appointmentService: {
+          updateAppointmentStatus: vi.fn(async () => null),
+        },
+      },
+    );
+
+    await loaded.handler.onEvent({
+      data: dataFor({}, { thirdPartyAppointmentId: 'appointment-4' }),
+      manifest: manifest(),
+    });
+
+    expect(loaded.util.showNotification).toHaveBeenCalledWith({
+      level: 'error',
+      message: 'Failed to confirm appointment.',
+      ttl: 3000,
+    });
+    expect(loaded.util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('keeps confirm refreshes quiet for explicit unsuccessful provider responses', async () => {
+    const loaded = await loadAppointmentButton(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentConfirm.ts',
+      {
+        appointmentService: {
+          updateAppointmentStatus: vi.fn(async () => ({ successful: false })),
+        },
+      },
+    );
+
+    await loaded.handler.onEvent({
+      data: dataFor({}, { thirdPartyAppointmentId: 'appointment-5' }),
+      manifest: manifest(),
+    });
+
+    expect(loaded.util.showNotification).not.toHaveBeenCalled();
+    expect(loaded.util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('reports appointment confirm errors from Error and non-Error failures', async () => {
+    const loadedWithError = await loadAppointmentButton(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentConfirm.ts',
+      {
+        appointmentService: {
+          updateAppointmentStatus: vi.fn(async () => {
+            throw new Error('confirm unavailable');
+          }),
+        },
+      },
+    );
+
+    await loadedWithError.handler.onEvent({
+      data: dataFor({}, { thirdPartyAppointmentId: 'appointment-6' }),
+      manifest: manifest(),
+    });
+
+    expect(loadedWithError.util.showNotification).toHaveBeenCalledWith({
+      level: 'error',
+      message: 'confirm unavailable',
+      ttl: 3000,
+    });
+    expect(loadedWithError.util.responseMessage).toHaveBeenCalledWith('request-1', { error: 'confirm unavailable' });
+
+    const loadedWithString = await loadAppointmentButton(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/appointmentConfirm.ts',
+      {
+        appointmentService: {
+          updateAppointmentStatus: vi.fn(async () => {
+            throw 'plain confirm failure';
+          }),
+        },
+      },
+    );
+
+    await loadedWithString.handler.onEvent({
+      data: dataFor({}, { thirdPartyAppointmentId: 'appointment-7' }),
+      manifest: manifest(),
+    });
+
+    expect(loadedWithString.util.showNotification).toHaveBeenCalledWith({
+      level: 'error',
+      message: 'plain confirm failure',
+      ttl: 3000,
+    });
+    expect(loadedWithString.util.responseMessage).toHaveBeenCalledWith('request-1', { error: 'plain confirm failure' });
   });
 
   it('reports appointment status update failures through notifications and response messages', async () => {

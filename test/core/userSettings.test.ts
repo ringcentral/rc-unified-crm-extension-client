@@ -9,6 +9,8 @@ beforeEach(async () => {
 
 describe('user settings getters', () => {
   it('uses documented defaults for key feature toggles', () => {
+    expect(userCore.getAutoLogCallSetting({}).value).toBe(false);
+    expect(userCore.getAutoLogSMSSetting({}).value).toBe(false);
     expect(userCore.getShowChatTabSetting({}).value).toBe(true);
     expect(userCore.getShowMeetingsTabSetting({}).value).toBe(true);
     expect(userCore.getShowTextTabSetting({}).value).toBe(true);
@@ -50,10 +52,33 @@ describe('user settings getters', () => {
     });
   });
 
+  it('disables client-side call auto-log for admins when server-side logging is enabled below account level', () => {
+    const userSettings = {
+      autoLogCall: { value: true, customizable: true },
+      serverSideLogging: {
+        enable: true,
+        loggingLevel: 'User',
+      },
+    };
+
+    expect(userCore.getAutoLogCallSetting(userSettings, false)).toEqual({
+      value: true,
+      readOnly: false,
+      readOnlyReason: '',
+    });
+    expect(userCore.getAutoLogCallSetting(userSettings, true)).toEqual({
+      value: false,
+      readOnly: true,
+      readOnlyReason: 'This cannot be turn ON becauase server side logging is enabled by admin',
+      warning: 'Unavailable while server side call logging enabled',
+    });
+  });
+
   it('normalizes click-to-dial and quick access URL settings', () => {
     expect(userCore.getClickToDialEmbedMode({}).value).toBe('crmOnly');
     expect(userCore.getQuickAccessButtonEmbedMode({}).value).toBe('crmOnly');
     expect(userCore.getClickToDialUrls({ clickToDialUrls: { value: '' } }).value).toEqual([]);
+    expect(userCore.getQuickAccessButtonUrls({ quickAccessButtonUrls: { value: '' } }).value).toEqual([]);
     expect(userCore.getQuickAccessButtonUrls({ quickAccessButtonUrls: { value: ['https://crm.example/*'] } }).value)
       .toEqual(['https://crm.example/*']);
   });
@@ -78,17 +103,37 @@ describe('user settings getters', () => {
       readOnlyReason: 'This setting is managed by admin',
       options: [],
     });
+
+    expect(userCore.getCustomSetting(undefined, 'missing', 'Default')).toEqual({
+      value: null,
+      readOnly: false,
+      readOnlyReason: '',
+    });
+
+    expect(userCore.getCustomSetting({
+      crmStage: {
+        value: 'Demo',
+        customizable: true,
+      },
+    }, 'crmStage', 'Default')).toEqual({
+      value: 'Demo',
+      readOnly: false,
+      readOnlyReason: '',
+      options: [],
+    });
   });
 
   it('extracts active plugin settings and skips removed plugins', () => {
     const userSettings = {
       plugin_a: { value: { version: '1.0.0' } },
       plugin_b: { value: { version: '2.0.0' }, isRemoved: true },
+      plugin_c: {},
       unrelated: { value: true },
     };
 
     expect(userCore.getAllPluginSettings(userSettings)).toEqual({
       a: { version: '1.0.0' },
+      c: null,
     });
     expect(userCore.getPluginSetting(userSettings, 'a')).toEqual({ version: '1.0.0' });
   });
@@ -227,6 +272,77 @@ describe('user settings getters', () => {
         value,
         readOnly: true,
         readOnlyReason: 'This setting is managed by admin',
+      });
+    }
+  });
+
+  it('keeps explicitly customizable settings editable without admin warning text', () => {
+    const cases = [
+      ['getAutoLogCallSetting', 'autoLogCall', true],
+      ['getAutoLogSMSSetting', 'autoLogSMS', true],
+      ['getAutoLogVoicemailSetting', 'autoLogVoicemail', true],
+      ['getAutoLogInboundFaxSetting', 'autoLogInboundFax', true],
+      ['getAutoLogOutboundFaxSetting', 'autoLogOutboundFax', true],
+      ['getEnableRetroCallLogSync', 'enableRetroCallLogSync', false],
+      ['getOneTimeLogSetting', 'oneTimeLog', true],
+      ['getCallPopSetting', 'popupLogPageAfterCall', true],
+      ['getSMSPopSetting', 'popupLogPageAfterSMS', true],
+      ['getIncomingCallPop', 'openContactPageFromIncomingCall', 'onFirstRing'],
+      ['getOutgoingCallPop', 'openContactPageFromOutgoingCall', 'onAnswer'],
+      ['getCallPopMultiMatchBehavior', 'multiContactMatchBehavior', 'openAllMatches'],
+      ['getopenContactPageAfterCreationSetting', 'openContactPageAfterCreation', true],
+      ['getDeveloperModeSetting', 'developerMode', true],
+      ['getAutoOpenSetting', 'autoOpenExtension', true],
+      ['getShowAiAssistantWidgetSetting', 'showAiAssistantWidget', true],
+      ['getAutoStartAiAssistantSetting', 'autoStartAiAssistant', true],
+      ['getShowChatTabSetting', 'showChatTab', false],
+      ['getShowMeetingsTabSetting', 'showMeetingsTab', false],
+      ['getShowTextTabSetting', 'showTextTab', false],
+      ['getShowFaxTabSetting', 'showFaxTab', false],
+      ['getShowVoicemailTabSetting', 'showVoicemailTab', false],
+      ['getShowRecordingsTabSetting', 'showRecordingsTab', false],
+      ['getShowContactsTabSetting', 'showContactsTab', false],
+      ['getShowCalldownTabSetting', 'showCalldownTab', false],
+      ['getShowAppointmentsTabSetting', 'showAppointmentsTab', false],
+      ['getShowUserReportTabSetting', 'showUserReportTab', false],
+      ['getC2DMatcherTypeSetting', 'c2dMatcherType', 'regExp'],
+      ['getClickToDialEmbedMode', 'clickToDialEmbedMode', 'whitelist'],
+      ['getClickToDialUrls', 'clickToDialUrls', ['https://crm.example/*']],
+      ['getQuickAccessButtonEmbedMode', 'quickAccessButtonEmbedMode', 'blacklist'],
+      ['getQuickAccessButtonUrls', 'quickAccessButtonUrls', ['https://crm.example/quick/*']],
+      ['getNotificationLevelSetting', 'notificationLevelSetting', ['error']],
+      ['getAddCallLogNoteSetting', 'addCallLogNote', false],
+      ['getAddCallSessionIdSetting', 'addCallSessionId', true],
+      ['getAddRingCentralUserNameSetting', 'addRingCentralUserName', true],
+      ['getAddRingCentralNumberSetting', 'addRingCentralNumber', true],
+      ['getAddCallLogSubjectSetting', 'addCallLogSubject', false],
+      ['getAddCallLogContactNumberSetting', 'addCallLogContactNumber', false],
+      ['getAddCallLogDateTimeSetting', 'addCallLogDateTime', false],
+      ['getLogDateFormatSetting', 'logDateFormat', 'YYYY/MM/DD'],
+      ['getAddCallLogDurationSetting', 'addCallLogDuration', false],
+      ['getAddCallLogResultSetting', 'addCallLogResult', false],
+      ['getAddCallLogRecordingSetting', 'addCallLogRecording', false],
+      ['getAddCallLogAiNoteSetting', 'addCallLogAiNote', false],
+      ['getAddCallLogTranscriptSetting', 'addCallLogTranscript', false],
+      ['getUnknownContactPreferenceSetting', 'unknownContactPreference', 'createNewPlaceholderContact'],
+      ['getMultipleContactsPreferenceSetting', 'multipleContactsPreference', 'firstAlphabetical'],
+      ['getNewContactTypeSetting', 'newContactType', 'Lead'],
+      ['getNewContactNamePrefixSetting', 'newContactNamePrefix', 'Auto'],
+      ['getPhoneNumberDisplayFormatTypeSetting', 'phoneNumberDisplayFormatType', 'custom'],
+      ['getPhoneNumberDisplayFormatTemplateSetting', 'phoneNumberDisplayFormatTemplate', '+# ### ### ####'],
+      ['getQuickAccessButtonSizeSetting', 'quickAccessButtonSize', 'small'],
+    ];
+
+    for (const [getter, settingKey, value] of cases) {
+      expect(userCore[getter]({
+        [settingKey]: {
+          value,
+          customizable: true,
+        },
+      })).toEqual({
+        value,
+        readOnly: false,
+        readOnlyReason: '',
       });
     }
   });

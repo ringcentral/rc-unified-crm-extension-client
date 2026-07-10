@@ -103,6 +103,32 @@ describe('contact core', () => {
     ]);
   });
 
+  it('returns an empty local cache result when cache layers are missing', async () => {
+    const contactCore = await loadContactCore();
+
+    getWidgetFrameWindow().phone.contactMatcher.data = null;
+    expect(contactCore.getLocalCachedContact({
+      phoneNumber: '16505550100',
+      platformName: 'salesforce',
+    })).toEqual([]);
+
+    getWidgetFrameWindow().phone.contactMatcher.data = {};
+    expect(contactCore.getLocalCachedContact({
+      phoneNumber: '16505550100',
+      platformName: 'salesforce',
+    })).toEqual([]);
+
+    getWidgetFrameWindow().phone.contactMatcher.data = {
+      '16505550100': {
+        hubspot: { data: [] },
+      },
+    };
+    expect(contactCore.getLocalCachedContact({
+      phoneNumber: '16505550100',
+      platformName: 'salesforce',
+    })).toEqual([]);
+  });
+
   it('returns cached contact match without calling the server', async () => {
     getWidgetFrameWindow().phone.contactMatcher.data = {
       '16505550100': {
@@ -173,6 +199,43 @@ describe('contact core', () => {
     });
   });
 
+  it('fetches contacts without platform cache rules and skips duplicate cached search contacts', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      userSettings: {
+        overridingPhoneNumberFormat3: { value: 'format-3' },
+      },
+      'rc-crm-search-contact-16505550100': [
+        { id: 'server-contact', name: 'Cached Duplicate', type: 'Lead' },
+      ],
+    });
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        contact: [{ id: 'server-contact', name: 'Server Contact', type: 'Contact', isNewContact: false }],
+      },
+    });
+    const contactCore = await loadContactCore();
+
+    await expect(contactCore.getContact({
+      serverUrl: 'https://server.example',
+      phoneNumber: '16505550100',
+      platformName: '',
+      isForceRefresh: true,
+      isToTriggerContactMatch: false,
+    })).resolves.toMatchObject({
+      matched: true,
+      contactInfo: [
+        { id: 'server-contact', name: 'Server Contact', type: 'Contact', isNewContact: false },
+      ],
+    });
+
+    expect(axios.get).toHaveBeenCalledWith(
+      'https://server.example/contact?phoneNumber=16505550100&overridingFormat=format-3&isExtension=false&isForceRefreshAccountData=false',
+    );
+    expect(readStorage()['tempContactMatchTask-16505550100']).toBeUndefined();
+  });
+
   it('returns connect-to-CRM warning when no JWT exists', async () => {
     const contactCore = await loadContactCore();
 
@@ -234,6 +297,37 @@ describe('contact core', () => {
     ]);
   });
 
+  it('creates contact match cache with null additional info when server omits it', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        contact: {
+          id: 'new-contact',
+        },
+      },
+    });
+    const contactCore = await loadContactCore();
+
+    await contactCore.createContact({
+      serverUrl: 'https://server.example',
+      phoneNumber: '16505550102',
+      newContactName: 'New Person',
+      newContactType: 'Contact',
+      additionalSubmission: {},
+    });
+
+    expect(readStorage()['tempContactMatchTask-16505550102']).toEqual([
+      {
+        id: 'new-contact',
+        phone: '16505550102',
+        name: 'New Person',
+        type: 'Contact',
+        additionalInfo: null,
+      },
+    ]);
+  });
+
   it('opens direct contact URL from manifest templates', async () => {
     seedStorage({
       'platform-info': {
@@ -254,6 +348,65 @@ describe('contact core', () => {
 
     expect(window.open).toHaveBeenCalledWith('https://crm.example/call-pop/contact-1');
     expect(showNotification).toHaveBeenCalled();
+  });
+
+  it('opens cached single contacts once and suppresses duplicate opens', async () => {
+    seedStorage({
+      'platform-info': {
+        hostname: 'crm.example',
+      },
+      userSettings: {},
+    });
+    getWidgetFrameWindow().phone.contactMatcher.data = {
+      '16505550100': {
+        salesforce: {
+          data: [{ id: 'contact-1', name: 'Jane Doe', contactType: 'Lead' }],
+        },
+      },
+    };
+    const contactCore = await loadContactCore();
+
+    await contactCore.openContactPage({
+      manifest: manifest(),
+      platformName: 'salesforce',
+      phoneNumber: '16505550100',
+    });
+    await contactCore.openContactPage({
+      manifest: manifest(),
+      platformName: 'salesforce',
+      phoneNumber: '16505550100',
+    });
+
+    expect(window.open).toHaveBeenCalledTimes(1);
+    expect(window.open).toHaveBeenCalledWith('https://crm.example/contact/contact-1/Lead');
+  });
+
+  it('does not open direct Bullhorn contacts when ATS URL is unavailable', async () => {
+    seedStorage({
+      'platform-info': {
+        hostname: 'bullhorn.example',
+      },
+      userSettings: {},
+      crm_extension_bullhorn_user_urls: {},
+    });
+    const contactCore = await loadContactCore();
+
+    await contactCore.openContactPage({
+      manifest: {
+        serverUrl: 'https://server.example',
+        platforms: {
+          bullhorn: {
+            contactPageUrl: 'https://{hostname}/contact/{contactId}',
+          },
+        },
+      },
+      platformName: 'bullhorn',
+      phoneNumber: '16505550100',
+      contactId: 'candidate-1',
+      contactType: 'Candidate',
+    });
+
+    expect(window.open).not.toHaveBeenCalled();
   });
 
   it('shows multi-contact prompt when multiple contacts are matched and prompt behavior is selected', async () => {
@@ -410,6 +563,66 @@ describe('contact core', () => {
       fromCallPop: true,
     });
     expect(window.open).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not open fallback pages for unmatched non-call-pop contacts', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      'platform-info': { hostname: 'crm.example' },
+      userSettings: {},
+    });
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        successful: false,
+        contact: null,
+      },
+    });
+    const contactCore = await loadContactCore();
+
+    await contactCore.openContactPage({
+      manifest: manifest(),
+      platformName: 'salesforce',
+      phoneNumber: '16505550100',
+      fromCallPop: false,
+    });
+
+    expect(window.open).not.toHaveBeenCalled();
+  });
+
+  it('returns early for multi contacts without behavior or with disabled behavior', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      'platform-info': { hostname: 'crm.example' },
+      userSettings: {},
+    });
+    const multiContactResponse = {
+      data: {
+        successful: true,
+        contact: [
+          { id: 'contact-1', name: 'One', type: 'Lead', isNewContact: false },
+          { id: 'contact-2', name: 'Two', type: 'Contact', isNewContact: false },
+        ],
+      },
+    };
+    vi.mocked(axios.get)
+      .mockResolvedValueOnce(multiContactResponse)
+      .mockResolvedValueOnce(multiContactResponse);
+    const contactCore = await loadContactCore();
+
+    await contactCore.openContactPage({
+      manifest: manifest(),
+      platformName: 'salesforce',
+      phoneNumber: '16505550100',
+    });
+    await contactCore.openContactPage({
+      manifest: manifest(),
+      platformName: 'salesforce',
+      phoneNumber: '16505550101',
+      multiContactMatchBehavior: 'disabled',
+    });
+
+    expect(window.open).not.toHaveBeenCalled();
+    expect(multiContactPopPromptPage.getMultiContactPopPromptPageRender).not.toHaveBeenCalled();
   });
 
   it('opens all multi-matched contacts and Bullhorn ATS windows', async () => {

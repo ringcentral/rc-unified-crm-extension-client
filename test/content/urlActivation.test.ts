@@ -150,4 +150,36 @@ describe('content URL activation', () => {
     vi.mocked(userCore.getClickToDialEmbedMode).mockReturnValueOnce({ value: 'disabled' });
     await expect(checkUrlMatch({ type: 'c2d' })).resolves.toBe(false);
   });
+
+  it('allows activation when platform info is missing or storage fails', async () => {
+    const { checkUrlMatch } = await loadContentSeams();
+
+    await chrome.storage.local.remove('platform-info');
+    await expect(checkUrlMatch({ type: 'quickAccessButton' })).resolves.toBe(true);
+
+    vi.mocked(chrome.storage.local.get).mockRejectedValueOnce(new Error('storage unavailable'));
+    await expect(checkUrlMatch({ type: 'c2d' })).resolves.toBe(true);
+  });
+
+  it('handles null URL lists for click-to-dial and quick access modes', async () => {
+    const { checkUrlMatch } = await loadContentSeams();
+    seedStorage({
+      allowEmbeddingForAllPages: false,
+      'platform-info': { platformName: 'salesforce', hostname: 'localhost' },
+      customCrmManifest: {
+        platforms: {
+          salesforce: {},
+        },
+      },
+      userSettings: {},
+    });
+
+    vi.mocked(userCore.getClickToDialEmbedMode).mockReturnValueOnce({ value: 'whitelist' });
+    vi.mocked(userCore.getClickToDialUrls).mockReturnValueOnce({ value: null });
+    await expect(checkUrlMatch({ type: 'c2d' })).resolves.toBe(false);
+
+    vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReturnValueOnce({ value: 'blacklist' });
+    vi.mocked(userCore.getQuickAccessButtonUrls).mockReturnValueOnce({ value: null });
+    await expect(checkUrlMatch({ type: 'quickAccessButton' })).resolves.toBe(true);
+  });
 });

@@ -12,12 +12,18 @@ function setting(value = false, overrides = {}) {
   };
 }
 
-function userCoreProxy() {
+function userCoreProxy(overrides = {}) {
   const fns = new Map();
   return new Proxy({}, {
     get(_target, prop) {
       if (!fns.has(prop)) {
         const fn = vi.fn((userSettings, id, defaultValue) => {
+          if (Object.prototype.hasOwnProperty.call(overrides, prop)) {
+            const override = overrides[prop];
+            return typeof override === 'function'
+              ? override(userSettings, id, defaultValue)
+              : setting(override);
+          }
           switch (prop) {
             case 'getPhoneNumberDisplayFormatTypeSetting':
               return setting('custom', { readOnly: true, readOnlyReason: 'Managed by admin' });
@@ -147,9 +153,16 @@ function manifest() {
   };
 }
 
-async function loadEmbeddableServices() {
+async function loadEmbeddableServices({
+  manifestValue = manifest(),
+  platformInfo = {
+    platformName: 'googleSheets',
+    hostname: 'sheets.example',
+  },
+  userCoreOverrides = {},
+} = {}) {
   vi.resetModules();
-  const userCore = userCoreProxy();
+  const userCore = userCoreProxy(userCoreOverrides);
   vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
   const authCore = {
     getLicenseStatus: vi.fn(async () => ({
@@ -160,13 +173,10 @@ async function loadEmbeddableServices() {
   };
   vi.doMock('../../src/core/auth.ts', () => ({ default: authCore }));
   vi.doMock('../../src/service/platformService.ts', () => ({
-    getPlatformInfo: vi.fn(async () => ({
-      platformName: 'googleSheets',
-      hostname: 'sheets.example',
-    })),
+    getPlatformInfo: vi.fn(async () => platformInfo),
   }));
   vi.doMock('../../src/service/manifestService.ts', () => ({
-    getManifest: vi.fn(async () => manifest()),
+    getManifest: vi.fn(async () => manifestValue),
   }));
   vi.doMock('../../src/i18n/index.ts', () => ({
     t: vi.fn((key, values) => (values?.author ? `${key}:${values.author}` : key)),
@@ -313,5 +323,154 @@ describe('embeddableServices', () => {
 
     const contactsSection = service.settings.find((item) => item.id === 'contacts');
     expect(contactsSection.items.map((item) => item.id)).toContain('allowExtensionNumberLogging');
+  });
+
+  it('builds Clio service with contact-type fallback and number formatter settings', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-02-01T08:00:00Z'));
+    seedStorage({
+      isAdmin: false,
+      crmAuthed: false,
+      developerMode: false,
+      crmUserInfo: null,
+      userPermissions: {},
+      userSettings: {
+        overridingPhoneNumberFormat: { value: '(###) ###-####', customizable: true },
+        overridingPhoneNumberFormat2: { value: '###.###.####', customizable: false },
+        overridingPhoneNumberFormat3: { value: '', customizable: undefined },
+      },
+      myBannerDismissedDate: 31,
+    });
+    const { embeddableServices, authCore } = await loadEmbeddableServices({
+      platformInfo: {
+        platformName: 'clio',
+      },
+      userCoreOverrides: {
+        getDeveloperModeSetting: false,
+      },
+      manifestValue: {
+        serverUrl: 'https://server.example',
+        platforms: {
+          clio: {
+            name: 'clio',
+            displayName: 'Clio',
+            page: {},
+            settings: [
+              {
+                id: 'clioOptions',
+                type: 'section',
+                name: 'Clio Options',
+                items: [
+                  {
+                    id: 'plainOption',
+                    type: 'option',
+                    name: 'Plain Option',
+                    options: [{ id: 'one', name: 'One' }],
+                  },
+                  {
+                    id: 'defaultButton',
+                    type: 'button',
+                    name: 'Default button',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    });
+
+    const service = await embeddableServices.getServiceManifest();
+
+    expect(service).toMatchObject({
+      name: 'clio',
+      displayName: 'Clio',
+      authorized: false,
+      authorizationLogo: '',
+      callLoggerHideEditLogButton: false,
+      info: 'settings.auth.developedBy:Unknown',
+    });
+    expect(authCore.getLicenseStatus).not.toHaveBeenCalled();
+    expect(service).not.toHaveProperty('banner');
+    expect(service).not.toHaveProperty('licenseStatus');
+    expect(service.settings.map((item) => item.id)).not.toContain('googleSheetsConfig');
+    expect(service.settings.map((item) => item.id)).not.toContain('openDeveloperSettingsPage');
+
+    const clioOptions = service.settings.find((item) => item.id === 'clioOptions');
+    expect(clioOptions.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'plainOption',
+        options: [{ id: 'one', name: 'One' }],
+        multiple: false,
+        checkbox: false,
+        required: false,
+      }),
+      expect.objectContaining({
+        id: 'defaultButton',
+        buttonLabel: 'Open',
+        buttonType: 'button',
+      }),
+      expect.objectContaining({
+        id: 'numberFormatterTitle',
+      }),
+      expect.objectContaining({
+        id: 'overridingPhoneNumberFormat',
+        value: '(###) ###-####',
+        readOnly: false,
+      }),
+      expect.objectContaining({
+        id: 'overridingPhoneNumberFormat2',
+        value: '###.###.####',
+        readOnly: true,
+      }),
+    ]));
+
+    const autoLogPreferences = service.settings.find((item) => item.id === 'autoLogPreferences');
+    expect(autoLogPreferences.items.find((item) => item.id === 'newContactType')).toMatchObject({
+      options: [{ id: 'contact', name: 'common.labels.contact' }],
+      value: 'contact',
+    });
+  });
+
+  it('uses Bullhorn-specific multi-match settings without optional platform settings', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-02-01T08:00:00Z'));
+    seedStorage({
+      isAdmin: false,
+      crmAuthed: true,
+      developerMode: false,
+      crmUserInfo: { name: 'Bullhorn User' },
+      userPermissions: {},
+      userSettings: {
+        multiContactMatchBehavior: { value: 'openAllMatches' },
+      },
+    });
+    const { embeddableServices } = await loadEmbeddableServices({
+      platformInfo: {
+        platformName: 'bullhorn',
+      },
+      manifestValue: {
+        serverUrl: 'https://server.example',
+        author: { name: 'AC Team' },
+        platforms: {
+          bullhorn: {
+            name: 'bullhorn',
+            displayName: 'Bullhorn',
+            page: {},
+          },
+        },
+      },
+    });
+
+    const service = await embeddableServices.getServiceManifest();
+
+    expect(service.authorizedAccount).toBe('Bullhorn User ');
+    expect(service.settings.map((item) => item.id)).not.toContain('googleSheetsConfig');
+    const contactsSection = service.settings.find((item) => item.id === 'contacts');
+    const multiMatch = contactsSection.items.find((item) => item.id === 'multiContactMatchBehavior');
+    expect(multiMatch.options.map((option) => option.id)).toEqual([
+      'disabled',
+      'promptToSelect',
+    ]);
   });
 });

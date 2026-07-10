@@ -259,6 +259,94 @@ describe('rc-active-call-notify event handler', () => {
     }));
   });
 
+  it('opens inbound call-pop on answer and skips transferred-on-hold calls', async () => {
+    seedStorage({
+      userSettings: {},
+      implementedInterfaces: {},
+    });
+    vi.mocked(userCore.getIncomingCallPop).mockReturnValue({ value: 'onAnswer' });
+    const handler = await loadActiveCallHandler();
+
+    await handler.onEvent({
+      popupContext: {},
+      data: {
+        requestId: 'request-inbound-answer',
+        call: {
+          telephonyStatus: 'CallConnected',
+          direction: 'Inbound',
+          sessionId: 'session-answer',
+          telephonySessionId: 'telephony-answer',
+          from: { phoneNumber: '+16505550600' },
+          to: { phoneNumber: '+18005550100' },
+        },
+      },
+    });
+
+    expect(contactCore.openContactPage).toHaveBeenCalledWith({
+      manifest: manifest(),
+      platformName: 'salesforce',
+      phoneNumber: '+16505550600',
+      multiContactMatchBehavior: 'prompt',
+      fromCallPop: true,
+    });
+
+    const popupContext = { transferOnHold: 'telephony-transfer' };
+    await handler.onEvent({
+      popupContext,
+      data: {
+        requestId: 'request-inbound-transfer',
+        call: {
+          telephonyStatus: 'CallConnected',
+          direction: 'Inbound',
+          sessionId: 'session-transfer',
+          telephonySessionId: 'telephony-transfer',
+          from: { phoneNumber: '+16505550700' },
+          to: { phoneNumber: '+18005550100' },
+        },
+      },
+    });
+
+    expect(popupContext.transferOnHold).toBe('');
+    expect(contactCore.openContactPage).not.toHaveBeenCalledWith(expect.objectContaining({
+      phoneNumber: '+16505550700',
+    }));
+  });
+
+  it('skips outbound answer call-pop for transferred-on-hold calls', async () => {
+    seedStorage({
+      userSettings: {
+        allowExtensionNumberLogging: { value: true },
+      },
+      implementedInterfaces: {},
+    });
+    vi.mocked(userCore.getOutgoingCallPop).mockReturnValue({ value: 'onAnswer' });
+    const handler = await loadActiveCallHandler();
+    const popupContext = { transferOnHold: 'telephony-transfer-out' };
+
+    await handler.onEvent({
+      popupContext,
+      data: {
+        requestId: 'request-outbound-transfer',
+        call: {
+          telephonyStatus: 'CallConnected',
+          direction: 'Outbound',
+          sessionId: 'session-transfer-out',
+          telephonySessionId: 'telephony-transfer-out',
+          from: { phoneNumber: '+18005550100' },
+          to: { phoneNumber: '+16505550800' },
+        },
+      },
+    });
+
+    expect(popupContext.transferOnHold).toBe('');
+    expect(contactCore.openContactPage).not.toHaveBeenCalledWith(expect.objectContaining({
+      phoneNumber: '+16505550800',
+    }));
+    expect(cacheLogPageData).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'session-transfer-out',
+    }));
+  });
+
   it('opens outbound call-pop when outgoing pop is configured for first ring', async () => {
     seedStorage({
       userSettings: {
@@ -357,5 +445,67 @@ describe('rc-active-call-notify event handler', () => {
     }));
     expect(responseMessage).toHaveBeenCalledWith('request-6', { data: 'ok' });
     expect(logPage.getLogPageRender).not.toHaveBeenCalled();
+  });
+
+  it('ignores non-final no-call updates', async () => {
+    seedStorage({ userSettings: {} });
+    const handler = await loadActiveCallHandler();
+
+    await handler.onEvent({
+      popupContext: {},
+      data: {
+        requestId: 'request-non-final',
+        call: {
+          telephonyStatus: 'NoCall',
+          terminationType: 'intermediate',
+          direction: 'Inbound',
+          sessionId: 'session-non-final',
+          telephonySessionId: 'telephony-non-final',
+          from: { phoneNumber: '+16505550900' },
+          to: { phoneNumber: '+18005550100' },
+        },
+      },
+    });
+
+    expect(chrome.runtime.sendMessage).not.toHaveBeenCalledWith(expect.objectContaining({
+      type: 'incomingCallResolved',
+    }));
+    expect(getWidgetPostMessages()).toEqual([]);
+    expect(cacheLogPageData).not.toHaveBeenCalled();
+  });
+
+  it('finalizes call data without opening the log page when call auto-popup is disabled', async () => {
+    seedStorage({
+      userSettings: {},
+      implementedInterfaces: {},
+    });
+    vi.mocked(userCore.getCallPopSetting).mockReturnValue({ value: false });
+    const handler = await loadActiveCallHandler();
+
+    await handler.onEvent({
+      popupContext: {},
+      data: {
+        requestId: 'request-no-popup',
+        call: {
+          telephonyStatus: 'NoCall',
+          terminationType: 'final',
+          direction: 'Outbound',
+          sessionId: 'session-no-popup',
+          telephonySessionId: 'telephony-no-popup',
+          from: { phoneNumber: '+18005550100' },
+          to: { phoneNumber: '+16505551000' },
+        },
+      },
+    });
+
+    expect(logPage.getLogPageRender).not.toHaveBeenCalled();
+    expect(readStorage()['call-log-data-ready-session-no-popup'].isReady).toBe(false);
+    expect(getWidgetPostMessages()).toContainEqual({
+      message: {
+        type: 'rc-adapter-trigger-call-logger-match',
+        sessionIds: ['session-no-popup'],
+      },
+      targetOrigin: '*',
+    });
   });
 });

@@ -190,4 +190,150 @@ describe('c2schedule message handler', () => {
       targetOrigin: '*',
     });
   });
+
+  it('defaults to creating a new contact when no existing contacts match', async () => {
+    seedStorage({});
+    vi.mocked(getPlatformInfo).mockResolvedValueOnce(null);
+    vi.mocked(contactCore.getContact).mockResolvedValueOnce({
+      contactInfo: [
+        { id: 'new-1', name: 'New', isNewContact: true },
+      ],
+    });
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+    const handler = await loadC2scheduleHandler();
+
+    try {
+      await handler.onMessage({
+        request: { phoneNumber: '+16505550200' },
+        sendResponse: vi.fn(),
+      });
+
+      expect(getSchedulePageRender).toHaveBeenCalledWith({
+        phoneNumber: '+16505550200',
+        listOneOf: [
+          { const: 'newContact', title: 'Create new contact' },
+        ],
+        isDefaultNew: true,
+        preselect: 'newContact',
+        contactTypes: [],
+      });
+    } finally {
+      const messageListener = addEventListenerSpy.mock.calls.find(([type]) => type === 'message')?.[1] as EventListener | undefined;
+      if (messageListener) {
+        window.removeEventListener('message', messageListener);
+      }
+      addEventListenerSpy.mockRestore();
+    }
+  });
+
+  it('ignores unrelated schedule page events and skips submissions without a callback time', async () => {
+    seedScheduleStorage();
+    mockMatchedScheduleContacts();
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+    const handler = await loadC2scheduleHandler();
+
+    try {
+      await handler.onMessage({
+        request: { phoneNumber: '+16505550100' },
+        sendResponse: vi.fn(),
+      });
+
+      window.dispatchEvent(new MessageEvent('message', { data: null }));
+      window.dispatchEvent(new MessageEvent('message', {
+        data: {
+          type: 'rc-post-message-request',
+          path: '/custom-button-click',
+          requestId: 'request-other',
+          body: {
+            page: { id: 'otherPage' },
+            formData: { callbackDateTime: '2026-07-02T10:00:00Z' },
+          },
+        },
+      }));
+      window.dispatchEvent(new MessageEvent('message', {
+        data: {
+          type: 'rc-post-message-request',
+          path: '/custom-button-click',
+          requestId: 'request-missing-time',
+          body: {
+            page: { id: 'c2dSchedulePage' },
+            formData: {
+              phone: '+16505550100',
+              contact: 'contact-1',
+            },
+          },
+        },
+      }));
+
+      await vi.waitFor(() => {
+        expect(getWidgetPostMessages()).toContainEqual({
+          message: {
+            type: 'rc-post-message-response',
+            responseId: 'request-missing-time',
+            response: { data: 'ok' },
+          },
+          targetOrigin: '*',
+        });
+      });
+      expect(axios.post).not.toHaveBeenCalled();
+      expect(cacheCalldownContact).not.toHaveBeenCalled();
+      expect(calldownPage.getCalldownPageWithRecords).not.toHaveBeenCalled();
+    } finally {
+      const messageListener = addEventListenerSpy.mock.calls.find(([type]) => type === 'message')?.[1] as EventListener | undefined;
+      if (messageListener) {
+        window.removeEventListener('message', messageListener);
+      }
+      addEventListenerSpy.mockRestore();
+    }
+  });
+
+  it('submits callbacks without account query and skips cache for new contacts', async () => {
+    seedStorage({
+      rcUserInfo: {},
+      userSettings: {},
+    });
+    mockMatchedScheduleContacts();
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { id: 'callback-2' } });
+    const handler = await loadC2scheduleHandler();
+
+    await handler.onMessage({
+      request: { phoneNumber: '+16505550300' },
+      sendResponse: vi.fn(),
+    });
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: {
+        type: 'rc-post-message-request',
+        path: '/custom-button-click',
+        requestId: 'request-new-contact',
+        body: {
+          page: { id: 'c2dSchedulePage' },
+          formData: {
+            phone: '+16505550300',
+            contact: 'newContact',
+            note: '',
+            callbackDateTime: '2026-07-03T10:00:00Z',
+          },
+        },
+      },
+    }));
+
+    await vi.waitFor(() => {
+      expect(axios.post).toHaveBeenCalledWith(
+        'https://server.example/calldown',
+        {
+          phoneNumber: '+16505550300',
+          scheduledAt: '2026-07-03T10:00:00Z',
+          contactId: 'newContact',
+          note: '',
+        },
+      );
+    });
+    expect(cacheCalldownContact).not.toHaveBeenCalled();
+    expect(calldownPage.getCalldownPageWithRecords).toHaveBeenCalledWith({
+      manifest: expect.objectContaining({ serverUrl: 'https://server.example' }),
+      filterStatus: 'All',
+      userSettings: {},
+    });
+  });
 });

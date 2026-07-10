@@ -119,7 +119,7 @@ async function onEvent({ data, manifest, platformName }: UnknownRecord) {
   const candidates = Array.isArray(formData?.participantCandidates)
     ? formData.participantCandidates
     : [];
-  const candidateIdSet = new Set(candidates.map((c) => String(c.id)));
+  const candidateIdSet = new Set(candidates.map((c) => String(c?.id ?? '')));
 
   // Identify free-text values typed by the user (not real contact IDs).
   const searchQueries = selectedValues.filter((v) => !candidateIdSet.has(String(v)));

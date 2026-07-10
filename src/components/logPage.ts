@@ -60,7 +60,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             }
         }
         callFormData = {
-            activityTitle: (Number(!!logInfo?.subject) & Number(logInfo.subject !== '')) ? logInfo.subject : defaultActivityTitle,
+            activityTitle: logInfo?.subject ? logInfo.subject : defaultActivityTitle,
             note: logInfo?.note ?? '',
             scheduleCallback: false,
             callbackDateTime: ''

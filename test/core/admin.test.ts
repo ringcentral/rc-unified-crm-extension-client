@@ -162,6 +162,25 @@ describe('admin core', () => {
     });
   });
 
+  it('refreshes non-admin state when admin settings are unavailable', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: '',
+      crmUserInfo: null,
+    });
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: null });
+    const adminCore = await loadAdminCore();
+
+    await expect(adminCore.refreshAdminSettings()).resolves.toEqual({
+      adminSettings: undefined,
+    });
+
+    expect(adminPage.getAdminPageRender).not.toHaveBeenCalled();
+    expect(authCore.setAuth).toHaveBeenCalledWith(false, undefined, false);
+    expect(readStorage()).toMatchObject({
+      isAdmin: false,
+    });
+  });
+
   it('authenticates server-side logging and stores token', async () => {
     seedStorage({ rcUserInfo: { rcAccountId: 'account-1' } });
     vi.mocked(axios.get).mockResolvedValueOnce({ data: { jwtToken: 'ssl-token' } });
@@ -178,6 +197,31 @@ describe('admin core', () => {
       headers: { Accept: 'application/json' },
     });
     expect(readStorage().serverSideLoggingToken).toBe('ssl-token');
+  });
+
+  it('returns early for server-side logging helpers when platform has no server config', async () => {
+    const adminCore = await loadAdminCore();
+    const noServerLoggingPlatform = { name: 'salesforce' };
+
+    await expect(adminCore.getServerSideLogging({ platform: noServerLoggingPlatform })).resolves.toBeUndefined();
+    await expect(adminCore.getServerSideLoggingAdditionalFieldValues({ platform: noServerLoggingPlatform })).resolves.toEqual({});
+    await expect(adminCore.uploadServerSideLoggingAdditionalFieldValues({
+      platform: noServerLoggingPlatform,
+      formData: { serverSideLoggingHolder: {} },
+    })).resolves.toBeUndefined();
+    await expect(adminCore.enableServerSideLogging({
+      serverUrl: 'https://server.example',
+      platform: noServerLoggingPlatform,
+    })).resolves.toBeUndefined();
+    await expect(adminCore.disableServerSideLogging({ platform: noServerLoggingPlatform })).resolves.toBeUndefined();
+    await expect(adminCore.updateServerSideDoNotLogNumbers({
+      platform: noServerLoggingPlatform,
+      doNotLogNumbers: '+16505550100',
+    })).resolves.toBeUndefined();
+    await expect(adminCore.authServerSideLogging({ platform: noServerLoggingPlatform })).resolves.toBeUndefined();
+
+    expect(axios.get).not.toHaveBeenCalled();
+    expect(axios.post).not.toHaveBeenCalled();
   });
 
   it('enables server-side logging with existing token and admin settings', async () => {
@@ -224,6 +268,82 @@ describe('admin core', () => {
     });
   });
 
+  it('reenables existing server-side logging silently with user-assigned token ownership', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'crm-jwt',
+      serverSideLoggingToken: 'ssl-token',
+    });
+    vi.mocked(axios.get)
+      .mockResolvedValueOnce({ data: { subscribed: true } })
+      .mockResolvedValueOnce({ data: { subscribed: true } });
+    vi.mocked(axios.post)
+      .mockResolvedValueOnce({ data: { unsubscribed: true } })
+      .mockResolvedValueOnce({ data: { subscribed: true } });
+    const adminCore = await loadAdminCore();
+
+    await adminCore.enableServerSideLogging({
+      serverUrl: 'https://server.example',
+      platform: platform(),
+      subscriptionLevel: 'User',
+      loggingByAdmin: false,
+      sources: ['server'],
+      silence: true,
+    });
+
+    expect(axios.post).toHaveBeenNthCalledWith(1, 'https://ssl.example/unsubscribe', {}, {
+      headers: {
+        Accept: 'application/json',
+        'X-Access-Token': 'ssl-token',
+      },
+    });
+    expect(axios.post).toHaveBeenNthCalledWith(2, 'https://ssl.example/subscribe', expect.objectContaining({
+      loggingByAdmin: false,
+      loggingWithUserAssigned: true,
+      detailedCallLog: false,
+      sources: ['server'],
+    }), {
+      headers: {
+        Accept: 'application/json',
+        'X-Access-Token': 'ssl-token',
+      },
+    });
+    expect(showNotification).not.toHaveBeenCalled();
+  });
+
+  it('shows a warning when server-side logging subscription creation is rejected', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'crm-jwt',
+      serverSideLoggingToken: 'ssl-token',
+    });
+    vi.mocked(axios.get).mockRejectedValueOnce({
+      response: {
+        status: 400,
+        data: {
+          result: {
+            message: 'bad request',
+          },
+        },
+      },
+    });
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const adminCore = await loadAdminCore();
+
+    await adminCore.enableServerSideLogging({
+      serverUrl: 'https://server.example',
+      platform: platform(),
+      subscriptionLevel: 'Account',
+      loggingByAdmin: true,
+      sources: [],
+    });
+
+    expect(showNotification).toHaveBeenCalledWith({
+      level: 'warning',
+      message: 'Failed to create subscription:bad request',
+      ttl: 10000,
+    });
+    consoleError.mockRestore();
+  });
+
   it('gets, saves, and deletes managed auth/OAuth settings with connector context', async () => {
     seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
     vi.mocked(axios.get).mockResolvedValueOnce({ data: { scope: 'account' } });
@@ -268,6 +388,43 @@ describe('admin core', () => {
     });
   });
 
+  it('gets and saves managed auth settings without jwt or refresh', async () => {
+    seedStorage({});
+    vi.mocked(getPlatformInfo).mockResolvedValue({});
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { scope: 'user' } });
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { saved: true } });
+    const adminCore = await loadAdminCore();
+
+    await expect(adminCore.getManagedAuthSettings({ serverUrl: 'https://server.example' }))
+      .resolves.toEqual({ scope: 'user' });
+    await expect(adminCore.saveManagedAuthSettings({
+      serverUrl: 'https://server.example',
+      scope: 'user',
+      values: { token: 'secret' },
+      rcExtensionId: '101',
+      rcUserName: 'Jane',
+      refreshAfterSave: false,
+    })).resolves.toEqual({ saved: true });
+
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=&isPrivate=false', {
+      headers: {
+        'X-RC-Access-Token': 'rc-access-token',
+      },
+    });
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=&isPrivate=false', {
+      scope: 'user',
+      values: { token: 'secret' },
+      rcExtensionId: '101',
+      rcUserName: 'Jane',
+      fieldsToRemove: [],
+    }, {
+      headers: {
+        'X-RC-Access-Token': 'rc-access-token',
+      },
+    });
+    expect(axios.get).toHaveBeenCalledTimes(1);
+  });
+
   it('returns null when admin settings cannot be loaded', async () => {
     vi.mocked(axios.get).mockRejectedValueOnce(new Error('network'));
     const adminCore = await loadAdminCore();
@@ -298,6 +455,21 @@ describe('admin core', () => {
     expect(readStorage().serverSideLoggingToken).toBe('new-token');
   });
 
+  it('returns undefined when server-side logging has no config or expired token cannot be refreshed', async () => {
+    seedStorage({
+      serverSideLoggingToken: 'ssl-token',
+    });
+    vi.mocked(axios.get)
+      .mockRejectedValueOnce({ response: { status: 500 } })
+      .mockRejectedValueOnce({ response: { status: 401 } })
+      .mockResolvedValueOnce({ data: { jwtToken: '' } });
+    const adminCore = await loadAdminCore();
+
+    await expect(adminCore.getServerSideLogging({ platform: platform() })).resolves.toBeUndefined();
+    await expect(adminCore.disableServerSideLogging({ platform: platform() })).resolves.toBeUndefined();
+    expect(axios.post).not.toHaveBeenCalled();
+  });
+
   it('gets and uploads server-side logging additional field values', async () => {
     seedStorage({ rcUserInfo: { rcAccountId: 'account-1' } });
     vi.mocked(axios.get).mockResolvedValueOnce({ data: { disposition: 'demo' } });
@@ -319,6 +491,18 @@ describe('admin core', () => {
     expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/serverLoggingSettings?rcAccountId=account-1', {
       additionalFieldValues: { disposition: 'demo' },
     });
+  });
+
+  it('returns early when disable subscription is already off', async () => {
+    seedStorage({
+      serverSideLoggingToken: 'ssl-token',
+    });
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { subscribed: false } });
+    const adminCore = await loadAdminCore();
+
+    await adminCore.disableServerSideLogging({ platform: platform() });
+
+    expect(axios.post).not.toHaveBeenCalled();
   });
 
   it('disables server-side logging and retries unsubscribe after token refresh', async () => {
@@ -369,6 +553,20 @@ describe('admin core', () => {
     });
   });
 
+  it('skips do-not-log number upload without a server-side logging token', async () => {
+    seedStorage({
+      selectedRegion: 'US',
+    });
+    const adminCore = await loadAdminCore();
+
+    await adminCore.updateServerSideDoNotLogNumbers({
+      platform: platform(),
+      doNotLogNumbers: 'not-a-phone,123',
+    });
+
+    expect(axios.post).not.toHaveBeenCalled();
+  });
+
   it('returns report stats and appends local unlogged-call stats for current user', async () => {
     vi.mocked(axios.get)
       .mockResolvedValueOnce({ data: { totalCalls: 10 } })
@@ -402,6 +600,37 @@ describe('admin core', () => {
       timeTo: '2026-07-04T00:00:00Z',
     })).resolves.toEqual({
       loggedCallCount: 2,
+      unloggedCallStats: {
+        unloggedCallCount: 1,
+        calls: [{ sessionId: 'inside', startTime: '2026-07-03T09:00:00Z' }],
+      },
+    });
+  });
+
+  it('returns null for incomplete user report ranges and creates unlogged stats when server data is empty', async () => {
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: null });
+    RCAdapter.getUnloggedCalls = vi.fn(async () => ({
+      calls: [
+        { sessionId: 'inside', startTime: '2026-07-03T09:00:00Z' },
+      ],
+      hasMore: false,
+    }));
+    const adminCore = await loadAdminCore();
+
+    await expect(adminCore.getUserExtensionReportStats({
+      serverUrl: 'https://server.example',
+      rcExtensionId: '101',
+      timezone: 'Asia/Shanghai',
+      timeFrom: undefined,
+      timeTo: '2026-07-04T00:00:00Z',
+    })).resolves.toBeNull();
+    await expect(adminCore.getUserExtensionReportStats({
+      serverUrl: 'https://server.example',
+      rcExtensionId: '~',
+      timezone: 'Asia/Shanghai',
+      timeFrom: '2026-07-03T00:00:00Z',
+      timeTo: '2026-07-04T00:00:00Z',
+    })).resolves.toEqual({
       unloggedCallStats: {
         unloggedCallCount: 1,
         calls: [{ sessionId: 'inside', startTime: '2026-07-03T09:00:00Z' }],

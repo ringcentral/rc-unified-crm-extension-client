@@ -110,4 +110,75 @@ describe('CustomC2DWidget', () => {
 
     expect(callHandler).toHaveBeenCalledWith('', undefined);
   });
+
+  it('handles empty handlers, missing SMS button, and repeated DOM injection', async () => {
+    const widget = new CustomC2DWidget();
+    const existingRoot = widget._root;
+    const rootCount = document.body.querySelectorAll('div').length;
+
+    expect(() => widget.emit('unknown')).not.toThrow();
+    widget._smsBtn = null;
+    expect(() => widget.update({ enableC2Text: false })).not.toThrow();
+    widget._injectDOM();
+
+    expect(widget._root).toBe(existingRoot);
+    expect(document.body.querySelectorAll('div')).toHaveLength(rootCount);
+  });
+
+  it('uses last context when the current target has none and emits no-extension numbers', async () => {
+    const widget = new CustomC2DWidget();
+    const scheduleHandler = vi.fn();
+    widget.on('schedule', scheduleHandler);
+
+    widget.setTarget({
+      context: { phoneNumber: '+16505550100' },
+      rect: { right: 100, top: 20, height: 20 },
+    });
+    widget.setTarget({
+      rect: { right: 110, top: 30, height: 20 },
+    });
+    widget._scheduleBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+
+    expect(scheduleHandler).toHaveBeenCalledWith('+16505550100', {
+      phoneNumber: '+16505550100',
+    });
+  });
+
+  it('keeps hover timers stable across button and root interactions', async () => {
+    vi.useFakeTimers();
+    const widget = new CustomC2DWidget();
+    widget.setTarget({
+      context: { phoneNumber: '+16505550100' },
+      rect: { right: 100, top: 50, height: 20 },
+    });
+    widget.setTarget(null);
+
+    widget._callBtn.dispatchEvent(new MouseEvent('mouseenter'));
+    expect(widget._hideTimer).toBeNull();
+    expect(widget._callBtn.style.background).toBe('rgb(247, 251, 255)');
+    widget._callBtn.dispatchEvent(new MouseEvent('mouseleave'));
+    expect(widget._callBtn.style.background).toBe('rgb(255, 255, 255)');
+
+    widget.setTarget({
+      context: { phoneNumber: '+16505550200' },
+      rect: { right: 120, top: 70, height: 20 },
+    });
+    widget._root.dispatchEvent(new MouseEvent('mouseleave'));
+    await vi.advanceTimersByTimeAsync(250);
+    expect(widget._root.style.display).toBe('flex');
+
+    widget.setTarget(null);
+    widget._root.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+    expect(widget._hideTimer).toBeNull();
+  });
+
+  it('ignores fetched icon responses without SVG content', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      text: async () => '<span>No icon</span>',
+    });
+    const widget = new CustomC2DWidget();
+    await flushIconLoad();
+
+    expect(widget._callBtn.querySelector('svg')).toBeNull();
+  });
 });

@@ -70,6 +70,35 @@ describe('service worker OAuth and click-to-X flows', () => {
     expect(readStorage()).not.toHaveProperty('loginWindowInfo');
   });
 
+  it('ignores OAuth alarms without state and re-arms while waiting for redirect URLs', async () => {
+    const { onAlarm } = await loadServiceWorkerListeners();
+
+    await onAlarm();
+    expect(chrome.tabs.query).not.toHaveBeenCalled();
+
+    seedStorage({
+      loginWindowInfo: {
+        platform: 'thirdParty',
+        id: 44,
+      },
+    });
+    vi.mocked(chrome.tabs.query).mockResolvedValueOnce([]);
+    await onAlarm();
+    expect(chrome.runtime.sendMessage).not.toHaveBeenCalled();
+
+    vi.mocked(chrome.tabs.query).mockResolvedValueOnce([
+      { url: 'https://crm.example/oauth/continue' },
+    ]);
+    await onAlarm();
+    expect(chrome.alarms.create).toHaveBeenCalledWith('oauthCheck', expect.objectContaining({
+      when: expect.any(Number),
+    }));
+    expect(readStorage().loginWindowInfo).toEqual({
+      platform: 'thirdParty',
+      id: 44,
+    });
+  });
+
   it('opens third-party OAuth windows with callback polling state', async () => {
     const { onMessage } = await loadServiceWorkerListeners();
     const sendResponse = vi.fn();
@@ -97,6 +126,22 @@ describe('service worker OAuth and click-to-X flows', () => {
         when: expect.any(Number),
       }));
     });
+  });
+
+  it('acknowledges OAuth window requests that do not provide a URI', async () => {
+    const { onMessage } = await loadServiceWorkerListeners();
+    const rcResponse = vi.fn();
+    const thirdPartyResponse = vi.fn();
+
+    onMessage({ type: 'openRCOAuthWindow' }, {}, rcResponse);
+    onMessage({ type: 'openThirdPartyAuthWindow' }, {}, thirdPartyResponse);
+
+    expect(rcResponse).toHaveBeenCalledWith({ result: 'ok' });
+    expect(thirdPartyResponse).toHaveBeenCalledWith({ result: 'ok' });
+    expect(chrome.windows.create).not.toHaveBeenCalledWith(expect.objectContaining({
+      width: 600,
+      height: 600,
+    }));
   });
 
   it('relays Pipedrive direct-page callback state between installation page and popup', async () => {
@@ -187,5 +232,80 @@ describe('service worker OAuth and click-to-X flows', () => {
       });
     });
     expect(chrome.windows.create).not.toHaveBeenCalled();
+  });
+
+  it('forwards click-to-X when focusing the existing popup fails', async () => {
+    seedStorage({ popupWindowId: 12 });
+    vi.mocked(chrome.windows.get).mockRejectedValueOnce(new Error('missing popup'));
+    const { onMessage } = await loadServiceWorkerListeners();
+
+    onMessage({
+      type: 'c2d',
+      phoneNumber: '+16505550300',
+    }, {}, vi.fn());
+
+    await vi.waitFor(() => {
+      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
+        type: 'c2d',
+        phoneNumber: '+16505550300',
+      });
+    });
+    expect(chrome.windows.create).not.toHaveBeenCalled();
+  });
+
+  it('restores minimized popups before forwarding click-to-X requests', async () => {
+    seedStorage({ popupWindowId: 11 });
+    vi.mocked(chrome.windows.get).mockResolvedValueOnce({
+      id: 11,
+      state: 'minimized',
+      focused: false,
+      width: 450,
+      height: 848,
+    });
+    const { onMessage } = await loadServiceWorkerListeners();
+
+    onMessage({
+      type: 'c2d',
+      phoneNumber: '+16505550400',
+    }, {}, vi.fn());
+
+    await vi.waitFor(() => {
+      expect(chrome.windows.update).toHaveBeenCalledWith(11, { state: 'normal' });
+    });
+    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
+      type: 'c2d',
+      phoneNumber: '+16505550400',
+    });
+  });
+
+  it('does not resize side widget windows without a popup or outside resize thresholds', async () => {
+    const { onMessage } = await loadServiceWorkerListeners();
+
+    onMessage({ type: 'sideWidgetOpen', opened: true }, {}, vi.fn());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(chrome.windows.get).not.toHaveBeenCalled();
+
+    seedStorage({ popupWindowId: 11 });
+    vi.mocked(chrome.windows.get).mockResolvedValueOnce({
+      id: 11,
+      state: 'normal',
+      focused: true,
+      width: 650,
+      height: 848,
+    });
+    onMessage({ type: 'sideWidgetOpen', opened: true }, {}, vi.fn());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(chrome.windows.update).not.toHaveBeenCalledWith(11, { width: 950 });
+
+    vi.mocked(chrome.windows.get).mockResolvedValueOnce({
+      id: 11,
+      state: 'normal',
+      focused: true,
+      width: 500,
+      height: 848,
+    });
+    onMessage({ type: 'sideWidgetOpen', opened: false }, {}, vi.fn());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(chrome.windows.update).not.toHaveBeenCalledWith(11, { width: 200 });
   });
 });

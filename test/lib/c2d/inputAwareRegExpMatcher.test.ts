@@ -12,6 +12,11 @@ vi.mock('ringcentral-c2d', () => ({
 import InputAwareRegExpMatcher from '../../../src/lib/c2d/inputAwareRegExpMatcher.ts';
 
 describe('InputAwareRegExpMatcher', () => {
+  afterEach(() => {
+    window.localStorage.removeItem('rcC2DDebug');
+    vi.restoreAllMocks();
+  });
+
   it('keeps text matcher results unless either boundary node is ignored', () => {
     const keptNode = document.createTextNode('+16505550100');
     const ignoredNode = document.createTextNode('+16505550101');
@@ -113,5 +118,103 @@ describe('InputAwareRegExpMatcher', () => {
     const matches = matcher.match({ node: shadowRoot });
 
     expect(matches.map((match) => match.startsNode)).toEqual([input, host]);
+  });
+
+  it('handles undefined text matches and empty value-node searches', () => {
+    const matcher = new InputAwareRegExpMatcher({
+      textMatcher: { match: vi.fn(() => undefined) },
+    });
+
+    expect(matcher.match({ node: document.createTextNode('no phone') })).toEqual([]);
+    expect(matcher.matchValueNodes(null)).toEqual([]);
+    expect(matcher.collectValueNodes(null)).toEqual([]);
+    expect(matcher.collectValueNodes(document.createTextNode('+1 650 555 0100'))).toEqual([]);
+  });
+
+  it('skips empty, non-phone, and non-string value nodes', () => {
+    const emptyInput = document.createElement('input');
+    emptyInput.value = '';
+    const nonPhoneInput = document.createElement('input');
+    nonPhoneInput.value = 'not a phone number';
+    const nonStringInput = document.createElement('input');
+    Object.defineProperty(nonStringInput, 'value', {
+      configurable: true,
+      value: null,
+    });
+    document.body.append(emptyInput, nonPhoneInput, nonStringInput);
+    const matcher = new InputAwareRegExpMatcher({
+      textMatcher: { match: vi.fn(() => []) },
+    });
+
+    expect(matcher.match({ node: document.body })).toEqual([]);
+  });
+
+  it('logs debug labels for ignored text matches and labelled elements', () => {
+    window.localStorage.setItem('rcC2DDebug', 'true');
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const link = document.createElement('a');
+    link.id = 'contact-link';
+    link.className = 'primary contact';
+    link.href = 'https://crm.example/contact';
+    const textNode = document.createTextNode('+1 650 555 0100');
+    link.appendChild(textNode);
+    document.body.append(link);
+    const matcher = new InputAwareRegExpMatcher({
+      textMatcher: {
+        match: vi.fn(() => [
+          {
+            startsNode: textNode,
+            endsNode: link,
+            context: { phoneNumber: '+1 650 555 0100' },
+          },
+          {
+            startsNode: null,
+            endsNode: null,
+            context: { phoneNumber: '+1 650 555 0101' },
+          },
+        ]),
+      },
+      isNodeIgnored: (node) => node === textNode || node == null,
+    });
+
+    expect(matcher.match({ node: link })).toEqual([]);
+    expect(console.log).toHaveBeenCalledWith(
+      '[App Connect][C2D matcher]',
+      'dropping ignored match',
+      expect.objectContaining({
+        phoneNumber: '+1 650 555 0100',
+        startsNode: '#text("+1 650 555 0100")',
+        endsNode: 'a#contact-link.primary.contact[href="https://crm.example/contact"]',
+        startsIgnored: true,
+      }),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      '[App Connect][C2D matcher]',
+      'dropping ignored match',
+      expect.objectContaining({
+        startsNode: 'null',
+        endsNode: 'null',
+      }),
+    );
+  });
+
+  it('returns already-collected value nodes before skipping ignored descendant scans', () => {
+    const input = document.createElement('input');
+    input.value = '+1 650 555 0100';
+    const matcher = new InputAwareRegExpMatcher({
+      textMatcher: { match: vi.fn(() => []) },
+      isNodeIgnored: (node) => node === input,
+    });
+
+    expect(matcher.collectValueNodes(input)).toEqual([]);
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = '<input value="+1 650 555 0101" />';
+    const ignoredRootMatcher = new InputAwareRegExpMatcher({
+      textMatcher: { match: vi.fn(() => []) },
+      isNodeIgnored: (node) => node === wrapper,
+    });
+
+    expect(ignoredRootMatcher.collectValueNodes(wrapper)).toEqual([]);
   });
 });

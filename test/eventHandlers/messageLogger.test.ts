@@ -538,4 +538,509 @@ describe('messageLogger', () => {
       caseType: 'fax',
     }));
   });
+
+  it('creates placeholder contacts for unknown group SMS members when configured', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: true },
+        unknownContactPreference: { value: 'createNewPlaceholderContact' },
+        newContactType: { value: 'Lead' },
+        newContactNamePrefix: { value: 'Prefix ' },
+      },
+    });
+    const { messageLogger, contactCore, logUtil, logCore } = await loadMessageLogger();
+
+    contactCore.getContact
+      .mockResolvedValueOnce({
+        contactInfo: [{
+          additionalInfo: {
+            Lead: {
+              category: [{ const: 'prospect', title: 'Prospect' }],
+              region: 'West',
+            },
+          },
+        }],
+      })
+      .mockResolvedValueOnce({
+        contactInfo: [{ id: 'contact-2', type: 'Contact', name: 'Alex Green' }],
+      });
+    logUtil.getLogConflictInfo
+      .mockResolvedValueOnce({
+        hasConflict: true,
+        conflictType: CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE,
+        autoSelectAdditionalSubmission: {},
+        requireManualDisposition: false,
+      })
+      .mockResolvedValueOnce({
+        hasConflict: false,
+        conflictType: 'No conflict',
+        autoSelectAdditionalSubmission: { disposition: 'sms' },
+        requireManualDisposition: false,
+      });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          correspondents: [
+            { phoneNumber: '+16505550100', name: 'Jane' },
+            { phoneNumber: '+16505550200' },
+          ],
+        }),
+      }),
+      ...context,
+      platform: {
+        page: {
+          newContact: {
+            additionalFields: [{ const: 'category' }, { const: 'region' }],
+          },
+        },
+      },
+    });
+
+    expect(contactCore.createContact).toHaveBeenCalledWith(expect.objectContaining({
+      phoneNumber: '+16505550100',
+      newContactName: 'Prefix Jane +16505550100',
+      newContactType: 'Lead',
+      additionalSubmission: {
+        category: 'prospect',
+        region: 'West',
+      },
+    }));
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'new-contact',
+      contactPhoneNumber: '+16505550100',
+    }));
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'contact-2',
+      contactPhoneNumber: '+16505550200',
+    }));
+  });
+
+  it('selects group SMS multiple contacts by configured preference', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: true },
+        multipleContactsPreference: { value: 'firstAlphabetical' },
+      },
+    });
+    const { messageLogger, contactCore, logUtil, logCore } = await loadMessageLogger();
+
+    contactCore.getContact.mockResolvedValue({
+      contactInfo: [
+        { id: 'z-contact', type: 'Lead', name: 'Zoe Zeta', mostRecentActivityDate: '2026-07-01T08:00:00Z' },
+        { id: 'a-contact', type: 'Lead', name: 'Amy Alpha', mostRecentActivityDate: '2026-07-02T08:00:00Z' },
+      ],
+    });
+    logUtil.getLogConflictInfo.mockResolvedValue({
+      hasConflict: true,
+      conflictType: CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE,
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          correspondents: [
+            { phoneNumber: '+16505550100' },
+            { phoneNumber: '+16505550200' },
+          ],
+        }),
+      }),
+      ...context,
+    });
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'a-contact',
+    }));
+
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: true },
+        multipleContactsPreference: { value: 'mostRecentActivity' },
+      },
+    });
+    logCore.addLog.mockClear();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          conversationId: 'conversation-activity',
+          conversationLogId: 'conversation-log-activity',
+          correspondents: [
+            { phoneNumber: '+16505550300' },
+            { phoneNumber: '+16505550400' },
+          ],
+        }),
+      }),
+      ...context,
+    });
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'a-contact',
+    }));
+  });
+
+  it('skips SMS auto logging when disabled and logs voicemail without conflicts', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+      },
+    });
+    const { messageLogger, logCore, logUtil } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor(),
+      ...context,
+    });
+    expect(logCore.addLog).not.toHaveBeenCalled();
+
+    seedStorage({
+      userSettings: {
+        autoLogVoicemail: { value: true },
+      },
+    });
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: false,
+      autoSelectAdditionalSubmission: { voicemailType: 'vm' },
+      requireManualDisposition: false,
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          conversationId: 'voicemail-2',
+          conversationLogId: 'voicemail-log-2',
+          type: 'VoiceMail',
+        }),
+      }),
+      ...context,
+    });
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      additionalSubmission: { voicemailType: 'vm' },
+      contactId: 'contact-1',
+    }));
+  });
+
+  it('warns on inbound fax conflicts and ignores fax directions without enabled auto log', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogInboundFax: { value: true },
+        autoLogOutboundFax: { value: false },
+      },
+    });
+    const { messageLogger, logUtil, util, logCore } = await loadMessageLogger();
+
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: true,
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: true,
+    });
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          conversationId: 'fax-inbound',
+          conversationLogId: 'fax-inbound-log',
+          type: 'Fax',
+          messages: [{ creationTime: '2026-07-03T08:00:00Z', direction: 'Inbound' }],
+        }),
+      }),
+      ...context,
+    });
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('Fax not logged'),
+    }));
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('Manual disposition might be needed'),
+    }));
+    expect(logCore.addLog).not.toHaveBeenCalled();
+
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: false,
+      autoSelectAdditionalSubmission: { faxType: 'outbound' },
+      requireManualDisposition: false,
+    });
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          conversationId: 'fax-outbound-disabled',
+          conversationLogId: 'fax-outbound-disabled-log',
+          type: 'Fax',
+          messages: [{ creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' }],
+        }),
+      }),
+      ...context,
+    });
+    expect(logCore.addLog).not.toHaveBeenCalled();
+  });
+
+  it('submits manual existing-contact forms and grouped new-contact forms', async () => {
+    seedStorage({
+      userSettings: {
+        openContactPageAfterCreation: { value: true },
+      },
+    });
+    const { messageLogger, contactCore, logCore } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'logForm',
+        redirect: false,
+        formData: {
+          contact: 'contact-1',
+          newContactName: '',
+          newContactType: '',
+          contactType: 'Lead',
+          contactName: 'Jane Smith',
+          messageType: 'sms',
+          ignoreNone: 'none',
+          newCategory: 'none',
+        },
+      }),
+      ...context,
+    });
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'contact-1',
+      contactType: 'Lead',
+      contactName: 'Jane Smith',
+    }));
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'logForm',
+        redirect: true,
+        formData: {
+          section_0: {
+            contact: 'createNewContact',
+            contactName: '',
+            contactType: '',
+            newContactName: 'Group New',
+            newContactType: 'Lead',
+            contactPhoneNumber: '+16505550999',
+            messageType: 'sms',
+            newCategory: 'prospect',
+          },
+        },
+      }),
+      ...context,
+    });
+    expect(contactCore.createContact).toHaveBeenCalledWith(expect.objectContaining({
+      phoneNumber: '+16505550999',
+      newContactName: 'Group New',
+      newContactType: 'Lead',
+    }));
+    expect(contactCore.openContactPage).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'new-contact',
+    }));
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'new-contact',
+      contactName: 'Group New',
+      contactPhoneNumber: '+16505550999',
+    }));
+  });
+
+  it('handles disabled group auto logging and placeholder creation without optional group data', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+      },
+    });
+    const { messageLogger, contactCore, logUtil, logCore, util } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          conversationId: 'group-disabled',
+          conversationLogId: 'group-disabled-log',
+          correspondents: [
+            { phoneNumber: '+16505550100' },
+            { phoneNumber: '+16505550200' },
+          ],
+        }),
+      }),
+      ...context,
+    });
+
+    expect(contactCore.getContact).not.toHaveBeenCalled();
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: true },
+        unknownContactPreference: { value: 'createNewPlaceholderContact' },
+        newContactType: { value: 'Lead' },
+        newContactNamePrefix: { value: 'Prefix ' },
+      },
+    });
+    contactCore.getContact
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({
+        contactInfo: [{ id: 'contact-2', type: 'Lead', name: 'Alex Green' }],
+      });
+    logUtil.getLogConflictInfo
+      .mockResolvedValueOnce({
+        hasConflict: true,
+        conflictType: CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE,
+        autoSelectAdditionalSubmission: {},
+        requireManualDisposition: false,
+      })
+      .mockResolvedValueOnce({
+        hasConflict: false,
+        conflictType: 'No conflict',
+        autoSelectAdditionalSubmission: { disposition: 'sms' },
+        requireManualDisposition: false,
+      });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          conversationId: 'group-placeholder-defaults',
+          conversationLogId: 'group-placeholder-defaults-log',
+          correspondents: [
+            { phoneNumber: '+16505550300' },
+            { phoneNumber: '+16505550400' },
+          ],
+        }),
+      }),
+      ...context,
+      platform: {},
+    });
+
+    expect(contactCore.createContact).toHaveBeenCalledWith(expect.objectContaining({
+      phoneNumber: '+16505550300',
+      newContactName: 'Prefix +16505550300',
+      additionalSubmission: {},
+    }));
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'new-contact',
+      contactPhoneNumber: '+16505550300',
+    }));
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'contact-2',
+      contactPhoneNumber: '+16505550400',
+    }));
+  });
+
+  it('opens SMS and voicemail message pages with cached-contact fallbacks', async () => {
+    seedStorage({
+      userSettings: {
+        messageAutoPopup: { value: true },
+      },
+      'rc-crm-search-contact-+16505550100': [
+        { id: 'contact-1', type: 'Lead', name: 'Duplicate Cached' },
+      ],
+    });
+    const { messageLogger, contactCore, logUtil, logPage } = await loadMessageLogger();
+
+    contactCore.getContact.mockResolvedValueOnce({
+      contactInfo: [{ id: 'contact-1', type: 'Lead', name: 'Jane Smith' }],
+    });
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'manual',
+        redirect: true,
+        conversation: conversation({
+          conversationId: 'sms-open',
+          conversationLogId: 'sms-open-log',
+          type: 'SMS',
+        }),
+      }),
+      ...context,
+    });
+
+    expect(logUtil.logPageFormDataDefaulting).toHaveBeenCalledWith(expect.objectContaining({
+      caseType: 'message',
+    }));
+    expect(logPage.getLogPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      contactInfo: [expect.objectContaining({ id: 'contact-1' })],
+    }));
+
+    seedStorage({
+      userSettings: {
+        messageAutoPopup: { value: true },
+      },
+    });
+    contactCore.getContact.mockResolvedValueOnce({});
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'manual',
+        redirect: true,
+        conversation: conversation({
+          conversationId: 'voicemail-open',
+          conversationLogId: 'voicemail-open-log',
+          type: 'VoiceMail',
+        }),
+      }),
+      ...context,
+    });
+
+    expect(logPage.getLogPageRender).toHaveBeenLastCalledWith(expect.objectContaining({
+      id: 'voicemail-open',
+      contactInfo: [],
+      useContactSearch: undefined,
+    }));
+    expect(logUtil.logPageFormDataDefaulting).toHaveBeenLastCalledWith(expect.objectContaining({
+      caseType: 'voicemail',
+      logType: 'messageLog',
+    }));
+  });
+
+  it('submits manual message forms when optional field configuration is absent', async () => {
+    seedStorage({
+      userSettings: {},
+    });
+    const { messageLogger, logCore } = await loadMessageLogger();
+    const minimalManifest = {
+      serverUrl: 'https://server.example',
+      platforms: {
+        salesforce: {
+          page: {},
+        },
+      },
+    };
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'logForm',
+        formData: {
+          contact: 'contact-1',
+          newContactName: 'Renamed Contact',
+          newContactType: 'Lead',
+          contactType: 'Contact',
+          contactName: 'Jane Smith',
+        },
+      }),
+      ...context,
+      manifest: minimalManifest,
+    });
+
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'contact-1',
+      contactType: 'Lead',
+      contactName: 'Renamed Contact',
+      additionalSubmission: {},
+    }));
+  });
+
+  it('does not open message pages when neither redirect nor auto popup is enabled', async () => {
+    seedStorage({
+      userSettings: {
+        messageAutoPopup: { value: false },
+      },
+    });
+    const { messageLogger, logUtil, logPage, groupLogPage, util } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'manual',
+        redirect: false,
+      }),
+      ...context,
+    });
+
+    expect(logUtil.cacheLogPageData).not.toHaveBeenCalled();
+    expect(logPage.getLogPageRender).not.toHaveBeenCalled();
+    expect(groupLogPage.getGroupLogPageRender).not.toHaveBeenCalled();
+    expect(getWidgetPostMessages()).toEqual([]);
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
 });
