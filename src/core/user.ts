@@ -327,7 +327,6 @@ function getSMSPopSetting(userSettings) {
     }
 }
 
-
 function getIncomingCallPop(userSettings) {
     return {
         value: userSettings?.openContactPageFromIncomingCall?.value ?? 'disabled',
