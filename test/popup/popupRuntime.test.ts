@@ -23,7 +23,6 @@ const eventHandlerModules = {
   rcAdapterAiAssistantSettingsNotify: '../../src/eventHandlers/rc-adapter-ai-assistant-settings-notify.ts',
   rcPostMessageRequest: '../../src/eventHandlers/rc-post-message-request/index.ts',
   rcAdapterPhoneNumberFormatSettingsNotify: '../../src/eventHandlers/rc-adapter-phone-number-format-settings-notify.ts',
-  rcSmsSettingsNotify: '../../src/eventHandlers/rc-sms-settings-notify.ts',
 };
 
 const messageHandlerModules = {
@@ -615,7 +614,6 @@ describe('popup runtime', () => {
       ['rc-adapter-ai-assistant-settings-notify', 'rcAdapterAiAssistantSettingsNotify'],
       ['rc-post-message-request', 'rcPostMessageRequest'],
       ['rc-adapter-phone-number-format-settings-notify', 'rcAdapterPhoneNumberFormatSettingsNotify'],
-      ['rc-sms-settings-notify', 'rcSmsSettingsNotify'],
     ] as const;
 
     for (const [type, handlerName] of messageRoutes) {
