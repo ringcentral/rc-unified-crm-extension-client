@@ -300,6 +300,26 @@ describe('basic page renderers', () => {
     });
     expect(selection.schema.properties.platforms.oneOf).toHaveLength(1);
     expect(selection.formData.platforms).toBe('p2=private');
+
+    const firstLoadSelection = platformSelectionPage.getPlatformSelectionPageRender({
+      platformList: [
+        {
+          id: 'p1',
+          access: 'public',
+          displayName: 'Salesforce',
+          developer: { name: 'RingCentral' },
+        },
+        {
+          id: 'p2',
+          access: 'private',
+          name: 'Hidden CRM',
+          developer: { name: 'Private Dev' },
+        },
+      ],
+      filter: 'All',
+    });
+    expect(firstLoadSelection.schema.properties.platforms.oneOf).toHaveLength(2);
+    expect(firstLoadSelection.formData.platformSearch.filter).toBe('common.labels.all');
   });
 
   it('renders managed OAuth setup pages with pending credentials', async () => {

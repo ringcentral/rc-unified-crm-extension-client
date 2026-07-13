@@ -2,9 +2,35 @@ import { t } from '../i18n';
 
 type UnknownRecord = Record<string, any>;
 
+function getPluginFilterLabels(): UnknownRecord {
+    return {
+        all: t('common.labels.all'),
+        private: t('common.labels.private'),
+        shared: t('common.labels.sharedWithYou'),
+    };
+}
+
+function normalizePluginFilter(filter: unknown): string {
+    const labels = getPluginFilterLabels();
+    switch (filter) {
+        case undefined:
+        case null:
+        case '':
+        case 'All':
+            return labels.all;
+        case 'Private':
+            return labels.private;
+        case 'Shared':
+        case 'Shared With You':
+            return labels.shared;
+        default:
+            return String(filter);
+    }
+}
+
 function getPluginMarketListPageRender({ pluginList, searchWord = '', filter = null }: UnknownRecord): UnknownRecord {
-    const allLabel = t('common.labels.all');
-    const filterValue = filter ?? allLabel;
+    const filterLabels = getPluginFilterLabels();
+    const filterValue = normalizePluginFilter(filter);
     let pluginListToRender = [];
     for (const plugin of pluginList) {
         let meta = '';
@@ -13,10 +39,10 @@ function getPluginMarketListPageRender({ pluginList, searchWord = '', filter = n
                 meta = '';
                 break;
             case 'shared':
-                meta = t('common.labels.sharedWithYou');
+                meta = filterLabels.shared;
                 break;
             case 'private':
-                meta = t('common.labels.private');
+                meta = filterLabels.private;
                 break;
         }
         const newPlugin = {
@@ -39,7 +65,7 @@ function getPluginMarketListPageRender({ pluginList, searchWord = '', filter = n
     if (searchWord) {
         pluginListToRender = pluginListToRender.filter(um => um.title.toLowerCase().includes(searchWord.toLowerCase()) || um.description.toLowerCase().includes(searchWord.toLowerCase()));
     }
-    if (filterValue !== allLabel) {
+    if (filterValue !== filterLabels.all) {
         pluginListToRender = pluginListToRender.filter(um => um.meta === filterValue);
     }
     const page = {
@@ -74,9 +100,9 @@ function getPluginMarketListPageRender({ pluginList, searchWord = '', filter = n
                 "ui:field": "search",
                 "ui:placeholder": t('plugins.searchPlaceholder'),
                 "ui:filters": [
-                    allLabel,
-                    t('common.labels.private'),
-                    t('common.labels.sharedWithYou')
+                    filterLabels.all,
+                    filterLabels.private,
+                    filterLabels.shared
                 ]
             },
             plugins: {
@@ -96,7 +122,7 @@ function getPluginMarketListPageRender({ pluginList, searchWord = '', filter = n
     return page;
 }
 
-export { getPluginMarketListPageRender };
+export { getPluginMarketListPageRender, normalizePluginFilter };
 export default {
     getPluginMarketListPageRender,
 };

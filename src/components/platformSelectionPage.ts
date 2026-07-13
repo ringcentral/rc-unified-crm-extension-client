@@ -2,7 +2,35 @@ import { t } from '../i18n';
 
 type UnknownRecord = Record<string, any>;
 
-function getPlatformSelectionPageRender({ platformList, searchWord = '', selectedPlatform = '', filter = 'All' }: UnknownRecord): UnknownRecord {
+function getPlatformFilterLabels(): UnknownRecord {
+    return {
+        all: t('common.labels.all'),
+        private: t('common.labels.private'),
+        shared: t('common.labels.sharedWithYou'),
+    };
+}
+
+function normalizePlatformFilter(filter: unknown): string {
+    const labels = getPlatformFilterLabels();
+    switch (filter) {
+        case undefined:
+        case null:
+        case '':
+        case 'All':
+            return labels.all;
+        case 'Private':
+            return labels.private;
+        case 'Shared':
+        case 'Shared With You':
+            return labels.shared;
+        default:
+            return String(filter);
+    }
+}
+
+function getPlatformSelectionPageRender({ platformList, searchWord = '', selectedPlatform = '', filter = null }: UnknownRecord): UnknownRecord {
+    const filterLabels = getPlatformFilterLabels();
+    const filterValue = normalizePlatformFilter(filter);
     let platformListToRender = [];
 
     // put the new element as the last element that has the same developer
@@ -39,8 +67,8 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
     if (searchWord) {
         platformListToRender = platformListToRender.filter(um => um.title.toLowerCase().includes(searchWord.toLowerCase()) || um.description.toLowerCase().includes(searchWord.toLowerCase()));
     }
-    if (filter !== t('common.labels.all')) {
-        platformListToRender = platformListToRender.filter(um => um.meta === filter);
+    if (filterValue !== filterLabels.all) {
+        platformListToRender = platformListToRender.filter(um => um.meta === filterValue);
     }
     return {
         id: 'platformSelectionPage',
@@ -75,9 +103,9 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
                 "ui:field": "search",
                 "ui:placeholder": t('pages.platformSelection.searchPlaceholder'),
                 "ui:filters": [
-                    t('common.labels.all'),
-                    t('common.labels.private'),
-                    t('common.labels.sharedWithYou')
+                    filterLabels.all,
+                    filterLabels.private,
+                    filterLabels.shared
                 ]
             },
             platforms: {
@@ -89,7 +117,7 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
             platforms: selectedPlatform,
             platformSearch: {
                 search: searchWord,
-                filter: filter
+                filter: filterValue
             },
             platformList
         }
@@ -97,7 +125,7 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
 }
 
 
-export { getPlatformSelectionPageRender };
+export { getPlatformSelectionPageRender, normalizePlatformFilter };
 export default {
     getPlatformSelectionPageRender,
 };
