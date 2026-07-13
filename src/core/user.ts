@@ -327,13 +327,6 @@ function getSMSPopSetting(userSettings) {
     }
 }
 
-function getClickToSMSFromSharedNumberSetting(userSettings) {
-    return {
-        value: userSettings?.clickToSMSFromSharedNumber?.value ?? false,
-        readOnly: userSettings?.clickToSMSFromSharedNumber?.customizable === undefined ? false : !userSettings?.clickToSMSFromSharedNumber?.customizable,
-        readOnlyReason: !userSettings?.clickToSMSFromSharedNumber?.customizable ? 'This setting is managed by admin' : ''
-    }
-}
 
 function getIncomingCallPop(userSettings) {
     return {
@@ -737,7 +730,6 @@ const userCore = {
     getOneTimeLogSetting,
     getCallPopSetting,
     getSMSPopSetting,
-    getClickToSMSFromSharedNumberSetting,
     getIncomingCallPop,
     getOutgoingCallPop,
     getCallPopMultiMatchBehavior,
@@ -804,7 +796,6 @@ export {
     getOneTimeLogSetting,
     getCallPopSetting,
     getSMSPopSetting,
-    getClickToSMSFromSharedNumberSetting,
     getIncomingCallPop,
     getOutgoingCallPop,
     getCallPopMultiMatchBehavior,

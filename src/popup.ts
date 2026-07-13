@@ -31,7 +31,6 @@ import rcRouteChangedNotifyHandler from './eventHandlers/rc-route-changed-notify
 import rcAdapterAiAssistantSettingsNotifyHandler from './eventHandlers/rc-adapter-ai-assistant-settings-notify';
 import rcPostMessageRequestHandler from './eventHandlers/rc-post-message-request';
 import rcAdapterPhoneNumberFormatSettingsNotifyHandler from './eventHandlers/rc-adapter-phone-number-format-settings-notify';
-import rcSmsSettingsNotifyHandler from './eventHandlers/rc-sms-settings-notify';
 import { syncLocaleToEmbeddableWhenReady } from './lib/embeddableLocale';
 
 // message handlers
@@ -371,9 +370,6 @@ window.addEventListener('message', async (e) => {
           if (data.path != '/callLogger/inputChanged' && await logRecorder.isRecordingLogs()) {
             logRecorder.logAction({ name: data.type, data });
           }
-          break;
-        case 'rc-sms-settings-notify':
-          await rcSmsSettingsNotifyHandler.onEvent(eventPayload);
           break;
         case "rc-adapter-phone-number-format-settings-notify":
           await rcAdapterPhoneNumberFormatSettingsNotifyHandler.onEvent(eventPayload);

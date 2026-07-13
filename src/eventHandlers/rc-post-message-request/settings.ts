@@ -61,7 +61,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
     }
   } catch (e) { void e; /* ignore */ }
   const setting = data.body.setting;
-  if (setting?.id === 'developerMode') {
+  if (data.body.setting.id === 'developerMode') {
     showNotification({ level: 'success', message: `Developer mode is turned ${setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
     await chrome.storage.local.set({ developerMode: setting.value });
     getWidgetFrameWindow().postMessage({
