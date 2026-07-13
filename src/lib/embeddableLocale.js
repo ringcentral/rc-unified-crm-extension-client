@@ -69,12 +69,7 @@ async function applyLocaleToPhone(phone, locale) {
 }
 
 async function getEffectiveLocale() {
-  const { languageOverride } = await chrome.storage.local.get({ languageOverride: 'auto' });
-  if (languageOverride && languageOverride !== 'auto') {
-    return i18n.normalizeLocaleCode(languageOverride);
-  }
-  const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' });
-  return i18n.countryToLocale(selectedRegion);
+  return i18n.getBrowserLocale();
 }
 
 async function syncLocaleToEmbeddable(localeCode) {

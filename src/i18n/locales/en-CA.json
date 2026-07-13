@@ -365,13 +365,6 @@
     },
     "googleSheets": {
       "config": "Google Sheets Config"
-    },
-    "language": {
-      "groupName": "Language",
-      "groupDesc": "Choose the display language for the extension",
-      "label": "Display language",
-      "helper": "Automatic follows your RingCentral region. Selecting a language overrides it.",
-      "auto": "Automatic (follow RingCentral region)"
     }
   },
   "notifications": {

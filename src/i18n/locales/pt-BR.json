@@ -364,13 +364,6 @@
     },
     "googleSheets": {
       "config": "Configuração do Google Sheets"
-    },
-    "language": {
-      "groupName": "Idioma",
-      "groupDesc": "Escolha o idioma de exibição da extensão",
-      "label": "Idioma de exibição",
-      "helper": "Automático segue sua região do RingCentral. Selecionar um idioma substitui isso.",
-      "auto": "Automático (seguir a região do RingCentral)"
     }
   },
   "notifications": {

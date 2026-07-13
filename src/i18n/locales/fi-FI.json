@@ -364,13 +364,6 @@
     },
     "googleSheets": {
       "config": "Google Sheets -määritys"
-    },
-    "language": {
-      "groupName": "Kieli",
-      "groupDesc": "Valitse laajennuksen näyttökieli",
-      "label": "Näyttökieli",
-      "helper": "Automaattinen seuraa RingCentral-aluettasi. Kielen valitseminen ohittaa sen.",
-      "auto": "Automaattinen (seuraa RingCentral-aluetta)"
     }
   },
   "notifications": {

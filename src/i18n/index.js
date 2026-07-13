@@ -76,33 +76,23 @@ const COUNTRY_TO_LOCALE_MAP = {
     'TW': 'zh-TW'
 };
 
+const DEFAULT_LOCALE_BY_LANGUAGE = {
+    de: 'de-DE',
+    en: 'en-US',
+    es: 'es-419',
+    fi: 'fi-FI',
+    fr: 'fr-FR',
+    hi: 'hi-IN',
+    it: 'it-IT',
+    ja: 'ja-JP',
+    ko: 'ko-KR',
+    nl: 'nl-NL',
+    pt: 'pt-BR',
+    zh: 'zh-CN'
+};
+
 // Supported country codes (matching Embeddable regions)
 const SUPPORTED_LOCALES_AS_COUNTRY_CODE = Object.keys(COUNTRY_TO_LOCALE_MAP);
-
-// Native display names for each supported locale, shown in the Language setting.
-// Kept in the language's own script so they read correctly regardless of the active UI locale.
-const LOCALE_DISPLAY_NAMES = {
-    'en-US': 'English (US)',
-    'en-GB': 'English (UK)',
-    'en-AU': 'English (Australia)',
-    'en-CA': 'English (Canada)',
-    'de-DE': 'Deutsch',
-    'es-ES': 'Español (España)',
-    'es-419': 'Español (Latinoamérica)',
-    'fr-FR': 'Français',
-    'fr-CA': 'Français (Canada)',
-    'hi-IN': 'हिन्दी',
-    'it-IT': 'Italiano',
-    'nl-NL': 'Nederlands',
-    'pt-BR': 'Português (Brasil)',
-    'pt-PT': 'Português (Portugal)',
-    'fi-FI': 'Suomi',
-    'ja-JP': '日本語',
-    'ko-KR': '한국어',
-    'zh-CN': '简体中文',
-    'zh-HK': '繁體中文 (香港)',
-    'zh-TW': '繁體中文 (台灣)'
-};
 
 // Map an internal locale code to the value RingCentral APIs expect in the Accept-Language header.
 // See https://developers.ringcentral.com/guide/basics/localization
@@ -143,6 +133,74 @@ function setAcceptLanguageHeader(localeCode) {
  */
 function normalizeLocaleCode(localeCode) {
     return SUPPORTED_LOCALES.includes(localeCode) ? localeCode : FALLBACK_LOCALE;
+}
+
+function canonicalizeLanguageTag(languageTag) {
+    const parts = String(languageTag || '')
+        .trim()
+        .replace(/_/g, '-')
+        .split('-')
+        .filter(Boolean);
+    const language = parts[0]?.toLowerCase();
+    if (!language) {
+        return '';
+    }
+
+    const region = parts
+        .slice(1)
+        .find(part => /^[a-z]{2}$/i.test(part) || part === '419');
+    if (!region) {
+        return language;
+    }
+
+    return `${language}-${region === '419' ? '419' : region.toUpperCase()}`;
+}
+
+function localeFromLanguageTag(languageTag) {
+    const parts = String(languageTag || '')
+        .trim()
+        .replace(/_/g, '-')
+        .split('-')
+        .filter(Boolean);
+    const language = parts[0]?.toLowerCase();
+    if (!language) {
+        return null;
+    }
+
+    const script = parts.slice(1).find(part => /^hans$/i.test(part) || /^hant$/i.test(part));
+    if (language === 'zh' && script) {
+        return /^hant$/i.test(script) ? 'zh-TW' : 'zh-CN';
+    }
+
+    const exactLocale = canonicalizeLanguageTag(languageTag);
+    if (SUPPORTED_LOCALES.includes(exactLocale)) {
+        return exactLocale;
+    }
+
+    return DEFAULT_LOCALE_BY_LANGUAGE[language] ||
+        SUPPORTED_LOCALES.find(localeCode => localeCode.startsWith(`${language}-`)) ||
+        null;
+}
+
+function getBrowserLanguages() {
+    if (typeof navigator === 'undefined') {
+        return [];
+    }
+    return [
+        ...(Array.isArray(navigator.languages) ? navigator.languages : []),
+        navigator.language
+    ].filter(Boolean);
+}
+
+function getBrowserLocale(browserLanguages = getBrowserLanguages()) {
+    const languages = Array.isArray(browserLanguages) ? browserLanguages : [browserLanguages];
+    for (const language of languages) {
+        const locale = localeFromLanguageTag(language);
+        if (locale) {
+            return locale;
+        }
+    }
+    return FALLBACK_LOCALE;
 }
 
 /**
@@ -221,7 +279,7 @@ async function init(countryCode = 'US') {
 
 /**
  * Apply a specific locale code directly (bypassing the country->locale mapping).
- * Used by the explicit user-selectable Language setting.
+ * Used by browser-language detection.
  * @param {string} localeCode - Locale code (e.g., 'de-DE')
  */
 async function applyLocaleCode(localeCode) {
@@ -316,34 +374,14 @@ function getSupportedLocales() {
 }
 
 /**
- * Get the list of selectable languages for the settings UI.
- * Includes an 'auto' option that follows the RingCentral region.
- * @returns {{id: string, name: string}[]}
- */
-function getSupportedLocaleOptions() {
-    const options = SUPPORTED_LOCALES.map(localeCode => ({
-        id: localeCode,
-        name: LOCALE_DISPLAY_NAMES[localeCode] || localeCode
-    }));
-    options.sort((a, b) => a.name.localeCompare(b.name));
-    return options;
-}
-
-/**
  * Restore locale from storage on startup.
- * An explicit user Language override takes precedence over the RingCentral region.
+ * The extension follows the browser language.
  */
 async function restoreLocale() {
     try {
-        const { languageOverride } = await chrome.storage.local.get({ languageOverride: 'auto' });
-        if (languageOverride && languageOverride !== 'auto') {
-            return await applyLocaleCode(languageOverride);
-        }
-        // Otherwise follow the RingCentral region country code
-        const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' });
-        return await init(selectedRegion);
+        return await applyLocaleCode(getBrowserLocale());
     } catch (e) {
-        return await init('US');
+        return await applyLocaleCode(FALLBACK_LOCALE);
     }
 }
 
@@ -356,13 +394,12 @@ const i18n = {
     t,
     hasKey,
     getSupportedLocales,
-    getSupportedLocaleOptions,
+    getBrowserLocale,
     restoreLocale,
     countryToLocale,
     toAcceptLanguage,
     setAcceptLanguageHeader,
     normalizeLocaleCode,
-    LOCALE_DISPLAY_NAMES,
     SUPPORTED_LOCALES,
     SUPPORTED_REGION_COUNTRY_CODES: SUPPORTED_LOCALES_AS_COUNTRY_CODE,
     COUNTRY_TO_LOCALE_MAP,
@@ -372,4 +409,4 @@ const i18n = {
 setAcceptLanguageHeader(currentLocale);
 
 export default i18n;
-export { init, setLocale, applyLocaleCode, getLocale, t, hasKey, getSupportedLocales, getSupportedLocaleOptions, restoreLocale, countryToLocale, toAcceptLanguage, setAcceptLanguageHeader, normalizeLocaleCode };
+export { init, setLocale, applyLocaleCode, getLocale, t, hasKey, getSupportedLocales, getBrowserLocale, restoreLocale, countryToLocale, toAcceptLanguage, setAcceptLanguageHeader, normalizeLocaleCode };

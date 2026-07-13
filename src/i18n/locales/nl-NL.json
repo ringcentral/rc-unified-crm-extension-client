@@ -364,13 +364,6 @@
     },
     "googleSheets": {
       "config": "Google Sheets-configuratie"
-    },
-    "language": {
-      "groupName": "Taal",
-      "groupDesc": "Kies de weergavetaal voor de extensie",
-      "label": "Weergavetaal",
-      "helper": "Automatisch volgt uw RingCentral-regio. Het selecteren van een taal overschrijft dit.",
-      "auto": "Automatisch (RingCentral-regio volgen)"
     }
   },
   "notifications": {

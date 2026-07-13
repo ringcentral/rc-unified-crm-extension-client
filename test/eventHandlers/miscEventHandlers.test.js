@@ -202,12 +202,13 @@ describe('miscellaneous top-level widget event handlers', () => {
     vi.resetModules();
     const i18n = {
       getLocale: vi.fn(() => 'en-US'),
-      setLocale: vi.fn(async () => 'en-CA'),
+      restoreLocale: vi.fn(async () => 'en-CA'),
     };
     vi.doMock('../../src/i18n/index.js', () => ({ default: i18n }));
+    const syncLocaleToEmbeddableWhenReady = vi.fn(async () => {});
     vi.doMock('../../src/lib/embeddableLocale.js', () => ({
       syncLocaleToEmbeddable: vi.fn(async () => {}),
-      syncLocaleToEmbeddableWhenReady: vi.fn(async () => {}),
+      syncLocaleToEmbeddableWhenReady,
     }));
     vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles: vi.fn(async () => {}) }));
     const embeddableServices = {
@@ -224,7 +225,8 @@ describe('miscellaneous top-level widget event handlers', () => {
     });
 
     expect(readStorage().selectedRegion).toBe('CA');
-    expect(i18n.setLocale).toHaveBeenCalledWith('CA');
+    expect(i18n.restoreLocale).toHaveBeenCalled();
+    expect(syncLocaleToEmbeddableWhenReady).toHaveBeenCalledWith('en-CA');
     expect(getWidgetPostMessages()).toContainEqual({
       message: {
         type: 'rc-adapter-register-third-party-service',
@@ -649,7 +651,7 @@ describe('miscellaneous rc-post-message-request handlers', () => {
     });
   });
 
-  it('saves a non-language setting normally even when the language option is present in the settings tree', async () => {
+  it('saves nested settings normally', async () => {
     vi.resetModules();
     const userCore = {
       refreshUserSettings: vi.fn(async ({ changedSettings }) => changedSettings),
@@ -668,27 +670,12 @@ describe('miscellaneous rc-post-message-request handlers', () => {
       getAppointmentsPageRender: vi.fn(() => ({ id: 'appointmentsPage' })),
     };
     vi.doMock('../../src/components/appointmentsPage/appointmentsPage.js', () => ({ default: appointmentsPage }));
-    const i18n = {
-      init: vi.fn(async () => 'en-US'),
-      applyLocaleCode: vi.fn(async () => 'de-DE'),
-    };
-    vi.doMock('../../src/i18n/index.js', () => ({ default: i18n, ...i18n }));
-    const syncLocaleToEmbeddable = vi.fn(async () => {});
-    vi.doMock('../../src/lib/embeddableLocale.js', () => ({
-      syncLocaleToEmbeddable,
-      syncLocaleToEmbeddableWhenReady: syncLocaleToEmbeddable,
-    }));
-    const refreshLocalizedCustomizedPageTitles = vi.fn(async () => {});
-    vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles }));
 
     const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/settings.js');
 
-    // The widget echoes the full settings tree - including the always-present
-    // `language` option - on every save. Toggling a different setting must NOT be
-    // treated as a language change (which would early-return and never persist).
     await handler.onEvent({
       data: {
-        requestId: 'settings-non-language',
+        requestId: 'settings-nested',
         body: {
           setting: {
             id: 'autoLogCall',
@@ -696,13 +683,12 @@ describe('miscellaneous rc-post-message-request handlers', () => {
           },
           settings: [
             {
-              id: 'language',
-              type: 'section',
+              id: 'logging',
+              type: 'group',
               items: [
-                { id: 'language', type: 'option', value: 'auto' },
+                { id: 'autoLogCall', type: 'boolean', value: true },
               ],
             },
-            { id: 'autoLogCall', value: true },
           ],
         },
       },
@@ -714,114 +700,7 @@ describe('miscellaneous rc-post-message-request handlers', () => {
         autoLogCall: { value: true },
       }),
     });
-    expect(syncLocaleToEmbeddable).not.toHaveBeenCalled();
-    expect(i18n.init).not.toHaveBeenCalled();
-    expect(i18n.applyLocaleCode).not.toHaveBeenCalled();
-    expect(readStorage().languageOverride).toBeUndefined();
-    expect(util.responseMessage).toHaveBeenCalledWith('settings-non-language', { data: 'ok' });
-  });
-
-  it('applies a language change and does not persist unrelated user settings', async () => {
-    vi.resetModules();
-    seedStorage({ languageOverride: 'auto' });
-    const userCore = {
-      refreshUserSettings: vi.fn(async ({ changedSettings }) => changedSettings),
-    };
-    vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
-    const util = {
-      showNotification: vi.fn(),
-      responseMessage: vi.fn(),
-    };
-    vi.doMock('../../src/lib/util.js', () => util);
-    const embeddableServices = {
-      getServiceManifest: vi.fn(async () => ({ id: 'service' })),
-    };
-    vi.doMock('../../src/service/embeddableServices.js', () => ({ default: embeddableServices }));
-    const i18n = {
-      init: vi.fn(async () => 'en-US'),
-      applyLocaleCode: vi.fn(async () => 'de-DE'),
-    };
-    vi.doMock('../../src/i18n/index.js', () => ({ default: i18n, ...i18n }));
-    const syncLocaleToEmbeddable = vi.fn(async () => {});
-    vi.doMock('../../src/lib/embeddableLocale.js', () => ({
-      syncLocaleToEmbeddable,
-      syncLocaleToEmbeddableWhenReady: syncLocaleToEmbeddable,
-    }));
-    const refreshLocalizedCustomizedPageTitles = vi.fn(async () => {});
-    vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles }));
-
-    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/settings.js');
-
-    await handler.onEvent({
-      data: {
-        requestId: 'settings-language',
-        body: {
-          setting: {
-            id: 'language',
-            value: 'de-DE',
-          },
-          settings: [],
-        },
-      },
-      ...baseContext(),
-    });
-
-    expect(readStorage().languageOverride).toBe('de-DE');
-    expect(i18n.applyLocaleCode).toHaveBeenCalledWith('de-DE');
-    expect(syncLocaleToEmbeddable).toHaveBeenCalled();
-    expect(userCore.refreshUserSettings).not.toHaveBeenCalled();
-    expect(util.responseMessage).toHaveBeenCalledWith('settings-language', { data: 'ok' });
-  });
-
-  it('acks a language save without re-initializing i18n when the language did not change', async () => {
-    vi.resetModules();
-    seedStorage({ languageOverride: 'de-DE' });
-    const userCore = {
-      refreshUserSettings: vi.fn(async ({ changedSettings }) => changedSettings),
-    };
-    vi.doMock('../../src/core/user.js', () => ({ default: userCore }));
-    const util = {
-      showNotification: vi.fn(),
-      responseMessage: vi.fn(),
-    };
-    vi.doMock('../../src/lib/util.js', () => util);
-    const embeddableServices = {
-      getServiceManifest: vi.fn(async () => ({ id: 'service' })),
-    };
-    vi.doMock('../../src/service/embeddableServices.js', () => ({ default: embeddableServices }));
-    const i18n = {
-      init: vi.fn(async () => 'en-US'),
-      applyLocaleCode: vi.fn(async () => 'de-DE'),
-    };
-    vi.doMock('../../src/i18n/index.js', () => ({ default: i18n, ...i18n }));
-    const syncLocaleToEmbeddable = vi.fn(async () => {});
-    vi.doMock('../../src/lib/embeddableLocale.js', () => ({
-      syncLocaleToEmbeddable,
-      syncLocaleToEmbeddableWhenReady: syncLocaleToEmbeddable,
-    }));
-    const refreshLocalizedCustomizedPageTitles = vi.fn(async () => {});
-    vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles }));
-
-    const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/settings.js');
-
-    await handler.onEvent({
-      data: {
-        requestId: 'settings-language-noop',
-        body: {
-          setting: {
-            id: 'language',
-            value: 'de-DE',
-          },
-          settings: [],
-        },
-      },
-      ...baseContext(),
-    });
-
-    expect(i18n.applyLocaleCode).not.toHaveBeenCalled();
-    expect(syncLocaleToEmbeddable).not.toHaveBeenCalled();
-    expect(userCore.refreshUserSettings).not.toHaveBeenCalled();
-    expect(util.responseMessage).toHaveBeenCalledWith('settings-language-noop', { data: 'ok' });
+    expect(util.responseMessage).toHaveBeenCalledWith('settings-nested', { data: 'ok' });
   });
 
   it('connects CRM when unauthorized and disconnects CRM with hidden calldown page when authorized', async () => {

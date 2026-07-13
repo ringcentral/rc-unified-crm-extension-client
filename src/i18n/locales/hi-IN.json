@@ -364,13 +364,6 @@
     },
     "googleSheets": {
       "config": "Google Sheets कॉन्फ़िग"
-    },
-    "language": {
-      "groupName": "भाषा",
-      "groupDesc": "एक्सटेंशन की प्रदर्शन भाषा चुनें",
-      "label": "प्रदर्शन भाषा",
-      "helper": "स्वचालित आपके RingCentral क्षेत्र का अनुसरण करता है. भाषा चुनने से यह ओवरराइड हो जाता है.",
-      "auto": "स्वचालित (RingCentral क्षेत्र का अनुसरण करें)"
     }
   },
   "notifications": {

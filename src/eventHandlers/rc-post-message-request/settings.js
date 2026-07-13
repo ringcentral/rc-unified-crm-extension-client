@@ -2,72 +2,8 @@ import userCore from '../../core/user';
 import { showNotification, responseMessage } from '../../lib/util';
 import embeddableServices from '../../service/embeddableServices';
 import appointmentsPage from '../../components/appointmentsPage/appointmentsPage';
-import i18n from '../../i18n';
-import { syncLocaleToEmbeddableWhenReady } from '../../lib/embeddableLocale';
-import { refreshLocalizedCustomizedPageTitles } from '../../service/customizedPageLocaleService';
-
-function findSettingValue(setting, settingId) {
-    if (!setting) {
-      return undefined;
-    }
-    if (setting.id === settingId && setting.value !== undefined) {
-      return setting.value;
-    }
-    if (!Array.isArray(setting.items)) {
-      return undefined;
-    }
-    for (const item of setting.items) {
-      const value = findSettingValue(item, settingId);
-      if (value !== undefined) {
-        return value;
-      }
-    }
-    return undefined;
-}
-
-function getLanguageSettingValue(body) {
-    // Only inspect the specific setting that changed (body.setting). The widget
-    // echoes the full settings tree in body.settings on every save, so scanning
-    // that whole array would match the always-present `language` option and route
-    // every settings save through the language-change branch below - preventing the
-    // real setting from being uploaded and triggering redundant locale/service
-    // re-registration (which makes the widget re-sync call history and call /callLog).
-    return findSettingValue(body?.setting, 'language');
-}
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }) {
-    const selectedLanguageSetting = getLanguageSettingValue(data.body);
-    if (selectedLanguageSetting !== undefined) {
-      // Language is stored locally (works even before CRM auth) and takes precedence over the RingCentral region.
-      const selectedLanguage = selectedLanguageSetting ?? 'auto';
-      const { languageOverride: previousLanguageOverride } = await chrome.storage.local.get({ languageOverride: 'auto' });
-      // If the language did not actually change, ack without re-initializing i18n or
-      // re-registering the service, so we don't cause needless widget churn.
-      if ((previousLanguageOverride ?? 'auto') === selectedLanguage) {
-        responseMessage(data.requestId, { data: 'ok' });
-        return;
-      }
-      await chrome.storage.local.set({ languageOverride: selectedLanguage });
-      let locale;
-      if (selectedLanguage === 'auto') {
-        const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' });
-        locale = await i18n.init(selectedRegion);
-      }
-      else {
-        locale = await i18n.applyLocaleCode(selectedLanguage);
-      }
-      await syncLocaleToEmbeddableWhenReady(locale);
-      // Re-register the service so all UI strings refresh in the newly selected language.
-      document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
-        type: 'rc-adapter-register-third-party-service',
-        service: (await embeddableServices.getServiceManifest())
-      }, '*');
-      await refreshLocalizedCustomizedPageTitles();
-      showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
-      responseMessage(data.requestId, { data: 'ok' });
-      return;
-    }
-
     const changedSettings = {};
     for (const s of data.body.settings) {
       if (s.items !== undefined) {

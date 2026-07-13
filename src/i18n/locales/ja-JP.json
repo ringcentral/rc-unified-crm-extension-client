@@ -364,13 +364,6 @@
     },
     "googleSheets": {
       "config": "Google Sheets設定"
-    },
-    "language": {
-      "groupName": "言語",
-      "groupDesc": "拡張機能の表示言語を選択します",
-      "label": "表示言語",
-      "helper": "自動はRingCentralのリージョンに従います。言語を選択すると上書きされます。",
-      "auto": "自動（RingCentralのリージョンに従う）"
     }
   },
   "notifications": {

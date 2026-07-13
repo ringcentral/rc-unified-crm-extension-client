@@ -364,13 +364,6 @@
     },
     "googleSheets": {
       "config": "Google Sheets 配置"
-    },
-    "language": {
-      "groupName": "语言",
-      "groupDesc": "选择扩展程序的显示语言",
-      "label": "显示语言",
-      "helper": "自动将跟随您的 RingCentral 区域。选择语言将覆盖此设置。",
-      "auto": "自动（跟随 RingCentral 区域）"
     }
   },
   "notifications": {
