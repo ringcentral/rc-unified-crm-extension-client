@@ -1,5 +1,7 @@
 # RingCentral App Connect Client
 
+[![Coverage](https://codecov.io/gh/ringcentral/rc-unified-crm-extension-client/branch/beta/graph/badge.svg)](https://codecov.io/gh/ringcentral/rc-unified-crm-extension-client?branch=beta)
+
 It is to work with the server code: https://github.com/ringcentral/rc-unified-crm-extension
 
 ## Quick start
