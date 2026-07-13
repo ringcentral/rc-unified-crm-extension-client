@@ -1,6 +1,6 @@
 import i18n from '../i18n';
 import embeddableServices from '../service/embeddableServices';
-import { syncLocaleToEmbeddable } from '../lib/embeddableLocale';
+import { syncLocaleToEmbeddableWhenReady } from '../lib/embeddableLocale';
 import { refreshLocalizedCustomizedPageTitles } from '../service/customizedPageLocaleService';
 
 async function onEvent({data}){
@@ -20,7 +20,7 @@ async function onEvent({data}){
     const { languageOverride } = await chrome.storage.local.get({ languageOverride: 'auto' });
     const hasManualLanguage = languageOverride && languageOverride !== 'auto';
     if (hasManualLanguage) {
-      await syncLocaleToEmbeddable(languageOverride);
+      await syncLocaleToEmbeddableWhenReady(languageOverride);
       return;
     }
 
@@ -31,7 +31,7 @@ async function onEvent({data}){
     // settings UI and makes it look like changes were not saved.
     const previousLocale = i18n.getLocale();
     const newLocale = await i18n.setLocale(data.countryCode);
-    await syncLocaleToEmbeddable(newLocale);
+    await syncLocaleToEmbeddableWhenReady(newLocale);
     if (newLocale === previousLocale) {
       return;
     }

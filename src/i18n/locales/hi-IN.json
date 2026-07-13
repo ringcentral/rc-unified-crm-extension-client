@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(पुराना) कॉल के बाद कॉल लॉगिंग पेज खोलें",
       "popupLogPageAfterCallDesc": "हर कॉल के बाद लॉगिंग फ़ॉर्म अपने-आप खोलें",
       "popupLogPageAfterSMS": "(पुराना) संदेश के बाद SMS लॉगिंग पेज खोलें",
-      "popupLogPageAfterSMSDesc": "हर संदेश के बाद लॉगिंग फ़ॉर्म अपने-आप खोलें"
+      "popupLogPageAfterSMSDesc": "हर संदेश के बाद लॉगिंग फ़ॉर्म अपने-आप खोलें",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "कॉल लॉग विवरण",

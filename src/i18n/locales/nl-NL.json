@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(Handmatige log) Open oproepregistratiepagina na oproep",
       "popupLogPageAfterCallDesc": "Automatisch het registratieformulier openen na elke oproep",
       "popupLogPageAfterSMS": "(Handmatige log) Open SMS-registratiepagina na bericht",
-      "popupLogPageAfterSMSDesc": "Automatisch het registratieformulier openen na elk bericht"
+      "popupLogPageAfterSMSDesc": "Automatisch het registratieformulier openen na elk bericht",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Oproeplogdetails",

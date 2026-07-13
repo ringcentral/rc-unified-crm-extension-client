@@ -3,7 +3,7 @@ import { showNotification, responseMessage } from '../../lib/util';
 import embeddableServices from '../../service/embeddableServices';
 import appointmentsPage from '../../components/appointmentsPage/appointmentsPage';
 import i18n from '../../i18n';
-import { syncLocaleToEmbeddable } from '../../lib/embeddableLocale';
+import { syncLocaleToEmbeddableWhenReady } from '../../lib/embeddableLocale';
 import { refreshLocalizedCustomizedPageTitles } from '../../service/customizedPageLocaleService';
 
 function findSettingValue(setting, settingId) {
@@ -56,7 +56,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform })
       else {
         locale = await i18n.applyLocaleCode(selectedLanguage);
       }
-      await syncLocaleToEmbeddable(locale);
+      await syncLocaleToEmbeddableWhenReady(locale);
       // Re-register the service so all UI strings refresh in the newly selected language.
       document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',

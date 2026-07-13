@@ -31,6 +31,8 @@ import rcRouteChangedNotifyHandler from './eventHandlers/rc-route-changed-notify
 import rcAdapterAiAssistantSettingsNotifyHandler from './eventHandlers/rc-adapter-ai-assistant-settings-notify';
 import rcPostMessageRequestHandler from './eventHandlers/rc-post-message-request';
 import rcAdapterPhoneNumberFormatSettingsNotifyHandler from './eventHandlers/rc-adapter-phone-number-format-settings-notify';
+import rcSmsSettingsNotifyHandler from './eventHandlers/rc-sms-settings-notify';
+import { syncLocaleToEmbeddableWhenReady } from './lib/embeddableLocale';
 
 // message handlers
 import oauthCallBackHandler from './messageHandlers/oauthCallBack';
@@ -207,7 +209,12 @@ initializePopup();
 
 async function initializePopup() {
   // Initialize i18n with stored locale before early API calls so Accept-Language is applied.
-  await i18n.restoreLocale();
+  const locale = await i18n.restoreLocale();
+  if (locale) {
+    syncLocaleToEmbeddableWhenReady(locale).catch((e) => {
+      console.warn('[i18n] Failed to sync locale to embeddable:', e);
+    });
+  }
   checkC2DCollision();
   getCustomManifest();
   getImplementedInterfaces();
@@ -325,6 +332,9 @@ window.addEventListener('message', async (e) => {
           if (data.path != '/callLogger/inputChanged' && await logRecorder.isRecordingLogs()) {
             logRecorder.logAction({ name: data.type, data });
           }
+          break;
+        case 'rc-sms-settings-notify':
+          await rcSmsSettingsNotifyHandler.onEvent({ data, popupContext });
           break;
         case "rc-adapter-phone-number-format-settings-notify":
           await rcAdapterPhoneNumberFormatSettingsNotifyHandler.onEvent({ data, popupContext });

@@ -205,7 +205,10 @@ describe('miscellaneous top-level widget event handlers', () => {
       setLocale: vi.fn(async () => 'en-CA'),
     };
     vi.doMock('../../src/i18n/index.js', () => ({ default: i18n }));
-    vi.doMock('../../src/lib/embeddableLocale.js', () => ({ syncLocaleToEmbeddable: vi.fn(async () => {}) }));
+    vi.doMock('../../src/lib/embeddableLocale.js', () => ({
+      syncLocaleToEmbeddable: vi.fn(async () => {}),
+      syncLocaleToEmbeddableWhenReady: vi.fn(async () => {}),
+    }));
     vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles: vi.fn(async () => {}) }));
     const embeddableServices = {
       getServiceManifest: vi.fn(async () => ({ id: 'localized-service' })),
@@ -287,7 +290,10 @@ describe('miscellaneous top-level widget event handlers', () => {
       refreshManifest,
     }));
     vi.doMock('../../src/i18n/index.js', () => ({ default: { restoreLocale: vi.fn(async () => 'en-US') } }));
-    vi.doMock('../../src/lib/embeddableLocale.js', () => ({ syncLocaleToEmbeddable: vi.fn(async () => {}) }));
+    vi.doMock('../../src/lib/embeddableLocale.js', () => ({
+      syncLocaleToEmbeddable: vi.fn(async () => {}),
+      syncLocaleToEmbeddableWhenReady: vi.fn(async () => {}),
+    }));
     vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles: vi.fn(async () => {}) }));
     const embeddableServices = {
       getServiceManifest: vi.fn(async () => ({ id: 'updated-service' })),
@@ -668,7 +674,10 @@ describe('miscellaneous rc-post-message-request handlers', () => {
     };
     vi.doMock('../../src/i18n/index.js', () => ({ default: i18n, ...i18n }));
     const syncLocaleToEmbeddable = vi.fn(async () => {});
-    vi.doMock('../../src/lib/embeddableLocale.js', () => ({ syncLocaleToEmbeddable }));
+    vi.doMock('../../src/lib/embeddableLocale.js', () => ({
+      syncLocaleToEmbeddable,
+      syncLocaleToEmbeddableWhenReady: syncLocaleToEmbeddable,
+    }));
     const refreshLocalizedCustomizedPageTitles = vi.fn(async () => {});
     vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles }));
 
@@ -734,7 +743,10 @@ describe('miscellaneous rc-post-message-request handlers', () => {
     };
     vi.doMock('../../src/i18n/index.js', () => ({ default: i18n, ...i18n }));
     const syncLocaleToEmbeddable = vi.fn(async () => {});
-    vi.doMock('../../src/lib/embeddableLocale.js', () => ({ syncLocaleToEmbeddable }));
+    vi.doMock('../../src/lib/embeddableLocale.js', () => ({
+      syncLocaleToEmbeddable,
+      syncLocaleToEmbeddableWhenReady: syncLocaleToEmbeddable,
+    }));
     const refreshLocalizedCustomizedPageTitles = vi.fn(async () => {});
     vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles }));
 
@@ -783,7 +795,10 @@ describe('miscellaneous rc-post-message-request handlers', () => {
     };
     vi.doMock('../../src/i18n/index.js', () => ({ default: i18n, ...i18n }));
     const syncLocaleToEmbeddable = vi.fn(async () => {});
-    vi.doMock('../../src/lib/embeddableLocale.js', () => ({ syncLocaleToEmbeddable }));
+    vi.doMock('../../src/lib/embeddableLocale.js', () => ({
+      syncLocaleToEmbeddable,
+      syncLocaleToEmbeddableWhenReady: syncLocaleToEmbeddable,
+    }));
     const refreshLocalizedCustomizedPageTitles = vi.fn(async () => {});
     vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles }));
 

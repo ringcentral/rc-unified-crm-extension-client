@@ -1,5 +1,8 @@
 import i18n from '../i18n';
 
+const DEFAULT_SYNC_ATTEMPTS = 20;
+const DEFAULT_SYNC_RETRY_DELAY = 250;
+
 const EMBEDDABLE_SUPPORTED_LOCALES = [
   'de-DE',
   'en-AU',
@@ -30,6 +33,41 @@ function normalizeEmbeddableLocale(localeCode) {
     : i18n.FALLBACK_LOCALE;
 }
 
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getEmbeddablePhone() {
+  return document.querySelector('#rc-widget-adapter-frame')?.contentWindow?.phone;
+}
+
+function getLocaleForPhone(phone, localeCode) {
+  return phone?.locale?.normalizeLocale
+    ? phone.locale.normalizeLocale(localeCode)
+    : normalizeEmbeddableLocale(localeCode);
+}
+
+async function applyLocaleToPhone(phone, locale) {
+  if (!phone) {
+    return false;
+  }
+
+  try {
+    if (phone.localeSettings?.saveLocale) {
+      await phone.localeSettings.saveLocale(locale);
+      return true;
+    }
+    if (phone.locale?.setLocale) {
+      await phone.locale.setLocale(locale);
+      return true;
+    }
+  } catch (e) {
+    console.warn('[i18n] Failed to sync locale to embeddable:', e);
+  }
+
+  return false;
+}
+
 async function getEffectiveLocale() {
   const { languageOverride } = await chrome.storage.local.get({ languageOverride: 'auto' });
   if (languageOverride && languageOverride !== 'auto') {
@@ -41,20 +79,35 @@ async function getEffectiveLocale() {
 
 async function syncLocaleToEmbeddable(localeCode) {
   const effectiveLocale = localeCode || await getEffectiveLocale();
-  const adapterFrame = document.querySelector('#rc-widget-adapter-frame');
-  const phone = adapterFrame?.contentWindow?.phone;
-  const locale = phone?.locale?.normalizeLocale
-    ? phone.locale.normalizeLocale(effectiveLocale)
-    : normalizeEmbeddableLocale(effectiveLocale);
+  const phone = getEmbeddablePhone();
+  const locale = getLocaleForPhone(phone, effectiveLocale);
 
-  try {
-    if (phone?.localeSettings?.saveLocale) {
-      await phone.localeSettings.saveLocale(locale);
-    } else if (phone?.locale?.setLocale) {
-      await phone.locale.setLocale(locale);
+  await applyLocaleToPhone(phone, locale);
+
+  return locale;
+}
+
+async function syncLocaleToEmbeddableWhenReady(
+  localeCode,
+  {
+    attempts = DEFAULT_SYNC_ATTEMPTS,
+    retryDelay = DEFAULT_SYNC_RETRY_DELAY,
+  } = {},
+) {
+  const effectiveLocale = localeCode || await getEffectiveLocale();
+  let locale = normalizeEmbeddableLocale(effectiveLocale);
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const phone = getEmbeddablePhone();
+    locale = getLocaleForPhone(phone, effectiveLocale);
+
+    if (await applyLocaleToPhone(phone, locale)) {
+      return locale;
     }
-  } catch (e) {
-    console.warn('[i18n] Failed to sync locale to embeddable:', e);
+
+    if (attempt < attempts - 1) {
+      await delay(retryDelay);
+    }
   }
 
   return locale;
@@ -63,5 +116,6 @@ async function syncLocaleToEmbeddable(localeCode) {
 export {
   getEffectiveLocale,
   normalizeEmbeddableLocale,
-  syncLocaleToEmbeddable
+  syncLocaleToEmbeddable,
+  syncLocaleToEmbeddableWhenReady
 };

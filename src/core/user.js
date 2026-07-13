@@ -313,6 +313,14 @@ function getSMSPopSetting(userSettings) {
     }
 }
 
+function getClickToSMSFromSharedNumberSetting(userSettings) {
+    return {
+        value: userSettings?.clickToSMSFromSharedNumber?.value ?? false,
+        readOnly: userSettings?.clickToSMSFromSharedNumber?.customizable === undefined ? false : !userSettings?.clickToSMSFromSharedNumber?.customizable,
+        readOnlyReason: !userSettings?.clickToSMSFromSharedNumber?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getIncomingCallPop(userSettings) {
     return {
         value: userSettings?.openContactPageFromIncomingCall?.value ?? 'disabled',
@@ -715,6 +723,7 @@ exports.getEnableRetroCallLogSync = getEnableRetroCallLogSync;
 exports.getOneTimeLogSetting = getOneTimeLogSetting;
 exports.getCallPopSetting = getCallPopSetting;
 exports.getSMSPopSetting = getSMSPopSetting;
+exports.getClickToSMSFromSharedNumberSetting = getClickToSMSFromSharedNumberSetting;
 exports.getIncomingCallPop = getIncomingCallPop;
 exports.getOutgoingCallPop = getOutgoingCallPop;
 exports.getCallPopMultiMatchBehavior = getCallPopMultiMatchBehavior;

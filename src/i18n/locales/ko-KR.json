@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(수동 로그) 통화 후 로그 페이지 열기",
       "popupLogPageAfterCallDesc": "각 통화 후 자동으로 로그 양식 열기",
       "popupLogPageAfterSMS": "(수동 로그) 메시지 후 SMS 로그 페이지 열기",
-      "popupLogPageAfterSMSDesc": "각 메시지 후 자동으로 로그 양식 열기"
+      "popupLogPageAfterSMSDesc": "각 메시지 후 자동으로 로그 양식 열기",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "통화 로그 세부 정보",

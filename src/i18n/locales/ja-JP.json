@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "（手動ログ）通話後にログページを開く",
       "popupLogPageAfterCallDesc": "各通話後に自動的にログフォームを開く",
       "popupLogPageAfterSMS": "（手動ログ）メッセージ後にSMSログページを開く",
-      "popupLogPageAfterSMSDesc": "各メッセージ後に自動的にログフォームを開く"
+      "popupLogPageAfterSMSDesc": "各メッセージ後に自動的にログフォームを開く",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "通話ログ詳細",

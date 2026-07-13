@@ -513,6 +513,15 @@ async function getServiceManifest() {
                         readOnly: userCore.getSMSPopSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getSMSPopSetting(userSettings).readOnlyReason,
                         value: userCore.getSMSPopSetting(userSettings).value
+                    },
+                    {
+                        id: "clickToSMSFromSharedNumber",
+                        type: "boolean",
+                        name: t('settings.logging.clickToSMSFromSharedNumber'),
+                        description: t('settings.logging.clickToSMSFromSharedNumberDesc'),
+                        readOnly: userCore.getClickToSMSFromSharedNumberSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getClickToSMSFromSharedNumberSetting(userSettings).readOnlyReason,
+                        value: userCore.getClickToSMSFromSharedNumberSetting(userSettings).value
                     }
                 ]
             }

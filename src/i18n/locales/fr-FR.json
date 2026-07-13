@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(Journal manuel) Ouvrir la page de journalisation après l'appel",
       "popupLogPageAfterCallDesc": "Ouvrir automatiquement le formulaire de journalisation après chaque appel",
       "popupLogPageAfterSMS": "(Journal manuel) Ouvrir la page de journalisation SMS après le message",
-      "popupLogPageAfterSMSDesc": "Ouvrir automatiquement le formulaire de journalisation après chaque message"
+      "popupLogPageAfterSMSDesc": "Ouvrir automatiquement le formulaire de journalisation après chaque message",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Détails du journal d'appels",

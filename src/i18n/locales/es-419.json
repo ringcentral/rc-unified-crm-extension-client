@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(Registro manual) Abrir página de registro después de la llamada",
       "popupLogPageAfterCallDesc": "Abrir automáticamente el formulario de registro después de cada llamada",
       "popupLogPageAfterSMS": "(Registro manual) Abrir página de registro SMS después del mensaje",
-      "popupLogPageAfterSMSDesc": "Abrir automáticamente el formulario de registro después de cada mensaje"
+      "popupLogPageAfterSMSDesc": "Abrir automáticamente el formulario de registro después de cada mensaje",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Detalles del registro de llamadas",

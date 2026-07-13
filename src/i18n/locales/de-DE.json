@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(Manuelle Protokollierung) Protokollierungsseite nach Anruf öffnen",
       "popupLogPageAfterCallDesc": "Protokollierungsformular automatisch nach jedem Anruf öffnen",
       "popupLogPageAfterSMS": "(Manuelle Protokollierung) SMS-Protokollierungsseite nach Nachricht öffnen",
-      "popupLogPageAfterSMSDesc": "Protokollierungsformular automatisch nach jeder Nachricht öffnen"
+      "popupLogPageAfterSMSDesc": "Protokollierungsformular automatisch nach jeder Nachricht öffnen",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Anrufprotokolldetails",

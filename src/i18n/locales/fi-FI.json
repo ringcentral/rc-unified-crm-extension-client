@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(Manuaalinen loki) Avaa lokitussivu puhelun jälkeen",
       "popupLogPageAfterCallDesc": "Avaa lokituslomake automaattisesti jokaisen puhelun jälkeen",
       "popupLogPageAfterSMS": "(Manuaalinen loki) Avaa tekstiviestilokitussivu viestin jälkeen",
-      "popupLogPageAfterSMSDesc": "Avaa lokituslomake automaattisesti jokaisen viestin jälkeen"
+      "popupLogPageAfterSMSDesc": "Avaa lokituslomake automaattisesti jokaisen viestin jälkeen",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Puhelulokin tiedot",

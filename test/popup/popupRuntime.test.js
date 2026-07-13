@@ -105,9 +105,14 @@ async function loadPopupRuntime() {
   vi.doMock('../../src/lib/logRecorder.js', () => ({ default: logRecorder }));
 
   const i18n = {
-    restoreLocale: vi.fn(),
+    restoreLocale: vi.fn(async () => 'en-US'),
   };
   vi.doMock('../../src/i18n/index.js', () => ({ default: i18n }));
+
+  const embeddableLocale = {
+    syncLocaleToEmbeddableWhenReady: vi.fn(async () => {}),
+  };
+  vi.doMock('../../src/lib/embeddableLocale.js', () => embeddableLocale);
 
   const eventHandlers = {};
   for (const [name, modulePath] of Object.entries(eventHandlerModules)) {
@@ -152,6 +157,7 @@ async function loadPopupRuntime() {
     platformService,
     logRecorder,
     i18n,
+    embeddableLocale,
     eventHandlers,
     messageHandlers,
     messageListener,
