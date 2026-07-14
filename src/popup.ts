@@ -61,18 +61,40 @@ const popupContext = {
 
 let isLoggingOut = false;
 
+function isAxiosAbsoluteUrl(url: string): boolean {
+  return /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
+}
+
+// Mirror Axios' browser adapter URL combination so the checked target is the target actually sent.
+function resolveAxiosBrowserRequestUrl(url: unknown, baseURL: unknown): URL | null {
+  const requestedUrl = typeof url === 'string' ? url : '';
+  let fullPath = requestedUrl;
+  if (typeof baseURL === 'string' && baseURL && !isAxiosAbsoluteUrl(requestedUrl)) {
+    fullPath = requestedUrl
+      ? `${baseURL.replace(/\/?\/$/, '')}/${requestedUrl.replace(/^\/+/, '')}`
+      : baseURL;
+  }
+  if (!fullPath) {
+    return null;
+  }
+  return new URL(fullPath, window.location.origin);
+}
+
 function extractJwtTokenFromUrl(url, baseURL) {
   if (!url || typeof url !== 'string') {
     return { sanitizedUrl: url, jwtToken: null };
   }
   try {
-    const isAbsoluteUrl = /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(url);
-    const base = baseURL || window.location.origin;
-    const parsed = new URL(url, base);
-    const jwtToken = parsed.searchParams.get('jwtToken');
-    if (!jwtToken) {
+    const isAbsoluteUrl = isAxiosAbsoluteUrl(url);
+    const parsed = resolveAxiosBrowserRequestUrl(url, baseURL);
+    if (!parsed) {
       return { sanitizedUrl: url, jwtToken: null };
     }
+    const jwtTokens = parsed.searchParams.getAll('jwtToken');
+    if (jwtTokens.length === 0) {
+      return { sanitizedUrl: url, jwtToken: null };
+    }
+    const jwtToken = jwtTokens.find(Boolean) || null;
     parsed.searchParams.delete('jwtToken');
     const sanitizedUrl = (isAbsoluteUrl || baseURL) ? parsed.toString() : `${parsed.pathname}${parsed.search}${parsed.hash}`;
     return { sanitizedUrl, jwtToken };
@@ -86,10 +108,10 @@ function extractJwtTokenFromParams(params) {
     return { sanitizedParams: params, jwtToken: null };
   }
   if (params instanceof URLSearchParams) {
-    const jwtToken = params.get('jwtToken');
     if (!params.has('jwtToken')) {
       return { sanitizedParams: params, jwtToken: null };
     }
+    const jwtToken = params.getAll('jwtToken').find(Boolean) || null;
     const sanitizedParams = new URLSearchParams(params);
     sanitizedParams.delete('jwtToken');
     return { sanitizedParams, jwtToken };
@@ -102,6 +124,42 @@ function extractJwtTokenFromParams(params) {
     return { sanitizedParams, jwtToken };
   }
   return { sanitizedParams: params, jwtToken: null };
+}
+
+function normalizeServerBasePath(pathname: string): string {
+  return pathname.replace(/\/+$/, '') || '/';
+}
+
+function isRequestToManifestServer(config: UnknownRecord, manifestServerUrl: unknown): boolean {
+  if (typeof manifestServerUrl !== 'string' || !manifestServerUrl) {
+    return false;
+  }
+  try {
+    const requestUrl = resolveAxiosBrowserRequestUrl(config.url, config.baseURL);
+    if (!requestUrl) {
+      return false;
+    }
+    const serverUrl = new URL(manifestServerUrl);
+    if (
+      !['http:', 'https:'].includes(serverUrl.protocol)
+      || serverUrl.username
+      || serverUrl.password
+      || serverUrl.search
+      || serverUrl.hash
+    ) {
+      return false;
+    }
+    if (requestUrl.origin !== serverUrl.origin) {
+      return false;
+    }
+    const serverBasePath = normalizeServerBasePath(serverUrl.pathname);
+    const requestPath = normalizeServerBasePath(requestUrl.pathname);
+    return serverBasePath === '/'
+      || requestPath === serverBasePath
+      || requestPath.startsWith(`${serverBasePath}/`);
+  } catch {
+    return false;
+  }
 }
 
 async function persistRefreshedJwtToken(headers) {
@@ -129,7 +187,12 @@ axios.interceptors.request.use(
       const tokenToUse = tokenFromUrl || tokenFromParams || rcUnifiedCrmExtJwt;
       if (tokenToUse) {
         requestConfig.headers = requestConfig.headers || {};
-        if (!requestConfig.headers.Authorization && !requestConfig.headers.authorization) {
+        const manifest = await getManifest();
+        if (
+          isRequestToManifestServer(requestConfig, manifest?.serverUrl)
+          && !requestConfig.headers.Authorization
+          && !requestConfig.headers.authorization
+        ) {
           requestConfig.headers.Authorization = `Bearer ${tokenToUse}`;
         }
       }

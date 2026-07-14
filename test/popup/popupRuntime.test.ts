@@ -313,12 +313,12 @@ describe('popup runtime', () => {
 
     const request = await runtime.requestInterceptors[0].fulfilled({
       url: '/records?jwtToken=url-token&search=Jane',
-      baseURL: 'https://api.example',
+      baseURL: 'https://server.example',
       method: 'get',
       params: { page: 1 },
       data: { sample: true },
     });
-    expect(request.url).toBe('https://api.example/records?search=Jane');
+    expect(request.url).toBe('https://server.example/records?search=Jane');
     expect(request.headers.Authorization).toBe('Bearer url-token');
     expect(request.params).toEqual({ page: 1 });
     expect(runtime.logRecorder.logAction).toHaveBeenCalledWith(expect.objectContaining({
@@ -331,7 +331,7 @@ describe('popup runtime', () => {
 
     const request = await runtime.requestInterceptors[0].fulfilled({
       url: '/records',
-      baseURL: 'https://api.example',
+      baseURL: 'https://server.example',
       method: 'get',
       params: {
         jwtToken: 'params-token',
@@ -349,16 +349,17 @@ describe('popup runtime', () => {
 
     const relativeUrlRequest = await runtime.requestInterceptors[0].fulfilled({
       url: '/records?jwtToken=relative-token&search=Jane',
+      baseURL: 'https://server.example',
       params: new URLSearchParams('search=Jane'),
       headers: {},
     });
-    expect(relativeUrlRequest.url).toBe('/records?search=Jane');
+    expect(relativeUrlRequest.url).toBe('https://server.example/records?search=Jane');
     expect(relativeUrlRequest.params.get('search')).toBe('Jane');
     expect(relativeUrlRequest.headers.Authorization).toBe('Bearer relative-token');
 
     const searchParamsRequest = await runtime.requestInterceptors[0].fulfilled({
       url: '/records',
-      baseURL: 'https://api.example',
+      baseURL: 'https://server.example',
       params: new URLSearchParams('jwtToken=params-token&search=Jane'),
       headers: {},
     });
@@ -383,7 +384,7 @@ describe('popup runtime', () => {
     });
     expect(malformedUrlRequest.url).toBe('http://[bad');
     expect(malformedUrlRequest.params).toEqual(['not', 'an', 'object']);
-    expect(malformedUrlRequest.headers.Authorization).toBe('Bearer stored-token');
+    expect(malformedUrlRequest.headers.Authorization).toBeUndefined();
   });
 
   it('keeps request inputs unchanged when no JWT is available', async () => {
@@ -410,18 +411,111 @@ describe('popup runtime', () => {
     expect(skipped.headers).toBeUndefined();
   });
 
-  it('uses stored JWT authorization when request token inputs are absent', async () => {
+  it('uses stored JWT authorization for the manifest server when request token inputs are absent', async () => {
     const runtime = await loadPopupRuntime();
 
     const request = await runtime.requestInterceptors[0].fulfilled({
-      url: undefined,
+      url: 'https://server.example/records',
       params: null,
       headers: {},
     });
 
-    expect(request.url).toBeUndefined();
+    expect(request.url).toBe('https://server.example/records');
     expect(request.params).toBeNull();
     expect(request.headers.Authorization).toBe('Bearer stored-token');
+  });
+
+  it('only inserts CRM JWT authorization for the manifest server base URL', async () => {
+    const runtime = await loadPopupRuntime({
+      manifest: {
+        serverUrl: 'https://server.example/api/',
+        author: { name: 'CRM Author' },
+      },
+    });
+
+    for (const config of [
+      { url: 'https://server.example/api' },
+      { url: 'https://SERVER.example:443/api/records' },
+      { url: '/records', baseURL: 'https://server.example/api' },
+      { url: 'records', baseURL: 'https://server.example/api' },
+    ]) {
+      const request = await runtime.requestInterceptors[0].fulfilled({
+        ...config,
+        headers: {},
+      });
+      expect(request.headers.Authorization).toBe('Bearer stored-token');
+    }
+
+    const basePathTokenRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records?jwtToken=url-token',
+      baseURL: 'https://server.example/api',
+      headers: {},
+    });
+    expect(basePathTokenRequest.url).toBe('https://server.example/api/records');
+    expect(basePathTokenRequest.headers.Authorization).toBe('Bearer url-token');
+
+    for (const config of [
+      { url: 'https://attacker.example/api/records?jwtToken=url-token' },
+      { url: 'https://server.example.attacker.test/api/records' },
+      { url: 'http://server.example/api/records' },
+      { url: 'https://server.example:444/api/records' },
+      { url: 'https://server.example/api-evil/records' },
+      { url: 'https://server.example/api.evil/records' },
+      { url: 'https://server.example/outside-api/records' },
+      { url: 'https://server.example/api/../outside' },
+      { url: 'https://server.example/api/%2e%2e/outside' },
+      { url: 'https://server.example@attacker.example/api/records' },
+      { url: 'https://attacker.example/api/records', baseURL: 'https://server.example/api', allowAbsoluteUrls: false },
+      { url: '//attacker.example/api/records', baseURL: 'https://server.example/api', allowAbsoluteUrls: false },
+      { url: '/relative-without-server-base' },
+      { url: 'http://[bad' },
+    ]) {
+      const request = await runtime.requestInterceptors[0].fulfilled({
+        ...config,
+        headers: {},
+      });
+      expect(request.headers.Authorization).toBeUndefined();
+    }
+
+    const attackerRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: 'https://attacker.example/api/records?jwtToken=url-token&search=Jane',
+      params: { jwtToken: 'params-token', page: 1 },
+      headers: {},
+    });
+    expect(attackerRequest.url).toBe('https://attacker.example/api/records?search=Jane');
+    expect(attackerRequest.params).toEqual({ page: 1 });
+    expect(attackerRequest.headers.Authorization).toBeUndefined();
+
+    const repeatedTokenRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: 'https://attacker.example/api/records?jwtToken=&jwtToken=url-token&search=Jane',
+      params: new URLSearchParams('jwtToken=&jwtToken=params-token&page=1'),
+      headers: {},
+    });
+    expect(repeatedTokenRequest.url).toBe('https://attacker.example/api/records?search=Jane');
+    expect(repeatedTokenRequest.params.getAll('jwtToken')).toEqual([]);
+    expect(repeatedTokenRequest.params.get('page')).toBe('1');
+    expect(repeatedTokenRequest.headers.Authorization).toBeUndefined();
+  });
+
+  it('fails closed when the manifest has no valid server URL', async () => {
+    for (const manifest of [
+      null,
+      { serverUrl: 'not-a-valid-url' },
+      { serverUrl: 'ftp://server.example/api' },
+      { serverUrl: 'https://user:password@server.example/api' },
+      { serverUrl: 'https://server.example/api?tenant=1' },
+      { serverUrl: 'https://server.example/api#fragment' },
+    ]) {
+      const runtime = await loadPopupRuntime({
+        manifest,
+        platformInfo: null,
+      });
+      const request = await runtime.requestInterceptors[0].fulfilled({
+        url: 'https://server.example/records',
+        headers: {},
+      });
+      expect(request.headers.Authorization).toBeUndefined();
+    }
   });
 
   it('logs request interceptor errors before rethrowing', async () => {
