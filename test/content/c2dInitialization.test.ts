@@ -4,6 +4,7 @@ import userCore from '../../src/core/user.ts';
 import { sendMessageToExtension } from '../../src/lib/sendMessage.ts';
 import { initializeShadowRootSupport } from '../../src/lib/c2d/shadowRootSupport.ts';
 import ReactDOM from 'react-dom';
+import i18n from '../../src/i18n/index.ts';
 import { seedStorage } from '../setup/storageHelpers';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 
@@ -98,6 +99,13 @@ vi.mock('../../src/lib/c2d/shadowRootSupport.ts', () => ({
   initializeShadowRootSupport: vi.fn(),
 }));
 
+vi.mock('../../src/i18n/index.ts', () => ({
+  default: {
+    restoreLocale: vi.fn(async () => 'en-US'),
+  },
+  t: vi.fn((key) => key),
+}));
+
 async function loadContentSeams() {
   seedStorage({
     renderQuickAccessButton: false,
@@ -133,6 +141,7 @@ describe('content click-to-dial initialization', () => {
     vi.mocked(CustomC2DWidget).mockClear();
     vi.mocked(sendMessageToExtension).mockReset();
     vi.mocked(initializeShadowRootSupport).mockReset();
+    vi.mocked(i18n.restoreLocale).mockReset().mockResolvedValue('en-US');
     vi.mocked(userCore.getClickToDialEmbedMode).mockReset().mockReturnValue(userSetting('disabled'));
     vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReset().mockReturnValue(userSetting('disabled'));
     vi.mocked(userCore.getClickToDialUrls).mockReset().mockReturnValue(userSetting([]));
@@ -300,6 +309,32 @@ describe('content click-to-dial initialization', () => {
 
     expect(document.querySelectorAll('#rc-crm-extension-quick-access-button')).toHaveLength(1);
     expect(ReactDOM.render).toHaveBeenCalledTimes(2);
+  });
+
+  it('restores i18n before rendering the quick access button', async () => {
+    const { Initialize } = await loadContentSeams();
+    vi.mocked(i18n.restoreLocale).mockClear();
+    vi.mocked(ReactDOM.render).mockClear();
+    seedStorage({
+      renderQuickAccessButton: true,
+      'platform-info': { platformName: 'salesforce', hostname: 'localhost' },
+      customCrmManifest: {
+        platforms: {
+          salesforce: {},
+        },
+      },
+      userSettings: {},
+    });
+    vi.mocked(userCore.getQuickAccessButtonEmbedMode).mockReturnValue(userSetting('whitelist'));
+    vi.mocked(userCore.getQuickAccessButtonUrls).mockReturnValue(userSetting(['*crm*']));
+    vi.mocked(userCore.getClickToDialEmbedMode).mockReturnValue(userSetting('disabled'));
+
+    await Initialize();
+
+    expect(i18n.restoreLocale).toHaveBeenCalled();
+    expect(ReactDOM.render).toHaveBeenCalled();
+    expect(vi.mocked(i18n.restoreLocale).mock.invocationCallOrder[0])
+      .toBeLessThan(vi.mocked(ReactDOM.render).mock.invocationCallOrder[0]);
   });
 
   it('handles content-script runtime messages', async () => {
