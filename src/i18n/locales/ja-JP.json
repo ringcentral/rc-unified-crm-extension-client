@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "（手動ログ）通話後にログページを開く",
       "popupLogPageAfterCallDesc": "各通話後に自動的にログフォームを開く",
       "popupLogPageAfterSMS": "（手動ログ）メッセージ後にSMSログページを開く",
-      "popupLogPageAfterSMSDesc": "各メッセージ後に自動的にログフォームを開く"
+      "popupLogPageAfterSMSDesc": "各メッセージ後に自動的にログフォームを開く",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "通話ログ詳細",
@@ -380,6 +382,13 @@
       "connectToCrm": "設定に移動してCRMプラットフォームに接続してください",
       "apiKeyFailed": "APIキーの登録に失敗しました。",
       "noContactFound": "連絡先が見つかりません",
+      "extensionNumberNotLoggable": "内線番号は記録できません",
+      "groupTypeNotSupported": "このタイプのグループメッセージは自動ログに対応していません。手動で記録してください。",
+      "groupMembersSkipped": "{count}人のグループメンバーを自動記録できませんでした（一致なしまたは複数一致）。手動で記録してください。",
+      "manualDispositionNeeded": "手動での処理が必要な場合があります。記録されたメッセージを編集して処理してください。",
+      "messageNotLogged": "メッセージは記録されませんでした。{details}。",
+      "voicemailNotLogged": "ボイスメールは記録されませんでした。{details}。",
+      "faxNotLogged": "ファックスは記録されませんでした。{details}。",
       "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {

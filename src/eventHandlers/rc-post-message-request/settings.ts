@@ -60,16 +60,17 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
       }, '*');
     }
   } catch (e) { void e; /* ignore */ }
+  const setting = data.body.setting;
   if (data.body.setting.id === 'developerMode') {
-    showNotification({ level: 'success', message: `Developer mode is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
-    await chrome.storage.local.set({ developerMode: data.body.setting.value });
+    showNotification({ level: 'success', message: `Developer mode is turned ${setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
+    await chrome.storage.local.set({ developerMode: setting.value });
     getWidgetFrameWindow().postMessage({
       type: 'rc-adapter-register-third-party-service',
       service: (await embeddableServices.getServiceManifest()),
     }, '*');
   }
-  else if (data.body.setting.id === 'autoOpenWithCRM') {
-    showNotification({ level: 'success', message: `Auto open is turned ${data.body.setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
+  else if (setting?.id === 'autoOpenWithCRM') {
+    showNotification({ level: 'success', message: `Auto open is turned ${setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
   }
   else {
     showNotification({ level: 'success', message: 'Settings saved.', ttl: 3000 });

@@ -169,9 +169,14 @@ async function loadPopupRuntime(options: PopupRuntimeOptions = {}) {
   vi.doMock('../../src/lib/logRecorder.ts', () => ({ default: logRecorder }));
 
   const i18n = {
-    restoreLocale: vi.fn(),
+    restoreLocale: vi.fn(async () => 'en-US'),
   };
   vi.doMock('../../src/i18n/index.ts', () => ({ default: i18n }));
+
+  const embeddableLocale = {
+    syncLocaleToEmbeddableWhenReady: vi.fn(async () => {}),
+  };
+  vi.doMock('../../src/lib/embeddableLocale.ts', () => embeddableLocale);
 
   const eventHandlers: Partial<Record<EventHandlerName, EventHandlerMock>> = {};
   for (const name of Object.keys(eventHandlerModules) as EventHandlerName[]) {
@@ -218,6 +223,7 @@ async function loadPopupRuntime(options: PopupRuntimeOptions = {}) {
     platformService,
     logRecorder,
     i18n,
+    embeddableLocale,
     eventHandlers,
     messageHandlers,
     messageListener,
@@ -242,6 +248,7 @@ describe('popup runtime', () => {
     expect(window.__ON_RC_POPUP_WINDOW).toBe(1);
     expect(runtime.authCore.syncCrmAuthedFromStorage).toHaveBeenCalled();
     expect(runtime.i18n.restoreLocale).toHaveBeenCalled();
+    expect(runtime.embeddableLocale.syncLocaleToEmbeddableWhenReady).toHaveBeenCalledWith('en-US');
     expect(runtime.util.checkC2DCollision).toHaveBeenCalled();
     expect(runtime.manifestService.saveManifestUrl).toHaveBeenCalledWith({
       manifestUrl: 'https://manifest.example/custom.json',

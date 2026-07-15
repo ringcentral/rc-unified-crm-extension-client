@@ -93,6 +93,13 @@ describe('plugin and developer page renderers', () => {
     expect(market.schema.properties.plugins.oneOf).toEqual([
       expect.objectContaining({ const: 'private-plugin=private' }),
     ]);
+
+    const firstLoadMarket = pluginMarketListPage.getPluginMarketListPageRender({
+      pluginList: plugins(),
+      filter: 'All',
+    });
+    expect(firstLoadMarket.schema.properties.plugins.oneOf).toHaveLength(2);
+    expect(firstLoadMarket.formData.pluginSearch.filter).toBe('common.labels.all');
   });
 
   it('renders developer settings page admin-only controls', async () => {

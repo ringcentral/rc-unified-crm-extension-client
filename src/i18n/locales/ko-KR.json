@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(수동 로그) 통화 후 로그 페이지 열기",
       "popupLogPageAfterCallDesc": "각 통화 후 자동으로 로그 양식 열기",
       "popupLogPageAfterSMS": "(수동 로그) 메시지 후 SMS 로그 페이지 열기",
-      "popupLogPageAfterSMSDesc": "각 메시지 후 자동으로 로그 양식 열기"
+      "popupLogPageAfterSMSDesc": "각 메시지 후 자동으로 로그 양식 열기",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "통화 로그 세부 정보",
@@ -380,6 +382,13 @@
       "connectToCrm": "설정으로 이동하여 CRM 플랫폼에 연결하세요",
       "apiKeyFailed": "API 키 등록 실패.",
       "noContactFound": "연락처를 찾을 수 없습니다",
+      "extensionNumberNotLoggable": "내선 번호는 기록할 수 없습니다",
+      "groupTypeNotSupported": "이 유형의 그룹 메시지는 자동 로깅을 지원하지 않습니다. 수동으로 기록하세요.",
+      "groupMembersSkipped": "{count}명의 그룹 구성원을 자동으로 기록할 수 없습니다(일치 항목 없음 또는 여러 일치). 수동으로 기록하세요.",
+      "manualDispositionNeeded": "수동 처리가 필요할 수 있습니다. 기록된 메시지를 편집하여 처리하세요.",
+      "messageNotLogged": "메시지가 기록되지 않았습니다. {details}.",
+      "voicemailNotLogged": "음성 메일이 기록되지 않았습니다. {details}.",
+      "faxNotLogged": "팩스가 기록되지 않았습니다. {details}.",
       "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {

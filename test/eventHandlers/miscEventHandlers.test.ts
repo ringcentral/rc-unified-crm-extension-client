@@ -243,9 +243,16 @@ describe('miscellaneous top-level widget event handlers', () => {
   it('persists region settings and refreshes localized service manifest', async () => {
     vi.resetModules();
     const i18n = {
-      setLocale: vi.fn(async () => {}),
+      getLocale: vi.fn(() => 'en-US'),
+      restoreLocale: vi.fn(async () => 'en-CA'),
     };
+    const syncLocaleToEmbeddableWhenReady = vi.fn(async () => {});
     vi.doMock('../../src/i18n/index.ts', () => ({ default: i18n }));
+    vi.doMock('../../src/lib/embeddableLocale.ts', () => ({
+      syncLocaleToEmbeddable: vi.fn(async () => {}),
+      syncLocaleToEmbeddableWhenReady,
+    }));
+    vi.doMock('../../src/service/customizedPageLocaleService.ts', () => ({ refreshLocalizedCustomizedPageTitles: vi.fn(async () => {}) }));
     const embeddableServices = {
       getServiceManifest: vi.fn(async () => ({ id: 'localized-service' })),
     };
@@ -260,7 +267,8 @@ describe('miscellaneous top-level widget event handlers', () => {
     });
 
     expect(readStorage().selectedRegion).toBe('CA');
-    expect(i18n.setLocale).toHaveBeenCalledWith('CA');
+    expect(i18n.restoreLocale).toHaveBeenCalled();
+    expect(syncLocaleToEmbeddableWhenReady).toHaveBeenCalledWith('en-CA');
     expect(getWidgetPostMessages()).toContainEqual({
       message: {
         type: 'rc-adapter-register-third-party-service',
@@ -327,6 +335,12 @@ describe('miscellaneous top-level widget event handlers', () => {
       getManifest: vi.fn(async () => manifest()),
       refreshManifest,
     }));
+    vi.doMock('../../src/i18n/index.js', () => ({ default: { restoreLocale: vi.fn(async () => 'en-US') } }));
+    vi.doMock('../../src/lib/embeddableLocale.js', () => ({
+      syncLocaleToEmbeddable: vi.fn(async () => {}),
+      syncLocaleToEmbeddableWhenReady: vi.fn(async () => {}),
+    }));
+    vi.doMock('../../src/service/customizedPageLocaleService.js', () => ({ refreshLocalizedCustomizedPageTitles: vi.fn(async () => {}) }));
     const embeddableServices = {
       getServiceManifest: vi.fn(async () => ({ id: 'updated-service' })),
     };

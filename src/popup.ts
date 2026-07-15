@@ -31,6 +31,7 @@ import rcRouteChangedNotifyHandler from './eventHandlers/rc-route-changed-notify
 import rcAdapterAiAssistantSettingsNotifyHandler from './eventHandlers/rc-adapter-ai-assistant-settings-notify';
 import rcPostMessageRequestHandler from './eventHandlers/rc-post-message-request';
 import rcAdapterPhoneNumberFormatSettingsNotifyHandler from './eventHandlers/rc-adapter-phone-number-format-settings-notify';
+import { syncLocaleToEmbeddableWhenReady } from './lib/embeddableLocale';
 
 // message handlers
 import oauthCallBackHandler from './messageHandlers/oauthCallBack';
@@ -304,12 +305,20 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
   }
 });
 
-// Initialize i18n with stored locale
-i18n.restoreLocale();
+initializePopup();
 
-checkC2DCollision();
-getCustomManifest();
-getImplementedInterfaces();
+async function initializePopup() {
+  // Initialize i18n with stored locale before early API calls so Accept-Language is applied.
+  const locale = await i18n.restoreLocale();
+  if (locale) {
+    syncLocaleToEmbeddableWhenReady(locale).catch((e) => {
+      console.warn('[i18n] Failed to sync locale to embeddable:', e);
+    });
+  }
+  checkC2DCollision();
+  getCustomManifest();
+  getImplementedInterfaces();
+}
 
 async function getCustomManifest() {
   const customCrmManifest = await getManifest();

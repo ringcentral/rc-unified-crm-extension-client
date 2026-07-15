@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(Journal manuel) Ouvrir la page de journalisation après l'appel",
       "popupLogPageAfterCallDesc": "Ouvrir automatiquement le formulaire de journalisation après chaque appel",
       "popupLogPageAfterSMS": "(Journal manuel) Ouvrir la page de journalisation SMS après le message",
-      "popupLogPageAfterSMSDesc": "Ouvrir automatiquement le formulaire de journalisation après chaque message"
+      "popupLogPageAfterSMSDesc": "Ouvrir automatiquement le formulaire de journalisation après chaque message",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Détails du journal d'appels",
@@ -380,6 +382,13 @@
       "connectToCrm": "Veuillez aller dans les Paramètres et vous connecter à la plateforme CRM",
       "apiKeyFailed": "Échec de l'enregistrement de la clé API.",
       "noContactFound": "Aucun contact trouvé",
+      "extensionNumberNotLoggable": "Les numéros de poste ne peuvent pas être enregistrés",
+      "groupTypeNotSupported": "Les messages de groupe de ce type ne sont pas pris en charge pour l'enregistrement automatique. Veuillez enregistrer manuellement.",
+      "groupMembersSkipped": "{count} membre(s) du groupe n'ont pas pu être enregistrés automatiquement (aucune correspondance ou plusieurs correspondances). Veuillez les enregistrer manuellement.",
+      "manualDispositionNeeded": "Une disposition manuelle peut être nécessaire. Veuillez modifier le message enregistré pour la disposition.",
+      "messageNotLogged": "Message non enregistré. {details}.",
+      "voicemailNotLogged": "Messagerie vocale non enregistrée. {details}.",
+      "faxNotLogged": "Fax non enregistré. {details}.",
       "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {

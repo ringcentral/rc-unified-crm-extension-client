@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "（手动记录）通话后打开记录页面",
       "popupLogPageAfterCallDesc": "每次通话后自动打开记录表单",
       "popupLogPageAfterSMS": "（手动记录）消息后打开短信记录页面",
-      "popupLogPageAfterSMSDesc": "每条消息后自动打开记录表单"
+      "popupLogPageAfterSMSDesc": "每条消息后自动打开记录表单",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "通话日志详情",
@@ -380,6 +382,13 @@
       "connectToCrm": "请前往设置并连接到 CRM 平台",
       "apiKeyFailed": "注册 API 密钥失败。",
       "noContactFound": "未找到联系人",
+      "extensionNumberNotLoggable": "无法记录分机号码",
+      "groupTypeNotSupported": "此类型的群组消息不支持自动记录。请手动记录。",
+      "groupMembersSkipped": "有 {count} 位群组成员无法自动记录（无匹配或多个匹配）。请手动记录。",
+      "manualDispositionNeeded": "可能需要手动处理。请编辑已记录的消息以进行处理。",
+      "messageNotLogged": "消息未记录。{details}。",
+      "voicemailNotLogged": "语音邮件未记录。{details}。",
+      "faxNotLogged": "传真未记录。{details}。",
       "earliestCreatedResolverMissingField": "通话未记录。最早创建联系人解析需要每个匹配联系人都包含创建时间。请联系您的 App Connect 开发者，在 connector 的 findContact 响应中添加 createdDate。"
     },
     "error": {

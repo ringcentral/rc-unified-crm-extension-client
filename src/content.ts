@@ -11,6 +11,7 @@ import InputAwareRegExpMatcher from './lib/c2d/inputAwareRegExpMatcher';
 import { initializeShadowRootSupport } from './lib/c2d/shadowRootSupport';
 import { createC2DNodeIgnorePredicate } from './lib/c2d/domIgnore';
 import userCore from './core/user';
+import i18n from './i18n';
 console.log('import content js to web page');
 
 type UnknownRecord = Record<string, any>;
@@ -291,6 +292,8 @@ async function fetchBullhornUserinfo() {
 }
 
 export async function Initialize() {
+  await i18n.restoreLocale();
+
   // Unique: Pipedrive
   if (window.location.hostname.includes('pipedrive.com')) {
     let { c2dDelay } = await chromeStorageLocal.get(

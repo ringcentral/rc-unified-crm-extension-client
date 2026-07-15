@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(Registro manual) Abrir página de registro después de la llamada",
       "popupLogPageAfterCallDesc": "Abrir automáticamente el formulario de registro después de cada llamada",
       "popupLogPageAfterSMS": "(Registro manual) Abrir página de registro SMS después del mensaje",
-      "popupLogPageAfterSMSDesc": "Abrir automáticamente el formulario de registro después de cada mensaje"
+      "popupLogPageAfterSMSDesc": "Abrir automáticamente el formulario de registro después de cada mensaje",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Detalles del registro de llamadas",
@@ -380,6 +382,13 @@
       "connectToCrm": "Por favor vaya a Configuración y conéctese a la plataforma CRM",
       "apiKeyFailed": "Error al registrar la clave API.",
       "noContactFound": "No se encontró ningún contacto",
+      "extensionNumberNotLoggable": "Los números de extensión no se pueden registrar",
+      "groupTypeNotSupported": "Los mensajes de grupo de este tipo no son compatibles con el registro automático. Regístrelo manualmente.",
+      "groupMembersSkipped": "No se pudieron registrar automáticamente {count} miembro(s) del grupo (sin coincidencia o varias coincidencias). Regístrelos manualmente.",
+      "manualDispositionNeeded": "Es posible que se necesite una disposición manual. Edite el mensaje registrado para asignar la disposición.",
+      "messageNotLogged": "Mensaje no registrado. {details}.",
+      "voicemailNotLogged": "Buzón de voz no registrado. {details}.",
+      "faxNotLogged": "Fax no registrado. {details}.",
       "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {

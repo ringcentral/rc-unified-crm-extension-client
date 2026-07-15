@@ -1,9 +1,18 @@
-import { seedStorage } from './setup/storageHelpers';
-
 async function loadI18n() {
   vi.resetModules();
   const module = await import('../src/i18n/index.ts');
   return module.default;
+}
+
+function mockBrowserLanguages(languages) {
+  Object.defineProperty(window.navigator, 'languages', {
+    configurable: true,
+    value: languages,
+  });
+  Object.defineProperty(window.navigator, 'language', {
+    configurable: true,
+    value: languages[0],
+  });
 }
 
 describe('i18n', () => {
@@ -26,7 +35,7 @@ describe('i18n', () => {
     expect(console.warn).toHaveBeenCalledWith('[i18n] Missing translation for key: missing.key');
     expect(i18n.countryToLocale('MX')).toBe('es-419');
     expect(i18n.countryToLocale('unknown')).toBe('en-US');
-    expect(i18n.getSupportedLocales()).toEqual(expect.arrayContaining(['US', 'DE', 'JP']));
+    expect(i18n.getSupportedLocales()).toEqual(expect.arrayContaining(['en-US', 'de-DE', 'ja-JP', 'hi-IN']));
     expect(chrome.storage.local.set).toHaveBeenCalledWith({ currentLocale: 'de-DE' });
 
     await expect(i18n.setLocale('DE')).resolves.toBe('de-DE');
@@ -44,17 +53,18 @@ describe('i18n', () => {
     expect(i18n.t('common.buttons.save')).toBe('Save');
   });
 
-  it('restores locale from selected region and falls back when storage read fails', async () => {
-    seedStorage({
-      selectedRegion: 'JP',
-    });
-    let i18n = await loadI18n();
+  it('restores locale from browser language', async () => {
+    mockBrowserLanguages(['hi-IN', 'en-US']);
+    const i18n = await loadI18n();
 
-    await expect(i18n.restoreLocale()).resolves.toBe('ja-JP');
-    expect(i18n.getLocale()).toBe('ja-JP');
+    await expect(i18n.restoreLocale()).resolves.toBe('hi-IN');
+    expect(i18n.getLocale()).toBe('hi-IN');
+    expect(i18n.getBrowserLocale(['zh-Hant-TW'])).toBe('zh-TW');
+    expect(i18n.getBrowserLocale(['zh-Hans-CN'])).toBe('zh-CN');
+    expect(i18n.getBrowserLocale(['en-IN'])).toBe('en-US');
 
-    vi.mocked(chrome.storage.local.get).mockRejectedValueOnce(new Error('storage unavailable'));
-    i18n = await loadI18n();
+    vi.mocked(chrome.storage.local.set).mockRejectedValueOnce(new Error('storage unavailable'));
+    mockBrowserLanguages(['unsupported']);
     await expect(i18n.restoreLocale()).resolves.toBe('en-US');
     expect(i18n.getLocale()).toBe('en-US');
   });

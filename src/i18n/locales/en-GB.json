@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(Deprecated) Open call logging page after call",
       "popupLogPageAfterCallDesc": "Automatically open the logging form after each call",
       "popupLogPageAfterSMS": "(Deprecated) Open SMS logging page after message",
-      "popupLogPageAfterSMSDesc": "Automatically open the logging form after each message"
+      "popupLogPageAfterSMSDesc": "Automatically open the logging form after each message",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Call log details",
@@ -381,6 +383,13 @@
       "connectToCrm": "Please go to Settings and connect to CRM platform",
       "apiKeyFailed": "Failed to register api key.",
       "noContactFound": "No contact found",
+      "extensionNumberNotLoggable": "Extension numbers cannot be logged",
+      "groupTypeNotSupported": "Group messages of this type are not supported for auto log. Please log manually.",
+      "groupMembersSkipped": "{count} group member(s) could not be auto-logged (no match or multiple matches). Please log them manually.",
+      "manualDispositionNeeded": "Manual disposition might be needed. Please edit logged message to disposition.",
+      "messageNotLogged": "Message not logged. {details}.",
+      "voicemailNotLogged": "Voicemail not logged. {details}.",
+      "faxNotLogged": "Fax not logged. {details}.",
       "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {

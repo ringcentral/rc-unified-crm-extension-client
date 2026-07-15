@@ -322,6 +322,7 @@ describe('embeddableServices', () => {
     const { service } = await loadAuthedAdminServiceManifest();
 
     const appearanceGroup = service.settings.find((item) => item.id === 'appearance');
+    expect(appearanceGroup.items.map((item) => item.id)).not.toContain('language');
     const tabsSection = appearanceGroup.items.find((item) => item.id === 'tabs');
     expect(tabsSection.items.map((item) => item.id)).toContain('showAppointmentsTab');
 

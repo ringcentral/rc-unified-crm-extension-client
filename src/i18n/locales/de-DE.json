@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(Manuelle Protokollierung) Protokollierungsseite nach Anruf öffnen",
       "popupLogPageAfterCallDesc": "Protokollierungsformular automatisch nach jedem Anruf öffnen",
       "popupLogPageAfterSMS": "(Manuelle Protokollierung) SMS-Protokollierungsseite nach Nachricht öffnen",
-      "popupLogPageAfterSMSDesc": "Protokollierungsformular automatisch nach jeder Nachricht öffnen"
+      "popupLogPageAfterSMSDesc": "Protokollierungsformular automatisch nach jeder Nachricht öffnen",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Anrufprotokolldetails",
@@ -380,6 +382,13 @@
       "connectToCrm": "Bitte gehen Sie zu den Einstellungen und verbinden Sie sich mit der CRM-Plattform",
       "apiKeyFailed": "API-Schlüssel konnte nicht registriert werden.",
       "noContactFound": "Kein Kontakt gefunden",
+      "extensionNumberNotLoggable": "Nebenstellennummern können nicht protokolliert werden",
+      "groupTypeNotSupported": "Gruppennachrichten dieses Typs werden für die automatische Protokollierung nicht unterstützt. Bitte manuell protokollieren.",
+      "groupMembersSkipped": "{count} Gruppenmitglied(er) konnten nicht automatisch protokolliert werden (keine oder mehrere Übereinstimmungen). Bitte manuell protokollieren.",
+      "manualDispositionNeeded": "Manuelle Disposition könnte erforderlich sein. Bitte bearbeiten Sie die protokollierte Nachricht zur Disposition.",
+      "messageNotLogged": "Nachricht nicht protokolliert. {details}.",
+      "voicemailNotLogged": "Voicemail nicht protokolliert. {details}.",
+      "faxNotLogged": "Fax nicht protokolliert. {details}.",
       "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {

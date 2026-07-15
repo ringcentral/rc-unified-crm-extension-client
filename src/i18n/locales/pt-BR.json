@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(Log manual) Abrir página de registro após chamada",
       "popupLogPageAfterCallDesc": "Abrir automaticamente o formulário de registro após cada chamada",
       "popupLogPageAfterSMS": "(Log manual) Abrir página de registro SMS após mensagem",
-      "popupLogPageAfterSMSDesc": "Abrir automaticamente o formulário de registro após cada mensagem"
+      "popupLogPageAfterSMSDesc": "Abrir automaticamente o formulário de registro após cada mensagem",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Detalhes do log de chamadas",
@@ -380,6 +382,13 @@
       "connectToCrm": "Por favor, vá para Configurações e conecte-se à plataforma CRM",
       "apiKeyFailed": "Falha ao registrar a chave API.",
       "noContactFound": "Nenhum contato encontrado",
+      "extensionNumberNotLoggable": "Números de ramal não podem ser registrados",
+      "groupTypeNotSupported": "Mensagens de grupo deste tipo não são compatíveis com o registro automático. Registre manualmente.",
+      "groupMembersSkipped": "Não foi possível registrar automaticamente {count} membro(s) do grupo (sem correspondência ou várias correspondências). Registre-os manualmente.",
+      "manualDispositionNeeded": "Pode ser necessária uma disposição manual. Edite a mensagem registrada para definir a disposição.",
+      "messageNotLogged": "Mensagem não registrada. {details}.",
+      "voicemailNotLogged": "Correio de voz não registrado. {details}.",
+      "faxNotLogged": "Fax não registrado. {details}.",
       "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {

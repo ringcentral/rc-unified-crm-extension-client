@@ -212,7 +212,9 @@
       "popupLogPageAfterCall": "(Manuaalinen loki) Avaa lokitussivu puhelun jälkeen",
       "popupLogPageAfterCallDesc": "Avaa lokituslomake automaattisesti jokaisen puhelun jälkeen",
       "popupLogPageAfterSMS": "(Manuaalinen loki) Avaa tekstiviestilokitussivu viestin jälkeen",
-      "popupLogPageAfterSMSDesc": "Avaa lokituslomake automaattisesti jokaisen viestin jälkeen"
+      "popupLogPageAfterSMSDesc": "Avaa lokituslomake automaattisesti jokaisen viestin jälkeen",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Puhelulokin tiedot",
@@ -380,6 +382,13 @@
       "connectToCrm": "Siirry asetuksiin ja yhdistä CRM-alustaan",
       "apiKeyFailed": "API-avaimen rekisteröinti epäonnistui.",
       "noContactFound": "Yhteystietoa ei löytynyt",
+      "extensionNumberNotLoggable": "Alanumeroita ei voi kirjata",
+      "groupTypeNotSupported": "Tämän tyyppisiä ryhmäviestejä ei tueta automaattisessa kirjaamisessa. Kirjaa manuaalisesti.",
+      "groupMembersSkipped": "{count} ryhmän jäsentä ei voitu kirjata automaattisesti (ei osumaa tai useita osumia). Kirjaa ne manuaalisesti.",
+      "manualDispositionNeeded": "Manuaalinen käsittely saattaa olla tarpeen. Muokkaa kirjattua viestiä käsittelyä varten.",
+      "messageNotLogged": "Viestiä ei kirjattu. {details}.",
+      "voicemailNotLogged": "Vastaajaviestiä ei kirjattu. {details}.",
+      "faxNotLogged": "Faksia ei kirjattu. {details}.",
       "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {

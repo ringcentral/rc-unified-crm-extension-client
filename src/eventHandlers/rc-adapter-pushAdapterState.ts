@@ -1,6 +1,9 @@
 import { getPlatformInfo } from '../service/platformService';
 import { refreshManifest } from '../service/manifestService';
 import embeddableServices from '../service/embeddableServices';
+import i18n from '../i18n';
+import { syncLocaleToEmbeddableWhenReady } from '../lib/embeddableLocale';
+import { refreshLocalizedCustomizedPageTitles } from '../service/customizedPageLocaleService';
 import axios from 'axios';
 
 type UnknownRecord = Record<string, any>;
@@ -25,11 +28,14 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
   if (platform.requestConfig?.timeout) {
     axios.defaults.timeout = platform.requestConfig.timeout * 1000;
   }
+  const locale = await i18n.restoreLocale();
+  await syncLocaleToEmbeddableWhenReady(locale);
   const serviceManifest = await embeddableServices.getServiceManifest();
   getWidgetFrameWindow().postMessage({
     type: 'rc-adapter-register-third-party-service',
     service: serviceManifest,
   }, '*');
+  await refreshLocalizedCustomizedPageTitles();
 }
 
 export default {

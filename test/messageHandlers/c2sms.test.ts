@@ -71,4 +71,5 @@ describe('c2sms message handler', () => {
       targetOrigin: '*',
     });
   });
+
 });
