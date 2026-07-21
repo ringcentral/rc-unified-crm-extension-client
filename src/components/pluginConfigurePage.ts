@@ -2,6 +2,12 @@ import { t } from '../i18n';
 
 type UnknownRecord = Record<string, any>;
 
+const DEFAULT_PLUGIN_ICON_URL = 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png';
+
+function getPluginIconUrl(plugin: UnknownRecord): string {
+    return plugin.iconUrl ?? plugin.logoUrl ?? DEFAULT_PLUGIN_ICON_URL;
+}
+
 function getMergedPluginConfigFromFormData(formData: UnknownRecord = {}): UnknownRecord {
     const config: UnknownRecord = {
         ...(formData.existingConfig ?? {})
@@ -80,7 +86,7 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
                         {
                             const: 'basicInfo',
                             title: plugin.displayName ?? plugin.name,
-                            icon: plugin.iconUrl ?? 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
+                            icon: getPluginIconUrl(plugin),
                             description: `by ${plugin.name.split('.')[0]}`,
                         }
                     ]
