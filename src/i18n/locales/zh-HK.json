@@ -310,9 +310,21 @@
       "large": "大",
       "extraLarge": "超大",
       "phoneNumberFormat": "电话号码格式",
-      "language": "Language",
-      "languageDesc": "Choose the language for the extension interface.",
-      "languageAuto": "Follow browser / region"
+      "language": "語言",
+      "languageDesc": "選擇擴充功能介面的語言。",
+      "languageAuto": "跟隨瀏覽器 / 地區"
+    },
+    "clickToDialMatcher": {
+      "name": "點擊撥號比對器",
+      "description": "控制 App Connect 在顯示點擊撥號或點擊傳送簡訊小工具之前，如何偵測網頁上的電話號碼。",
+      "introName": "關於點擊撥號比對",
+      "introText": "App Connect 會掃描網頁上的電話號碼，以便在找到相符項目時顯示點擊撥號或點擊傳送簡訊小工具。",
+      "matcherType": "比對器類型",
+      "matcherTypeDesc": "選擇在網頁上偵測電話號碼的範圍。",
+      "regionName": "地區導向比對器",
+      "regionDesc": "專注於與所選地區相符的電話號碼格式。",
+      "allName": "全部比對器",
+      "allDesc": "比對任何看起來像電話號碼的數字序列。"
     },
     "callPop": {
       "groupName": "来电弹窗",

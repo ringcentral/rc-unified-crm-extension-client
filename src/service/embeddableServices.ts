@@ -543,32 +543,32 @@ async function getServiceManifest() {
         {
             id: 'clickToDialMatcher',
             type: 'section',
-            name: 'Click-to-dial Matcher',
+            name: t('settings.clickToDialMatcher.name'),
             groupId: 'general',
-            description: 'Control how App Connect detects phone numbers on webpages before showing the click-to-dial or click-to-SMS widget.',
+            description: t('settings.clickToDialMatcher.description'),
             items: [
                 {
                     id: 'clickToDialMatcherIntro',
-                    name: 'About click-to-dial matching',
+                    name: t('settings.clickToDialMatcher.introName'),
                     type: 'admonition',
                     severity: 'warning',
-                    value: 'App Connect scans webpages for phone numbers so it can display the click-to-dial or click-to-SMS widget when a match is found.'
+                    value: t('settings.clickToDialMatcher.introText')
                 },
                 {
                     id: 'c2dMatcherType',
                     type: 'option',
-                    name: 'Matcher type',
-                    description: 'Choose how broadly phone numbers should be detected on webpages.',
+                    name: t('settings.clickToDialMatcher.matcherType'),
+                    description: t('settings.clickToDialMatcher.matcherTypeDesc'),
                     options: [
                         {
                             id: 'libPhone',
-                            name: 'Region-focused matcher',
-                            description: 'Focus on phone-number variations that align with the selected region.'
+                            name: t('settings.clickToDialMatcher.regionName'),
+                            description: t('settings.clickToDialMatcher.regionDesc')
                         },
                         {
                             id: 'regExp',
-                            name: 'All matcher',
-                            description: 'Match any number sequence that looks like a phone number.'
+                            name: t('settings.clickToDialMatcher.allName'),
+                            description: t('settings.clickToDialMatcher.allDesc')
                         }
                     ],
                     value: userCore.getC2DMatcherTypeSetting(userSettings).value,

@@ -1,10 +1,10 @@
-import i18n from '../../../i18n';
+import i18n, { t } from '../../../i18n';
 
 type UnknownRecord = Record<string, any>;
 
 function getLanguageValueOptions(): UnknownRecord[] {
     return [
-        { const: 'auto', title: 'Follow browser / region (default)' },
+        { const: 'auto', title: t('settings.appearance.languageAuto') },
         ...i18n.getSupportedLocaleOptions().map(option => ({
             const: option.id,
             title: option.name,
@@ -15,7 +15,7 @@ function getLanguageValueOptions(): UnknownRecord[] {
 function getLanguageSettingPageRender({ adminUserSettings }: UnknownRecord): UnknownRecord {
     return {
         id: 'languageSettingPage',
-        title: 'Language',
+        title: t('settings.appearance.language'),
         type: 'page',
         schema: {
             type: 'object',
@@ -23,15 +23,15 @@ function getLanguageSettingPageRender({ adminUserSettings }: UnknownRecord): Unk
             properties: {
                 language: {
                     type: 'object',
-                    title: 'Language',
+                    title: t('settings.appearance.language'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'string',
-                            title: 'Value',
+                            title: t('common.labels.value'),
                             oneOf: getLanguageValueOptions()
                         }
                     }
@@ -43,7 +43,7 @@ function getLanguageSettingPageRender({ adminUserSettings }: UnknownRecord): Unk
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
-                submitText: 'Save',
+                submitText: t('common.buttons.save'),
             }
         },
         formData: {

@@ -310,9 +310,21 @@
       "large": "बड़ा",
       "extraLarge": "बहुत बड़ा",
       "phoneNumberFormat": "फ़ोन नंबर फ़ॉर्मेट",
-      "language": "Language",
-      "languageDesc": "Choose the language for the extension interface.",
-      "languageAuto": "Follow browser / region"
+      "language": "भाषा",
+      "languageDesc": "एक्सटेंशन इंटरफ़ेस के लिए भाषा चुनें।",
+      "languageAuto": "ब्राउज़र / क्षेत्र का अनुसरण करें"
+    },
+    "clickToDialMatcher": {
+      "name": "क्लिक-टू-डायल मैचर",
+      "description": "नियंत्रित करें कि क्लिक-टू-डायल या क्लिक-टू-SMS विजेट दिखाने से पहले App Connect वेबपेजों पर फ़ोन नंबर कैसे पहचानता है।",
+      "introName": "क्लिक-टू-डायल मिलान के बारे में",
+      "introText": "App Connect वेबपेजों पर फ़ोन नंबर खोजता है ताकि मिलान मिलने पर क्लिक-टू-डायल या क्लिक-टू-SMS विजेट दिखाया जा सके।",
+      "matcherType": "मैचर प्रकार",
+      "matcherTypeDesc": "चुनें कि वेबपेजों पर फ़ोन नंबर कितने व्यापक रूप से पहचाने जाने चाहिए।",
+      "regionName": "क्षेत्र-केंद्रित मैचर",
+      "regionDesc": "चयनित क्षेत्र से मेल खाने वाले फ़ोन नंबर रूपों पर ध्यान केंद्रित करता है।",
+      "allName": "सभी मैचर",
+      "allDesc": "किसी भी संख्या अनुक्रम से मेल खाता है जो फ़ोन नंबर जैसा दिखता है।"
     },
     "callPop": {
       "groupName": "कॉल पॉप",

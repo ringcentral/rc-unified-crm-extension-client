@@ -310,9 +310,21 @@
       "large": "크게",
       "extraLarge": "매우 크게",
       "phoneNumberFormat": "전화번호 형식",
-      "language": "Language",
-      "languageDesc": "Choose the language for the extension interface.",
-      "languageAuto": "Follow browser / region"
+      "language": "언어",
+      "languageDesc": "확장 프로그램 인터페이스의 언어를 선택하세요.",
+      "languageAuto": "브라우저 / 지역 따르기"
+    },
+    "clickToDialMatcher": {
+      "name": "클릭 투 다이얼 매처",
+      "description": "클릭 투 다이얼 또는 클릭 투 SMS 위젯을 표시하기 전에 App Connect가 웹페이지에서 전화번호를 감지하는 방식을 제어합니다.",
+      "introName": "클릭 투 다이얼 매칭 정보",
+      "introText": "App Connect는 웹페이지에서 전화번호를 검색하여 일치하는 항목을 찾으면 클릭 투 다이얼 또는 클릭 투 SMS 위젯을 표시합니다.",
+      "matcherType": "매처 유형",
+      "matcherTypeDesc": "웹페이지에서 전화번호를 얼마나 광범위하게 감지할지 선택하세요.",
+      "regionName": "지역 중심 매처",
+      "regionDesc": "선택한 지역에 맞는 전화번호 형식에 집중합니다.",
+      "allName": "전체 매처",
+      "allDesc": "전화번호처럼 보이는 모든 숫자 시퀀스와 일치합니다."
     },
     "callPop": {
       "groupName": "통화 팝업",

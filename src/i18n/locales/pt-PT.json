@@ -310,9 +310,21 @@
       "large": "Grande",
       "extraLarge": "Extra grande",
       "phoneNumberFormat": "Formato do número de telefone",
-      "language": "Language",
-      "languageDesc": "Choose the language for the extension interface.",
-      "languageAuto": "Follow browser / region"
+      "language": "Idioma",
+      "languageDesc": "Escolha o idioma da interface da extensão.",
+      "languageAuto": "Seguir navegador / região"
+    },
+    "clickToDialMatcher": {
+      "name": "Detetor de clique para ligar",
+      "description": "Controle como o App Connect deteta números de telefone nas páginas web antes de mostrar o widget de clique para ligar ou clique para SMS.",
+      "introName": "Acerca da deteção de clique para ligar",
+      "introText": "O App Connect analisa as páginas web em busca de números de telefone para mostrar o widget de clique para ligar ou clique para SMS quando encontra uma correspondência.",
+      "matcherType": "Tipo de detetor",
+      "matcherTypeDesc": "Escolha a abrangência da deteção de números de telefone nas páginas web.",
+      "regionName": "Detetor focado na região",
+      "regionDesc": "Concentra-se nas variações de número de telefone que correspondem à região selecionada.",
+      "allName": "Detetor completo",
+      "allDesc": "Corresponde a qualquer sequência de números que se pareça com um número de telefone."
     },
     "callPop": {
       "groupName": "Pop de chamada",

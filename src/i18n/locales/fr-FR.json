@@ -310,9 +310,21 @@
       "large": "Grand",
       "extraLarge": "Très grand",
       "phoneNumberFormat": "Format de numéro de téléphone",
-      "language": "Language",
-      "languageDesc": "Choose the language for the extension interface.",
-      "languageAuto": "Follow browser / region"
+      "language": "Langue",
+      "languageDesc": "Choisissez la langue de l'interface de l'extension.",
+      "languageAuto": "Suivre le navigateur / la région"
+    },
+    "clickToDialMatcher": {
+      "name": "Détecteur de clic-pour-appeler",
+      "description": "Contrôlez la façon dont App Connect détecte les numéros de téléphone sur les pages web avant d'afficher le widget de clic-pour-appeler ou de clic-pour-SMS.",
+      "introName": "À propos de la détection du clic-pour-appeler",
+      "introText": "App Connect analyse les pages web à la recherche de numéros de téléphone afin d'afficher le widget de clic-pour-appeler ou de clic-pour-SMS lorsqu'une correspondance est trouvée.",
+      "matcherType": "Type de détecteur",
+      "matcherTypeDesc": "Choisissez l'étendue de la détection des numéros de téléphone sur les pages web.",
+      "regionName": "Détecteur axé sur la région",
+      "regionDesc": "Se concentre sur les variantes de numéros de téléphone correspondant à la région sélectionnée.",
+      "allName": "Détecteur global",
+      "allDesc": "Correspond à toute séquence de chiffres ressemblant à un numéro de téléphone."
     },
     "callPop": {
       "groupName": "Pop d'appel",

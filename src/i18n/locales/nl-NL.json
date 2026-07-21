@@ -310,9 +310,21 @@
       "large": "Groot",
       "extraLarge": "Extra groot",
       "phoneNumberFormat": "Telefoonnummerformaat",
-      "language": "Language",
-      "languageDesc": "Choose the language for the extension interface.",
-      "languageAuto": "Follow browser / region"
+      "language": "Taal",
+      "languageDesc": "Kies de taal voor de interface van de extensie.",
+      "languageAuto": "Browser / regio volgen"
+    },
+    "clickToDialMatcher": {
+      "name": "Klik-om-te-bellen-matcher",
+      "description": "Bepaal hoe App Connect telefoonnummers op webpagina's detecteert voordat de klik-om-te-bellen- of klik-om-te-sms'en-widget wordt weergegeven.",
+      "introName": "Over klik-om-te-bellen-matching",
+      "introText": "App Connect scant webpagina's op telefoonnummers om de klik-om-te-bellen- of klik-om-te-sms'en-widget weer te geven wanneer er een overeenkomst wordt gevonden.",
+      "matcherType": "Matchertype",
+      "matcherTypeDesc": "Kies hoe breed telefoonnummers op webpagina's moeten worden gedetecteerd.",
+      "regionName": "Regiogerichte matcher",
+      "regionDesc": "Richt zich op telefoonnummervarianten die passen bij de geselecteerde regio.",
+      "allName": "Alles-matcher",
+      "allDesc": "Komt overeen met elke reeks cijfers die op een telefoonnummer lijkt."
     },
     "callPop": {
       "groupName": "Oproep-pop",
