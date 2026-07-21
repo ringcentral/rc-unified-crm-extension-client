@@ -451,6 +451,28 @@ describe('basic page renderers', () => {
     });
   });
 
+  it('renders admin plugin configuration icon from plugin manifest logoUrl', async () => {
+    const pluginAdminConfigurePage = await loadPage('../../src/components/pluginAdminConfigurePage.ts');
+
+    const page = pluginAdminConfigurePage.getPluginAdminConfigurePageRender({
+      pluginId: 'plugin-1',
+      pluginAccess: 'private',
+      installed: false,
+      ownerRcAccountId: 'account-1',
+      plugin: {
+        name: 'vendor.logoOnly',
+        displayName: 'Logo Only Plugin',
+        description: 'Plugin detail manifest provides logoUrl',
+        logoUrl: 'https://plugin.example/logo.png',
+      },
+    });
+
+    expect(page.schema.properties.basicInfo.oneOf[0]).toMatchObject({
+      title: 'Logo Only Plugin',
+      icon: 'https://plugin.example/logo.png',
+    });
+  });
+
   it('renders release notes with global and platform-specific entries', async () => {
     const releaseNotesPage = await loadPage('../../src/components/releaseNotesPage.ts');
 

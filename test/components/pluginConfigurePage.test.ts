@@ -184,4 +184,26 @@ describe('pluginConfigurePage', () => {
     expect(page.schema.properties).not.toHaveProperty('config');
     expect(page.uiSchema).not.toHaveProperty('config');
   });
+
+  it('uses plugin manifest logoUrl as the basic info icon when iconUrl is absent', async () => {
+    const pageModule = await loadPluginConfigurePage();
+
+    const page = pageModule.getPluginConfigurePageRender({
+      pluginId: 'plugin-3',
+      pluginAccess: 'public',
+      isLoggedIn: false,
+      config: {},
+      plugin: {
+        name: 'vendor.logoOnly',
+        displayName: 'Logo Only Plugin',
+        description: 'Plugin detail manifest provides logoUrl',
+        logoUrl: 'https://plugin.example/logo.png',
+      },
+    });
+
+    expect(page.schema.properties.basicInfo.oneOf[0]).toMatchObject({
+      title: 'Logo Only Plugin',
+      icon: 'https://plugin.example/logo.png',
+    });
+  });
 });

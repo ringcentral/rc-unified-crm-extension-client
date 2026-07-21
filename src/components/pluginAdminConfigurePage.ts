@@ -2,6 +2,12 @@ import { t } from '../i18n';
 
 type UnknownRecord = Record<string, any>;
 
+const DEFAULT_PLUGIN_ICON_URL = 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png';
+
+function getPluginIconUrl(plugin: UnknownRecord): string {
+    return plugin.iconUrl ?? plugin.logoUrl ?? DEFAULT_PLUGIN_ICON_URL;
+}
+
 function getPluginAdminConfigurePageRender({ pluginId, pluginAccess, plugin, installed, ownerRcAccountId }: UnknownRecord): UnknownRecord {
     const page = {
         id: 'pluginConfigurePage',
@@ -17,7 +23,7 @@ function getPluginAdminConfigurePageRender({ pluginId, pluginAccess, plugin, ins
                         {
                             const: 'basicInfo',
                             title: plugin.displayName ?? plugin.name,
-                            icon: plugin.iconUrl ?? 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
+                            icon: getPluginIconUrl(plugin),
                             description: `by ${plugin.name.split('.')[0]}`,
                             actions: installed ? [
                                 { id: 'removeButton', type: 'button', title: t('plugins.uninstall'), variant: 'contained', color: 'danger.b03' }
