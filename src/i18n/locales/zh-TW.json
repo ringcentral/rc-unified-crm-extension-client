@@ -296,6 +296,7 @@
       "showContactsTab": "显示联系人标签页",
       "showUserReportTab": "显示用户报告标签页",
       "showCalldownTab": "显示呼叫列表标签页",
+      "showAppointmentsTab": "显示预约标签页",
       "notificationLevel": "通知级别",
       "notificationLevelDesc": "选择在扩展程序中显示的通知级别。",
       "notificationLevelSelectDesc": "选择要显示的通知类型",

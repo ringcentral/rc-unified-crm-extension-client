@@ -296,6 +296,7 @@
       "showContactsTab": "연락처 탭 표시",
       "showUserReportTab": "사용자 보고서 탭 표시",
       "showCalldownTab": "통화 목록 탭 표시",
+      "showAppointmentsTab": "약속 탭 표시",
       "notificationLevel": "알림 수준",
       "notificationLevelDesc": "확장 프로그램에 표시할 알림 수준을 선택하세요.",
       "notificationLevelSelectDesc": "표시할 알림 유형 선택",

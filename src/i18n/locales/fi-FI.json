@@ -296,6 +296,7 @@
       "showContactsTab": "Näytä yhteystiedot-välilehti",
       "showUserReportTab": "Näytä käyttäjäraportti-välilehti",
       "showCalldownTab": "Näytä soittolista-välilehti",
+      "showAppointmentsTab": "Näytä tapaamiset-välilehti",
       "notificationLevel": "Ilmoitustaso",
       "notificationLevelDesc": "Valitse laajennuksessa näytettävä ilmoitustaso.",
       "notificationLevelSelectDesc": "Valitse näytettävät ilmoitustyypit",

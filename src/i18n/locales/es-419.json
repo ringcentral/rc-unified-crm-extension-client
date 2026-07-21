@@ -296,6 +296,7 @@
       "showContactsTab": "Mostrar pestaña de contactos",
       "showUserReportTab": "Mostrar pestaña de informe de usuario",
       "showCalldownTab": "Mostrar pestaña de lista de llamadas",
+      "showAppointmentsTab": "Mostrar pestaña de citas",
       "notificationLevel": "Nivel de notificación",
       "notificationLevelDesc": "Seleccionar el nivel de notificación que se mostrará en la extensión.",
       "notificationLevelSelectDesc": "Elegir qué tipos de notificaciones mostrar",

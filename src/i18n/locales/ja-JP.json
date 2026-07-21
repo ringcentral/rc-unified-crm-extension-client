@@ -296,6 +296,7 @@
       "showContactsTab": "連絡先タブを表示",
       "showUserReportTab": "ユーザーレポートタブを表示",
       "showCalldownTab": "コールリストタブを表示",
+      "showAppointmentsTab": "予約タブを表示",
       "notificationLevel": "通知レベル",
       "notificationLevelDesc": "拡張機能で表示する通知レベルを選択。",
       "notificationLevelSelectDesc": "表示する通知の種類を選択",

@@ -296,6 +296,7 @@
       "showContactsTab": "Kontakte-Tab anzeigen",
       "showUserReportTab": "Benutzerberichte-Tab anzeigen",
       "showCalldownTab": "Anrufliste-Tab anzeigen",
+      "showAppointmentsTab": "Termine-Tab anzeigen",
       "notificationLevel": "Benachrichtigungsstufe",
       "notificationLevelDesc": "Benachrichtigungsstufe auswählen, die in der Erweiterung angezeigt werden soll.",
       "notificationLevelSelectDesc": "Auswählen, welche Arten von Benachrichtigungen angezeigt werden sollen",

@@ -296,6 +296,7 @@
       "showContactsTab": "Afficher l'onglet contacts",
       "showUserReportTab": "Afficher l'onglet rapport utilisateur",
       "showCalldownTab": "Afficher l'onglet liste d'appels",
+      "showAppointmentsTab": "Afficher l'onglet rendez-vous",
       "notificationLevel": "Niveau de notification",
       "notificationLevelDesc": "Sélectionner le niveau de notification à afficher dans l'extension.",
       "notificationLevelSelectDesc": "Choisir quels types de notifications afficher",

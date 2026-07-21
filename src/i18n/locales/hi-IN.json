@@ -279,7 +279,8 @@
       "multipleContacts": "कई संपर्क",
       "multipleContactsHelper": "जब कई संपर्क फ़ोन नंबर से मेल खाते हों तो क्या करें",
       "firstAlphabetical": "वर्णानुक्रम में पहला",
-      "mostRecentActivity": "सबसे हाल की गतिविधि"
+      "mostRecentActivity": "सबसे हाल की गतिविधि",
+      "earliestCreated": "सबसे पहले बनाया गया"
     },
     "appearance": {
       "groupName": "दिखावट",
@@ -403,7 +404,8 @@
       "manualDispositionNeeded": "मैन्युअल डिस्पोज़िशन की आवश्यकता हो सकती है. कृपया लॉग किए गए संदेश को डिस्पोज़िशन में संपादित करें.",
       "messageNotLogged": "संदेश लॉग नहीं हुआ. {details}.",
       "voicemailNotLogged": "वॉइसमेल लॉग नहीं हुआ. {details}.",
-      "faxNotLogged": "फ़ैक्स लॉग नहीं हुआ. {details}."
+      "faxNotLogged": "फ़ैक्स लॉग नहीं हुआ. {details}.",
+      "earliestCreatedResolverMissingField": "कॉल लॉग नहीं हुई. सबसे-पहले-बनाया-गया संपर्क रिज़ॉल्वर के लिए आवश्यक है कि प्रत्येक मिलान किया गया संपर्क एक निर्माण तिथि शामिल करे. createdDate को कनेक्टर की findContact प्रतिक्रिया में जोड़ने के लिए अपने App Connect डेवलपर से संपर्क करें."
     },
     "error": {
       "wrongFormat": "गलत फ़ॉर्मेट: {field}",

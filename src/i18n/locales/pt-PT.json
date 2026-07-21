@@ -296,6 +296,7 @@
       "showContactsTab": "Mostrar aba de contatos",
       "showUserReportTab": "Mostrar aba de relatório do usuário",
       "showCalldownTab": "Mostrar aba de lista de chamadas",
+      "showAppointmentsTab": "Mostrar aba de compromissos",
       "notificationLevel": "Nível de notificação",
       "notificationLevelDesc": "Selecionar o nível de notificação a ser exibido na extensão.",
       "notificationLevelSelectDesc": "Escolher quais tipos de notificações exibir",

@@ -296,6 +296,7 @@
       "showContactsTab": "Mostra scheda contatti",
       "showUserReportTab": "Mostra scheda report utente",
       "showCalldownTab": "Mostra scheda lista chiamate",
+      "showAppointmentsTab": "Mostra scheda appuntamenti",
       "notificationLevel": "Livello notifica",
       "notificationLevelDesc": "Seleziona il livello di notifica da visualizzare nell'estensione.",
       "notificationLevelSelectDesc": "Scegli quali tipi di notifiche visualizzare",
@@ -388,7 +389,8 @@
       "callLogUpdated": "Log chiamata aggiornato",
       "authorized": "Autorizzato con successo.",
       "unauthorized": "Disconnesso con successo.",
-      "openingContactPage": "Tentativo di trovare e aprire la pagina del contatto..."
+      "openingContactPage": "Tentativo di trovare e aprire la pagina del contatto...",
+      "loggedOut": "Disconnessione effettuata con successo."
     },
     "warning": {
       "callLogFailed": "Impossibile salvare il log chiamata",

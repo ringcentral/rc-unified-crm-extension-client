@@ -296,6 +296,7 @@
       "showContactsTab": "Contactentabblad tonen",
       "showUserReportTab": "Gebruikersrapporttabblad tonen",
       "showCalldownTab": "Bellijsttabblad tonen",
+      "showAppointmentsTab": "Afsprakentabblad tonen",
       "notificationLevel": "Meldingsniveau",
       "notificationLevelDesc": "Selecteer het meldingsniveau dat in de extensie wordt weergegeven.",
       "notificationLevelSelectDesc": "Kies welke typen meldingen worden weergegeven",
