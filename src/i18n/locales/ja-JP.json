@@ -309,7 +309,10 @@
       "medium": "中",
       "large": "大",
       "extraLarge": "特大",
-      "phoneNumberFormat": "電話番号形式"
+      "phoneNumberFormat": "電話番号形式",
+      "language": "Language",
+      "languageDesc": "Choose the language for the extension interface.",
+      "languageAuto": "Follow browser / region"
     },
     "callPop": {
       "groupName": "通話ポップ",

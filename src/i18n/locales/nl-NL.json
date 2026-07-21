@@ -309,7 +309,10 @@
       "medium": "Gemiddeld",
       "large": "Groot",
       "extraLarge": "Extra groot",
-      "phoneNumberFormat": "Telefoonnummerformaat"
+      "phoneNumberFormat": "Telefoonnummerformaat",
+      "language": "Language",
+      "languageDesc": "Choose the language for the extension interface.",
+      "languageAuto": "Follow browser / region"
     },
     "callPop": {
       "groupName": "Oproep-pop",

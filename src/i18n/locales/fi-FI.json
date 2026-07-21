@@ -309,7 +309,10 @@
       "medium": "Keskikokoinen",
       "large": "Suuri",
       "extraLarge": "Erittäin suuri",
-      "phoneNumberFormat": "Puhelinnumeromuoto"
+      "phoneNumberFormat": "Puhelinnumeromuoto",
+      "language": "Language",
+      "languageDesc": "Choose the language for the extension interface.",
+      "languageAuto": "Follow browser / region"
     },
     "callPop": {
       "groupName": "Puhelun ponnahdusikkuna",

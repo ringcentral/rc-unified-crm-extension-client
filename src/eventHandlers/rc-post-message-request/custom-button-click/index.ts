@@ -380,6 +380,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
         case 'clickToDialMatcherSettingPage':
         case 'widgetSettingsPage':
         case 'notificationLevelSettingPage':
+        case 'languageSettingPage':
         case 'phoneNumberFormatPage':
         case 'clickToDialEmbedPage':
             await generalHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });

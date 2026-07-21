@@ -682,6 +682,7 @@ describe('admin page renderers', () => {
       'customizeTabs',
       'widgetSettings',
       'notificationLevel',
+      'language',
       'phoneNumberFormat',
     ]);
   });
@@ -711,6 +712,31 @@ describe('admin page renderers', () => {
     }).formData.notificationLevelSetting).toEqual({
       customizable: false,
       value: ['error'],
+    });
+  });
+
+  it('renders language settings with saved value and locale options', async () => {
+    const languagePage = await loadPage('../../src/components/admin/generalSettings/languageSettingPage.ts');
+    const render = languagePage.getLanguageSettingPageRender({
+      adminUserSettings: {
+        language: { customizable: false, value: 'de-DE' },
+      },
+    });
+    expect(render.formData.language).toEqual({
+      customizable: false,
+      value: 'de-DE',
+    });
+    const valueOptions = render.schema.properties.language.properties.value.oneOf;
+    expect(valueOptions.map((option) => option.const)).toEqual(
+      expect.arrayContaining(['auto', 'de-DE', 'ja-JP']),
+    );
+  });
+
+  it('defaults language admin setting to auto when unset', async () => {
+    const languagePage = await loadPage('../../src/components/admin/generalSettings/languageSettingPage.ts');
+    expect(languagePage.getLanguageSettingPageRender({ adminUserSettings: {} }).formData.language).toEqual({
+      customizable: true,
+      value: 'auto',
     });
   });
 

@@ -309,7 +309,10 @@
       "medium": "중간",
       "large": "크게",
       "extraLarge": "매우 크게",
-      "phoneNumberFormat": "전화번호 형식"
+      "phoneNumberFormat": "전화번호 형식",
+      "language": "Language",
+      "languageDesc": "Choose the language for the extension interface.",
+      "languageAuto": "Follow browser / region"
     },
     "callPop": {
       "groupName": "통화 팝업",

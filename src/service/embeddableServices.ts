@@ -3,6 +3,7 @@ import authCore from '../core/auth';
 import { getPlatformInfo } from './platformService';
 import { getManifest as getManifestBase } from './manifestService';
 import { t } from '../i18n';
+import i18n from '../i18n';
 
 type UnknownRecord = Record<string, any>;
 
@@ -276,6 +277,28 @@ async function getServiceManifest() {
                                 readOnly: userCore.getShowAppointmentsTabSetting(userSettings).readOnly,
                                 readOnlyReason: userCore.getShowAppointmentsTabSetting(userSettings).readOnlyReason
                             }] : [])
+                        ]
+                    },
+                    {
+                        id: 'language',
+                        type: 'section',
+                        name: t('settings.appearance.language'),
+                        groupId: 'appearance',
+                        description: t('settings.appearance.languageDesc'),
+                        items: [
+                            {
+                                id: 'language',
+                                type: 'option',
+                                name: t('settings.appearance.language'),
+                                description: t('settings.appearance.languageDesc'),
+                                options: [
+                                    { id: 'auto', name: t('settings.appearance.languageAuto') },
+                                    ...i18n.getSupportedLocaleOptions()
+                                ],
+                                value: userCore.getLanguageSetting(userSettings).value,
+                                readOnly: userCore.getLanguageSetting(userSettings).readOnly,
+                                readOnlyReason: userCore.getLanguageSetting(userSettings).readOnlyReason
+                            }
                         ]
                     },
                     {

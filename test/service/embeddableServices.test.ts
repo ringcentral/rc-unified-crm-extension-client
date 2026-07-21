@@ -33,6 +33,8 @@ function userCoreProxy(overrides: Record<PropertyKey, any> = {}) {
               return setting(true, { readOnlyReason: 'Managed SMS' });
             case 'getNotificationLevelSetting':
               return setting(['success', 'warning']);
+            case 'getLanguageSetting':
+              return setting('auto');
             case 'getQuickAccessButtonSizeSetting':
               return setting('small');
             case 'getIncomingCallPop':
@@ -184,6 +186,12 @@ async function loadEmbeddableServices({
   }));
   vi.doMock('../../src/i18n/index.ts', () => ({
     t: vi.fn((key, values) => (values?.author ? `${key}:${values.author}` : key)),
+    default: {
+      getSupportedLocaleOptions: vi.fn(() => [
+        { id: 'en-US', name: 'English (US)' },
+        { id: 'de-DE', name: 'Deutsch' },
+      ]),
+    },
   }));
   const embeddableServices = await loadModule('../../src/service/embeddableServices.ts');
   return {
@@ -322,7 +330,14 @@ describe('embeddableServices', () => {
     const { service } = await loadAuthedAdminServiceManifest();
 
     const appearanceGroup = service.settings.find((item) => item.id === 'appearance');
-    expect(appearanceGroup.items.map((item) => item.id)).not.toContain('language');
+    expect(appearanceGroup.items.map((item) => item.id)).toContain('language');
+    const languageSection = appearanceGroup.items.find((item) => item.id === 'language');
+    const languageOption = languageSection.items.find((item) => item.id === 'language');
+    expect(languageOption.type).toBe('option');
+    expect(languageOption.value).toBe('auto');
+    expect(languageOption.options.map((option) => option.id)).toEqual(
+      expect.arrayContaining(['auto', 'en-US', 'de-DE']),
+    );
     const tabsSection = appearanceGroup.items.find((item) => item.id === 'tabs');
     expect(tabsSection.items.map((item) => item.id)).toContain('showAppointmentsTab');
 

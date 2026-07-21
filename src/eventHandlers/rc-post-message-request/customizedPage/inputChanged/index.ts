@@ -25,6 +25,7 @@ import clickToDialMatcherHandler from './sections/clickToDialMatcher';
 import customizeTabsHandler from './sections/customizeTabs';
 import widgetSettingsHandler from './sections/widgetSettings';
 import notificationLevelHandler from './sections/notificationLevel';
+import languageHandler from './sections/language';
 import phoneNumberFormatHandler from './sections/phoneNumberFormat';
 import clickToDialEmbedHandler from './sections/clickToDialEmbed';
 import callAndSMSLoggingHandler from './sections/callAndSMSLogging';
@@ -187,6 +188,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             break;
         case 'notificationLevel':
             await notificationLevelHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'language':
+            await languageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'phoneNumberFormat':
             await phoneNumberFormatHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

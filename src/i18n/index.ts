@@ -76,6 +76,36 @@ const COUNTRY_TO_LOCALE_MAP: Record<string, string> = {
     'TW': 'zh-TW'
 };
 
+// Human-readable, self-referential names for each supported locale. Shown to the
+// user in the Language setting dropdown. Kept here (not in locale JSON files) so a
+// language always appears in its own name regardless of the active UI locale.
+const LOCALE_DISPLAY_NAMES: Record<string, string> = {
+    'de-DE': 'Deutsch',
+    'en-AU': 'English (Australia)',
+    'en-CA': 'English (Canada)',
+    'en-GB': 'English (UK)',
+    'en-US': 'English (US)',
+    'es-419': 'Español (Latinoamérica)',
+    'es-ES': 'Español (España)',
+    'fi-FI': 'Suomi',
+    'fr-CA': 'Français (Canada)',
+    'fr-FR': 'Français (France)',
+    'hi-IN': 'हिन्दी',
+    'it-IT': 'Italiano',
+    'ja-JP': '日本語',
+    'ko-KR': '한국어',
+    'nl-NL': 'Nederlands',
+    'pt-BR': 'Português (Brasil)',
+    'pt-PT': 'Português (Portugal)',
+    'zh-CN': '简体中文',
+    'zh-HK': '繁體中文 (香港)',
+    'zh-TW': '繁體中文 (台灣)'
+};
+
+// Sentinel value used by the Language setting to mean "follow the browser/region",
+// i.e. no explicit user/admin override.
+const AUTO_LOCALE = 'auto';
+
 const DEFAULT_LOCALE_BY_LANGUAGE: Record<string, string> = {
     de: 'de-DE',
     en: 'en-US',
@@ -374,11 +404,86 @@ function getSupportedLocales(): string[] {
 }
 
 /**
- * Restore locale from storage on startup.
- * The extension follows the browser language.
+ * Get the display name for a supported locale (in its own language).
+ * @param {string} localeCode - Locale code (e.g. 'de-DE')
+ * @returns {string} Display name (falls back to the locale code)
+ */
+function getLanguageDisplayName(localeCode: string): string {
+    return LOCALE_DISPLAY_NAMES[localeCode] || localeCode;
+}
+
+/**
+ * Get the supported locales as selectable options for a settings dropdown.
+ * Does NOT include the "auto"/follow-browser option; callers prepend it with a
+ * localized label of their choosing.
+ * @returns {{ id: string, name: string }[]}
+ */
+function getSupportedLocaleOptions(): { id: string; name: string }[] {
+    return SUPPORTED_LOCALES.map(localeCode => ({
+        id: localeCode,
+        name: getLanguageDisplayName(localeCode)
+    }));
+}
+
+function toSupportedPreference(value: unknown): string | null {
+    return typeof value === 'string' && value !== AUTO_LOCALE && SUPPORTED_LOCALES.includes(value)
+        ? value
+        : null;
+}
+
+/**
+ * Read the effective saved language preference from extension storage.
+ * Resolution order:
+ *   1. Admin-enforced language (userSettings.language with customizable === false)
+ *      — applies to all users, cannot be overridden.
+ *   2. The user's explicit local choice (languageOverride) — takes priority over
+ *      the browser/region language. An explicit "auto" means follow the browser.
+ *   3. A language persisted in userSettings from the server (if present).
+ * Returns a supported locale code, or null when following the browser/region.
+ */
+async function getStoredLanguagePreference(): Promise<string | null> {
+    try {
+        const { userSettings, languageOverride } = await chrome.storage.local.get(['userSettings', 'languageOverride']) as {
+            userSettings?: Record<string, any>;
+            languageOverride?: string;
+        };
+
+        // 1. Admin-enforced language wins.
+        const adminLanguage = userSettings?.language;
+        if (adminLanguage && adminLanguage.customizable === false) {
+            return toSupportedPreference(adminLanguage.value);
+        }
+
+        // 2. User's explicit local override.
+        if (languageOverride !== undefined) {
+            if (languageOverride === AUTO_LOCALE) {
+                return null;
+            }
+            const overrideLocale = toSupportedPreference(languageOverride);
+            if (overrideLocale) {
+                return overrideLocale;
+            }
+        }
+
+        // 3. Persisted user setting from the server, if any.
+        return toSupportedPreference(userSettings?.language?.value);
+    } catch (e) {
+        // Storage may be unavailable in some contexts; fall back to browser language.
+    }
+    return null;
+}
+
+/**
+ * Restore locale from storage on startup and on region changes.
+ * Resolution order: explicit saved language preference (user choice, or an
+ * admin-enforced value pulled into userSettings) -> browser language -> fallback.
  */
 async function restoreLocale(): Promise<string> {
     try {
+        const preferredLocale = await getStoredLanguagePreference();
+        if (preferredLocale) {
+            return await applyLocaleCode(preferredLocale);
+        }
         return await applyLocaleCode(getBrowserLocale());
     } catch (e) {
         return await applyLocaleCode(FALLBACK_LOCALE);
@@ -394,6 +499,8 @@ const i18n = {
     t,
     hasKey,
     getSupportedLocales,
+    getSupportedLocaleOptions,
+    getLanguageDisplayName,
     getBrowserLocale,
     restoreLocale,
     countryToLocale,
@@ -403,10 +510,11 @@ const i18n = {
     SUPPORTED_LOCALES,
     SUPPORTED_REGION_COUNTRY_CODES: SUPPORTED_LOCALES_AS_COUNTRY_CODE,
     COUNTRY_TO_LOCALE_MAP,
-    FALLBACK_LOCALE
+    FALLBACK_LOCALE,
+    AUTO_LOCALE
 };
 
 setAcceptLanguageHeader(currentLocale);
 
 export default i18n;
-export { init, setLocale, applyLocaleCode, getLocale, t, hasKey, getSupportedLocales, getBrowserLocale, restoreLocale, countryToLocale, toAcceptLanguage, setAcceptLanguageHeader, normalizeLocaleCode };
+export { init, setLocale, applyLocaleCode, getLocale, t, hasKey, getSupportedLocales, getSupportedLocaleOptions, getLanguageDisplayName, getBrowserLocale, restoreLocale, countryToLocale, toAcceptLanguage, setAcceptLanguageHeader, normalizeLocaleCode, AUTO_LOCALE };

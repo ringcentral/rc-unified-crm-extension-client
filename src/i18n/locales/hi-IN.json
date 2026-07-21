@@ -309,7 +309,10 @@
       "medium": "मध्यम",
       "large": "बड़ा",
       "extraLarge": "बहुत बड़ा",
-      "phoneNumberFormat": "फ़ोन नंबर फ़ॉर्मेट"
+      "phoneNumberFormat": "फ़ोन नंबर फ़ॉर्मेट",
+      "language": "Language",
+      "languageDesc": "Choose the language for the extension interface.",
+      "languageAuto": "Follow browser / region"
     },
     "callPop": {
       "groupName": "कॉल पॉप",

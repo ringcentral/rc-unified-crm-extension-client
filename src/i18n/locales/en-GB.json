@@ -310,7 +310,10 @@
       "medium": "Medium",
       "large": "Large",
       "extraLarge": "Extra Large",
-      "phoneNumberFormat": "Phone number format"
+      "phoneNumberFormat": "Phone number format",
+      "language": "Language",
+      "languageDesc": "Choose the language for the extension interface.",
+      "languageAuto": "Follow browser / region"
     },
     "callPop": {
       "groupName": "Call-pop",

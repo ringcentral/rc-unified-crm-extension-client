@@ -309,7 +309,10 @@
       "medium": "Moyen",
       "large": "Grand",
       "extraLarge": "Très grand",
-      "phoneNumberFormat": "Format de numéro de téléphone"
+      "phoneNumberFormat": "Format de numéro de téléphone",
+      "language": "Language",
+      "languageDesc": "Choose the language for the extension interface.",
+      "languageAuto": "Follow browser / region"
     },
     "callPop": {
       "groupName": "Pop d'appel",
