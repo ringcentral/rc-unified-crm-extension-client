@@ -1,7 +1,9 @@
+import { t } from '../../../i18n';
+
 function getAppearancePageRender() {
     return {
         id: 'appearancePage',
-        title: 'Appearance',
+        title: t('pages.generalSettings.appearance'),
         type: 'page',
         schema: {
             type: 'object',
@@ -12,19 +14,23 @@ function getAppearancePageRender() {
                     oneOf: [
                         {
                             const: "customizeTabs",
-                            title: "Customize tabs"
+                            title: t('settings.appearance.customizeTabs')
                         },
                         {
                             const: "widgetSettings",
-                            title: "Widget settings"
+                            title: t('settings.appearance.widgetSettings')
                         },
                         {
                             const: "notificationLevel",
-                            title: "Notification level"
+                            title: t('settings.appearance.notificationLevel')
+                        },
+                        {
+                            const: "language",
+                            title: t('settings.appearance.language')
                         },
                         {
                             const: "phoneNumberFormat",
-                            title: "Phone number format"
+                            title: t('settings.appearance.phoneNumberFormat')
                         }
                     ]
                 }

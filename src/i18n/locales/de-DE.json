@@ -296,6 +296,7 @@
       "showContactsTab": "Kontakte-Tab anzeigen",
       "showUserReportTab": "Benutzerberichte-Tab anzeigen",
       "showCalldownTab": "Anrufliste-Tab anzeigen",
+      "showAppointmentsTab": "Termine-Tab anzeigen",
       "notificationLevel": "Benachrichtigungsstufe",
       "notificationLevelDesc": "Benachrichtigungsstufe auswählen, die in der Erweiterung angezeigt werden soll.",
       "notificationLevelSelectDesc": "Auswählen, welche Arten von Benachrichtigungen angezeigt werden sollen",
@@ -309,7 +310,22 @@
       "medium": "Mittel",
       "large": "Groß",
       "extraLarge": "Extra groß",
-      "phoneNumberFormat": "Telefonnummernformat"
+      "phoneNumberFormat": "Telefonnummernformat",
+      "language": "Sprache",
+      "languageDesc": "Wählen Sie die Sprache für die Benutzeroberfläche der Erweiterung.",
+      "languageAuto": "Browser/Region folgen"
+    },
+    "clickToDialMatcher": {
+      "name": "Click-to-Dial-Matcher",
+      "description": "Legen Sie fest, wie App Connect Telefonnummern auf Webseiten erkennt, bevor das Click-to-Dial- oder Click-to-SMS-Widget angezeigt wird.",
+      "introName": "Über die Click-to-Dial-Erkennung",
+      "introText": "App Connect durchsucht Webseiten nach Telefonnummern, um bei einem Treffer das Click-to-Dial- oder Click-to-SMS-Widget anzuzeigen.",
+      "matcherType": "Matcher-Typ",
+      "matcherTypeDesc": "Wählen Sie, wie umfassend Telefonnummern auf Webseiten erkannt werden sollen.",
+      "regionName": "Regionsbezogener Matcher",
+      "regionDesc": "Konzentriert sich auf Telefonnummernvarianten, die zur ausgewählten Region passen.",
+      "allName": "Alle-Matcher",
+      "allDesc": "Erkennt jede Zahlenfolge, die wie eine Telefonnummer aussieht."
     },
     "callPop": {
       "groupName": "Anruf-Pop",

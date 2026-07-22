@@ -296,6 +296,7 @@
       "showContactsTab": "Näytä yhteystiedot-välilehti",
       "showUserReportTab": "Näytä käyttäjäraportti-välilehti",
       "showCalldownTab": "Näytä soittolista-välilehti",
+      "showAppointmentsTab": "Näytä tapaamiset-välilehti",
       "notificationLevel": "Ilmoitustaso",
       "notificationLevelDesc": "Valitse laajennuksessa näytettävä ilmoitustaso.",
       "notificationLevelSelectDesc": "Valitse näytettävät ilmoitustyypit",
@@ -309,7 +310,22 @@
       "medium": "Keskikokoinen",
       "large": "Suuri",
       "extraLarge": "Erittäin suuri",
-      "phoneNumberFormat": "Puhelinnumeromuoto"
+      "phoneNumberFormat": "Puhelinnumeromuoto",
+      "language": "Kieli",
+      "languageDesc": "Valitse laajennuksen käyttöliittymän kieli.",
+      "languageAuto": "Seuraa selainta / aluetta"
+    },
+    "clickToDialMatcher": {
+      "name": "Soita napsauttamalla -tunnistin",
+      "description": "Määritä, miten App Connect tunnistaa puhelinnumerot verkkosivuilla ennen soita napsauttamalla- tai lähetä tekstiviesti napsauttamalla -widgetin näyttämistä.",
+      "introName": "Tietoja soita napsauttamalla -tunnistuksesta",
+      "introText": "App Connect etsii verkkosivuilta puhelinnumeroita näyttääkseen soita napsauttamalla- tai lähetä tekstiviesti napsauttamalla -widgetin, kun osuma löytyy.",
+      "matcherType": "Tunnistimen tyyppi",
+      "matcherTypeDesc": "Valitse, kuinka laajasti puhelinnumerot tunnistetaan verkkosivuilla.",
+      "regionName": "Aluekohtainen tunnistin",
+      "regionDesc": "Keskittyy puhelinnumeromuotoihin, jotka vastaavat valittua aluetta.",
+      "allName": "Kaikki-tunnistin",
+      "allDesc": "Tunnistaa minkä tahansa numerosarjan, joka näyttää puhelinnumerolta."
     },
     "callPop": {
       "groupName": "Puhelun ponnahdusikkuna",

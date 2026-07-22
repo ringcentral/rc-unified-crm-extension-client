@@ -519,6 +519,14 @@ function getNotificationLevelSetting(userSettings) {
     }
 }
 
+function getLanguageSetting(userSettings) {
+    return {
+        value: userSettings?.language?.value ?? 'auto',
+        readOnly: userSettings?.language?.customizable === undefined ? false : !userSettings?.language?.customizable,
+        readOnlyReason: !userSettings?.language?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
 function getAddCallLogNoteSetting(userSettings) {
     return {
         value: userSettings?.addCallLogNote?.value ?? true,
@@ -751,6 +759,7 @@ const userCore = {
     getQuickAccessButtonEmbedMode,
     getQuickAccessButtonUrls,
     getNotificationLevelSetting,
+    getLanguageSetting,
     getAddCallLogNoteSetting,
     getAddCallSessionIdSetting,
     getAddRingCentralUserNameSetting,
@@ -817,6 +826,7 @@ export {
     getQuickAccessButtonEmbedMode,
     getQuickAccessButtonUrls,
     getNotificationLevelSetting,
+    getLanguageSetting,
     getAddCallLogNoteSetting,
     getAddCallSessionIdSetting,
     getAddRingCentralUserNameSetting,
