@@ -952,6 +952,74 @@ describe('miscellaneous rc-post-message-request handlers', () => {
     expect(readStorage().languageOverride).toBe('auto');
   });
 
+  it('isolates a failing Reports tab re-registration and still localizes the other tabs', async () => {
+    const { handler, util, reportPage, calldownPage, adminPage } = await loadSettingsRequestHandler();
+    await chrome.storage.local.set({ isAdmin: true, adminSettings: { userSettings: {} } });
+    // Reports re-registration throws; the Call Back and Admin tabs must still register.
+    reportPage.getReportsPageRender.mockImplementationOnce(() => {
+      throw new Error('report render boom');
+    });
+
+    await expect(handler.onEvent({
+      data: {
+        requestId: 'settings-lang-report-fail',
+        body: {
+          setting: { id: 'language', value: 'de-DE' },
+          settings: [
+            { items: [{ id: 'language', value: 'de-DE' }] },
+          ],
+        },
+      },
+      ...baseContext(),
+    })).resolves.toBeUndefined();
+
+    expect(calldownPage.getCalldownPageWithRecords).toHaveBeenCalledTimes(1);
+    expect(adminPage.getAdminPageRender).toHaveBeenCalledTimes(1);
+    expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
+      { message: { type: 'rc-adapter-register-customized-page', page: { id: 'calldownPage' } }, targetOrigin: '*' },
+      { message: { type: 'rc-adapter-register-customized-page', page: { id: 'adminPage' } }, targetOrigin: '*' },
+    ]));
+    expect(getWidgetPostMessages()).not.toEqual(expect.arrayContaining([
+      { message: { type: 'rc-adapter-register-customized-page', page: { id: 'reportPage' } }, targetOrigin: '*' },
+    ]));
+    expect(util.showNotification).toHaveBeenCalledWith({
+      level: 'success',
+      message: 'Language updated.',
+      ttl: 3000,
+    });
+  });
+
+  it('does not throw when Call Back and Admin tab re-registration fail during a language change', async () => {
+    const { handler, util, calldownPage, adminPage } = await loadSettingsRequestHandler();
+    await chrome.storage.local.set({ isAdmin: true, adminSettings: { userSettings: {} } });
+    calldownPage.getCalldownPageWithRecords.mockRejectedValueOnce(new Error('calldown boom'));
+    adminPage.getAdminPageRender.mockImplementationOnce(() => {
+      throw new Error('admin render boom');
+    });
+
+    await expect(handler.onEvent({
+      data: {
+        requestId: 'settings-lang-tabs-fail',
+        body: {
+          setting: { id: 'language', value: 'de-DE' },
+          settings: [
+            { items: [{ id: 'language', value: 'de-DE' }] },
+          ],
+        },
+      },
+      ...baseContext(),
+    })).resolves.toBeUndefined();
+
+    // Both re-registration paths were attempted (and their errors swallowed).
+    expect(calldownPage.getCalldownPageWithRecords).toHaveBeenCalledTimes(1);
+    expect(adminPage.getAdminPageRender).toHaveBeenCalledTimes(1);
+    expect(util.showNotification).toHaveBeenCalledWith({
+      level: 'success',
+      message: 'Language updated.',
+      ttl: 3000,
+    });
+  });
+
   it('connects CRM when authorize is requested while unauthorized', async () => {
     const { handler, authCore } = await loadAuthorizeHandler();
 

@@ -121,6 +121,17 @@ describe('i18n', () => {
     await expect(i18n.restoreLocale()).resolves.toBe('ja-JP');
   });
 
+  it('falls back to the browser language when reading the stored preference throws', async () => {
+    mockBrowserLanguages(['hi-IN', 'en-US']);
+    const i18n = await loadI18n();
+    // Force the storage read inside getStoredLanguagePreference to reject so the
+    // defensive catch -> `return null` fallback is exercised.
+    vi.mocked(chrome.storage.local.get).mockRejectedValueOnce(new Error('storage unavailable'));
+
+    await expect(i18n.restoreLocale()).resolves.toBe('hi-IN');
+    expect(i18n.getLocale()).toBe('hi-IN');
+  });
+
   it('exposes supported locale options and self-referential display names', async () => {
     const i18n = await loadI18n();
 
