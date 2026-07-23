@@ -1,6 +1,6 @@
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
-import { seedStorage, readStorage } from '../setup/storageHelpers';
+import { seedStorage } from '../setup/storageHelpers';
 import { CONSTANTS } from '../../src/misc/constant';
 
 async function loadMessageLogger() {
@@ -1058,7 +1058,6 @@ describe('messageLogger', () => {
       logType: 'Message',
       triggerType: 'createLog',
     }));
-    expect(readStorage()['rc-crm-message-selection-selected-conversation']).toEqual(['m1', 'm3']);
     expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
       {
         message: {
@@ -1131,15 +1130,37 @@ describe('messageLogger', () => {
     });
   });
 
-  it('forwards the previously selected message ids with the full conversation when the log form is submitted', async () => {
+  it('logs all selected messages in a single POST when the log form is submitted', async () => {
     seedStorage({
       userSettings: {
         autoLogSMS: { value: false },
       },
-      'rc-crm-message-selection-selected-conversation': ['m1', 'm3'],
     });
     const { messageLogger, logCore } = await loadMessageLogger();
 
+    // 1) Selecting messages (no contact) stores the selection snapshot in memory
+    //    and opens the contact form; nothing is logged yet.
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        selectedMessageIds: ['m1', 'm3'],
+        conversation: conversation({
+          conversationId: 'selected-conversation',
+          conversationLogId: 'selected-log',
+          messages: [
+            { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
+            { id: 'm2', creationTime: '2026-07-03T08:05:00Z', direction: 'Inbound' },
+            { id: 'm3', creationTime: '2026-07-05T08:10:00Z', direction: 'Outbound' },
+          ],
+        }),
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+    expect(logCore.addLog).not.toHaveBeenCalled();
+
+    // 2) Submitting the contact form logs exactly the selected messages as a
+    //    single CRM entry, carrying all selectedMessageIds.
     await messageLogger.onEvent({
       data: eventFor({
         triggerType: 'logForm',
@@ -1150,7 +1171,6 @@ describe('messageLogger', () => {
           messages: [
             { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
             { id: 'm2', creationTime: '2026-07-03T08:05:00Z', direction: 'Inbound' },
-            { id: 'm3', creationTime: '2026-07-03T08:10:00Z', direction: 'Outbound' },
           ],
         }),
         formData: {
@@ -1163,16 +1183,101 @@ describe('messageLogger', () => {
         },
       }),
       ...context,
+      platform: { isSelectedMessageLogSupported: true },
     });
 
     expect(logCore.addLog).toHaveBeenCalledTimes(1);
     const addLogArgs = logCore.addLog.mock.calls[0][0];
-    // Full conversation is sent; the server filters to the selected ids.
-    expect(addLogArgs.logInfo.messages.map((m: any) => m.id)).toEqual(['m1', 'm2', 'm3']);
+    // Only the selected messages (across all day-buckets) are sent, in one POST.
+    expect(addLogArgs.logInfo.messages.map((m: any) => m.id)).toEqual(['m1', 'm3']);
     expect(addLogArgs.selectedMessageIds).toEqual(['m1', 'm3']);
     expect(addLogArgs.contactId).toBe('contact-1');
-    // Selection is consumed after logging.
-    expect(readStorage()['rc-crm-message-selection-selected-conversation']).toBeUndefined();
+  });
+
+  it('sends only one POST when the widget fans out parallel per-day-bucket logForm submits', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+      },
+    });
+    const { messageLogger, logCore } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        selectedMessageIds: ['m1', 'm3'],
+        conversation: conversation({
+          conversationId: 'multi-day-conversation',
+          conversationLogId: 'day-1',
+          messages: [
+            { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
+            { id: 'm3', creationTime: '2026-07-05T08:10:00Z', direction: 'Outbound' },
+          ],
+        }),
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    // The widget submits one logForm per day-bucket in parallel (Promise.all).
+    const dayBucket = (conversationLogId: string, msgId: string) => messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'logForm',
+        redirect: false,
+        conversation: conversation({
+          conversationId: 'multi-day-conversation',
+          conversationLogId,
+          messages: [{ id: msgId, creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' }],
+        }),
+        formData: {
+          contact: 'contact-1',
+          contactType: 'Lead',
+          contactName: 'Jane Smith',
+          newContactName: '',
+          newContactType: '',
+          messageType: 'sms',
+        },
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+    await Promise.all([dayBucket('day-1', 'm1'), dayBucket('day-2', 'm3')]);
+
+    // Exactly one POST, carrying all selected ids and messages.
+    expect(logCore.addLog).toHaveBeenCalledTimes(1);
+    expect(logCore.addLog.mock.calls[0][0].selectedMessageIds).toEqual(['m1', 'm3']);
+    expect(logCore.addLog.mock.calls[0][0].logInfo.messages.map((m: any) => m.id)).toEqual(['m1', 'm3']);
+  });
+
+  it('does not auto-append new messages when selected message logging is enabled', async () => {
+    const prefKey = 'rc-crm-conversation-pref-selected-log';
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: true },
+      },
+      [prefKey]: {
+        additionalSubmission: {},
+        contact: { id: 'pref-contact', type: 'Contact', name: 'Preferred Contact' },
+      },
+    });
+    const { messageLogger, logCore, util } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'auto',
+        conversation: conversation({
+          conversationId: 'selected-conversation',
+          conversationLogId: 'selected-log',
+        }),
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    // Auto-update ("keep already-logged conversation in sync") is disabled in
+    // granular mode, so a new message is never silently logged.
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
   });
 
   it('ignores selectedLog events when the platform does not support selected message logging', async () => {

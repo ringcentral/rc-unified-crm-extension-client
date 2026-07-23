@@ -22,6 +22,23 @@ function getWidgetFrameWindow(): Window {
   return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
 }
 
+type PendingSelectedLog = {
+  // Snapshot of exactly the messages the user selected (already filtered by the
+  // widget), used as the single-entry payload on submit.
+  conversation: UnknownRecord;
+  selectedMessageIds: string[];
+  // Guards against the widget's parallel per-day-bucket `logForm` fan-out so we
+  // only emit ONE messageLog POST for the whole selection.
+  consumed: boolean;
+};
+
+// In-memory (not chrome.storage) so the check-and-consume in the `logForm`
+// handler is synchronous and immune to the race created by the widget firing
+// several `logForm` submits in parallel (`Promise.all`) for a multi-day
+// conversation. Keyed by conversationId. Entries are short-lived: consumed
+// after the single POST and cleared shortly after.
+const pendingSelectedLogs = new Map<string, PendingSelectedLog>();
+
 async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
   void platformInfo;
   const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
@@ -162,6 +179,15 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
 
   // Case: auto log
   if (data.body.triggerType === 'auto' && !messageAutoPopup) {
+    // Granular selection mode: disable the widget's "keep an already-logged
+    // conversation in sync" auto-update (its `isAutoUpdate`, which is compiled
+    // into the widget and cannot be toggled via registration). When
+    // `isSelectedMessageLogSupported` is on, new messages must be logged
+    // explicitly by selecting them, so never silently append here.
+    if (platform?.isSelectedMessageLogSupported === true) {
+      responseMessage(data.requestId, { data: 'ok' });
+      return;
+    }
     // Case: group SMS
     if (data.body.conversation.correspondents.length > 1) {
       // Group auto-log is only supported for SMS conversations
@@ -460,11 +486,14 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
       });
       return;
     }
-    // Sub-case: no contact resolved yet. Persist the selection snapshot so the
-    // subsequent logForm submit for this conversation logs exactly these
-    // messages as a single entry, then open the contact-selection form.
-    await chrome.storage.local.set({
-      [`rc-crm-message-selection-${data.body.conversation.conversationId}`]: selectedIds
+    // Sub-case: no contact resolved yet. Keep the selection snapshot (the exact
+    // selected messages + their ids) in memory so the subsequent logForm submit
+    // for this conversation logs all of them as a SINGLE CRM entry (one POST),
+    // then open the contact-selection form.
+    pendingSelectedLogs.set(String(data.body.conversation.conversationId), {
+      conversation: { ...data.body.conversation, messages: selectedMessages },
+      selectedMessageIds: selectedIds,
+      consumed: false,
     });
     // Open the contact-selection log form (no CRM write yet). Render it as a
     // normal manual/new log page ('selectedLog' is not a valid render trigger
@@ -476,15 +505,75 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
   }
   // Case: manual log, submit
   else if (data.body.triggerType === 'logForm') {
-    // If this submit corresponds to a granular message selection, forward the
-    // selected message ids to the server (top-level `selectedMessageIds`). The
-    // server keeps the full conversation for message content and composes a
-    // single CRM entry from exactly those ids, returning a per-message ->
-    // log-id map. Absent/empty selection keeps the existing daily-digest path.
-    const selectionKey = `rc-crm-message-selection-${data.body.conversation.conversationId}`;
-    const storedSelection = (await chrome.storage.local.get(selectionKey) as UnknownRecord)[selectionKey];
-    const hasSelection = Array.isArray(storedSelection) && storedSelection.length > 0;
-    const selectedMessageIds = hasSelection ? storedSelection.map((id: unknown) => String(id)) : undefined;
+    const conversationId = String(data.body.conversation.conversationId);
+    const pending = pendingSelectedLogs.get(conversationId);
+    // Granular single-POST path: when a message selection is pending for this
+    // conversation, log every selected message as ONE CRM entry. The widget
+    // fans out one `logForm` submit per day-bucket in parallel (Promise.all),
+    // so we consume the selection exactly once (synchronous check-and-set, no
+    // await in between) and ignore the sibling submits. Only the single
+    // (non-group) contact form is supported for selected logging; group
+    // selections fall through to the normal per-day handling below.
+    if (pending && data.body.formData?.contact) {
+      if (pending.consumed) {
+        // Leftover parallel day-bucket submit for the same selection: skip.
+        responseMessage(data.requestId, { data: 'ok' });
+        return;
+      }
+      pending.consumed = true;
+      // Clear shortly after so a later, unrelated manual log of this thread is
+      // not treated as part of the (already-consumed) selection.
+      setTimeout(() => pendingSelectedLogs.delete(conversationId), 5000);
+
+      let additionalSubmission: UnknownRecord = {};
+      const selAdditionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
+      const selNewContactAdditionalFields = manifest.platforms[platformName].page?.newContact?.additionalFields ?? [];
+      for (const f of selAdditionalFields.concat(selNewContactAdditionalFields)) {
+        if (data.body.formData[f.const] != "none") {
+          additionalSubmission[f.const] = data.body.formData[f.const];
+        }
+      }
+      let selectedNewContactInfo: UnknownRecord = {};
+      if (data.body.formData.contact === 'createNewContact' && data.body.redirect) {
+        const newContactResp = await contactCore.createContact({
+          serverUrl: manifest.serverUrl,
+          phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
+          newContactName: data.body.formData.newContactName,
+          newContactType: data.body.formData.newContactType,
+          additionalSubmission
+        }) as UnknownRecord;
+        selectedNewContactInfo = newContactResp.contactInfo;
+        if (userCore.getopenContactPageAfterCreationSetting(userSettings).value) {
+          await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: selectedNewContactInfo.id, contactType: data.body.formData.newContactType });
+        }
+      }
+      // Carry every selected message (across all day-buckets) in a single
+      // conversation payload so exactly one POST /messageLog is sent with all
+      // selectedMessageIds and logged at once.
+      const selectedConversation = { ...data.body.conversation, messages: pending.conversation.messages };
+      const addLogResult = await logCore.addLog({
+        serverUrl: manifest.serverUrl,
+        logType: 'Message',
+        logInfo: selectedConversation,
+        isMain: true,
+        note: '',
+        additionalSubmission,
+        contactId: selectedNewContactInfo?.id ?? data.body.formData.contact,
+        contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
+        contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
+        selectedMessageIds: pending.selectedMessageIds,
+      });
+      responseMessage(data.requestId, {
+        data: {
+          logId: addLogResult?.logId,
+          logIds: addLogResult?.logIds,
+          messageLogs: addLogResult?.messageLogs,
+        }
+      });
+      return;
+    }
+    // Non-granular path: existing daily-digest behavior (no selection filter).
+    const selectedMessageIds = undefined;
     const logConversation = data.body.conversation;
     // user manaully submit message log form
     // Case: single form
@@ -564,11 +653,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
           selectedMessageIds,
         });
       }
-    }
-    // Selection has been consumed; clear it so future full-conversation logs of
-    // this thread are not accidentally filtered.
-    if (hasSelection) {
-      await chrome.storage.local.remove(selectionKey);
     }
   }
   // Case: Open page OR auto pop up log page
