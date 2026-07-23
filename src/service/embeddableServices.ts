@@ -104,6 +104,16 @@ async function getServiceManifest() {
         messageLoggerPath: '/messageLogger',
         messagesLogPageInputChangedEventPath: '/messageLogger/inputChanged',
         messageLogEntityMatcherPath: '/messageLogger/match',
+        // Where the widget posts a click on a message's "logged" icon so we can
+        // open the corresponding CRM log record.
+        messageLoggerOpenLogPath: '/messageLogger/openLog',
+        // Enable per-message selection UI ONLY when the platform manifest opts in
+        // via `isSelectedMessageLogSupported: true`. Otherwise the widget keeps
+        // the existing message-logging behavior (for both auto and manual).
+        // NOTE: the embeddable widget reads this exact key (`messageLoggerGranularSelectionEnabled`)
+        // to decide whether to render per-message checkboxes; the widget additionally
+        // requires manual SMS mode (auto-log off) and a non-thread conversation.
+        messageLoggerGranularSelectionEnabled: platform?.isSelectedMessageLogSupported === true,
         messageLoggerAutoSettingLabel: t('settings.logging.autoLogSMS'),
         messageLoggerAutoSettingReadOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
         messageLoggerAutoSettingReadOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,

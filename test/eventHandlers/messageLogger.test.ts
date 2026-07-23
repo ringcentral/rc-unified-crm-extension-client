@@ -1,6 +1,6 @@
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
-import { seedStorage } from '../setup/storageHelpers';
+import { seedStorage, readStorage } from '../setup/storageHelpers';
 import { CONSTANTS } from '../../src/misc/constant';
 
 async function loadMessageLogger() {
@@ -1019,6 +1019,215 @@ describe('messageLogger', () => {
       contactName: 'Renamed Contact',
       additionalSubmission: {},
     }));
+  });
+
+  it('opens the log form and stores the selection instead of logging immediately', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+      },
+    });
+    const { messageLogger, logCore, logPage, util } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        redirect: false,
+        selectedMessageIds: ['m1', 'm3'],
+        conversation: conversation({
+          conversationId: 'selected-conversation',
+          conversationLogId: 'selected-log',
+          messages: [
+            { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
+            { id: 'm2', creationTime: '2026-07-03T08:05:00Z', direction: 'Inbound' },
+            { id: 'm3', creationTime: '2026-07-03T08:10:00Z', direction: 'Outbound' },
+          ],
+        }),
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    // No CRM write on click; the contact-selection form is opened instead.
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    // The page must be rendered with a valid render trigger type so the contact
+    // field is present; 'selectedLog' is not a valid render type and would
+    // otherwise produce an empty page that drops the contact on submit.
+    expect(logPage.getLogPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'selected-conversation',
+      logType: 'Message',
+      triggerType: 'createLog',
+    }));
+    expect(readStorage()['rc-crm-message-selection-selected-conversation']).toEqual(['m1', 'm3']);
+    expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
+      {
+        message: {
+          type: 'rc-adapter-navigate-to',
+          path: '/log/messages/selected-conversation',
+        },
+        targetOrigin: '*',
+      },
+    ]));
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('logs selected messages directly with the widget-provided contact and returns the log id', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+      },
+    });
+    const { messageLogger, logCore, logPage, util } = await loadMessageLogger();
+    logCore.addLog.mockResolvedValueOnce({
+      successful: true,
+      logId: 'crm-entry-1',
+      logIds: ['crm-entry-1'],
+      messageLogs: { m1: 'crm-entry-1', m3: 'crm-entry-1' },
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        selectedMessageIds: ['m1', 'm3'],
+        additionalSubmission: {},
+        contactId: '2554',
+        contactName: 'TestingWithDeepak  SushilTest',
+        contactType: 'custjob',
+        conversation: conversation({
+          conversationId: 'selected-conversation',
+          conversationLogId: 'selected-log',
+          messages: [
+            { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
+            { id: 'm2', creationTime: '2026-07-03T08:05:00Z', direction: 'Inbound' },
+            { id: 'm3', creationTime: '2026-07-03T08:10:00Z', direction: 'Outbound' },
+          ],
+        }),
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    // Logs directly (no form) using the same payload shape as normal manual
+    // SMS logging plus the selected ids.
+    expect(logPage.getLogPageRender).not.toHaveBeenCalled();
+    expect(logCore.addLog).toHaveBeenCalledTimes(1);
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      logType: 'Message',
+      additionalSubmission: {},
+      contactId: '2554',
+      contactName: 'TestingWithDeepak  SushilTest',
+      contactType: 'custjob',
+      selectedMessageIds: ['m1', 'm3'],
+    }));
+    // Full conversation is forwarded; the server filters to the selected ids.
+    expect(logCore.addLog.mock.calls[0][0].logInfo.messages.map((m: any) => m.id)).toEqual(['m1', 'm2', 'm3']);
+    // The resulting log id is returned so the widget can mark them logged.
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', {
+      data: {
+        logId: 'crm-entry-1',
+        logIds: ['crm-entry-1'],
+        messageLogs: { m1: 'crm-entry-1', m3: 'crm-entry-1' },
+      },
+    });
+  });
+
+  it('forwards the previously selected message ids with the full conversation when the log form is submitted', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+      },
+      'rc-crm-message-selection-selected-conversation': ['m1', 'm3'],
+    });
+    const { messageLogger, logCore } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'logForm',
+        redirect: false,
+        conversation: conversation({
+          conversationId: 'selected-conversation',
+          conversationLogId: 'selected-log',
+          messages: [
+            { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
+            { id: 'm2', creationTime: '2026-07-03T08:05:00Z', direction: 'Inbound' },
+            { id: 'm3', creationTime: '2026-07-03T08:10:00Z', direction: 'Outbound' },
+          ],
+        }),
+        formData: {
+          contact: 'contact-1',
+          contactType: 'Lead',
+          contactName: 'Jane Smith',
+          newContactName: '',
+          newContactType: '',
+          messageType: 'sms',
+        },
+      }),
+      ...context,
+    });
+
+    expect(logCore.addLog).toHaveBeenCalledTimes(1);
+    const addLogArgs = logCore.addLog.mock.calls[0][0];
+    // Full conversation is sent; the server filters to the selected ids.
+    expect(addLogArgs.logInfo.messages.map((m: any) => m.id)).toEqual(['m1', 'm2', 'm3']);
+    expect(addLogArgs.selectedMessageIds).toEqual(['m1', 'm3']);
+    expect(addLogArgs.contactId).toBe('contact-1');
+    // Selection is consumed after logging.
+    expect(readStorage()['rc-crm-message-selection-selected-conversation']).toBeUndefined();
+  });
+
+  it('ignores selectedLog events when the platform does not support selected message logging', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+      },
+    });
+    const { messageLogger, logCore, logPage, contactCore, util } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        selectedMessageIds: ['m1'],
+        conversation: conversation({
+          messages: [{ id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' }],
+        }),
+      }),
+      ...context,
+      platform: {},
+    });
+
+    expect(contactCore.getContact).not.toHaveBeenCalled();
+    expect(logPage.getLogPageRender).not.toHaveBeenCalled();
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('warns and skips opening the form when no messages are selected', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+      },
+    });
+    const { messageLogger, logCore, logPage, contactCore, util } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        selectedMessageIds: [],
+        conversation: conversation({
+          messages: [{ id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' }],
+        }),
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      message: 'No messages selected to log.',
+    }));
+    expect(contactCore.getContact).not.toHaveBeenCalled();
+    expect(logPage.getLogPageRender).not.toHaveBeenCalled();
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
   });
 
   it('does not open message pages when neither redirect nor auto popup is enabled', async () => {

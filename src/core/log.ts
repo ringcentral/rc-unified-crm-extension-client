@@ -24,8 +24,9 @@ export async function addLog({
   contactType,
   contactName,
   additionalSubmission,
+  selectedMessageIds,
   isShowNotification = true,
-}: UnknownRecord): Promise<void> {
+}: UnknownRecord): Promise<any> {
   const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as UnknownRecord;
   const { userSettings } = await chrome.storage.local.get({ userSettings: {} }) as UnknownRecord;
   const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} }) as UnknownRecord;
@@ -96,7 +97,18 @@ export async function addLog({
           // eslint-disable-next-line no-param-reassign
           logInfo.rcAccessToken = rcAccessToken;
         }
-        addLogRes = await axios.post(`${serverUrl}/messageLog`, { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+        {
+          // Granular SMS logging: when the user selected specific messages,
+          // forward their RingCentral ids as a top-level `selectedMessageIds`
+          // array. The server keeps the full `logInfo.messages` for content and
+          // composes a single CRM entry from exactly the selected ids. Absent/
+          // empty selection keeps the existing daily-digest/auto behavior.
+          const messageLogBody: UnknownRecord = { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName };
+          if (Array.isArray(selectedMessageIds) && selectedMessageIds.length > 0) {
+            messageLogBody.selectedMessageIds = selectedMessageIds.map((id: unknown) => String(id));
+          }
+          addLogRes = await axios.post(`${serverUrl}/messageLog`, messageLogBody);
+        }
         if (addLogRes.data.successful) {
           if ((isMain as any) & ((addLogRes.data.logIds.length > 0) as any)) {
             trackSyncMessageLog();
@@ -116,7 +128,14 @@ export async function addLog({
           }
           await chrome.storage.local.set({ [`rc-crm-conversation-log-${logInfo.conversationLogId}`]: { logged: true } });
         }
-        break;
+        // Return the log result so callers (e.g. the selected-message logging
+        // flow) can report the CRM log id back to the widget.
+        return {
+          successful: !!addLogRes?.data?.successful,
+          logId: addLogRes?.data?.logIds?.[0],
+          logIds: addLogRes?.data?.logIds,
+          messageLogs: addLogRes?.data?.messageLogs,
+        };
     }
   }
   else {
@@ -151,6 +170,35 @@ export async function getLog({ serverUrl, logType, sessionIds, requireDetails }:
   else {
     return { successful: false, message: t('notifications.warning.connectToCrm') };
   }
+}
+
+// Fetch which individual messages in a conversation are already logged, and to
+// which CRM log record. Used to hydrate the per-message "logged" state (icons)
+// when a thread loads. Returns a map of messageId -> { logId } (plus any extra
+// fields the server includes). Degrades to an empty map without CRM auth.
+export async function getMessageLog({ serverUrl, conversationId, messageIds }: UnknownRecord): Promise<any> {
+  const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as UnknownRecord;
+  if (!rcUnifiedCrmExtJwt) {
+    return { successful: false, messageLogs: {} };
+  }
+  const query = new URLSearchParams({ conversationId: String(conversationId ?? '') });
+  if (Array.isArray(messageIds) && messageIds.length > 0) {
+    query.set('messageIds', messageIds.join(','));
+  }
+  const res = await axios.get(`${serverUrl}/messageLog?${query.toString()}`);
+  // The server returns a flat `messageLogs` map (messageId -> CRM logId) and a
+  // parallel `logs` array ([{ messageId, matched, logId }]). Prefer the map;
+  // fall back to reconstructing it from the matched entries in `logs`.
+  let messageLogs = res.data.messageLogs as UnknownRecord | undefined;
+  if ((!messageLogs || isObjectEmpty(messageLogs)) && Array.isArray(res.data.logs)) {
+    messageLogs = {};
+    for (const entry of res.data.logs as UnknownRecord[]) {
+      if (entry?.matched && entry.logId && entry.messageId !== undefined && entry.messageId !== null) {
+        messageLogs[String(entry.messageId)] = entry.logId;
+      }
+    }
+  }
+  return { successful: res.data.successful, messageLogs: messageLogs ?? {} };
 }
 
 export function openLog({ manifest, platformName, hostname, logId, contactType, contactId, userSettings }: UnknownRecord): void {
@@ -266,6 +314,7 @@ export function getConflictContentFromUnresolvedLog(log: UnknownRecord): Unknown
 const logCore = {
   addLog,
   getLog,
+  getMessageLog,
   openLog,
   updateLog,
   cacheCallNote,

@@ -256,6 +256,8 @@ describe('embeddableServices', () => {
       authorizationLogo: 'https://logo.example/google-sheets.png',
       callLoggerHideEditLogButton: true,
       messageLoggerAutoSettingReadOnlyValue: true,
+      messageLoggerOpenLogPath: '/messageLogger/openLog',
+      messageLoggerGranularSelectionEnabled: false,
       licenseStatus: 'License: Active',
       licenseStatusColor: 'inherit',
       licenseDescription: 'Ready',
@@ -264,6 +266,23 @@ describe('embeddableServices', () => {
       }),
     });
     expect(authCore.getLicenseStatus).toHaveBeenCalledWith({ serverUrl: 'https://server.example' });
+  });
+
+  it('enables selected-message logging when the platform manifest opts in', async () => {
+    seedStorage({
+      isAdmin: false,
+      crmAuthed: true,
+      crmUserInfo: { name: 'CRM User' },
+      userPermissions: {},
+      userSettings: {},
+    });
+    const manifestValue = manifest();
+    (manifestValue.platforms.googleSheets as Record<string, any>).isSelectedMessageLogSupported = true;
+    const { embeddableServices } = await loadEmbeddableServices({ manifestValue });
+
+    const service = await embeddableServices.getServiceManifest();
+
+    expect(service.messageLoggerGranularSelectionEnabled).toBe(true);
   });
 
   it('posts phone-number format and SMS typing side effects to the widget', async () => {

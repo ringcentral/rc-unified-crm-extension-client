@@ -176,6 +176,152 @@ describe('log core', () => {
     });
   });
 
+  it('retains the legacy conversation-level logged marker for granular SMS logging', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      userSettings: {},
+      rcAdditionalSubmission: {},
+    });
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        logIds: ['message-log-1'],
+      },
+    });
+    const logCore = await loadLogCore();
+
+    await logCore.addLog({
+      serverUrl: 'https://server.example',
+      logType: 'Message',
+      logInfo: {
+        type: 'SMS',
+        conversationId: 'conv-granular',
+        conversationLogId: 'conv-granular-log',
+        messages: [
+          { id: 'm1', attachments: [] },
+          { id: 'm2', attachments: [] },
+        ],
+      },
+      isMain: true,
+      contactId: 'contact-1',
+      additionalSubmission: {},
+    });
+
+    // The server (GET /messageLog) is the source of truth for per-message
+    // logged state, so no local per-message map is written.
+    expect(readStorage()['rc-crm-message-log-conv-granular']).toBeUndefined();
+    expect(readStorage()['rc-crm-conversation-log-conv-granular-log']).toEqual({ logged: true });
+  });
+
+  it('forwards selectedMessageIds in the messageLog request body for granular logging', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      userSettings: {},
+      rcAdditionalSubmission: {},
+    });
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        logIds: ['crm-entry-1'],
+        messageLogs: { '6424569101': 'crm-entry-1', '6424569105': 'crm-entry-1' },
+      },
+    });
+    const logCore = await loadLogCore();
+
+    const logInfo = {
+      type: 'SMS',
+      conversationId: '8031152018338945901',
+      conversationLogId: '8031152018338945901-2026-07-14',
+      messages: [
+        { id: '6424569101', attachments: [] },
+        { id: '6424569102', attachments: [] },
+        { id: '6424569105', attachments: [] },
+      ],
+    };
+
+    const result = await logCore.addLog({
+      serverUrl: 'https://server.example',
+      logType: 'Message',
+      logInfo,
+      isMain: true,
+      contactId: 77001,
+      contactType: 'contact',
+      contactName: 'Maya Patel',
+      additionalSubmission: {},
+      selectedMessageIds: ['6424569101', '6424569105'],
+    });
+
+    // The result is returned so the selected-message flow can report the log id
+    // back to the widget.
+    expect(result).toMatchObject({
+      successful: true,
+      logId: 'crm-entry-1',
+      messageLogs: { '6424569101': 'crm-entry-1', '6424569105': 'crm-entry-1' },
+    });
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/messageLog', {
+      logInfo,
+      additionalSubmission: {},
+      overridingFormat: [],
+      contactId: 77001,
+      contactType: 'contact',
+      contactName: 'Maya Patel',
+      selectedMessageIds: ['6424569101', '6424569105'],
+    });
+  });
+
+  it('fetches per-message logged state and degrades without CRM auth', async () => {
+    const logCore = await loadLogCore();
+
+    await expect(logCore.getMessageLog({
+      serverUrl: 'https://server.example',
+      conversationId: 'conv-1',
+      messageIds: ['m1'],
+    })).resolves.toEqual({ successful: false, messageLogs: {} });
+    expect(axios.get).not.toHaveBeenCalled();
+
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        messageLogs: { m1: { logId: 'log-1' } },
+      },
+    });
+
+    await expect(logCore.getMessageLog({
+      serverUrl: 'https://server.example',
+      conversationId: 'conv-1',
+      messageIds: ['m1', 'm2'],
+    })).resolves.toEqual({
+      successful: true,
+      messageLogs: { m1: { logId: 'log-1' } },
+    });
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/messageLog?conversationId=conv-1&messageIds=m1%2Cm2');
+  });
+
+  it('reconstructs the messageLogs map from the logs array when the map is absent', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const logCore = await loadLogCore();
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        logs: [
+          { messageId: '6424569101', matched: true, logId: 'crm-entry-1' },
+          { messageId: '6424569102', matched: false },
+          { messageId: '6424569105', matched: true, logId: 'crm-entry-1' },
+        ],
+      },
+    });
+
+    await expect(logCore.getMessageLog({
+      serverUrl: 'https://server.example',
+      conversationId: '8031152018338945901',
+      messageIds: ['6424569101', '6424569102', '6424569105'],
+    })).resolves.toEqual({
+      successful: true,
+      messageLogs: { '6424569101': 'crm-entry-1', '6424569105': 'crm-entry-1' },
+    });
+  });
+
   it('warns instead of logging when CRM JWT is missing', async () => {
     const logCore = await loadLogCore();
 

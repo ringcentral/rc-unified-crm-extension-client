@@ -1,4 +1,5 @@
 import { loadModule } from '../helpers/loadModule';
+ import { loadModule } from '../helpers/loadModule';
 
 let userCore;
 
