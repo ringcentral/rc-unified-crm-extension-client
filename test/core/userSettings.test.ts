@@ -22,6 +22,20 @@ describe('user settings getters', () => {
     expect(userCore.getShowAppointmentsTabSetting({}).value).toBe(true);
     expect(userCore.getC2DMatcherTypeSetting({}).value).toBe('libPhone');
     expect(userCore.getNotificationLevelSetting({}).value).toEqual(['success', 'warning', 'error']);
+    expect(userCore.getLanguageSetting({}).value).toBe('auto');
+  });
+
+  it('exposes the language setting with admin-managed read-only support', () => {
+    expect(userCore.getLanguageSetting({ language: { value: 'de-DE', customizable: true } })).toEqual({
+      value: 'de-DE',
+      readOnly: false,
+      readOnlyReason: '',
+    });
+    expect(userCore.getLanguageSetting({ language: { value: 'ja-JP', customizable: false } })).toEqual({
+      value: 'ja-JP',
+      readOnly: true,
+      readOnlyReason: 'This setting is managed by admin',
+    });
   });
 
   it('marks settings read-only when admin made them non-customizable', () => {

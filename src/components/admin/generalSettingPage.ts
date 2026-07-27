@@ -18,7 +18,7 @@ function getGeneralSettingPageRender() {
                         },
                         {
                             const: "clickToDialMatcher",
-                            title: "Click-to-dial Matcher"
+                            title: t('settings.clickToDialMatcher.name')
                         },
                         {
                             const: "clickToDialEmbed",

@@ -296,6 +296,7 @@
       "showContactsTab": "Mostrar pestaña de contactos",
       "showUserReportTab": "Mostrar pestaña de informe de usuario",
       "showCalldownTab": "Mostrar pestaña de lista de llamadas",
+      "showAppointmentsTab": "Mostrar pestaña de citas",
       "notificationLevel": "Nivel de notificación",
       "notificationLevelDesc": "Seleccionar el nivel de notificación que se mostrará en la extensión.",
       "notificationLevelSelectDesc": "Elegir qué tipos de notificaciones mostrar",
@@ -309,7 +310,22 @@
       "medium": "Mediano",
       "large": "Grande",
       "extraLarge": "Extra grande",
-      "phoneNumberFormat": "Formato de número de teléfono"
+      "phoneNumberFormat": "Formato de número de teléfono",
+      "language": "Idioma",
+      "languageDesc": "Elige el idioma de la interfaz de la extensión.",
+      "languageAuto": "Seguir navegador / región"
+    },
+    "clickToDialMatcher": {
+      "name": "Detector de clic para llamar",
+      "description": "Controla cómo App Connect detecta números de teléfono en las páginas web antes de mostrar el widget de clic para llamar o clic para SMS.",
+      "introName": "Acerca de la detección de clic para llamar",
+      "introText": "App Connect analiza las páginas web en busca de números de teléfono para mostrar el widget de clic para llamar o clic para SMS cuando encuentra una coincidencia.",
+      "matcherType": "Tipo de detector",
+      "matcherTypeDesc": "Elige con qué amplitud se deben detectar los números de teléfono en las páginas web.",
+      "regionName": "Detector centrado en la región",
+      "regionDesc": "Se centra en las variantes de número de teléfono que coinciden con la región seleccionada.",
+      "allName": "Detector completo",
+      "allDesc": "Coincide con cualquier secuencia de números que parezca un número de teléfono."
     },
     "callPop": {
       "groupName": "Pop de llamada",

@@ -1,9 +1,11 @@
+import { t } from '../../../i18n';
+
 type UnknownRecord = Record<string, any>;
 
 function getClickToDialMatcherSettingPageRender({ adminUserSettings }: UnknownRecord): UnknownRecord {
     return {
         id: 'clickToDialMatcherSettingPage',
-        title: 'Click-to-dial Matcher',
+        title: t('settings.clickToDialMatcher.name'),
         type: 'page',
         schema: {
             type: 'object',
@@ -11,26 +13,26 @@ function getClickToDialMatcherSettingPageRender({ adminUserSettings }: UnknownRe
             properties: {
                 c2dMatcherType: {
                     type: 'object',
-                    title: 'Click-to-dial Matcher',
-                    description: 'Choose how App Connect detects phone numbers on webpages before showing the click-to-dial or click-to-SMS widget.',
+                    title: t('settings.clickToDialMatcher.name'),
+                    description: t('settings.clickToDialMatcher.description'),
                     properties: {
                         customizable: {
                             type: 'boolean',
-                            title: 'Customizable by user'
+                            title: t('common.labels.customizableByUser')
                         },
                         value: {
                             type: 'string',
-                            title: 'Matcher type',
+                            title: t('settings.clickToDialMatcher.matcherType'),
                             oneOf: [
                                 {
                                     const: 'libPhone',
-                                    title: 'Region-focused matcher',
-                                    description: 'Focus on phone-number variations that align with the selected region.'
+                                    title: t('settings.clickToDialMatcher.regionName'),
+                                    description: t('settings.clickToDialMatcher.regionDesc')
                                 },
                                 {
                                     const: 'regExp',
-                                    title: 'All matcher',
-                                    description: 'Match any number sequence that looks like a phone number.'
+                                    title: t('settings.clickToDialMatcher.allName'),
+                                    description: t('settings.clickToDialMatcher.allDesc')
                                 }
                             ],
                             default: 'libPhone'
@@ -44,7 +46,7 @@ function getClickToDialMatcherSettingPageRender({ adminUserSettings }: UnknownRe
                 "ui:collapsible": true
             },
             submitButtonOptions: {
-                submitText: 'Save',
+                submitText: t('common.buttons.save'),
             }
         },
         formData: {

@@ -296,6 +296,7 @@
       "showContactsTab": "連絡先タブを表示",
       "showUserReportTab": "ユーザーレポートタブを表示",
       "showCalldownTab": "コールリストタブを表示",
+      "showAppointmentsTab": "予約タブを表示",
       "notificationLevel": "通知レベル",
       "notificationLevelDesc": "拡張機能で表示する通知レベルを選択。",
       "notificationLevelSelectDesc": "表示する通知の種類を選択",
@@ -309,7 +310,22 @@
       "medium": "中",
       "large": "大",
       "extraLarge": "特大",
-      "phoneNumberFormat": "電話番号形式"
+      "phoneNumberFormat": "電話番号形式",
+      "language": "言語",
+      "languageDesc": "拡張機能のインターフェースの言語を選択します。",
+      "languageAuto": "ブラウザー / 地域に従う"
+    },
+    "clickToDialMatcher": {
+      "name": "クリックトゥダイヤル マッチャー",
+      "description": "クリックトゥダイヤルまたはクリックトゥSMSウィジェットを表示する前に、App Connect がウェブページ上の電話番号をどのように検出するかを制御します。",
+      "introName": "クリックトゥダイヤルのマッチングについて",
+      "introText": "App Connect はウェブページ内の電話番号をスキャンし、一致が見つかるとクリックトゥダイヤルまたはクリックトゥSMSウィジェットを表示します。",
+      "matcherType": "マッチャーの種類",
+      "matcherTypeDesc": "ウェブページ上で電話番号をどの程度広く検出するかを選択します。",
+      "regionName": "地域重視のマッチャー",
+      "regionDesc": "選択した地域に合った電話番号のパターンに絞り込みます。",
+      "allName": "すべてのマッチャー",
+      "allDesc": "電話番号のように見える任意の数字の並びに一致します。"
     },
     "callPop": {
       "groupName": "通話ポップ",

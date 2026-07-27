@@ -562,6 +562,9 @@ async function loadSettingsRequestHandler() {
   vi.resetModules();
   const userCore = {
     refreshUserSettings: vi.fn(async ({ changedSettings }) => changedSettings),
+    getShowUserReportTabSetting: vi.fn(() => ({ value: true })),
+    getShowCalldownTabSetting: vi.fn(() => ({ value: true })),
+    getUserReportStats: vi.fn(async () => ({ totalCalls: 0 })),
   };
   vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
   const util = {
@@ -577,6 +580,30 @@ async function loadSettingsRequestHandler() {
     getAppointmentsPageRender: vi.fn(() => ({ id: 'appointmentsPage' })),
   };
   vi.doMock('../../src/components/appointmentsPage/appointmentsPage.ts', () => ({ default: appointmentsPage }));
+  const reportPage = {
+    getReportsPageRender: vi.fn(() => ({ id: 'reportPage' })),
+  };
+  vi.doMock('../../src/components/reportPage/reportPage.ts', () => ({ default: reportPage }));
+  const calldownPage = {
+    getCalldownPageWithRecords: vi.fn(async () => ({ id: 'calldownPage' })),
+  };
+  vi.doMock('../../src/components/calldownPage.ts', () => ({ default: calldownPage }));
+  const adminPage = {
+    getAdminPageRender: vi.fn(() => ({ id: 'adminPage' })),
+  };
+  vi.doMock('../../src/components/admin/adminPage.ts', () => ({ default: adminPage }));
+  const i18n = {
+    AUTO_LOCALE: 'auto',
+    normalizeLocaleCode: vi.fn((code) => code),
+    getBrowserLocale: vi.fn(() => 'en-US'),
+    applyLocaleCode: vi.fn(async (code) => code),
+  };
+  vi.doMock('../../src/i18n/index.ts', () => ({ default: i18n }));
+  const embeddableLocale = {
+    syncLocaleToEmbeddable: vi.fn(async () => {}),
+    syncLocaleToEmbeddableWhenReady: vi.fn(async () => {}),
+  };
+  vi.doMock('../../src/lib/embeddableLocale.ts', () => embeddableLocale);
 
   const handler = await loadModule('../../src/eventHandlers/rc-post-message-request/settings.ts');
 
@@ -585,6 +612,11 @@ async function loadSettingsRequestHandler() {
     userCore,
     util,
     appointmentsPage,
+    reportPage,
+    calldownPage,
+    adminPage,
+    i18n,
+    embeddableLocale,
   };
 }
 
@@ -771,6 +803,219 @@ describe('miscellaneous rc-post-message-request handlers', () => {
     expect(util.showNotification).toHaveBeenCalledWith({
       level: 'success',
       message: 'Settings saved.',
+      ttl: 3000,
+    });
+  });
+
+  it('applies the selected UI language, persists the override, and re-registers the service', async () => {
+    const { handler, util, i18n, embeddableLocale } = await loadSettingsRequestHandler();
+
+    await handler.onEvent({
+      data: {
+        requestId: 'settings-lang',
+        body: {
+          setting: { id: 'language', value: 'de-DE' },
+          settings: [
+            { items: [{ id: 'language', value: 'de-DE' }] },
+          ],
+        },
+      },
+      ...baseContext(),
+    });
+
+    expect(i18n.applyLocaleCode).toHaveBeenCalledWith('de-DE');
+    expect(embeddableLocale.syncLocaleToEmbeddableWhenReady).toHaveBeenCalledWith('de-DE');
+    expect(readStorage().languageOverride).toBe('de-DE');
+    expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
+      {
+        message: {
+          type: 'rc-adapter-register-third-party-service',
+          service: { id: 'developer-service' },
+        },
+        targetOrigin: '*',
+      },
+      // Custom tabs are re-registered so their titles localize immediately.
+      {
+        message: {
+          type: 'rc-adapter-register-customized-page',
+          page: { id: 'reportPage' },
+        },
+        targetOrigin: '*',
+      },
+      {
+        message: {
+          type: 'rc-adapter-register-customized-page',
+          page: { id: 'calldownPage' },
+        },
+        targetOrigin: '*',
+      },
+    ]));
+    expect(util.showNotification).toHaveBeenCalledWith({
+      level: 'success',
+      message: 'Language updated.',
+      ttl: 3000,
+    });
+  });
+
+  it('re-registers the Admin tab on a language change for admins', async () => {
+    const { handler, adminPage } = await loadSettingsRequestHandler();
+    await chrome.storage.local.set({ isAdmin: true, adminSettings: { userSettings: {} } });
+
+    await handler.onEvent({
+      data: {
+        requestId: 'settings-lang-admin',
+        body: {
+          setting: { id: 'language', value: 'de-DE' },
+          settings: [
+            { items: [{ id: 'language', value: 'de-DE' }] },
+          ],
+        },
+      },
+      ...baseContext(),
+    });
+
+    expect(adminPage.getAdminPageRender).toHaveBeenCalledTimes(1);
+    expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
+      {
+        message: {
+          type: 'rc-adapter-register-customized-page',
+          page: { id: 'adminPage' },
+        },
+        targetOrigin: '*',
+      },
+    ]));
+  });
+
+  it('does not re-register the Admin tab for non-admins on a language change', async () => {
+    const { handler, adminPage } = await loadSettingsRequestHandler();
+
+    await handler.onEvent({
+      data: {
+        requestId: 'settings-lang-nonadmin',
+        body: {
+          setting: { id: 'language', value: 'de-DE' },
+          settings: [
+            { items: [{ id: 'language', value: 'de-DE' }] },
+          ],
+        },
+      },
+      ...baseContext(),
+    });
+
+    expect(adminPage.getAdminPageRender).not.toHaveBeenCalled();
+  });
+
+  it('does not re-apply the language when the submitted value is unchanged', async () => {
+    const { handler, util, i18n } = await loadSettingsRequestHandler();
+    await chrome.storage.local.set({ languageOverride: 'de-DE' });
+
+    await handler.onEvent({
+      data: {
+        requestId: 'settings-lang-unchanged',
+        body: {
+          setting: { id: 'someOtherSetting', value: true },
+          settings: [
+            { items: [{ id: 'language', value: 'de-DE' }] },
+          ],
+        },
+      },
+      ...baseContext(),
+    });
+
+    expect(i18n.applyLocaleCode).not.toHaveBeenCalled();
+    expect(util.showNotification).toHaveBeenCalledWith({
+      level: 'success',
+      message: 'Settings saved.',
+      ttl: 3000,
+    });
+  });
+
+  it('follows the browser locale when the language is switched to "auto"', async () => {
+    const { handler, i18n } = await loadSettingsRequestHandler();
+    await chrome.storage.local.set({ languageOverride: 'de-DE' });
+
+    await handler.onEvent({
+      data: {
+        requestId: 'settings-lang-auto',
+        body: {
+          setting: { id: 'language', value: 'auto' },
+          settings: [
+            { items: [{ id: 'language', value: 'auto' }] },
+          ],
+        },
+      },
+      ...baseContext(),
+    });
+
+    expect(i18n.getBrowserLocale).toHaveBeenCalled();
+    expect(i18n.applyLocaleCode).toHaveBeenCalledWith('en-US');
+    expect(readStorage().languageOverride).toBe('auto');
+  });
+
+  it('isolates a failing Reports tab re-registration and still localizes the other tabs', async () => {
+    const { handler, util, reportPage, calldownPage, adminPage } = await loadSettingsRequestHandler();
+    await chrome.storage.local.set({ isAdmin: true, adminSettings: { userSettings: {} } });
+    // Reports re-registration throws; the Call Back and Admin tabs must still register.
+    reportPage.getReportsPageRender.mockImplementationOnce(() => {
+      throw new Error('report render boom');
+    });
+
+    await expect(handler.onEvent({
+      data: {
+        requestId: 'settings-lang-report-fail',
+        body: {
+          setting: { id: 'language', value: 'de-DE' },
+          settings: [
+            { items: [{ id: 'language', value: 'de-DE' }] },
+          ],
+        },
+      },
+      ...baseContext(),
+    })).resolves.toBeUndefined();
+
+    expect(calldownPage.getCalldownPageWithRecords).toHaveBeenCalledTimes(1);
+    expect(adminPage.getAdminPageRender).toHaveBeenCalledTimes(1);
+    expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
+      { message: { type: 'rc-adapter-register-customized-page', page: { id: 'calldownPage' } }, targetOrigin: '*' },
+      { message: { type: 'rc-adapter-register-customized-page', page: { id: 'adminPage' } }, targetOrigin: '*' },
+    ]));
+    expect(getWidgetPostMessages()).not.toEqual(expect.arrayContaining([
+      { message: { type: 'rc-adapter-register-customized-page', page: { id: 'reportPage' } }, targetOrigin: '*' },
+    ]));
+    expect(util.showNotification).toHaveBeenCalledWith({
+      level: 'success',
+      message: 'Language updated.',
+      ttl: 3000,
+    });
+  });
+
+  it('does not throw when Call Back and Admin tab re-registration fail during a language change', async () => {
+    const { handler, util, calldownPage, adminPage } = await loadSettingsRequestHandler();
+    await chrome.storage.local.set({ isAdmin: true, adminSettings: { userSettings: {} } });
+    calldownPage.getCalldownPageWithRecords.mockRejectedValueOnce(new Error('calldown boom'));
+    adminPage.getAdminPageRender.mockImplementationOnce(() => {
+      throw new Error('admin render boom');
+    });
+
+    await expect(handler.onEvent({
+      data: {
+        requestId: 'settings-lang-tabs-fail',
+        body: {
+          setting: { id: 'language', value: 'de-DE' },
+          settings: [
+            { items: [{ id: 'language', value: 'de-DE' }] },
+          ],
+        },
+      },
+      ...baseContext(),
+    })).resolves.toBeUndefined();
+
+    // Both re-registration paths were attempted (and their errors swallowed).
+    expect(calldownPage.getCalldownPageWithRecords).toHaveBeenCalledTimes(1);
+    expect(adminPage.getAdminPageRender).toHaveBeenCalledTimes(1);
+    expect(util.showNotification).toHaveBeenCalledWith({
+      level: 'success',
+      message: 'Language updated.',
       ttl: 3000,
     });
   });

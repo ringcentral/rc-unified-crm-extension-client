@@ -279,7 +279,8 @@
       "multipleContacts": "कई संपर्क",
       "multipleContactsHelper": "जब कई संपर्क फ़ोन नंबर से मेल खाते हों तो क्या करें",
       "firstAlphabetical": "वर्णानुक्रम में पहला",
-      "mostRecentActivity": "सबसे हाल की गतिविधि"
+      "mostRecentActivity": "सबसे हाल की गतिविधि",
+      "earliestCreated": "सबसे पहले बनाया गया"
     },
     "appearance": {
       "groupName": "दिखावट",
@@ -309,7 +310,22 @@
       "medium": "मध्यम",
       "large": "बड़ा",
       "extraLarge": "बहुत बड़ा",
-      "phoneNumberFormat": "फ़ोन नंबर फ़ॉर्मेट"
+      "phoneNumberFormat": "फ़ोन नंबर फ़ॉर्मेट",
+      "language": "भाषा",
+      "languageDesc": "एक्सटेंशन इंटरफ़ेस के लिए भाषा चुनें।",
+      "languageAuto": "ब्राउज़र / क्षेत्र का अनुसरण करें"
+    },
+    "clickToDialMatcher": {
+      "name": "क्लिक-टू-डायल मैचर",
+      "description": "नियंत्रित करें कि क्लिक-टू-डायल या क्लिक-टू-SMS विजेट दिखाने से पहले App Connect वेबपेजों पर फ़ोन नंबर कैसे पहचानता है।",
+      "introName": "क्लिक-टू-डायल मिलान के बारे में",
+      "introText": "App Connect वेबपेजों पर फ़ोन नंबर खोजता है ताकि मिलान मिलने पर क्लिक-टू-डायल या क्लिक-टू-SMS विजेट दिखाया जा सके।",
+      "matcherType": "मैचर प्रकार",
+      "matcherTypeDesc": "चुनें कि वेबपेजों पर फ़ोन नंबर कितने व्यापक रूप से पहचाने जाने चाहिए।",
+      "regionName": "क्षेत्र-केंद्रित मैचर",
+      "regionDesc": "चयनित क्षेत्र से मेल खाने वाले फ़ोन नंबर रूपों पर ध्यान केंद्रित करता है।",
+      "allName": "सभी मैचर",
+      "allDesc": "किसी भी संख्या अनुक्रम से मेल खाता है जो फ़ोन नंबर जैसा दिखता है।"
     },
     "callPop": {
       "groupName": "कॉल पॉप",
@@ -388,7 +404,8 @@
       "manualDispositionNeeded": "मैन्युअल डिस्पोज़िशन की आवश्यकता हो सकती है. कृपया लॉग किए गए संदेश को डिस्पोज़िशन में संपादित करें.",
       "messageNotLogged": "संदेश लॉग नहीं हुआ. {details}.",
       "voicemailNotLogged": "वॉइसमेल लॉग नहीं हुआ. {details}.",
-      "faxNotLogged": "फ़ैक्स लॉग नहीं हुआ. {details}."
+      "faxNotLogged": "फ़ैक्स लॉग नहीं हुआ. {details}.",
+      "earliestCreatedResolverMissingField": "कॉल लॉग नहीं हुई. सबसे-पहले-बनाया-गया संपर्क रिज़ॉल्वर के लिए आवश्यक है कि प्रत्येक मिलान किया गया संपर्क एक निर्माण तिथि शामिल करे. createdDate को कनेक्टर की findContact प्रतिक्रिया में जोड़ने के लिए अपने App Connect डेवलपर से संपर्क करें."
     },
     "error": {
       "wrongFormat": "गलत फ़ॉर्मेट: {field}",

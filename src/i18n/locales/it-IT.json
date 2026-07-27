@@ -296,6 +296,7 @@
       "showContactsTab": "Mostra scheda contatti",
       "showUserReportTab": "Mostra scheda report utente",
       "showCalldownTab": "Mostra scheda lista chiamate",
+      "showAppointmentsTab": "Mostra scheda appuntamenti",
       "notificationLevel": "Livello notifica",
       "notificationLevelDesc": "Seleziona il livello di notifica da visualizzare nell'estensione.",
       "notificationLevelSelectDesc": "Scegli quali tipi di notifiche visualizzare",
@@ -309,7 +310,22 @@
       "medium": "Medio",
       "large": "Grande",
       "extraLarge": "Extra grande",
-      "phoneNumberFormat": "Formato numero di telefono"
+      "phoneNumberFormat": "Formato numero di telefono",
+      "language": "Lingua",
+      "languageDesc": "Scegli la lingua dell'interfaccia dell'estensione.",
+      "languageAuto": "Segui browser / area geografica"
+    },
+    "clickToDialMatcher": {
+      "name": "Rilevatore clic per chiamare",
+      "description": "Controlla come App Connect rileva i numeri di telefono nelle pagine web prima di mostrare il widget clic per chiamare o clic per SMS.",
+      "introName": "Informazioni sul rilevamento clic per chiamare",
+      "introText": "App Connect analizza le pagine web alla ricerca di numeri di telefono per mostrare il widget clic per chiamare o clic per SMS quando trova una corrispondenza.",
+      "matcherType": "Tipo di rilevatore",
+      "matcherTypeDesc": "Scegli con quale ampiezza rilevare i numeri di telefono nelle pagine web.",
+      "regionName": "Rilevatore focalizzato sull'area geografica",
+      "regionDesc": "Si concentra sulle varianti di numeri di telefono corrispondenti all'area geografica selezionata.",
+      "allName": "Rilevatore completo",
+      "allDesc": "Corrisponde a qualsiasi sequenza di numeri che assomigli a un numero di telefono."
     },
     "callPop": {
       "groupName": "Pop chiamata",
@@ -373,7 +389,8 @@
       "callLogUpdated": "Log chiamata aggiornato",
       "authorized": "Autorizzato con successo.",
       "unauthorized": "Disconnesso con successo.",
-      "openingContactPage": "Tentativo di trovare e aprire la pagina del contatto..."
+      "openingContactPage": "Tentativo di trovare e aprire la pagina del contatto...",
+      "loggedOut": "Disconnessione effettuata con successo."
     },
     "warning": {
       "callLogFailed": "Impossibile salvare il log chiamata",

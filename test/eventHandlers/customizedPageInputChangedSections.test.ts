@@ -10,6 +10,7 @@ const simpleSectionMocks = [
   ['../../src/components/admin/generalSettings/customizeTabsSettingPage.ts', 'getCustomizeTabsSettingPageRender', 'customizeTabsSettingPage'],
   ['../../src/components/admin/generalSettings/widgetSettingsPage.ts', 'getWidgetSettingsPageRender', 'widgetSettingsPage'],
   ['../../src/components/admin/generalSettings/notificationLevelSettingPage.ts', 'getNotificationLevelSettingPageRender', 'notificationLevelSettingPage'],
+  ['../../src/components/admin/generalSettings/languageSettingPage.ts', 'getLanguageSettingPageRender', 'languageSettingPage'],
   ['../../src/components/admin/generalSettings/phoneNumberFormatPage.ts', 'getPhoneNumberFormatPageRender', 'phoneNumberFormatPage'],
   ['../../src/components/admin/generalSettings/clickToDialEmbedPage.ts', 'getClickToDialEmbedPageRender', 'clickToDialEmbedPage'],
   ['../../src/components/admin/managedSettings/callAndSMSLoggingSettingPage.ts', 'getCallAndSMSLoggingSettingPageRender', 'callAndSMSLoggingSettingPage'],
@@ -198,6 +199,7 @@ const simpleSettingsSectionRoutes = [
   ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/customizeTabs.ts', 'getCustomizeTabsSettingPageRender', 'customizeTabsSettingPage'],
   ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/widgetSettings.ts', 'getWidgetSettingsPageRender', 'widgetSettingsPage'],
   ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/notificationLevel.ts', 'getNotificationLevelSettingPageRender', 'notificationLevelSettingPage'],
+  ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/language.ts', 'getLanguageSettingPageRender', 'languageSettingPage'],
   ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/phoneNumberFormat.ts', 'getPhoneNumberFormatPageRender', 'phoneNumberFormatPage'],
   ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/clickToDialEmbed.ts', 'getClickToDialEmbedPageRender', 'clickToDialEmbedPage'],
   ['../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/callAndSMSLogging.ts', 'getCallAndSMSLoggingSettingPageRender', 'callAndSMSLoggingSettingPage'],
@@ -264,11 +266,11 @@ describe('customizedPage inputChanged section handlers', () => {
   });
 
   it('renders general settings section pages with stored admin settings', async () => {
-    await expectSimpleSectionRoutesToRender(simpleSettingsSectionRoutes.slice(0, 8));
+    await expectSimpleSectionRoutesToRender(simpleSettingsSectionRoutes.slice(0, 9));
   });
 
   it('renders managed settings section pages with stored admin settings', async () => {
-    await expectSimpleSectionRoutesToRender(simpleSettingsSectionRoutes.slice(8));
+    await expectSimpleSectionRoutesToRender(simpleSettingsSectionRoutes.slice(9));
   });
 
   it('renders call log details with refreshed server-side logging subscription state', async () => {
