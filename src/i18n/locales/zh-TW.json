@@ -209,6 +209,8 @@
       "oneTimeLog": "一次性通话记录",
       "oneTimeLogDesc": "延迟记录直到完整的通话详情可用",
       "enableOneTimeLog": "启用一次性通话记录",
+      "selectedMessageLog": "記錄所選訊息",
+      "selectedMessageLogDesc": "選擇要記錄的個別短訊，而非整個對話。關閉時，將記錄整個對話。",
       "popupLogPageAfterCall": "（手动记录）通话后打开记录页面",
       "popupLogPageAfterCallDesc": "每次通话后自动打开记录表单",
       "popupLogPageAfterSMS": "（手动记录）消息后打开短信记录页面",

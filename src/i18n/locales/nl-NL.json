@@ -209,6 +209,8 @@
       "oneTimeLog": "Eenmalige oproepregistratie",
       "oneTimeLogDesc": "Vertraagt registratie totdat volledige oproepdetails beschikbaar zijn",
       "enableOneTimeLog": "Eenmalige oproepregistratie inschakelen",
+      "selectedMessageLog": "Geselecteerde berichten loggen",
+      "selectedMessageLogDesc": "Kies afzonderlijke sms-berichten om te loggen in plaats van het hele gesprek. Wanneer uitgeschakeld, wordt het hele gesprek gelogd.",
       "popupLogPageAfterCall": "(Handmatige log) Open oproepregistratiepagina na oproep",
       "popupLogPageAfterCallDesc": "Automatisch het registratieformulier openen na elke oproep",
       "popupLogPageAfterSMS": "(Handmatige log) Open SMS-registratiepagina na bericht",

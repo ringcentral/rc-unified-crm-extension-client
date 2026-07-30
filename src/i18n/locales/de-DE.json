@@ -209,6 +209,8 @@
       "oneTimeLog": "Einmalige Anrufprotokollierung",
       "oneTimeLogDesc": "Verzögert die Protokollierung, bis vollständige Anrufdetails verfügbar sind",
       "enableOneTimeLog": "Einmalige Anrufprotokollierung aktivieren",
+      "selectedMessageLog": "Ausgewählte Nachrichten protokollieren",
+      "selectedMessageLogDesc": "Einzelne SMS-Nachrichten zum Protokollieren auswählen, statt der gesamten Konversation. Wenn deaktiviert, wird die gesamte Konversation protokolliert.",
       "popupLogPageAfterCall": "(Manuelle Protokollierung) Protokollierungsseite nach Anruf öffnen",
       "popupLogPageAfterCallDesc": "Protokollierungsformular automatisch nach jedem Anruf öffnen",
       "popupLogPageAfterSMS": "(Manuelle Protokollierung) SMS-Protokollierungsseite nach Nachricht öffnen",

@@ -209,6 +209,8 @@
       "oneTimeLog": "일회성 통화 로깅",
       "oneTimeLogDesc": "전체 통화 세부 정보를 사용할 수 있을 때까지 로깅 지연",
       "enableOneTimeLog": "일회성 통화 로깅 활성화",
+      "selectedMessageLog": "선택한 메시지 기록",
+      "selectedMessageLogDesc": "전체 대화 대신 기록할 개별 SMS 메시지를 선택합니다. 사용 안 함으로 설정하면 전체 대화가 기록됩니다.",
       "popupLogPageAfterCall": "(수동 로그) 통화 후 로그 페이지 열기",
       "popupLogPageAfterCallDesc": "각 통화 후 자동으로 로그 양식 열기",
       "popupLogPageAfterSMS": "(수동 로그) 메시지 후 SMS 로그 페이지 열기",

@@ -209,6 +209,8 @@
       "oneTimeLog": "Kertaluonteinen puhelulokitus",
       "oneTimeLogDesc": "Viivästyttää lokitusta, kunnes täydelliset puhelutiedot ovat saatavilla",
       "enableOneTimeLog": "Ota kertaluonteinen puhelulokitus käyttöön",
+      "selectedMessageLog": "Kirjaa valitut viestit",
+      "selectedMessageLogDesc": "Valitse yksittäiset tekstiviestit kirjattavaksi koko keskustelun sijaan. Kun asetus on pois käytöstä, koko keskustelu kirjataan.",
       "popupLogPageAfterCall": "(Manuaalinen loki) Avaa lokitussivu puhelun jälkeen",
       "popupLogPageAfterCallDesc": "Avaa lokituslomake automaattisesti jokaisen puhelun jälkeen",
       "popupLogPageAfterSMS": "(Manuaalinen loki) Avaa tekstiviestilokitussivu viestin jälkeen",

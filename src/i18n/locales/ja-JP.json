@@ -209,6 +209,8 @@
       "oneTimeLog": "ワンタイム通話ログ",
       "oneTimeLogDesc": "完全な通話詳細が利用可能になるまでログを遅延",
       "enableOneTimeLog": "ワンタイム通話ログを有効化",
+      "selectedMessageLog": "選択したメッセージを記録",
+      "selectedMessageLogDesc": "会話全体ではなく、記録する個々のSMSメッセージを選択します。オフの場合は会話全体が記録されます。",
       "popupLogPageAfterCall": "（手動ログ）通話後にログページを開く",
       "popupLogPageAfterCallDesc": "各通話後に自動的にログフォームを開く",
       "popupLogPageAfterSMS": "（手動ログ）メッセージ後にSMSログページを開く",

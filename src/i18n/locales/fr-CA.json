@@ -209,6 +209,8 @@
       "oneTimeLog": "Journalisation d'appel unique",
       "oneTimeLogDesc": "Retarde la journalisation jusqu'à ce que les détails complets de l'appel soient disponibles",
       "enableOneTimeLog": "Activer la journalisation d'appel unique",
+      "selectedMessageLog": "Journaliser les messages sélectionnés",
+      "selectedMessageLogDesc": "Choisissez des messages SMS individuels à journaliser au lieu de toute la conversation. Lorsque cette option est désactivée, toute la conversation est journalisée.",
       "popupLogPageAfterCall": "(Journal manuel) Ouvrir la page de journalisation après l'appel",
       "popupLogPageAfterCallDesc": "Ouvrir automatiquement le formulaire de journalisation après chaque appel",
       "popupLogPageAfterSMS": "(Journal manuel) Ouvrir la page de journalisation SMS après le message",
