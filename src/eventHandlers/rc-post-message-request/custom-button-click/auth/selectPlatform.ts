@@ -5,6 +5,7 @@ import authCore from '../../../../core/auth';
 import baseManifest from '../../../../manifest.json';
 import { getRcInfo } from '../../../../lib/util';
 import embeddableServices from '../../../../service/embeddableServices';
+import { getImplementedInterfaces } from '../../../../service/implementedInterfacesService';
 
 type UnknownRecord = Record<string, any>;
 
@@ -72,6 +73,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   }
   // eslint-disable-next-line no-param-reassign
   manifest = await saveManifest({ manifest: platformManifestResponse!.data as any }) as UnknownRecord;
+  await getImplementedInterfaces({ manifest, platformName: selectedPlatform.name });
   if (manifest.platforms[selectedPlatform.name]?.environment?.type === 'fixed' && !manifest.platforms[selectedPlatform.name]?.environment?.instructions?.length) {
     const inputUrlObj = new URL(manifest.platforms[selectedPlatform.name]?.environment?.url);
     const inputHostname = inputUrlObj.hostname;

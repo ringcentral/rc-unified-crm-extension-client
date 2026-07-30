@@ -566,7 +566,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       platform: baseManifest().platforms.salesforce,
       listButtonItemId: 'salesforce=shared',
     });
-    expect(axios.get).toHaveBeenCalledTimes(2);
+    expect(axios.get).toHaveBeenCalledTimes(3);
     expect(loaded.manifestService.saveManifestUrl).toHaveBeenCalledWith({
       manifestUrl: 'https://appconnect.labs.ringcentral.com/public-api/connectors/salesforce/manifest?access=internal&type=connector&accountId=shared-account',
     });

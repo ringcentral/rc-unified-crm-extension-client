@@ -6,7 +6,6 @@ import apiErrorHandler from './lib/apiErrorHandler';
 import embeddableServices from './service/embeddableServices';
 import { getManifest as getManifestBase } from './service/manifestService';
 import { saveManifestUrl } from './service/manifestService';
-import { getPlatformInfo } from './service/platformService';
 import logRecorder from './lib/logRecorder';
 import i18n from './i18n';
 
@@ -317,7 +316,6 @@ async function initializePopup() {
   }
   checkC2DCollision();
   getCustomManifest();
-  getImplementedInterfaces();
 }
 
 async function getCustomManifest() {
@@ -328,17 +326,6 @@ async function getCustomManifest() {
       await saveManifestUrl({ manifestUrl: customCrmManifestUrl });
     }
     setAuthor(customCrmManifest?.author?.name ?? "");
-  }
-}
-
-async function getImplementedInterfaces() {
-  const platformInfo = await getPlatformInfo();
-  if (platformInfo) {
-    const manifest = await getManifest();
-    const response = await axios.get(`${manifest.serverUrl}/implementedInterfaces?platform=${platformInfo.platformName}`);
-    if (response.data) {
-      await chrome.storage.local.set({ implementedInterfaces: response.data });
-    }
   }
 }
 
