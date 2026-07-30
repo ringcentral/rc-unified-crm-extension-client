@@ -19,6 +19,10 @@ async function loadMessageLogger() {
     getMultipleContactsPreferenceSetting: vi.fn((settings) => ({ value: settings?.multipleContactsPreference?.value ?? 'skipLogging' })),
     getNewContactTypeSetting: vi.fn((settings) => ({ value: settings?.newContactType?.value ?? null })),
     getNewContactNamePrefixSetting: vi.fn((settings) => ({ value: settings?.newContactNamePrefix?.value ?? 'PlaceholderContact' })),
+    getSelectedMessageLogSetting: vi.fn((settings) => ({ value: settings?.selectedMessageLog?.value ?? true })),
+    isSelectedMessageLogEnabled: vi.fn(({ platform, userSettings } = {}) =>
+      platform?.isSelectedMessageLogSupported === true
+      && (userSettings?.selectedMessageLog?.value ?? true) === true),
   };
   vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
@@ -1067,6 +1071,38 @@ describe('messageLogger', () => {
         targetOrigin: '*',
       },
     ]));
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('ignores selectedLog and does not log when the selected-message setting is disabled', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+        selectedMessageLog: { value: false },
+      },
+    });
+    const { messageLogger, logCore, logPage, util } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        selectedMessageIds: ['m1', 'm3'],
+        conversation: conversation({
+          conversationId: 'selected-conversation',
+          conversationLogId: 'selected-log',
+          messages: [
+            { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
+            { id: 'm3', creationTime: '2026-07-03T08:10:00Z', direction: 'Outbound' },
+          ],
+        }),
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    // Feature turned off => selectedLog is a no-op: no CRM write and no form.
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(logPage.getLogPageRender).not.toHaveBeenCalled();
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
   });
 

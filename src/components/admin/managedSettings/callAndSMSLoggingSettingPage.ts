@@ -109,6 +109,20 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }: UnknownRec
                         }
                     }
                 },
+                selectedMessageLog: {
+                    type: 'object',
+                    title: t('settings.logging.selectedMessageLog'),
+                    properties: {
+                        customizable: {
+                            type: 'boolean',
+                            title: t('common.labels.customizableByUser')
+                        },
+                        value: {
+                            type: 'boolean',
+                            title: t('common.labels.value')
+                        }
+                    }
+                },
                 section: {
                     type: "string",
                     oneOf: [{
@@ -145,6 +159,9 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }: UnknownRec
                 "ui:collapsible": true,
             },
             oneTimeLog: {
+                "ui:collapsible": true,
+            },
+            selectedMessageLog: {
                 "ui:collapsible": true,
             },
             submitButtonOptions: {
@@ -186,6 +203,11 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }: UnknownRec
             {
                 customizable: adminUserSettings?.oneTimeLog?.customizable ?? true,
                 value: adminUserSettings?.oneTimeLog?.value ?? false
+            },
+            selectedMessageLog:
+            {
+                customizable: adminUserSettings?.selectedMessageLog?.customizable ?? true,
+                value: adminUserSettings?.selectedMessageLog?.value ?? true
             }
         }
     }

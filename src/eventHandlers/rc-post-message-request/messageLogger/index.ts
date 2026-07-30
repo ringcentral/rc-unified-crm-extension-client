@@ -53,6 +53,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
     responseMessage(data.requestId, { data: 'ok' });
     return;
   }
+  // Effective gate for per-message (granular) SMS logging: platform support AND
+  // the user/admin `selectedMessageLog` setting. When off, message logging keeps
+  // the existing whole-conversation behavior (both manual and auto).
+  const selectedMessageLogEnabled = userCore.isSelectedMessageLogEnabled({ platform, userSettings });
   const isAutoLogSMS = userSettings?.autoLogSMS?.value ?? false;
   const isAutoLogVoicemail = userSettings?.autoLogVoicemail?.value ?? false;
   const isAutoLogInboundFax = userSettings?.autoLogInboundFax?.value ?? false;
@@ -181,10 +185,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
   if (data.body.triggerType === 'auto' && !messageAutoPopup) {
     // Granular selection mode: disable the widget's "keep an already-logged
     // conversation in sync" auto-update (its `isAutoUpdate`, which is compiled
-    // into the widget and cannot be toggled via registration). When
-    // `isSelectedMessageLogSupported` is on, new messages must be logged
-    // explicitly by selecting them, so never silently append here.
-    if (platform?.isSelectedMessageLogSupported === true) {
+    // into the widget and cannot be toggled via registration). When per-message
+    // logging is enabled, new messages must be logged explicitly by selecting
+    // them, so never silently append here. When the user/admin turns the
+    // `selectedMessageLog` setting off, fall through to the normal
+    // whole-conversation auto behavior below.
+    if (selectedMessageLogEnabled) {
       responseMessage(data.requestId, { data: 'ok' });
       return;
     }
@@ -447,9 +453,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
   // opening the contact-selection form and logging on submit.
   else if (data.body.triggerType === 'selectedLog') {
     // Gate: this feature is only available when the platform manifest opts in
-    // via `isSelectedMessageLogSupported: true`. Otherwise keep existing
-    // behavior and ignore the event.
-    if (platform?.isSelectedMessageLogSupported !== true) {
+    // (`isSelectedMessageLogSupported: true`) AND the user/admin `selectedMessageLog`
+    // setting is enabled. Otherwise keep existing behavior and ignore the event.
+    if (!selectedMessageLogEnabled) {
       responseMessage(data.requestId, { data: 'ok' });
       return;
     }

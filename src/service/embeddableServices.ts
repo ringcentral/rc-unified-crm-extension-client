@@ -113,7 +113,9 @@ async function getServiceManifest() {
         // NOTE: the embeddable widget reads this exact key (`messageLoggerGranularSelectionEnabled`)
         // to decide whether to render per-message checkboxes; the widget additionally
         // requires manual SMS mode (auto-log off) and a non-thread conversation.
-        messageLoggerGranularSelectionEnabled: platform?.isSelectedMessageLogSupported === true,
+        // The feature also honors the user/admin `selectedMessageLog` setting: when
+        // turned off, checkboxes are hidden and message logging stays whole-conversation.
+        messageLoggerGranularSelectionEnabled: userCore.isSelectedMessageLogEnabled({ platform, userSettings }),
         messageLoggerAutoSettingLabel: t('settings.logging.autoLogSMS'),
         messageLoggerAutoSettingReadOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
         messageLoggerAutoSettingReadOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
@@ -191,7 +193,19 @@ async function getServiceManifest() {
                         readOnly: userCore.getOneTimeLogSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getOneTimeLogSetting(userSettings).readOnlyReason,
                         value: userCore.getOneTimeLogSetting(userSettings).value
-                    }
+                    },
+                    // Per-message (granular) SMS logging toggle. Only surfaced when the
+                    // platform manifest supports it; otherwise the setting is meaningless.
+                    // When off, message logging reverts to whole-conversation behavior.
+                    ...(platform?.isSelectedMessageLogSupported === true ? [{
+                        id: "selectedMessageLog",
+                        type: "boolean",
+                        name: t('settings.logging.selectedMessageLog'),
+                        description: t('settings.logging.selectedMessageLogDesc'),
+                        readOnly: userCore.getSelectedMessageLogSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getSelectedMessageLogSetting(userSettings).readOnlyReason,
+                        value: userCore.getSelectedMessageLogSetting(userSettings).value
+                    }] : [])
                 ]
             },
             {

@@ -57,6 +57,15 @@ function userCoreProxy(overrides: Record<PropertyKey, any> = {}) {
               return setting(defaultValue ?? 'custom-value', {
                 options: [{ id: 'dynamic', name: 'Dynamic' }],
               });
+            case 'getSelectedMessageLogSetting':
+              return setting(userSettings?.selectedMessageLog?.value ?? true);
+            case 'isSelectedMessageLogEnabled': {
+              // Called as isSelectedMessageLogEnabled({ platform, userSettings }),
+              // so the first (userSettings) arg is actually the options object.
+              const opts = (userSettings ?? {}) as { platform?: any; userSettings?: any };
+              return opts?.platform?.isSelectedMessageLogSupported === true
+                && (opts?.userSettings?.selectedMessageLog?.value ?? true) === true;
+            }
             default:
               return setting(userSettings?.[prop]?.value ?? false);
           }
@@ -283,6 +292,23 @@ describe('embeddableServices', () => {
     const service = await embeddableServices.getServiceManifest();
 
     expect(service.messageLoggerGranularSelectionEnabled).toBe(true);
+  });
+
+  it('disables selected-message logging when the user/admin setting is turned off', async () => {
+    seedStorage({
+      isAdmin: false,
+      crmAuthed: true,
+      crmUserInfo: { name: 'CRM User' },
+      userPermissions: {},
+      userSettings: { selectedMessageLog: { value: false } },
+    });
+    const manifestValue = manifest();
+    (manifestValue.platforms.googleSheets as Record<string, any>).isSelectedMessageLogSupported = true;
+    const { embeddableServices } = await loadEmbeddableServices({ manifestValue });
+
+    const service = await embeddableServices.getServiceManifest();
+
+    expect(service.messageLoggerGranularSelectionEnabled).toBe(false);
   });
 
   it('posts phone-number format and SMS typing side effects to the widget', async () => {

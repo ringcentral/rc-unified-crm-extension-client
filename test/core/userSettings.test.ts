@@ -360,4 +360,54 @@ describe('user settings getters', () => {
       });
     }
   });
+
+  describe('selected-message logging setting', () => {
+    it('defaults to enabled and editable', () => {
+      // Mirrors the sibling getters: an unset `customizable` leaves the setting
+      // editable (readOnly false) while value defaults to on.
+      expect(userCore.getSelectedMessageLogSetting({})).toMatchObject({
+        value: true,
+        readOnly: false,
+      });
+    });
+
+    it('reflects the stored user value', () => {
+      expect(userCore.getSelectedMessageLogSetting({
+        selectedMessageLog: { value: false, customizable: true },
+      })).toEqual({
+        value: false,
+        readOnly: false,
+        readOnlyReason: '',
+      });
+    });
+
+    it('is read-only when the admin made it non-customizable', () => {
+      expect(userCore.getSelectedMessageLogSetting({
+        selectedMessageLog: { value: true, customizable: false },
+      })).toEqual({
+        value: true,
+        readOnly: true,
+        readOnlyReason: 'This setting is managed by admin',
+      });
+    });
+
+    it('is effectively enabled only when the platform supports it and the setting is on', () => {
+      const supported = { isSelectedMessageLogSupported: true };
+      const unsupported = { isSelectedMessageLogSupported: false };
+      // Platform supports + default (on) => enabled
+      expect(userCore.isSelectedMessageLogEnabled({ platform: supported, userSettings: {} })).toBe(true);
+      // Platform supports + user turned it off => disabled
+      expect(userCore.isSelectedMessageLogEnabled({
+        platform: supported,
+        userSettings: { selectedMessageLog: { value: false } },
+      })).toBe(false);
+      // Platform does not support => disabled regardless of setting
+      expect(userCore.isSelectedMessageLogEnabled({
+        platform: unsupported,
+        userSettings: { selectedMessageLog: { value: true } },
+      })).toBe(false);
+      // Missing platform => disabled
+      expect(userCore.isSelectedMessageLogEnabled({ userSettings: {} })).toBe(false);
+    });
+  });
 });
