@@ -33,6 +33,10 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   platformName = selectedPlatform.name;
   let platformManifestResponse: UnknownRecord | undefined;
   const rcInfo = await getRcInfo();
+  const isPrivate = selectedPlatformType === 'private' || selectedPlatformType === 'shared';
+  const devRcAccountId = isPrivate
+    ? selectedPlatform.accountId ?? rcInfo.value?.cachedData?.accountInfo?.id
+    : '';
   switch (selectedPlatformType) {
     case 'public':
       platformManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?type=connector`);
@@ -83,7 +87,8 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
         platformDisplayName: selectedPlatform.displayName ?? selectedPlatform.name,
         hostname: inputHostname,
         connectorId: selectedPlatform.id,
-        isPrivate: selectedPlatformType === 'private' || selectedPlatformType === 'shared',
+        devRcAccountId,
+        isPrivate,
       },
     });
     getWidgetFrameWindow().postMessage({
@@ -116,7 +121,8 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
         serverUrl: manifest.serverUrl,
         platformName: selectedPlatform.name,
         connectorId: selectedPlatform.id,
-        isPrivate: selectedPlatformType === 'private' || selectedPlatformType === 'shared',
+        devRcAccountId,
+        isPrivate,
         rcInfo,
       })
       : null;
@@ -128,7 +134,8 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
         ? `All required authentication fields are ready. Click Connect to connect to ${selectedPlatformConfig.displayName ?? selectedPlatformConfig.name}.`
         : '',
       connectorId: selectedPlatform.id,
-      isPrivate: selectedPlatformType === 'private' || selectedPlatformType === 'shared',
+      devRcAccountId,
+      isPrivate,
     });
     getWidgetFrameWindow().postMessage({
       type: 'rc-adapter-register-customized-page',

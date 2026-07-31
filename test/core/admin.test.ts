@@ -107,6 +107,7 @@ describe('admin core', () => {
     vi.mocked(getPlatformInfo).mockResolvedValue({
       platformName: 'salesforce',
       connectorId: 'connector-1',
+      devRcAccountId: 'connector-owner-account',
       isPrivate: true,
     });
   });
@@ -365,13 +366,13 @@ describe('admin core', () => {
       platformName: 'salesforce',
     })).resolves.toEqual({ deleted: true });
 
-    expect(axios.get).toHaveBeenNthCalledWith(1, 'https://server.example/admin/managedAuth?connectorId=connector-1&isPrivate=true', {
+    expect(axios.get).toHaveBeenNthCalledWith(1, 'https://server.example/admin/managedAuth?connectorId=connector-1&devRcAccountId=connector-owner-account&isPrivate=true', {
       headers: {
         Authorization: 'Bearer jwt-1',
         'X-RC-Access-Token': 'rc-access-token',
       },
     });
-    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=connector-1&isPrivate=true', {
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=connector-1&devRcAccountId=connector-owner-account&isPrivate=true', {
       scope: 'account',
       values: { apiKey: 'secret' },
       rcExtensionId: undefined,
@@ -406,12 +407,12 @@ describe('admin core', () => {
       refreshAfterSave: false,
     })).resolves.toEqual({ saved: true });
 
-    expect(axios.get).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=&isPrivate=false', {
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=&devRcAccountId=&isPrivate=false', {
       headers: {
         'X-RC-Access-Token': 'rc-access-token',
       },
     });
-    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=&isPrivate=false', {
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=&devRcAccountId=&isPrivate=false', {
       scope: 'user',
       values: { token: 'secret' },
       rcExtensionId: '101',

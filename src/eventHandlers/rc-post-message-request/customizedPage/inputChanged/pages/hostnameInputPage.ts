@@ -31,6 +31,7 @@ async function renderHostnameInputPage({ data, manifest }: Pick<EventOptions, 'd
       serverUrl: manifest.serverUrl,
       platformName: data.body.formData.platformId,
       connectorId: data.body.formData.connectorId ?? '',
+      devRcAccountId: data.body.formData.devRcAccountId ?? '',
       isPrivate: !!data.body.formData.isPrivate,
       rcInfo,
     })
@@ -46,6 +47,7 @@ async function renderHostnameInputPage({ data, manifest }: Pick<EventOptions, 'd
         ? `All required authentication fields are ready. Click Connect to connect to ${selectedPlatform.displayName ?? selectedPlatform.name}.`
         : '',
       connectorId: data.body.formData.connectorId ?? '',
+      devRcAccountId: data.body.formData.devRcAccountId ?? '',
       isPrivate: !!data.body.formData.isPrivate,
     });
   getWidgetFrameWindow().postMessage({

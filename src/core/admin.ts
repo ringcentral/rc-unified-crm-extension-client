@@ -507,7 +507,7 @@ async function getManagedAuthSettings({ serverUrl }: UnknownRecord): Promise<any
     const { rcUnifiedCrmExtJwt } = await chromeStorageLocal.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
     const response = await axios.get(
-        `${serverUrl}/admin/managedAuth?connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        `${serverUrl}/admin/managedAuth?connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&devRcAccountId=${encodeURIComponent(platformInfo?.devRcAccountId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
         getRcAccessTokenHeaderConfig(getJwtAuthorizationConfig(rcUnifiedCrmExtJwt)),
     );
     await chrome.storage.local.set({ managedAuthSettings: response.data });
@@ -526,7 +526,7 @@ async function saveManagedAuthSettings({
     const { rcUnifiedCrmExtJwt } = await chromeStorageLocal.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
     const response = await axios.post(
-        `${serverUrl}/admin/managedAuth?connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        `${serverUrl}/admin/managedAuth?connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&devRcAccountId=${encodeURIComponent(platformInfo?.devRcAccountId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
         {
             scope,
             values,

@@ -254,8 +254,8 @@ describe('popup runtime', () => {
       manifestUrl: 'https://manifest.example/custom.json',
     });
     expect(runtime.analytics.setAuthor).toHaveBeenCalledWith('CRM Author');
-    expect(runtime.axiosMock.get).toHaveBeenCalledWith('https://server.example/implementedInterfaces?platform=salesforce');
-    expect(readStorage().implementedInterfaces).toEqual({ findContactWithName: true });
+    expect(runtime.axiosMock.get).not.toHaveBeenCalled();
+    expect(readStorage().implementedInterfaces).toBeUndefined();
 
     await runtime.crmAuthCacheClearedHandler();
     expect(getWidgetPostMessages()).toContainEqual({
@@ -305,12 +305,12 @@ describe('popup runtime', () => {
     expect(runtime.axiosMock.get).not.toHaveBeenCalled();
   });
 
-  it('skips implemented interface storage when the server returns no data', async () => {
+  it('does not fetch implemented interfaces during popup initialization', async () => {
     const runtime = await loadPopupRuntime({
       implementedInterfaces: null,
     });
 
-    expect(runtime.axiosMock.get).toHaveBeenCalledWith('https://server.example/implementedInterfaces?platform=salesforce');
+    expect(runtime.axiosMock.get).not.toHaveBeenCalled();
     expect(readStorage().implementedInterfaces).toBeUndefined();
   });
 

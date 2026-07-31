@@ -117,6 +117,7 @@ async function onUserClickConnectButton({ platform, platformName, manifest }: Un
                 serverUrl: manifest.serverUrl,
                 platformName,
                 connectorId: storedPlatformInfo?.['platform-info']?.connectorId ?? null,
+                devRcAccountId: storedPlatformInfo?.['platform-info']?.devRcAccountId ?? null,
                 isPrivate: !!storedPlatformInfo?.['platform-info']?.isPrivate
             });
             if (managedAuthState?.allRequiredFieldsSatisfied) {
@@ -217,13 +218,13 @@ async function checkManagedOAuthBeforeCrmVisible({ manifest, platformName, platf
     };
 }
 
-async function getManagedAuthState({ serverUrl, platformName, connectorId = null, isPrivate = false, rcInfo = null, rcExtensionId = null, rcAccountId = null }: UnknownRecord): Promise<any> {
+async function getManagedAuthState({ serverUrl, platformName, connectorId = null, devRcAccountId = null, isPrivate = false, rcInfo = null, rcExtensionId = null, rcAccountId = null }: UnknownRecord): Promise<any> {
     try {
         const resolvedRcInfo = rcInfo ?? await getRcInfo();
         const resolvedRcAccountId = rcAccountId ?? resolvedRcInfo?.value?.cachedData?.extensionInfo?.account?.id;
         const resolvedRcExtensionId = rcExtensionId ?? resolvedRcInfo?.value?.cachedData?.extensionInfo?.id;
         const response = await axios.get(
-            `${serverUrl}/apiKeyManagedAuthState?platform=${encodeURIComponent(platformName)}&connectorId=${encodeURIComponent(connectorId ?? '')}&isPrivate=${encodeURIComponent(isPrivate ? 'true' : 'false')}&rcAccountId=${encodeURIComponent(resolvedRcAccountId ?? '')}&rcExtensionId=${encodeURIComponent(resolvedRcExtensionId ?? '')}`,
+            `${serverUrl}/apiKeyManagedAuthState?platform=${encodeURIComponent(platformName)}&connectorId=${encodeURIComponent(connectorId ?? '')}&devRcAccountId=${encodeURIComponent(devRcAccountId ?? '')}&isPrivate=${encodeURIComponent(isPrivate ? 'true' : 'false')}&rcAccountId=${encodeURIComponent(resolvedRcAccountId ?? '')}&rcExtensionId=${encodeURIComponent(resolvedRcExtensionId ?? '')}`,
             getRcAccessTokenHeaderConfig(),
         );
         return response.data;
@@ -257,6 +258,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }: UnknownR
         const platformName = platformInfo['platform-info'].platformName;
         const hostname = platformInfo['platform-info'].hostname;
         const connectorId = platformInfo['platform-info'].connectorId;
+        const devRcAccountId = platformInfo['platform-info'].devRcAccountId;
         const isPrivate = !!platformInfo['platform-info'].isPrivate;
         const manifest = await getManifest();
         const platform = manifest?.platforms[platformName];
@@ -271,6 +273,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }: UnknownR
             proxyId,
             rcAccessToken,
             connectorId,
+            devRcAccountId,
             isPrivate,
             rcAccountId: rcInfo.value.cachedData.extensionInfo.account.id,
             rcExtensionId: rcInfo.value.cachedData.extensionInfo.id,

@@ -2,7 +2,7 @@ import { t } from '../i18n';
 
 type UnknownRecord = Record<string, any>;
 
-function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid, submitText, readyMessage = '', connectorId = '', isPrivate = false }: UnknownRecord): UnknownRecord {
+function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid, submitText, readyMessage = '', connectorId = '', devRcAccountId = '', isPrivate = false }: UnknownRecord): UnknownRecord {
     const platformName = platform.displayName ?? platform.name;
     const url = platform.environment.url;
     const overrides = platform.overrides;
@@ -26,6 +26,7 @@ function getHostnameInputPageRender({ platform, inputUrl, selection, isUrlValid,
             selection: selection ?? '',
             platformDisplayName: platform.displayName ?? platform.name,
             connectorId,
+            devRcAccountId,
             isPrivate
         }
     }

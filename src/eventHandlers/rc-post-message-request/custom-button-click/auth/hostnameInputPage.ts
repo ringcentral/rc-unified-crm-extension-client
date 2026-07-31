@@ -40,6 +40,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
       platformDisplayName: data.body.button.formData.platformDisplayName,
       hostname: inputHostname,
       connectorId: data.body.button.formData.connectorId ?? '',
+      devRcAccountId: data.body.button.formData.devRcAccountId ?? '',
       isPrivate: !!data.body.button.formData.isPrivate,
     },
   });

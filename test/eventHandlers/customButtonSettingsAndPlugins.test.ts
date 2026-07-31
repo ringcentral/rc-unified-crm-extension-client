@@ -398,6 +398,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         platformDisplayName: 'Salesforce',
         url: 'https://crm.example/lightning',
         connectorId: 'connector-1',
+        devRcAccountId: 'connector-owner-account',
         isPrivate: true,
       }, 'hostnameInputPage'),
       manifest: baseManifest(),
@@ -410,6 +411,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       platformDisplayName: 'Salesforce',
       hostname: 'crm.example',
       connectorId: 'connector-1',
+      devRcAccountId: 'connector-owner-account',
       isPrivate: true,
     });
     expect(loaded.manifestService.getManifest).toHaveBeenCalledWith(true);
@@ -479,6 +481,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       platformDisplayName: 'Salesforce',
       hostname: 'crm.example',
       connectorId: 'salesforce',
+      devRcAccountId: '',
       isPrivate: false,
     });
     expect(loaded.embeddableServices.getServiceManifest).toHaveBeenCalled();
@@ -521,6 +524,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       serverUrl: 'https://server.example',
       platformName: 'salesforce',
       connectorId: 'salesforce',
+      devRcAccountId: 1001,
       isPrivate: true,
     }));
     expect(loaded.hostnameInputPage.getHostnameInputPageRender).toHaveBeenCalledWith(expect.objectContaining({
@@ -528,6 +532,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       isUrlValid: true,
       submitText: 'Connect',
       connectorId: 'salesforce',
+      devRcAccountId: 1001,
       isPrivate: true,
     }));
     expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
@@ -624,6 +629,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
         platformDisplayName: 'Salesforce',
         url: 'https://crm.example/lightning',
         connectorId: 'salesforce',
+        devRcAccountId: 1001,
         isPrivate: true,
       }, 'hostnameInputPage'),
       manifest: dynamicManifest,
@@ -636,6 +642,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       platformDisplayName: 'Salesforce',
       hostname: 'crm.example',
       connectorId: 'salesforce',
+      devRcAccountId: 1001,
       isPrivate: true,
     });
     expect(hostnameLoaded.manifestService.saveManifest).toHaveBeenCalledWith({ manifest: dynamicManifest });

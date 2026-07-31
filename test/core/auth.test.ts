@@ -304,6 +304,7 @@ describe('auth core', () => {
       serverUrl: 'https://server.example',
       platformName: 'salesforce',
       connectorId: 'connector-1',
+      devRcAccountId: 'connector-owner-account',
       isPrivate: true,
       rcInfo: {
         value: {
@@ -318,7 +319,7 @@ describe('auth core', () => {
     })).resolves.toEqual({ allRequiredFieldsSatisfied: true });
 
     expect(axios.get).toHaveBeenCalledWith(
-      'https://server.example/apiKeyManagedAuthState?platform=salesforce&connectorId=connector-1&isPrivate=true&rcAccountId=account-2&rcExtensionId=extension-2',
+      'https://server.example/apiKeyManagedAuthState?platform=salesforce&connectorId=connector-1&devRcAccountId=connector-owner-account&isPrivate=true&rcAccountId=account-2&rcExtensionId=extension-2',
       { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
     );
   });
@@ -333,7 +334,7 @@ describe('auth core', () => {
     })).resolves.toEqual({ allRequiredFieldsSatisfied: false });
 
     expect(axios.get).toHaveBeenCalledWith(
-      'https://server.example/apiKeyManagedAuthState?platform=salesforce&connectorId=&isPrivate=false&rcAccountId=account-1&rcExtensionId=extension-1',
+      'https://server.example/apiKeyManagedAuthState?platform=salesforce&connectorId=&devRcAccountId=&isPrivate=false&rcAccountId=account-1&rcExtensionId=extension-1',
       { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
     );
   });
@@ -351,7 +352,7 @@ describe('auth core', () => {
     })).resolves.toBeNull();
 
     expect(axios.get).toHaveBeenCalledWith(
-      'https://server.example/apiKeyManagedAuthState?platform=sales%20force&connectorId=&isPrivate=false&rcAccountId=account%20id&rcExtensionId=extension%20id',
+      'https://server.example/apiKeyManagedAuthState?platform=sales%20force&connectorId=&devRcAccountId=&isPrivate=false&rcAccountId=account%20id&rcExtensionId=extension%20id',
       { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
     );
   });
@@ -362,6 +363,7 @@ describe('auth core', () => {
         platformName: 'salesforce',
         hostname: 'crm.example',
         connectorId: 'connector-1',
+        devRcAccountId: 'connector-owner-account',
         isPrivate: true,
       },
     });
@@ -394,6 +396,7 @@ describe('auth core', () => {
         proxyId: 'proxy-1',
         rcAccessToken: 'rc-access-token',
         connectorId: 'connector-1',
+        devRcAccountId: 'connector-owner-account',
         isPrivate: true,
         rcAccountId: 'account-1',
         rcExtensionId: 'extension-1',

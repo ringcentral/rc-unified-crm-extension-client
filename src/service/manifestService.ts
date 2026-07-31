@@ -1,6 +1,6 @@
 import axios from 'axios';
 import baseManifest from '../manifest.json';
-import { getRcInfo } from '../lib/util';
+import { getRcAccessTokenHeaderConfig, getRcInfo } from '../lib/util';
 import { getPlatformInfo } from './platformService';
 
 type UnknownRecord = Record<string, unknown>;
@@ -109,7 +109,10 @@ export async function getPlatformList(): Promise<CatalogItem[]> {
   }
   const rcInfo = await getRcInfo() as RcInfo;
   const rcAccountId = getRcAccountId(rcInfo);
-  const platformInternalListResponse = await axios.get(`${baseManifest.platformInternalListUrl}?access=internal&type=connector&accountId=${rcAccountId}`);
+  const platformInternalListResponse = await axios.get(
+    `${baseManifest.platformInternalListUrl}?access=internal&type=connector&accountId=${rcAccountId}`,
+    getRcAccessTokenHeaderConfig(),
+  );
   for (const platform of asConnectorList(platformInternalListResponse.data).sharedConnectors ?? []) {
     platform.access = 'shared';
     result.push(platform);
@@ -131,7 +134,10 @@ export async function getPluginList(): Promise<CatalogItem[]> {
   }
   const rcInfo = await getRcInfo() as RcInfo;
   const rcAccountId = getRcAccountId(rcInfo);
-  const pluginInternalListResponse = await axios.get(`${baseManifest.platformInternalListUrl}?access=internal&type=plugin&accountId=${rcAccountId}`);
+  const pluginInternalListResponse = await axios.get(
+    `${baseManifest.platformInternalListUrl}?access=internal&type=plugin&accountId=${rcAccountId}`,
+    getRcAccessTokenHeaderConfig(),
+  );
   for (const plugin of asConnectorList(pluginInternalListResponse.data).sharedConnectors ?? []) {
     plugin.access = 'shared';
     result.push(plugin);

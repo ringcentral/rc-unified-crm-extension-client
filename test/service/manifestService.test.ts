@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { getPlatformInfo } from '../../src/service/platformService.ts';
-import { getRcInfo } from '../../src/lib/util.ts';
+import { getRcAccessTokenHeaderConfig, getRcInfo } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
 
@@ -15,6 +15,11 @@ vi.mock('../../src/service/platformService.ts', () => ({
 }));
 
 vi.mock('../../src/lib/util.ts', () => ({
+  getRcAccessTokenHeaderConfig: vi.fn(() => ({
+    headers: {
+      'X-RC-Access-Token': 'rc-access-token',
+    },
+  })),
   getRcInfo: vi.fn(),
 }));
 
@@ -63,7 +68,12 @@ describe('manifestService', () => {
     ]);
 
     expect(axios.get).toHaveBeenNthCalledWith(1, 'https://appconnect.labs.ringcentral.com/public-api/connectors?type=connector');
-    expect(axios.get).toHaveBeenNthCalledWith(2, 'https://appconnect.labs.ringcentral.com/public-api/connectors/internal?access=internal&type=connector&accountId=account-1');
+    expect(axios.get).toHaveBeenNthCalledWith(
+      2,
+      'https://appconnect.labs.ringcentral.com/public-api/connectors/internal?access=internal&type=connector&accountId=account-1',
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
+    expect(getRcAccessTokenHeaderConfig).toHaveBeenCalledTimes(1);
   });
 
   it('caches platform list results and handles empty catalog payloads', async () => {
@@ -96,7 +106,12 @@ describe('manifestService', () => {
     ]);
 
     expect(axios.get).toHaveBeenNthCalledWith(1, 'https://appconnect.labs.ringcentral.com/public-api/connectors?type=plugin');
-    expect(axios.get).toHaveBeenNthCalledWith(2, 'https://appconnect.labs.ringcentral.com/public-api/connectors/internal?access=internal&type=plugin&accountId=account-1');
+    expect(axios.get).toHaveBeenNthCalledWith(
+      2,
+      'https://appconnect.labs.ringcentral.com/public-api/connectors/internal?access=internal&type=plugin&accountId=account-1',
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
+    expect(getRcAccessTokenHeaderConfig).toHaveBeenCalledTimes(1);
   });
 
   it('returns an empty plugin list when catalog payloads omit connector arrays', async () => {
