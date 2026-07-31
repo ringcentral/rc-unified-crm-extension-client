@@ -179,6 +179,61 @@ describe('contact search custom-button and selection handlers', () => {
     ]));
   });
 
+  it.each([
+    ['Call', 'contactSearchAdapterButtonCallLog'],
+    ['Message', 'contactSearchAdapterButtonMessageLog'],
+  ])('opens the contact search page from a search-only %s log button', async (logType, contactSearchAdapterButton) => {
+    vi.resetModules();
+    const contactSearch = {
+      getCustomContactSearch: vi.fn(({ contactSearchAdapterButton: adapterButton }) => ({
+        id: 'searchContact',
+        adapterButton,
+      })),
+    };
+    vi.doMock('../../src/core/customContactSearch.ts', () => ({ default: contactSearch }));
+    const handler = await loadModule(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/contactSearch/searchContactButton.ts',
+    );
+
+    await handler.onEvent({
+      data: {
+        body: {
+          button: {
+            formData: {
+              logType,
+              contactPhoneNumber: '+16505550100',
+            },
+          },
+        },
+      },
+      ...context(),
+    });
+
+    expect(contactSearch.getCustomContactSearch).toHaveBeenCalledWith({
+      contactSearchAdapterButton,
+      contactPhoneNumber: '+16505550100',
+    });
+    expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
+      {
+        message: {
+          type: 'rc-adapter-register-customized-page',
+          page: {
+            id: 'searchContact',
+            adapterButton: contactSearchAdapterButton,
+          },
+        },
+        targetOrigin: undefined,
+      },
+      {
+        message: {
+          type: 'rc-adapter-navigate-to',
+          path: '/customized/searchContact',
+        },
+        targetOrigin: '*',
+      },
+    ]));
+  });
+
   it('writes a selected search contact back to the cached call-log page', async () => {
     const { handler, logPage } = await loadSearchResultHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/contactSearchResultCallLog.ts',

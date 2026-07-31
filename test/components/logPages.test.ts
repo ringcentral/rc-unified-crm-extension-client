@@ -538,6 +538,58 @@ describe('logPage', () => {
     expect(validCase.uiSchema['caseId-error']).toBeUndefined();
   });
 
+  it('renders contact search as a button when it is the only contact option', async () => {
+    const logPage = await loadLogPage();
+    const page = logPage.getLogPageRender({
+      id: 'search-only',
+      manifest: manifest(),
+      logType: 'Call',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [],
+      logInfo: {},
+      contactPhoneNumber: '+16505550100',
+      useContactSearch: true,
+    });
+
+    expect(page.schema.properties.contact.oneOf).toEqual([
+      expect.objectContaining({ const: 'searchContact' }),
+    ]);
+    expect(page.schema.properties.contact).toMatchObject({
+      title: expect.any(String),
+      type: 'string',
+    });
+    expect(page.uiSchema.contact).toEqual({
+      'ui:field': 'button',
+      'ui:variant': 'contained',
+      'ui:fullWidth': true,
+    });
+    expect(page.uiSchema.submitButtonOptions['ui:disabled']).toBe(true);
+    expect(page.schema.required).toContain('contact');
+    expect(page.formData.contact).toBe('');
+    expect(page.formData.contactName).toBe('');
+
+    const updatedPage = logPage.getUpdatedLogPageRender({
+      manifest: manifest(),
+      logType: 'Call',
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['scheduleCallback'],
+        page,
+        formData: {
+          ...page.formData,
+          contact: 'searchContact',
+          scheduleCallback: false,
+        },
+      },
+    });
+
+    expect(updatedPage.uiSchema.submitButtonOptions['ui:disabled']).toBe(true);
+    expect(updatedPage.schema.required).toContain('contact');
+    expect(updatedPage.formData.contact).toBe('');
+  });
+
   it('renders edit log and message log pages with current form data', async () => {
     const logPage = await loadLogPage();
 

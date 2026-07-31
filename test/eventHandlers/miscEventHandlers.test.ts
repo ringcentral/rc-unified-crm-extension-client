@@ -1232,6 +1232,7 @@ describe('miscellaneous rc-post-message-request handlers', () => {
       data: {
         requestId: 'input-1',
         body: {
+          keys: ['contact'],
           call: {
             sessionId: 'session-1',
           },
@@ -1334,6 +1335,55 @@ describe('miscellaneous rc-post-message-request handlers', () => {
       },
     ]));
     expect(responseMessage).toHaveBeenCalledWith('message-input-1', { data: 'ok' });
+  });
+
+  it.each([
+    ['call', '../../src/eventHandlers/rc-post-message-request/callLogger/inputChanged/index.ts'],
+    ['message', '../../src/eventHandlers/rc-post-message-request/messageLogger/inputChanged/index.ts'],
+  ])('does not open contact search when another %s-log input changes', async (_logType, modulePath) => {
+    vi.resetModules();
+    const logCore = {
+      cacheCallNote: vi.fn(async () => {}),
+    };
+    vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
+    const logPage = {
+      getUpdatedLogPageRender: vi.fn(() => ({ id: 'logPage' })),
+    };
+    vi.doMock('../../src/components/logPage.ts', () => ({ default: logPage }));
+    const contactSearch = {
+      getCustomContactSearch: vi.fn(() => ({ id: 'contactSearchPage' })),
+    };
+    vi.doMock('../../src/core/customContactSearch.ts', () => ({ default: contactSearch }));
+    const responseMessage = vi.fn();
+    vi.doMock('../../src/lib/util.ts', () => ({ responseMessage }));
+    const handler = await loadModule(modulePath);
+
+    await handler.onEvent({
+      data: {
+        requestId: 'other-input',
+        body: {
+          keys: ['note'],
+          call: {
+            sessionId: 'session-1',
+          },
+          formData: {
+            note: 'updated note',
+            contact: 'searchContact',
+            contactPhoneNumber: '+16505550100',
+          },
+        },
+      },
+      ...baseContext(),
+    });
+
+    expect(contactSearch.getCustomContactSearch).not.toHaveBeenCalled();
+    expect(getWidgetPostMessages()).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        message: expect.objectContaining({
+          type: 'rc-adapter-navigate-to',
+        }),
+      }),
+    ]));
   });
 
   it('matches locally saved message logs by conversation log id', async () => {

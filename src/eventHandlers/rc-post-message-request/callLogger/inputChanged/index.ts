@@ -29,7 +29,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
     type: 'rc-adapter-update-call-log-page',
     page,
   }, '*');
-  if (data.body.formData.contact === 'searchContact') {
+  if (data.body.keys?.includes('contact') && data.body.formData.contact === 'searchContact') {
     const contactSearchRender = contactSearch.getCustomContactSearch({ contactSearchAdapterButton: 'contactSearchAdapterButtonCallLog', contactPhoneNumber: data.body.formData?.contactPhoneNumber });
     getWidgetFrameWindow().postMessage({
       type: 'rc-adapter-register-customized-page',

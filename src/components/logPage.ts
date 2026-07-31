@@ -10,9 +10,11 @@ type UnknownRecord = Record<string, any>;
 function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved, contactPhoneNumber, useContactSearch }: UnknownRecord): UnknownRecord {
     const contactList = buildContactOptions(contactInfo, useContactSearch);
     const defaultContact = contactList.some(c => c.toNumberEntity) ? contactList.find(c => c.toNumberEntity) : (contactList[0] ?? null);
+    const hasOnlyContactSearch = contactList.length === 1 && defaultContact.const === 'searchContact';
+    const defaultContactName = hasOnlyContactSearch ? '' : (defaultContact?.title ?? '');
     const defaultActivityTitle = direction === 'Inbound' ?
-        t('pages.log.inboundCallFrom', { type: logType, name: defaultContact?.title ?? '' }) :
-        t('pages.log.outboundCallTo', { type: logType, name: defaultContact?.title ?? '' });
+        t('pages.log.inboundCallFrom', { type: logType, name: defaultContactName }) :
+        t('pages.log.outboundCallTo', { type: logType, name: defaultContactName });
     let callSchemas: UnknownRecord = {};
     let callUISchemas: UnknownRecord = {};
     let callFormData: UnknownRecord = {};
@@ -82,6 +84,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
         case 'auto':
             const warningField = buildContactWarningField(contactList, defaultContact);
             if (contactList.length === 1 && contactList.some(c => c.isNewContact)) { requiredFieldNames.push('newContactName') };
+            if (hasOnlyContactSearch) { requiredFieldNames.push('contact') };
             const newContactWidget = buildNewContactWidget(defaultContact, manifest, platformName);
             page = {
                 title: t('pages.log.saveTo', { platform: manifest.platforms[platformName].displayName }), // optional
@@ -94,7 +97,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                             type: 'string'
                         },
                         contact: {
-                            title: t('common.labels.contact'),
+                            title: hasOnlyContactSearch ? defaultContact.title : t('common.labels.contact'),
                             type: 'string',
                             oneOf: contactList
                         },
@@ -139,6 +142,11 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         "ui:field": "admonition", // or typography to show raw text
                         "ui:severity": "warning", // "warning", "info", "error", "success"
                     },
+                    contact: hasOnlyContactSearch ? {
+                            "ui:field": "button",
+                            "ui:variant": "contained",
+                            "ui:fullWidth": true
+                    } : {},
                     contactType: {
                         "ui:widget": "hidden",
                     },
@@ -165,11 +173,11 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 },
                 formData: {
                     id,
-                    contact: defaultContact.const,
+                    contact: hasOnlyContactSearch ? '' : defaultContact.const,
                     newContactType: defaultContact.defaultContactType ?? '',
                     newContactName: '',
                     contactType: defaultContact?.type ?? '',
-                    contactName: defaultContact?.title ?? '',
+                    contactName: defaultContactName,
                     triggerType,
                     logType,
                     contactPhoneNumber,
@@ -177,6 +185,12 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     ...callFormData,
                     ...additionalFieldsValue
                 }
+            }
+            if (hasOnlyContactSearch) {
+                page.uiSchema.submitButtonOptions = {
+                    ...page.uiSchema.submitButtonOptions,
+                    "ui:disabled": true
+                };
             }
             // Hide callbackDateTime when scheduleCallback is false
             if (!page.formData.scheduleCallback) {
@@ -531,6 +545,20 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                 "ui:severity": "error", // "warning", "info", "error", "success"
             };
         }
+    }
+    const contactOptions = page.schema.properties.contact?.oneOf ?? [];
+    if (contactOptions.length === 1 && contactOptions[0].const === 'searchContact') {
+        if (!Array.isArray(page.schema.required)) {
+            page.schema.required = [];
+        }
+        if (!page.schema.required.includes('contact')) {
+            page.schema.required.push('contact');
+        }
+        page.formData.contact = '';
+        page.uiSchema.submitButtonOptions = {
+            ...page.uiSchema.submitButtonOptions,
+            "ui:disabled": true
+        };
     }
     return page;
 }

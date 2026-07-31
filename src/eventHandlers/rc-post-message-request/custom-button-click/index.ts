@@ -61,6 +61,7 @@ import adminRemoveSheetButtonHandler from './googleSheets/adminRemoveSheetButton
 
 import contactSearchAdapterButtonCallLogHandler from './contactSearch/contactSearchAdapterButtonCallLog';
 import contactSearchAdapterButtonMessageLogHandler from './contactSearch/contactSearchAdapterButtonMessageLog';
+import searchContactButtonHandler from './contactSearch/searchContactButton';
 
 import openInstalledPluginListPageHandler from './plugins/installedPluginListPage';
 import selectPluginHandler from './plugins/selectPlugin';
@@ -327,6 +328,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             break;
         case 'contactSearchAdapterButtonMessageLog':
             await contactSearchAdapterButtonMessageLogHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'contact':
+            await searchContactButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'refreshLicense':
             if (platform.useLicense) { await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl }); }
