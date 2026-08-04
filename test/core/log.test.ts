@@ -120,6 +120,57 @@ describe('log core', () => {
     });
   });
 
+  it('includes a linked voicemail media-reader URL in the create call-log payload', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      userSettings: {},
+    });
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        id: 456,
+        attachments: [{
+          type: 'AudioRecording',
+          uri: 'https://media.ringcentral.com/restapi/v1.0/account/1/extension/2/message-store/456/content/456',
+        }],
+      },
+    });
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        logId: 'log-voicemail',
+      },
+    });
+    const logCore = await loadLogCore();
+
+    await logCore.addLog({
+      serverUrl: 'https://server.example',
+      logType: 'Call',
+      logInfo: {
+        sessionId: 'session-voicemail',
+        message: {
+          id: '456',
+          type: 'VoiceMail',
+          uri: 'https://platform.ringcentral.com/restapi/v1.0/account/1/extension/2/message-store/456',
+        },
+      },
+      note: '',
+      additionalSubmission: {},
+      isShowNotification: false,
+    });
+
+    expect(axios.get).toHaveBeenCalledWith(
+      'https://platform.ringcentral.com/restapi/v1.0/account/1/extension/2/message-store/456',
+      { headers: { Authorization: 'Bearer rc-access-token' } },
+    );
+    expect(axios.post).toHaveBeenCalledWith(
+      'https://server.example/callLog',
+      expect.objectContaining({
+        voicemailMessageId: '456',
+        voicemailLink: 'https://ringcentral.github.io/ringcentral-media-reader/?media=https%3A%2F%2Fmedia.ringcentral.com%2Frestapi%2Fv1.0%2Faccount%2F1%2Fextension%2F2%2Fmessage-store%2F456%2Fcontent%2F456',
+      }),
+    );
+  });
+
   it('creates message logs and stores conversation logging state', async () => {
     seedStorage({
       rcUnifiedCrmExtJwt: 'jwt-1',
@@ -364,6 +415,48 @@ describe('log core', () => {
       hashedExtensionId: 'hash-1',
     }));
     expect(axios.defaults.headers.common.Authorization).toBe('Bearer jwt-1');
+  });
+
+  it('resolves and includes a linked voicemail media-reader URL when updating a call log', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        id: 456,
+        attachments: [{
+          type: 'AudioRecording',
+          uri: 'https://media.ringcentral.com/restapi/v1.0/account/1/extension/2/message-store/456/content/456',
+        }],
+      },
+    });
+    vi.mocked(axios.patch).mockResolvedValueOnce({ data: {} });
+    const logCore = await loadLogCore();
+
+    await logCore.updateLog({
+      serverUrl: 'https://server.example',
+      logType: 'Call',
+      sessionId: 'session-voicemail',
+      call: {
+        sessionId: 'session-voicemail',
+        message: {
+          id: '456',
+          type: 'VoiceMail',
+          uri: 'https://platform.ringcentral.com/restapi/v1.0/account/1/extension/2/message-store/456',
+        },
+      },
+    });
+
+    expect(axios.get).toHaveBeenCalledWith(
+      'https://platform.ringcentral.com/restapi/v1.0/account/1/extension/2/message-store/456',
+      { headers: { Authorization: 'Bearer rc-access-token' } },
+    );
+    expect(axios.patch).toHaveBeenCalledWith(
+      'https://server.example/callLog',
+      expect.objectContaining({
+        sessionId: 'session-voicemail',
+        voicemailMessageId: '456',
+        voicemailLink: 'https://ringcentral.github.io/ringcentral-media-reader/?media=https%3A%2F%2Fmedia.ringcentral.com%2Frestapi%2Fv1.0%2Faccount%2F1%2Fextension%2F2%2Fmessage-store%2F456%2Fcontent%2F456',
+      }),
+    );
   });
 
   it('keeps existing bearer auth when getting call logs without details', async () => {

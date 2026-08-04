@@ -7,6 +7,19 @@ class RcAPI {
 
     rcExtensions: UnknownRecord[] = [];
 
+    async getMessageByUri({ uri, rcAccessToken }: { uri: string; rcAccessToken: string }): Promise<UnknownRecord> {
+        const parsedUri = new URL(uri, 'https://platform.ringcentral.com');
+        if (!parsedUri.hostname.endsWith('.ringcentral.com')) {
+            throw new Error('Invalid linked voicemail URI');
+        }
+        const response = await axios.get(parsedUri.toString(), {
+            headers: {
+                Authorization: `Bearer ${rcAccessToken}`
+            }
+        });
+        return response.data;
+    }
+
     async getUserInfo({ serverUrl, extensionId, accountId }: UnknownRecord): Promise<UnknownRecord> {
         const userInfoHashResponse = await axios.get(
             `${serverUrl}/userInfoHash?extensionId=${extensionId}&accountId=${accountId}`

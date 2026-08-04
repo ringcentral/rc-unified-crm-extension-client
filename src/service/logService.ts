@@ -4,6 +4,7 @@ import dispositionCore from '../core/disposition';
 import contactCore from '../core/contact';
 import { showNotification, dismissNotification, isObjectEmpty, getRcAccessToken } from '../lib/util';
 import logUtil from '../lib/logUtil';
+import { resolveVoicemailRecording } from '../lib/voicemail';
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -30,6 +31,14 @@ interface UnloggedCall extends UnknownRecord {
   to: PhoneParty;
   aiNote?: unknown;
   transcript?: unknown;
+  message?: LinkedMessage;
+  legs?: Array<{ message?: LinkedMessage }>;
+}
+
+interface LinkedMessage {
+  id?: string | number;
+  type?: string;
+  uri?: string;
 }
 
 interface UnloggedCallsResponse {
@@ -194,6 +203,7 @@ export async function syncCallData({
   const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} }) as { rcAdditionalSubmission: UnknownRecord };
   const rcAccessToken = getRcAccessToken();
   const recordingLink = dataBody?.call?.recording?.link;
+  const voicemailRecording = await resolveVoicemailRecording(dataBody.call, rcAccessToken);
 
   // Get the cached note for this call
   const note = await logCore.getCachedNote({ sessionId: dataBody.call.sessionId });
@@ -210,6 +220,7 @@ export async function syncCallData({
         sessionId: dataBody.call.sessionId,
         recordingLink: dataBody.call.recording.link,
         recordingDownloadLink: `${dataBody.call.recording.contentUri}?accessToken=${rcAccessToken}`,
+        ...voicemailRecording,
         note,
         aiNote: dataBody.aiNote,
         transcript: dataBody.transcript,
@@ -229,6 +240,7 @@ export async function syncCallData({
         logType: 'Call',
         rcAdditionalSubmission,
         sessionId: dataBody.call.sessionId,
+        ...voicemailRecording,
         note,
         aiNote: dataBody.aiNote,
         transcript: dataBody.transcript,

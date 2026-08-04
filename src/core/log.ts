@@ -3,6 +3,7 @@ import { isObjectEmpty, showNotification, getRcAccessToken, getRcCallLogIdentity
 import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 import { t } from '../i18n';
 import { renderUrlTemplate } from '../lib/urlTemplate';
+import { resolveVoicemailRecording } from '../lib/voicemail';
 
 type UnknownRecord = Record<string, any>;
 
@@ -66,7 +67,8 @@ export async function addLog({
               logInfo.recording = hasRecording[`rec-link-${logInfo.sessionId}`];
             }
           }
-          addLogRes = await axios.post(`${serverUrl}/callLog`, { logInfo, note, aiNote, transcript, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName, extensionNumber, hashedExtensionId });
+          const voicemailRecording = await resolveVoicemailRecording(logInfo, rcAccessToken);
+          addLogRes = await axios.post(`${serverUrl}/callLog`, { logInfo, note, aiNote, transcript, ...voicemailRecording, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName, extensionNumber, hashedExtensionId });
           if (addLogRes.data.successful) {
             trackSyncCallLog({ hasNote: note !== '' });
             if (isShowNotification) {
@@ -167,7 +169,7 @@ export function openLog({ manifest, platformName, hostname, logId, contactType, 
   window.open(logPageUrl);
 }
 
-export async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, recordingLink, recordingDownloadLink, subject, note, startTime, duration, aiNote, transcript, result, direction, from, to, isShowNotification }: UnknownRecord): Promise<void> {
+export async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, recordingLink, recordingDownloadLink, voicemailLink, voicemailMessageId, call, subject, note, startTime, duration, aiNote, transcript, result, direction, from, to, isShowNotification }: UnknownRecord): Promise<void> {
   const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as UnknownRecord;
   const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} }) as UnknownRecord;
   void rcAdditionalSubmission;
@@ -176,11 +178,16 @@ export async function updateLog({ serverUrl, logType, telephonySessionId, sessio
       case 'Call':
         {
           const { extensionNumber, hashedExtensionId } = await getRcCallLogIdentity();
+          const voicemailRecording = voicemailLink || !call
+            ? { voicemailLink, voicemailMessageId }
+            : await resolveVoicemailRecording(call, getRcAccessToken());
           const patchBody = {
             telephonySessionId,
             sessionId,
             recordingLink,
             recordingDownloadLink,
+            voicemailLink: voicemailRecording.voicemailLink,
+            voicemailMessageId: voicemailRecording.voicemailMessageId,
             subject,
             note,
             startTime,
