@@ -40,8 +40,31 @@ type PendingSelectedLog = {
 const pendingSelectedLogs = new Map<string, PendingSelectedLog>();
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
-  void platformInfo;
   const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
+
+  // Case: user clicked a message's "logged" icon to open the existing CRM log
+  // record. Embeddable widget builds that don't support the dedicated
+  // `messageLoggerOpenLogPath` fall back to posting to the main messageLogger
+  // path with `triggerType: 'openLog'` and only a `logId` (no `conversation`),
+  // so this MUST be handled before any `data.body.conversation` access to avoid
+  // a crash on the missing conversation payload.
+  if (data.body?.triggerType === 'openLog') {
+    const logId = data.body?.logId;
+    if (logId) {
+      logCore.openLog({
+        manifest,
+        platformName,
+        hostname: platformInfo?.hostname,
+        logId,
+        contactId: data.body?.contactId,
+        contactType: data.body?.contactType,
+        userSettings,
+      });
+    }
+    responseMessage(data.requestId, { data: 'ok' });
+    return;
+  }
+
   console.log('message log request for', data.body.conversation.conversationLogId, data.body.triggerType);
   // Case: when auto log and auto pop turned ON, we need to know which event is for the conversation that user is looking at
   const { autoPopupMainConverastionId } = await chrome.storage.local.get({ autoPopupMainConverastionId: null }) as { autoPopupMainConverastionId?: string | null };

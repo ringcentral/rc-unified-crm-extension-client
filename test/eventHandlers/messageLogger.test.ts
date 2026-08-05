@@ -29,6 +29,7 @@ async function loadMessageLogger() {
   const logCore: Record<string, any> = {
     addLog: vi.fn(async () => ({})),
     getConflictContentFromUnresolvedLog: vi.fn(() => ({ description: 'Multiple contacts found' })),
+    openLog: vi.fn(() => {}),
   };
   vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
@@ -1369,6 +1370,52 @@ describe('messageLogger', () => {
     expect(logPage.getLogPageRender).not.toHaveBeenCalled();
     expect(logCore.addLog).not.toHaveBeenCalled();
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('opens the CRM log page when the widget falls back to the main path with triggerType openLog', async () => {
+    seedStorage({ userSettings: { logDateFormat: { value: 'YYYY-MM-DD' } } });
+    const { messageLogger, logCore, util } = await loadMessageLogger();
+
+    // Older embeddable builds without messageLoggerOpenLogPath post the logged
+    // icon click to the main messageLogger path with only a logId and no
+    // conversation payload. This must open the CRM record without crashing.
+    await messageLogger.onEvent({
+      data: {
+        requestId: 'open-log-request',
+        body: {
+          triggerType: 'openLog',
+          logId: 'crm-log-123',
+          contactId: 'contact-9',
+          contactType: 'Lead',
+        },
+      },
+      ...context,
+    });
+
+    expect(logCore.openLog).toHaveBeenCalledWith(expect.objectContaining({
+      platformName: 'salesforce',
+      logId: 'crm-log-123',
+      contactId: 'contact-9',
+      contactType: 'Lead',
+    }));
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('open-log-request', { data: 'ok' });
+  });
+
+  it('does not open a log page for an openLog event that is missing a logId', async () => {
+    seedStorage({ userSettings: {} });
+    const { messageLogger, logCore, util } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: {
+        requestId: 'open-log-no-id',
+        body: { triggerType: 'openLog' },
+      },
+      ...context,
+    });
+
+    expect(logCore.openLog).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('open-log-no-id', { data: 'ok' });
   });
 
   it('does not open message pages when neither redirect nor auto popup is enabled', async () => {
