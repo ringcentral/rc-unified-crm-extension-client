@@ -3,7 +3,7 @@ import logCore from '../../src/core/log.ts';
 import dispositionCore from '../../src/core/disposition.ts';
 import contactCore from '../../src/core/contact.ts';
 import logUtil from '../../src/lib/logUtil.ts';
-import { showNotification, dismissNotification, getRcAccessToken } from '../../src/lib/util.ts';
+import { showNotification, dismissNotification, getRcAccessToken, refreshRCToken } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { seedStorage } from '../setup/storageHelpers';
@@ -52,6 +52,7 @@ vi.mock('../../src/lib/util.ts', () => ({
   dismissNotification: vi.fn(),
   isObjectEmpty: vi.fn((obj) => !obj || Object.keys(obj).length === 0),
   getRcAccessToken: vi.fn(() => 'rc-access-token'),
+  refreshRCToken: vi.fn(async () => {}),
 }));
 
 vi.mock('../../src/lib/rcAPI.ts', () => ({
@@ -243,6 +244,7 @@ describe('logService', () => {
       uri: 'https://platform.ringcentral.com/restapi/v1.0/account/1/extension/2/message-store/456',
       rcAccessToken: 'rc-access-token',
     });
+    expect(refreshRCToken).toHaveBeenCalled();
     expect(logCore.updateLog).toHaveBeenCalledWith(expect.objectContaining({
       sessionId: 'session-voicemail',
       voicemailMessageId: '456',

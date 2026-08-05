@@ -5,6 +5,7 @@ import adminCore from '../../src/core/admin.ts';
 import embeddableServices from '../../src/service/embeddableServices.ts';
 import reportPage from '../../src/components/reportPage/reportPage.ts';
 import calldownPage from '../../src/components/calldownPage.ts';
+import { getRcAccessToken, refreshRCToken } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
@@ -26,6 +27,7 @@ vi.mock('axios', () => ({
 
 vi.mock('../../src/lib/util.ts', () => ({
   getRcAccessToken: vi.fn(() => 'rc-access-token'),
+  refreshRCToken: vi.fn(async () => {}),
 }));
 
 vi.mock('../../src/lib/rcAPI.ts', () => ({
@@ -102,6 +104,8 @@ describe('user service behavior', () => {
     });
     rcApiMocks.instance.getRcCallLog.mockReset();
     rcApiMocks.instance.getRcSMSLog.mockReset();
+    vi.mocked(getRcAccessToken).mockClear();
+    vi.mocked(refreshRCToken).mockClear();
   });
 
   it('returns null for user report stats until both custom dates are available', async () => {
@@ -174,6 +178,10 @@ describe('user service behavior', () => {
       customStartDate: '2026-01-01T00:00:00Z',
       customEndDate: '2026-01-03T00:00:00Z',
     });
+    expect(refreshRCToken).toHaveBeenCalledTimes(2);
+    expect(getRcAccessToken).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(refreshRCToken).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(getRcAccessToken).mock.invocationCallOrder[0]);
+    expect(vi.mocked(refreshRCToken).mock.invocationCallOrder[1]).toBeLessThan(vi.mocked(getRcAccessToken).mock.invocationCallOrder[1]);
     expect(RCAdapter.getUnloggedCalls).toHaveBeenCalledWith(100, 1);
   });
 

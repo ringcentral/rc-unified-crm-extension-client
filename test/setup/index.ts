@@ -12,6 +12,7 @@ beforeEach(() => {
   (globalThis as typeof globalThis & { RCAdapter: typeof RCAdapter }).RCAdapter = {
     alertMessage: vi.fn(async () => 'notification-id'),
     dismissAlertMessage: vi.fn(),
+    refreshLoginSession: vi.fn(async () => {}),
     setAutoLog: vi.fn(),
     getUnloggedCalls: vi.fn(async () => ({ calls: [], hasMore: false })),
     getCallLog: vi.fn(async () => null),

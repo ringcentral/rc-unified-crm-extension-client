@@ -6,6 +6,7 @@ type UnknownRecord = Record<string, any>;
 declare const RCAdapter: {
   alertMessage(options: UnknownRecord): Promise<string> | string;
   dismissMessage(notificationId: unknown): Promise<unknown> | unknown;
+  refreshLoginSession(force: boolean): Promise<void>;
 };
 
 function secondsToHourMinuteSecondString(totalSeconds: number): string {
@@ -37,6 +38,9 @@ async function dismissNotification({ notificationId }: UnknownRecord): Promise<v
   }
 }
 
+async function refreshRCToken(force: boolean = false): Promise<void> {
+  await RCAdapter.refreshLoginSession(force);
+}
 
 function responseMessage(responseId: unknown, response: unknown): void {
   (document.querySelector("#rc-widget-adapter-frame") as any).contentWindow.postMessage({
@@ -250,6 +254,7 @@ export {
   secondsToHourMinuteSecondString,
   showNotification,
   dismissNotification,
+  refreshRCToken,
   responseMessage,
   isObjectEmpty,
   getRcInfo,

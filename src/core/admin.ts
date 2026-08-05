@@ -4,7 +4,7 @@ import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import { RcAPI } from '../lib/rcAPI';
 import { parsePhoneNumber } from 'awesome-phonenumber';
-import { getRcAccessToken, getRcAccessTokenHeaderConfig, getRcContactInfo, showNotification } from '../lib/util';
+import { getRcAccessToken, getRcAccessTokenHeaderConfig, getRcContactInfo, refreshRCToken, showNotification } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest as getManifestBase } from '../service/manifestService';
 
@@ -393,11 +393,12 @@ async function authServerSideLogging({ platform }: UnknownRecord): Promise<any> 
         return;
     }
     const { rcUserInfo } = await chromeStorageLocal.get('rcUserInfo');
-    const rcAccessToken = getRcAccessToken();
     const rcClientId = "Y4m1YREFKbXdDoet5djv46";
     const serverDomainUrl = platform.serverSideLogging.url;
     // Auth
     const rcAPI = new RcAPI();
+    await refreshRCToken();
+    const rcAccessToken = getRcAccessToken();
     const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
     const serverSideLoggingTokenResp = await axios.get(
         `${serverDomainUrl}/oauth/callback?code=${rcInteropCode}&rcAccountId=${rcUserInfo?.rcAccountId}`,
@@ -414,9 +415,10 @@ async function authServerSideLogging({ platform }: UnknownRecord): Promise<any> 
 
 async function authAppConnectServer({ serverUrl }: UnknownRecord): Promise<any> {
     try {
-        const rcAccessToken = getRcAccessToken();
         const rcClientId = process.env.RC_CLIENT_ID;
         const rcAPI = new RcAPI();
+        await refreshRCToken();
+        const rcAccessToken = getRcAccessToken();
         const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
         const serverSideLoggingTokenResp = await axios.get(
             `${serverUrl}/ringcentral/oauth/callback?code=${rcInteropCode}`,

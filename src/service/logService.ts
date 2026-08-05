@@ -203,7 +203,7 @@ export async function syncCallData({
   const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} }) as { rcAdditionalSubmission: UnknownRecord };
   const rcAccessToken = getRcAccessToken();
   const recordingLink = dataBody?.call?.recording?.link;
-  const voicemailRecording = await resolveVoicemailRecording(dataBody.call, rcAccessToken);
+  const voicemailRecording = await resolveVoicemailRecording(dataBody.call);
 
   // Get the cached note for this call
   const note = await logCore.getCachedNote({ sessionId: dataBody.call.sessionId });

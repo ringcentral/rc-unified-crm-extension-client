@@ -67,7 +67,7 @@ export async function addLog({
               logInfo.recording = hasRecording[`rec-link-${logInfo.sessionId}`];
             }
           }
-          const voicemailRecording = await resolveVoicemailRecording(logInfo, rcAccessToken);
+          const voicemailRecording = await resolveVoicemailRecording(logInfo);
           addLogRes = await axios.post(`${serverUrl}/callLog`, { logInfo, note, aiNote, transcript, ...voicemailRecording, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName, extensionNumber, hashedExtensionId });
           if (addLogRes.data.successful) {
             trackSyncCallLog({ hasNote: note !== '' });
@@ -180,7 +180,7 @@ export async function updateLog({ serverUrl, logType, telephonySessionId, sessio
           const { extensionNumber, hashedExtensionId } = await getRcCallLogIdentity();
           const voicemailRecording = voicemailLink || !call
             ? { voicemailLink, voicemailMessageId }
-            : await resolveVoicemailRecording(call, getRcAccessToken());
+            : await resolveVoicemailRecording(call);
           const patchBody = {
             telephonySessionId,
             sessionId,

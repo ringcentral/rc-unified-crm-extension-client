@@ -1,4 +1,5 @@
 import { RcAPI } from './rcAPI';
+import { getRcAccessToken, refreshRCToken } from './util';
 
 type UnknownRecord = Record<string, any>;
 
@@ -23,7 +24,6 @@ export function findLinkedVoicemailMessage(call: CallWithLinkedMessage): LinkedM
 
 export async function resolveVoicemailRecording(
   call: CallWithLinkedMessage,
-  rcAccessToken: string,
 ): Promise<{ voicemailLink?: string; voicemailMessageId?: string }> {
   const linkedMessage = findLinkedVoicemailMessage(call);
   if (!linkedMessage?.uri) {
@@ -31,9 +31,10 @@ export async function resolveVoicemailRecording(
   }
 
   try {
+    await refreshRCToken();
     const message = await new RcAPI().getMessageByUri({
       uri: linkedMessage.uri,
-      rcAccessToken,
+      rcAccessToken: getRcAccessToken(),
     });
     const audioAttachment = message.attachments?.find(
       (attachment: UnknownRecord) => attachment.type === 'AudioRecording'

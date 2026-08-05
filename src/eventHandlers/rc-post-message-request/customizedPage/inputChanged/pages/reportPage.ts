@@ -1,4 +1,4 @@
-import { getRcAccessToken, getRcInfo } from '../../../../../lib/util';
+import { getRcAccessToken, getRcInfo, refreshRCToken } from '../../../../../lib/util';
 import { RcAPI } from '../../../../../lib/rcAPI';
 import contactCore from '../../../../../core/contact';
 import logPage from '../../../../../components/logPage';
@@ -30,6 +30,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   let rcExtensions: UnknownRecord[] | undefined;
   if (isAdmin) {
     const rcAPI = new RcAPI();
+    await refreshRCToken();
     rcExtensions = await rcAPI.getRcExtensionList({ rcAccessToken: getRcAccessToken() });
     if (data.body.keys.some((k: string) => k === 'rcExtensionList')) {
       if (!rcExtensions?.some(rcExtension => rcExtension.id == data.body.formData.rcExtensionList) && data.body.formData.rcExtensionList !== 'me') {

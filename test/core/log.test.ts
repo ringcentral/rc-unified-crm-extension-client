@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { showNotification, getRcAccessToken, getRcCallLogIdentity, isObjectEmpty } from '../../src/lib/util.ts';
+import { showNotification, getRcAccessToken, getRcCallLogIdentity, isObjectEmpty, refreshRCToken } from '../../src/lib/util.ts';
 import { trackSyncCallLog, trackSyncMessageLog } from '../../src/lib/analytics.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
@@ -25,6 +25,7 @@ vi.mock('../../src/lib/util.ts', () => ({
     extensionNumber: '101',
     hashedExtensionId: 'hash-1',
   })),
+  refreshRCToken: vi.fn(async () => {}),
   isObjectEmpty: vi.fn((obj) => !obj || Object.keys(obj).length === 0),
 }));
 
@@ -169,6 +170,7 @@ describe('log core', () => {
         voicemailLink: 'https://ringcentral.github.io/ringcentral-media-reader/?media=https%3A%2F%2Fmedia.ringcentral.com%2Frestapi%2Fv1.0%2Faccount%2F1%2Fextension%2F2%2Fmessage-store%2F456%2Fcontent%2F456',
       }),
     );
+    expect(refreshRCToken).toHaveBeenCalled();
   });
 
   it('creates message logs and stores conversation logging state', async () => {

@@ -2,7 +2,7 @@ import axios from 'axios';
 import adminPage from '../../src/components/admin/adminPage.ts';
 import authCore from '../../src/core/auth.ts';
 import { RcAPI } from '../../src/lib/rcAPI.ts';
-import { getRcAccessToken, getRcContactInfo, showNotification } from '../../src/lib/util.ts';
+import { getRcAccessToken, getRcContactInfo, refreshRCToken, showNotification } from '../../src/lib/util.ts';
 import { getManifest } from '../../src/service/manifestService.ts';
 import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { loadModule } from '../helpers/loadModule';
@@ -56,6 +56,7 @@ vi.mock('../../src/lib/util.ts', () => ({
     { id: 'user-1', type: 'User' },
     { id: 'site-1', type: 'Site' },
   ]),
+  refreshRCToken: vi.fn(async () => {}),
   showNotification: vi.fn(),
 }));
 
@@ -97,6 +98,7 @@ describe('admin core', () => {
       { id: 'user-1', type: 'User' },
       { id: 'site-1', type: 'Site' },
     ]);
+    vi.mocked(refreshRCToken).mockReset().mockResolvedValue();
     vi.mocked(showNotification).mockReset();
     vi.mocked(getManifest).mockResolvedValue({
       serverUrl: 'https://server.example',
@@ -190,6 +192,9 @@ describe('admin core', () => {
     await expect(adminCore.authServerSideLogging({ platform: platform() })).resolves.toBe('ssl-token');
 
     expect(RcAPI).toHaveBeenCalled();
+    expect(refreshRCToken).toHaveBeenCalledOnce();
+    expect(vi.mocked(refreshRCToken).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(getRcAccessToken).mock.invocationCallOrder[0]);
+    expect(vi.mocked(getRcAccessToken).mock.invocationCallOrder[0]).toBeLessThan(rcApiMocks.getInteropCode.mock.invocationCallOrder[0]);
     expect(rcApiMocks.getInteropCode).toHaveBeenCalledWith({
       rcAccessToken: 'rc-access-token',
       rcClientId: 'Y4m1YREFKbXdDoet5djv46',
