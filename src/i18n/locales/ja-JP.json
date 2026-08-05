@@ -67,6 +67,7 @@
       "communityForums": "コミュニティフォーラム",
       "serverStatus": "サーバーステータス：{status}",
       "versionLabel": "バージョン：v{version}",
+      "rcAccountIdLabel": "RingCentral アカウント ID：{accountId}",
       "sendErrorReport": "エラーレポートを送信",
       "clearLogConflicts": "ログの競合をクリア",
       "factoryResetWarning": "工場出荷時リセットは、この拡張機能からCRMとRingCentralの両方のアカウントを切断し、ログアウトします。",
@@ -211,7 +212,9 @@
       "popupLogPageAfterCall": "（手動ログ）通話後にログページを開く",
       "popupLogPageAfterCallDesc": "各通話後に自動的にログフォームを開く",
       "popupLogPageAfterSMS": "（手動ログ）メッセージ後にSMSログページを開く",
-      "popupLogPageAfterSMSDesc": "各メッセージ後に自動的にログフォームを開く"
+      "popupLogPageAfterSMSDesc": "各メッセージ後に自動的にログフォームを開く",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "通話ログ詳細",
@@ -276,7 +279,8 @@
       "multipleContacts": "複数の連絡先",
       "multipleContactsHelper": "複数の連絡先が電話番号と一致する場合の対応",
       "firstAlphabetical": "アルファベット順の最初",
-      "mostRecentActivity": "最新のアクティビティ"
+      "mostRecentActivity": "最新のアクティビティ",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "外観",
@@ -292,6 +296,7 @@
       "showContactsTab": "連絡先タブを表示",
       "showUserReportTab": "ユーザーレポートタブを表示",
       "showCalldownTab": "コールリストタブを表示",
+      "showAppointmentsTab": "予約タブを表示",
       "notificationLevel": "通知レベル",
       "notificationLevelDesc": "拡張機能で表示する通知レベルを選択。",
       "notificationLevelSelectDesc": "表示する通知の種類を選択",
@@ -305,7 +310,22 @@
       "medium": "中",
       "large": "大",
       "extraLarge": "特大",
-      "phoneNumberFormat": "電話番号形式"
+      "phoneNumberFormat": "電話番号形式",
+      "language": "言語",
+      "languageDesc": "拡張機能のインターフェースの言語を選択します。",
+      "languageAuto": "ブラウザー / 地域に従う"
+    },
+    "clickToDialMatcher": {
+      "name": "クリックトゥダイヤル マッチャー",
+      "description": "クリックトゥダイヤルまたはクリックトゥSMSウィジェットを表示する前に、App Connect がウェブページ上の電話番号をどのように検出するかを制御します。",
+      "introName": "クリックトゥダイヤルのマッチングについて",
+      "introText": "App Connect はウェブページ内の電話番号をスキャンし、一致が見つかるとクリックトゥダイヤルまたはクリックトゥSMSウィジェットを表示します。",
+      "matcherType": "マッチャーの種類",
+      "matcherTypeDesc": "ウェブページ上で電話番号をどの程度広く検出するかを選択します。",
+      "regionName": "地域重視のマッチャー",
+      "regionDesc": "選択した地域に合った電話番号のパターンに絞り込みます。",
+      "allName": "すべてのマッチャー",
+      "allDesc": "電話番号のように見える任意の数字の並びに一致します。"
     },
     "callPop": {
       "groupName": "通話ポップ",
@@ -377,7 +397,15 @@
       "callLogUpdateFailed": "通話ログの更新に失敗しました",
       "connectToCrm": "設定に移動してCRMプラットフォームに接続してください",
       "apiKeyFailed": "APIキーの登録に失敗しました。",
-      "noContactFound": "連絡先が見つかりません"
+      "noContactFound": "連絡先が見つかりません",
+      "extensionNumberNotLoggable": "内線番号は記録できません",
+      "groupTypeNotSupported": "このタイプのグループメッセージは自動ログに対応していません。手動で記録してください。",
+      "groupMembersSkipped": "{count}人のグループメンバーを自動記録できませんでした（一致なしまたは複数一致）。手動で記録してください。",
+      "manualDispositionNeeded": "手動での処理が必要な場合があります。記録されたメッセージを編集して処理してください。",
+      "messageNotLogged": "メッセージは記録されませんでした。{details}。",
+      "voicemailNotLogged": "ボイスメールは記録されませんでした。{details}。",
+      "faxNotLogged": "ファックスは記録されませんでした。{details}。",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "形式エラー：{field}",
@@ -407,4 +435,3 @@
     "setup": "セットアップ"
   }
 }
-

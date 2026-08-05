@@ -67,6 +67,7 @@
       "communityForums": "Community-Foren",
       "serverStatus": "Serverstatus: {status}",
       "versionLabel": "Version: v{version}",
+      "rcAccountIdLabel": "RingCentral-Konto-ID: {accountId}",
       "sendErrorReport": "Fehlerbericht senden",
       "clearLogConflicts": "Protokollkonflikte löschen",
       "factoryResetWarning": "Das Zurücksetzen auf Werkseinstellungen trennt sowohl das CRM- als auch das RingCentral-Konto von dieser Erweiterung und meldet Sie ab.",
@@ -211,7 +212,9 @@
       "popupLogPageAfterCall": "(Manuelle Protokollierung) Protokollierungsseite nach Anruf öffnen",
       "popupLogPageAfterCallDesc": "Protokollierungsformular automatisch nach jedem Anruf öffnen",
       "popupLogPageAfterSMS": "(Manuelle Protokollierung) SMS-Protokollierungsseite nach Nachricht öffnen",
-      "popupLogPageAfterSMSDesc": "Protokollierungsformular automatisch nach jeder Nachricht öffnen"
+      "popupLogPageAfterSMSDesc": "Protokollierungsformular automatisch nach jeder Nachricht öffnen",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Anrufprotokolldetails",
@@ -276,7 +279,8 @@
       "multipleContacts": "Mehrere Kontakte",
       "multipleContactsHelper": "Was tun, wenn mehrere Kontakte der Telefonnummer entsprechen",
       "firstAlphabetical": "Erster alphabetisch",
-      "mostRecentActivity": "Neueste Aktivität"
+      "mostRecentActivity": "Neueste Aktivität",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "Erscheinungsbild",
@@ -292,6 +296,7 @@
       "showContactsTab": "Kontakte-Tab anzeigen",
       "showUserReportTab": "Benutzerberichte-Tab anzeigen",
       "showCalldownTab": "Anrufliste-Tab anzeigen",
+      "showAppointmentsTab": "Termine-Tab anzeigen",
       "notificationLevel": "Benachrichtigungsstufe",
       "notificationLevelDesc": "Benachrichtigungsstufe auswählen, die in der Erweiterung angezeigt werden soll.",
       "notificationLevelSelectDesc": "Auswählen, welche Arten von Benachrichtigungen angezeigt werden sollen",
@@ -305,7 +310,22 @@
       "medium": "Mittel",
       "large": "Groß",
       "extraLarge": "Extra groß",
-      "phoneNumberFormat": "Telefonnummernformat"
+      "phoneNumberFormat": "Telefonnummernformat",
+      "language": "Sprache",
+      "languageDesc": "Wählen Sie die Sprache für die Benutzeroberfläche der Erweiterung.",
+      "languageAuto": "Browser/Region folgen"
+    },
+    "clickToDialMatcher": {
+      "name": "Click-to-Dial-Matcher",
+      "description": "Legen Sie fest, wie App Connect Telefonnummern auf Webseiten erkennt, bevor das Click-to-Dial- oder Click-to-SMS-Widget angezeigt wird.",
+      "introName": "Über die Click-to-Dial-Erkennung",
+      "introText": "App Connect durchsucht Webseiten nach Telefonnummern, um bei einem Treffer das Click-to-Dial- oder Click-to-SMS-Widget anzuzeigen.",
+      "matcherType": "Matcher-Typ",
+      "matcherTypeDesc": "Wählen Sie, wie umfassend Telefonnummern auf Webseiten erkannt werden sollen.",
+      "regionName": "Regionsbezogener Matcher",
+      "regionDesc": "Konzentriert sich auf Telefonnummernvarianten, die zur ausgewählten Region passen.",
+      "allName": "Alle-Matcher",
+      "allDesc": "Erkennt jede Zahlenfolge, die wie eine Telefonnummer aussieht."
     },
     "callPop": {
       "groupName": "Anruf-Pop",
@@ -377,7 +397,15 @@
       "callLogUpdateFailed": "Aktualisierung des Anrufprotokolls fehlgeschlagen",
       "connectToCrm": "Bitte gehen Sie zu den Einstellungen und verbinden Sie sich mit der CRM-Plattform",
       "apiKeyFailed": "API-Schlüssel konnte nicht registriert werden.",
-      "noContactFound": "Kein Kontakt gefunden"
+      "noContactFound": "Kein Kontakt gefunden",
+      "extensionNumberNotLoggable": "Nebenstellennummern können nicht protokolliert werden",
+      "groupTypeNotSupported": "Gruppennachrichten dieses Typs werden für die automatische Protokollierung nicht unterstützt. Bitte manuell protokollieren.",
+      "groupMembersSkipped": "{count} Gruppenmitglied(er) konnten nicht automatisch protokolliert werden (keine oder mehrere Übereinstimmungen). Bitte manuell protokollieren.",
+      "manualDispositionNeeded": "Manuelle Disposition könnte erforderlich sein. Bitte bearbeiten Sie die protokollierte Nachricht zur Disposition.",
+      "messageNotLogged": "Nachricht nicht protokolliert. {details}.",
+      "voicemailNotLogged": "Voicemail nicht protokolliert. {details}.",
+      "faxNotLogged": "Fax nicht protokolliert. {details}.",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "Falsches Format: {field}",

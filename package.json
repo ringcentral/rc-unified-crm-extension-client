@@ -1,11 +1,20 @@
 {
   "name": "rc-unified-crm-extension-client",
-  "version": "1.7.33",
+  "version": "1.7.40",
   "description": "![image](https://user-images.githubusercontent.com/7036536/190325756-35ef367d-1557-4833-84aa-b09f5d6717ab.png)",
   "main": "background.js",
   "scripts": {
-    "build": "node ./build.js",
-    "update": "node ./updateVersion.js"
+    "build": "node ./build.ts",
+    "update": "node ./updateVersion.ts",
+    "lint": "eslint src build.ts updateVersion.ts eslint.config.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
+    "typecheck:e2e": "tsc -p tsconfig.e2e.json --noEmit",
+    "pretest:e2e": "npm run build",
+    "test:e2e": "playwright test",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -19,13 +28,13 @@
   "homepage": "./",
   "dependencies": {
     "@ringcentral/juno": "^2.35.0",
-    "core-js": "^3.37.0",
-    "events": "^3.3.0",
     "@ringcentral/juno-icon": "^1.15.0",
     "@segment/analytics-next": "^1.49.1",
     "awesome-phonenumber": "^7.2.0",
     "axios": "^1.8.2",
+    "core-js": "^3.37.0",
     "crypto-js": "^4.2.0",
+    "events": "^3.3.0",
     "idb": "^8.0.0",
     "mixpanel-browser": "^2.49.0",
     "moment": "^2.29.4",
@@ -38,12 +47,24 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
-    "esbuild-sass-plugin": "^3.7.0",
+    "@playwright/test": "^1.61.1",
+    "@types/chrome": "^0.2.2",
+    "@types/node": "^26.0.1",
+    "@types/react": "^17.0.93",
+    "@types/react-dom": "^17.0.26",
+    "@vitest/coverage-v8": "^4.1.9",
     "dotenv": "^16.5.0",
     "esbuild": "^0.27.0",
     "esbuild-copy-static-files": "^0.1.0",
     "esbuild-plugin-svgr": "^1.1.0",
+    "esbuild-sass-plugin": "^3.7.0",
     "eslint": "^9.22.0",
-    "globals": "^16.0.0"
+    "globals": "^16.0.0",
+    "jiti": "^2.7.0",
+    "jsdom": "^29.1.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.62.1",
+    "vite": "^8.1.0",
+    "vitest": "^4.1.9"
   }
 }

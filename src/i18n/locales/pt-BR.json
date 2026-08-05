@@ -67,6 +67,7 @@
       "communityForums": "Fóruns da comunidade",
       "serverStatus": "Status do servidor: {status}",
       "versionLabel": "Versão: v{version}",
+      "rcAccountIdLabel": "ID da conta RingCentral: {accountId}",
       "sendErrorReport": "Enviar relatório de erro",
       "clearLogConflicts": "Limpar conflitos de log",
       "factoryResetWarning": "A redefinição de fábrica desconectará as contas CRM e RingCentral desta extensão e fará logout.",
@@ -211,7 +212,9 @@
       "popupLogPageAfterCall": "(Log manual) Abrir página de registro após chamada",
       "popupLogPageAfterCallDesc": "Abrir automaticamente o formulário de registro após cada chamada",
       "popupLogPageAfterSMS": "(Log manual) Abrir página de registro SMS após mensagem",
-      "popupLogPageAfterSMSDesc": "Abrir automaticamente o formulário de registro após cada mensagem"
+      "popupLogPageAfterSMSDesc": "Abrir automaticamente o formulário de registro após cada mensagem",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Detalhes do log de chamadas",
@@ -276,7 +279,8 @@
       "multipleContacts": "Múltiplos contatos",
       "multipleContactsHelper": "O que fazer quando múltiplos contatos correspondem ao número de telefone",
       "firstAlphabetical": "Primeiro alfabeticamente",
-      "mostRecentActivity": "Atividade mais recente"
+      "mostRecentActivity": "Atividade mais recente",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "Aparência",
@@ -292,6 +296,7 @@
       "showContactsTab": "Mostrar aba de contatos",
       "showUserReportTab": "Mostrar aba de relatório do usuário",
       "showCalldownTab": "Mostrar aba de lista de chamadas",
+      "showAppointmentsTab": "Mostrar aba de compromissos",
       "notificationLevel": "Nível de notificação",
       "notificationLevelDesc": "Selecionar o nível de notificação a ser exibido na extensão.",
       "notificationLevelSelectDesc": "Escolher quais tipos de notificações exibir",
@@ -305,7 +310,22 @@
       "medium": "Médio",
       "large": "Grande",
       "extraLarge": "Extra grande",
-      "phoneNumberFormat": "Formato do número de telefone"
+      "phoneNumberFormat": "Formato do número de telefone",
+      "language": "Idioma",
+      "languageDesc": "Escolha o idioma da interface da extensão.",
+      "languageAuto": "Seguir navegador / região"
+    },
+    "clickToDialMatcher": {
+      "name": "Detector de clique para ligar",
+      "description": "Controle como o App Connect detecta números de telefone nas páginas da web antes de exibir o widget de clique para ligar ou clique para SMS.",
+      "introName": "Sobre a detecção de clique para ligar",
+      "introText": "O App Connect verifica as páginas da web em busca de números de telefone para exibir o widget de clique para ligar ou clique para SMS quando uma correspondência é encontrada.",
+      "matcherType": "Tipo de detector",
+      "matcherTypeDesc": "Escolha a abrangência da detecção de números de telefone nas páginas da web.",
+      "regionName": "Detector focado na região",
+      "regionDesc": "Concentra-se nas variações de número de telefone que correspondem à região selecionada.",
+      "allName": "Detector completo",
+      "allDesc": "Corresponde a qualquer sequência de números que se pareça com um número de telefone."
     },
     "callPop": {
       "groupName": "Pop de chamada",
@@ -377,7 +397,15 @@
       "callLogUpdateFailed": "Falha na atualização do log de chamada",
       "connectToCrm": "Por favor, vá para Configurações e conecte-se à plataforma CRM",
       "apiKeyFailed": "Falha ao registrar a chave API.",
-      "noContactFound": "Nenhum contato encontrado"
+      "noContactFound": "Nenhum contato encontrado",
+      "extensionNumberNotLoggable": "Números de ramal não podem ser registrados",
+      "groupTypeNotSupported": "Mensagens de grupo deste tipo não são compatíveis com o registro automático. Registre manualmente.",
+      "groupMembersSkipped": "Não foi possível registrar automaticamente {count} membro(s) do grupo (sem correspondência ou várias correspondências). Registre-os manualmente.",
+      "manualDispositionNeeded": "Pode ser necessária uma disposição manual. Edite a mensagem registrada para definir a disposição.",
+      "messageNotLogged": "Mensagem não registrada. {details}.",
+      "voicemailNotLogged": "Correio de voz não registrado. {details}.",
+      "faxNotLogged": "Fax não registrado. {details}.",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "Formato incorreto: {field}",

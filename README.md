@@ -1,5 +1,7 @@
 # RingCentral App Connect Client
 
+[![Coverage](https://codecov.io/gh/ringcentral/rc-unified-crm-extension-client/branch/beta/graph/badge.svg)](https://codecov.io/gh/ringcentral/rc-unified-crm-extension-client?branch=beta)
+
 It is to work with the server code: https://github.com/ringcentral/rc-unified-crm-extension
 
 ## Quick start
@@ -11,6 +13,22 @@ Assuming you have already setup your local server, let's then start setting up y
 3. `npm run build`
 4. The build will be in `dist` folder
 5. To install it, go to chrome://extensions/ and toggle on "Developer mode" and click "Load unpacked"
+
+## Test
+
+Run unit and integration tests:
+
+```bash
+npm test
+```
+
+Run browser extension E2E smoke tests:
+
+```bash
+npm run test:e2e
+```
+
+The E2E command builds `dist/`, loads the unpacked extension in a temporary Chromium profile, and verifies local extension flows such as quick access, URL activation, click-to-dial, and call logging. Set `E2E_CHROME_PATH` or `E2E_BROWSER_CHANNEL` if the default local Chrome/Edge detection does not match your environment.
 
 ## Add your CRM
 

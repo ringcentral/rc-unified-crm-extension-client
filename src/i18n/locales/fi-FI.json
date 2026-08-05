@@ -67,6 +67,7 @@
       "communityForums": "Yhteisöfoorumit",
       "serverStatus": "Palvelimen tila: {status}",
       "versionLabel": "Versio: v{version}",
+      "rcAccountIdLabel": "RingCentral-tilin tunnus: {accountId}",
       "sendErrorReport": "Lähetä virheraportti",
       "clearLogConflicts": "Tyhjennä lokikonfliktit",
       "factoryResetWarning": "Tehdasasetusten palautus katkaisee yhteyden sekä CRM- että RingCentral-tileihin ja kirjaa sinut ulos.",
@@ -211,7 +212,9 @@
       "popupLogPageAfterCall": "(Manuaalinen loki) Avaa lokitussivu puhelun jälkeen",
       "popupLogPageAfterCallDesc": "Avaa lokituslomake automaattisesti jokaisen puhelun jälkeen",
       "popupLogPageAfterSMS": "(Manuaalinen loki) Avaa tekstiviestilokitussivu viestin jälkeen",
-      "popupLogPageAfterSMSDesc": "Avaa lokituslomake automaattisesti jokaisen viestin jälkeen"
+      "popupLogPageAfterSMSDesc": "Avaa lokituslomake automaattisesti jokaisen viestin jälkeen",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Puhelulokin tiedot",
@@ -276,7 +279,8 @@
       "multipleContacts": "Useita yhteystietoja",
       "multipleContactsHelper": "Mitä tehdä, kun useita yhteystietoja vastaa puhelinnumeroa",
       "firstAlphabetical": "Ensimmäinen aakkosjärjestyksessä",
-      "mostRecentActivity": "Viimeisin aktiviteetti"
+      "mostRecentActivity": "Viimeisin aktiviteetti",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "Ulkoasu",
@@ -292,6 +296,7 @@
       "showContactsTab": "Näytä yhteystiedot-välilehti",
       "showUserReportTab": "Näytä käyttäjäraportti-välilehti",
       "showCalldownTab": "Näytä soittolista-välilehti",
+      "showAppointmentsTab": "Näytä tapaamiset-välilehti",
       "notificationLevel": "Ilmoitustaso",
       "notificationLevelDesc": "Valitse laajennuksessa näytettävä ilmoitustaso.",
       "notificationLevelSelectDesc": "Valitse näytettävät ilmoitustyypit",
@@ -305,7 +310,22 @@
       "medium": "Keskikokoinen",
       "large": "Suuri",
       "extraLarge": "Erittäin suuri",
-      "phoneNumberFormat": "Puhelinnumeromuoto"
+      "phoneNumberFormat": "Puhelinnumeromuoto",
+      "language": "Kieli",
+      "languageDesc": "Valitse laajennuksen käyttöliittymän kieli.",
+      "languageAuto": "Seuraa selainta / aluetta"
+    },
+    "clickToDialMatcher": {
+      "name": "Soita napsauttamalla -tunnistin",
+      "description": "Määritä, miten App Connect tunnistaa puhelinnumerot verkkosivuilla ennen soita napsauttamalla- tai lähetä tekstiviesti napsauttamalla -widgetin näyttämistä.",
+      "introName": "Tietoja soita napsauttamalla -tunnistuksesta",
+      "introText": "App Connect etsii verkkosivuilta puhelinnumeroita näyttääkseen soita napsauttamalla- tai lähetä tekstiviesti napsauttamalla -widgetin, kun osuma löytyy.",
+      "matcherType": "Tunnistimen tyyppi",
+      "matcherTypeDesc": "Valitse, kuinka laajasti puhelinnumerot tunnistetaan verkkosivuilla.",
+      "regionName": "Aluekohtainen tunnistin",
+      "regionDesc": "Keskittyy puhelinnumeromuotoihin, jotka vastaavat valittua aluetta.",
+      "allName": "Kaikki-tunnistin",
+      "allDesc": "Tunnistaa minkä tahansa numerosarjan, joka näyttää puhelinnumerolta."
     },
     "callPop": {
       "groupName": "Puhelun ponnahdusikkuna",
@@ -377,7 +397,15 @@
       "callLogUpdateFailed": "Puhelulokin päivitys epäonnistui",
       "connectToCrm": "Siirry asetuksiin ja yhdistä CRM-alustaan",
       "apiKeyFailed": "API-avaimen rekisteröinti epäonnistui.",
-      "noContactFound": "Yhteystietoa ei löytynyt"
+      "noContactFound": "Yhteystietoa ei löytynyt",
+      "extensionNumberNotLoggable": "Alanumeroita ei voi kirjata",
+      "groupTypeNotSupported": "Tämän tyyppisiä ryhmäviestejä ei tueta automaattisessa kirjaamisessa. Kirjaa manuaalisesti.",
+      "groupMembersSkipped": "{count} ryhmän jäsentä ei voitu kirjata automaattisesti (ei osumaa tai useita osumia). Kirjaa ne manuaalisesti.",
+      "manualDispositionNeeded": "Manuaalinen käsittely saattaa olla tarpeen. Muokkaa kirjattua viestiä käsittelyä varten.",
+      "messageNotLogged": "Viestiä ei kirjattu. {details}.",
+      "voicemailNotLogged": "Vastaajaviestiä ei kirjattu. {details}.",
+      "faxNotLogged": "Faksia ei kirjattu. {details}.",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "Väärä muoto: {field}",

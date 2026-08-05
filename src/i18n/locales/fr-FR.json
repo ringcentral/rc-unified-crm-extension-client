@@ -67,6 +67,7 @@
       "communityForums": "Forums communautaires",
       "serverStatus": "État du serveur : {status}",
       "versionLabel": "Version : v{version}",
+      "rcAccountIdLabel": "ID du compte RingCentral : {accountId}",
       "sendErrorReport": "Envoyer un rapport d'erreur",
       "clearLogConflicts": "Effacer les conflits de journaux",
       "factoryResetWarning": "La réinitialisation d'usine déconnectera les comptes CRM et RingCentral de cette extension et vous déconnectera.",
@@ -211,7 +212,9 @@
       "popupLogPageAfterCall": "(Journal manuel) Ouvrir la page de journalisation après l'appel",
       "popupLogPageAfterCallDesc": "Ouvrir automatiquement le formulaire de journalisation après chaque appel",
       "popupLogPageAfterSMS": "(Journal manuel) Ouvrir la page de journalisation SMS après le message",
-      "popupLogPageAfterSMSDesc": "Ouvrir automatiquement le formulaire de journalisation après chaque message"
+      "popupLogPageAfterSMSDesc": "Ouvrir automatiquement le formulaire de journalisation après chaque message",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Détails du journal d'appels",
@@ -276,7 +279,8 @@
       "multipleContacts": "Plusieurs contacts",
       "multipleContactsHelper": "Que faire lorsque plusieurs contacts correspondent au numéro de téléphone",
       "firstAlphabetical": "Premier par ordre alphabétique",
-      "mostRecentActivity": "Activité la plus récente"
+      "mostRecentActivity": "Activité la plus récente",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "Apparence",
@@ -292,6 +296,7 @@
       "showContactsTab": "Afficher l'onglet contacts",
       "showUserReportTab": "Afficher l'onglet rapport utilisateur",
       "showCalldownTab": "Afficher l'onglet liste d'appels",
+      "showAppointmentsTab": "Afficher l'onglet rendez-vous",
       "notificationLevel": "Niveau de notification",
       "notificationLevelDesc": "Sélectionner le niveau de notification à afficher dans l'extension.",
       "notificationLevelSelectDesc": "Choisir quels types de notifications afficher",
@@ -305,7 +310,22 @@
       "medium": "Moyen",
       "large": "Grand",
       "extraLarge": "Très grand",
-      "phoneNumberFormat": "Format de numéro de téléphone"
+      "phoneNumberFormat": "Format de numéro de téléphone",
+      "language": "Langue",
+      "languageDesc": "Choisissez la langue de l'interface de l'extension.",
+      "languageAuto": "Suivre le navigateur / la région"
+    },
+    "clickToDialMatcher": {
+      "name": "Détecteur de clic-pour-appeler",
+      "description": "Contrôlez la façon dont App Connect détecte les numéros de téléphone sur les pages web avant d'afficher le widget de clic-pour-appeler ou de clic-pour-SMS.",
+      "introName": "À propos de la détection du clic-pour-appeler",
+      "introText": "App Connect analyse les pages web à la recherche de numéros de téléphone afin d'afficher le widget de clic-pour-appeler ou de clic-pour-SMS lorsqu'une correspondance est trouvée.",
+      "matcherType": "Type de détecteur",
+      "matcherTypeDesc": "Choisissez l'étendue de la détection des numéros de téléphone sur les pages web.",
+      "regionName": "Détecteur axé sur la région",
+      "regionDesc": "Se concentre sur les variantes de numéros de téléphone correspondant à la région sélectionnée.",
+      "allName": "Détecteur global",
+      "allDesc": "Correspond à toute séquence de chiffres ressemblant à un numéro de téléphone."
     },
     "callPop": {
       "groupName": "Pop d'appel",
@@ -377,7 +397,15 @@
       "callLogUpdateFailed": "Échec de la mise à jour du journal d'appel",
       "connectToCrm": "Veuillez aller dans les Paramètres et vous connecter à la plateforme CRM",
       "apiKeyFailed": "Échec de l'enregistrement de la clé API.",
-      "noContactFound": "Aucun contact trouvé"
+      "noContactFound": "Aucun contact trouvé",
+      "extensionNumberNotLoggable": "Les numéros de poste ne peuvent pas être enregistrés",
+      "groupTypeNotSupported": "Les messages de groupe de ce type ne sont pas pris en charge pour l'enregistrement automatique. Veuillez enregistrer manuellement.",
+      "groupMembersSkipped": "{count} membre(s) du groupe n'ont pas pu être enregistrés automatiquement (aucune correspondance ou plusieurs correspondances). Veuillez les enregistrer manuellement.",
+      "manualDispositionNeeded": "Une disposition manuelle peut être nécessaire. Veuillez modifier le message enregistré pour la disposition.",
+      "messageNotLogged": "Message non enregistré. {details}.",
+      "voicemailNotLogged": "Messagerie vocale non enregistrée. {details}.",
+      "faxNotLogged": "Fax non enregistré. {details}.",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "Mauvais format : {field}",

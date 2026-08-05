@@ -67,6 +67,7 @@
       "communityForums": "Communityforums",
       "serverStatus": "Serverstatus: {status}",
       "versionLabel": "Versie: v{version}",
+      "rcAccountIdLabel": "RingCentral-account-ID: {accountId}",
       "sendErrorReport": "Foutrapport verzenden",
       "clearLogConflicts": "Logconflicten wissen",
       "factoryResetWarning": "Fabrieksinstellingen herstellen zal zowel CRM- als RingCentral-accounts van deze extensie loskoppelen en u uitloggen.",
@@ -211,7 +212,9 @@
       "popupLogPageAfterCall": "(Handmatige log) Open oproepregistratiepagina na oproep",
       "popupLogPageAfterCallDesc": "Automatisch het registratieformulier openen na elke oproep",
       "popupLogPageAfterSMS": "(Handmatige log) Open SMS-registratiepagina na bericht",
-      "popupLogPageAfterSMSDesc": "Automatisch het registratieformulier openen na elk bericht"
+      "popupLogPageAfterSMSDesc": "Automatisch het registratieformulier openen na elk bericht",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Oproeplogdetails",
@@ -276,7 +279,8 @@
       "multipleContacts": "Meerdere contacten",
       "multipleContactsHelper": "Wat te doen wanneer meerdere contacten overeenkomen met het telefoonnummer",
       "firstAlphabetical": "Eerst alfabetisch",
-      "mostRecentActivity": "Meest recente activiteit"
+      "mostRecentActivity": "Meest recente activiteit",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "Uiterlijk",
@@ -292,6 +296,7 @@
       "showContactsTab": "Contactentabblad tonen",
       "showUserReportTab": "Gebruikersrapporttabblad tonen",
       "showCalldownTab": "Bellijsttabblad tonen",
+      "showAppointmentsTab": "Afsprakentabblad tonen",
       "notificationLevel": "Meldingsniveau",
       "notificationLevelDesc": "Selecteer het meldingsniveau dat in de extensie wordt weergegeven.",
       "notificationLevelSelectDesc": "Kies welke typen meldingen worden weergegeven",
@@ -305,7 +310,22 @@
       "medium": "Gemiddeld",
       "large": "Groot",
       "extraLarge": "Extra groot",
-      "phoneNumberFormat": "Telefoonnummerformaat"
+      "phoneNumberFormat": "Telefoonnummerformaat",
+      "language": "Taal",
+      "languageDesc": "Kies de taal voor de interface van de extensie.",
+      "languageAuto": "Browser / regio volgen"
+    },
+    "clickToDialMatcher": {
+      "name": "Klik-om-te-bellen-matcher",
+      "description": "Bepaal hoe App Connect telefoonnummers op webpagina's detecteert voordat de klik-om-te-bellen- of klik-om-te-sms'en-widget wordt weergegeven.",
+      "introName": "Over klik-om-te-bellen-matching",
+      "introText": "App Connect scant webpagina's op telefoonnummers om de klik-om-te-bellen- of klik-om-te-sms'en-widget weer te geven wanneer er een overeenkomst wordt gevonden.",
+      "matcherType": "Matchertype",
+      "matcherTypeDesc": "Kies hoe breed telefoonnummers op webpagina's moeten worden gedetecteerd.",
+      "regionName": "Regiogerichte matcher",
+      "regionDesc": "Richt zich op telefoonnummervarianten die passen bij de geselecteerde regio.",
+      "allName": "Alles-matcher",
+      "allDesc": "Komt overeen met elke reeks cijfers die op een telefoonnummer lijkt."
     },
     "callPop": {
       "groupName": "Oproep-pop",
@@ -377,7 +397,15 @@
       "callLogUpdateFailed": "Bijwerken van oproeplog mislukt",
       "connectToCrm": "Ga naar Instellingen en maak verbinding met het CRM-platform",
       "apiKeyFailed": "Registreren van API-sleutel mislukt.",
-      "noContactFound": "Geen contact gevonden"
+      "noContactFound": "Geen contact gevonden",
+      "extensionNumberNotLoggable": "Toestelnummers kunnen niet worden geregistreerd",
+      "groupTypeNotSupported": "Groepsberichten van dit type worden niet ondersteund voor automatisch registreren. Registreer handmatig.",
+      "groupMembersSkipped": "{count} groepslid(leden) konden niet automatisch worden geregistreerd (geen overeenkomst of meerdere overeenkomsten). Registreer ze handmatig.",
+      "manualDispositionNeeded": "Handmatige verwerking is mogelijk nodig. Bewerk het geregistreerde bericht om de verwerking in te stellen.",
+      "messageNotLogged": "Bericht niet geregistreerd. {details}.",
+      "voicemailNotLogged": "Voicemail niet geregistreerd. {details}.",
+      "faxNotLogged": "Fax niet geregistreerd. {details}.",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "Verkeerd formaat: {field}",

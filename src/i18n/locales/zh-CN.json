@@ -67,6 +67,7 @@
       "communityForums": "社区论坛",
       "serverStatus": "服务器状态：{status}",
       "versionLabel": "版本：v{version}",
+      "rcAccountIdLabel": "RingCentral 账户 ID：{accountId}",
       "sendErrorReport": "发送错误报告",
       "clearLogConflicts": "清除日志冲突",
       "factoryResetWarning": "恢复出厂设置将断开此扩展程序与 CRM 和 RingCentral 账户的连接并退出登录。",
@@ -211,7 +212,9 @@
       "popupLogPageAfterCall": "（手动记录）通话后打开记录页面",
       "popupLogPageAfterCallDesc": "每次通话后自动打开记录表单",
       "popupLogPageAfterSMS": "（手动记录）消息后打开短信记录页面",
-      "popupLogPageAfterSMSDesc": "每条消息后自动打开记录表单"
+      "popupLogPageAfterSMSDesc": "每条消息后自动打开记录表单",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "通话日志详情",
@@ -276,7 +279,8 @@
       "multipleContacts": "多个联系人",
       "multipleContactsHelper": "当多个联系人匹配电话号码时的操作",
       "firstAlphabetical": "按字母顺序第一个",
-      "mostRecentActivity": "最近活动"
+      "mostRecentActivity": "最近活动",
+      "earliestCreated": "最早创建"
     },
     "appearance": {
       "groupName": "外观",
@@ -292,6 +296,7 @@
       "showContactsTab": "显示联系人标签页",
       "showUserReportTab": "显示用户报告标签页",
       "showCalldownTab": "显示呼叫列表标签页",
+      "showAppointmentsTab": "显示预约标签页",
       "notificationLevel": "通知级别",
       "notificationLevelDesc": "选择在扩展程序中显示的通知级别。",
       "notificationLevelSelectDesc": "选择要显示的通知类型",
@@ -305,7 +310,22 @@
       "medium": "中",
       "large": "大",
       "extraLarge": "超大",
-      "phoneNumberFormat": "电话号码格式"
+      "phoneNumberFormat": "电话号码格式",
+      "language": "语言",
+      "languageDesc": "选择扩展程序界面的语言。",
+      "languageAuto": "跟随浏览器 / 区域"
+    },
+    "clickToDialMatcher": {
+      "name": "点击拨号匹配器",
+      "description": "控制 App Connect 在显示点击拨号或点击发送短信小组件之前如何检测网页上的电话号码。",
+      "introName": "关于点击拨号匹配",
+      "introText": "App Connect 会扫描网页上的电话号码，以便在找到匹配项时显示点击拨号或点击发送短信小组件。",
+      "matcherType": "匹配器类型",
+      "matcherTypeDesc": "选择在网页上检测电话号码的范围。",
+      "regionName": "区域优先匹配器",
+      "regionDesc": "专注于与所选区域匹配的电话号码格式。",
+      "allName": "全部匹配器",
+      "allDesc": "匹配任何看起来像电话号码的数字序列。"
     },
     "callPop": {
       "groupName": "来电弹窗",
@@ -377,7 +397,15 @@
       "callLogUpdateFailed": "通话日志更新失败",
       "connectToCrm": "请前往设置并连接到 CRM 平台",
       "apiKeyFailed": "注册 API 密钥失败。",
-      "noContactFound": "未找到联系人"
+      "noContactFound": "未找到联系人",
+      "extensionNumberNotLoggable": "无法记录分机号码",
+      "groupTypeNotSupported": "此类型的群组消息不支持自动记录。请手动记录。",
+      "groupMembersSkipped": "有 {count} 位群组成员无法自动记录（无匹配或多个匹配）。请手动记录。",
+      "manualDispositionNeeded": "可能需要手动处理。请编辑已记录的消息以进行处理。",
+      "messageNotLogged": "消息未记录。{details}。",
+      "voicemailNotLogged": "语音邮件未记录。{details}。",
+      "faxNotLogged": "传真未记录。{details}。",
+      "earliestCreatedResolverMissingField": "通话未记录。最早创建联系人解析需要每个匹配联系人都包含创建时间。请联系您的 App Connect 开发者，在 connector 的 findContact 响应中添加 createdDate。"
     },
     "error": {
       "wrongFormat": "格式错误：{field}",

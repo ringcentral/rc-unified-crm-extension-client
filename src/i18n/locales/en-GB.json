@@ -67,6 +67,7 @@
       "communityForums": "Community forums",
       "serverStatus": "Server status: {status}",
       "versionLabel": "Version: v{version}",
+      "rcAccountIdLabel": "RingCentral account ID: {accountId}",
       "sendErrorReport": "Send error report",
       "clearLogConflicts": "Clear log conflicts",
       "factoryResetWarning": "Factory reset will disconnect both CRM and RingCentral accounts from this extension and log you out.",
@@ -211,7 +212,9 @@
       "popupLogPageAfterCall": "(Deprecated) Open call logging page after call",
       "popupLogPageAfterCallDesc": "Automatically open the logging form after each call",
       "popupLogPageAfterSMS": "(Deprecated) Open SMS logging page after message",
-      "popupLogPageAfterSMSDesc": "Automatically open the logging form after each message"
+      "popupLogPageAfterSMSDesc": "Automatically open the logging form after each message",
+      "clickToSMSFromSharedNumber": "Send click-to-SMS from shared number",
+      "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
       "groupName": "Call log details",
@@ -276,7 +279,8 @@
       "multipleContacts": "Multiple contacts",
       "multipleContactsHelper": "What to do when multiple contacts match the phone number",
       "firstAlphabetical": "First alphabetical",
-      "mostRecentActivity": "Most recent activity"
+      "mostRecentActivity": "Most recent activity",
+      "earliestCreated": "Earliest created"
     },
     "appearance": {
       "groupName": "Appearance",
@@ -306,7 +310,22 @@
       "medium": "Medium",
       "large": "Large",
       "extraLarge": "Extra Large",
-      "phoneNumberFormat": "Phone number format"
+      "phoneNumberFormat": "Phone number format",
+      "language": "Language",
+      "languageDesc": "Choose the language for the extension interface.",
+      "languageAuto": "Follow browser / region"
+    },
+    "clickToDialMatcher": {
+      "name": "Click-to-dial Matcher",
+      "description": "Control how App Connect detects phone numbers on webpages before showing the click-to-dial or click-to-SMS widget.",
+      "introName": "About click-to-dial matching",
+      "introText": "App Connect scans webpages for phone numbers so it can display the click-to-dial or click-to-SMS widget when a match is found.",
+      "matcherType": "Matcher type",
+      "matcherTypeDesc": "Choose how broadly phone numbers should be detected on webpages.",
+      "regionName": "Region-focused matcher",
+      "regionDesc": "Focus on phone-number variations that align with the selected region.",
+      "allName": "All matcher",
+      "allDesc": "Match any number sequence that looks like a phone number."
     },
     "callPop": {
       "groupName": "Call-pop",
@@ -378,7 +397,15 @@
       "callLogUpdateFailed": "Call log update failed",
       "connectToCrm": "Please go to Settings and connect to CRM platform",
       "apiKeyFailed": "Failed to register api key.",
-      "noContactFound": "No contact found"
+      "noContactFound": "No contact found",
+      "extensionNumberNotLoggable": "Extension numbers cannot be logged",
+      "groupTypeNotSupported": "Group messages of this type are not supported for auto log. Please log manually.",
+      "groupMembersSkipped": "{count} group member(s) could not be auto-logged (no match or multiple matches). Please log them manually.",
+      "manualDispositionNeeded": "Manual disposition might be needed. Please edit logged message to disposition.",
+      "messageNotLogged": "Message not logged. {details}.",
+      "voicemailNotLogged": "Voicemail not logged. {details}.",
+      "faxNotLogged": "Fax not logged. {details}.",
+      "earliestCreatedResolverMissingField": "Call not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response."
     },
     "error": {
       "wrongFormat": "Wrong format: {field}",
