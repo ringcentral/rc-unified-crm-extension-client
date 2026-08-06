@@ -8,7 +8,7 @@ function getWidgetFrameWindow(): Window {
 }
 
 async function onEvent({ manifest, platform }: UnknownRecord): Promise<void> {
-    const { adminSettings } = await chrome.storage.local.get('adminSettings');
+    const { adminSettings } = await chrome.storage.local.get('adminSettings') as UnknownRecord;
     const dataKeys = [...new Set((platform.adminSettings ?? [])
         .filter((setting: UnknownRecord) => setting.accountDataKey)
         .map((setting: UnknownRecord) => setting.accountDataKey))];
