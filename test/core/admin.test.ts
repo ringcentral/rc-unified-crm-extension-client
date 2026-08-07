@@ -702,4 +702,56 @@ describe('admin core', () => {
     });
     expect(consoleLog).toHaveBeenCalledWith('Cannot auth app connect server', expect.any(Error));
   });
+
+  it('caches account data by server and key, then bypasses the cache on force refresh', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'crm-jwt' });
+    vi.mocked(axios.get)
+      .mockResolvedValueOnce({
+        data: {
+          data: {
+            activityTypes: [{ const: 'call', title: 'Call' }],
+            users: [{ const: 'user-1', title: 'User One' }],
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          data: {
+            activityTypes: [{ const: 'meeting', title: 'Meeting' }],
+          },
+        },
+      });
+    const adminCore = await loadAdminCore();
+
+    await expect(adminCore.getAccountData({
+      serverUrl: 'https://server.example',
+      keys: ['activityTypes', 'users'],
+    })).resolves.toEqual({
+      activityTypes: [{ const: 'call', title: 'Call' }],
+      users: [{ const: 'user-1', title: 'User One' }],
+    });
+    await expect(adminCore.getAccountData({
+      serverUrl: 'https://server.example',
+      keys: ['activityTypes'],
+    })).resolves.toEqual({
+      activityTypes: [{ const: 'call', title: 'Call' }],
+    });
+    await expect(adminCore.getAccountData({
+      serverUrl: 'https://server.example',
+      keys: ['activityTypes'],
+      forceRefresh: true,
+    })).resolves.toEqual({
+      activityTypes: [{ const: 'meeting', title: 'Meeting' }],
+    });
+
+    expect(axios.get).toHaveBeenCalledTimes(2);
+    expect(axios.get).toHaveBeenNthCalledWith(
+      1,
+      'https://server.example/accountData?jwtToken=crm-jwt&keys=activityTypes%2Cusers&forceRefresh=false',
+    );
+    expect(axios.get).toHaveBeenNthCalledWith(
+      2,
+      'https://server.example/accountData?jwtToken=crm-jwt&keys=activityTypes&forceRefresh=true',
+    );
+  });
 });

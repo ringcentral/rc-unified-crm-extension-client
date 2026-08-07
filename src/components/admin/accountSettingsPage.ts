@@ -1,5 +1,20 @@
 type UnknownRecord = Record<string, any>;
 
+function resolveAccountDataOptions(accountDataSource: unknown, property: string): UnknownRecord[] {
+    const value = Array.isArray(accountDataSource) ?
+        accountDataSource :
+        (accountDataSource as UnknownRecord | null | undefined)?.[property];
+    if (Array.isArray(value)) {
+        return value;
+    }
+    // Tolerate account data produced by an older/custom connector contract where
+    // an individual list was wrapped as { options: [...] }.
+    if (Array.isArray((value as UnknownRecord | null | undefined)?.options)) {
+        return (value as UnknownRecord).options;
+    }
+    return [];
+}
+
 // Admin-only, account-level settings defined in the platform manifest's `adminSettings` array
 // (kept separate from `settings` so legacy clients never render them). Items with an
 // `accountDataKey` get their options from the server's /accountData endpoint.
@@ -52,8 +67,10 @@ function getAccountSettingsPageRender({ platform, adminUserSettings, accountData
                 };
                 break;
             case 'option': {
-                const options = setting.accountDataKey ?
-                    (accountDataOptions?.[setting.accountDataKey] ?? []) :
+                const accountDataSource = accountDataOptions?.[setting.accountDataKey];
+                const accountDataProperty = setting.accountDataProperty ?? setting.id;
+                const dynamicOptions = resolveAccountDataOptions(accountDataSource, accountDataProperty);
+                const options = setting.accountDataKey ? dynamicOptions :
                     (setting.options ?? []).map((option: UnknownRecord) => ({ const: option.id, title: option.name }));
                 page.schema.properties[setting.id] = {
                     type: 'object',

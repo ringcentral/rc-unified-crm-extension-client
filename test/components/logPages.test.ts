@@ -471,7 +471,7 @@ describe('logPage', () => {
     expect(searchContact.schema.properties).not.toHaveProperty('disposition');
   });
 
-  it('updates new-contact names and removes type-specific fields after contact type changes', async () => {
+  it('updates contact-type-dependent options and removes stale values after contact type changes', async () => {
     vi.setSystemTime(new Date('2026-07-03T08:00:00.000Z'));
     const { logPage, basePage } = await createAdvancedCallLogPage();
 
@@ -489,12 +489,14 @@ describe('logPage', () => {
     renamed.uiSchema.newOnly = {};
     const contactTypeChanged = updateCallLogPage(logPage, renamed, ['newContactType'], {
       newContactType: 'Contact',
+      newCategory: 'prospect',
     });
 
     expect(contactTypeChanged.schema.properties.newCategory.oneOf).toEqual([
-      { const: 'default-new', title: 'Default New' },
+      { const: 'customer', title: 'Customer' },
       { const: 'none', title: expect.any(String) },
     ]);
+    expect(contactTypeChanged.formData.newCategory).toBeUndefined();
     expect(contactTypeChanged.schema.properties).not.toHaveProperty('newOnly');
   });
 
@@ -1018,6 +1020,9 @@ describe('groupLogPage', () => {
       ...newContact(),
       additionalInfo: {
         ...newContact().additionalInfo,
+        Contact: {
+          newCategory: [{ const: 'customer', title: 'Customer' }],
+        },
         messageType: [{ const: 'sms', title: 'SMS' }],
         skipMemo: true,
       },
@@ -1114,15 +1119,17 @@ describe('groupLogPage', () => {
           ...valid.formData,
           section_0: {
             ...valid.formData.section_0,
-            newContactType: 'Lead',
+            newContactType: 'Contact',
+            newCategory: 'prospect',
           },
         },
       },
     });
     expect(contactTypeChanged.schema.properties.section_0.properties.newCategory.oneOf).toEqual([
-      { const: 'prospect', title: 'Prospect' },
+      { const: 'customer', title: 'Customer' },
       { const: 'none', title: expect.any(String) },
     ]);
+    expect(contactTypeChanged.formData.section_0.newCategory).toBeUndefined();
   });
 
   it('switches grouped existing contacts to new-contact fields with no type config', async () => {

@@ -1,12 +1,12 @@
+import { getPlatformAccountDataKeys } from '../../lib/accountData';
+
 type UnknownRecord = Record<string, any>;
 
-// Admin-only page to force refresh all account-level CRM data (the server caches it
-// with a lazy TTL; this button is the manual escape hatch when CRM config just changed).
+// Admin-only manual refresh page for account-level CRM data. Data can be consumed
+// by admin settings or directly by contact/log fields, independently of admin defaults.
 function getAccountDataPageRender({ platform }: UnknownRecord): UnknownRecord {
-    const dataKeys = [...new Set((platform?.adminSettings ?? [])
-        .filter((setting: UnknownRecord) => setting.accountDataKey)
-        .map((setting: UnknownRecord) => setting.accountDataKey))];
-    const page = {
+    const dataKeys = getPlatformAccountDataKeys(platform);
+    return {
         id: 'accountDataPage',
         title: 'Account data',
         type: 'page',
@@ -31,7 +31,6 @@ function getAccountDataPageRender({ platform }: UnknownRecord): UnknownRecord {
         },
         formData: {}
     };
-    return page;
 }
 
 export { getAccountDataPageRender };

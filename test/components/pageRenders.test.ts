@@ -537,6 +537,32 @@ describe('admin page renderers', () => {
       'serverSideLoggingSetting',
       'plugins',
     ]);
+
+    const accountSettingsAdmin = adminPage.getAdminPageRender({
+      platform: {
+        ...manifest().platforms.salesforce,
+        adminSettings: [{ id: 'activityType', type: 'option', accountDataKey: 'activityTypes' }],
+      },
+    });
+    expect(accountSettingsAdmin.schema.properties.section.oneOf.map((item) => item.const)).toContain('accountSettings');
+    expect(accountSettingsAdmin.schema.properties.section.oneOf.map((item) => item.const)).toContain('accountData');
+
+    const accountDataOnlyAdmin = adminPage.getAdminPageRender({
+      platform: {
+        ...manifest().platforms.salesforce,
+        page: {
+          callLog: {
+            additionalFields: [{
+              const: 'noteActions',
+              accountDataKey: 'bullhornData',
+              accountDataProperty: 'commentActionList',
+            }],
+          },
+        },
+      },
+    });
+    expect(accountDataOnlyAdmin.schema.properties.section.oneOf.map((item) => item.const)).not.toContain('accountSettings');
+    expect(accountDataOnlyAdmin.schema.properties.section.oneOf.map((item) => item.const)).toContain('accountData');
   });
 
   it('renders general setting navigation pages', async () => {

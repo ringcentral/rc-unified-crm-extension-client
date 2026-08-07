@@ -7,18 +7,22 @@ function getWidgetFrameWindow(): Window {
 }
 
 async function onEvent({ platform }: UnknownRecord): Promise<void> {
-    const accountDataPageRender = accountDataPage.getAccountDataPageRender({ platform });
-    getWidgetFrameWindow().postMessage({
-        type: 'rc-adapter-register-customized-page',
-        page: accountDataPageRender
-    });
-    getWidgetFrameWindow().postMessage({
-        type: 'rc-adapter-navigate-to',
-        path: `/customized/${accountDataPageRender.id}`, // page id
-    }, '*');
+    window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+    try {
+        const accountDataPageRender = accountDataPage.getAccountDataPageRender({ platform });
+        getWidgetFrameWindow().postMessage({
+            type: 'rc-adapter-register-customized-page',
+            page: accountDataPageRender
+        });
+        getWidgetFrameWindow().postMessage({
+            type: 'rc-adapter-navigate-to',
+            path: `/customized/${accountDataPageRender.id}`,
+        }, '*');
+    }
+    finally {
+        window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+    }
 }
 
 export { onEvent };
-export default {
-    onEvent,
-};
+export default { onEvent };
