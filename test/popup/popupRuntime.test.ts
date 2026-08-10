@@ -583,7 +583,7 @@ describe('popup runtime', () => {
     expect(readStorage().rcUnifiedCrmExtJwt).toBe('stored-token');
   });
 
-  it('handles response errors, clears CRM auth on 401, and stores refreshed error tokens', async () => {
+  it('clears CRM auth only for a structured CRM session-revoked 401', async () => {
     const runtime = await loadPopupRuntime();
     runtime.logRecorder.isRecordingLogs.mockResolvedValue(true);
     const authError = mockHttpError('unauthorized');
@@ -595,7 +595,10 @@ describe('popup runtime', () => {
     authError.response = {
       status: 401,
       statusText: 'Unauthorized',
-      data: { error: 'invalid' },
+      data: {
+        errorCode: 'CRM_SESSION_REVOKED',
+        returnMessage: { message: 'Reconnect' },
+      },
       headers: {
         'X-Refreshed-Jwt-Token': 'error-fresh-token',
       },
@@ -621,6 +624,10 @@ describe('popup runtime', () => {
         url: '/records?jwtToken=expired',
         headers: { Authorization: 'Bearer expired' },
         skipAuthorization: true,
+      },
+      {
+        url: '/records',
+        headers: { Authorization: 'Bearer expired' },
       },
       {
         url: '/records',

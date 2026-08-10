@@ -26,8 +26,6 @@ export async function onMessage({ request, sendResponse }: MessageHandlerOptions
         type: 'rc-adapter-authorization-code',
         callbackUri: request.callbackUri,
       }, '*');
-      // remove previous crm auth if existing
-      await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
       break;
     case 'thirdParty': {
       window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');

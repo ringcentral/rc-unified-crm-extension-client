@@ -254,7 +254,8 @@ axios.interceptors.response.use(
       });
     }
     await apiErrorHandler.handleApiError(error);
-    if (error.response?.status === 401 && !isLoggingOut) {
+    const isCrmSessionRevoked = error.response?.data?.errorCode === 'CRM_SESSION_REVOKED';
+    if (error.response?.status === 401 && isCrmSessionRevoked && !isLoggingOut) {
       const url = error.config?.baseURL ? `${error.config.baseURL}${error.config.url}` : error.config?.url || '';
       const hasBearerHeader = !!(error.config?.headers?.Authorization || error.config?.headers?.authorization);
       if ((url.includes('jwtToken=') || hasBearerHeader) && !url.includes('/unAuthorize') && !(error.config as UnknownRecord)?.skipAuthorization) {
