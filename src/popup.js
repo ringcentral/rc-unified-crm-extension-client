@@ -101,6 +101,33 @@ let manifest = {};
 let platform = null;
 let hasOngoingCall = false;
 let lastUserSettingSyncDate = new Date();
+const RETRO_AUTO_LOG_INTERVAL_MS = 10 * 60 * 1000;
+let retroAutoCallLogIntervalId;
+let retroAutoCallLogInProgress = false;
+
+function stopRetroAutoCallLog() {
+  if (retroAutoCallLogIntervalId !== undefined) {
+    clearInterval(retroAutoCallLogIntervalId);
+    retroAutoCallLogIntervalId = undefined;
+  }
+}
+
+async function runRetroAutoCallLog() {
+  if (retroAutoCallLogInProgress) {
+    return;
+  }
+  retroAutoCallLogInProgress = true;
+  try {
+    await logService.retroAutoCallLog({
+      manifest,
+      platformName,
+      platform
+    });
+  }
+  finally {
+    retroAutoCallLogInProgress = false;
+  }
+}
 
 async function syncCrmAuthedFromStorage() {
   const { rcUnifiedCrmExtJwt, crmAuthed: storedCrmAuthed } = await chrome.storage.local.get(['rcUnifiedCrmExtJwt', 'crmAuthed']);
@@ -664,16 +691,13 @@ window.addEventListener('message', async (e) => {
           break;
         case 'rc-callLogger-auto-log-notify':
           trackEditSettings({ changedItem: 'auto-call-log', status: data.autoLog });
+          stopRetroAutoCallLog();
+          await chrome.storage.local.remove('retroAutoCallLogIntervalId');
           if (!!data.autoLog && !!crmAuthed) {
-            await chrome.storage.local.set({ retroAutoCallLogMaxAttempt: 10 });
-            const retroAutoCallLogIntervalId = setInterval(
-              function () {
-                logService.retroAutoCallLog({
-                  manifest,
-                  platformName,
-                  platform
-                })
-              }, 60000);
+            retroAutoCallLogIntervalId = setInterval(
+              () => void runRetroAutoCallLog(),
+              RETRO_AUTO_LOG_INTERVAL_MS
+            );
             await chrome.storage.local.set({ retroAutoCallLogIntervalId });
           }
           break;
