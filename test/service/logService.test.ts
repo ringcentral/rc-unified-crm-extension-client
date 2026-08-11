@@ -3,7 +3,7 @@ import logCore from '../../src/core/log.ts';
 import dispositionCore from '../../src/core/disposition.ts';
 import contactCore from '../../src/core/contact.ts';
 import logUtil from '../../src/lib/logUtil.ts';
-import { showNotification, dismissNotification, getRcAccessToken, refreshRCToken } from '../../src/lib/util.ts';
+import { showNotification, getRcAccessToken, refreshRCToken } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { seedStorage } from '../setup/storageHelpers';
@@ -49,7 +49,6 @@ vi.mock('../../src/lib/logUtil.ts', () => ({
 
 vi.mock('../../src/lib/util.ts', () => ({
   showNotification: vi.fn(async () => 'notification-id'),
-  dismissNotification: vi.fn(),
   isObjectEmpty: vi.fn((obj) => !obj || Object.keys(obj).length === 0),
   getRcAccessToken: vi.fn(() => 'rc-access-token'),
   refreshRCToken: vi.fn(async () => {}),
@@ -139,7 +138,6 @@ describe('logService', () => {
       },
       rcAdditionalSubmission: {},
     });
-    expect(dismissNotification).toHaveBeenCalled();
     expect(showNotification).toHaveBeenCalledWith({
       level: 'success',
       message: 'Historical call syncing finished. 1 call(s) synced.',
@@ -252,12 +250,14 @@ describe('logService', () => {
     }));
   });
 
-  it('finishes retro auto-log immediately when max attempts are exhausted', async () => {
+  it('continues checking after the legacy max-attempt counter is exhausted and stays quiet when there are no calls', async () => {
     seedStorage({
       retroAutoCallLogMaxAttempt: 0,
-      retroAutoCallLogIntervalId: 123,
     });
-    vi.mocked(RCAdapter.getUnloggedCalls!).mockClear();
+    vi.mocked(RCAdapter.getUnloggedCalls!).mockReset().mockResolvedValueOnce({
+      calls: [],
+      hasMore: false,
+    });
     vi.mocked(showNotification).mockClear();
     const service = await loadLogService();
 
@@ -267,12 +267,8 @@ describe('logService', () => {
       platform: { name: 'salesforce' },
     });
 
-    expect(RCAdapter.getUnloggedCalls).not.toHaveBeenCalled();
-    expect(showNotification).toHaveBeenCalledWith({
-      level: 'success',
-      message: 'Historical call syncing finished. 0 call(s) synced.',
-      ttl: 5000,
-    });
+    expect(RCAdapter.getUnloggedCalls).toHaveBeenCalledWith(50, 1);
+    expect(showNotification).not.toHaveBeenCalled();
   });
 
   it('skips retro calls that are unmatched, conflicted, or already matched', async () => {
@@ -345,9 +341,7 @@ describe('logService', () => {
       phoneNumber: '18005550100',
     }));
     expect(logCore.addLog).not.toHaveBeenCalled();
-    expect(showNotification).not.toHaveBeenCalledWith(expect.objectContaining({
-      message: expect.stringContaining('Attempting to sync'),
-    }));
+    expect(showNotification).not.toHaveBeenCalled();
     expect(getWidgetPostMessages()).toContainEqual({
       message: {
         type: 'rc-adapter-trigger-call-logger-match',
