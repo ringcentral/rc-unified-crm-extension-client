@@ -11,6 +11,10 @@ function getManagedAuthOptionsButtonId(action: string, fieldConst: string): stri
   return `${action}-${encodeURIComponent(fieldConst)}-action`;
 }
 
+function getManagedAuthOptionsButtonTitle(field: UnknownRecord): string {
+  return `Update ${field.title ?? 'list'}`;
+}
+
 function getDynamicManagedAuthSchema(field: UnknownRecord, options: UnknownRecord[] = []): UnknownRecord {
   return {
     title: field.title,
@@ -48,6 +52,7 @@ export {
   getDynamicManagedAuthSchema,
   getDynamicManagedAuthUiSchema,
   getManagedAuthOptionsButtonId,
+  getManagedAuthOptionsButtonTitle,
   getUpdateListButtonUiSchema,
   isDynamicUserManagedField,
 };

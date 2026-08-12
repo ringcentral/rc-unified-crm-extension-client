@@ -238,7 +238,7 @@ describe('basic page renderers', () => {
 
     expect(adminAuth.schema.properties['managedAuthOptionsAuth-crmUserId-action']).toEqual({
       type: 'string',
-      title: 'Update list',
+      title: 'Update CRM user',
     });
     expect(adminAuth.schema.properties.crmUserId).toMatchObject({
       type: 'string',
@@ -785,7 +785,7 @@ describe('admin page renderers', () => {
       },
     });
 
-    expect(edit.schema.properties['managedAuthOptionsUser-crmUserId-action'].title).toBe('Update list');
+    expect(edit.schema.properties['managedAuthOptionsUser-crmUserId-action'].title).toBe('Update CRM user');
     expect(edit.schema.properties.crmUserId).toMatchObject({
       type: 'string',
       enum: ['crm-101'],

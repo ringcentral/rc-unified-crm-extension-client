@@ -4,6 +4,7 @@ import {
     getDynamicManagedAuthSchema,
     getDynamicManagedAuthUiSchema,
     getManagedAuthOptionsButtonId,
+    getManagedAuthOptionsButtonTitle,
     getUpdateListButtonUiSchema,
     isDynamicUserManagedField,
 } from './managedAuthField';
@@ -45,7 +46,7 @@ function getAuthPageRender({
             const buttonId = getManagedAuthOptionsButtonId(AUTH_OPTIONS_ACTION, c.const);
             content[buttonId] = {
                 type: 'string',
-                title: 'Update list',
+                title: getManagedAuthOptionsButtonTitle(c),
             };
         }
     }
