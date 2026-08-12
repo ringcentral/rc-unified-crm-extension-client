@@ -4,7 +4,13 @@ import managedAuthUserEditPage from '../../src/components/admin/managedAuthUserE
 import { getRcContactInfo, showNotification } from '../../src/lib/util.ts';
 import handler from '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthOptions.ts';
 import { seedStorage } from '../setup/storageHelpers';
-import { clearManagedAuthOptionsCache } from '../../src/service/managedAuthOptionsService.ts';
+import {
+  clearManagedAuthOptionsCache,
+  getCachedManagedAuthOptions,
+  getManagedAuthOptionsContextKey,
+  refreshManagedAuthUserOptions,
+  setCachedManagedAuthOptions,
+} from '../../src/service/managedAuthOptionsService.ts';
 
 vi.mock('../../src/core/admin.ts', () => ({
   default: {
@@ -152,5 +158,65 @@ describe('managed auth dynamic option button', () => {
       ttl: 5000,
     });
     expect(authPage.getAuthPageRender).not.toHaveBeenCalled();
+  });
+
+  it('refreshes and caches every dynamic user field when user managed auth is opened', async () => {
+    vi.mocked(adminCore.getManagedAuthOptions)
+      .mockResolvedValueOnce([{ value: 'crm-101', label: 'Ada Lovelace' }])
+      .mockResolvedValueOnce([{ value: 'team-1', label: 'Sales' }]);
+
+    const result = await refreshManagedAuthUserOptions({
+      serverUrl: 'https://server.example',
+      platformName: 'salesforce',
+      connectorId: 'connector-1',
+      userFields: [
+        { const: 'apiKey', managed: true, managedScope: 'user', managedFieldType: 'input' },
+        { const: 'crmUserId', managed: true, managedScope: 'user', managedFieldType: 'dynamic' },
+        { const: 'teamId', managed: true, managedScope: 'user', managedFieldType: 'dynamic' },
+      ],
+    });
+
+    expect(adminCore.getManagedAuthOptions).toHaveBeenCalledTimes(2);
+    expect(adminCore.getManagedAuthOptions).toHaveBeenNthCalledWith(1, {
+      serverUrl: 'https://server.example',
+      platformName: 'salesforce',
+      fieldConst: 'crmUserId',
+    });
+    expect(result).toEqual({
+      dynamicOptions: {
+        crmUserId: [{ value: 'crm-101', label: 'Ada Lovelace' }],
+        teamId: [{ value: 'team-1', label: 'Sales' }],
+      },
+      errors: [],
+    });
+  });
+
+  it('keeps the previous field list when an automatic refresh fails', async () => {
+    const contextKey = getManagedAuthOptionsContextKey({
+      platformName: 'salesforce',
+      connectorId: 'connector-1',
+      mode: 'user',
+    });
+    setCachedManagedAuthOptions(contextKey, {
+      crmUserId: [{ value: 'crm-old', label: 'Previous user' }],
+    });
+    vi.mocked(adminCore.getManagedAuthOptions).mockRejectedValue(new Error('CRM unavailable'));
+
+    const result = await refreshManagedAuthUserOptions({
+      serverUrl: 'https://server.example',
+      platformName: 'salesforce',
+      connectorId: 'connector-1',
+      userFields: [{
+        const: 'crmUserId',
+        managed: true,
+        managedScope: 'user',
+        managedFieldType: 'dynamic',
+      }],
+    });
+
+    expect(result.errors).toHaveLength(1);
+    expect(getCachedManagedAuthOptions(contextKey)).toEqual({
+      crmUserId: [{ value: 'crm-old', label: 'Previous user' }],
+    });
   });
 });

@@ -785,7 +785,7 @@ describe('admin page renderers', () => {
       },
     });
 
-    expect(edit.schema.properties['managedAuthOptionsUser-crmUserId-action'].title).toBe('Update CRM user');
+    expect(edit.schema.properties['managedAuthOptionsUser-crmUserId-action']).toBeUndefined();
     expect(edit.schema.properties.crmUserId).toMatchObject({
       type: 'string',
       enum: ['crm-101'],

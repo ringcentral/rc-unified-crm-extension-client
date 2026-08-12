@@ -94,6 +94,9 @@ async function loadSectionHandler(modulePath, overrides: Record<string, any> = {
       },
     ]),
     uploadAdminSettings: vi.fn(async () => {}),
+    getManagedAuthOptions: vi.fn(async ({ fieldConst }) => ([
+      { value: `${fieldConst}-value`, label: `${fieldConst} label` },
+    ])),
     getManagedAuthSettings: vi.fn(async () => ({
       orgFields: [{ const: 'clientId' }],
       userFields: [{ const: 'clientSecret' }],
@@ -145,6 +148,7 @@ async function loadSectionHandler(modulePath, overrides: Record<string, any> = {
       { id: '201', type: 'Department', name: 'Support Team' },
       { id: 'account', type: 'Company', name: 'Acme' },
     ]),
+    showNotification: vi.fn(),
     ...overrides.util,
   };
   vi.doMock('../../src/lib/util.ts', () => util);
@@ -341,6 +345,16 @@ describe('customizedPage inputChanged section handlers', () => {
   });
 
   it('renders managed auth user section with RC extension choices', async () => {
+    seedStorage({
+      'platform-info': { platformName: 'salesforce', connectorId: 'connector-1' },
+      managedAuthSettings: {
+        userFields: [
+          { const: 'clientSecret', managed: true, managedScope: 'user', managedFieldType: 'input' },
+          { const: 'crmUserId', managed: true, managedScope: 'user', managedFieldType: 'dynamic' },
+        ],
+        userValues: [],
+      },
+    });
     const loaded = await loadSectionHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedAuthUser.ts',
     );
@@ -348,8 +362,14 @@ describe('customizedPage inputChanged section handlers', () => {
     await loaded.handler.onEvent(context);
 
     expect(loaded.util.getRcContactInfo).toHaveBeenCalled();
+    expect(loaded.adminCore.getManagedAuthOptions).toHaveBeenCalledTimes(1);
+    expect(loaded.adminCore.getManagedAuthOptions).toHaveBeenCalledWith({
+      serverUrl: 'https://server.example',
+      platformName: 'salesforce',
+      fieldConst: 'crmUserId',
+    });
     expect(loaded.managedAuthUserPage.getManagedAuthUserPageRender).toHaveBeenCalledWith(expect.objectContaining({
-      userFields: [{ const: 'clientSecret' }],
+      userFields: expect.arrayContaining([expect.objectContaining({ const: 'crmUserId' })]),
       rcExtensions: [
         { id: '101', type: 'User', name: 'Jane User' },
         { id: '201', type: 'Department', name: 'Support Team' },
