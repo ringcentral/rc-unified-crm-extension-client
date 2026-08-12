@@ -240,6 +240,11 @@ describe('basic page renderers', () => {
       type: 'string',
       title: 'Update list',
     });
+    expect(adminAuth.schema.properties.crmUserId).toMatchObject({
+      type: 'string',
+      enum: ['user-101'],
+      enumNames: ['Ada Lovelace'],
+    });
     expect(adminAuth.uiSchema.crmUserId).toMatchObject({
       'ui:widget': 'AutocompleteWidget',
       'ui:options': {
@@ -781,6 +786,11 @@ describe('admin page renderers', () => {
     });
 
     expect(edit.schema.properties['managedAuthOptionsUser-crmUserId-action'].title).toBe('Update list');
+    expect(edit.schema.properties.crmUserId).toMatchObject({
+      type: 'string',
+      enum: ['crm-101'],
+      enumNames: ['Ada Lovelace'],
+    });
     expect(edit.uiSchema.crmUserId['ui:options'].enumOptions).toEqual([
       { value: 'crm-101', label: 'Ada Lovelace' },
     ]);

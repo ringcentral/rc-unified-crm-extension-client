@@ -11,6 +11,16 @@ function getManagedAuthOptionsButtonId(action: string, fieldConst: string): stri
   return `${action}-${encodeURIComponent(fieldConst)}-action`;
 }
 
+function getDynamicManagedAuthSchema(field: UnknownRecord, options: UnknownRecord[] = []): UnknownRecord {
+  return {
+    title: field.title,
+    type: 'string',
+    description: field.description,
+    enum: options.map(option => option.value),
+    enumNames: options.map(option => option.label),
+  };
+}
+
 function getDynamicManagedAuthUiSchema(field: UnknownRecord, options: UnknownRecord[] = []): UnknownRecord {
   return {
     ...(field.uiSchema ?? {}),
@@ -35,9 +45,9 @@ function getUpdateListButtonUiSchema(): UnknownRecord {
 export {
   AUTH_OPTIONS_ACTION,
   USER_OPTIONS_ACTION,
+  getDynamicManagedAuthSchema,
   getDynamicManagedAuthUiSchema,
   getManagedAuthOptionsButtonId,
   getUpdateListButtonUiSchema,
   isDynamicUserManagedField,
 };
-

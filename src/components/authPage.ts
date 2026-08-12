@@ -1,6 +1,7 @@
 import { t } from '../i18n';
 import {
     AUTH_OPTIONS_ACTION,
+    getDynamicManagedAuthSchema,
     getDynamicManagedAuthUiSchema,
     getManagedAuthOptionsButtonId,
     getUpdateListButtonUiSchema,
@@ -33,11 +34,13 @@ function getAuthPageRender({
     } : {};
     let content = {};
     for (const c of filteredContent) {
-        content[c.const] = {
-            title: c.title,
-            type: c.type,
-            description: c.description
-        }
+        content[c.const] = isDynamicUserManagedField(c) ?
+            getDynamicManagedAuthSchema(c, dynamicOptions[c.const] ?? []) :
+            {
+                title: c.title,
+                type: c.type,
+                description: c.description
+            };
         if (isAdmin && isDynamicUserManagedField(c)) {
             const buttonId = getManagedAuthOptionsButtonId(AUTH_OPTIONS_ACTION, c.const);
             content[buttonId] = {

@@ -1,5 +1,6 @@
 import {
     USER_OPTIONS_ACTION,
+    getDynamicManagedAuthSchema,
     getDynamicManagedAuthUiSchema,
     getManagedAuthOptionsButtonId,
     getUpdateListButtonUiSchema,
@@ -41,12 +42,8 @@ function getManagedAuthUserEditPageRender({
     userFields.forEach((field: UnknownRecord) => {
         const storedValue = selectedEntry?.fields?.[field.const] ?? {};
         const hasFormValue = Object.prototype.hasOwnProperty.call(nextFormData, field.const);
-        properties[field.const] = {
-            title: field.title,
-            type: field.type,
-            description: field.description
-        };
         if (isDynamicUserManagedField(field)) {
+            properties[field.const] = getDynamicManagedAuthSchema(field, dynamicOptions[field.const] ?? []);
             uiSchema[field.const] = getDynamicManagedAuthUiSchema(field, dynamicOptions[field.const] ?? []);
             const buttonId = getManagedAuthOptionsButtonId(USER_OPTIONS_ACTION, field.const);
             properties[buttonId] = {
@@ -56,6 +53,11 @@ function getManagedAuthUserEditPageRender({
             uiSchema[buttonId] = getUpdateListButtonUiSchema();
         }
         else {
+            properties[field.const] = {
+                title: field.title,
+                type: field.type,
+                description: field.description
+            };
             uiSchema[field.const] = field.uiSchema ?? {};
         }
         if (!hasFormValue && storedValue.hasValue) {
