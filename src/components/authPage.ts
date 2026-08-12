@@ -1,6 +1,21 @@
 import { t } from '../i18n';
+import {
+    AUTH_OPTIONS_ACTION,
+    getDynamicManagedAuthUiSchema,
+    getManagedAuthOptionsButtonId,
+    getUpdateListButtonUiSchema,
+    isDynamicUserManagedField,
+} from './managedAuthField';
 
-function getAuthPageRender({ manifest, platformName, isAdmin, visibleFieldConsts = null, warningMessage = '' }) {
+function getAuthPageRender({
+    manifest,
+    platformName,
+    isAdmin,
+    visibleFieldConsts = null,
+    warningMessage = '',
+    formData: submittedFormData = {},
+    dynamicOptions = {},
+}) {
     const authPage = manifest.platforms[platformName].auth.apiKey.page;
     const pageTitle = authPage.title;
     const filteredContent = isAdmin ?
@@ -23,6 +38,13 @@ function getAuthPageRender({ manifest, platformName, isAdmin, visibleFieldConsts
             type: c.type,
             description: c.description
         }
+        if (isAdmin && isDynamicUserManagedField(c)) {
+            const buttonId = getManagedAuthOptionsButtonId(AUTH_OPTIONS_ACTION, c.const);
+            content[buttonId] = {
+                type: 'string',
+                title: 'Update list',
+            };
+        }
     }
     let uiSchema = {
         submitButtonOptions: { // optional if you don't want to show submit button
@@ -34,7 +56,13 @@ function getAuthPageRender({ manifest, platformName, isAdmin, visibleFieldConsts
         }
     };
     for (const c of filteredContent) {
-        if (c.uiSchema) {
+        if (isDynamicUserManagedField(c)) {
+            uiSchema[c.const] = getDynamicManagedAuthUiSchema(c, dynamicOptions[c.const] ?? []);
+            if (isAdmin) {
+                uiSchema[getManagedAuthOptionsButtonId(AUTH_OPTIONS_ACTION, c.const)] = getUpdateListButtonUiSchema();
+            }
+        }
+        else if (c.uiSchema) {
             uiSchema[c.const] = c.uiSchema;
         }
     }
@@ -44,6 +72,10 @@ function getAuthPageRender({ manifest, platformName, isAdmin, visibleFieldConsts
             formData[c.const] = c.defaultValue;
         }
     }
+    formData = {
+        ...formData,
+        ...submittedFormData,
+    };
     const page = {
         id: 'authPage',
         title: pageTitle,

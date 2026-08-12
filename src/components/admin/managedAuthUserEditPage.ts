@@ -1,3 +1,11 @@
+import {
+    USER_OPTIONS_ACTION,
+    getDynamicManagedAuthUiSchema,
+    getManagedAuthOptionsButtonId,
+    getUpdateListButtonUiSchema,
+    isDynamicUserManagedField,
+} from '../managedAuthField';
+
 type UnknownRecord = Record<string, any>;
 
 function getManagedAuthUserEditPageRender({
@@ -6,7 +14,8 @@ function getManagedAuthUserEditPageRender({
     rcExtension,
     formData = {},
     searchWord = '',
-    filter = 'All'
+    filter = 'All',
+    dynamicOptions = {},
 }: UnknownRecord): UnknownRecord {
     const nextFormData: UnknownRecord = {
         ...(formData ?? {})
@@ -37,7 +46,18 @@ function getManagedAuthUserEditPageRender({
             type: field.type,
             description: field.description
         };
-        uiSchema[field.const] = field.uiSchema ?? {};
+        if (isDynamicUserManagedField(field)) {
+            uiSchema[field.const] = getDynamicManagedAuthUiSchema(field, dynamicOptions[field.const] ?? []);
+            const buttonId = getManagedAuthOptionsButtonId(USER_OPTIONS_ACTION, field.const);
+            properties[buttonId] = {
+                type: 'string',
+                title: 'Update list',
+            };
+            uiSchema[buttonId] = getUpdateListButtonUiSchema();
+        }
+        else {
+            uiSchema[field.const] = field.uiSchema ?? {};
+        }
         if (!hasFormValue && storedValue.hasValue) {
             nextFormData[field.const] = storedValue.value;
         }

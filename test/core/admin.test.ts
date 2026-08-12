@@ -431,6 +431,29 @@ describe('admin core', () => {
     expect(axios.get).toHaveBeenCalledTimes(1);
   });
 
+  it('loads managed auth options with transient account values and no CRM jwt', async () => {
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: [{ value: 'crm-101', label: 'Ada Lovelace' }],
+    });
+    const adminCore = await loadAdminCore();
+
+    await expect(adminCore.getManagedAuthOptions({
+      serverUrl: 'https://server.example',
+      platformName: 'salesforce',
+      fieldConst: 'crmUserId',
+      accountValues: { companyId: 'company-123' },
+    })).resolves.toEqual([{ value: 'crm-101', label: 'Ada Lovelace' }]);
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'https://server.example/admin/managedAuth/options?platform=salesforce&connectorId=connector-1&devRcAccountId=connector-owner-account&isPrivate=true',
+      {
+        fieldConst: 'crmUserId',
+        accountValues: { companyId: 'company-123' },
+      },
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
+  });
+
   it('returns null when admin settings cannot be loaded', async () => {
     vi.mocked(axios.get).mockRejectedValueOnce(new Error('network'));
     const adminCore = await loadAdminCore();

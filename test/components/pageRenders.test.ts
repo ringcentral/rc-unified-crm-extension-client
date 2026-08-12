@@ -213,6 +213,46 @@ describe('basic page renderers', () => {
     expect(adminAuth.uiSchema.secret).toEqual({ 'ui:widget': 'password' });
   });
 
+  it('renders connector-driven user fields as searchable dropdowns with update buttons', async () => {
+    const authPage = await loadPage('../../src/components/authPage.ts');
+    const dynamicManifest: any = manifest();
+    dynamicManifest.platforms.salesforce.auth.apiKey.page.content.push({
+      const: 'crmUserId',
+      title: 'CRM user',
+      type: 'string',
+      required: true,
+      managed: true,
+      managedScope: 'user',
+      managedFieldType: 'dynamic',
+    });
+
+    const adminAuth = authPage.getAuthPageRender({
+      manifest: dynamicManifest,
+      platformName: 'salesforce',
+      isAdmin: true,
+      formData: { apiUrl: 'company-123', crmUserId: 'user-101' },
+      dynamicOptions: {
+        crmUserId: [{ value: 'user-101', label: 'Ada Lovelace' }],
+      },
+    });
+
+    expect(adminAuth.schema.properties['managedAuthOptionsAuth-crmUserId-action']).toEqual({
+      type: 'string',
+      title: 'Update list',
+    });
+    expect(adminAuth.uiSchema.crmUserId).toMatchObject({
+      'ui:widget': 'AutocompleteWidget',
+      'ui:options': {
+        multiple: false,
+        enumOptions: [{ value: 'user-101', label: 'Ada Lovelace' }],
+      },
+    });
+    expect(adminAuth.formData).toMatchObject({
+      apiUrl: 'company-123',
+      crmUserId: 'user-101',
+    });
+  });
+
   it('renders dynamic hostname input pages with validation and private connector metadata', async () => {
     const hostnamePage = await loadPage('../../src/components/hostnameInputPage.ts');
     const dynamicHost = hostnamePage.getHostnameInputPageRender({
@@ -721,6 +761,29 @@ describe('admin page renderers', () => {
       searchWord: 'jane',
       filter: 'Configured',
     });
+  });
+
+  it('renders dynamic fields on managed auth user edit pages', async () => {
+    const managedAuthUserEditPage = await loadPage('../../src/components/admin/managedAuthUserEditPage.ts');
+    const edit = managedAuthUserEditPage.getManagedAuthUserEditPageRender({
+      userFields: [{
+        const: 'crmUserId',
+        title: 'CRM user',
+        type: 'string',
+        managed: true,
+        managedScope: 'user',
+        managedFieldType: 'dynamic',
+      }],
+      rcExtension: { id: 'ext-1', name: 'Jane Smith' },
+      dynamicOptions: {
+        crmUserId: [{ value: 'crm-101', label: 'Ada Lovelace' }],
+      },
+    });
+
+    expect(edit.schema.properties['managedAuthOptionsUser-crmUserId-action'].title).toBe('Update list');
+    expect(edit.uiSchema.crmUserId['ui:options'].enumOptions).toEqual([
+      { value: 'crm-101', label: 'Ada Lovelace' },
+    ]);
   });
 
   it('renders appearance setting detail page navigation', async () => {
