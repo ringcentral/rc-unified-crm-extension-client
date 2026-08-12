@@ -116,7 +116,7 @@ describe('oauthCallBack message handler', () => {
     vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'salesforce' });
   });
 
-  it('forwards RingCentral callbacks to the widget and clears old CRM JWT state', async () => {
+  it('forwards RingCentral callbacks to the widget without clearing CRM JWT state', async () => {
     seedStorage({ rcUnifiedCrmExtJwt: 'old-jwt' });
     const sendResponse = vi.fn();
     const handler = await loadOauthCallbackHandler();
@@ -136,7 +136,7 @@ describe('oauthCallBack message handler', () => {
       },
       targetOrigin: '*',
     });
-    expect(readStorage()).not.toHaveProperty('rcUnifiedCrmExtJwt');
+    expect(readStorage().rcUnifiedCrmExtJwt).toBe('old-jwt');
     expect(sendResponse).toHaveBeenCalledWith({ result: 'ok' });
   });
 

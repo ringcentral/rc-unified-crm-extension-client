@@ -8,6 +8,7 @@ interface RCAdapterGlobal {
     calls?: unknown[];
     hasMore?: boolean;
   }>;
+  refreshLoginSession?: (force: boolean) => Promise<void>;
   setAutoLog?: (settings: { call?: boolean; message?: boolean }) => void;
   showFeedback?: (options: {
     onFeedback?: (...args: unknown[]) => void;

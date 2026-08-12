@@ -11,6 +11,18 @@ type EventOptions = {
   };
 };
 
+const RETRO_AUTO_LOG_INTERVAL_MS = 10 * 60 * 1000;
+
+let retroAutoCallLogIntervalId: ReturnType<typeof setInterval> | undefined;
+let retroAutoCallLogInProgress = false;
+
+function stopRetroAutoCallLog(): void {
+  if (retroAutoCallLogIntervalId !== undefined) {
+    clearInterval(retroAutoCallLogIntervalId);
+    retroAutoCallLogIntervalId = undefined;
+  }
+}
+
 export async function onEvent({ data }: EventOptions): Promise<void> {
   const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false }) as { crmAuthed: boolean };
   const manifest = await getManifest() as UnknownRecord;
@@ -18,16 +30,29 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
   const platformName = platformInfo?.platformName ?? '';
   const platform = manifest?.platforms[platformName];
   trackEditSettings({ changedItem: 'auto-call-log', status: data.autoLog });
+  stopRetroAutoCallLog();
+  await chrome.storage.local.remove('retroAutoCallLogIntervalId');
   if (!!data.autoLog && !!crmAuthed) {
-    await chrome.storage.local.set({ retroAutoCallLogMaxAttempt: 10 });
-    const retroAutoCallLogIntervalId = setInterval(
-      function () {
-        logService.retroAutoCallLog({
+    const runRetroAutoCallLog = async (): Promise<void> => {
+      if (retroAutoCallLogInProgress) {
+        return;
+      }
+      retroAutoCallLogInProgress = true;
+      try {
+        await logService.retroAutoCallLog({
           manifest: manifest as any,
           platformName,
           platform,
         });
-      }, 60000);
+      }
+      finally {
+        retroAutoCallLogInProgress = false;
+      }
+    };
+    retroAutoCallLogIntervalId = setInterval(
+      () => void runRetroAutoCallLog(),
+      RETRO_AUTO_LOG_INTERVAL_MS,
+    );
     await chrome.storage.local.set({ retroAutoCallLogIntervalId });
   }
 }

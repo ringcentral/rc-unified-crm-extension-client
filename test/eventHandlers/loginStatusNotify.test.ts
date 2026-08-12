@@ -53,6 +53,7 @@ vi.mock('../../src/core/auth.ts', () => ({
   default: {
     checkAndOpenPlatformSelectionPage: vi.fn(),
     apiKeyLogin: vi.fn(),
+    clearLocalCrmAuthState: vi.fn(),
     setAuth: vi.fn(),
     isAdminManagedOAuthEnabled: vi.fn(),
     checkManagedOAuthBeforeCrmVisible: vi.fn(),
@@ -232,6 +233,15 @@ describe('rc-login-status-notify event handler', () => {
     vi.mocked(getPlatformList).mockReset().mockResolvedValue([{ id: 'salesforce' }]);
     vi.mocked(authCore.checkAndOpenPlatformSelectionPage).mockReset();
     vi.mocked(authCore.apiKeyLogin).mockReset();
+    vi.mocked(authCore.clearLocalCrmAuthState).mockReset().mockImplementation(async () => {
+      await chrome.storage.local.remove([
+        'rcUnifiedCrmExtJwt',
+        'serverSideLoggingToken',
+        'isAdmin',
+        'crmAuthed',
+      ]);
+      return true;
+    });
     vi.mocked(authCore.setAuth).mockReset();
     vi.mocked(authCore.isAdminManagedOAuthEnabled).mockReset().mockReturnValue(false);
     vi.mocked(authCore.checkManagedOAuthBeforeCrmVisible).mockReset();
@@ -281,6 +291,48 @@ describe('rc-login-status-notify event handler', () => {
       targetOrigin: '*',
     });
     expect(trackRcLogin).toHaveBeenCalled();
+  });
+
+  it('keeps CRM auth when the RingCentral identity is unchanged', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'crm-jwt',
+      crmAuthed: true,
+      rcUserInfo: {
+        rcAccountId: 'account-1',
+        rcExtensionId: 'extension-1',
+      },
+    });
+    const handler = await loadLoginStatusHandler();
+
+    await handler.onEvent({ data: loggedInEventData() });
+
+    expect(authCore.clearLocalCrmAuthState).not.toHaveBeenCalled();
+    expect(readStorage()).toMatchObject({
+      rcUnifiedCrmExtJwt: 'crm-jwt',
+      crmAuthed: true,
+    });
+  });
+
+  it('clears CRM auth when the RingCentral identity changes', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'crm-jwt',
+      crmAuthed: true,
+      serverSideLoggingToken: 'logging-token',
+      isAdmin: true,
+      rcUserInfo: {
+        rcAccountId: 'previous-account',
+        rcExtensionId: 'previous-extension',
+      },
+    });
+    const handler = await loadLoginStatusHandler();
+
+    await handler.onEvent({ data: loggedInEventData() });
+
+    expect(authCore.clearLocalCrmAuthState).toHaveBeenCalledOnce();
+    expect(readStorage()).not.toHaveProperty('rcUnifiedCrmExtJwt');
+    expect(readStorage().crmAuthed).toBe(false);
+    expect(adminCore.refreshAdminSettings).not.toHaveBeenCalled();
+    expect(userCore.updateSSCLToken).not.toHaveBeenCalled();
   });
 
   it('registers report, calldown, and appointments tabs after login', async () => {

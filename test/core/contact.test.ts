@@ -57,6 +57,32 @@ function manifest() {
           disableContactCache: true,
         },
       },
+      bullhorn: {
+        page: {
+          callLog: {
+            additionalFields: [
+              {
+                const: 'noteActions',
+                accountDataKey: 'bullhornData',
+                accountDataProperty: 'commentActionList',
+              },
+            ],
+          },
+          newContact: {
+            additionalFields: [
+              {
+                const: 'status',
+                accountDataKey: 'bullhornData',
+                accountDataPropertyByContactType: {
+                  Lead: 'leadStatuses',
+                  Candidate: 'candidateStatuses',
+                  Contact: 'contactStatuses',
+                },
+              },
+            ],
+          },
+        },
+      },
     },
   };
 }
@@ -234,6 +260,84 @@ describe('contact core', () => {
       'https://server.example/contact?phoneNumber=16505550100&overridingFormat=format-3&isExtension=false&isForceRefreshAccountData=false',
     );
     expect(readStorage()['tempContactMatchTask-16505550100']).toBeUndefined();
+  });
+
+  it('hydrates Bullhorn contact options from account data while preserving the legacy shape', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    vi.mocked(axios.get)
+      .mockResolvedValueOnce({
+        data: {
+          successful: true,
+          contact: [{
+            id: 'createNewContact',
+            isNewContact: true,
+            defaultContactType: 'Lead',
+            additionalInfo: {
+              noteActions: [{ const: 'Legacy', title: 'Legacy' }],
+              Lead: { status: [{ const: 'Legacy', title: 'Legacy' }] },
+            },
+          }],
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          data: {
+            bullhornData: {
+              commentActionList: [{ const: 'Call', title: 'Call' }],
+              leadStatuses: [{ const: 'New', title: 'New' }],
+              candidateStatuses: [{ const: 'Active', title: 'Active' }],
+              contactStatuses: [{ const: 'Approved', title: 'Approved' }],
+            },
+          },
+        },
+      });
+    const contactCore = await loadContactCore();
+
+    const result = await contactCore.getContact({
+      serverUrl: 'https://bullhorn-server.example',
+      phoneNumber: '16505550100',
+      platformName: 'bullhorn',
+      isForceRefresh: true,
+      isToTriggerContactMatch: false,
+    });
+
+    expect(result.contactInfo[0].additionalInfo).toEqual({
+      noteActions: [{ const: 'Call', title: 'Call' }],
+      Lead: { status: [{ const: 'New', title: 'New' }] },
+      Candidate: { status: [{ const: 'Active', title: 'Active' }] },
+      Contact: { status: [{ const: 'Approved', title: 'Approved' }] },
+    });
+    expect(axios.get).toHaveBeenNthCalledWith(
+      2,
+      'https://bullhorn-server.example/accountData?jwtToken=jwt-1&keys=bullhornData&forceRefresh=false',
+    );
+  });
+
+  it('falls back to Bullhorn options embedded by an old server when account data is unavailable', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const legacyAdditionalInfo = {
+      noteActions: [{ const: 'Legacy', title: 'Legacy' }],
+      Lead: { status: [{ const: 'Legacy', title: 'Legacy' }] },
+    };
+    vi.mocked(axios.get)
+      .mockResolvedValueOnce({
+        data: {
+          successful: true,
+          contact: [{ id: 'createNewContact', additionalInfo: legacyAdditionalInfo }],
+        },
+      })
+      .mockRejectedValueOnce(new Error('Old server has no accountData endpoint'));
+    const contactCore = await loadContactCore();
+
+    const result = await contactCore.getContact({
+      serverUrl: 'https://old-bullhorn-server.example',
+      phoneNumber: '16505550100',
+      platformName: 'bullhorn',
+      isForceRefresh: true,
+      isToTriggerContactMatch: false,
+    });
+
+    expect(result.contactInfo[0].additionalInfo).toEqual(legacyAdditionalInfo);
   });
 
   it('returns connect-to-CRM warning when no JWT exists', async () => {

@@ -2,6 +2,13 @@ import { t } from '../i18n';
 
 type UnknownRecord = Record<string, any>;
 
+function getContactFieldOptions(field: UnknownRecord, contact: UnknownRecord, newContactType?: string): UnknownRecord[] {
+    const options = contact?.isNewContact && field.contactTypeDependent
+        ? contact?.additionalInfo?.[newContactType ?? contact.defaultContactType]?.[field.const]
+        : contact?.additionalInfo?.[field.const];
+    return Array.isArray(options) ? options : [];
+}
+
 function buildContactOptions(contactInfo: UnknownRecord[] = [], useContactSearch?: boolean): UnknownRecord[] {
     const contactList: UnknownRecord[] = contactInfo.map(c => {
         return {
@@ -46,7 +53,7 @@ function buildAdditionalFieldsSchema({ allAdditionalFields, contact, logInfo }: 
             case 'selection': {
                 // deprecated
                 if (contact.isNewContact && f.contactTypeDependent) {
-                    const baseOptions = [...contact.additionalInfo[contact.defaultContactType][f.const]];
+                    const baseOptions = getContactFieldOptions(f, contact, contact.defaultContactType);
                     const includeNoneOption = f.includeNoneOption !== false;
                     additionalFields[f.const] = {
                         title: f.title,
@@ -58,7 +65,7 @@ function buildAdditionalFieldsSchema({ allAdditionalFields, contact, logInfo }: 
                     if (contact?.additionalInfo?.[f.const] === undefined) {
                         continue;
                     }
-                    const baseOptions = [...contact.additionalInfo[f.const]];
+                    const baseOptions = getContactFieldOptions(f, contact);
                     const includeNoneOption = f.includeNoneOption !== false;
                     additionalFields[f.const] = {
                         title: f.title,
@@ -261,4 +268,5 @@ export {
     buildContactWarningField,
     buildNewContactWidget,
     buildSingleContactSection,
+    getContactFieldOptions,
 };

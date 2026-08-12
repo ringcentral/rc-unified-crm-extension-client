@@ -1,6 +1,6 @@
 import axios from 'axios';
 import moment from 'moment';
-import { getRcAccessToken } from '../lib/util';
+import { getRcAccessToken, refreshRCToken } from '../lib/util';
 import { getManifest as getManifestBase } from '../service/manifestService';
 import { getPlatformInfo } from '../service/platformService';
 import adminCore from './admin';
@@ -27,8 +27,9 @@ async function getUserReportStats({ dateRange, customStartDate, customEndDate }:
     if (customStartDate === undefined || customEndDate === undefined) {
         return null;
     }
-    const rcAccessToken = getRcAccessToken();
     const rcAPI = new RcAPI();
+    await refreshRCToken();
+    let rcAccessToken = getRcAccessToken();
     const callLogData = await rcAPI.getRcCallLog({ rcAccessToken, dateRange, customStartDate, customEndDate });
     // phone activity
     const inboundCallCount = callLogData.records.filter(call => call.direction === 'Inbound').length;
@@ -39,6 +40,8 @@ async function getUserReportStats({ dateRange, customStartDate, customEndDate }:
     const totalTalkTime = Math.round(callLogData.records.reduce((acc, call) => acc + (call.duration || 0), 0) / 60) || 0;
     const averageTalkTime = Math.round(totalTalkTime / (inboundCallCount + outboundCallCount)) || 0;
     // sms activity
+    await refreshRCToken();
+    rcAccessToken = getRcAccessToken();
     const smsLogData = await rcAPI.getRcSMSLog({ rcAccessToken, dateRange, customStartDate, customEndDate });
     const smsSentCount = smsLogData.records.filter(sms => sms.direction === 'Outbound').length;
     const smsReceivedCount = smsLogData.records.filter(sms => sms.direction === 'Inbound').length;

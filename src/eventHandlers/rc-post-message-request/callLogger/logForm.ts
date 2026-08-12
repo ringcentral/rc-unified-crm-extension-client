@@ -122,6 +122,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                 logType: 'Call',
                 telephonySessionId: data.body.call.telephonySessionId,
                 sessionId: data.body.call.sessionId,
+                call: data.body.call,
                 subject: data.body.formData.activityTitle ?? "",
                 note: data.body.formData.note ?? "",
                 aiNote: data.body.aiNote,

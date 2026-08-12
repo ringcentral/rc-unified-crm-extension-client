@@ -5,10 +5,78 @@ import multiContactPopPromptPage from '../components/multiContactPopPromptPage';
 import { t } from '../i18n';
 import { getManifest } from '../service/manifestService';
 import { isSafeHttpUrl, renderUrlTemplate } from '../lib/urlTemplate';
+import { getPageAccountDataFields, getPlatformAccountDataKeys } from '../lib/accountData';
+import adminCore from './admin';
 
 type UnknownRecord = Record<string, any>;
 
 let lastOpenedContactPageUrl: unknown = null;
+
+export async function hydrateContactsWithAccountData({
+  contacts,
+  platform,
+  serverUrl,
+  forceRefresh = false,
+}: UnknownRecord): Promise<UnknownRecord[]> {
+  const fields = getPageAccountDataFields(platform);
+  const keys = getPlatformAccountDataKeys({ ...platform, adminSettings: [] });
+  if (!contacts?.length || keys.length === 0) {
+    return contacts ?? [];
+  }
+
+  try {
+    const accountData = await adminCore.getAccountData({ serverUrl, keys, forceRefresh });
+    return contacts.map(contact => {
+      const additionalInfo = { ...(contact.additionalInfo ?? {}) };
+      for (const field of fields) {
+        if (field.accountDataKey && !field.accountDataPropertyByContactType && accountData[field.accountDataKey] !== undefined) {
+          const dataSource = accountData[field.accountDataKey];
+          const fieldOptions = field.accountDataProperty ? dataSource?.[field.accountDataProperty] : dataSource;
+          if (fieldOptions !== undefined) {
+            additionalInfo[field.const] = fieldOptions;
+          }
+        }
+        for (const [contactType, dataProperty] of Object.entries(field.accountDataPropertyByContactType ?? {})) {
+          const fieldOptions = accountData[field.accountDataKey]?.[dataProperty as string];
+          if (fieldOptions !== undefined) {
+            additionalInfo[contactType] = {
+              ...(additionalInfo[contactType] ?? {}),
+              [field.const]: fieldOptions,
+            };
+          }
+        }
+        // Legacy contract where each contact type referenced a separate account data key.
+        for (const [contactType, dataKey] of Object.entries(field.accountDataKeyByContactType ?? {})) {
+          if (accountData[dataKey as string] !== undefined) {
+            additionalInfo[contactType] = {
+              ...(additionalInfo[contactType] ?? {}),
+              [field.const]: accountData[dataKey as string],
+            };
+          }
+        }
+      }
+      return { ...contact, additionalInfo };
+    });
+  }
+  catch (_e) {
+    // Backward compatibility: old servers do not expose /accountData, so retain
+    // the legacy options embedded in contact.additionalInfo.
+    return contacts;
+  }
+}
+
+async function hydratePlatformContacts({ contacts, platformName, serverUrl, forceRefresh = false }: UnknownRecord): Promise<UnknownRecord[]> {
+  if (!platformName) {
+    return contacts ?? [];
+  }
+  const manifest = await getManifest() as UnknownRecord;
+  return hydrateContactsWithAccountData({
+    contacts,
+    platform: manifest?.platforms?.[platformName],
+    serverUrl,
+    forceRefresh,
+  });
+}
 
 function getWidgetFrameWindow(): Window & UnknownRecord {
   return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow! as Window & UnknownRecord;
@@ -70,7 +138,12 @@ export async function getContact({
       return {
         matched: true,
         returnMessage: null,
-        contactInfo: cachedContact,
+        contactInfo: await hydratePlatformContacts({
+          contacts: cachedContact,
+          platformName,
+          serverUrl,
+          forceRefresh: isForceRefreshAccountData,
+        }),
       };
     }
   }
@@ -101,6 +174,12 @@ export async function getContact({
         contactInfo: null,
       };
     }
+    contactRes.data.contact = await hydratePlatformContacts({
+      contacts: contactRes.data.contact,
+      platformName,
+      serverUrl,
+      forceRefresh: forceRefreshAccountData,
+    });
     if (isToTriggerContactMatch) {
       const tempContactMatchTask: UnknownRecord = {};
       tempContactMatchTask[`tempContactMatchTask-${phoneNumber}`] = [...contactRes.data.contact.filter((c: UnknownRecord) => !c.isNewContact)];

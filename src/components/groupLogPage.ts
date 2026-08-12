@@ -1,5 +1,5 @@
 import { t } from '../i18n';
-import { buildSingleContactSection } from './logPageUtils';
+import { buildSingleContactSection, getContactFieldOptions } from './logPageUtils';
 
 type UnknownRecord = Record<string, any>;
 
@@ -144,7 +144,7 @@ function getUpdatedGroupLogPageRender({ manifest, platformName, updateData }: Un
                         if (f.contactDependent && (contact?.additionalInfo?.[f.const] === undefined)) {
                             continue;
                         }
-                        const baseOptions = [...contact.additionalInfo[f.const]];
+                        const baseOptions = getContactFieldOptions(f, contact, sectionFormData.newContactType);
                         const includeNoneOption = f.includeNoneOption !== false;
                         sectionSchema.properties[f.const] = {
                             title: f.title,
@@ -152,9 +152,12 @@ function getUpdatedGroupLogPageRender({ manifest, platformName, updateData }: Un
                             oneOf: includeNoneOption ? [...baseOptions, { const: 'none', title: t('common.labels.none') }] : baseOptions,
                             associationField: f.contactDependent
                         };
-                        sectionFormData[f.const] = f.contactDependent
-                            ? contact.additionalInfo[f.const][0].const
-                            : sectionFormData[f.const];
+                        if (f.contactDependent) {
+                            sectionFormData[f.const] = baseOptions[0]?.const;
+                        }
+                        else if (f.contactTypeDependent && !baseOptions.some(option => option.const === sectionFormData[f.const])) {
+                            delete sectionFormData[f.const];
+                        }
                         if (f.required) {
                             sectionSchema.required.push(f.const);
                         }
@@ -211,10 +214,20 @@ function getUpdatedGroupLogPageRender({ manifest, platformName, updateData }: Un
             // deprecated
             const contactTypeDependentFields = manifest.platforms[platformName].page?.newContact?.additionalFields?.filter(f => f.contactTypeDependent) ?? [];
             for (const f of contactTypeDependentFields) {
+                const options = getContactFieldOptions(f, contact, sectionFormData.newContactType);
+                const includeNoneOption = f.includeNoneOption !== false;
+                sectionSchema.properties[f.const] = {
+                    ...sectionSchema.properties[f.const],
+                    title: f.title,
+                    type: 'string',
+                };
                 sectionSchema.properties[f.const].oneOf = [
-                    ...contact.additionalInfo[sectionFormData.newContactType][f.const],
-                    { const: 'none', title: t('common.labels.none') }
+                    ...options,
+                    ...(includeNoneOption ? [{ const: 'none', title: t('common.labels.none') }] : [])
                 ];
+                if (sectionFormData[f.const] !== 'none' && !options.some(option => option.const === sectionFormData[f.const])) {
+                    delete sectionFormData[f.const];
+                }
             }
             break;
         }

@@ -3,10 +3,14 @@ import logCore from '../../src/core/log.ts';
 import dispositionCore from '../../src/core/disposition.ts';
 import contactCore from '../../src/core/contact.ts';
 import logUtil from '../../src/lib/logUtil.ts';
-import { showNotification, dismissNotification, getRcAccessToken } from '../../src/lib/util.ts';
+import { showNotification, getRcAccessToken, refreshRCToken } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { seedStorage } from '../setup/storageHelpers';
+
+const { getMessageByUriMock } = vi.hoisted(() => ({
+  getMessageByUriMock: vi.fn(),
+}));
 
 vi.mock('../../src/core/user.ts', () => ({
   default: {
@@ -45,9 +49,15 @@ vi.mock('../../src/lib/logUtil.ts', () => ({
 
 vi.mock('../../src/lib/util.ts', () => ({
   showNotification: vi.fn(async () => 'notification-id'),
-  dismissNotification: vi.fn(),
   isObjectEmpty: vi.fn((obj) => !obj || Object.keys(obj).length === 0),
   getRcAccessToken: vi.fn(() => 'rc-access-token'),
+  refreshRCToken: vi.fn(async () => {}),
+}));
+
+vi.mock('../../src/lib/rcAPI.ts', () => ({
+  RcAPI: class {
+    getMessageByUri = getMessageByUriMock;
+  },
 }));
 
 async function loadLogService() {
@@ -128,7 +138,6 @@ describe('logService', () => {
       },
       rcAdditionalSubmission: {},
     });
-    expect(dismissNotification).toHaveBeenCalled();
     expect(showNotification).toHaveBeenCalledWith({
       level: 'success',
       message: 'Historical call syncing finished. 1 call(s) synced.',
@@ -201,12 +210,54 @@ describe('logService', () => {
     }));
   });
 
-  it('finishes retro auto-log immediately when max attempts are exhausted', async () => {
+  it('syncs a linked voicemail as a canonical media-reader link', async () => {
+    vi.mocked(logCore.updateLog).mockClear();
+    getMessageByUriMock.mockResolvedValueOnce({
+      id: 456,
+      attachments: [{
+        type: 'AudioRecording',
+        uri: 'https://media.ringcentral.com/restapi/v1.0/account/1/extension/2/message-store/456/content/456',
+      }],
+    });
+    const service = await loadLogService();
+
+    await service.syncCallData({
+      serverUrl: 'https://server.example',
+      dataBody: {
+        call: {
+          sessionId: 'session-voicemail',
+          direction: 'Inbound',
+          from: { phoneNumber: '16505550100' },
+          to: { phoneNumber: '18005550100' },
+          message: {
+            id: '456',
+            type: 'VoiceMail',
+            uri: 'https://platform.ringcentral.com/restapi/v1.0/account/1/extension/2/message-store/456',
+          },
+        },
+      },
+    });
+
+    expect(getMessageByUriMock).toHaveBeenCalledWith({
+      uri: 'https://platform.ringcentral.com/restapi/v1.0/account/1/extension/2/message-store/456',
+      rcAccessToken: 'rc-access-token',
+    });
+    expect(refreshRCToken).toHaveBeenCalled();
+    expect(logCore.updateLog).toHaveBeenCalledWith(expect.objectContaining({
+      sessionId: 'session-voicemail',
+      voicemailMessageId: '456',
+      voicemailLink: 'https://ringcentral.github.io/ringcentral-media-reader/?media=https%3A%2F%2Fmedia.ringcentral.com%2Frestapi%2Fv1.0%2Faccount%2F1%2Fextension%2F2%2Fmessage-store%2F456%2Fcontent%2F456',
+    }));
+  });
+
+  it('continues checking after the legacy max-attempt counter is exhausted and stays quiet when there are no calls', async () => {
     seedStorage({
       retroAutoCallLogMaxAttempt: 0,
-      retroAutoCallLogIntervalId: 123,
     });
-    vi.mocked(RCAdapter.getUnloggedCalls!).mockClear();
+    vi.mocked(RCAdapter.getUnloggedCalls!).mockReset().mockResolvedValueOnce({
+      calls: [],
+      hasMore: false,
+    });
     vi.mocked(showNotification).mockClear();
     const service = await loadLogService();
 
@@ -216,12 +267,8 @@ describe('logService', () => {
       platform: { name: 'salesforce' },
     });
 
-    expect(RCAdapter.getUnloggedCalls).not.toHaveBeenCalled();
-    expect(showNotification).toHaveBeenCalledWith({
-      level: 'success',
-      message: 'Historical call syncing finished. 0 call(s) synced.',
-      ttl: 5000,
-    });
+    expect(RCAdapter.getUnloggedCalls).toHaveBeenCalledWith(50, 1);
+    expect(showNotification).not.toHaveBeenCalled();
   });
 
   it('skips retro calls that are unmatched, conflicted, or already matched', async () => {
@@ -294,9 +341,7 @@ describe('logService', () => {
       phoneNumber: '18005550100',
     }));
     expect(logCore.addLog).not.toHaveBeenCalled();
-    expect(showNotification).not.toHaveBeenCalledWith(expect.objectContaining({
-      message: expect.stringContaining('Attempting to sync'),
-    }));
+    expect(showNotification).not.toHaveBeenCalled();
     expect(getWidgetPostMessages()).toContainEqual({
       message: {
         type: 'rc-adapter-trigger-call-logger-match',

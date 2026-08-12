@@ -43,6 +43,8 @@ import managedAuthenticationHandler from './sections/managedAuthentication';
 import managedOAuthHandler from './sections/managedOAuth';
 import managedAuthOrgHandler from './sections/managedAuthOrg';
 import managedAuthUserHandler from './sections/managedAuthUser';
+import accountSettingsHandler from './sections/accountSettings';
+import accountDataHandler from './sections/accountData';
 
 import pluginMarketListPageHandler from '../../pluginMarketListPage';
 import selectPluginHandler from '../../custom-button-click/plugins/selectPlugin';
@@ -148,6 +150,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             break;
         case 'managedSettings':
             await managedSettingsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'accountSettings':
+            await accountSettingsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'accountData':
+            await accountDataHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'plugins':
             switch (data.body.page.id) {

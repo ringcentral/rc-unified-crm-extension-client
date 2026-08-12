@@ -471,7 +471,7 @@ describe('logPage', () => {
     expect(searchContact.schema.properties).not.toHaveProperty('disposition');
   });
 
-  it('updates new-contact names and removes type-specific fields after contact type changes', async () => {
+  it('updates contact-type-dependent options and removes stale values after contact type changes', async () => {
     vi.setSystemTime(new Date('2026-07-03T08:00:00.000Z'));
     const { logPage, basePage } = await createAdvancedCallLogPage();
 
@@ -489,12 +489,14 @@ describe('logPage', () => {
     renamed.uiSchema.newOnly = {};
     const contactTypeChanged = updateCallLogPage(logPage, renamed, ['newContactType'], {
       newContactType: 'Contact',
+      newCategory: 'prospect',
     });
 
     expect(contactTypeChanged.schema.properties.newCategory.oneOf).toEqual([
-      { const: 'default-new', title: 'Default New' },
+      { const: 'customer', title: 'Customer' },
       { const: 'none', title: expect.any(String) },
     ]);
+    expect(contactTypeChanged.formData.newCategory).toBeUndefined();
     expect(contactTypeChanged.schema.properties).not.toHaveProperty('newOnly');
   });
 
@@ -536,6 +538,58 @@ describe('logPage', () => {
     });
     expect(validCase.schema.properties['caseId-error']).toBeUndefined();
     expect(validCase.uiSchema['caseId-error']).toBeUndefined();
+  });
+
+  it('renders contact search as a button when it is the only contact option', async () => {
+    const logPage = await loadLogPage();
+    const page = logPage.getLogPageRender({
+      id: 'search-only',
+      manifest: manifest(),
+      logType: 'Call',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [],
+      logInfo: {},
+      contactPhoneNumber: '+16505550100',
+      useContactSearch: true,
+    });
+
+    expect(page.schema.properties.contact.oneOf).toEqual([
+      expect.objectContaining({ const: 'searchContact' }),
+    ]);
+    expect(page.schema.properties.contact).toMatchObject({
+      title: expect.any(String),
+      type: 'string',
+    });
+    expect(page.uiSchema.contact).toEqual({
+      'ui:field': 'button',
+      'ui:variant': 'contained',
+      'ui:fullWidth': true,
+    });
+    expect(page.uiSchema.submitButtonOptions['ui:disabled']).toBe(true);
+    expect(page.schema.required).toContain('contact');
+    expect(page.formData.contact).toBe('');
+    expect(page.formData.contactName).toBe('');
+
+    const updatedPage = logPage.getUpdatedLogPageRender({
+      manifest: manifest(),
+      logType: 'Call',
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['scheduleCallback'],
+        page,
+        formData: {
+          ...page.formData,
+          contact: 'searchContact',
+          scheduleCallback: false,
+        },
+      },
+    });
+
+    expect(updatedPage.uiSchema.submitButtonOptions['ui:disabled']).toBe(true);
+    expect(updatedPage.schema.required).toContain('contact');
+    expect(updatedPage.formData.contact).toBe('');
   });
 
   it('renders edit log and message log pages with current form data', async () => {
@@ -966,6 +1020,9 @@ describe('groupLogPage', () => {
       ...newContact(),
       additionalInfo: {
         ...newContact().additionalInfo,
+        Contact: {
+          newCategory: [{ const: 'customer', title: 'Customer' }],
+        },
         messageType: [{ const: 'sms', title: 'SMS' }],
         skipMemo: true,
       },
@@ -1062,15 +1119,17 @@ describe('groupLogPage', () => {
           ...valid.formData,
           section_0: {
             ...valid.formData.section_0,
-            newContactType: 'Lead',
+            newContactType: 'Contact',
+            newCategory: 'prospect',
           },
         },
       },
     });
     expect(contactTypeChanged.schema.properties.section_0.properties.newCategory.oneOf).toEqual([
-      { const: 'prospect', title: 'Prospect' },
+      { const: 'customer', title: 'Customer' },
       { const: 'none', title: expect.any(String) },
     ]);
+    expect(contactTypeChanged.formData.section_0.newCategory).toBeUndefined();
   });
 
   it('switches grouped existing contacts to new-contact fields with no type config', async () => {

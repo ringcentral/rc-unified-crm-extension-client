@@ -254,8 +254,8 @@ describe('popup runtime', () => {
       manifestUrl: 'https://manifest.example/custom.json',
     });
     expect(runtime.analytics.setAuthor).toHaveBeenCalledWith('CRM Author');
-    expect(runtime.axiosMock.get).toHaveBeenCalledWith('https://server.example/implementedInterfaces?platform=salesforce');
-    expect(readStorage().implementedInterfaces).toEqual({ findContactWithName: true });
+    expect(runtime.axiosMock.get).not.toHaveBeenCalled();
+    expect(readStorage().implementedInterfaces).toBeUndefined();
 
     await runtime.crmAuthCacheClearedHandler();
     expect(getWidgetPostMessages()).toContainEqual({
@@ -305,12 +305,12 @@ describe('popup runtime', () => {
     expect(runtime.axiosMock.get).not.toHaveBeenCalled();
   });
 
-  it('skips implemented interface storage when the server returns no data', async () => {
+  it('does not fetch implemented interfaces during popup initialization', async () => {
     const runtime = await loadPopupRuntime({
       implementedInterfaces: null,
     });
 
-    expect(runtime.axiosMock.get).toHaveBeenCalledWith('https://server.example/implementedInterfaces?platform=salesforce');
+    expect(runtime.axiosMock.get).not.toHaveBeenCalled();
     expect(readStorage().implementedInterfaces).toBeUndefined();
   });
 
@@ -583,7 +583,7 @@ describe('popup runtime', () => {
     expect(readStorage().rcUnifiedCrmExtJwt).toBe('stored-token');
   });
 
-  it('handles response errors, clears CRM auth on 401, and stores refreshed error tokens', async () => {
+  it('clears CRM auth only for a structured CRM session-revoked 401', async () => {
     const runtime = await loadPopupRuntime();
     runtime.logRecorder.isRecordingLogs.mockResolvedValue(true);
     const authError = mockHttpError('unauthorized');
@@ -595,7 +595,10 @@ describe('popup runtime', () => {
     authError.response = {
       status: 401,
       statusText: 'Unauthorized',
-      data: { error: 'invalid' },
+      data: {
+        errorCode: 'CRM_SESSION_REVOKED',
+        returnMessage: { message: 'Reconnect' },
+      },
       headers: {
         'X-Refreshed-Jwt-Token': 'error-fresh-token',
       },
@@ -621,6 +624,10 @@ describe('popup runtime', () => {
         url: '/records?jwtToken=expired',
         headers: { Authorization: 'Bearer expired' },
         skipAuthorization: true,
+      },
+      {
+        url: '/records',
+        headers: { Authorization: 'Bearer expired' },
       },
       {
         url: '/records',

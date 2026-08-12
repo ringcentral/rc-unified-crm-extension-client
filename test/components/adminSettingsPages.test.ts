@@ -456,3 +456,173 @@ describe('managed settings page renderers', () => {
     expect(tabsWithoutAppointments.formData).not.toHaveProperty('showAppointmentsTab');
   });
 });
+
+describe('account-level admin page renderers', () => {
+  const platform = {
+    adminSettings: [
+      {
+        id: 'callActivityType',
+        type: 'option',
+        name: 'Call activity type',
+        accountDataKey: 'activityTypes',
+        defaultValue: '',
+      },
+      {
+        id: 'smsActivityType',
+        type: 'option',
+        name: 'SMS activity type',
+        options: [
+          { id: 'sms', name: 'SMS' },
+          { id: 'message', name: 'Message' },
+        ],
+        defaultValue: 'sms',
+      },
+      {
+        id: 'enabled',
+        type: 'boolean',
+        name: 'Enabled',
+        defaultValue: false,
+      },
+      {
+        id: 'prefix',
+        type: 'inputField',
+        name: 'Prefix',
+        defaultValue: 'Default',
+      },
+      {
+        id: 'warning',
+        type: 'warning',
+        value: 'Review these settings carefully.',
+      },
+    ],
+  };
+
+  it('returns no account settings page when the manifest has none', async () => {
+    const accountSettingsPage = await loadPage('../../src/components/admin/accountSettingsPage.ts');
+
+    expect(accountSettingsPage.getAccountSettingsPageRender({ platform: {} })).toBeNull();
+  });
+
+  it('renders a dedicated refresh page for account data used by contact and log fields', async () => {
+    const accountDataPage = await loadPage('../../src/components/admin/accountDataPage.ts');
+    const page = accountDataPage.getAccountDataPageRender({
+      platform: {
+        adminSettings: [
+          { accountDataKey: 'activityTypes' },
+          { accountDataKey: 'activityTypes' },
+        ],
+        page: {
+          callLog: {
+            additionalFields: [{
+              const: 'noteActions',
+              accountDataKey: 'bullhornData',
+              accountDataProperty: 'commentActionList',
+            }],
+          },
+          newContact: {
+            additionalFields: [{
+              const: 'status',
+              accountDataKey: 'bullhornData',
+              accountDataPropertyByContactType: {
+                Lead: 'leadStatuses',
+                Candidate: 'candidateStatuses',
+                Contact: 'contactStatuses',
+              },
+            }],
+          },
+        },
+      },
+    });
+
+    expect(page).toMatchObject({
+      id: 'accountDataPage',
+      title: 'Account data',
+      uiSchema: {
+        submitButtonOptions: { submitText: 'Refresh all account data' },
+      },
+    });
+    expect(page.schema.properties.info.description).toContain('(activityTypes, bullhornData)');
+  });
+
+  it('resolves settings under one account data key by setting id', async () => {
+    const accountSettingsPage = await loadPage('../../src/components/admin/accountSettingsPage.ts');
+    const page = accountSettingsPage.getAccountSettingsPageRender({
+      platform: {
+        adminSettings: [
+          { id: 'commentActionList', name: 'Comment actions', type: 'option', accountDataKey: 'bullhornData' },
+          { id: 'leadStatuses', name: 'Lead statuses', type: 'option', accountDataKey: 'bullhornData' },
+        ],
+      },
+      accountDataOptions: {
+        bullhornData: {
+          commentActionList: [{ const: 'Call', title: 'Call' }],
+          leadStatuses: [{ const: 'New', title: 'New' }],
+        },
+      },
+    });
+
+    expect(page.schema.properties.commentActionList.properties.value.oneOf).toContainEqual({ const: 'Call', title: 'Call' });
+    expect(page.schema.properties.leadStatuses.properties.value.oneOf).toContainEqual({ const: 'New', title: 'New' });
+  });
+
+  it('normalizes wrapped and invalid composite account data options', async () => {
+    const accountSettingsPage = await loadPage('../../src/components/admin/accountSettingsPage.ts');
+    const page = accountSettingsPage.getAccountSettingsPageRender({
+      platform: {
+        adminSettings: [
+          { id: 'commentActionList', name: 'Comment actions', type: 'option', accountDataKey: 'bullhornData' },
+          { id: 'leadStatuses', name: 'Lead statuses', type: 'option', accountDataKey: 'bullhornData' },
+        ],
+      },
+      accountDataOptions: {
+        bullhornData: {
+          commentActionList: { options: [{ const: 'Call', title: 'Call' }] },
+          leadStatuses: { unexpected: true },
+        },
+      },
+    });
+
+    expect(page.schema.properties.commentActionList.properties.value.oneOf).toContainEqual({ const: 'Call', title: 'Call' });
+    expect(page.schema.properties.leadStatuses.properties.value.oneOf).toEqual([{ const: '', title: 'Auto' }]);
+  });
+
+  it('renders dynamic and static admin settings with saved values and defaults', async () => {
+    const accountSettingsPage = await loadPage('../../src/components/admin/accountSettingsPage.ts');
+    const page = accountSettingsPage.getAccountSettingsPageRender({
+      platform,
+      adminUserSettings: {
+        callActivityType: { value: 'meeting' },
+        enabled: { value: true },
+      },
+      accountDataOptions: {
+        activityTypes: [
+          { const: 'call', title: 'Call' },
+          { const: 'meeting', title: 'Meeting' },
+        ],
+      },
+    });
+
+    expect(page.schema.properties.callActivityType.properties.value.oneOf).toEqual([
+      { const: '', title: 'Auto' },
+      { const: 'call', title: 'Call' },
+      { const: 'meeting', title: 'Meeting' },
+    ]);
+    expect(page.schema.properties.smsActivityType.properties.value.oneOf).toEqual([
+      { const: '', title: 'Auto' },
+      { const: 'sms', title: 'SMS' },
+      { const: 'message', title: 'Message' },
+    ]);
+    expect(page.schema.properties.warning).toMatchObject({
+      type: 'string',
+      description: 'Review these settings carefully.',
+    });
+    expect(page.formData).toMatchObject({
+      callActivityType: { value: 'meeting' },
+      smsActivityType: { value: 'sms' },
+      enabled: { value: true },
+      prefix: { value: 'Default' },
+    });
+    expect(page.schema.properties.accountDataInfo).toBeUndefined();
+    expect(page.schema.properties.refreshAccountDataButton).toBeUndefined();
+  });
+});

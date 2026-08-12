@@ -4,7 +4,7 @@ import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import { RcAPI } from '../lib/rcAPI';
 import { parsePhoneNumber } from 'awesome-phonenumber';
-import { getRcAccessToken, getRcAccessTokenHeaderConfig, getRcContactInfo, showNotification } from '../lib/util';
+import { getRcAccessToken, getRcAccessTokenHeaderConfig, getRcContactInfo, refreshRCToken, showNotification } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest as getManifestBase } from '../service/manifestService';
 
@@ -393,11 +393,12 @@ async function authServerSideLogging({ platform }: UnknownRecord): Promise<any> 
         return;
     }
     const { rcUserInfo } = await chromeStorageLocal.get('rcUserInfo');
-    const rcAccessToken = getRcAccessToken();
     const rcClientId = "Y4m1YREFKbXdDoet5djv46";
     const serverDomainUrl = platform.serverSideLogging.url;
     // Auth
     const rcAPI = new RcAPI();
+    await refreshRCToken();
+    const rcAccessToken = getRcAccessToken();
     const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
     const serverSideLoggingTokenResp = await axios.get(
         `${serverDomainUrl}/oauth/callback?code=${rcInteropCode}&rcAccountId=${rcUserInfo?.rcAccountId}`,
@@ -414,9 +415,10 @@ async function authServerSideLogging({ platform }: UnknownRecord): Promise<any> 
 
 async function authAppConnectServer({ serverUrl }: UnknownRecord): Promise<any> {
     try {
-        const rcAccessToken = getRcAccessToken();
         const rcClientId = process.env.RC_CLIENT_ID;
         const rcAPI = new RcAPI();
+        await refreshRCToken();
+        const rcAccessToken = getRcAccessToken();
         const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
         const serverSideLoggingTokenResp = await axios.get(
             `${serverUrl}/ringcentral/oauth/callback?code=${rcInteropCode}`,
@@ -507,7 +509,7 @@ async function getManagedAuthSettings({ serverUrl }: UnknownRecord): Promise<any
     const { rcUnifiedCrmExtJwt } = await chromeStorageLocal.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
     const response = await axios.get(
-        `${serverUrl}/admin/managedAuth?connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        `${serverUrl}/admin/managedAuth?connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&devRcAccountId=${encodeURIComponent(platformInfo?.devRcAccountId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
         getRcAccessTokenHeaderConfig(getJwtAuthorizationConfig(rcUnifiedCrmExtJwt)),
     );
     await chrome.storage.local.set({ managedAuthSettings: response.data });
@@ -526,7 +528,7 @@ async function saveManagedAuthSettings({
     const { rcUnifiedCrmExtJwt } = await chromeStorageLocal.get('rcUnifiedCrmExtJwt');
     const platformInfo = await getPlatformInfo();
     const response = await axios.post(
-        `${serverUrl}/admin/managedAuth?connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        `${serverUrl}/admin/managedAuth?connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&devRcAccountId=${encodeURIComponent(platformInfo?.devRcAccountId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
         {
             scope,
             values,
@@ -550,6 +552,36 @@ async function deleteManagedOAuthAccount({ serverUrl, platformName }: UnknownRec
     return response.data;
 }
 
+// Short in-memory cache so reopening Account settings within a session doesn't re-hit the
+// server; the server itself caches account data with a longer lazy TTL.
+const ACCOUNT_DATA_CACHE_TTL_MS = 5 * 60 * 1000;
+const accountDataCache = new Map();
+
+async function getAccountData({ serverUrl, keys, forceRefresh = false }: UnknownRecord): Promise<any> {
+    const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt');
+    const result: Record<string, any> = {};
+    const keysToFetch = [];
+    for (const key of keys) {
+        const cached = accountDataCache.get(`${serverUrl}:${key}`);
+        if (!forceRefresh && cached && cached.expiry > Date.now()) {
+            result[key] = cached.data;
+        }
+        else {
+            keysToFetch.push(key);
+        }
+    }
+    if (keysToFetch.length > 0) {
+        const response = await axios.get(
+            `${serverUrl}/accountData?jwtToken=${rcUnifiedCrmExtJwt}&keys=${encodeURIComponent(keysToFetch.join(','))}&forceRefresh=${forceRefresh ? 'true' : 'false'}`
+        );
+        for (const key of keysToFetch) {
+            result[key] = response.data?.data?.[key] ?? [];
+            accountDataCache.set(`${serverUrl}:${key}`, { data: result[key], expiry: Date.now() + ACCOUNT_DATA_CACHE_TTL_MS });
+        }
+    }
+    return result;
+}
+
 const adminCore = {
     getAdminSettings,
     uploadAdminSettings,
@@ -569,6 +601,7 @@ const adminCore = {
     getManagedAuthSettings,
     saveManagedAuthSettings,
     deleteManagedOAuthAccount,
+    getAccountData,
 };
 
 export {
@@ -590,6 +623,7 @@ export {
     getManagedAuthSettings,
     saveManagedAuthSettings,
     deleteManagedOAuthAccount,
+    getAccountData,
 };
 
 export default adminCore;

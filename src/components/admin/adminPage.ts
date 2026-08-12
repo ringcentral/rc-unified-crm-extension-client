@@ -3,6 +3,7 @@ import adminIconActive from '../../images/adminIcon_active.png';
 import adminIconDark from '../../images/adminIcon_dark.png';
 import { t } from '../../i18n';
 import authCore from '../../core/auth';
+import { getPlatformAccountDataKeys } from '../../lib/accountData';
 
 type UnknownRecord = Record<string, any>;
 
@@ -29,6 +30,14 @@ function getAdminPageRender({ platform }: UnknownRecord): UnknownRecord {
                             const: "managedSettings",
                             title: t('pages.admin.managedSettings'),
                         },
+                        ...(platform.adminSettings?.length > 0 ? [{
+                            const: "accountSettings",
+                            title: 'Account settings',
+                        }] : []),
+                        ...(getPlatformAccountDataKeys(platform).length > 0 ? [{
+                            const: "accountData",
+                            title: 'Account data',
+                        }] : []),
                         ...hasManagedAuthFields ? [{
                             const: "managedAuthentication",
                             title: 'Managed authentication',

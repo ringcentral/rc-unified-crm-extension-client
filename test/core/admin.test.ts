@@ -2,7 +2,7 @@ import axios from 'axios';
 import adminPage from '../../src/components/admin/adminPage.ts';
 import authCore from '../../src/core/auth.ts';
 import { RcAPI } from '../../src/lib/rcAPI.ts';
-import { getRcAccessToken, getRcContactInfo, showNotification } from '../../src/lib/util.ts';
+import { getRcAccessToken, getRcContactInfo, refreshRCToken, showNotification } from '../../src/lib/util.ts';
 import { getManifest } from '../../src/service/manifestService.ts';
 import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { loadModule } from '../helpers/loadModule';
@@ -56,6 +56,7 @@ vi.mock('../../src/lib/util.ts', () => ({
     { id: 'user-1', type: 'User' },
     { id: 'site-1', type: 'Site' },
   ]),
+  refreshRCToken: vi.fn(async () => {}),
   showNotification: vi.fn(),
 }));
 
@@ -97,6 +98,7 @@ describe('admin core', () => {
       { id: 'user-1', type: 'User' },
       { id: 'site-1', type: 'Site' },
     ]);
+    vi.mocked(refreshRCToken).mockReset().mockResolvedValue();
     vi.mocked(showNotification).mockReset();
     vi.mocked(getManifest).mockResolvedValue({
       serverUrl: 'https://server.example',
@@ -107,6 +109,7 @@ describe('admin core', () => {
     vi.mocked(getPlatformInfo).mockResolvedValue({
       platformName: 'salesforce',
       connectorId: 'connector-1',
+      devRcAccountId: 'connector-owner-account',
       isPrivate: true,
     });
   });
@@ -189,6 +192,9 @@ describe('admin core', () => {
     await expect(adminCore.authServerSideLogging({ platform: platform() })).resolves.toBe('ssl-token');
 
     expect(RcAPI).toHaveBeenCalled();
+    expect(refreshRCToken).toHaveBeenCalledOnce();
+    expect(vi.mocked(refreshRCToken).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(getRcAccessToken).mock.invocationCallOrder[0]);
+    expect(vi.mocked(getRcAccessToken).mock.invocationCallOrder[0]).toBeLessThan(rcApiMocks.getInteropCode.mock.invocationCallOrder[0]);
     expect(rcApiMocks.getInteropCode).toHaveBeenCalledWith({
       rcAccessToken: 'rc-access-token',
       rcClientId: 'Y4m1YREFKbXdDoet5djv46',
@@ -365,13 +371,13 @@ describe('admin core', () => {
       platformName: 'salesforce',
     })).resolves.toEqual({ deleted: true });
 
-    expect(axios.get).toHaveBeenNthCalledWith(1, 'https://server.example/admin/managedAuth?connectorId=connector-1&isPrivate=true', {
+    expect(axios.get).toHaveBeenNthCalledWith(1, 'https://server.example/admin/managedAuth?connectorId=connector-1&devRcAccountId=connector-owner-account&isPrivate=true', {
       headers: {
         Authorization: 'Bearer jwt-1',
         'X-RC-Access-Token': 'rc-access-token',
       },
     });
-    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=connector-1&isPrivate=true', {
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=connector-1&devRcAccountId=connector-owner-account&isPrivate=true', {
       scope: 'account',
       values: { apiKey: 'secret' },
       rcExtensionId: undefined,
@@ -406,12 +412,12 @@ describe('admin core', () => {
       refreshAfterSave: false,
     })).resolves.toEqual({ saved: true });
 
-    expect(axios.get).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=&isPrivate=false', {
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=&devRcAccountId=&isPrivate=false', {
       headers: {
         'X-RC-Access-Token': 'rc-access-token',
       },
     });
-    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=&isPrivate=false', {
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/managedAuth?connectorId=&devRcAccountId=&isPrivate=false', {
       scope: 'user',
       values: { token: 'secret' },
       rcExtensionId: '101',
@@ -695,5 +701,57 @@ describe('admin core', () => {
       headers: { Accept: 'application/json' },
     });
     expect(consoleLog).toHaveBeenCalledWith('Cannot auth app connect server', expect.any(Error));
+  });
+
+  it('caches account data by server and key, then bypasses the cache on force refresh', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'crm-jwt' });
+    vi.mocked(axios.get)
+      .mockResolvedValueOnce({
+        data: {
+          data: {
+            activityTypes: [{ const: 'call', title: 'Call' }],
+            users: [{ const: 'user-1', title: 'User One' }],
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          data: {
+            activityTypes: [{ const: 'meeting', title: 'Meeting' }],
+          },
+        },
+      });
+    const adminCore = await loadAdminCore();
+
+    await expect(adminCore.getAccountData({
+      serverUrl: 'https://server.example',
+      keys: ['activityTypes', 'users'],
+    })).resolves.toEqual({
+      activityTypes: [{ const: 'call', title: 'Call' }],
+      users: [{ const: 'user-1', title: 'User One' }],
+    });
+    await expect(adminCore.getAccountData({
+      serverUrl: 'https://server.example',
+      keys: ['activityTypes'],
+    })).resolves.toEqual({
+      activityTypes: [{ const: 'call', title: 'Call' }],
+    });
+    await expect(adminCore.getAccountData({
+      serverUrl: 'https://server.example',
+      keys: ['activityTypes'],
+      forceRefresh: true,
+    })).resolves.toEqual({
+      activityTypes: [{ const: 'meeting', title: 'Meeting' }],
+    });
+
+    expect(axios.get).toHaveBeenCalledTimes(2);
+    expect(axios.get).toHaveBeenNthCalledWith(
+      1,
+      'https://server.example/accountData?jwtToken=crm-jwt&keys=activityTypes%2Cusers&forceRefresh=false',
+    );
+    expect(axios.get).toHaveBeenNthCalledWith(
+      2,
+      'https://server.example/accountData?jwtToken=crm-jwt&keys=activityTypes&forceRefresh=true',
+    );
   });
 });

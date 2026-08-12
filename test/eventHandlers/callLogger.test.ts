@@ -1209,6 +1209,7 @@ describe('callLogger logForm', () => {
       subject: 'Updated title',
       note: 'Updated note',
       sessionId: 'session-1',
+      call: expect.objectContaining({ sessionId: 'session-1' }),
     }));
     expect(dispositionCore.upsertDisposition).toHaveBeenCalledWith(expect.objectContaining({
       dispositions: { disposition: 'support', note: 'Updated note' },

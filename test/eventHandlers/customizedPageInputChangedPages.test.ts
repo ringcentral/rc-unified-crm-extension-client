@@ -58,6 +58,7 @@ async function loadPageHandler(modulePath, overrides: Record<string, any> = {}) 
       }, '*');
     }),
     getRcAccessToken: vi.fn(() => 'rc-access-token'),
+    refreshRCToken: vi.fn(async () => {}),
     getRcInfo: vi.fn(async () => ({
       value: {
         cachedData: {
@@ -226,7 +227,7 @@ describe('customizedPage inputChanged page handlers', () => {
       userSettings: {},
       rcUnifiedCrmExtJwt: 'jwt-1',
     });
-    const { handler, adminCore, userCore, reportPage } = await loadPageHandler(
+    const { handler, util, rcApiInstance, adminCore, userCore, reportPage } = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/reportPage.ts',
     );
 
@@ -244,6 +245,8 @@ describe('customizedPage inputChanged page handlers', () => {
     expect(reportPage.getReportsPageRender).not.toHaveBeenCalled();
     expect(adminCore.getAdminReportStats).not.toHaveBeenCalled();
     expect(userCore.getUserReportStats).not.toHaveBeenCalled();
+    expect(util.refreshRCToken).toHaveBeenCalledOnce();
+    expect(util.refreshRCToken.mock.invocationCallOrder[0]).toBeLessThan(rcApiInstance.getRcExtensionList.mock.invocationCallOrder[0]);
   });
 
   it('fetches company report stats with the account timezone and selected group key', async () => {

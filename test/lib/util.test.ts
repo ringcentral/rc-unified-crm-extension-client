@@ -58,6 +58,16 @@ describe('util', () => {
     expect(RCAdapter.dismissMessage).toHaveBeenCalledTimes(1);
   });
 
+  it('refreshes the RingCentral login session', async () => {
+    const util = await loadUtil();
+
+    await util.refreshRCToken();
+    await util.refreshRCToken(true);
+
+    expect(RCAdapter.refreshLoginSession).toHaveBeenNthCalledWith(1, false);
+    expect(RCAdapter.refreshLoginSession).toHaveBeenNthCalledWith(2, true);
+  });
+
   it('posts widget responses and reads RingCentral storage values', async () => {
     const util = await loadUtil();
     localStorage.setItem('sdk-rc-widgetplatform', JSON.stringify({

@@ -2,6 +2,7 @@ export interface PlatformInfo {
   platformName?: string;
   hostname?: string;
   connectorId?: string;
+  devRcAccountId?: string | number;
   isPrivate?: boolean;
   [key: string]: unknown;
 }

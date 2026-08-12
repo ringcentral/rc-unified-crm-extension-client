@@ -4748,8 +4748,8 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) { var desc = {}; Object.keys(descriptor).forEach(function (key) { desc[key] = descriptor[key]; }); desc.enumerable = !!desc.enumerable; desc.configurable = !!desc.configurable; if ('value' in desc || desc.initializer) { desc.writable = true; } desc = decorators.slice().reverse().reduce(function (desc, decorator) { return decorator(target, property, desc) || desc; }, desc); if (context && desc.initializer !== void 0) { desc.value = desc.initializer ? desc.initializer.call(context) : void 0; desc.initializer = undefined; } if (desc.initializer === void 0) { Object.defineProperty(target, property, desc); desc = null; } return desc; }
 function _initializerWarningHelper(descriptor, context) { throw new Error('Decorating class property failed. Please ensure that ' + 'transform-class-properties is enabled and runs after the decorators transform.'); }
 (0, _usmRedux.setAutoFreeze)(false);
-(0, _usmRedux.setPatchesToggle)(!({"NODE_ENV":"production","API_CONFIG":{"appKey":"SlwZwfZ_STmpq2W_qOaC5A","server":"https://platform.ringcentral.com"},"APP_VERSION":"3.0.0-beta","HOSTING_URL":null,"REDIRECT_URI":undefined,"PROXY_URI":undefined,"PREFIX":"rc-widget","BRAND":"rc","BRAND_CONFIGS":{"atos":{"id":"2020","code":"atos","name":"Unify Office","shortName":"Unify Office","appName":"Unify Office Embeddable","fullName":"Unify Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.unifyoffice.com/","protocol":"unifyoffice://","name":"Unify Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Unify Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.unifyoffice.com/teleconference","rcvProductName":"Unify Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","eulaLink":"https://www.ringcentral.com/de/de/legal/privacy-notice","assets":{"logo":"/assets/atos/logo.svg","icon":"/assets/atos/icon.png"},"showFeedback":false,"enableEDP":true},"att":{"id":"3460","code":"att","name":"Office@Hand","appName":"Office@Hand Embeddable","fullName":"Office@Hand","application":"Office@Hand Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.officeathand.att.com/","protocol":"officeathand://","name":"Office@Hand App"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"callWithSoftphone":{"protocol":"attvr20://","name":"Office@Hand Phone","appDownloadUrl":{"mac":"https://www.ringcentral.com/apps/officeathand-mac","windows":"https://www.ringcentral.com/apps/officeathand-windows"}},"rcmProductName":"AT&T Office@Hand Meeting","rcvProductName":"AT&T Office@Hand Meetings","rcvMeetingTopic":"{extensionName}'s {brandName} Meetings","rcvSettingsTitle":"{brandName} Meetings settings","rcvTeleconference":"https://meetings.officeathand.att.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings-officeathand.att.com/teleconference","eulaLink":"http://www.att.com/officeathandpolicy","assets":{"logo":"/assets/att/logo.svg","icon":"/assets/att/icon.svg"},"showFeedback":false,"subBrands":[{"id":"3420","code":"attub"}],"enableEDP":true},"avaya":{"id":"6010","code":"avaya","name":"Avaya Cloud Office","shortName":"Avaya Cloud Office","appName":"Avaya Cloud Office Embeddable","fullName":"Avaya Cloud Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.cloudoffice.avaya.com/","protocol":"rcapp://","name":"Avaya Cloud App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Avaya Cloud Office Phone"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"allowRegionSettings":true,"signupUrl":"https://www.avaya.com/en/products/ucaas/cloud-office-pricing/","rcvTeleconference":"https://video.cloudoffice.avaya.com/teleconference","rcvProductName":"Avaya Cloud Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","assets":{"logo":"/assets/avaya/logo.svg","icon":"/assets/avaya/icon.svg"},"showFeedback":false,"enableEDP":true},"bt":{"id":"7710","code":"bt","name":"BT Cloud Work","appName":"BT Cloud Work Embeddable","fullName":"BT Cloud Work","application":"BT Cloud Work Embeddable","callWithJupiter":{"link":"https://app.cloudwork.bt.com/","protocol":"com.bt.cloudwork.app://","name":"BT Cloud Work App"},"callWithSoftphone":{"protocol":"rcbtmobile://","name":"BT Cloud Work Phone"},"defaultLocale":"en-GB","supportedLocales":["en-GB","en-US","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcmProductName":"BT Cloud Work Meetings","rcvProductName":"BT Cloud Work Video","rcvTeleconference":"https://video.cloudwork.bt.com/teleconference","rcvMeetingTopic":"{extensionName}'s {shortName} Video meeting","rcvSettingsTitle":"{shortName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.btcloudphone.bt.com/teleconference","eulaLink":"https://www.bt.com/products/static/terms/terms-of-use.html","assets":{"logo":"/assets/bt/logo.svg","icon":"/assets/bt/icon.svg"},"showFeedback":false,"enableEDP":true},"rainbow":{"id":"2110","code":"rainbow","name":"Rainbow Office","shortName":"Rainbow Office","appName":"Rainbow Office Embeddable","fullName":"Rainbow Office","defaultLocale":"fr-FR","supportedLocales":["fr-FR","en-US","en-GB","en-AU","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"eulaLink":"https://www.ringcentral.fr/legal/privacy-notice.html","callWithJupiter":{"link":"https://app.rainbowoffice.com/","protocol":"com.rainbowoffice.app://","name":"Rainbow Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Rainbow Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.rainbowoffice.com/teleconference","rcvProductName":"Rainbow Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} vous a invité à une réunion {rcvProductName}.\n\nVeuillez rejoindre la réunion à l’aide de ce lien :\n    {joinUri}{passwordTpl}","assets":{"logo":"/assets/rainbow/logo.svg","icon":"/assets/rainbow/icon.png"},"showFeedback":false,"enableEDP":true},"rc":{"id":"1210","code":"rc","name":"RingCentral","appName":"RingCentral Embeddable","fullName":"RingCentral","application":"RingCentral Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"signupUrl":"https://www.ringcentral.com/office/plansandpricing.html","eulaLink":"https://www.ringcentral.com/legal/eulatos.html","callWithJupiter":{"link":"https://app.ringcentral.com/","protocol":"rcapp://","name":"RingCentral App"},"isDisableSpartan":true,"allowJupiterUniversalLink":false,"callWithSoftphone":{"protocol":"rcmobile://","name":"RingCentral Phone"},"rcmProductName":"RingCentral Meetings","rcvProductName":"RingCentral Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","rcvTeleconference":"https://v.ringcentral.com/teleconference/","assets":{"logo":"/assets/rc/logo.svg","icon":"/assets/rc/icon.svg"},"subBrands":[{"id":"5010","code":"rcau"},{"id":"3610","code":"rcca"},{"id":"2010","code":"rceu"},{"id":"3710","code":"rcuk"}],"showFeedback":false,"enableEDP":true},"telus":{"id":"7310","code":"telus","name":"TELUS Business Connect","appName":"TELUS Business Connect Embeddable","fullName":"TELUS Business Connect","application":"TELUS Business Connect Embeddable","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.businessconnect.telus.com/","protocol":"rctelus://","name":"TELUS Business Connect App"},"callWithSoftphone":{"protocol":"rctelus://","name":"TELUS Business Connect Phone"},"allowRegionSettings":true,"isDisableSpartan":true,"allowJupiterUniversalLink":true,"rcmProductName":"TELUS Business Connect Meetings","rcvProductName":"Business Connect Video Meeting","rcvMeetingTopic":"{extensionName}'s Business Connect Video meeting","rcvSettingsTitle":"Business Connect Video meeting settings","rcvTeleconference":"https://video.businessconnect.telus.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a TELUS Business Connect Video meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.businessconnect.telus.com/teleconference","eulaLink":"http://telus.com/BusinessConnect/ServiceTerms","assets":{"logo":"/assets/telus/logo.svg","icon":"/assets/telus/icon.svg"},"showFeedback":false,"enableEDP":true}},"ERROR_REPORT_KEY":undefined,"RECORDING_LINK":"https://ringcentral.github.io/ringcentral-media-reader/","MIXPANEL_KEY":"04acd7cb2e1867dcf98b6e8cf5ee1e1c","ANALYTICS_SECRET_KEY":"adasdawqsadaaasa...","NOISE_REDUCTION_SDK_URL":"/noise-reduction","ADAPTER_NAME":"adapter.js"}).DISABLE_PATCHES);
-if (!({"NODE_ENV":"production","API_CONFIG":{"appKey":"SlwZwfZ_STmpq2W_qOaC5A","server":"https://platform.ringcentral.com"},"APP_VERSION":"3.0.0-beta","HOSTING_URL":null,"REDIRECT_URI":undefined,"PROXY_URI":undefined,"PREFIX":"rc-widget","BRAND":"rc","BRAND_CONFIGS":{"atos":{"id":"2020","code":"atos","name":"Unify Office","shortName":"Unify Office","appName":"Unify Office Embeddable","fullName":"Unify Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.unifyoffice.com/","protocol":"unifyoffice://","name":"Unify Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Unify Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.unifyoffice.com/teleconference","rcvProductName":"Unify Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","eulaLink":"https://www.ringcentral.com/de/de/legal/privacy-notice","assets":{"logo":"/assets/atos/logo.svg","icon":"/assets/atos/icon.png"},"showFeedback":false,"enableEDP":true},"att":{"id":"3460","code":"att","name":"Office@Hand","appName":"Office@Hand Embeddable","fullName":"Office@Hand","application":"Office@Hand Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.officeathand.att.com/","protocol":"officeathand://","name":"Office@Hand App"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"callWithSoftphone":{"protocol":"attvr20://","name":"Office@Hand Phone","appDownloadUrl":{"mac":"https://www.ringcentral.com/apps/officeathand-mac","windows":"https://www.ringcentral.com/apps/officeathand-windows"}},"rcmProductName":"AT&T Office@Hand Meeting","rcvProductName":"AT&T Office@Hand Meetings","rcvMeetingTopic":"{extensionName}'s {brandName} Meetings","rcvSettingsTitle":"{brandName} Meetings settings","rcvTeleconference":"https://meetings.officeathand.att.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings-officeathand.att.com/teleconference","eulaLink":"http://www.att.com/officeathandpolicy","assets":{"logo":"/assets/att/logo.svg","icon":"/assets/att/icon.svg"},"showFeedback":false,"subBrands":[{"id":"3420","code":"attub"}],"enableEDP":true},"avaya":{"id":"6010","code":"avaya","name":"Avaya Cloud Office","shortName":"Avaya Cloud Office","appName":"Avaya Cloud Office Embeddable","fullName":"Avaya Cloud Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.cloudoffice.avaya.com/","protocol":"rcapp://","name":"Avaya Cloud App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Avaya Cloud Office Phone"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"allowRegionSettings":true,"signupUrl":"https://www.avaya.com/en/products/ucaas/cloud-office-pricing/","rcvTeleconference":"https://video.cloudoffice.avaya.com/teleconference","rcvProductName":"Avaya Cloud Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","assets":{"logo":"/assets/avaya/logo.svg","icon":"/assets/avaya/icon.svg"},"showFeedback":false,"enableEDP":true},"bt":{"id":"7710","code":"bt","name":"BT Cloud Work","appName":"BT Cloud Work Embeddable","fullName":"BT Cloud Work","application":"BT Cloud Work Embeddable","callWithJupiter":{"link":"https://app.cloudwork.bt.com/","protocol":"com.bt.cloudwork.app://","name":"BT Cloud Work App"},"callWithSoftphone":{"protocol":"rcbtmobile://","name":"BT Cloud Work Phone"},"defaultLocale":"en-GB","supportedLocales":["en-GB","en-US","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcmProductName":"BT Cloud Work Meetings","rcvProductName":"BT Cloud Work Video","rcvTeleconference":"https://video.cloudwork.bt.com/teleconference","rcvMeetingTopic":"{extensionName}'s {shortName} Video meeting","rcvSettingsTitle":"{shortName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.btcloudphone.bt.com/teleconference","eulaLink":"https://www.bt.com/products/static/terms/terms-of-use.html","assets":{"logo":"/assets/bt/logo.svg","icon":"/assets/bt/icon.svg"},"showFeedback":false,"enableEDP":true},"rainbow":{"id":"2110","code":"rainbow","name":"Rainbow Office","shortName":"Rainbow Office","appName":"Rainbow Office Embeddable","fullName":"Rainbow Office","defaultLocale":"fr-FR","supportedLocales":["fr-FR","en-US","en-GB","en-AU","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"eulaLink":"https://www.ringcentral.fr/legal/privacy-notice.html","callWithJupiter":{"link":"https://app.rainbowoffice.com/","protocol":"com.rainbowoffice.app://","name":"Rainbow Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Rainbow Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.rainbowoffice.com/teleconference","rcvProductName":"Rainbow Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} vous a invité à une réunion {rcvProductName}.\n\nVeuillez rejoindre la réunion à l’aide de ce lien :\n    {joinUri}{passwordTpl}","assets":{"logo":"/assets/rainbow/logo.svg","icon":"/assets/rainbow/icon.png"},"showFeedback":false,"enableEDP":true},"rc":{"id":"1210","code":"rc","name":"RingCentral","appName":"RingCentral Embeddable","fullName":"RingCentral","application":"RingCentral Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"signupUrl":"https://www.ringcentral.com/office/plansandpricing.html","eulaLink":"https://www.ringcentral.com/legal/eulatos.html","callWithJupiter":{"link":"https://app.ringcentral.com/","protocol":"rcapp://","name":"RingCentral App"},"isDisableSpartan":true,"allowJupiterUniversalLink":false,"callWithSoftphone":{"protocol":"rcmobile://","name":"RingCentral Phone"},"rcmProductName":"RingCentral Meetings","rcvProductName":"RingCentral Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","rcvTeleconference":"https://v.ringcentral.com/teleconference/","assets":{"logo":"/assets/rc/logo.svg","icon":"/assets/rc/icon.svg"},"subBrands":[{"id":"5010","code":"rcau"},{"id":"3610","code":"rcca"},{"id":"2010","code":"rceu"},{"id":"3710","code":"rcuk"}],"showFeedback":false,"enableEDP":true},"telus":{"id":"7310","code":"telus","name":"TELUS Business Connect","appName":"TELUS Business Connect Embeddable","fullName":"TELUS Business Connect","application":"TELUS Business Connect Embeddable","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.businessconnect.telus.com/","protocol":"rctelus://","name":"TELUS Business Connect App"},"callWithSoftphone":{"protocol":"rctelus://","name":"TELUS Business Connect Phone"},"allowRegionSettings":true,"isDisableSpartan":true,"allowJupiterUniversalLink":true,"rcmProductName":"TELUS Business Connect Meetings","rcvProductName":"Business Connect Video Meeting","rcvMeetingTopic":"{extensionName}'s Business Connect Video meeting","rcvSettingsTitle":"Business Connect Video meeting settings","rcvTeleconference":"https://video.businessconnect.telus.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a TELUS Business Connect Video meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.businessconnect.telus.com/teleconference","eulaLink":"http://telus.com/BusinessConnect/ServiceTerms","assets":{"logo":"/assets/telus/logo.svg","icon":"/assets/telus/icon.svg"},"showFeedback":false,"enableEDP":true}},"ERROR_REPORT_KEY":undefined,"RECORDING_LINK":"https://ringcentral.github.io/ringcentral-media-reader/","MIXPANEL_KEY":"04acd7cb2e1867dcf98b6e8cf5ee1e1c","ANALYTICS_SECRET_KEY":"adasdawqsadaaasa...","NOISE_REDUCTION_SDK_URL":"/noise-reduction","ADAPTER_NAME":"adapter.js"}).DISABLE_PATCHES) {
+(0, _usmRedux.setPatchesToggle)(!({"NODE_ENV":"production","API_CONFIG":{"appKey":"SlwZwfZ_STmpq2W_qOaC5A","server":"https://platform.ringcentral.com"},"APP_VERSION":"3.0.0-beta","HOSTING_URL":null,"REDIRECT_URI":undefined,"PROXY_URI":undefined,"PREFIX":"rc-widget","BRAND":"rc","BRAND_CONFIGS":{"atos":{"id":"2020","code":"atos","name":"Unify Office","shortName":"Unify Office","appName":"Unify Office Embeddable","fullName":"Unify Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.unifyoffice.com/","protocol":"unifyoffice://","name":"Unify Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Unify Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.unifyoffice.com/teleconference","rcvProductName":"Unify Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","eulaLink":"https://www.ringcentral.com/de/de/legal/privacy-notice","assets":{"logo":"/assets/atos/logo.svg","icon":"/assets/atos/icon.png"},"showFeedback":false,"enableEDP":true},"att":{"id":"3460","code":"att","name":"Office@Hand","appName":"Office@Hand Embeddable","fullName":"Office@Hand","application":"Office@Hand Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.officeathand.att.com/","protocol":"officeathand://","name":"Office@Hand App"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"callWithSoftphone":{"protocol":"attvr20://","name":"Office@Hand Phone","appDownloadUrl":{"mac":"https://www.ringcentral.com/apps/officeathand-mac","windows":"https://www.ringcentral.com/apps/officeathand-windows"}},"rcmProductName":"AT&T Office@Hand Meeting","rcvProductName":"AT&T Office@Hand Meetings","rcvMeetingTopic":"{extensionName}'s {brandName} Meetings","rcvSettingsTitle":"{brandName} Meetings settings","rcvTeleconference":"https://meetings.officeathand.att.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings-officeathand.att.com/teleconference","eulaLink":"http://www.att.com/officeathandpolicy","assets":{"logo":"/assets/att/logo.svg","icon":"/assets/att/icon.svg"},"showFeedback":false,"subBrands":[{"id":"3420","code":"attub"}],"enableEDP":true},"avaya":{"id":"6010","code":"avaya","name":"Avaya Cloud Office","shortName":"Avaya Cloud Office","appName":"Avaya Cloud Office Embeddable","fullName":"Avaya Cloud Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.cloudoffice.avaya.com/","protocol":"rcapp://","name":"Avaya Cloud App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Avaya Cloud Office Phone"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"allowRegionSettings":true,"signupUrl":"https://www.avaya.com/en/products/ucaas/cloud-office-pricing/","rcvTeleconference":"https://video.cloudoffice.avaya.com/teleconference","rcvProductName":"Avaya Cloud Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","assets":{"logo":"/assets/avaya/logo.svg","icon":"/assets/avaya/icon.svg"},"showFeedback":false,"enableEDP":true},"bt":{"id":"7710","code":"bt","name":"BT Cloud Work","appName":"BT Cloud Work Embeddable","fullName":"BT Cloud Work","application":"BT Cloud Work Embeddable","callWithJupiter":{"link":"https://app.cloudwork.bt.com/","protocol":"com.bt.cloudwork.app://","name":"BT Cloud Work App"},"callWithSoftphone":{"protocol":"rcbtmobile://","name":"BT Cloud Work Phone"},"defaultLocale":"en-GB","supportedLocales":["en-GB","en-US","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcmProductName":"BT Cloud Work Meetings","rcvProductName":"BT Cloud Work Video","rcvTeleconference":"https://video.cloudwork.bt.com/teleconference","rcvMeetingTopic":"{extensionName}'s {shortName} Video meeting","rcvSettingsTitle":"{shortName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.btcloudphone.bt.com/teleconference","eulaLink":"https://www.bt.com/products/static/terms/terms-of-use.html","assets":{"logo":"/assets/bt/logo.svg","icon":"/assets/bt/icon.svg"},"showFeedback":false,"enableEDP":true},"rainbow":{"id":"2110","code":"rainbow","name":"Rainbow Office","shortName":"Rainbow Office","appName":"Rainbow Office Embeddable","fullName":"Rainbow Office","defaultLocale":"fr-FR","supportedLocales":["fr-FR","en-US","en-GB","en-AU","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"eulaLink":"https://www.ringcentral.fr/legal/privacy-notice.html","callWithJupiter":{"link":"https://app.rainbowoffice.com/","protocol":"com.rainbowoffice.app://","name":"Rainbow Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Rainbow Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.rainbowoffice.com/teleconference","rcvProductName":"Rainbow Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} vous a invité à une réunion {rcvProductName}.\n\nVeuillez rejoindre la réunion à l’aide de ce lien :\n    {joinUri}{passwordTpl}","assets":{"logo":"/assets/rainbow/logo.svg","icon":"/assets/rainbow/icon.png"},"showFeedback":false,"enableEDP":true},"rc":{"id":"1210","code":"rc","name":"RingCentral","appName":"RingCentral Embeddable","fullName":"RingCentral","application":"RingCentral Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","hi-IN","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"signupUrl":"https://www.ringcentral.com/office/plansandpricing.html","eulaLink":"https://www.ringcentral.com/legal/eulatos.html","callWithJupiter":{"link":"https://app.ringcentral.com/","protocol":"rcapp://","name":"RingCentral App"},"isDisableSpartan":true,"allowJupiterUniversalLink":false,"callWithSoftphone":{"protocol":"rcmobile://","name":"RingCentral Phone"},"rcmProductName":"RingCentral Meetings","rcvProductName":"RingCentral Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","rcvTeleconference":"https://v.ringcentral.com/teleconference/","assets":{"logo":"/assets/rc/logo.svg","icon":"/assets/rc/icon.svg"},"subBrands":[{"id":"5010","code":"rcau"},{"id":"3610","code":"rcca"},{"id":"2010","code":"rceu"},{"id":"3710","code":"rcuk"}],"showFeedback":false,"enableEDP":true},"telus":{"id":"7310","code":"telus","name":"TELUS Business Connect","appName":"TELUS Business Connect Embeddable","fullName":"TELUS Business Connect","application":"TELUS Business Connect Embeddable","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.businessconnect.telus.com/","protocol":"rctelus://","name":"TELUS Business Connect App"},"callWithSoftphone":{"protocol":"rctelus://","name":"TELUS Business Connect Phone"},"allowRegionSettings":true,"isDisableSpartan":true,"allowJupiterUniversalLink":true,"rcmProductName":"TELUS Business Connect Meetings","rcvProductName":"Business Connect Video Meeting","rcvMeetingTopic":"{extensionName}'s Business Connect Video meeting","rcvSettingsTitle":"Business Connect Video meeting settings","rcvTeleconference":"https://video.businessconnect.telus.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a TELUS Business Connect Video meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.businessconnect.telus.com/teleconference","eulaLink":"http://telus.com/BusinessConnect/ServiceTerms","assets":{"logo":"/assets/telus/logo.svg","icon":"/assets/telus/icon.svg"},"showFeedback":false,"enableEDP":true}},"ERROR_REPORT_KEY":undefined,"RECORDING_LINK":"https://ringcentral.github.io/ringcentral-media-reader/","MIXPANEL_KEY":"04acd7cb2e1867dcf98b6e8cf5ee1e1c","ANALYTICS_SECRET_KEY":"adasdawqsadaaasa...","NOISE_REDUCTION_SDK_URL":"/noise-reduction","ADAPTER_NAME":"adapter.js"}).DISABLE_PATCHES);
+if (!({"NODE_ENV":"production","API_CONFIG":{"appKey":"SlwZwfZ_STmpq2W_qOaC5A","server":"https://platform.ringcentral.com"},"APP_VERSION":"3.0.0-beta","HOSTING_URL":null,"REDIRECT_URI":undefined,"PROXY_URI":undefined,"PREFIX":"rc-widget","BRAND":"rc","BRAND_CONFIGS":{"atos":{"id":"2020","code":"atos","name":"Unify Office","shortName":"Unify Office","appName":"Unify Office Embeddable","fullName":"Unify Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.unifyoffice.com/","protocol":"unifyoffice://","name":"Unify Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Unify Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.unifyoffice.com/teleconference","rcvProductName":"Unify Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","eulaLink":"https://www.ringcentral.com/de/de/legal/privacy-notice","assets":{"logo":"/assets/atos/logo.svg","icon":"/assets/atos/icon.png"},"showFeedback":false,"enableEDP":true},"att":{"id":"3460","code":"att","name":"Office@Hand","appName":"Office@Hand Embeddable","fullName":"Office@Hand","application":"Office@Hand Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.officeathand.att.com/","protocol":"officeathand://","name":"Office@Hand App"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"callWithSoftphone":{"protocol":"attvr20://","name":"Office@Hand Phone","appDownloadUrl":{"mac":"https://www.ringcentral.com/apps/officeathand-mac","windows":"https://www.ringcentral.com/apps/officeathand-windows"}},"rcmProductName":"AT&T Office@Hand Meeting","rcvProductName":"AT&T Office@Hand Meetings","rcvMeetingTopic":"{extensionName}'s {brandName} Meetings","rcvSettingsTitle":"{brandName} Meetings settings","rcvTeleconference":"https://meetings.officeathand.att.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings-officeathand.att.com/teleconference","eulaLink":"http://www.att.com/officeathandpolicy","assets":{"logo":"/assets/att/logo.svg","icon":"/assets/att/icon.svg"},"showFeedback":false,"subBrands":[{"id":"3420","code":"attub"}],"enableEDP":true},"avaya":{"id":"6010","code":"avaya","name":"Avaya Cloud Office","shortName":"Avaya Cloud Office","appName":"Avaya Cloud Office Embeddable","fullName":"Avaya Cloud Office","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.cloudoffice.avaya.com/","protocol":"rcapp://","name":"Avaya Cloud App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Avaya Cloud Office Phone"},"isDisableSpartan":true,"allowJupiterUniversalLink":true,"allowRegionSettings":true,"signupUrl":"https://www.avaya.com/en/products/ucaas/cloud-office-pricing/","rcvTeleconference":"https://video.cloudoffice.avaya.com/teleconference","rcvProductName":"Avaya Cloud Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","assets":{"logo":"/assets/avaya/logo.svg","icon":"/assets/avaya/icon.svg"},"showFeedback":false,"enableEDP":true},"bt":{"id":"7710","code":"bt","name":"BT Cloud Work","appName":"BT Cloud Work Embeddable","fullName":"BT Cloud Work","application":"BT Cloud Work Embeddable","callWithJupiter":{"link":"https://app.cloudwork.bt.com/","protocol":"com.bt.cloudwork.app://","name":"BT Cloud Work App"},"callWithSoftphone":{"protocol":"rcbtmobile://","name":"BT Cloud Work Phone"},"defaultLocale":"en-GB","supportedLocales":["en-GB","en-US","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcmProductName":"BT Cloud Work Meetings","rcvProductName":"BT Cloud Work Video","rcvTeleconference":"https://video.cloudwork.bt.com/teleconference","rcvMeetingTopic":"{extensionName}'s {shortName} Video meeting","rcvSettingsTitle":"{shortName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.btcloudphone.bt.com/teleconference","eulaLink":"https://www.bt.com/products/static/terms/terms-of-use.html","assets":{"logo":"/assets/bt/logo.svg","icon":"/assets/bt/icon.svg"},"showFeedback":false,"enableEDP":true},"rainbow":{"id":"2110","code":"rainbow","name":"Rainbow Office","shortName":"Rainbow Office","appName":"Rainbow Office Embeddable","fullName":"Rainbow Office","defaultLocale":"fr-FR","supportedLocales":["fr-FR","en-US","en-GB","en-AU","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"eulaLink":"https://www.ringcentral.fr/legal/privacy-notice.html","callWithJupiter":{"link":"https://app.rainbowoffice.com/","protocol":"com.rainbowoffice.app://","name":"Rainbow Office App"},"callWithSoftphone":{"protocol":"rcmobile://","name":"Rainbow Office Phone"},"isDisableSpartan":true,"allowRegionSettings":true,"allowJupiterUniversalLink":false,"rcvTeleconference":"https://video.rainbowoffice.com/teleconference","rcvProductName":"Rainbow Office Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} vous a invité à une réunion {rcvProductName}.\n\nVeuillez rejoindre la réunion à l’aide de ce lien :\n    {joinUri}{passwordTpl}","assets":{"logo":"/assets/rainbow/logo.svg","icon":"/assets/rainbow/icon.png"},"showFeedback":false,"enableEDP":true},"rc":{"id":"1210","code":"rc","name":"RingCentral","appName":"RingCentral Embeddable","fullName":"RingCentral","application":"RingCentral Embeddable","allowRegionSettings":true,"defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","hi-IN","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"signupUrl":"https://www.ringcentral.com/office/plansandpricing.html","eulaLink":"https://www.ringcentral.com/legal/eulatos.html","callWithJupiter":{"link":"https://app.ringcentral.com/","protocol":"rcapp://","name":"RingCentral App"},"isDisableSpartan":true,"allowJupiterUniversalLink":false,"callWithSoftphone":{"protocol":"rcmobile://","name":"RingCentral Phone"},"rcmProductName":"RingCentral Meetings","rcvProductName":"RingCentral Video","rcvMeetingTopic":"{extensionName}'s {brandName} Video meeting","rcvSettingsTitle":"{brandName} Video meeting settings","rcvInviteMeetingContent":"{accountName} has invited you to a {rcvProductName} meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.ringcentral.com/teleconference","rcvTeleconference":"https://v.ringcentral.com/teleconference/","assets":{"logo":"/assets/rc/logo.svg","icon":"/assets/rc/icon.svg"},"subBrands":[{"id":"5010","code":"rcau"},{"id":"3610","code":"rcca"},{"id":"2010","code":"rceu"},{"id":"3710","code":"rcuk"}],"showFeedback":false,"enableEDP":true},"telus":{"id":"7310","code":"telus","name":"TELUS Business Connect","appName":"TELUS Business Connect Embeddable","fullName":"TELUS Business Connect","application":"TELUS Business Connect Embeddable","defaultLocale":"en-US","supportedLocales":["en-US","en-GB","en-AU","fr-FR","fr-CA","de-DE","it-IT","es-ES","es-419","ja-JP","pt-PT","pt-BR","zh-CN","zh-TW","zh-HK","nl-NL","ko-KR"],"callWithJupiter":{"link":"https://app.businessconnect.telus.com/","protocol":"rctelus://","name":"TELUS Business Connect App"},"callWithSoftphone":{"protocol":"rctelus://","name":"TELUS Business Connect Phone"},"allowRegionSettings":true,"isDisableSpartan":true,"allowJupiterUniversalLink":true,"rcmProductName":"TELUS Business Connect Meetings","rcvProductName":"Business Connect Video Meeting","rcvMeetingTopic":"{extensionName}'s Business Connect Video meeting","rcvSettingsTitle":"Business Connect Video meeting settings","rcvTeleconference":"https://video.businessconnect.telus.com/teleconference","rcvInviteMeetingContent":"{accountName} has invited you to a TELUS Business Connect Video meeting.\n\nPlease join using this link:\n    {joinUri}{passwordTpl}","teleconference":"https://meetings.businessconnect.telus.com/teleconference","eulaLink":"http://telus.com/BusinessConnect/ServiceTerms","assets":{"logo":"/assets/telus/logo.svg","icon":"/assets/telus/icon.svg"},"showFeedback":false,"enableEDP":true}},"ERROR_REPORT_KEY":undefined,"RECORDING_LINK":"https://ringcentral.github.io/ringcentral-media-reader/","MIXPANEL_KEY":"04acd7cb2e1867dcf98b6e8cf5ee1e1c","ANALYTICS_SECRET_KEY":"adasdawqsadaaasa...","NOISE_REDUCTION_SDK_URL":"/noise-reduction","ADAPTER_NAME":"adapter.js"}).DISABLE_PATCHES) {
   (0, _usmRedux.enablePatches)();
 }
 var ModuleStatus = /*#__PURE__*/function (ModuleStatus) {
@@ -10844,7 +10844,7 @@ module.exports = typeof Reflect !== 'undefined' && Reflect && Reflect.apply;
 "use strict";
 
 
-var GetIntrinsic = __webpack_require__(75177);
+var GetIntrinsic = __webpack_require__(20550);
 
 var callBindBasic = __webpack_require__(97489);
 
@@ -10860,536 +10860,6 @@ module.exports = function callBoundIntrinsic(name, allowMissing) {
 		return callBindBasic(/** @type {const} */ ([intrinsic]));
 	}
 	return intrinsic;
-};
-
-
-/***/ }),
-
-/***/ 71723:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('.')} */
-var $defineProperty = Object.defineProperty || false;
-if ($defineProperty) {
-	try {
-		$defineProperty({}, 'a', { value: 1 });
-	} catch (e) {
-		// IE 8 has a broken defineProperty
-		$defineProperty = false;
-	}
-}
-
-module.exports = $defineProperty;
-
-
-/***/ }),
-
-/***/ 54720:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('.')} */
-module.exports = Object;
-
-
-/***/ }),
-
-/***/ 75177:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-var undefined;
-
-var $Object = __webpack_require__(54720);
-
-var $Error = __webpack_require__(33012);
-var $EvalError = __webpack_require__(54320);
-var $RangeError = __webpack_require__(1641);
-var $ReferenceError = __webpack_require__(31753);
-var $SyntaxError = __webpack_require__(96761);
-var $TypeError = __webpack_require__(7410);
-var $URIError = __webpack_require__(60754);
-
-var abs = __webpack_require__(30409);
-var floor = __webpack_require__(39611);
-var max = __webpack_require__(53611);
-var min = __webpack_require__(57577);
-var pow = __webpack_require__(7747);
-var round = __webpack_require__(21965);
-var sign = __webpack_require__(88540);
-
-var $Function = Function;
-
-// eslint-disable-next-line consistent-return
-var getEvalledConstructor = function (expressionSyntax) {
-	try {
-		return $Function('"use strict"; return (' + expressionSyntax + ').constructor;')();
-	} catch (e) {}
-};
-
-var $gOPD = __webpack_require__(25903);
-var $defineProperty = __webpack_require__(71723);
-
-var throwTypeError = function () {
-	throw new $TypeError();
-};
-var ThrowTypeError = $gOPD
-	? (function () {
-		try {
-			// eslint-disable-next-line no-unused-expressions, no-caller, no-restricted-properties
-			arguments.callee; // IE 8 does not throw here
-			return throwTypeError;
-		} catch (calleeThrows) {
-			try {
-				// IE 8 throws on Object.getOwnPropertyDescriptor(arguments, '')
-				return $gOPD(arguments, 'callee').get;
-			} catch (gOPDthrows) {
-				return throwTypeError;
-			}
-		}
-	}())
-	: throwTypeError;
-
-var hasSymbols = __webpack_require__(2099)();
-
-var getProto = __webpack_require__(97727);
-var $ObjectGPO = __webpack_require__(70015);
-var $ReflectGPO = __webpack_require__(59961);
-
-var $apply = __webpack_require__(81417);
-var $call = __webpack_require__(31885);
-
-var needsEval = {};
-
-var TypedArray = typeof Uint8Array === 'undefined' || !getProto ? undefined : getProto(Uint8Array);
-
-var INTRINSICS = {
-	__proto__: null,
-	'%AggregateError%': typeof AggregateError === 'undefined' ? undefined : AggregateError,
-	'%Array%': Array,
-	'%ArrayBuffer%': typeof ArrayBuffer === 'undefined' ? undefined : ArrayBuffer,
-	'%ArrayIteratorPrototype%': hasSymbols && getProto ? getProto([][Symbol.iterator]()) : undefined,
-	'%AsyncFromSyncIteratorPrototype%': undefined,
-	'%AsyncFunction%': needsEval,
-	'%AsyncGenerator%': needsEval,
-	'%AsyncGeneratorFunction%': needsEval,
-	'%AsyncIteratorPrototype%': needsEval,
-	'%Atomics%': typeof Atomics === 'undefined' ? undefined : Atomics,
-	'%BigInt%': typeof BigInt === 'undefined' ? undefined : BigInt,
-	'%BigInt64Array%': typeof BigInt64Array === 'undefined' ? undefined : BigInt64Array,
-	'%BigUint64Array%': typeof BigUint64Array === 'undefined' ? undefined : BigUint64Array,
-	'%Boolean%': Boolean,
-	'%DataView%': typeof DataView === 'undefined' ? undefined : DataView,
-	'%Date%': Date,
-	'%decodeURI%': decodeURI,
-	'%decodeURIComponent%': decodeURIComponent,
-	'%encodeURI%': encodeURI,
-	'%encodeURIComponent%': encodeURIComponent,
-	'%Error%': $Error,
-	'%eval%': eval, // eslint-disable-line no-eval
-	'%EvalError%': $EvalError,
-	'%Float16Array%': typeof Float16Array === 'undefined' ? undefined : Float16Array,
-	'%Float32Array%': typeof Float32Array === 'undefined' ? undefined : Float32Array,
-	'%Float64Array%': typeof Float64Array === 'undefined' ? undefined : Float64Array,
-	'%FinalizationRegistry%': typeof FinalizationRegistry === 'undefined' ? undefined : FinalizationRegistry,
-	'%Function%': $Function,
-	'%GeneratorFunction%': needsEval,
-	'%Int8Array%': typeof Int8Array === 'undefined' ? undefined : Int8Array,
-	'%Int16Array%': typeof Int16Array === 'undefined' ? undefined : Int16Array,
-	'%Int32Array%': typeof Int32Array === 'undefined' ? undefined : Int32Array,
-	'%isFinite%': isFinite,
-	'%isNaN%': isNaN,
-	'%IteratorPrototype%': hasSymbols && getProto ? getProto(getProto([][Symbol.iterator]())) : undefined,
-	'%JSON%': typeof JSON === 'object' ? JSON : undefined,
-	'%Map%': typeof Map === 'undefined' ? undefined : Map,
-	'%MapIteratorPrototype%': typeof Map === 'undefined' || !hasSymbols || !getProto ? undefined : getProto(new Map()[Symbol.iterator]()),
-	'%Math%': Math,
-	'%Number%': Number,
-	'%Object%': $Object,
-	'%Object.getOwnPropertyDescriptor%': $gOPD,
-	'%parseFloat%': parseFloat,
-	'%parseInt%': parseInt,
-	'%Promise%': typeof Promise === 'undefined' ? undefined : Promise,
-	'%Proxy%': typeof Proxy === 'undefined' ? undefined : Proxy,
-	'%RangeError%': $RangeError,
-	'%ReferenceError%': $ReferenceError,
-	'%Reflect%': typeof Reflect === 'undefined' ? undefined : Reflect,
-	'%RegExp%': RegExp,
-	'%Set%': typeof Set === 'undefined' ? undefined : Set,
-	'%SetIteratorPrototype%': typeof Set === 'undefined' || !hasSymbols || !getProto ? undefined : getProto(new Set()[Symbol.iterator]()),
-	'%SharedArrayBuffer%': typeof SharedArrayBuffer === 'undefined' ? undefined : SharedArrayBuffer,
-	'%String%': String,
-	'%StringIteratorPrototype%': hasSymbols && getProto ? getProto(''[Symbol.iterator]()) : undefined,
-	'%Symbol%': hasSymbols ? Symbol : undefined,
-	'%SyntaxError%': $SyntaxError,
-	'%ThrowTypeError%': ThrowTypeError,
-	'%TypedArray%': TypedArray,
-	'%TypeError%': $TypeError,
-	'%Uint8Array%': typeof Uint8Array === 'undefined' ? undefined : Uint8Array,
-	'%Uint8ClampedArray%': typeof Uint8ClampedArray === 'undefined' ? undefined : Uint8ClampedArray,
-	'%Uint16Array%': typeof Uint16Array === 'undefined' ? undefined : Uint16Array,
-	'%Uint32Array%': typeof Uint32Array === 'undefined' ? undefined : Uint32Array,
-	'%URIError%': $URIError,
-	'%WeakMap%': typeof WeakMap === 'undefined' ? undefined : WeakMap,
-	'%WeakRef%': typeof WeakRef === 'undefined' ? undefined : WeakRef,
-	'%WeakSet%': typeof WeakSet === 'undefined' ? undefined : WeakSet,
-
-	'%Function.prototype.call%': $call,
-	'%Function.prototype.apply%': $apply,
-	'%Object.defineProperty%': $defineProperty,
-	'%Object.getPrototypeOf%': $ObjectGPO,
-	'%Math.abs%': abs,
-	'%Math.floor%': floor,
-	'%Math.max%': max,
-	'%Math.min%': min,
-	'%Math.pow%': pow,
-	'%Math.round%': round,
-	'%Math.sign%': sign,
-	'%Reflect.getPrototypeOf%': $ReflectGPO
-};
-
-if (getProto) {
-	try {
-		null.error; // eslint-disable-line no-unused-expressions
-	} catch (e) {
-		// https://github.com/tc39/proposal-shadowrealm/pull/384#issuecomment-1364264229
-		var errorProto = getProto(getProto(e));
-		INTRINSICS['%Error.prototype%'] = errorProto;
-	}
-}
-
-var doEval = function doEval(name) {
-	var value;
-	if (name === '%AsyncFunction%') {
-		value = getEvalledConstructor('async function () {}');
-	} else if (name === '%GeneratorFunction%') {
-		value = getEvalledConstructor('function* () {}');
-	} else if (name === '%AsyncGeneratorFunction%') {
-		value = getEvalledConstructor('async function* () {}');
-	} else if (name === '%AsyncGenerator%') {
-		var fn = doEval('%AsyncGeneratorFunction%');
-		if (fn) {
-			value = fn.prototype;
-		}
-	} else if (name === '%AsyncIteratorPrototype%') {
-		var gen = doEval('%AsyncGenerator%');
-		if (gen && getProto) {
-			value = getProto(gen.prototype);
-		}
-	}
-
-	INTRINSICS[name] = value;
-
-	return value;
-};
-
-var LEGACY_ALIASES = {
-	__proto__: null,
-	'%ArrayBufferPrototype%': ['ArrayBuffer', 'prototype'],
-	'%ArrayPrototype%': ['Array', 'prototype'],
-	'%ArrayProto_entries%': ['Array', 'prototype', 'entries'],
-	'%ArrayProto_forEach%': ['Array', 'prototype', 'forEach'],
-	'%ArrayProto_keys%': ['Array', 'prototype', 'keys'],
-	'%ArrayProto_values%': ['Array', 'prototype', 'values'],
-	'%AsyncFunctionPrototype%': ['AsyncFunction', 'prototype'],
-	'%AsyncGenerator%': ['AsyncGeneratorFunction', 'prototype'],
-	'%AsyncGeneratorPrototype%': ['AsyncGeneratorFunction', 'prototype', 'prototype'],
-	'%BooleanPrototype%': ['Boolean', 'prototype'],
-	'%DataViewPrototype%': ['DataView', 'prototype'],
-	'%DatePrototype%': ['Date', 'prototype'],
-	'%ErrorPrototype%': ['Error', 'prototype'],
-	'%EvalErrorPrototype%': ['EvalError', 'prototype'],
-	'%Float32ArrayPrototype%': ['Float32Array', 'prototype'],
-	'%Float64ArrayPrototype%': ['Float64Array', 'prototype'],
-	'%FunctionPrototype%': ['Function', 'prototype'],
-	'%Generator%': ['GeneratorFunction', 'prototype'],
-	'%GeneratorPrototype%': ['GeneratorFunction', 'prototype', 'prototype'],
-	'%Int8ArrayPrototype%': ['Int8Array', 'prototype'],
-	'%Int16ArrayPrototype%': ['Int16Array', 'prototype'],
-	'%Int32ArrayPrototype%': ['Int32Array', 'prototype'],
-	'%JSONParse%': ['JSON', 'parse'],
-	'%JSONStringify%': ['JSON', 'stringify'],
-	'%MapPrototype%': ['Map', 'prototype'],
-	'%NumberPrototype%': ['Number', 'prototype'],
-	'%ObjectPrototype%': ['Object', 'prototype'],
-	'%ObjProto_toString%': ['Object', 'prototype', 'toString'],
-	'%ObjProto_valueOf%': ['Object', 'prototype', 'valueOf'],
-	'%PromisePrototype%': ['Promise', 'prototype'],
-	'%PromiseProto_then%': ['Promise', 'prototype', 'then'],
-	'%Promise_all%': ['Promise', 'all'],
-	'%Promise_reject%': ['Promise', 'reject'],
-	'%Promise_resolve%': ['Promise', 'resolve'],
-	'%RangeErrorPrototype%': ['RangeError', 'prototype'],
-	'%ReferenceErrorPrototype%': ['ReferenceError', 'prototype'],
-	'%RegExpPrototype%': ['RegExp', 'prototype'],
-	'%SetPrototype%': ['Set', 'prototype'],
-	'%SharedArrayBufferPrototype%': ['SharedArrayBuffer', 'prototype'],
-	'%StringPrototype%': ['String', 'prototype'],
-	'%SymbolPrototype%': ['Symbol', 'prototype'],
-	'%SyntaxErrorPrototype%': ['SyntaxError', 'prototype'],
-	'%TypedArrayPrototype%': ['TypedArray', 'prototype'],
-	'%TypeErrorPrototype%': ['TypeError', 'prototype'],
-	'%Uint8ArrayPrototype%': ['Uint8Array', 'prototype'],
-	'%Uint8ClampedArrayPrototype%': ['Uint8ClampedArray', 'prototype'],
-	'%Uint16ArrayPrototype%': ['Uint16Array', 'prototype'],
-	'%Uint32ArrayPrototype%': ['Uint32Array', 'prototype'],
-	'%URIErrorPrototype%': ['URIError', 'prototype'],
-	'%WeakMapPrototype%': ['WeakMap', 'prototype'],
-	'%WeakSetPrototype%': ['WeakSet', 'prototype']
-};
-
-var bind = __webpack_require__(93836);
-var hasOwn = __webpack_require__(84748);
-var $concat = bind.call($call, Array.prototype.concat);
-var $spliceApply = bind.call($apply, Array.prototype.splice);
-var $replace = bind.call($call, String.prototype.replace);
-var $strSlice = bind.call($call, String.prototype.slice);
-var $exec = bind.call($call, RegExp.prototype.exec);
-
-/* adapted from https://github.com/lodash/lodash/blob/4.17.15/dist/lodash.js#L6735-L6744 */
-var rePropName = /[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g;
-var reEscapeChar = /\\(\\)?/g; /** Used to match backslashes in property paths. */
-var stringToPath = function stringToPath(string) {
-	var first = $strSlice(string, 0, 1);
-	var last = $strSlice(string, -1);
-	if (first === '%' && last !== '%') {
-		throw new $SyntaxError('invalid intrinsic syntax, expected closing `%`');
-	} else if (last === '%' && first !== '%') {
-		throw new $SyntaxError('invalid intrinsic syntax, expected opening `%`');
-	}
-	var result = [];
-	$replace(string, rePropName, function (match, number, quote, subString) {
-		result[result.length] = quote ? $replace(subString, reEscapeChar, '$1') : number || match;
-	});
-	return result;
-};
-/* end adaptation */
-
-var getBaseIntrinsic = function getBaseIntrinsic(name, allowMissing) {
-	var intrinsicName = name;
-	var alias;
-	if (hasOwn(LEGACY_ALIASES, intrinsicName)) {
-		alias = LEGACY_ALIASES[intrinsicName];
-		intrinsicName = '%' + alias[0] + '%';
-	}
-
-	if (hasOwn(INTRINSICS, intrinsicName)) {
-		var value = INTRINSICS[intrinsicName];
-		if (value === needsEval) {
-			value = doEval(intrinsicName);
-		}
-		if (typeof value === 'undefined' && !allowMissing) {
-			throw new $TypeError('intrinsic ' + name + ' exists, but is not available. Please file an issue!');
-		}
-
-		return {
-			alias: alias,
-			name: intrinsicName,
-			value: value
-		};
-	}
-
-	throw new $SyntaxError('intrinsic ' + name + ' does not exist!');
-};
-
-module.exports = function GetIntrinsic(name, allowMissing) {
-	if (typeof name !== 'string' || name.length === 0) {
-		throw new $TypeError('intrinsic name must be a non-empty string');
-	}
-	if (arguments.length > 1 && typeof allowMissing !== 'boolean') {
-		throw new $TypeError('"allowMissing" argument must be a boolean');
-	}
-
-	if ($exec(/^%?[^%]*%?$/, name) === null) {
-		throw new $SyntaxError('`%` may not be present anywhere but at the beginning and end of the intrinsic name');
-	}
-	var parts = stringToPath(name);
-	var intrinsicBaseName = parts.length > 0 ? parts[0] : '';
-
-	var intrinsic = getBaseIntrinsic('%' + intrinsicBaseName + '%', allowMissing);
-	var intrinsicRealName = intrinsic.name;
-	var value = intrinsic.value;
-	var skipFurtherCaching = false;
-
-	var alias = intrinsic.alias;
-	if (alias) {
-		intrinsicBaseName = alias[0];
-		$spliceApply(parts, $concat([0, 1], alias));
-	}
-
-	for (var i = 1, isOwn = true; i < parts.length; i += 1) {
-		var part = parts[i];
-		var first = $strSlice(part, 0, 1);
-		var last = $strSlice(part, -1);
-		if (
-			(
-				(first === '"' || first === "'" || first === '`')
-				|| (last === '"' || last === "'" || last === '`')
-			)
-			&& first !== last
-		) {
-			throw new $SyntaxError('property names with quotes must have matching quotes');
-		}
-		if (part === 'constructor' || !isOwn) {
-			skipFurtherCaching = true;
-		}
-
-		intrinsicBaseName += '.' + part;
-		intrinsicRealName = '%' + intrinsicBaseName + '%';
-
-		if (hasOwn(INTRINSICS, intrinsicRealName)) {
-			value = INTRINSICS[intrinsicRealName];
-		} else if (value != null) {
-			if (!(part in value)) {
-				if (!allowMissing) {
-					throw new $TypeError('base intrinsic for ' + name + ' exists, but the property is not available.');
-				}
-				return void undefined;
-			}
-			if ($gOPD && (i + 1) >= parts.length) {
-				var desc = $gOPD(value, part);
-				isOwn = !!desc;
-
-				// By convention, when a data property is converted to an accessor
-				// property to emulate a data property that does not suffer from
-				// the override mistake, that accessor's getter is marked with
-				// an `originalValue` property. Here, when we detect this, we
-				// uphold the illusion by pretending to see that original data
-				// property, i.e., returning the value rather than the getter
-				// itself.
-				if (isOwn && 'get' in desc && !('originalValue' in desc.get)) {
-					value = desc.get;
-				} else {
-					value = value[part];
-				}
-			} else {
-				isOwn = hasOwn(value, part);
-				value = value[part];
-			}
-
-			if (isOwn && !skipFurtherCaching) {
-				INTRINSICS[intrinsicRealName] = value;
-			}
-		}
-	}
-	return value;
-};
-
-
-/***/ }),
-
-/***/ 94489:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('./gOPD')} */
-module.exports = Object.getOwnPropertyDescriptor;
-
-
-/***/ }),
-
-/***/ 25903:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-/** @type {import('.')} */
-var $gOPD = __webpack_require__(94489);
-
-if ($gOPD) {
-	try {
-		$gOPD([], 'length');
-	} catch (e) {
-		// IE 8 has a broken gOPD
-		$gOPD = null;
-	}
-}
-
-module.exports = $gOPD;
-
-
-/***/ }),
-
-/***/ 2099:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-var origSymbol = typeof Symbol !== 'undefined' && Symbol;
-var hasSymbolSham = __webpack_require__(79441);
-
-/** @type {import('.')} */
-module.exports = function hasNativeSymbols() {
-	if (typeof origSymbol !== 'function') { return false; }
-	if (typeof Symbol !== 'function') { return false; }
-	if (typeof origSymbol('foo') !== 'symbol') { return false; }
-	if (typeof Symbol('bar') !== 'symbol') { return false; }
-
-	return hasSymbolSham();
-};
-
-
-/***/ }),
-
-/***/ 79441:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('./shams')} */
-/* eslint complexity: [2, 18], max-statements: [2, 33] */
-module.exports = function hasSymbols() {
-	if (typeof Symbol !== 'function' || typeof Object.getOwnPropertySymbols !== 'function') { return false; }
-	if (typeof Symbol.iterator === 'symbol') { return true; }
-
-	/** @type {{ [k in symbol]?: unknown }} */
-	var obj = {};
-	var sym = Symbol('test');
-	var symObj = Object(sym);
-	if (typeof sym === 'string') { return false; }
-
-	if (Object.prototype.toString.call(sym) !== '[object Symbol]') { return false; }
-	if (Object.prototype.toString.call(symObj) !== '[object Symbol]') { return false; }
-
-	// temp disabled per https://github.com/ljharb/object.assign/issues/17
-	// if (sym instanceof Symbol) { return false; }
-	// temp disabled per https://github.com/WebReflection/get-own-property-symbols/issues/4
-	// if (!(symObj instanceof Symbol)) { return false; }
-
-	// if (typeof Symbol.prototype.toString !== 'function') { return false; }
-	// if (String(sym) !== Symbol.prototype.toString.call(sym)) { return false; }
-
-	var symVal = 42;
-	obj[sym] = symVal;
-	for (var _ in obj) { return false; } // eslint-disable-line no-restricted-syntax, no-unreachable-loop
-	if (typeof Object.keys === 'function' && Object.keys(obj).length !== 0) { return false; }
-
-	if (typeof Object.getOwnPropertyNames === 'function' && Object.getOwnPropertyNames(obj).length !== 0) { return false; }
-
-	var syms = Object.getOwnPropertySymbols(obj);
-	if (syms.length !== 1 || syms[0] !== sym) { return false; }
-
-	if (!Object.prototype.propertyIsEnumerable.call(obj, sym)) { return false; }
-
-	if (typeof Object.getOwnPropertyDescriptor === 'function') {
-		// eslint-disable-next-line no-extra-parens
-		var descriptor = /** @type {PropertyDescriptor} */ (Object.getOwnPropertyDescriptor(obj, sym));
-		if (descriptor.value !== symVal || descriptor.enumerable !== true) { return false; }
-	}
-
-	return true;
 };
 
 
@@ -23497,7 +22967,7 @@ module.exports = function (i) {
 
 
 var callBind = __webpack_require__(97489);
-var gOPD = __webpack_require__(33603);
+var gOPD = __webpack_require__(24770);
 
 var hasProtoAccessor;
 try {
@@ -23528,37 +22998,24 @@ module.exports = desc && typeof desc.get === 'function'
 
 /***/ }),
 
-/***/ 31525:
+/***/ 37126:
 /***/ (function(module) {
 
 "use strict";
 
 
-/** @type {import('./gOPD')} */
-module.exports = Object.getOwnPropertyDescriptor;
-
-
-/***/ }),
-
-/***/ 33603:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
 /** @type {import('.')} */
-var $gOPD = __webpack_require__(31525);
-
-if ($gOPD) {
+var $defineProperty = Object.defineProperty || false;
+if ($defineProperty) {
 	try {
-		$gOPD([], 'length');
+		$defineProperty({}, 'a', { value: 1 });
 	} catch (e) {
-		// IE 8 has a broken gOPD
-		$gOPD = null;
+		// IE 8 has a broken defineProperty
+		$defineProperty = false;
 	}
 }
 
-module.exports = $gOPD;
+module.exports = $defineProperty;
 
 
 /***/ }),
@@ -24269,6 +23726,392 @@ module.exports = Function.prototype.bind || implementation;
 
 /***/ }),
 
+/***/ 20550:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var undefined;
+
+var $Object = __webpack_require__(79031);
+
+var $Error = __webpack_require__(33012);
+var $EvalError = __webpack_require__(54320);
+var $RangeError = __webpack_require__(1641);
+var $ReferenceError = __webpack_require__(31753);
+var $SyntaxError = __webpack_require__(96761);
+var $TypeError = __webpack_require__(7410);
+var $URIError = __webpack_require__(60754);
+
+var abs = __webpack_require__(30409);
+var floor = __webpack_require__(39611);
+var max = __webpack_require__(53611);
+var min = __webpack_require__(57577);
+var pow = __webpack_require__(7747);
+var round = __webpack_require__(21965);
+var sign = __webpack_require__(88540);
+
+var $Function = Function;
+
+// eslint-disable-next-line consistent-return
+var getEvalledConstructor = function (expressionSyntax) {
+	try {
+		return $Function('"use strict"; return (' + expressionSyntax + ').constructor;')();
+	} catch (e) {}
+};
+
+var $gOPD = __webpack_require__(24770);
+var $defineProperty = __webpack_require__(37126);
+
+var throwTypeError = function () {
+	throw new $TypeError();
+};
+var ThrowTypeError = $gOPD
+	? (function () {
+		try {
+			// eslint-disable-next-line no-unused-expressions, no-caller, no-restricted-properties
+			arguments.callee; // IE 8 does not throw here
+			return throwTypeError;
+		} catch (calleeThrows) {
+			try {
+				// IE 8 throws on Object.getOwnPropertyDescriptor(arguments, '')
+				return $gOPD(arguments, 'callee').get;
+			} catch (gOPDthrows) {
+				return throwTypeError;
+			}
+		}
+	}())
+	: throwTypeError;
+
+var hasSymbols = __webpack_require__(32856)();
+
+var getProto = __webpack_require__(97727);
+var $ObjectGPO = __webpack_require__(70015);
+var $ReflectGPO = __webpack_require__(59961);
+
+var $apply = __webpack_require__(81417);
+var $call = __webpack_require__(31885);
+
+var needsEval = {};
+
+var TypedArray = typeof Uint8Array === 'undefined' || !getProto ? undefined : getProto(Uint8Array);
+
+var INTRINSICS = {
+	__proto__: null,
+	'%AggregateError%': typeof AggregateError === 'undefined' ? undefined : AggregateError,
+	'%Array%': Array,
+	'%ArrayBuffer%': typeof ArrayBuffer === 'undefined' ? undefined : ArrayBuffer,
+	'%ArrayIteratorPrototype%': hasSymbols && getProto ? getProto([][Symbol.iterator]()) : undefined,
+	'%AsyncFromSyncIteratorPrototype%': undefined,
+	'%AsyncFunction%': needsEval,
+	'%AsyncGenerator%': needsEval,
+	'%AsyncGeneratorFunction%': needsEval,
+	'%AsyncIteratorPrototype%': needsEval,
+	'%Atomics%': typeof Atomics === 'undefined' ? undefined : Atomics,
+	'%BigInt%': typeof BigInt === 'undefined' ? undefined : BigInt,
+	'%BigInt64Array%': typeof BigInt64Array === 'undefined' ? undefined : BigInt64Array,
+	'%BigUint64Array%': typeof BigUint64Array === 'undefined' ? undefined : BigUint64Array,
+	'%Boolean%': Boolean,
+	'%DataView%': typeof DataView === 'undefined' ? undefined : DataView,
+	'%Date%': Date,
+	'%decodeURI%': decodeURI,
+	'%decodeURIComponent%': decodeURIComponent,
+	'%encodeURI%': encodeURI,
+	'%encodeURIComponent%': encodeURIComponent,
+	'%Error%': $Error,
+	'%eval%': eval, // eslint-disable-line no-eval
+	'%EvalError%': $EvalError,
+	'%Float16Array%': typeof Float16Array === 'undefined' ? undefined : Float16Array,
+	'%Float32Array%': typeof Float32Array === 'undefined' ? undefined : Float32Array,
+	'%Float64Array%': typeof Float64Array === 'undefined' ? undefined : Float64Array,
+	'%FinalizationRegistry%': typeof FinalizationRegistry === 'undefined' ? undefined : FinalizationRegistry,
+	'%Function%': $Function,
+	'%GeneratorFunction%': needsEval,
+	'%Int8Array%': typeof Int8Array === 'undefined' ? undefined : Int8Array,
+	'%Int16Array%': typeof Int16Array === 'undefined' ? undefined : Int16Array,
+	'%Int32Array%': typeof Int32Array === 'undefined' ? undefined : Int32Array,
+	'%isFinite%': isFinite,
+	'%isNaN%': isNaN,
+	'%IteratorPrototype%': hasSymbols && getProto ? getProto(getProto([][Symbol.iterator]())) : undefined,
+	'%JSON%': typeof JSON === 'object' ? JSON : undefined,
+	'%Map%': typeof Map === 'undefined' ? undefined : Map,
+	'%MapIteratorPrototype%': typeof Map === 'undefined' || !hasSymbols || !getProto ? undefined : getProto(new Map()[Symbol.iterator]()),
+	'%Math%': Math,
+	'%Number%': Number,
+	'%Object%': $Object,
+	'%Object.getOwnPropertyDescriptor%': $gOPD,
+	'%parseFloat%': parseFloat,
+	'%parseInt%': parseInt,
+	'%Promise%': typeof Promise === 'undefined' ? undefined : Promise,
+	'%Proxy%': typeof Proxy === 'undefined' ? undefined : Proxy,
+	'%RangeError%': $RangeError,
+	'%ReferenceError%': $ReferenceError,
+	'%Reflect%': typeof Reflect === 'undefined' ? undefined : Reflect,
+	'%RegExp%': RegExp,
+	'%Set%': typeof Set === 'undefined' ? undefined : Set,
+	'%SetIteratorPrototype%': typeof Set === 'undefined' || !hasSymbols || !getProto ? undefined : getProto(new Set()[Symbol.iterator]()),
+	'%SharedArrayBuffer%': typeof SharedArrayBuffer === 'undefined' ? undefined : SharedArrayBuffer,
+	'%String%': String,
+	'%StringIteratorPrototype%': hasSymbols && getProto ? getProto(''[Symbol.iterator]()) : undefined,
+	'%Symbol%': hasSymbols ? Symbol : undefined,
+	'%SyntaxError%': $SyntaxError,
+	'%ThrowTypeError%': ThrowTypeError,
+	'%TypedArray%': TypedArray,
+	'%TypeError%': $TypeError,
+	'%Uint8Array%': typeof Uint8Array === 'undefined' ? undefined : Uint8Array,
+	'%Uint8ClampedArray%': typeof Uint8ClampedArray === 'undefined' ? undefined : Uint8ClampedArray,
+	'%Uint16Array%': typeof Uint16Array === 'undefined' ? undefined : Uint16Array,
+	'%Uint32Array%': typeof Uint32Array === 'undefined' ? undefined : Uint32Array,
+	'%URIError%': $URIError,
+	'%WeakMap%': typeof WeakMap === 'undefined' ? undefined : WeakMap,
+	'%WeakRef%': typeof WeakRef === 'undefined' ? undefined : WeakRef,
+	'%WeakSet%': typeof WeakSet === 'undefined' ? undefined : WeakSet,
+
+	'%Function.prototype.call%': $call,
+	'%Function.prototype.apply%': $apply,
+	'%Object.defineProperty%': $defineProperty,
+	'%Object.getPrototypeOf%': $ObjectGPO,
+	'%Math.abs%': abs,
+	'%Math.floor%': floor,
+	'%Math.max%': max,
+	'%Math.min%': min,
+	'%Math.pow%': pow,
+	'%Math.round%': round,
+	'%Math.sign%': sign,
+	'%Reflect.getPrototypeOf%': $ReflectGPO
+};
+
+if (getProto) {
+	try {
+		null.error; // eslint-disable-line no-unused-expressions
+	} catch (e) {
+		// https://github.com/tc39/proposal-shadowrealm/pull/384#issuecomment-1364264229
+		var errorProto = getProto(getProto(e));
+		INTRINSICS['%Error.prototype%'] = errorProto;
+	}
+}
+
+var doEval = function doEval(name) {
+	var value;
+	if (name === '%AsyncFunction%') {
+		value = getEvalledConstructor('async function () {}');
+	} else if (name === '%GeneratorFunction%') {
+		value = getEvalledConstructor('function* () {}');
+	} else if (name === '%AsyncGeneratorFunction%') {
+		value = getEvalledConstructor('async function* () {}');
+	} else if (name === '%AsyncGenerator%') {
+		var fn = doEval('%AsyncGeneratorFunction%');
+		if (fn) {
+			value = fn.prototype;
+		}
+	} else if (name === '%AsyncIteratorPrototype%') {
+		var gen = doEval('%AsyncGenerator%');
+		if (gen && getProto) {
+			value = getProto(gen.prototype);
+		}
+	}
+
+	INTRINSICS[name] = value;
+
+	return value;
+};
+
+var LEGACY_ALIASES = {
+	__proto__: null,
+	'%ArrayBufferPrototype%': ['ArrayBuffer', 'prototype'],
+	'%ArrayPrototype%': ['Array', 'prototype'],
+	'%ArrayProto_entries%': ['Array', 'prototype', 'entries'],
+	'%ArrayProto_forEach%': ['Array', 'prototype', 'forEach'],
+	'%ArrayProto_keys%': ['Array', 'prototype', 'keys'],
+	'%ArrayProto_values%': ['Array', 'prototype', 'values'],
+	'%AsyncFunctionPrototype%': ['AsyncFunction', 'prototype'],
+	'%AsyncGenerator%': ['AsyncGeneratorFunction', 'prototype'],
+	'%AsyncGeneratorPrototype%': ['AsyncGeneratorFunction', 'prototype', 'prototype'],
+	'%BooleanPrototype%': ['Boolean', 'prototype'],
+	'%DataViewPrototype%': ['DataView', 'prototype'],
+	'%DatePrototype%': ['Date', 'prototype'],
+	'%ErrorPrototype%': ['Error', 'prototype'],
+	'%EvalErrorPrototype%': ['EvalError', 'prototype'],
+	'%Float32ArrayPrototype%': ['Float32Array', 'prototype'],
+	'%Float64ArrayPrototype%': ['Float64Array', 'prototype'],
+	'%FunctionPrototype%': ['Function', 'prototype'],
+	'%Generator%': ['GeneratorFunction', 'prototype'],
+	'%GeneratorPrototype%': ['GeneratorFunction', 'prototype', 'prototype'],
+	'%Int8ArrayPrototype%': ['Int8Array', 'prototype'],
+	'%Int16ArrayPrototype%': ['Int16Array', 'prototype'],
+	'%Int32ArrayPrototype%': ['Int32Array', 'prototype'],
+	'%JSONParse%': ['JSON', 'parse'],
+	'%JSONStringify%': ['JSON', 'stringify'],
+	'%MapPrototype%': ['Map', 'prototype'],
+	'%NumberPrototype%': ['Number', 'prototype'],
+	'%ObjectPrototype%': ['Object', 'prototype'],
+	'%ObjProto_toString%': ['Object', 'prototype', 'toString'],
+	'%ObjProto_valueOf%': ['Object', 'prototype', 'valueOf'],
+	'%PromisePrototype%': ['Promise', 'prototype'],
+	'%PromiseProto_then%': ['Promise', 'prototype', 'then'],
+	'%Promise_all%': ['Promise', 'all'],
+	'%Promise_reject%': ['Promise', 'reject'],
+	'%Promise_resolve%': ['Promise', 'resolve'],
+	'%RangeErrorPrototype%': ['RangeError', 'prototype'],
+	'%ReferenceErrorPrototype%': ['ReferenceError', 'prototype'],
+	'%RegExpPrototype%': ['RegExp', 'prototype'],
+	'%SetPrototype%': ['Set', 'prototype'],
+	'%SharedArrayBufferPrototype%': ['SharedArrayBuffer', 'prototype'],
+	'%StringPrototype%': ['String', 'prototype'],
+	'%SymbolPrototype%': ['Symbol', 'prototype'],
+	'%SyntaxErrorPrototype%': ['SyntaxError', 'prototype'],
+	'%TypedArrayPrototype%': ['TypedArray', 'prototype'],
+	'%TypeErrorPrototype%': ['TypeError', 'prototype'],
+	'%Uint8ArrayPrototype%': ['Uint8Array', 'prototype'],
+	'%Uint8ClampedArrayPrototype%': ['Uint8ClampedArray', 'prototype'],
+	'%Uint16ArrayPrototype%': ['Uint16Array', 'prototype'],
+	'%Uint32ArrayPrototype%': ['Uint32Array', 'prototype'],
+	'%URIErrorPrototype%': ['URIError', 'prototype'],
+	'%WeakMapPrototype%': ['WeakMap', 'prototype'],
+	'%WeakSetPrototype%': ['WeakSet', 'prototype']
+};
+
+var bind = __webpack_require__(93836);
+var hasOwn = __webpack_require__(84748);
+var $concat = bind.call($call, Array.prototype.concat);
+var $spliceApply = bind.call($apply, Array.prototype.splice);
+var $replace = bind.call($call, String.prototype.replace);
+var $strSlice = bind.call($call, String.prototype.slice);
+var $exec = bind.call($call, RegExp.prototype.exec);
+
+/* adapted from https://github.com/lodash/lodash/blob/4.17.15/dist/lodash.js#L6735-L6744 */
+var rePropName = /[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g;
+var reEscapeChar = /\\(\\)?/g; /** Used to match backslashes in property paths. */
+var stringToPath = function stringToPath(string) {
+	var first = $strSlice(string, 0, 1);
+	var last = $strSlice(string, -1);
+	if (first === '%' && last !== '%') {
+		throw new $SyntaxError('invalid intrinsic syntax, expected closing `%`');
+	} else if (last === '%' && first !== '%') {
+		throw new $SyntaxError('invalid intrinsic syntax, expected opening `%`');
+	}
+	var result = [];
+	$replace(string, rePropName, function (match, number, quote, subString) {
+		result[result.length] = quote ? $replace(subString, reEscapeChar, '$1') : number || match;
+	});
+	return result;
+};
+/* end adaptation */
+
+var getBaseIntrinsic = function getBaseIntrinsic(name, allowMissing) {
+	var intrinsicName = name;
+	var alias;
+	if (hasOwn(LEGACY_ALIASES, intrinsicName)) {
+		alias = LEGACY_ALIASES[intrinsicName];
+		intrinsicName = '%' + alias[0] + '%';
+	}
+
+	if (hasOwn(INTRINSICS, intrinsicName)) {
+		var value = INTRINSICS[intrinsicName];
+		if (value === needsEval) {
+			value = doEval(intrinsicName);
+		}
+		if (typeof value === 'undefined' && !allowMissing) {
+			throw new $TypeError('intrinsic ' + name + ' exists, but is not available. Please file an issue!');
+		}
+
+		return {
+			alias: alias,
+			name: intrinsicName,
+			value: value
+		};
+	}
+
+	throw new $SyntaxError('intrinsic ' + name + ' does not exist!');
+};
+
+module.exports = function GetIntrinsic(name, allowMissing) {
+	if (typeof name !== 'string' || name.length === 0) {
+		throw new $TypeError('intrinsic name must be a non-empty string');
+	}
+	if (arguments.length > 1 && typeof allowMissing !== 'boolean') {
+		throw new $TypeError('"allowMissing" argument must be a boolean');
+	}
+
+	if ($exec(/^%?[^%]*%?$/, name) === null) {
+		throw new $SyntaxError('`%` may not be present anywhere but at the beginning and end of the intrinsic name');
+	}
+	var parts = stringToPath(name);
+	var intrinsicBaseName = parts.length > 0 ? parts[0] : '';
+
+	var intrinsic = getBaseIntrinsic('%' + intrinsicBaseName + '%', allowMissing);
+	var intrinsicRealName = intrinsic.name;
+	var value = intrinsic.value;
+	var skipFurtherCaching = false;
+
+	var alias = intrinsic.alias;
+	if (alias) {
+		intrinsicBaseName = alias[0];
+		$spliceApply(parts, $concat([0, 1], alias));
+	}
+
+	for (var i = 1, isOwn = true; i < parts.length; i += 1) {
+		var part = parts[i];
+		var first = $strSlice(part, 0, 1);
+		var last = $strSlice(part, -1);
+		if (
+			(
+				(first === '"' || first === "'" || first === '`')
+				|| (last === '"' || last === "'" || last === '`')
+			)
+			&& first !== last
+		) {
+			throw new $SyntaxError('property names with quotes must have matching quotes');
+		}
+		if (part === 'constructor' || !isOwn) {
+			skipFurtherCaching = true;
+		}
+
+		intrinsicBaseName += '.' + part;
+		intrinsicRealName = '%' + intrinsicBaseName + '%';
+
+		if (hasOwn(INTRINSICS, intrinsicRealName)) {
+			value = INTRINSICS[intrinsicRealName];
+		} else if (value != null) {
+			if (!(part in value)) {
+				if (!allowMissing) {
+					throw new $TypeError('base intrinsic for ' + name + ' exists, but the property is not available.');
+				}
+				return void undefined;
+			}
+			if ($gOPD && (i + 1) >= parts.length) {
+				var desc = $gOPD(value, part);
+				isOwn = !!desc;
+
+				// By convention, when a data property is converted to an accessor
+				// property to emulate a data property that does not suffer from
+				// the override mistake, that accessor's getter is marked with
+				// an `originalValue` property. Here, when we detect this, we
+				// uphold the illusion by pretending to see that original data
+				// property, i.e., returning the value rather than the getter
+				// itself.
+				if (isOwn && 'get' in desc && !('originalValue' in desc.get)) {
+					value = desc.get;
+				} else {
+					value = value[part];
+				}
+			} else {
+				isOwn = hasOwn(value, part);
+				value = value[part];
+			}
+
+			if (isOwn && !skipFurtherCaching) {
+				INTRINSICS[intrinsicRealName] = value;
+			}
+		}
+	}
+	return value;
+};
+
+
+/***/ }),
+
 /***/ 70015:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
@@ -24326,6 +24169,116 @@ module.exports = reflectGetProto
 				return getDunderProto(O);
 			}
 			: null;
+
+
+/***/ }),
+
+/***/ 94534:
+/***/ (function(module) {
+
+"use strict";
+
+
+/** @type {import('./gOPD')} */
+module.exports = Object.getOwnPropertyDescriptor;
+
+
+/***/ }),
+
+/***/ 24770:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+/** @type {import('.')} */
+var $gOPD = __webpack_require__(94534);
+
+if ($gOPD) {
+	try {
+		$gOPD([], 'length');
+	} catch (e) {
+		// IE 8 has a broken gOPD
+		$gOPD = null;
+	}
+}
+
+module.exports = $gOPD;
+
+
+/***/ }),
+
+/***/ 32856:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var origSymbol = typeof Symbol !== 'undefined' && Symbol;
+var hasSymbolSham = __webpack_require__(82378);
+
+/** @type {import('.')} */
+module.exports = function hasNativeSymbols() {
+	if (typeof origSymbol !== 'function') { return false; }
+	if (typeof Symbol !== 'function') { return false; }
+	if (typeof origSymbol('foo') !== 'symbol') { return false; }
+	if (typeof Symbol('bar') !== 'symbol') { return false; }
+
+	return hasSymbolSham();
+};
+
+
+/***/ }),
+
+/***/ 82378:
+/***/ (function(module) {
+
+"use strict";
+
+
+/** @type {import('./shams')} */
+/* eslint complexity: [2, 18], max-statements: [2, 33] */
+module.exports = function hasSymbols() {
+	if (typeof Symbol !== 'function' || typeof Object.getOwnPropertySymbols !== 'function') { return false; }
+	if (typeof Symbol.iterator === 'symbol') { return true; }
+
+	/** @type {{ [k in symbol]?: unknown }} */
+	var obj = {};
+	var sym = Symbol('test');
+	var symObj = Object(sym);
+	if (typeof sym === 'string') { return false; }
+
+	if (Object.prototype.toString.call(sym) !== '[object Symbol]') { return false; }
+	if (Object.prototype.toString.call(symObj) !== '[object Symbol]') { return false; }
+
+	// temp disabled per https://github.com/ljharb/object.assign/issues/17
+	// if (sym instanceof Symbol) { return false; }
+	// temp disabled per https://github.com/WebReflection/get-own-property-symbols/issues/4
+	// if (!(symObj instanceof Symbol)) { return false; }
+
+	// if (typeof Symbol.prototype.toString !== 'function') { return false; }
+	// if (String(sym) !== Symbol.prototype.toString.call(sym)) { return false; }
+
+	var symVal = 42;
+	obj[sym] = symVal;
+	for (var _ in obj) { return false; } // eslint-disable-line no-restricted-syntax, no-unreachable-loop
+	if (typeof Object.keys === 'function' && Object.keys(obj).length !== 0) { return false; }
+
+	if (typeof Object.getOwnPropertyNames === 'function' && Object.getOwnPropertyNames(obj).length !== 0) { return false; }
+
+	var syms = Object.getOwnPropertySymbols(obj);
+	if (syms.length !== 1 || syms[0] !== sym) { return false; }
+
+	if (!Object.prototype.propertyIsEnumerable.call(obj, sym)) { return false; }
+
+	if (typeof Object.getOwnPropertyDescriptor === 'function') {
+		// eslint-disable-next-line no-extra-parens
+		var descriptor = /** @type {PropertyDescriptor} */ (Object.getOwnPropertyDescriptor(obj, sym));
+		if (descriptor.value !== symVal || descriptor.enumerable !== true) { return false; }
+	}
+
+	return true;
+};
 
 
 /***/ }),
@@ -25823,6 +25776,7 @@ var defaults = {
     parseArrays: true,
     plainObjects: false,
     strictDepth: false,
+    strictMerge: true,
     strictNullHandling: false,
     throwOnLimitExceeded: false
 };
@@ -25864,10 +25818,10 @@ var parseValues = function parseQueryStringValues(str, options) {
     var limit = options.parameterLimit === Infinity ? void undefined : options.parameterLimit;
     var parts = cleanStr.split(
         options.delimiter,
-        options.throwOnLimitExceeded ? limit + 1 : limit
+        options.throwOnLimitExceeded && typeof limit !== 'undefined' ? limit + 1 : limit
     );
 
-    if (options.throwOnLimitExceeded && parts.length > limit) {
+    if (options.throwOnLimitExceeded && typeof limit !== 'undefined' && parts.length > limit) {
         throw new RangeError('Parameter limit exceeded. Only ' + limit + ' parameter' + (limit === 1 ? '' : 's') + ' allowed.');
     }
 
@@ -25937,7 +25891,7 @@ var parseValues = function parseQueryStringValues(str, options) {
 
         if (key !== null) {
             var existing = has.call(obj, key);
-            if (existing && options.duplicates === 'combine') {
+            if (existing && (options.duplicates === 'combine' || part.indexOf('[]=') > -1)) {
                 obj[key] = utils.combine(
                     obj[key],
                     val,
@@ -26011,9 +25965,12 @@ var parseObject = function (chain, val, options, valuesParsed) {
     return leaf;
 };
 
-var splitKeyIntoSegments = function splitKeyIntoSegments(givenKey, options) {
-    var key = options.allowDots ? givenKey.replace(/\.([^.[]+)/g, '[$1]') : givenKey;
+// Split a key like "a[b][c[]]" into ['a', '[b]', '[c[]]'] while preserving
+// qs parse semantics for depth/prototype guards.
+var splitKeyIntoSegments = function splitKeyIntoSegments(originalKey, options) {
+    var key = options.allowDots ? originalKey.replace(/\.([^.[]+)/g, '[$1]') : originalKey;
 
+    // depth <= 0 keeps the whole key as one segment
     if (options.depth <= 0) {
         if (!options.plainObjects && has.call(Object.prototype, key)) {
             if (!options.allowPrototypes) {
@@ -26024,14 +25981,11 @@ var splitKeyIntoSegments = function splitKeyIntoSegments(givenKey, options) {
         return [key];
     }
 
-    var brackets = /(\[[^[\]]*])/;
-    var child = /(\[[^[\]]*])/g;
+    var segments = [];
 
-    var segment = brackets.exec(key);
-    var parent = segment ? key.slice(0, segment.index) : key;
-
-    var keys = [];
-
+    // parent before the first '[' (may be empty if key starts with '[')
+    var first = key.indexOf('[');
+    var parent = first >= 0 ? key.slice(0, first) : key;
     if (parent) {
         if (!options.plainObjects && has.call(Object.prototype, parent)) {
             if (!options.allowPrototypes) {
@@ -26039,32 +25993,62 @@ var splitKeyIntoSegments = function splitKeyIntoSegments(givenKey, options) {
             }
         }
 
-        keys[keys.length] = parent;
+        segments[segments.length] = parent;
     }
 
-    var i = 0;
-    while ((segment = child.exec(key)) !== null && i < options.depth) {
-        i += 1;
+    var n = key.length;
+    var open = first;
+    var collected = 0;
 
-        var segmentContent = segment[1].slice(1, -1);
-        if (!options.plainObjects && has.call(Object.prototype, segmentContent)) {
-            if (!options.allowPrototypes) {
-                return;
+    while (open >= 0 && collected < options.depth) {
+        var level = 1;
+        var i = open + 1;
+        var close = -1;
+
+        // balance nested '[' and ']' inside this bracket group using a nesting level counter
+        while (i < n && close < 0) {
+            var cu = key.charCodeAt(i);
+            if (cu === 0x5B) { // '['
+                level += 1;
+            } else if (cu === 0x5D) { // ']'
+                level -= 1;
+                if (level === 0) {
+                    close = i; // found matching close; loop will exit by condition
+                }
             }
+            i += 1;
         }
 
-        keys[keys.length] = segment[1];
+        if (close < 0) {
+            // Unterminated group: wrap the raw remainder in one bracket pair so it stays
+            // a single literal segment (e.g. "[[]b" -> "[[]b]"); we do not infer missing ']'.
+            segments[segments.length] = '[' + key.slice(open) + ']';
+            return segments;
+        }
+
+        var seg = key.slice(open, close + 1);
+        // prototype guard for the content of this group
+        var content = seg.slice(1, -1);
+        if (!options.plainObjects && has.call(Object.prototype, content) && !options.allowPrototypes) {
+            return;
+        }
+
+        segments[segments.length] = seg;
+        collected += 1;
+
+        // find the next '[' after this balanced group
+        open = key.indexOf('[', close + 1);
     }
 
-    if (segment) {
+    if (open >= 0) {
         if (options.strictDepth === true) {
             throw new RangeError('Input depth exceeded depth option of ' + options.depth + ' and strictDepth is true');
         }
 
-        keys[keys.length] = '[' + key.slice(segment.index) + ']';
+        segments[segments.length] = '[' + key.slice(open) + ']';
     }
 
-    return keys;
+    return segments;
 };
 
 var parseKeys = function parseQueryStringKeys(givenKey, val, options, valuesParsed) {
@@ -26137,6 +26121,7 @@ var normalizeParseOptions = function normalizeParseOptions(opts) {
         parseArrays: opts.parseArrays !== false,
         plainObjects: typeof opts.plainObjects === 'boolean' ? opts.plainObjects : defaults.plainObjects,
         strictDepth: typeof opts.strictDepth === 'boolean' ? !!opts.strictDepth : defaults.strictDepth,
+        strictMerge: typeof opts.strictMerge === 'boolean' ? !!opts.strictMerge : defaults.strictMerge,
         strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling,
         throwOnLimitExceeded: typeof opts.throwOnLimitExceeded === 'boolean' ? opts.throwOnLimitExceeded : false
     };
@@ -26295,7 +26280,7 @@ var stringify = function stringify(
 
     if (obj === null) {
         if (strictNullHandling) {
-            return encoder && !encodeValuesOnly ? encoder(prefix, defaults.encoder, charset, 'key', format) : prefix;
+            return formatter(encoder && !encodeValuesOnly ? encoder(prefix, defaults.encoder, charset, 'key', format) : prefix);
         }
 
         obj = '';
@@ -26319,7 +26304,9 @@ var stringify = function stringify(
     if (generateArrayPrefix === 'comma' && isArray(obj)) {
         // we need to join elements in
         if (encodeValuesOnly && encoder) {
-            obj = utils.maybeMap(obj, encoder);
+            obj = utils.maybeMap(obj, function (v) {
+                return v == null ? v : encoder(v);
+            });
         }
         objKeys = [{ value: obj.length > 0 ? obj.join(',') || null : void undefined }];
     } else if (isArray(filter)) {
@@ -26489,6 +26476,11 @@ module.exports = function (object, opts) {
     var sideChannel = getSideChannel();
     for (var i = 0; i < objKeys.length; ++i) {
         var key = objKeys[i];
+
+        if (typeof key === 'undefined' || key === null) {
+            continue;
+        }
+
         var value = obj[key];
 
         if (options.skipNulls && value === null) {
@@ -26522,10 +26514,10 @@ module.exports = function (object, opts) {
     if (options.charsetSentinel) {
         if (options.charset === 'iso-8859-1') {
             // encodeURIComponent('&#10003;'), the "numeric entity" representation of a checkmark
-            prefix += 'utf8=%26%2310003%3B&';
+            prefix += 'utf8=%26%2310003%3B' + options.delimiter;
         } else {
             // encodeURIComponent('✓')
-            prefix += 'utf8=%E2%9C%93&';
+            prefix += 'utf8=%E2%9C%93' + options.delimiter;
         }
     }
 
@@ -26626,6 +26618,8 @@ var merge = function merge(target, source, options) {
                 var newIndex = getMaxIndex(target) + 1;
                 target[newIndex] = source;
                 setMaxIndex(target, newIndex);
+            } else if (options && options.strictMerge) {
+                return [target, source];
             } else if (
                 (options && (options.plainObjects || options.allowPrototypes))
                 || !has.call(Object.prototype, source)
@@ -45641,7 +45635,7 @@ module.exports = function getSideChannelList() {
 "use strict";
 
 
-var GetIntrinsic = __webpack_require__(46860);
+var GetIntrinsic = __webpack_require__(20550);
 var callBound = __webpack_require__(29809);
 var inspect = __webpack_require__(1642);
 
@@ -45711,543 +45705,13 @@ module.exports = !!$Map && /** @type {Exclude<import('.'), false>} */ function g
 
 /***/ }),
 
-/***/ 13376:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('.')} */
-var $defineProperty = Object.defineProperty || false;
-if ($defineProperty) {
-	try {
-		$defineProperty({}, 'a', { value: 1 });
-	} catch (e) {
-		// IE 8 has a broken defineProperty
-		$defineProperty = false;
-	}
-}
-
-module.exports = $defineProperty;
-
-
-/***/ }),
-
-/***/ 65593:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('.')} */
-module.exports = Object;
-
-
-/***/ }),
-
-/***/ 46860:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-var undefined;
-
-var $Object = __webpack_require__(65593);
-
-var $Error = __webpack_require__(33012);
-var $EvalError = __webpack_require__(54320);
-var $RangeError = __webpack_require__(1641);
-var $ReferenceError = __webpack_require__(31753);
-var $SyntaxError = __webpack_require__(96761);
-var $TypeError = __webpack_require__(7410);
-var $URIError = __webpack_require__(60754);
-
-var abs = __webpack_require__(30409);
-var floor = __webpack_require__(39611);
-var max = __webpack_require__(53611);
-var min = __webpack_require__(57577);
-var pow = __webpack_require__(7747);
-var round = __webpack_require__(21965);
-var sign = __webpack_require__(88540);
-
-var $Function = Function;
-
-// eslint-disable-next-line consistent-return
-var getEvalledConstructor = function (expressionSyntax) {
-	try {
-		return $Function('"use strict"; return (' + expressionSyntax + ').constructor;')();
-	} catch (e) {}
-};
-
-var $gOPD = __webpack_require__(7244);
-var $defineProperty = __webpack_require__(13376);
-
-var throwTypeError = function () {
-	throw new $TypeError();
-};
-var ThrowTypeError = $gOPD
-	? (function () {
-		try {
-			// eslint-disable-next-line no-unused-expressions, no-caller, no-restricted-properties
-			arguments.callee; // IE 8 does not throw here
-			return throwTypeError;
-		} catch (calleeThrows) {
-			try {
-				// IE 8 throws on Object.getOwnPropertyDescriptor(arguments, '')
-				return $gOPD(arguments, 'callee').get;
-			} catch (gOPDthrows) {
-				return throwTypeError;
-			}
-		}
-	}())
-	: throwTypeError;
-
-var hasSymbols = __webpack_require__(31482)();
-
-var getProto = __webpack_require__(97727);
-var $ObjectGPO = __webpack_require__(70015);
-var $ReflectGPO = __webpack_require__(59961);
-
-var $apply = __webpack_require__(81417);
-var $call = __webpack_require__(31885);
-
-var needsEval = {};
-
-var TypedArray = typeof Uint8Array === 'undefined' || !getProto ? undefined : getProto(Uint8Array);
-
-var INTRINSICS = {
-	__proto__: null,
-	'%AggregateError%': typeof AggregateError === 'undefined' ? undefined : AggregateError,
-	'%Array%': Array,
-	'%ArrayBuffer%': typeof ArrayBuffer === 'undefined' ? undefined : ArrayBuffer,
-	'%ArrayIteratorPrototype%': hasSymbols && getProto ? getProto([][Symbol.iterator]()) : undefined,
-	'%AsyncFromSyncIteratorPrototype%': undefined,
-	'%AsyncFunction%': needsEval,
-	'%AsyncGenerator%': needsEval,
-	'%AsyncGeneratorFunction%': needsEval,
-	'%AsyncIteratorPrototype%': needsEval,
-	'%Atomics%': typeof Atomics === 'undefined' ? undefined : Atomics,
-	'%BigInt%': typeof BigInt === 'undefined' ? undefined : BigInt,
-	'%BigInt64Array%': typeof BigInt64Array === 'undefined' ? undefined : BigInt64Array,
-	'%BigUint64Array%': typeof BigUint64Array === 'undefined' ? undefined : BigUint64Array,
-	'%Boolean%': Boolean,
-	'%DataView%': typeof DataView === 'undefined' ? undefined : DataView,
-	'%Date%': Date,
-	'%decodeURI%': decodeURI,
-	'%decodeURIComponent%': decodeURIComponent,
-	'%encodeURI%': encodeURI,
-	'%encodeURIComponent%': encodeURIComponent,
-	'%Error%': $Error,
-	'%eval%': eval, // eslint-disable-line no-eval
-	'%EvalError%': $EvalError,
-	'%Float16Array%': typeof Float16Array === 'undefined' ? undefined : Float16Array,
-	'%Float32Array%': typeof Float32Array === 'undefined' ? undefined : Float32Array,
-	'%Float64Array%': typeof Float64Array === 'undefined' ? undefined : Float64Array,
-	'%FinalizationRegistry%': typeof FinalizationRegistry === 'undefined' ? undefined : FinalizationRegistry,
-	'%Function%': $Function,
-	'%GeneratorFunction%': needsEval,
-	'%Int8Array%': typeof Int8Array === 'undefined' ? undefined : Int8Array,
-	'%Int16Array%': typeof Int16Array === 'undefined' ? undefined : Int16Array,
-	'%Int32Array%': typeof Int32Array === 'undefined' ? undefined : Int32Array,
-	'%isFinite%': isFinite,
-	'%isNaN%': isNaN,
-	'%IteratorPrototype%': hasSymbols && getProto ? getProto(getProto([][Symbol.iterator]())) : undefined,
-	'%JSON%': typeof JSON === 'object' ? JSON : undefined,
-	'%Map%': typeof Map === 'undefined' ? undefined : Map,
-	'%MapIteratorPrototype%': typeof Map === 'undefined' || !hasSymbols || !getProto ? undefined : getProto(new Map()[Symbol.iterator]()),
-	'%Math%': Math,
-	'%Number%': Number,
-	'%Object%': $Object,
-	'%Object.getOwnPropertyDescriptor%': $gOPD,
-	'%parseFloat%': parseFloat,
-	'%parseInt%': parseInt,
-	'%Promise%': typeof Promise === 'undefined' ? undefined : Promise,
-	'%Proxy%': typeof Proxy === 'undefined' ? undefined : Proxy,
-	'%RangeError%': $RangeError,
-	'%ReferenceError%': $ReferenceError,
-	'%Reflect%': typeof Reflect === 'undefined' ? undefined : Reflect,
-	'%RegExp%': RegExp,
-	'%Set%': typeof Set === 'undefined' ? undefined : Set,
-	'%SetIteratorPrototype%': typeof Set === 'undefined' || !hasSymbols || !getProto ? undefined : getProto(new Set()[Symbol.iterator]()),
-	'%SharedArrayBuffer%': typeof SharedArrayBuffer === 'undefined' ? undefined : SharedArrayBuffer,
-	'%String%': String,
-	'%StringIteratorPrototype%': hasSymbols && getProto ? getProto(''[Symbol.iterator]()) : undefined,
-	'%Symbol%': hasSymbols ? Symbol : undefined,
-	'%SyntaxError%': $SyntaxError,
-	'%ThrowTypeError%': ThrowTypeError,
-	'%TypedArray%': TypedArray,
-	'%TypeError%': $TypeError,
-	'%Uint8Array%': typeof Uint8Array === 'undefined' ? undefined : Uint8Array,
-	'%Uint8ClampedArray%': typeof Uint8ClampedArray === 'undefined' ? undefined : Uint8ClampedArray,
-	'%Uint16Array%': typeof Uint16Array === 'undefined' ? undefined : Uint16Array,
-	'%Uint32Array%': typeof Uint32Array === 'undefined' ? undefined : Uint32Array,
-	'%URIError%': $URIError,
-	'%WeakMap%': typeof WeakMap === 'undefined' ? undefined : WeakMap,
-	'%WeakRef%': typeof WeakRef === 'undefined' ? undefined : WeakRef,
-	'%WeakSet%': typeof WeakSet === 'undefined' ? undefined : WeakSet,
-
-	'%Function.prototype.call%': $call,
-	'%Function.prototype.apply%': $apply,
-	'%Object.defineProperty%': $defineProperty,
-	'%Object.getPrototypeOf%': $ObjectGPO,
-	'%Math.abs%': abs,
-	'%Math.floor%': floor,
-	'%Math.max%': max,
-	'%Math.min%': min,
-	'%Math.pow%': pow,
-	'%Math.round%': round,
-	'%Math.sign%': sign,
-	'%Reflect.getPrototypeOf%': $ReflectGPO
-};
-
-if (getProto) {
-	try {
-		null.error; // eslint-disable-line no-unused-expressions
-	} catch (e) {
-		// https://github.com/tc39/proposal-shadowrealm/pull/384#issuecomment-1364264229
-		var errorProto = getProto(getProto(e));
-		INTRINSICS['%Error.prototype%'] = errorProto;
-	}
-}
-
-var doEval = function doEval(name) {
-	var value;
-	if (name === '%AsyncFunction%') {
-		value = getEvalledConstructor('async function () {}');
-	} else if (name === '%GeneratorFunction%') {
-		value = getEvalledConstructor('function* () {}');
-	} else if (name === '%AsyncGeneratorFunction%') {
-		value = getEvalledConstructor('async function* () {}');
-	} else if (name === '%AsyncGenerator%') {
-		var fn = doEval('%AsyncGeneratorFunction%');
-		if (fn) {
-			value = fn.prototype;
-		}
-	} else if (name === '%AsyncIteratorPrototype%') {
-		var gen = doEval('%AsyncGenerator%');
-		if (gen && getProto) {
-			value = getProto(gen.prototype);
-		}
-	}
-
-	INTRINSICS[name] = value;
-
-	return value;
-};
-
-var LEGACY_ALIASES = {
-	__proto__: null,
-	'%ArrayBufferPrototype%': ['ArrayBuffer', 'prototype'],
-	'%ArrayPrototype%': ['Array', 'prototype'],
-	'%ArrayProto_entries%': ['Array', 'prototype', 'entries'],
-	'%ArrayProto_forEach%': ['Array', 'prototype', 'forEach'],
-	'%ArrayProto_keys%': ['Array', 'prototype', 'keys'],
-	'%ArrayProto_values%': ['Array', 'prototype', 'values'],
-	'%AsyncFunctionPrototype%': ['AsyncFunction', 'prototype'],
-	'%AsyncGenerator%': ['AsyncGeneratorFunction', 'prototype'],
-	'%AsyncGeneratorPrototype%': ['AsyncGeneratorFunction', 'prototype', 'prototype'],
-	'%BooleanPrototype%': ['Boolean', 'prototype'],
-	'%DataViewPrototype%': ['DataView', 'prototype'],
-	'%DatePrototype%': ['Date', 'prototype'],
-	'%ErrorPrototype%': ['Error', 'prototype'],
-	'%EvalErrorPrototype%': ['EvalError', 'prototype'],
-	'%Float32ArrayPrototype%': ['Float32Array', 'prototype'],
-	'%Float64ArrayPrototype%': ['Float64Array', 'prototype'],
-	'%FunctionPrototype%': ['Function', 'prototype'],
-	'%Generator%': ['GeneratorFunction', 'prototype'],
-	'%GeneratorPrototype%': ['GeneratorFunction', 'prototype', 'prototype'],
-	'%Int8ArrayPrototype%': ['Int8Array', 'prototype'],
-	'%Int16ArrayPrototype%': ['Int16Array', 'prototype'],
-	'%Int32ArrayPrototype%': ['Int32Array', 'prototype'],
-	'%JSONParse%': ['JSON', 'parse'],
-	'%JSONStringify%': ['JSON', 'stringify'],
-	'%MapPrototype%': ['Map', 'prototype'],
-	'%NumberPrototype%': ['Number', 'prototype'],
-	'%ObjectPrototype%': ['Object', 'prototype'],
-	'%ObjProto_toString%': ['Object', 'prototype', 'toString'],
-	'%ObjProto_valueOf%': ['Object', 'prototype', 'valueOf'],
-	'%PromisePrototype%': ['Promise', 'prototype'],
-	'%PromiseProto_then%': ['Promise', 'prototype', 'then'],
-	'%Promise_all%': ['Promise', 'all'],
-	'%Promise_reject%': ['Promise', 'reject'],
-	'%Promise_resolve%': ['Promise', 'resolve'],
-	'%RangeErrorPrototype%': ['RangeError', 'prototype'],
-	'%ReferenceErrorPrototype%': ['ReferenceError', 'prototype'],
-	'%RegExpPrototype%': ['RegExp', 'prototype'],
-	'%SetPrototype%': ['Set', 'prototype'],
-	'%SharedArrayBufferPrototype%': ['SharedArrayBuffer', 'prototype'],
-	'%StringPrototype%': ['String', 'prototype'],
-	'%SymbolPrototype%': ['Symbol', 'prototype'],
-	'%SyntaxErrorPrototype%': ['SyntaxError', 'prototype'],
-	'%TypedArrayPrototype%': ['TypedArray', 'prototype'],
-	'%TypeErrorPrototype%': ['TypeError', 'prototype'],
-	'%Uint8ArrayPrototype%': ['Uint8Array', 'prototype'],
-	'%Uint8ClampedArrayPrototype%': ['Uint8ClampedArray', 'prototype'],
-	'%Uint16ArrayPrototype%': ['Uint16Array', 'prototype'],
-	'%Uint32ArrayPrototype%': ['Uint32Array', 'prototype'],
-	'%URIErrorPrototype%': ['URIError', 'prototype'],
-	'%WeakMapPrototype%': ['WeakMap', 'prototype'],
-	'%WeakSetPrototype%': ['WeakSet', 'prototype']
-};
-
-var bind = __webpack_require__(93836);
-var hasOwn = __webpack_require__(84748);
-var $concat = bind.call($call, Array.prototype.concat);
-var $spliceApply = bind.call($apply, Array.prototype.splice);
-var $replace = bind.call($call, String.prototype.replace);
-var $strSlice = bind.call($call, String.prototype.slice);
-var $exec = bind.call($call, RegExp.prototype.exec);
-
-/* adapted from https://github.com/lodash/lodash/blob/4.17.15/dist/lodash.js#L6735-L6744 */
-var rePropName = /[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g;
-var reEscapeChar = /\\(\\)?/g; /** Used to match backslashes in property paths. */
-var stringToPath = function stringToPath(string) {
-	var first = $strSlice(string, 0, 1);
-	var last = $strSlice(string, -1);
-	if (first === '%' && last !== '%') {
-		throw new $SyntaxError('invalid intrinsic syntax, expected closing `%`');
-	} else if (last === '%' && first !== '%') {
-		throw new $SyntaxError('invalid intrinsic syntax, expected opening `%`');
-	}
-	var result = [];
-	$replace(string, rePropName, function (match, number, quote, subString) {
-		result[result.length] = quote ? $replace(subString, reEscapeChar, '$1') : number || match;
-	});
-	return result;
-};
-/* end adaptation */
-
-var getBaseIntrinsic = function getBaseIntrinsic(name, allowMissing) {
-	var intrinsicName = name;
-	var alias;
-	if (hasOwn(LEGACY_ALIASES, intrinsicName)) {
-		alias = LEGACY_ALIASES[intrinsicName];
-		intrinsicName = '%' + alias[0] + '%';
-	}
-
-	if (hasOwn(INTRINSICS, intrinsicName)) {
-		var value = INTRINSICS[intrinsicName];
-		if (value === needsEval) {
-			value = doEval(intrinsicName);
-		}
-		if (typeof value === 'undefined' && !allowMissing) {
-			throw new $TypeError('intrinsic ' + name + ' exists, but is not available. Please file an issue!');
-		}
-
-		return {
-			alias: alias,
-			name: intrinsicName,
-			value: value
-		};
-	}
-
-	throw new $SyntaxError('intrinsic ' + name + ' does not exist!');
-};
-
-module.exports = function GetIntrinsic(name, allowMissing) {
-	if (typeof name !== 'string' || name.length === 0) {
-		throw new $TypeError('intrinsic name must be a non-empty string');
-	}
-	if (arguments.length > 1 && typeof allowMissing !== 'boolean') {
-		throw new $TypeError('"allowMissing" argument must be a boolean');
-	}
-
-	if ($exec(/^%?[^%]*%?$/, name) === null) {
-		throw new $SyntaxError('`%` may not be present anywhere but at the beginning and end of the intrinsic name');
-	}
-	var parts = stringToPath(name);
-	var intrinsicBaseName = parts.length > 0 ? parts[0] : '';
-
-	var intrinsic = getBaseIntrinsic('%' + intrinsicBaseName + '%', allowMissing);
-	var intrinsicRealName = intrinsic.name;
-	var value = intrinsic.value;
-	var skipFurtherCaching = false;
-
-	var alias = intrinsic.alias;
-	if (alias) {
-		intrinsicBaseName = alias[0];
-		$spliceApply(parts, $concat([0, 1], alias));
-	}
-
-	for (var i = 1, isOwn = true; i < parts.length; i += 1) {
-		var part = parts[i];
-		var first = $strSlice(part, 0, 1);
-		var last = $strSlice(part, -1);
-		if (
-			(
-				(first === '"' || first === "'" || first === '`')
-				|| (last === '"' || last === "'" || last === '`')
-			)
-			&& first !== last
-		) {
-			throw new $SyntaxError('property names with quotes must have matching quotes');
-		}
-		if (part === 'constructor' || !isOwn) {
-			skipFurtherCaching = true;
-		}
-
-		intrinsicBaseName += '.' + part;
-		intrinsicRealName = '%' + intrinsicBaseName + '%';
-
-		if (hasOwn(INTRINSICS, intrinsicRealName)) {
-			value = INTRINSICS[intrinsicRealName];
-		} else if (value != null) {
-			if (!(part in value)) {
-				if (!allowMissing) {
-					throw new $TypeError('base intrinsic for ' + name + ' exists, but the property is not available.');
-				}
-				return void undefined;
-			}
-			if ($gOPD && (i + 1) >= parts.length) {
-				var desc = $gOPD(value, part);
-				isOwn = !!desc;
-
-				// By convention, when a data property is converted to an accessor
-				// property to emulate a data property that does not suffer from
-				// the override mistake, that accessor's getter is marked with
-				// an `originalValue` property. Here, when we detect this, we
-				// uphold the illusion by pretending to see that original data
-				// property, i.e., returning the value rather than the getter
-				// itself.
-				if (isOwn && 'get' in desc && !('originalValue' in desc.get)) {
-					value = desc.get;
-				} else {
-					value = value[part];
-				}
-			} else {
-				isOwn = hasOwn(value, part);
-				value = value[part];
-			}
-
-			if (isOwn && !skipFurtherCaching) {
-				INTRINSICS[intrinsicRealName] = value;
-			}
-		}
-	}
-	return value;
-};
-
-
-/***/ }),
-
-/***/ 1000:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('./gOPD')} */
-module.exports = Object.getOwnPropertyDescriptor;
-
-
-/***/ }),
-
-/***/ 7244:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-/** @type {import('.')} */
-var $gOPD = __webpack_require__(1000);
-
-if ($gOPD) {
-	try {
-		$gOPD([], 'length');
-	} catch (e) {
-		// IE 8 has a broken gOPD
-		$gOPD = null;
-	}
-}
-
-module.exports = $gOPD;
-
-
-/***/ }),
-
-/***/ 31482:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-var origSymbol = typeof Symbol !== 'undefined' && Symbol;
-var hasSymbolSham = __webpack_require__(55648);
-
-/** @type {import('.')} */
-module.exports = function hasNativeSymbols() {
-	if (typeof origSymbol !== 'function') { return false; }
-	if (typeof Symbol !== 'function') { return false; }
-	if (typeof origSymbol('foo') !== 'symbol') { return false; }
-	if (typeof Symbol('bar') !== 'symbol') { return false; }
-
-	return hasSymbolSham();
-};
-
-
-/***/ }),
-
-/***/ 55648:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('./shams')} */
-/* eslint complexity: [2, 18], max-statements: [2, 33] */
-module.exports = function hasSymbols() {
-	if (typeof Symbol !== 'function' || typeof Object.getOwnPropertySymbols !== 'function') { return false; }
-	if (typeof Symbol.iterator === 'symbol') { return true; }
-
-	/** @type {{ [k in symbol]?: unknown }} */
-	var obj = {};
-	var sym = Symbol('test');
-	var symObj = Object(sym);
-	if (typeof sym === 'string') { return false; }
-
-	if (Object.prototype.toString.call(sym) !== '[object Symbol]') { return false; }
-	if (Object.prototype.toString.call(symObj) !== '[object Symbol]') { return false; }
-
-	// temp disabled per https://github.com/ljharb/object.assign/issues/17
-	// if (sym instanceof Symbol) { return false; }
-	// temp disabled per https://github.com/WebReflection/get-own-property-symbols/issues/4
-	// if (!(symObj instanceof Symbol)) { return false; }
-
-	// if (typeof Symbol.prototype.toString !== 'function') { return false; }
-	// if (String(sym) !== Symbol.prototype.toString.call(sym)) { return false; }
-
-	var symVal = 42;
-	obj[sym] = symVal;
-	for (var _ in obj) { return false; } // eslint-disable-line no-restricted-syntax, no-unreachable-loop
-	if (typeof Object.keys === 'function' && Object.keys(obj).length !== 0) { return false; }
-
-	if (typeof Object.getOwnPropertyNames === 'function' && Object.getOwnPropertyNames(obj).length !== 0) { return false; }
-
-	var syms = Object.getOwnPropertySymbols(obj);
-	if (syms.length !== 1 || syms[0] !== sym) { return false; }
-
-	if (!Object.prototype.propertyIsEnumerable.call(obj, sym)) { return false; }
-
-	if (typeof Object.getOwnPropertyDescriptor === 'function') {
-		// eslint-disable-next-line no-extra-parens
-		var descriptor = /** @type {PropertyDescriptor} */ (Object.getOwnPropertyDescriptor(obj, sym));
-		if (descriptor.value !== symVal || descriptor.enumerable !== true) { return false; }
-	}
-
-	return true;
-};
-
-
-/***/ }),
-
 /***/ 94710:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
 "use strict";
 
 
-var GetIntrinsic = __webpack_require__(548);
+var GetIntrinsic = __webpack_require__(20550);
 var callBound = __webpack_require__(29809);
 var inspect = __webpack_require__(1642);
 var getSideChannelMap = __webpack_require__(50830);
@@ -46329,536 +45793,6 @@ module.exports = $WeakMap
 		return channel;
 	}
 	: getSideChannelMap;
-
-
-/***/ }),
-
-/***/ 62952:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('.')} */
-var $defineProperty = Object.defineProperty || false;
-if ($defineProperty) {
-	try {
-		$defineProperty({}, 'a', { value: 1 });
-	} catch (e) {
-		// IE 8 has a broken defineProperty
-		$defineProperty = false;
-	}
-}
-
-module.exports = $defineProperty;
-
-
-/***/ }),
-
-/***/ 6801:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('.')} */
-module.exports = Object;
-
-
-/***/ }),
-
-/***/ 548:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-var undefined;
-
-var $Object = __webpack_require__(6801);
-
-var $Error = __webpack_require__(33012);
-var $EvalError = __webpack_require__(54320);
-var $RangeError = __webpack_require__(1641);
-var $ReferenceError = __webpack_require__(31753);
-var $SyntaxError = __webpack_require__(96761);
-var $TypeError = __webpack_require__(7410);
-var $URIError = __webpack_require__(60754);
-
-var abs = __webpack_require__(30409);
-var floor = __webpack_require__(39611);
-var max = __webpack_require__(53611);
-var min = __webpack_require__(57577);
-var pow = __webpack_require__(7747);
-var round = __webpack_require__(21965);
-var sign = __webpack_require__(88540);
-
-var $Function = Function;
-
-// eslint-disable-next-line consistent-return
-var getEvalledConstructor = function (expressionSyntax) {
-	try {
-		return $Function('"use strict"; return (' + expressionSyntax + ').constructor;')();
-	} catch (e) {}
-};
-
-var $gOPD = __webpack_require__(95652);
-var $defineProperty = __webpack_require__(62952);
-
-var throwTypeError = function () {
-	throw new $TypeError();
-};
-var ThrowTypeError = $gOPD
-	? (function () {
-		try {
-			// eslint-disable-next-line no-unused-expressions, no-caller, no-restricted-properties
-			arguments.callee; // IE 8 does not throw here
-			return throwTypeError;
-		} catch (calleeThrows) {
-			try {
-				// IE 8 throws on Object.getOwnPropertyDescriptor(arguments, '')
-				return $gOPD(arguments, 'callee').get;
-			} catch (gOPDthrows) {
-				return throwTypeError;
-			}
-		}
-	}())
-	: throwTypeError;
-
-var hasSymbols = __webpack_require__(82098)();
-
-var getProto = __webpack_require__(97727);
-var $ObjectGPO = __webpack_require__(70015);
-var $ReflectGPO = __webpack_require__(59961);
-
-var $apply = __webpack_require__(81417);
-var $call = __webpack_require__(31885);
-
-var needsEval = {};
-
-var TypedArray = typeof Uint8Array === 'undefined' || !getProto ? undefined : getProto(Uint8Array);
-
-var INTRINSICS = {
-	__proto__: null,
-	'%AggregateError%': typeof AggregateError === 'undefined' ? undefined : AggregateError,
-	'%Array%': Array,
-	'%ArrayBuffer%': typeof ArrayBuffer === 'undefined' ? undefined : ArrayBuffer,
-	'%ArrayIteratorPrototype%': hasSymbols && getProto ? getProto([][Symbol.iterator]()) : undefined,
-	'%AsyncFromSyncIteratorPrototype%': undefined,
-	'%AsyncFunction%': needsEval,
-	'%AsyncGenerator%': needsEval,
-	'%AsyncGeneratorFunction%': needsEval,
-	'%AsyncIteratorPrototype%': needsEval,
-	'%Atomics%': typeof Atomics === 'undefined' ? undefined : Atomics,
-	'%BigInt%': typeof BigInt === 'undefined' ? undefined : BigInt,
-	'%BigInt64Array%': typeof BigInt64Array === 'undefined' ? undefined : BigInt64Array,
-	'%BigUint64Array%': typeof BigUint64Array === 'undefined' ? undefined : BigUint64Array,
-	'%Boolean%': Boolean,
-	'%DataView%': typeof DataView === 'undefined' ? undefined : DataView,
-	'%Date%': Date,
-	'%decodeURI%': decodeURI,
-	'%decodeURIComponent%': decodeURIComponent,
-	'%encodeURI%': encodeURI,
-	'%encodeURIComponent%': encodeURIComponent,
-	'%Error%': $Error,
-	'%eval%': eval, // eslint-disable-line no-eval
-	'%EvalError%': $EvalError,
-	'%Float16Array%': typeof Float16Array === 'undefined' ? undefined : Float16Array,
-	'%Float32Array%': typeof Float32Array === 'undefined' ? undefined : Float32Array,
-	'%Float64Array%': typeof Float64Array === 'undefined' ? undefined : Float64Array,
-	'%FinalizationRegistry%': typeof FinalizationRegistry === 'undefined' ? undefined : FinalizationRegistry,
-	'%Function%': $Function,
-	'%GeneratorFunction%': needsEval,
-	'%Int8Array%': typeof Int8Array === 'undefined' ? undefined : Int8Array,
-	'%Int16Array%': typeof Int16Array === 'undefined' ? undefined : Int16Array,
-	'%Int32Array%': typeof Int32Array === 'undefined' ? undefined : Int32Array,
-	'%isFinite%': isFinite,
-	'%isNaN%': isNaN,
-	'%IteratorPrototype%': hasSymbols && getProto ? getProto(getProto([][Symbol.iterator]())) : undefined,
-	'%JSON%': typeof JSON === 'object' ? JSON : undefined,
-	'%Map%': typeof Map === 'undefined' ? undefined : Map,
-	'%MapIteratorPrototype%': typeof Map === 'undefined' || !hasSymbols || !getProto ? undefined : getProto(new Map()[Symbol.iterator]()),
-	'%Math%': Math,
-	'%Number%': Number,
-	'%Object%': $Object,
-	'%Object.getOwnPropertyDescriptor%': $gOPD,
-	'%parseFloat%': parseFloat,
-	'%parseInt%': parseInt,
-	'%Promise%': typeof Promise === 'undefined' ? undefined : Promise,
-	'%Proxy%': typeof Proxy === 'undefined' ? undefined : Proxy,
-	'%RangeError%': $RangeError,
-	'%ReferenceError%': $ReferenceError,
-	'%Reflect%': typeof Reflect === 'undefined' ? undefined : Reflect,
-	'%RegExp%': RegExp,
-	'%Set%': typeof Set === 'undefined' ? undefined : Set,
-	'%SetIteratorPrototype%': typeof Set === 'undefined' || !hasSymbols || !getProto ? undefined : getProto(new Set()[Symbol.iterator]()),
-	'%SharedArrayBuffer%': typeof SharedArrayBuffer === 'undefined' ? undefined : SharedArrayBuffer,
-	'%String%': String,
-	'%StringIteratorPrototype%': hasSymbols && getProto ? getProto(''[Symbol.iterator]()) : undefined,
-	'%Symbol%': hasSymbols ? Symbol : undefined,
-	'%SyntaxError%': $SyntaxError,
-	'%ThrowTypeError%': ThrowTypeError,
-	'%TypedArray%': TypedArray,
-	'%TypeError%': $TypeError,
-	'%Uint8Array%': typeof Uint8Array === 'undefined' ? undefined : Uint8Array,
-	'%Uint8ClampedArray%': typeof Uint8ClampedArray === 'undefined' ? undefined : Uint8ClampedArray,
-	'%Uint16Array%': typeof Uint16Array === 'undefined' ? undefined : Uint16Array,
-	'%Uint32Array%': typeof Uint32Array === 'undefined' ? undefined : Uint32Array,
-	'%URIError%': $URIError,
-	'%WeakMap%': typeof WeakMap === 'undefined' ? undefined : WeakMap,
-	'%WeakRef%': typeof WeakRef === 'undefined' ? undefined : WeakRef,
-	'%WeakSet%': typeof WeakSet === 'undefined' ? undefined : WeakSet,
-
-	'%Function.prototype.call%': $call,
-	'%Function.prototype.apply%': $apply,
-	'%Object.defineProperty%': $defineProperty,
-	'%Object.getPrototypeOf%': $ObjectGPO,
-	'%Math.abs%': abs,
-	'%Math.floor%': floor,
-	'%Math.max%': max,
-	'%Math.min%': min,
-	'%Math.pow%': pow,
-	'%Math.round%': round,
-	'%Math.sign%': sign,
-	'%Reflect.getPrototypeOf%': $ReflectGPO
-};
-
-if (getProto) {
-	try {
-		null.error; // eslint-disable-line no-unused-expressions
-	} catch (e) {
-		// https://github.com/tc39/proposal-shadowrealm/pull/384#issuecomment-1364264229
-		var errorProto = getProto(getProto(e));
-		INTRINSICS['%Error.prototype%'] = errorProto;
-	}
-}
-
-var doEval = function doEval(name) {
-	var value;
-	if (name === '%AsyncFunction%') {
-		value = getEvalledConstructor('async function () {}');
-	} else if (name === '%GeneratorFunction%') {
-		value = getEvalledConstructor('function* () {}');
-	} else if (name === '%AsyncGeneratorFunction%') {
-		value = getEvalledConstructor('async function* () {}');
-	} else if (name === '%AsyncGenerator%') {
-		var fn = doEval('%AsyncGeneratorFunction%');
-		if (fn) {
-			value = fn.prototype;
-		}
-	} else if (name === '%AsyncIteratorPrototype%') {
-		var gen = doEval('%AsyncGenerator%');
-		if (gen && getProto) {
-			value = getProto(gen.prototype);
-		}
-	}
-
-	INTRINSICS[name] = value;
-
-	return value;
-};
-
-var LEGACY_ALIASES = {
-	__proto__: null,
-	'%ArrayBufferPrototype%': ['ArrayBuffer', 'prototype'],
-	'%ArrayPrototype%': ['Array', 'prototype'],
-	'%ArrayProto_entries%': ['Array', 'prototype', 'entries'],
-	'%ArrayProto_forEach%': ['Array', 'prototype', 'forEach'],
-	'%ArrayProto_keys%': ['Array', 'prototype', 'keys'],
-	'%ArrayProto_values%': ['Array', 'prototype', 'values'],
-	'%AsyncFunctionPrototype%': ['AsyncFunction', 'prototype'],
-	'%AsyncGenerator%': ['AsyncGeneratorFunction', 'prototype'],
-	'%AsyncGeneratorPrototype%': ['AsyncGeneratorFunction', 'prototype', 'prototype'],
-	'%BooleanPrototype%': ['Boolean', 'prototype'],
-	'%DataViewPrototype%': ['DataView', 'prototype'],
-	'%DatePrototype%': ['Date', 'prototype'],
-	'%ErrorPrototype%': ['Error', 'prototype'],
-	'%EvalErrorPrototype%': ['EvalError', 'prototype'],
-	'%Float32ArrayPrototype%': ['Float32Array', 'prototype'],
-	'%Float64ArrayPrototype%': ['Float64Array', 'prototype'],
-	'%FunctionPrototype%': ['Function', 'prototype'],
-	'%Generator%': ['GeneratorFunction', 'prototype'],
-	'%GeneratorPrototype%': ['GeneratorFunction', 'prototype', 'prototype'],
-	'%Int8ArrayPrototype%': ['Int8Array', 'prototype'],
-	'%Int16ArrayPrototype%': ['Int16Array', 'prototype'],
-	'%Int32ArrayPrototype%': ['Int32Array', 'prototype'],
-	'%JSONParse%': ['JSON', 'parse'],
-	'%JSONStringify%': ['JSON', 'stringify'],
-	'%MapPrototype%': ['Map', 'prototype'],
-	'%NumberPrototype%': ['Number', 'prototype'],
-	'%ObjectPrototype%': ['Object', 'prototype'],
-	'%ObjProto_toString%': ['Object', 'prototype', 'toString'],
-	'%ObjProto_valueOf%': ['Object', 'prototype', 'valueOf'],
-	'%PromisePrototype%': ['Promise', 'prototype'],
-	'%PromiseProto_then%': ['Promise', 'prototype', 'then'],
-	'%Promise_all%': ['Promise', 'all'],
-	'%Promise_reject%': ['Promise', 'reject'],
-	'%Promise_resolve%': ['Promise', 'resolve'],
-	'%RangeErrorPrototype%': ['RangeError', 'prototype'],
-	'%ReferenceErrorPrototype%': ['ReferenceError', 'prototype'],
-	'%RegExpPrototype%': ['RegExp', 'prototype'],
-	'%SetPrototype%': ['Set', 'prototype'],
-	'%SharedArrayBufferPrototype%': ['SharedArrayBuffer', 'prototype'],
-	'%StringPrototype%': ['String', 'prototype'],
-	'%SymbolPrototype%': ['Symbol', 'prototype'],
-	'%SyntaxErrorPrototype%': ['SyntaxError', 'prototype'],
-	'%TypedArrayPrototype%': ['TypedArray', 'prototype'],
-	'%TypeErrorPrototype%': ['TypeError', 'prototype'],
-	'%Uint8ArrayPrototype%': ['Uint8Array', 'prototype'],
-	'%Uint8ClampedArrayPrototype%': ['Uint8ClampedArray', 'prototype'],
-	'%Uint16ArrayPrototype%': ['Uint16Array', 'prototype'],
-	'%Uint32ArrayPrototype%': ['Uint32Array', 'prototype'],
-	'%URIErrorPrototype%': ['URIError', 'prototype'],
-	'%WeakMapPrototype%': ['WeakMap', 'prototype'],
-	'%WeakSetPrototype%': ['WeakSet', 'prototype']
-};
-
-var bind = __webpack_require__(93836);
-var hasOwn = __webpack_require__(84748);
-var $concat = bind.call($call, Array.prototype.concat);
-var $spliceApply = bind.call($apply, Array.prototype.splice);
-var $replace = bind.call($call, String.prototype.replace);
-var $strSlice = bind.call($call, String.prototype.slice);
-var $exec = bind.call($call, RegExp.prototype.exec);
-
-/* adapted from https://github.com/lodash/lodash/blob/4.17.15/dist/lodash.js#L6735-L6744 */
-var rePropName = /[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g;
-var reEscapeChar = /\\(\\)?/g; /** Used to match backslashes in property paths. */
-var stringToPath = function stringToPath(string) {
-	var first = $strSlice(string, 0, 1);
-	var last = $strSlice(string, -1);
-	if (first === '%' && last !== '%') {
-		throw new $SyntaxError('invalid intrinsic syntax, expected closing `%`');
-	} else if (last === '%' && first !== '%') {
-		throw new $SyntaxError('invalid intrinsic syntax, expected opening `%`');
-	}
-	var result = [];
-	$replace(string, rePropName, function (match, number, quote, subString) {
-		result[result.length] = quote ? $replace(subString, reEscapeChar, '$1') : number || match;
-	});
-	return result;
-};
-/* end adaptation */
-
-var getBaseIntrinsic = function getBaseIntrinsic(name, allowMissing) {
-	var intrinsicName = name;
-	var alias;
-	if (hasOwn(LEGACY_ALIASES, intrinsicName)) {
-		alias = LEGACY_ALIASES[intrinsicName];
-		intrinsicName = '%' + alias[0] + '%';
-	}
-
-	if (hasOwn(INTRINSICS, intrinsicName)) {
-		var value = INTRINSICS[intrinsicName];
-		if (value === needsEval) {
-			value = doEval(intrinsicName);
-		}
-		if (typeof value === 'undefined' && !allowMissing) {
-			throw new $TypeError('intrinsic ' + name + ' exists, but is not available. Please file an issue!');
-		}
-
-		return {
-			alias: alias,
-			name: intrinsicName,
-			value: value
-		};
-	}
-
-	throw new $SyntaxError('intrinsic ' + name + ' does not exist!');
-};
-
-module.exports = function GetIntrinsic(name, allowMissing) {
-	if (typeof name !== 'string' || name.length === 0) {
-		throw new $TypeError('intrinsic name must be a non-empty string');
-	}
-	if (arguments.length > 1 && typeof allowMissing !== 'boolean') {
-		throw new $TypeError('"allowMissing" argument must be a boolean');
-	}
-
-	if ($exec(/^%?[^%]*%?$/, name) === null) {
-		throw new $SyntaxError('`%` may not be present anywhere but at the beginning and end of the intrinsic name');
-	}
-	var parts = stringToPath(name);
-	var intrinsicBaseName = parts.length > 0 ? parts[0] : '';
-
-	var intrinsic = getBaseIntrinsic('%' + intrinsicBaseName + '%', allowMissing);
-	var intrinsicRealName = intrinsic.name;
-	var value = intrinsic.value;
-	var skipFurtherCaching = false;
-
-	var alias = intrinsic.alias;
-	if (alias) {
-		intrinsicBaseName = alias[0];
-		$spliceApply(parts, $concat([0, 1], alias));
-	}
-
-	for (var i = 1, isOwn = true; i < parts.length; i += 1) {
-		var part = parts[i];
-		var first = $strSlice(part, 0, 1);
-		var last = $strSlice(part, -1);
-		if (
-			(
-				(first === '"' || first === "'" || first === '`')
-				|| (last === '"' || last === "'" || last === '`')
-			)
-			&& first !== last
-		) {
-			throw new $SyntaxError('property names with quotes must have matching quotes');
-		}
-		if (part === 'constructor' || !isOwn) {
-			skipFurtherCaching = true;
-		}
-
-		intrinsicBaseName += '.' + part;
-		intrinsicRealName = '%' + intrinsicBaseName + '%';
-
-		if (hasOwn(INTRINSICS, intrinsicRealName)) {
-			value = INTRINSICS[intrinsicRealName];
-		} else if (value != null) {
-			if (!(part in value)) {
-				if (!allowMissing) {
-					throw new $TypeError('base intrinsic for ' + name + ' exists, but the property is not available.');
-				}
-				return void undefined;
-			}
-			if ($gOPD && (i + 1) >= parts.length) {
-				var desc = $gOPD(value, part);
-				isOwn = !!desc;
-
-				// By convention, when a data property is converted to an accessor
-				// property to emulate a data property that does not suffer from
-				// the override mistake, that accessor's getter is marked with
-				// an `originalValue` property. Here, when we detect this, we
-				// uphold the illusion by pretending to see that original data
-				// property, i.e., returning the value rather than the getter
-				// itself.
-				if (isOwn && 'get' in desc && !('originalValue' in desc.get)) {
-					value = desc.get;
-				} else {
-					value = value[part];
-				}
-			} else {
-				isOwn = hasOwn(value, part);
-				value = value[part];
-			}
-
-			if (isOwn && !skipFurtherCaching) {
-				INTRINSICS[intrinsicRealName] = value;
-			}
-		}
-	}
-	return value;
-};
-
-
-/***/ }),
-
-/***/ 3888:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('./gOPD')} */
-module.exports = Object.getOwnPropertyDescriptor;
-
-
-/***/ }),
-
-/***/ 95652:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-/** @type {import('.')} */
-var $gOPD = __webpack_require__(3888);
-
-if ($gOPD) {
-	try {
-		$gOPD([], 'length');
-	} catch (e) {
-		// IE 8 has a broken gOPD
-		$gOPD = null;
-	}
-}
-
-module.exports = $gOPD;
-
-
-/***/ }),
-
-/***/ 82098:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-var origSymbol = typeof Symbol !== 'undefined' && Symbol;
-var hasSymbolSham = __webpack_require__(76040);
-
-/** @type {import('.')} */
-module.exports = function hasNativeSymbols() {
-	if (typeof origSymbol !== 'function') { return false; }
-	if (typeof Symbol !== 'function') { return false; }
-	if (typeof origSymbol('foo') !== 'symbol') { return false; }
-	if (typeof Symbol('bar') !== 'symbol') { return false; }
-
-	return hasSymbolSham();
-};
-
-
-/***/ }),
-
-/***/ 76040:
-/***/ (function(module) {
-
-"use strict";
-
-
-/** @type {import('./shams')} */
-/* eslint complexity: [2, 18], max-statements: [2, 33] */
-module.exports = function hasSymbols() {
-	if (typeof Symbol !== 'function' || typeof Object.getOwnPropertySymbols !== 'function') { return false; }
-	if (typeof Symbol.iterator === 'symbol') { return true; }
-
-	/** @type {{ [k in symbol]?: unknown }} */
-	var obj = {};
-	var sym = Symbol('test');
-	var symObj = Object(sym);
-	if (typeof sym === 'string') { return false; }
-
-	if (Object.prototype.toString.call(sym) !== '[object Symbol]') { return false; }
-	if (Object.prototype.toString.call(symObj) !== '[object Symbol]') { return false; }
-
-	// temp disabled per https://github.com/ljharb/object.assign/issues/17
-	// if (sym instanceof Symbol) { return false; }
-	// temp disabled per https://github.com/WebReflection/get-own-property-symbols/issues/4
-	// if (!(symObj instanceof Symbol)) { return false; }
-
-	// if (typeof Symbol.prototype.toString !== 'function') { return false; }
-	// if (String(sym) !== Symbol.prototype.toString.call(sym)) { return false; }
-
-	var symVal = 42;
-	obj[sym] = symVal;
-	for (var _ in obj) { return false; } // eslint-disable-line no-restricted-syntax, no-unreachable-loop
-	if (typeof Object.keys === 'function' && Object.keys(obj).length !== 0) { return false; }
-
-	if (typeof Object.getOwnPropertyNames === 'function' && Object.getOwnPropertyNames(obj).length !== 0) { return false; }
-
-	var syms = Object.getOwnPropertySymbols(obj);
-	if (syms.length !== 1 || syms[0] !== sym) { return false; }
-
-	if (!Object.prototype.propertyIsEnumerable.call(obj, sym)) { return false; }
-
-	if (typeof Object.getOwnPropertyDescriptor === 'function') {
-		// eslint-disable-next-line no-extra-parens
-		var descriptor = /** @type {PropertyDescriptor} */ (Object.getOwnPropertyDescriptor(obj, sym));
-		if (descriptor.value !== symVal || descriptor.enumerable !== true) { return false; }
-	}
-
-	return true;
-};
 
 
 /***/ }),
@@ -57790,7 +56724,7 @@ var AdapterCore = __webpack_require__(27461);
 var utils = __webpack_require__(48042);
 ;// ./src/lib/popWindow.ts
 function popWindow(url, id, w, h) {
-  if (url.indexOf('javascript') > 0) {
+  if (url.indexOf('javascript') > -1) {
     throw new Error('Invalid window open url');
   }
   // Fixes dual-screen position                         Most browsers      Firefox
@@ -58770,6 +57704,11 @@ class Adapter extends AdapterCore/* default */.A {
       template,
       readOnly,
       readOnlyReason
+    });
+  }
+  async refreshLoginSession(force) {
+    return this._requestWithPostMessage('/refresh-login-session', {
+      force
     });
   }
 }

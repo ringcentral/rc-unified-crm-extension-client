@@ -287,8 +287,12 @@ describe('miscellaneous top-level widget event handlers', () => {
       trackEditSettings: vi.fn(),
     };
     vi.doMock('../../src/lib/analytics.ts', () => analytics);
+    let finishRetroAutoCallLog: (() => void) | undefined;
+    const retroAutoCallLogPromise = new Promise<void>((resolve) => {
+      finishRetroAutoCallLog = resolve;
+    });
     const logService = {
-      retroAutoCallLog: vi.fn(),
+      retroAutoCallLog: vi.fn(() => retroAutoCallLogPromise),
     };
     vi.doMock('../../src/service/logService.ts', () => ({ default: logService }));
     vi.doMock('../../src/service/manifestService.ts', () => ({
@@ -313,15 +317,47 @@ describe('miscellaneous top-level widget event handlers', () => {
       changedItem: 'auto-call-log',
       status: true,
     });
-    expect(readStorage().retroAutoCallLogMaxAttempt).toBe(10);
     expect(readStorage().retroAutoCallLogIntervalId).toBe(123);
-    expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 60000);
+    expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 10 * 60 * 1000);
+    intervalSpy.mock.calls[0][0]();
     intervalSpy.mock.calls[0][0]();
     expect(logService.retroAutoCallLog).toHaveBeenCalledWith({
       manifest: manifest(),
       platformName: 'salesforce',
       platform: manifest().platforms.salesforce,
     });
+    expect(logService.retroAutoCallLog).toHaveBeenCalledTimes(1);
+    finishRetroAutoCallLog?.();
+    await retroAutoCallLogPromise;
+  });
+
+  it('replaces and stops retro auto-call-log polling when auto-log changes', async () => {
+    vi.resetModules();
+    const intervalSpy = vi.spyOn(globalThis, 'setInterval').mockReturnValue(
+      123 as unknown as ReturnType<typeof setInterval>,
+    );
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval').mockImplementation(() => {});
+    vi.doMock('../../src/lib/analytics.ts', () => ({ trackEditSettings: vi.fn() }));
+    vi.doMock('../../src/service/logService.ts', () => ({
+      default: { retroAutoCallLog: vi.fn() },
+    }));
+    vi.doMock('../../src/service/manifestService.ts', () => ({
+      getManifest: vi.fn(async () => manifest()),
+    }));
+    vi.doMock('../../src/service/platformService.ts', () => ({
+      getPlatformInfo: vi.fn(async () => ({ platformName: 'salesforce' })),
+    }));
+    seedStorage({ crmAuthed: true });
+    const handler = await loadModule('../../src/eventHandlers/rc-callLogger-auto-log-notify.ts');
+
+    await handler.onEvent({ data: { autoLog: true } });
+    await handler.onEvent({ data: { autoLog: true } });
+    await handler.onEvent({ data: { autoLog: false } });
+
+    expect(intervalSpy).toHaveBeenCalledTimes(2);
+    expect(clearIntervalSpy).toHaveBeenCalledTimes(2);
+    expect(clearIntervalSpy).toHaveBeenNthCalledWith(1, 123);
+    expect(readStorage().retroAutoCallLogIntervalId).toBeUndefined();
   });
 
   it('refreshes pushed adapter state and reapplies platform request timeout', async () => {
@@ -1232,6 +1268,7 @@ describe('miscellaneous rc-post-message-request handlers', () => {
       data: {
         requestId: 'input-1',
         body: {
+          keys: ['contact'],
           call: {
             sessionId: 'session-1',
           },
@@ -1334,6 +1371,55 @@ describe('miscellaneous rc-post-message-request handlers', () => {
       },
     ]));
     expect(responseMessage).toHaveBeenCalledWith('message-input-1', { data: 'ok' });
+  });
+
+  it.each([
+    ['call', '../../src/eventHandlers/rc-post-message-request/callLogger/inputChanged/index.ts'],
+    ['message', '../../src/eventHandlers/rc-post-message-request/messageLogger/inputChanged/index.ts'],
+  ])('does not open contact search when another %s-log input changes', async (_logType, modulePath) => {
+    vi.resetModules();
+    const logCore = {
+      cacheCallNote: vi.fn(async () => {}),
+    };
+    vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
+    const logPage = {
+      getUpdatedLogPageRender: vi.fn(() => ({ id: 'logPage' })),
+    };
+    vi.doMock('../../src/components/logPage.ts', () => ({ default: logPage }));
+    const contactSearch = {
+      getCustomContactSearch: vi.fn(() => ({ id: 'contactSearchPage' })),
+    };
+    vi.doMock('../../src/core/customContactSearch.ts', () => ({ default: contactSearch }));
+    const responseMessage = vi.fn();
+    vi.doMock('../../src/lib/util.ts', () => ({ responseMessage }));
+    const handler = await loadModule(modulePath);
+
+    await handler.onEvent({
+      data: {
+        requestId: 'other-input',
+        body: {
+          keys: ['note'],
+          call: {
+            sessionId: 'session-1',
+          },
+          formData: {
+            note: 'updated note',
+            contact: 'searchContact',
+            contactPhoneNumber: '+16505550100',
+          },
+        },
+      },
+      ...baseContext(),
+    });
+
+    expect(contactSearch.getCustomContactSearch).not.toHaveBeenCalled();
+    expect(getWidgetPostMessages()).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        message: expect.objectContaining({
+          type: 'rc-adapter-navigate-to',
+        }),
+      }),
+    ]));
   });
 
   it('matches locally saved message logs by conversation log id', async () => {

@@ -38,7 +38,10 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
   const manifest = await getManifest() as UnknownRecord;
   const platformName = platformInfo?.platformName ?? '';
   const platform = manifest?.platforms?.[platformName];
-  const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as { rcUnifiedCrmExtJwt?: string };
+  let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as { rcUnifiedCrmExtJwt?: string };
+  const { rcUserInfo: previousRcUserInfo } = await chrome.storage.local.get('rcUserInfo') as { rcUserInfo?: UnknownRecord };
+  let rcInfo: UnknownRecord | undefined;
+  let currentRcUserInfo: UnknownRecord | undefined;
   // get login status from widget
   const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} }) as { userPermissions: UnknownRecord };
   if (data.loggedIn) {
@@ -46,20 +49,47 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
     userPermissions.ringSenseInsights = data.features && data.features.ringSenseInsights;
     userPermissions.ringCX = data.features && data.features.ringCX;
     userPermissions.sms = data.features && data.features.sms;
-    const rcInfo = await getRcInfo() as UnknownRecord;
+    rcInfo = await getRcInfo() as UnknownRecord;
     const smsSendingEnabled = rcInfo?.value?.cachedData?.extensionFeatures?.records?.find((ef: UnknownRecord) => ef.id === 'SMSSending')?.available ?? false;
     if (smsSendingEnabled) {
       userPermissions.c2sms = true;
     }
     await chrome.storage.local.set({ userPermissions });
+
+    if (manifest?.serverUrl) {
+      try {
+        const extensionInfo = rcInfo.value.cachedData.extensionInfo;
+        const rcAPI = new RcAPI();
+        const userInfoResponse = await rcAPI.getUserInfo({
+          serverUrl: manifest.serverUrl,
+          extensionId: extensionInfo.id,
+          accountId: extensionInfo.account.id,
+        });
+        currentRcUserInfo = {
+          rcUserName: extensionInfo.name,
+          rcUserEmail: extensionInfo.contact.email,
+          rcAccountId: userInfoResponse.accountId,
+          rcExtensionId: userInfoResponse.extensionId,
+        };
+        const rcIdentityChanged = !!previousRcUserInfo?.rcAccountId
+          && !!previousRcUserInfo?.rcExtensionId
+          && (previousRcUserInfo.rcAccountId !== currentRcUserInfo.rcAccountId
+            || previousRcUserInfo.rcExtensionId !== currentRcUserInfo.rcExtensionId);
+        if (rcIdentityChanged) {
+          await authCore.clearLocalCrmAuthState();
+          rcUnifiedCrmExtJwt = undefined;
+        }
+      }
+      catch (e) {
+        console.error('Failed to compare RingCentral user identity', e);
+      }
+    }
   }
   console.log('rc-login-status-notify:', data.loggedIn, data.loginNumber, data.contractedCountryCode);
 
   let crmAuthed = !!rcUnifiedCrmExtJwt;
   // 2. If logged in
   if (data.loggedIn) {
-    const { rcUserInfo } = await chrome.storage.local.get('rcUserInfo');
-    void rcUserInfo;
     // 2.1. If no platform info, show platform selection page
     if (!platformInfo) {
       const platformList = await getPlatformList();
@@ -167,21 +197,24 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
     }
 
     try {
-      const rcInfo = await getRcInfo() as UnknownRecord;
+      rcInfo ??= await getRcInfo() as UnknownRecord;
       await setRcAdditionalSubmission({ rcInfo, platform });
       if (manifest?.serverUrl) {
-        const rcAPI = new RcAPI();
-        const userInfoResponse = await rcAPI.getUserInfo({
-          serverUrl: manifest.serverUrl,
-          extensionId: rcInfo.value.cachedData.extensionInfo.id,
-          accountId: rcInfo.value.cachedData.extensionInfo.account.id,
-        });
-        const rcUserInfo = {
-          rcUserName: rcInfo.value.cachedData.extensionInfo.name,
-          rcUserEmail: rcInfo.value.cachedData.extensionInfo.contact.email,
-          rcAccountId: userInfoResponse.accountId,
-          rcExtensionId: userInfoResponse.extensionId,
-        };
+        if (!currentRcUserInfo) {
+          const rcAPI = new RcAPI();
+          const userInfoResponse = await rcAPI.getUserInfo({
+            serverUrl: manifest.serverUrl,
+            extensionId: rcInfo.value.cachedData.extensionInfo.id,
+            accountId: rcInfo.value.cachedData.extensionInfo.account.id,
+          });
+          currentRcUserInfo = {
+            rcUserName: rcInfo.value.cachedData.extensionInfo.name,
+            rcUserEmail: rcInfo.value.cachedData.extensionInfo.contact.email,
+            rcAccountId: userInfoResponse.accountId,
+            rcExtensionId: userInfoResponse.extensionId,
+          };
+        }
+        const rcUserInfo = currentRcUserInfo;
         await chrome.storage.local.set({ ['rcUserInfo']: rcUserInfo });
         reset();
         identify({ extensionId: rcUserInfo?.rcExtensionId, rcAccountId: rcUserInfo?.rcAccountId, platformName });

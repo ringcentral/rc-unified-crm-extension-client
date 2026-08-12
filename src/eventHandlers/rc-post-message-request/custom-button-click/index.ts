@@ -44,6 +44,7 @@ import logRecordSubmissionPageHandler from './errorLogging/logRecordSubmit';
 import saveServerSideLoggingButtonHandler from './adminSettings/saveServerSideLogging';
 import doNotLogNumbersSubmitButtonHandler from './adminSettings/doNotLogNumbersSubmit';
 import generalHandler from './adminSettings/adminSettingsFormSubmit';
+import refreshAccountDataHandler from './adminSettings/refreshAccountData';
 import managedAuthOrgPageHandler from './adminSettings/managedAuthOrgPage';
 import managedAuthUserPageHandler from './adminSettings/managedAuthUserPage';
 import managedAuthUserEditHandler from './adminSettings/managedAuthUserEdit';
@@ -61,6 +62,7 @@ import adminRemoveSheetButtonHandler from './googleSheets/adminRemoveSheetButton
 
 import contactSearchAdapterButtonCallLogHandler from './contactSearch/contactSearchAdapterButtonCallLog';
 import contactSearchAdapterButtonMessageLogHandler from './contactSearch/contactSearchAdapterButtonMessageLog';
+import searchContactButtonHandler from './contactSearch/searchContactButton';
 
 import openInstalledPluginListPageHandler from './plugins/installedPluginListPage';
 import selectPluginHandler from './plugins/selectPlugin';
@@ -328,6 +330,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
         case 'contactSearchAdapterButtonMessageLog':
             await contactSearchAdapterButtonMessageLogHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
+        case 'contact':
+            await searchContactButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
         case 'refreshLicense':
             if (platform.useLicense) { await authCore.refreshLicenseStatus({ serverUrl: manifest.serverUrl }); }
             break;
@@ -383,7 +388,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
         case 'languageSettingPage':
         case 'phoneNumberFormatPage':
         case 'clickToDialEmbedPage':
+        case 'accountSettingsPage':
             await generalHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
+            break;
+        case 'accountDataPage':
+            await refreshAccountDataHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'managedAuthOrgPage':
             await (managedAuthOrgPageHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
