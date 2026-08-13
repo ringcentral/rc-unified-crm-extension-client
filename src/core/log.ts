@@ -7,8 +7,52 @@ import { resolveVoicemailRecording } from '../lib/voicemail';
 
 type UnknownRecord = Record<string, any>;
 
+const MESSAGE_LOG_MATCH_BATCH_SIZE = 100;
+const MESSAGE_LOG_MATCH_MAX_CONCURRENCY = 3;
+
 function getWidgetFrameWindow(): Window {
   return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
+}
+
+function normalizeMessageIds(messageIds: unknown): string[] {
+  if (!Array.isArray(messageIds)) {
+    return [];
+  }
+  return messageIds.map((id) => String(id).trim()).filter(Boolean);
+}
+
+function extractMessageLogs(data: UnknownRecord): UnknownRecord {
+  // The server returns a flat `messageLogs` map (messageId -> CRM logId) and a
+  // parallel `logs` array ([{ messageId, matched, logId }]). Prefer the map;
+  // fall back to reconstructing it from the matched entries in `logs`.
+  let messageLogs = data.messageLogs as UnknownRecord | undefined;
+  if ((!messageLogs || isObjectEmpty(messageLogs)) && Array.isArray(data.logs)) {
+    messageLogs = {};
+    for (const entry of data.logs as UnknownRecord[]) {
+      if (entry?.matched && entry.logId && entry.messageId !== undefined && entry.messageId !== null) {
+        messageLogs[String(entry.messageId)] = entry.logId;
+      }
+    }
+  }
+  return messageLogs ?? {};
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  maxConcurrency: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = [];
+  let nextIndex = 0;
+  const workerCount = Math.min(maxConcurrency, items.length);
+  await Promise.all(Array.from({ length: workerCount }, async () => {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await worker(items[index], index);
+    }
+  }));
+  return results;
 }
 
 // Input {id} = sessionId from RC
@@ -183,24 +227,29 @@ export async function getMessageLog({ serverUrl, conversationId, messageIds }: U
   if (!rcUnifiedCrmExtJwt) {
     return { successful: false, messageLogs: {} };
   }
-  const query = new URLSearchParams({ conversationId: String(conversationId ?? '') });
-  if (Array.isArray(messageIds) && messageIds.length > 0) {
-    query.set('messageIds', messageIds.join(','));
-  }
-  const res = await axios.get(`${serverUrl}/messageLog?${query.toString()}`);
-  // The server returns a flat `messageLogs` map (messageId -> CRM logId) and a
-  // parallel `logs` array ([{ messageId, matched, logId }]). Prefer the map;
-  // fall back to reconstructing it from the matched entries in `logs`.
-  let messageLogs = res.data.messageLogs as UnknownRecord | undefined;
-  if ((!messageLogs || isObjectEmpty(messageLogs)) && Array.isArray(res.data.logs)) {
-    messageLogs = {};
-    for (const entry of res.data.logs as UnknownRecord[]) {
-      if (entry?.matched && entry.logId && entry.messageId !== undefined && entry.messageId !== null) {
-        messageLogs[String(entry.messageId)] = entry.logId;
-      }
+
+  const ids = normalizeMessageIds(messageIds);
+  const batches = ids.length > 0
+    ? Array.from({ length: Math.ceil(ids.length / MESSAGE_LOG_MATCH_BATCH_SIZE) }, (_, index) => (
+      ids.slice(index * MESSAGE_LOG_MATCH_BATCH_SIZE, (index + 1) * MESSAGE_LOG_MATCH_BATCH_SIZE)
+    ))
+    : [[]];
+
+  const responses = await mapWithConcurrency(batches, MESSAGE_LOG_MATCH_MAX_CONCURRENCY, async (batch) => {
+    const body: UnknownRecord = { conversationId: String(conversationId ?? '') };
+    if (batch.length > 0) {
+      body.messageIds = batch;
     }
-  }
-  return { successful: res.data.successful, messageLogs: messageLogs ?? {} };
+    return axios.post(`${serverUrl}/messageLog/match`, body);
+  });
+
+  return responses.reduce((result, res) => ({
+    successful: result.successful && res.data.successful !== false,
+    messageLogs: {
+      ...result.messageLogs,
+      ...extractMessageLogs(res.data),
+    },
+  }), { successful: true, messageLogs: {} as UnknownRecord });
 }
 
 export function openLog({ manifest, platformName, hostname, logId, contactType, contactId, userSettings }: UnknownRecord): void {

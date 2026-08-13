@@ -260,7 +260,7 @@ describe('log core', () => {
       additionalSubmission: {},
     });
 
-    // The server (GET /messageLog) is the source of truth for per-message
+    // The server match endpoint is the source of truth for per-message
     // logged state, so no local per-message map is written.
     expect(readStorage()['rc-crm-message-log-conv-granular']).toBeUndefined();
     expect(readStorage()['rc-crm-conversation-log-conv-granular-log']).toEqual({ logged: true });
@@ -324,16 +324,17 @@ describe('log core', () => {
 
   it('fetches per-message logged state and degrades without CRM auth', async () => {
     const logCore = await loadLogCore();
+    vi.mocked(axios.post).mockClear();
 
     await expect(logCore.getMessageLog({
       serverUrl: 'https://server.example',
       conversationId: 'conv-1',
       messageIds: ['m1'],
     })).resolves.toEqual({ successful: false, messageLogs: {} });
-    expect(axios.get).not.toHaveBeenCalled();
+    expect(axios.post).not.toHaveBeenCalled();
 
     seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
-    vi.mocked(axios.get).mockResolvedValueOnce({
+    vi.mocked(axios.post).mockResolvedValueOnce({
       data: {
         successful: true,
         messageLogs: { m1: { logId: 'log-1' } },
@@ -348,13 +349,17 @@ describe('log core', () => {
       successful: true,
       messageLogs: { m1: { logId: 'log-1' } },
     });
-    expect(axios.get).toHaveBeenCalledWith('https://server.example/messageLog?conversationId=conv-1&messageIds=m1%2Cm2');
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/messageLog/match', {
+      conversationId: 'conv-1',
+      messageIds: ['m1', 'm2'],
+    });
   });
 
   it('reconstructs the messageLogs map from the logs array when the map is absent', async () => {
     seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
     const logCore = await loadLogCore();
-    vi.mocked(axios.get).mockResolvedValueOnce({
+    vi.mocked(axios.post).mockClear();
+    vi.mocked(axios.post).mockResolvedValueOnce({
       data: {
         successful: true,
         logs: [
@@ -373,6 +378,84 @@ describe('log core', () => {
       successful: true,
       messageLogs: { '6424569101': 'crm-entry-1', '6424569105': 'crm-entry-1' },
     });
+  });
+
+  it('batches per-message logged-state lookups to keep requests bounded', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const logCore = await loadLogCore();
+    vi.mocked(axios.post).mockClear();
+    const messageIds = Array.from({ length: 101 }, (_, index) => `m${index + 1}`);
+    vi.mocked(axios.post)
+      .mockResolvedValueOnce({
+        data: {
+          successful: true,
+          messageLogs: { m1: 'log-1' },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          successful: true,
+          messageLogs: { m101: 'log-101' },
+        },
+      });
+
+    await expect(logCore.getMessageLog({
+      serverUrl: 'https://server.example',
+      conversationId: 'conv-batched',
+      messageIds,
+    })).resolves.toEqual({
+      successful: true,
+      messageLogs: { m1: 'log-1', m101: 'log-101' },
+    });
+
+    expect(axios.post).toHaveBeenNthCalledWith(1, 'https://server.example/messageLog/match', {
+      conversationId: 'conv-batched',
+      messageIds: messageIds.slice(0, 100),
+    });
+    expect(axios.post).toHaveBeenNthCalledWith(2, 'https://server.example/messageLog/match', {
+      conversationId: 'conv-batched',
+      messageIds: ['m101'],
+    });
+  });
+
+  it('limits concurrent per-message logged-state lookup requests', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const logCore = await loadLogCore();
+    vi.mocked(axios.post).mockClear();
+    const messageIds = Array.from({ length: 301 }, (_, index) => `m${index + 1}`);
+    const resolvers: Array<() => void> = [];
+    let activeRequests = 0;
+    let maxActiveRequests = 0;
+    vi.mocked(axios.post).mockImplementation(() => new Promise((resolve) => {
+      activeRequests += 1;
+      maxActiveRequests = Math.max(maxActiveRequests, activeRequests);
+      resolvers.push(() => {
+        activeRequests -= 1;
+        resolve({ data: { successful: true, messageLogs: {} } });
+      });
+    }));
+
+    try {
+      const lookup = logCore.getMessageLog({
+        serverUrl: 'https://server.example',
+        conversationId: 'conv-concurrency',
+        messageIds,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(axios.post).toHaveBeenCalledTimes(3);
+
+      resolvers.shift()?.();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(axios.post).toHaveBeenCalledTimes(4);
+
+      while (resolvers.length > 0) {
+        resolvers.shift()?.();
+      }
+      await expect(lookup).resolves.toEqual({ successful: true, messageLogs: {} });
+      expect(maxActiveRequests).toBeLessThanOrEqual(3);
+    } finally {
+      vi.mocked(axios.post).mockReset();
+    }
   });
 
   it('warns instead of logging when CRM JWT is missing', async () => {

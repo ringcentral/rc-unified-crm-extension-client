@@ -31,7 +31,7 @@ async function matchByConversationLogIds(data: UnknownRecord): Promise<void> {
 
 // Per-message match (granular SMS logging): given a `conversationId` and a set
 // of `messageIds`, ask the server which individual messages are already logged
-// and to which CRM log record. The server (via GET /messageLog) is the single
+// and to which CRM log record. The server match endpoint is the single
 // source of truth; there is no local cache. The widget uses the response to
 // render per-message "logged" icons that navigate straight to the CRM entry.
 async function matchByMessageIds(data: UnknownRecord, manifest?: UnknownRecord): Promise<void> {
