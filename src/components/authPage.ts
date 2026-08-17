@@ -35,13 +35,6 @@ function getAuthPageRender({
     } : {};
     let content = {};
     for (const c of filteredContent) {
-        content[c.const] = isDynamicUserManagedField(c) ?
-            getDynamicManagedAuthSchema(c, dynamicOptions[c.const] ?? []) :
-            {
-                title: c.title,
-                type: c.type,
-                description: c.description
-            };
         if (isAdmin && isDynamicUserManagedField(c)) {
             const buttonId = getManagedAuthOptionsButtonId(AUTH_OPTIONS_ACTION, c.const);
             content[buttonId] = {
@@ -49,6 +42,13 @@ function getAuthPageRender({
                 title: getManagedAuthOptionsButtonTitle(c),
             };
         }
+        content[c.const] = isDynamicUserManagedField(c) ?
+            getDynamicManagedAuthSchema(c, dynamicOptions[c.const] ?? []) :
+            {
+                title: c.title,
+                type: c.type,
+                description: c.description
+            };
     }
     let uiSchema = {
         submitButtonOptions: { // optional if you don't want to show submit button

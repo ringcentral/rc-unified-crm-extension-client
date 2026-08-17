@@ -240,6 +240,9 @@ describe('basic page renderers', () => {
       type: 'string',
       title: 'Update CRM user',
     });
+    const propertyKeys = Object.keys(adminAuth.schema.properties);
+    expect(propertyKeys.indexOf('managedAuthOptionsAuth-crmUserId-action'))
+      .toBeLessThan(propertyKeys.indexOf('crmUserId'));
     expect(adminAuth.schema.properties.crmUserId).toMatchObject({
       type: 'string',
       enum: ['user-101'],
