@@ -280,7 +280,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             await reportIssueButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'openCommunityPageButton':
-            window.open('https://community.ringcentral.com/groups/app-connect-22', '_blank');
+            window.open('https://community.ringcentral.com/integrations-app-connect-33', '_blank');
             break;
         case 'documentation':
             await documentationHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
