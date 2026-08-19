@@ -7,7 +7,7 @@ import reportPage from '../../src/components/reportPage/reportPage.ts';
 import calldownPage from '../../src/components/calldownPage.ts';
 import { getRcAccessToken, refreshRCToken } from '../../src/lib/util.ts';
 import { loadModule } from '../helpers/loadModule';
-import { getWidgetPostMessages } from '../setup/widgetFrameMock';
+import { getWidgetFrameWindow, getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
 
 const rcApiMocks = vi.hoisted(() => ({
@@ -496,6 +496,43 @@ describe('user service behavior', () => {
       },
       targetOrigin: '*',
     });
+  });
+
+  it('disables forced client auto-log for an admin after registering admin-only server-side logging', async () => {
+    seedStorage({
+      crmAuthed: true,
+      isAdmin: true,
+      selectedRegion: 'US',
+    });
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        autoLogCall: { customizable: false, value: true },
+        serverSideLogging: {
+          enable: true,
+          loggingLevel: 'User',
+        },
+      },
+    });
+    vi.mocked(axios.post).mockImplementationOnce(async (_url, body) => ({
+      data: {
+        userSettings: getPostedUserSettings(body),
+      },
+    }));
+    const userCore = await loadUserCore();
+
+    await userCore.refreshUserSettings({});
+
+    expect(RCAdapter.setAutoLog).toHaveBeenCalledWith({
+      call: false,
+      message: false,
+    });
+    const widgetPostMessage = vi.mocked(getWidgetFrameWindow().postMessage);
+    const registrationCallIndex = widgetPostMessage.mock.calls.findIndex(
+      ([message]) => message.type === 'rc-adapter-register-third-party-service',
+    );
+    expect(registrationCallIndex).toBeGreaterThanOrEqual(0);
+    expect(widgetPostMessage.mock.invocationCallOrder[registrationCallIndex])
+      .toBeLessThan(vi.mocked(RCAdapter.setAutoLog).mock.invocationCallOrder[0]);
   });
 
   it('refreshes settings without changed settings and can skip forced AI updates', async () => {
