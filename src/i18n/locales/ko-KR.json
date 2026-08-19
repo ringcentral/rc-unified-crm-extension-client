@@ -102,6 +102,7 @@
       "saveTo": "{platform}에 저장",
       "editLog": "로그 편집",
       "activityTitle": "활동 제목",
+      "messageLogTitle": "{name}님과의 SMS 대화 - {date}",
       "note": "메모",
       "scheduleCallback": "콜백 예약",
       "callbackTime": "콜백 시간",

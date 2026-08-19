@@ -102,6 +102,7 @@
       "saveTo": "Opslaan in {platform}",
       "editLog": "Log bewerken",
       "activityTitle": "Activiteitstitel",
+      "messageLogTitle": "Sms-gesprek met {name} - {date}",
       "note": "Notitie",
       "scheduleCallback": "Terugbelafspraak plannen",
       "callbackTime": "Terugbeltijd",

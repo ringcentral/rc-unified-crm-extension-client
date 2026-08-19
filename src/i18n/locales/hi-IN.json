@@ -102,6 +102,7 @@
       "saveTo": "{platform} में सहेजें",
       "editLog": "लॉग संपादित करें",
       "activityTitle": "गतिविधि शीर्षक",
+      "messageLogTitle": "{name} के साथ SMS वार्तालाप - {date}",
       "note": "नोट",
       "scheduleCallback": "कॉलबैक शेड्यूल करें",
       "callbackTime": "कॉलबैक समय",

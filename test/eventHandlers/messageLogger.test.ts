@@ -1065,6 +1065,8 @@ describe('messageLogger', () => {
       id: 'selected-conversation',
       logType: 'Message',
       triggerType: 'createLog',
+      // The selected-message form surfaces an editable, prefilled title.
+      showActivityTitle: true,
     }));
     expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
       {
@@ -1222,6 +1224,7 @@ describe('messageLogger', () => {
           newContactName: '',
           newContactType: '',
           messageType: 'sms',
+          activityTitle: 'My custom SMS title',
         },
       }),
       ...context,
@@ -1234,6 +1237,8 @@ describe('messageLogger', () => {
     expect(addLogArgs.logInfo.messages.map((m: any) => m.id)).toEqual(['m1', 'm3']);
     expect(addLogArgs.selectedMessageIds).toEqual(['m1', 'm3']);
     expect(addLogArgs.contactId).toBe('contact-1');
+    // The user-editable title is forwarded as the log subject.
+    expect(addLogArgs.subject).toBe('My custom SMS title');
   });
 
   it('sends only one POST when the widget fans out parallel per-day-bucket logForm submits', async () => {

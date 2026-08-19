@@ -102,6 +102,7 @@
       "saveTo": "保存到 {platform}",
       "editLog": "编辑日志",
       "activityTitle": "活动标题",
+      "messageLogTitle": "與 {name} 的短訊對話 - {date}",
       "note": "备注",
       "scheduleCallback": "安排回拨",
       "callbackTime": "回拨时间",

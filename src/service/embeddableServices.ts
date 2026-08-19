@@ -68,6 +68,17 @@ async function getServiceManifest() {
         enabled: !!platform?.trackSmsTypingDuration,
     }, '*');
 
+    // `autoLogSMS` (Log SMS conversations automatically) and `selectedMessageLog`
+    // (Log selected messages) are mutually exclusive: enabling one hides the other.
+    // An item still shows while it is itself ON so the user can turn it back off
+    // (prevents both being hidden if a legacy state had both enabled at once).
+    const autoLogSMSValue = userCore.getAutoLogSMSSetting(userSettings).value === true;
+    const selectedMessageLogSupported = platform?.isSelectedMessageLogSupported === true;
+    const selectedMessageLogValue = selectedMessageLogSupported
+        && userCore.getSelectedMessageLogSetting(userSettings).value === true;
+    const showAutoLogSMS = autoLogSMSValue || !selectedMessageLogValue;
+    const showSelectedMessageLog = selectedMessageLogSupported && (selectedMessageLogValue || !autoLogSMSValue);
+
     const services: UnknownRecord = {
         name: platformName,
         displayName: platform.displayName,
@@ -140,7 +151,7 @@ async function getServiceManifest() {
                         readOnlyReason: userCore.getAutoLogCallSetting(userSettings, isAdmin).warning ?? userCore.getAutoLogCallSetting(userSettings, isAdmin).readOnlyReason,
                         value: userCore.getAutoLogCallSetting(userSettings, isAdmin).value,
                     },
-                    {
+                    ...(showAutoLogSMS ? [{
                         id: 'autoLogSMS',
                         type: 'boolean',
                         name: t('settings.logging.autoLogSMS'),
@@ -148,7 +159,7 @@ async function getServiceManifest() {
                         readOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
                         value: userCore.getAutoLogSMSSetting(userSettings).value,
-                    },
+                    }] : []),
                     {
                         id: 'autoLogVoicemail',
                         type: 'boolean',
@@ -197,7 +208,7 @@ async function getServiceManifest() {
                     // Per-message (granular) SMS logging toggle. Only surfaced when the
                     // platform manifest supports it; otherwise the setting is meaningless.
                     // When off, message logging reverts to whole-conversation behavior.
-                    ...(platform?.isSelectedMessageLogSupported === true ? [{
+                    ...(showSelectedMessageLog ? [{
                         id: "selectedMessageLog",
                         type: "boolean",
                         name: t('settings.logging.selectedMessageLog'),

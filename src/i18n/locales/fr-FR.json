@@ -102,6 +102,7 @@
       "saveTo": "Enregistrer dans {platform}",
       "editLog": "Modifier le journal",
       "activityTitle": "Titre de l'activité",
+      "messageLogTitle": "Conversation SMS avec {name} - {date}",
       "note": "Note",
       "scheduleCallback": "Planifier un rappel",
       "callbackTime": "Heure de rappel",

@@ -102,6 +102,7 @@
       "saveTo": "Salvar em {platform}",
       "editLog": "Editar log",
       "activityTitle": "Título da atividade",
+      "messageLogTitle": "Conversa por SMS com {name} - {date}",
       "note": "Nota",
       "scheduleCallback": "Agendar retorno",
       "callbackTime": "Hora do retorno",

@@ -102,6 +102,7 @@
       "saveTo": "Tallenna kohteeseen {platform}",
       "editLog": "Muokkaa lokia",
       "activityTitle": "Aktiviteetin otsikko",
+      "messageLogTitle": "Tekstiviestikeskustelu: {name} - {date}",
       "note": "Muistiinpano",
       "scheduleCallback": "Ajasta takaisinsoitto",
       "callbackTime": "Takaisinsoittoaika",

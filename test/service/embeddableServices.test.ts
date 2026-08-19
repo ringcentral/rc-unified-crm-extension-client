@@ -311,6 +311,52 @@ describe('embeddableServices', () => {
     expect(service.messageLoggerGranularSelectionEnabled).toBe(false);
   });
 
+  it('hides "Log selected messages" while "Log SMS conversations automatically" is enabled', async () => {
+    seedStorage({
+      isAdmin: false,
+      crmAuthed: true,
+      crmUserInfo: { name: 'CRM User' },
+      userPermissions: {},
+      userSettings: { selectedMessageLog: { value: false } },
+    });
+    const manifestValue = manifest();
+    (manifestValue.platforms.googleSheets as Record<string, any>).isSelectedMessageLogSupported = true;
+    // Default getAutoLogSMSSetting mock returns value true.
+    const { embeddableServices } = await loadEmbeddableServices({ manifestValue });
+
+    const service = await embeddableServices.getServiceManifest();
+    const loggingItemIds = service.settings
+      .find((item) => item.id === 'logging').items
+      .map((item) => item.id);
+
+    expect(loggingItemIds).toContain('autoLogSMS');
+    expect(loggingItemIds).not.toContain('selectedMessageLog');
+  });
+
+  it('hides "Log SMS conversations automatically" while "Log selected messages" is enabled', async () => {
+    seedStorage({
+      isAdmin: false,
+      crmAuthed: true,
+      crmUserInfo: { name: 'CRM User' },
+      userPermissions: {},
+      userSettings: { selectedMessageLog: { value: true } },
+    });
+    const manifestValue = manifest();
+    (manifestValue.platforms.googleSheets as Record<string, any>).isSelectedMessageLogSupported = true;
+    const { embeddableServices } = await loadEmbeddableServices({
+      manifestValue,
+      userCoreOverrides: { getAutoLogSMSSetting: false },
+    });
+
+    const service = await embeddableServices.getServiceManifest();
+    const loggingItemIds = service.settings
+      .find((item) => item.id === 'logging').items
+      .map((item) => item.id);
+
+    expect(loggingItemIds).toContain('selectedMessageLog');
+    expect(loggingItemIds).not.toContain('autoLogSMS');
+  });
+
   it('posts phone-number format and SMS typing side effects to the widget', async () => {
     await loadAuthedAdminServiceManifest();
 

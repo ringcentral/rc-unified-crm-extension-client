@@ -102,6 +102,7 @@
       "saveTo": "{platform}に保存",
       "editLog": "ログを編集",
       "activityTitle": "アクティビティタイトル",
+      "messageLogTitle": "{name} とのSMS会話 - {date}",
       "note": "メモ",
       "scheduleCallback": "コールバックをスケジュール",
       "callbackTime": "コールバック時間",

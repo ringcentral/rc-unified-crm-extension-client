@@ -102,6 +102,7 @@
       "saveTo": "Speichern in {platform}",
       "editLog": "Protokoll bearbeiten",
       "activityTitle": "Aktivitätstitel",
+      "messageLogTitle": "SMS-Konversation mit {name} - {date}",
       "note": "Notiz",
       "scheduleCallback": "Rückruf planen",
       "callbackTime": "Rückrufzeit",

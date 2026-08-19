@@ -105,7 +105,16 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
   // affect submit routing. It defaults to the incoming event trigger type, but
   // callers whose trigger type is not a valid render type (e.g. 'selectedLog')
   // MUST pass a supported value so the contact field is rendered.
-  async function openMessageLogPage(renderTriggerType: string = data.body.triggerType) {
+  async function openMessageLogPage(renderTriggerType: string = data.body.triggerType, showActivityTitle: boolean = false, messageDate?: string) {
+    // Prefilled title uses the timestamp of the first (selected) message,
+    // rendered in the user's local timezone. Callers may pass an explicit
+    // `messageDate` (e.g. from the selected messages); otherwise fall back to
+    // the first message of the conversation.
+    const activityTitleDate = showActivityTitle
+      ? (messageDate ?? (data.body.conversation.messages?.[0]?.creationTime
+        ? moment(data.body.conversation.messages[0].creationTime).format('MM/DD/YYYY hh:mm A')
+        : ''))
+      : '';
     getContactMatchResult = {};
     for (const correspondent of data.body.conversation.correspondents) {
       const singleContactMatchResult = await contactCore.getContact({
@@ -158,11 +167,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
         logType: 'Message',
         triggerType: renderTriggerType,
         platformName,
-        direction: '',
-        contactInfo: contactInfo ?? [],
-        contactPhoneNumber: data.body?.conversation?.correspondents[0]?.phoneNumber,
-        useContactSearch
-      });
+            direction: '',
+                contactInfo: contactInfo ?? [],
+                contactPhoneNumber: data.body?.conversation?.correspondents[0]?.phoneNumber,
+                useContactSearch,
+                showActivityTitle,
+                messageDate: activityTitleDate
+              });
     }
     switch (data.body.conversation.type) {
       case 'SMS':
@@ -527,8 +538,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
     // Open the contact-selection log form (no CRM write yet). Render it as a
     // normal manual/new log page ('selectedLog' is not a valid render trigger
     // type, which would otherwise produce an empty page without a contact
-    // field and drop the contact on submit).
-    await openMessageLogPage('createLog');
+    // field and drop the contact on submit). Surface an editable, prefilled
+    // title (using the first selected message's timestamp) so the user can
+    // name the selected-message log before saving.
+    const selectedTitleDate = selectedMessages[0]?.creationTime
+      ? moment(selectedMessages[0].creationTime).format('MM/DD/YYYY hh:mm A')
+      : undefined;
+    await openMessageLogPage('createLog', true, selectedTitleDate);
     responseMessage(data.requestId, { data: 'ok' });
     return;
   }
@@ -585,6 +601,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
         logType: 'Message',
         logInfo: selectedConversation,
         isMain: true,
+        // User-editable title from the selected-message log form; forwarded to
+        // the server as `logInfo.customSubject`.
+        subject: data.body.formData.activityTitle,
         note: '',
         additionalSubmission,
         contactId: selectedNewContactInfo?.id ?? data.body.formData.contact,

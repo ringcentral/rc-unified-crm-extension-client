@@ -7,7 +7,7 @@ import { buildContactOptions, buildAdditionalFieldsSchema, buildContactWarningFi
 
 type UnknownRecord = Record<string, any>;
 
-function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved, contactPhoneNumber, useContactSearch }: UnknownRecord): UnknownRecord {
+function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved, contactPhoneNumber, useContactSearch, showActivityTitle, messageDate }: UnknownRecord): UnknownRecord {
     const contactList = buildContactOptions(contactInfo, useContactSearch);
     const defaultContact = contactList.some(c => c.toNumberEntity) ? contactList.find(c => c.toNumberEntity) : (contactList[0] ?? null);
     const hasOnlyContactSearch = contactList.length === 1 && defaultContact.const === 'searchContact';
@@ -67,6 +67,34 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
             scheduleCallback: false,
             callbackDateTime: ''
         }
+    }
+    // Editable, prefilled title for message logging (e.g. the "log selected
+    // messages" flow). Kept separate from the call `activityTitle` above so it
+    // only appears when the caller opts in via `showActivityTitle`.
+    let messageTitleSchemas: UnknownRecord = {};
+    let messageTitleUISchemas: UnknownRecord = {};
+    let messageTitleFormData: UnknownRecord = {};
+    if (logType === 'Message' && showActivityTitle) {
+        const messageTitleName = defaultContactName || contactPhoneNumber || '';
+        const messageTitleDate = messageDate ?? '';
+        messageTitleSchemas = {
+            activityTitle: {
+                title: t('pages.log.activityTitle'),
+                type: 'string',
+                manuallyEdited: false,
+                // Stash the (immutable) message timestamp so the title can be
+                // regenerated with the same date when the contact changes.
+                messageDate: messageTitleDate
+            }
+        };
+        messageTitleUISchemas = {
+            activityTitle: {
+                "ui:placeholder": t('pages.log.enterTitle'),
+            }
+        };
+        messageTitleFormData = {
+            activityTitle: logInfo?.subject ? logInfo.subject : t('pages.log.messageLogTitle', { name: messageTitleName, date: messageTitleDate })
+        };
     }
     let page: UnknownRecord = {};
     let allAdditionalFields = logType === 'Call' ? manifest.platforms[platformName].page?.callLog?.additionalFields : manifest.platforms[platformName].page?.messageLog?.additionalFields;
@@ -131,6 +159,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                             oneOf: manifest.platforms[platformName].contactTypes?.map(ct => { return { const: ct.value, title: ct.display } }) ?? [],
                         },
                         ...callSchemas,
+                        ...messageTitleSchemas,
                         ...additionalFields
                     }
                 },
@@ -166,6 +195,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                         submitText: t('common.buttons.save'),
                     },
                     ...callUISchemas,
+                    ...messageTitleUISchemas,
                     ...newContactWidget,
                     ...additionalWarningUISchemas,
                     // Always render scheduling fields at the end
@@ -183,6 +213,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                     contactPhoneNumber,
                     isUnresolved: !!isUnresolved,
                     ...callFormData,
+                    ...messageTitleFormData,
                     ...additionalFieldsValue
                 }
             }
@@ -350,9 +381,11 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                     page.schema.required.push('newContactName');
                 }
                 if (!!page.schema.properties.activityTitle && !page.schema.properties.activityTitle?.manuallyEdited) {
-                    page.formData.activityTitle = page.formData.activityTitle.startsWith('Inbound') ?
-                        t('pages.log.inboundCallFrom', { type: 'call', name: '' }) :
-                        t('pages.log.outboundCallTo', { type: 'call', name: '' });
+                    page.formData.activityTitle = logType === 'Message' ?
+                        t('pages.log.messageLogTitle', { name: '', date: page.schema.properties.activityTitle?.messageDate ?? '' }) :
+                        (page.formData.activityTitle.startsWith('Inbound') ?
+                            t('pages.log.inboundCallFrom', { type: 'call', name: '' }) :
+                            t('pages.log.outboundCallTo', { type: 'call', name: '' }));
                 }
                 page.formData.newContactType = manifest.platforms[platformName].contactTypes?.length > 0 ? manifest.platforms[platformName].contactTypes[0].value : '';
             }
@@ -367,9 +400,11 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                 };
                 page.schema.required = [];
                 if (!!page.schema.properties.activityTitle && !page.schema.properties.activityTitle?.manuallyEdited) {
-                    page.formData.activityTitle = page.formData.activityTitle.startsWith('Inbound') ?
-                        t('pages.log.inboundCallFrom', { type: 'call', name: contact.title }) :
-                        t('pages.log.outboundCallTo', { type: 'call', name: contact.title });
+                    page.formData.activityTitle = logType === 'Message' ?
+                        t('pages.log.messageLogTitle', { name: contact.title, date: page.schema.properties.activityTitle?.messageDate ?? '' }) :
+                        (page.formData.activityTitle.startsWith('Inbound') ?
+                            t('pages.log.inboundCallFrom', { type: 'call', name: contact.title }) :
+                            t('pages.log.outboundCallTo', { type: 'call', name: contact.title }));
                 }
             }
             page.formData.contactType = contact.type;
@@ -538,9 +573,11 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             break;
         case 'newContactName':
             if (!!page.schema.properties.activityTitle && !page.schema.properties.activityTitle.manuallyEdited) {
-                page.formData.activityTitle = page.formData.activityTitle.startsWith('Inbound') ?
-                    t('pages.log.inboundCallFrom', { type: 'call', name: page.formData.newContactName }) :
-                    t('pages.log.outboundCallTo', { type: 'call', name: page.formData.newContactName });
+                page.formData.activityTitle = logType === 'Message' ?
+                    t('pages.log.messageLogTitle', { name: page.formData.newContactName, date: page.schema.properties.activityTitle?.messageDate ?? '' }) :
+                    (page.formData.activityTitle.startsWith('Inbound') ?
+                        t('pages.log.inboundCallFrom', { type: 'call', name: page.formData.newContactName }) :
+                        t('pages.log.outboundCallTo', { type: 'call', name: page.formData.newContactName }));
             }
             break;
         case 'activityTitle':
