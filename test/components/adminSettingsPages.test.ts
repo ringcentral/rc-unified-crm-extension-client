@@ -179,9 +179,7 @@ describe('managed settings page renderers', () => {
       autoLogOutboundFax: { customizable: true, value: false },
       enableRetroCallLogSync: { customizable: true, value: true },
       oneTimeLog: { customizable: true, value: false },
-      // Selected-message logging defaults to ON so supported platforms keep
-      // their current behavior until an admin turns it off.
-      selectedMessageLog: { customizable: true, value: true },
+      selectedMessageLog: { customizable: true, value: false },
     });
   });
 

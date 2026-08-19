@@ -58,13 +58,13 @@ function userCoreProxy(overrides: Record<PropertyKey, any> = {}) {
                 options: [{ id: 'dynamic', name: 'Dynamic' }],
               });
             case 'getSelectedMessageLogSetting':
-              return setting(userSettings?.selectedMessageLog?.value ?? true);
+              return setting(userSettings?.selectedMessageLog?.value ?? false);
             case 'isSelectedMessageLogEnabled': {
               // Called as isSelectedMessageLogEnabled({ platform, userSettings }),
               // so the first (userSettings) arg is actually the options object.
               const opts = (userSettings ?? {}) as { platform?: any; userSettings?: any };
               return opts?.platform?.isSelectedMessageLogSupported === true
-                && (opts?.userSettings?.selectedMessageLog?.value ?? true) === true;
+                && (opts?.userSettings?.selectedMessageLog?.value ?? false) === true;
             }
             default:
               return setting(userSettings?.[prop]?.value ?? false);
@@ -277,13 +277,13 @@ describe('embeddableServices', () => {
     expect(authCore.getLicenseStatus).toHaveBeenCalledWith({ serverUrl: 'https://server.example' });
   });
 
-  it('enables selected-message logging when the platform manifest opts in', async () => {
+  it('enables selected-message logging when the platform opts in and the setting is enabled', async () => {
     seedStorage({
       isAdmin: false,
       crmAuthed: true,
       crmUserInfo: { name: 'CRM User' },
       userPermissions: {},
-      userSettings: {},
+      userSettings: { selectedMessageLog: { value: true } },
     });
     const manifestValue = manifest();
     (manifestValue.platforms.googleSheets as Record<string, any>).isSelectedMessageLogSupported = true;

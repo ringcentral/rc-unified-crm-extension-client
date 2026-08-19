@@ -19,10 +19,10 @@ async function loadMessageLogger() {
     getMultipleContactsPreferenceSetting: vi.fn((settings) => ({ value: settings?.multipleContactsPreference?.value ?? 'skipLogging' })),
     getNewContactTypeSetting: vi.fn((settings) => ({ value: settings?.newContactType?.value ?? null })),
     getNewContactNamePrefixSetting: vi.fn((settings) => ({ value: settings?.newContactNamePrefix?.value ?? 'PlaceholderContact' })),
-    getSelectedMessageLogSetting: vi.fn((settings) => ({ value: settings?.selectedMessageLog?.value ?? true })),
+    getSelectedMessageLogSetting: vi.fn((settings) => ({ value: settings?.selectedMessageLog?.value ?? false })),
     isSelectedMessageLogEnabled: vi.fn(({ platform, userSettings } = {}) =>
       platform?.isSelectedMessageLogSupported === true
-      && (userSettings?.selectedMessageLog?.value ?? true) === true),
+      && (userSettings?.selectedMessageLog?.value ?? false) === true),
   };
   vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
@@ -688,6 +688,7 @@ describe('messageLogger', () => {
     seedStorage({
       userSettings: {
         autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
       },
     });
     const { messageLogger, logCore, logUtil } = await loadMessageLogger();
@@ -846,6 +847,7 @@ describe('messageLogger', () => {
     seedStorage({
       userSettings: {
         autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
       },
     });
     const { messageLogger, contactCore, logUtil, logCore, util } = await loadMessageLogger();
@@ -1030,6 +1032,7 @@ describe('messageLogger', () => {
     seedStorage({
       userSettings: {
         autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
       },
     });
     const { messageLogger, logCore, logPage, util } = await loadMessageLogger();
@@ -1111,6 +1114,7 @@ describe('messageLogger', () => {
     seedStorage({
       userSettings: {
         autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
       },
     });
     const { messageLogger, logCore, logPage, util } = await loadMessageLogger();
@@ -1171,6 +1175,7 @@ describe('messageLogger', () => {
     seedStorage({
       userSettings: {
         autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
       },
     });
     const { messageLogger, logCore } = await loadMessageLogger();
@@ -1235,6 +1240,7 @@ describe('messageLogger', () => {
     seedStorage({
       userSettings: {
         autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
       },
     });
     const { messageLogger, logCore } = await loadMessageLogger();
@@ -1291,6 +1297,7 @@ describe('messageLogger', () => {
     seedStorage({
       userSettings: {
         autoLogSMS: { value: true },
+        selectedMessageLog: { value: true },
       },
       [prefKey]: {
         additionalSubmission: {},
@@ -1321,6 +1328,7 @@ describe('messageLogger', () => {
     seedStorage({
       userSettings: {
         autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
       },
     });
     const { messageLogger, logCore, logPage, contactCore, util } = await loadMessageLogger();
@@ -1347,6 +1355,7 @@ describe('messageLogger', () => {
     seedStorage({
       userSettings: {
         autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
       },
     });
     const { messageLogger, logCore, logPage, contactCore, util } = await loadMessageLogger();

@@ -315,12 +315,11 @@ function getOneTimeLogSetting(userSettings) {
 }
 
 // Whether the per-message (granular) SMS logging feature is turned ON for this
-// user. Defaults to ON so behavior is unchanged for platforms that support it
-// until an admin/user explicitly turns it off. When OFF, message logging falls
-// back to the existing whole-conversation behavior (manual and auto).
+// user. Defaults to OFF so platforms that support it retain whole-conversation
+// logging until an admin/user explicitly turns selected-message logging on.
 function getSelectedMessageLogSetting(userSettings) {
     return {
-        value: userSettings?.selectedMessageLog?.value ?? true,
+        value: userSettings?.selectedMessageLog?.value ?? false,
         readOnly: userSettings?.selectedMessageLog?.customizable === undefined ? false : !userSettings?.selectedMessageLog?.customizable,
         readOnlyReason: !userSettings?.selectedMessageLog?.customizable ? 'This setting is managed by admin' : ''
     }

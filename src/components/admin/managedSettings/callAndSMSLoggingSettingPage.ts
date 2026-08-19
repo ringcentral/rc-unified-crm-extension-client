@@ -207,7 +207,7 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }: UnknownRec
             selectedMessageLog:
             {
                 customizable: adminUserSettings?.selectedMessageLog?.customizable ?? true,
-                value: adminUserSettings?.selectedMessageLog?.value ?? true
+                value: adminUserSettings?.selectedMessageLog?.value ?? false
             }
         }
     }

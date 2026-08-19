@@ -362,11 +362,11 @@ describe('user settings getters', () => {
   });
 
   describe('selected-message logging setting', () => {
-    it('defaults to enabled and editable', () => {
+    it('defaults to disabled and editable', () => {
       // Mirrors the sibling getters: an unset `customizable` leaves the setting
-      // editable (readOnly false) while value defaults to on.
+      // editable (readOnly false) while value defaults to off.
       expect(userCore.getSelectedMessageLogSetting({})).toMatchObject({
-        value: true,
+        value: false,
         readOnly: false,
       });
     });
@@ -394,8 +394,13 @@ describe('user settings getters', () => {
     it('is effectively enabled only when the platform supports it and the setting is on', () => {
       const supported = { isSelectedMessageLogSupported: true };
       const unsupported = { isSelectedMessageLogSupported: false };
-      // Platform supports + default (on) => enabled
-      expect(userCore.isSelectedMessageLogEnabled({ platform: supported, userSettings: {} })).toBe(true);
+      // Platform supports + default (off) => disabled
+      expect(userCore.isSelectedMessageLogEnabled({ platform: supported, userSettings: {} })).toBe(false);
+      // Platform supports + user turned it on => enabled
+      expect(userCore.isSelectedMessageLogEnabled({
+        platform: supported,
+        userSettings: { selectedMessageLog: { value: true } },
+      })).toBe(true);
       // Platform supports + user turned it off => disabled
       expect(userCore.isSelectedMessageLogEnabled({
         platform: supported,
