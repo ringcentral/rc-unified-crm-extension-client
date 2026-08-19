@@ -2619,7 +2619,7 @@ window.addEventListener('message', async (e) => {
                   }
                   break;
                 case 'openCommunityPageButton':
-                  window.open('https://community.ringcentral.com/groups/app-connect-22', '_blank');
+                  window.open('https://community.ringcentral.com/integrations-app-connect-33', '_blank');
                   break;
                 case 'documentation':
                   if (platform?.documentationUrl) {
