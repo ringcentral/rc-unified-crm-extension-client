@@ -238,7 +238,7 @@ describe('basic page renderers', () => {
 
     expect(adminAuth.schema.properties['managedAuthOptionsAuth-crmUserId-action']).toEqual({
       type: 'string',
-      title: 'Update CRM user',
+      title: 'Refresh User List',
     });
     const propertyKeys = Object.keys(adminAuth.schema.properties);
     expect(propertyKeys.indexOf('managedAuthOptionsAuth-crmUserId-action'))

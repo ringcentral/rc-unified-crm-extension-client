@@ -11,8 +11,8 @@ function getManagedAuthOptionsButtonId(action: string, fieldConst: string): stri
   return `${action}-${encodeURIComponent(fieldConst)}-action`;
 }
 
-function getManagedAuthOptionsButtonTitle(field: UnknownRecord): string {
-  return `Update ${field.title ?? 'list'}`;
+function getManagedAuthOptionsButtonTitle(_field: UnknownRecord): string {
+  return 'Refresh User List';
 }
 
 function getDynamicManagedAuthSchema(field: UnknownRecord, options: UnknownRecord[] = []): UnknownRecord {
