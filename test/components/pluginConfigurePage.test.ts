@@ -87,7 +87,8 @@ describe('pluginConfigurePage', () => {
       },
     });
 
-    expect(page.schema.required).toEqual(['apiKey']);
+    expect(page.schema.required).toEqual([]);
+    expect(page.schema.properties.config.required).toEqual(['apiKey']);
     expect(page.schema.properties.basicInfo.oneOf[0]).toMatchObject({
       title: 'Vendor Plugin',
       icon: 'https://plugin.example/icon.png',
@@ -153,6 +154,31 @@ describe('pluginConfigurePage', () => {
       logTypes: ['callLog'],
       isLoggedIn: true,
     });
+  });
+
+  it('finds only visible required plugin config fields with missing values', async () => {
+    const pageModule = await loadPluginConfigurePage();
+    const plugin = {
+      pageContent: [
+        { const: 'apiKey', title: 'API key', required: true },
+        { const: 'region', title: 'Region', required: true },
+        { const: 'notes', title: 'Notes', required: false },
+        { const: 'hiddenKey', title: 'Hidden key', required: true, hidden: true },
+      ],
+    };
+
+    expect(pageModule.getMissingRequiredPluginConfigFields(plugin, {
+      apiKey: { value: '' },
+      region: { value: 'us' },
+      notes: { value: '' },
+    })).toEqual([
+      expect.objectContaining({ const: 'apiKey' }),
+    ]);
+
+    expect(pageModule.getMissingRequiredPluginConfigFields(plugin, {
+      apiKey: { value: false },
+      region: 'us',
+    })).toEqual([]);
   });
 
   it('renders fallback plugin info and connect action without custom fields', async () => {

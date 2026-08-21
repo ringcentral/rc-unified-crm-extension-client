@@ -471,7 +471,8 @@ describe('basic page renderers', () => {
       licenseStatusDescription: 'Expired',
     });
 
-    expect(page.schema.required).toEqual(['region']);
+    expect(page.schema.required).toEqual([]);
+    expect(page.schema.properties.config.required).toEqual(['region']);
     expect(page.schema.properties.config.properties.region).toMatchObject({
       readOnly: true,
       default: 'us',

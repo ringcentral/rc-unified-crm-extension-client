@@ -1,6 +1,6 @@
 import { refreshUserSettings } from '../../../../core/user';
 import { getRcInfo, showNotification } from '../../../../lib/util';
-import { getMergedPluginConfigFromFormData } from '../../../../components/pluginConfigurePage';
+import { getMergedPluginConfigFromFormData, getMissingRequiredPluginConfigFields } from '../../../../components/pluginConfigurePage';
 
 type UnknownRecord = Record<string, any>;
 
@@ -22,10 +22,20 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   void platformName;
   void platform;
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-  const rcInfo = await getRcInfo();
-  const rcAccountId = rcInfo.value.cachedData.extensionInfo.account.id;
   const form = data.body.button.formData;
   const config = getMergedPluginConfigFromFormData(form);
+  const missingRequiredFields = getMissingRequiredPluginConfigFields(form.plugin, config);
+  if (missingRequiredFields.length > 0) {
+    window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+    showNotification({
+      level: 'warning',
+      message: `Please complete the required plugin configuration: ${missingRequiredFields.map(field => field.title ?? field.const).join(', ')}.`,
+      ttl: 5000,
+    });
+    return;
+  }
+  const rcInfo = await getRcInfo();
+  const rcAccountId = rcInfo.value.cachedData.extensionInfo.account.id;
   const changedSettings = {
     [`plugin_${form.pluginId}`]: {
       value: {

@@ -303,6 +303,7 @@ async function loadButtonHandler(modulePath, overrides: Record<string, any> = {}
     getMergedPluginConfigFromFormData: vi.fn((form) => ({
       apiKey: form.apiKey?.value ?? form.apiKey ?? null,
     })),
+    getMissingRequiredPluginConfigFields: vi.fn(() => []),
     getInstalledPluginListPageRender: vi.fn((props) => ({ id: 'installedPluginListPage', props })),
     getPluginMarketListPageRender: vi.fn((props) => ({ id: 'pluginMarketListPage', props })),
     ...overrides.pluginPages,
@@ -313,6 +314,7 @@ async function loadButtonHandler(modulePath, overrides: Record<string, any> = {}
   vi.doMock('../../src/components/pluginConfigurePage.ts', () => ({
     getPluginConfigurePageRender: pluginPages.getPluginConfigurePageRender,
     getMergedPluginConfigFromFormData: pluginPages.getMergedPluginConfigFromFormData,
+    getMissingRequiredPluginConfigFields: pluginPages.getMissingRequiredPluginConfigFields,
   }));
   vi.doMock('../../src/components/installedPluginListPage.ts', () => ({
     getInstalledPluginListPageRender: pluginPages.getInstalledPluginListPageRender,
@@ -1585,6 +1587,37 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       level: 'success',
       message: 'Configuration is updated.',
       ttl: 3000,
+    });
+  });
+
+  it('does not save user plugin configuration when required fields are missing', async () => {
+    const loaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginConfigurePageSubmit.ts',
+      {
+        pluginPages: {
+          getMissingRequiredPluginConfigFields: vi.fn(() => [
+            { const: 'apiKey', title: 'API key' },
+          ]),
+        },
+      },
+    );
+
+    await loaded.handler.onEvent({
+      data: dataFor({
+        pluginId: 'plugin-1',
+        plugin: pluginList()[0],
+        access: 'user',
+      }, 'pluginConfigurePage'),
+      manifest: baseManifest(),
+      platformName: 'salesforce',
+      platform: baseManifest().platforms.salesforce,
+    });
+
+    expect(loaded.userCore.refreshUserSettings).not.toHaveBeenCalled();
+    expect(loaded.util.showNotification).toHaveBeenCalledWith({
+      level: 'warning',
+      message: 'Please complete the required plugin configuration: API key.',
+      ttl: 5000,
     });
   });
 
