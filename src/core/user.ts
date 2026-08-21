@@ -129,9 +129,17 @@ async function uploadUserSettings({ serverUrl, userSettings, settingKeysToRemove
     return uploadUserSettingsResponse?.data?.userSettings;
 }
 
+function getEffectiveAutoLogCallValue(userSettings: UnknownRecord, isAdmin: boolean): boolean {
+    const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
+    const serverSideLoggingEnabledForUser = serverSideLoggingEnabled &&
+        (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin);
+
+    return (userSettings?.autoLogCall?.value && !serverSideLoggingEnabledForUser) ?? false;
+}
+
 
 async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], isAvoidForceChange = false }: UnknownRecord): Promise<any> {
-    const { crmAuthed } = await chromeStorageLocal.get({ crmAuthed: false });
+    const { crmAuthed, isAdmin } = await chromeStorageLocal.get({ crmAuthed: false, isAdmin: false });
     if (!crmAuthed) {
         return;
     }
@@ -186,7 +194,6 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
     const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false) || (userSettings?.autoLogVoicemail?.value ?? false);
     const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
     window.postMessage({ type: 'rc-server-side-logging-enabled', enabled: isServerSideLoggingEnabledForEndUsers }, '*');
-    RCAdapter.setAutoLog({ call: (userSettings.autoLogCall?.value && !isServerSideLoggingEnabledForEndUsers) ?? false, message: autoLogMessagesGroupTrigger })
     if (!isAvoidForceChange) {
         const showAiAssistantWidgetSetting = getShowAiAssistantWidgetSetting(userSettings);
         const autoStartAiAssistantSetting = getAutoStartAiAssistantSetting(userSettings);
@@ -208,6 +215,8 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
         type: 'rc-adapter-register-third-party-service',
         service
     }, '*');
+    // CallLogger ignores auto-log updates until the third-party service is ready.
+    RCAdapter.setAutoLog({ call: getEffectiveAutoLogCallValue(userSettings, isAdmin), message: autoLogMessagesGroupTrigger })
     // custom tabs
     const reportPageRender = reportPage.getReportsPageRender({ userStats: null, adminStats: null, userSettings });
     getWidgetFrame().contentWindow.postMessage({
@@ -253,7 +262,7 @@ function getAutoLogCallSetting(userSettings, isAdmin) {
     const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
     if (serverSideLoggingEnabled && (userSettings?.serverSideLogging?.loggingLevel === 'Account' || isAdmin)) {
         return {
-            value: false,
+            value: getEffectiveAutoLogCallValue(userSettings, isAdmin),
             readOnly: true,
             readOnlyReason: 'This cannot be turn ON becauase server side logging is enabled by admin',
             warning: 'Unavailable while server side call logging enabled'
