@@ -413,6 +413,15 @@ describe('user settings getters', () => {
       })).toBe(false);
       // Missing platform => disabled
       expect(userCore.isSelectedMessageLogEnabled({ userSettings: {} })).toBe(false);
+      // Automatic SMS logging takes precedence: even with selected-message logging
+      // stored as on, granular selection is disabled while autoLogSMS is on.
+      expect(userCore.isSelectedMessageLogEnabled({
+        platform: supported,
+        userSettings: {
+          selectedMessageLog: { value: true },
+          autoLogSMS: { value: true },
+        },
+      })).toBe(false);
     });
   });
 });

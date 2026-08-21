@@ -294,6 +294,30 @@ describe('embeddableServices', () => {
     expect(service.messageLoggerGranularSelectionEnabled).toBe(true);
   });
 
+  it('marks the message auto setting read-only on platforms that support selected-message logging so the widget adopts our auto value', async () => {
+    seedStorage({
+      isAdmin: false,
+      crmAuthed: true,
+      crmUserInfo: { name: 'CRM User' },
+      userPermissions: {},
+      userSettings: { selectedMessageLog: { value: true } },
+    });
+    const manifestValue = manifest();
+    (manifestValue.platforms.googleSheets as Record<string, any>).isSelectedMessageLogSupported = true;
+    // Even though the auto-log SMS setting is customizable (readOnly false),
+    // supporting platforms must register read-only so the widget syncs its
+    // internal autoLog from our value and cannot stay stuck ON.
+    const { embeddableServices } = await loadEmbeddableServices({
+      manifestValue,
+      userCoreOverrides: { getAutoLogSMSSetting: false },
+    });
+
+    const service = await embeddableServices.getServiceManifest();
+
+    expect(service.messageLoggerAutoSettingReadOnly).toBe(true);
+    expect(service.messageLoggerAutoSettingReadOnlyValue).toBe(false);
+  });
+
   it('disables selected-message logging when the user/admin setting is turned off', async () => {
     seedStorage({
       isAdmin: false,
@@ -333,7 +357,7 @@ describe('embeddableServices', () => {
     expect(loggingItemIds).not.toContain('selectedMessageLog');
   });
 
-  it('hides "Log SMS conversations automatically" while "Log selected messages" is enabled', async () => {
+  it('keeps "Log SMS conversations automatically" visible even while "Log selected messages" is enabled', async () => {
     seedStorage({
       isAdmin: false,
       crmAuthed: true,
@@ -353,8 +377,10 @@ describe('embeddableServices', () => {
       .find((item) => item.id === 'logging').items
       .map((item) => item.id);
 
+    // `autoLogSMS` is always shown; `selectedMessageLog` is only hidden when
+    // `autoLogSMS` is enabled. With `autoLogSMS` off both are visible.
+    expect(loggingItemIds).toContain('autoLogSMS');
     expect(loggingItemIds).toContain('selectedMessageLog');
-    expect(loggingItemIds).not.toContain('autoLogSMS');
   });
 
   it('posts phone-number format and SMS typing side effects to the widget', async () => {

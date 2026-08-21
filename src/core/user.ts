@@ -183,7 +183,16 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
         calldown: getShowCalldownTabSetting(userSettings).value,
         appointments: appointmentsSupported && getShowAppointmentsTabSetting(userSettings).value,
     }, '*');
-    const autoLogMessagesGroupTrigger = (userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false) || (userSettings?.autoLogVoicemail?.value ?? false);
+    // `RCAdapter.setAutoLog({ message })` sets the widget's single
+    // `conversationLogger.autoLog` flag, which covers ALL message-type
+    // conversations (SMS, voicemail, fax). The per-message selection checkboxes
+    // only render in manual message mode (`!conversationLogger.autoLog`), so when
+    // granular selected-message logging is enabled we MUST keep message auto-log
+    // off — otherwise a user with voicemail/fax (or SMS) auto-log on would force
+    // `autoLog` true and permanently suppress the checkboxes.
+    const selectedMessageLogEnabled = isSelectedMessageLogEnabled({ platform: manifest?.platforms?.[platformName], userSettings });
+    const autoLogMessagesGroupTrigger = !selectedMessageLogEnabled
+        && ((userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false) || (userSettings?.autoLogVoicemail?.value ?? false));
     const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
     window.postMessage({ type: 'rc-server-side-logging-enabled', enabled: isServerSideLoggingEnabledForEndUsers }, '*');
     RCAdapter.setAutoLog({ call: (userSettings.autoLogCall?.value && !isServerSideLoggingEnabledForEndUsers) ?? false, message: autoLogMessagesGroupTrigger })
@@ -331,8 +340,16 @@ function getSelectedMessageLogSetting(userSettings) {
 // and the message-logger handler (to toggle the runtime behavior) so they never
 // diverge.
 function isSelectedMessageLogEnabled({ platform, userSettings }) {
+    // Automatic SMS logging takes precedence over granular selection. When
+    // `autoLogSMS` is on, messages must be logged automatically as whole
+    // conversations, so per-message selection is disabled (the widget hides the
+    // checkboxes and keeps message auto-log on) even if `selectedMessageLog` is
+    // still stored as `true`. The two values are not mutually exclusive at the
+    // storage level (we only hide the `selectedMessageLog` UI while `autoLogSMS`
+    // is enabled), so the precedence must be enforced here.
     return platform?.isSelectedMessageLogSupported === true
-        && getSelectedMessageLogSetting(userSettings).value === true;
+        && getSelectedMessageLogSetting(userSettings).value === true
+        && getAutoLogSMSSetting(userSettings).value !== true;
 }
 
 function getCallPopSetting(userSettings) {

@@ -68,16 +68,28 @@ async function getServiceManifest() {
         enabled: !!platform?.trackSmsTypingDuration,
     }, '*');
 
-    // `autoLogSMS` (Log SMS conversations automatically) and `selectedMessageLog`
-    // (Log selected messages) are mutually exclusive: enabling one hides the other.
-    // An item still shows while it is itself ON so the user can turn it back off
-    // (prevents both being hidden if a legacy state had both enabled at once).
+    // `autoLogSMS` (Log SMS conversations automatically) is always visible.
+    // `selectedMessageLog` (Log selected messages) is hidden whenever `autoLogSMS`
+    // is enabled, so the two never apply at the same time. The relationship is
+    // one-directional: enabling `selectedMessageLog` never hides `autoLogSMS`.
     const autoLogSMSValue = userCore.getAutoLogSMSSetting(userSettings).value === true;
     const selectedMessageLogSupported = platform?.isSelectedMessageLogSupported === true;
-    const selectedMessageLogValue = selectedMessageLogSupported
-        && userCore.getSelectedMessageLogSetting(userSettings).value === true;
-    const showAutoLogSMS = autoLogSMSValue || !selectedMessageLogValue;
-    const showSelectedMessageLog = selectedMessageLogSupported && (selectedMessageLogValue || !autoLogSMSValue);
+    const showAutoLogSMS = true;
+    const showSelectedMessageLog = selectedMessageLogSupported && !autoLogSMSValue;
+
+    // The embeddable widget only renders per-message selection checkboxes in
+    // manual SMS mode (`!conversationLogger.autoLog`). It syncs its internal
+    // `autoLog` from our value ONLY when `messageLoggerAutoSettingReadOnly` is
+    // true (see conversationLogger.onInit in the widget bundle); otherwise it
+    // keeps its own persisted flag, which can get stuck ON and permanently
+    // suppress the checkboxes. Because the in-widget auto-log toggle is hidden
+    // (`messageLoggerAutoSettingHidden: true`) the extension settings page is the
+    // sole source of truth, so on platforms that support selected-message logging
+    // we mark the auto setting read-only. That makes the widget always adopt our
+    // `autoLogSMS` value (off => manual mode => checkboxes render).
+    const messageLoggerAutoSettingReadOnly = selectedMessageLogSupported
+        ? true
+        : userCore.getAutoLogSMSSetting(userSettings).readOnly;
 
     const services: UnknownRecord = {
         name: platformName,
@@ -128,7 +140,7 @@ async function getServiceManifest() {
         // turned off, checkboxes are hidden and message logging stays whole-conversation.
         messageLoggerGranularSelectionEnabled: userCore.isSelectedMessageLogEnabled({ platform, userSettings }),
         messageLoggerAutoSettingLabel: t('settings.logging.autoLogSMS'),
-        messageLoggerAutoSettingReadOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
+        messageLoggerAutoSettingReadOnly,
         messageLoggerAutoSettingReadOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
         messageLoggerAutoSettingReadOnlyValue: userCore.getAutoLogSMSSetting(userSettings).value,
 
