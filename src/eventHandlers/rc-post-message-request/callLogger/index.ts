@@ -2,6 +2,11 @@ import { responseMessage, isObjectEmpty, showNotification } from '../../../lib/u
 import logCore from '../../../core/log';
 import userCore from '../../../core/user';
 import tempLogNotePage from '../../../components/tempLogNotePage';
+import {
+    extractCallRecord,
+    isCallDataComplete,
+    resolveCallLogReadiness,
+} from '../../../lib/callLogReadiness';
 
 import logFormHandler from './logForm';
 import callLogSyncHandler from './callLogSync';
@@ -22,7 +27,9 @@ function getWidgetFrameWindow(): Window {
     return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
 }
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
+async function onEvent(options: EventOptions) {
+    const { manifest, platformInfo, platformName, platform } = options;
+    let { data } = options;
     if (data.body?.call?.action) {
         const isQueue = await chrome.storage.local.get(`is-call-queue-${data.body.call.sessionId}`) as UnknownRecord;
         if ((data.body.call.result === 'Missed' && isQueue[`is-call-queue-${data.body.call.sessionId}`]?.isQueue) || (data.body.call.delegationType === 'QueueForwarding' && data.body.call.result === 'Answered Elsewhere')) {
@@ -74,20 +81,50 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             return;
         }
     }
-    const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
-    const isFinalDataResult = data.body?.call?.action !== undefined;
-    const isRecorded = !isObjectEmpty((await chrome.storage.local.get(`rec-link-${data.body.call.sessionId}`)));
-    const hasRecording = !!data.body.call.recording?.link;
-    const isCallLogDataReady = isFinalDataResult && (isRecorded || !hasRecording);
-    await chrome.storage.local.set({
-        [`call-log-data-ready-${data.body.call.sessionId}`]:
-        {
-            isReady: isCallLogDataReady,
-            expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
+    const readinessKey = `call-log-data-ready-${data.body.call.sessionId}`;
+    const recordingKey = `rec-link-${data.body.call.sessionId}`;
+    const storedData = await chrome.storage.local.get([
+        'userSettings',
+        readinessKey,
+        recordingKey,
+    ]) as UnknownRecord;
+    const userSettings = storedData.userSettings as UnknownRecord;
+
+    if (data.body.redirect && !isCallDataComplete(data.body.call) && typeof RCAdapter.getCallLog === 'function') {
+        try {
+            const recoveredCall = extractCallRecord(await RCAdapter.getCallLog({ sessionId: data.body.call.sessionId }));
+            if (isCallDataComplete(recoveredCall)) {
+                data = {
+                    ...data,
+                    body: {
+                        ...data.body,
+                        call: { ...data.body.call, ...recoveredCall },
+                    },
+                };
+            }
         }
+        catch {
+            // Keep the existing preparing-data behavior when recovery is unavailable.
+        }
+    }
+
+    const isFinalDataResult = data.body.call.action !== undefined;
+    const isRecorded = !isObjectEmpty(storedData[recordingKey] ?? {});
+    const hasRecording = !!data.body.call.recording?.link;
+    const readiness = resolveCallLogReadiness({
+        call: data.body.call,
+        previousState: storedData[readinessKey],
+        explicitlyFinal: isFinalDataResult,
+        existingAutoDataReady: isRecorded || !hasRecording,
+    });
+    await chrome.storage.local.set({
+        [readinessKey]: readiness,
     });
     if (userCore.getOneTimeLogSetting(userSettings).value) {
-        if (!isCallLogDataReady) {
+        const readyForCurrentRequest = data.body.redirect
+            ? readiness.autoReady || isCallDataComplete(data.body.call)
+            : readiness.autoReady;
+        if (!readyForCurrentRequest) {
             if (data.body.redirect) {
                 showNotification({ level: 'warning', message: 'Call data is not yet ready. Please input your custom note while it is preparing data.', ttl: 3000 });
                 const cachedNote = await logCore.getCachedNote({ sessionId: data.body.call.sessionId });

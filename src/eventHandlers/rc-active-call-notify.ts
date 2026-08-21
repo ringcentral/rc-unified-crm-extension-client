@@ -6,6 +6,7 @@ import logCore from '../core/log';
 import logPage from '../components/logPage';
 import { logPageFormDataDefaulting, cacheLogPageData } from '../lib/logUtil';
 import { responseMessage } from '../lib/util';
+import { resolveCallLogReadiness } from '../lib/callLogReadiness';
 
 type UnknownRecord = Record<string, any>;
 
@@ -172,12 +173,15 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
           }, '*');
         }
 
-        await chrome.storage.local.set({
-          [`call-log-data-ready-${data.call.sessionId}`]: {
-            isReady: false,
-            expiry: new Date().getTime() + 60000 * 60 * 24 * 30, // 30 days
-          },
+        const readinessKey = `call-log-data-ready-${data.call.sessionId}`;
+        const existingReadiness = await chrome.storage.local.get(readinessKey) as UnknownRecord;
+        const readiness = resolveCallLogReadiness({
+          call: data.call,
+          previousState: existingReadiness[readinessKey],
+          explicitlyFinal: false,
+          existingAutoDataReady: false,
         });
+        await chrome.storage.local.set({ [readinessKey]: readiness });
         getWidgetFrameWindow().postMessage({
           type: 'rc-adapter-trigger-call-logger-match',
           sessionIds: [data.call.sessionId],

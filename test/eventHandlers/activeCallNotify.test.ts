@@ -512,4 +512,39 @@ describe('rc-active-call-notify event handler', () => {
       targetOrigin: '*',
     });
   });
+
+  it('marks complete terminal call data as manually ready without enabling automatic logging', async () => {
+    seedStorage({
+      userSettings: {},
+      implementedInterfaces: {},
+    });
+    vi.mocked(userCore.getCallPopSetting).mockReturnValue(setting(false));
+    const handler = await loadActiveCallHandler();
+
+    await handler.onEvent({
+      popupContext: {},
+      data: {
+        requestId: 'request-complete-fallback',
+        call: {
+          telephonyStatus: 'NoCall',
+          terminationType: 'final',
+          direction: 'Outbound',
+          sessionId: 'session-complete-fallback',
+          telephonySessionId: 'telephony-complete-fallback',
+          startTime: '2026-08-21T01:00:00.000Z',
+          duration: 42,
+          result: 'Completed',
+          from: { extensionNumber: '101' },
+          to: { phoneNumber: '+16505551000' },
+        },
+      },
+    });
+
+    expect(readStorage()['call-log-data-ready-session-complete-fallback']).toMatchObject({
+      isReady: false,
+      autoReady: false,
+      manualReady: true,
+      reason: 'complete-data-fallback',
+    });
+  });
 });

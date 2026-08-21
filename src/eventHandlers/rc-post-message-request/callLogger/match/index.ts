@@ -1,6 +1,11 @@
 import logCore from '../../../../core/log';
 import userCore from '../../../../core/user';
-import { responseMessage, isObjectEmpty } from '../../../../lib/util';
+import { responseMessage } from '../../../../lib/util';
+import {
+    extractCallRecord,
+    isCallDataComplete,
+    isManualLogReady,
+} from '../../../../lib/callLogReadiness';
 
 type UnknownRecord = Record<string, any>;
 
@@ -11,6 +16,46 @@ type EventOptions = {
     platformName?: string;
     platform?: UnknownRecord;
 };
+
+const READINESS_RECHECK_INTERVAL_MS = 30000;
+const READINESS_TTL_MS = 60000 * 60 * 24 * 30;
+
+async function recoverManualReadiness(sessionId: string, readiness: UnknownRecord): Promise<boolean> {
+    if (isManualLogReady(readiness)) {
+        return true;
+    }
+
+    const now = Date.now();
+    if (typeof readiness.lastCheckedAt === 'number'
+        && now - readiness.lastCheckedAt < READINESS_RECHECK_INTERVAL_MS) {
+        return false;
+    }
+
+    let manualReady = false;
+    if (typeof RCAdapter.getCallLog === 'function') {
+        try {
+            const recoveredCall = extractCallRecord(await RCAdapter.getCallLog({ sessionId }));
+            manualReady = isCallDataComplete(recoveredCall);
+        }
+        catch {
+            // A transient recovery error must not break matching for the remaining calls.
+        }
+    }
+
+    const readinessKey = `call-log-data-ready-${sessionId}`;
+    await chrome.storage.local.set({
+        [readinessKey]: {
+            ...readiness,
+            isReady: readiness.isReady ?? false,
+            autoReady: readiness.autoReady ?? readiness.isReady ?? false,
+            manualReady,
+            reason: manualReady ? 'complete-data-fallback' : 'incomplete',
+            lastCheckedAt: now,
+            expiry: readiness.expiry ?? now + READINESS_TTL_MS,
+        },
+    });
+    return manualReady;
+}
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
     void platformInfo;
@@ -92,8 +137,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             if (loggedSessionIds.includes(sessionId)) {
                 continue;
             }
-            const isCallLogDataReady = await chrome.storage.local.get(`call-log-data-ready-${sessionId}`) as UnknownRecord;
-            if (!isObjectEmpty(isCallLogDataReady) && !isCallLogDataReady[`call-log-data-ready-${sessionId}`]?.isReady) {
+            const readinessKey = `call-log-data-ready-${sessionId}`;
+            const readinessStorage = await chrome.storage.local.get(readinessKey) as UnknownRecord;
+            const readiness = readinessStorage[readinessKey];
+            if (readiness && !await recoverManualReadiness(sessionId, readiness)) {
                 callLogMatchData[sessionId] = [
                     {
                         type: 'status',

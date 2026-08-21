@@ -355,4 +355,48 @@ describe('contact and call-log match handlers', () => {
       },
     });
   });
+
+  it('recovers a stuck one-time call from complete adapter data', async () => {
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: true },
+      },
+      'call-log-data-ready-recovered-session': {
+        isReady: false,
+      },
+    });
+    vi.mocked(RCAdapter.getCallLog!).mockResolvedValue({
+      call: {
+        sessionId: 'recovered-session',
+        startTime: '2026-08-21T01:00:00.000Z',
+        duration: 42,
+        direction: 'Outbound',
+        result: 'Completed',
+        from: { extensionNumber: '101' },
+        to: { phoneNumber: '+16505550100' },
+      },
+    });
+    const { handler, util } = await loadMatchHandler(
+      '../../src/eventHandlers/rc-post-message-request/callLogger/match/index.ts',
+    );
+
+    await handler.onEvent({
+      data: {
+        requestId: 'request-recovery',
+        body: {
+          sessionIds: ['recovered-session'],
+        },
+      },
+      manifest: manifest(),
+    });
+
+    expect(RCAdapter.getCallLog).toHaveBeenCalledWith({ sessionId: 'recovered-session' });
+    expect(readStorage()['call-log-data-ready-recovered-session']).toMatchObject({
+      isReady: false,
+      autoReady: false,
+      manualReady: true,
+      reason: 'complete-data-fallback',
+    });
+    expect(util.responseMessage).toHaveBeenCalledWith('request-recovery', { data: {} });
+  });
 });
