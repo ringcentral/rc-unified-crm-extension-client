@@ -431,6 +431,29 @@ describe('customizedPage inputChanged section handlers', () => {
     expect(loaded.pluginPages.getPluginsSettingPageRender).toHaveBeenCalledWith({
       installedPluginList: [expect.objectContaining({ id: 'plugin-1' })],
     });
+    expect(vi.mocked(window.postMessage).mock.calls).toEqual([
+      [{ type: 'rc-log-modal-loading-on' }, '*'],
+      [{ type: 'rc-log-modal-loading-off' }, '*'],
+    ]);
+  });
+
+  it('stops loading when the admin plugin list fails to load', async () => {
+    const loaded = await loadSectionHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/pluginsAdminConfig.ts',
+      {
+        manifestService: {
+          getPluginList: vi.fn(async () => {
+            throw new Error('Plugin list unavailable');
+          }),
+        },
+      },
+    );
+
+    await expect(loaded.handler.onEvent(context)).rejects.toThrow('Plugin list unavailable');
+    expect(vi.mocked(window.postMessage).mock.calls).toEqual([
+      [{ type: 'rc-log-modal-loading-on' }, '*'],
+      [{ type: 'rc-log-modal-loading-off' }, '*'],
+    ]);
   });
 
   it('renders installed plugin list section with license status', async () => {
