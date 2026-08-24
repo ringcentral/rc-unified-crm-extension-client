@@ -37,24 +37,24 @@ describe('build manifest name helpers', () => {
       name: 'App Connect',
       currentBranch: 'beta',
       isBranchedFromBeta: false,
-    })).toBe('App Connect - Beta');
+    })).toBe('App Connect - BETA');
 
     expect(getManifestNameForBranch({
       name: 'App Connect',
       currentBranch: 'feature/from-beta',
       isBranchedFromBeta: true,
-    })).toBe('App Connect - Beta');
+    })).toBe('App Connect - BETA');
 
     expect(getManifestNameForBranch({
-      name: 'App Connect - Beta',
+      name: 'App Connect - BETA',
       currentBranch: 'beta',
       isBranchedFromBeta: true,
-    })).toBe('App Connect - Beta');
+    })).toBe('App Connect - BETA');
   });
 
   it('removes BETA suffix for non-beta branches', () => {
     expect(getManifestNameForBranch({
-      name: 'App Connect - Beta',
+      name: 'App Connect - BETA',
       currentBranch: 'main',
       isBranchedFromBeta: false,
     })).toBe('App Connect');
@@ -75,12 +75,12 @@ describe('build manifest name helpers', () => {
       currentBranch: 'beta',
       isBranchedFromBeta: false,
     })).toEqual({
-      name: 'App Connect - Beta',
+      name: 'App Connect - BETA',
       version: '1.7.35',
     });
 
-    expect(JSON.parse(fs.readFileSync(manifestPath, 'utf8')).name).toBe('App Connect - Beta');
-    expect(consoleLogSpy).toHaveBeenCalledWith('Updated manifest name for beta branch: App Connect - Beta');
+    expect(JSON.parse(fs.readFileSync(manifestPath, 'utf8')).name).toBe('App Connect - BETA');
+    expect(consoleLogSpy).toHaveBeenCalledWith('Updated manifest name for beta branch: App Connect - BETA');
 
     expect(updateManifestNameForBranch({
       manifestPath,

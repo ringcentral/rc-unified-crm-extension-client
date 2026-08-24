@@ -4,7 +4,7 @@ const { execSync } = require('child_process');
 require('dotenv').config();
 
 function getManifestNameForBranch({ name, currentBranch, isBranchedFromBeta }) {
-    const betaSuffix = ' - Beta';
+    const betaSuffix = ' - BETA';
     if (currentBranch === 'beta' || isBranchedFromBeta) {
         return name.includes(betaSuffix) ? name : `${name}${betaSuffix}`;
     }
@@ -22,7 +22,7 @@ function updateManifestNameForBranch({ manifestPath, currentBranch, isBranchedFr
     if (nextName !== currentName) {
         manifest.name = nextName;
         fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-        if (nextName.includes(' - Beta')) {
+        if (nextName.includes(' - BETA')) {
             console.log(`Updated manifest name for beta branch: ${manifest.name}`);
         } else {
             console.log(`Updated manifest name for ${currentBranch} branch: ${manifest.name}`);
