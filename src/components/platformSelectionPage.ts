@@ -28,14 +28,30 @@ function normalizePlatformFilter(filter: unknown): string {
     }
 }
 
+const platformAccessOrder: Record<string, number> = {
+    public: 0,
+    shared: 1,
+    private: 2,
+};
+
+function comparePlatforms(firstPlatform: UnknownRecord, secondPlatform: UnknownRecord): number {
+    const accessDifference = (platformAccessOrder[firstPlatform.access] ?? Number.MAX_SAFE_INTEGER)
+        - (platformAccessOrder[secondPlatform.access] ?? Number.MAX_SAFE_INTEGER);
+    if (accessDifference !== 0) {
+        return accessDifference;
+    }
+
+    const firstName = firstPlatform.displayName ?? firstPlatform.name ?? '';
+    const secondName = secondPlatform.displayName ?? secondPlatform.name ?? '';
+    return firstName.localeCompare(secondName, undefined, { sensitivity: 'base' });
+}
+
 function getPlatformSelectionPageRender({ platformList, searchWord = '', selectedPlatform = '', filter = null }: UnknownRecord): UnknownRecord {
     const filterLabels = getPlatformFilterLabels();
     const filterValue = normalizePlatformFilter(filter);
     let platformListToRender = [];
 
-    // put the new element as the last element that has the same developer
-    // if there's no same developer, put it at the last of the array
-    for (const platform of platformList) {
+    for (const platform of [...platformList].sort(comparePlatforms)) {
         let meta = '';
         switch (platform.access) {
             case 'public':

@@ -370,6 +370,30 @@ describe('basic page renderers', () => {
     expect(firstLoadSelection.formData.platformSearch.filter).toBe('common.labels.all');
   });
 
+  it('sorts platform selection by access section and CRM name', async () => {
+    const platformSelectionPage = await loadPage('../../src/components/platformSelectionPage.ts');
+    const platformList = [
+      { id: 'private-z', access: 'private', displayName: 'Zendesk', developer: { name: 'Private Dev' } },
+      { id: 'shared-z', access: 'shared', displayName: 'Zoho', developer: { name: 'Shared Dev' } },
+      { id: 'public-s', access: 'public', displayName: 'Salesforce', developer: { name: 'RingCentral' } },
+      { id: 'private-a', access: 'private', displayName: 'Agile CRM', developer: { name: 'Private Dev' } },
+      { id: 'public-b', access: 'public', displayName: 'Bullhorn', developer: { name: 'RingCentral' } },
+      { id: 'shared-a', access: 'shared', displayName: 'Affinity', developer: { name: 'Shared Dev' } },
+    ];
+
+    const selection = platformSelectionPage.getPlatformSelectionPageRender({ platformList });
+
+    expect(selection.schema.properties.platforms.oneOf.map((platform: { const: string }) => platform.const)).toEqual([
+      'public-b=public',
+      'public-s=public',
+      'shared-a=shared',
+      'shared-z=shared',
+      'private-a=private',
+      'private-z=private',
+    ]);
+    expect(selection.formData.platformList).toBe(platformList);
+  });
+
   it('renders managed OAuth setup pages with pending credentials', async () => {
     const managedOAuthSetupPage = await loadPage('../../src/components/managedOAuthSetupPage.ts');
 
