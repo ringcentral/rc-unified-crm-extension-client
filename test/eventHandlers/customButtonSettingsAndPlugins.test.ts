@@ -496,6 +496,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       platform: fixedManifest.platforms.salesforce,
       platformName: 'salesforce',
       manifest: fixedManifest,
+      hostname: 'crm.example',
     });
   });
 
@@ -653,6 +654,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       platform: dynamicManifest.platforms.salesforce,
       platformName: 'salesforce',
       manifest: dynamicManifest,
+      hostname: 'crm.example',
     });
   });
 

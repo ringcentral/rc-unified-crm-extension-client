@@ -18,11 +18,10 @@ function getWidgetFrameWindow(): Window {
 }
 
 export async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions): Promise<void> {
-  void platformInfo;
   const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as { rcUnifiedCrmExtJwt?: string };
   await chrome.storage.local.set({ crmAuthed: !!rcUnifiedCrmExtJwt });
   if (!rcUnifiedCrmExtJwt) {
-    await authCore.onUserClickConnectButton({ platform, platformName, manifest });
+    await authCore.onUserClickConnectButton({ platform, platformName, manifest, hostname: platformInfo?.hostname });
   }
   else {
     window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');

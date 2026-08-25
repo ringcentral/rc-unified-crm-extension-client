@@ -39,12 +39,15 @@ function isAdminManagedOAuthEnabled(platform: UnknownRecord): boolean {
     return platform?.auth?.type === 'oauth' && platform?.auth?.oauth?.adminManaged?.enabled === true;
 }
 
-function buildOAuthUrl({ authorizationUri, clientId, redirectUri, scopes, customState, platformName }: UnknownRecord): string {
+function buildOAuthUrl({ authorizationUri, clientId, redirectUri, scopes, customState, platformName, hostname }: UnknownRecord): string {
     const state = customState === '' || !customState ? `platform=${platformName}` : customState;
     const scopeQuery = scopes
         ? (scopes.includes('=') ? `&${scopes}` : `&scope=${encodeURIComponent(scopes)}`)
         : '';
-    return `${authorizationUri}?` +
+    const resolvedAuthorizationUri = hostname
+        ? authorizationUri.split('{hostname}').join(hostname)
+        : authorizationUri;
+    return `${resolvedAuthorizationUri}?` +
         'response_type=code' +
         `&client_id=${encodeURIComponent(clientId)}` +
         scopeQuery +
@@ -52,7 +55,7 @@ function buildOAuthUrl({ authorizationUri, clientId, redirectUri, scopes, custom
         `&redirect_uri=${encodeURIComponent(redirectUri)}`;
 }
 
-async function onUserClickConnectButton({ platform, platformName, manifest }: UnknownRecord): Promise<any> {
+async function onUserClickConnectButton({ platform, platformName, manifest, hostname }: UnknownRecord): Promise<any> {
     if (!platform || !platformName || !manifest) {
         const platformInfo = await getPlatformInfo();
         // eslint-disable-next-line no-param-reassign
@@ -99,13 +102,18 @@ async function onUserClickConnectButton({ platform, platformName, manifest }: Un
                 await tryConnectToBullhorn({ platform });
             }
             else {
+                let resolvedHostname = hostname;
+                if (!resolvedHostname && platform.auth.oauth.authUrl.includes('{hostname}')) {
+                    resolvedHostname = (await getPlatformInfo())?.hostname;
+                }
                 authUri = buildOAuthUrl({
                     authorizationUri: platform.auth.oauth.authUrl,
                     clientId: platform.auth.oauth.clientId,
                     redirectUri: platform.auth.oauth.redirectUri ?? 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html',
                     scopes: platform.auth.oauth.scope,
                     customState,
-                    platformName: platform.name
+                    platformName: platform.name,
+                    hostname: resolvedHostname
                 });
                 handleThirdPartyOAuthWindow(authUri);
             }
