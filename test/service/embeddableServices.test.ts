@@ -164,7 +164,7 @@ async function loadEmbeddableServices({
   userCoreOverrides = {},
 }: {
   manifestValue?: Record<string, any>;
-  platformInfo?: { platformName: string; hostname?: string };
+  platformInfo?: { platformName: string; hostname?: string } | null;
   userCoreOverrides?: Record<PropertyKey, any>;
 } = {}) {
   vi.resetModules();
@@ -242,6 +242,28 @@ describe('embeddableServices', () => {
         }),
       },
       targetOrigin: '*',
+    });
+  });
+
+  it('returns the placeholder service when platform info is missing', async () => {
+    const { embeddableServices } = await loadEmbeddableServices({ platformInfo: null });
+
+    await expect(embeddableServices.getServiceManifest()).resolves.toMatchObject({
+      name: 'placeholder',
+      authorizationPath: '/platform-selection',
+      authorized: false,
+    });
+  });
+
+  it('returns the placeholder service when the selected platform is absent from the manifest', async () => {
+    const { embeddableServices } = await loadEmbeddableServices({
+      platformInfo: { platformName: 'missingCrm' },
+    });
+
+    await expect(embeddableServices.getServiceManifest()).resolves.toMatchObject({
+      name: 'placeholder',
+      authorizationPath: '/platform-selection',
+      authorized: false,
     });
   });
 

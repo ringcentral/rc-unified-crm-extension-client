@@ -13,6 +13,42 @@ let cachedClickToXRequest;
 const INCOMING_CALL_NOTIFICATION_PREFIX = 'incoming-call-';
 const RECENT_INCOMING_CALL_NOTIFICATIONS_KEY = 'recentIncomingCallNotificationIds';
 const INCOMING_CALL_NOTIFICATION_TTL = 5 * 60 * 1000;
+const OAUTH_ALARM_NAME = 'oauthCheck';
+const OAUTH_POLL_INTERVAL_MS = 3000;
+const THIRD_PARTY_OAUTH_TIMEOUT_MS = 3 * 60 * 1000;
+
+async function getOAuthRedirectUri() {
+  const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
+  const platformInfo = await chrome.storage.local.get('platform-info');
+  return customCrmManifest?.platforms?.[platformInfo?.['platform-info']?.platformName ?? '']?.auth?.oauth?.redirectUri
+    ?? redirectUri
+    ?? baseManifest.redirectUri;
+}
+
+async function clearOAuthLoginWindow(loginWindowInfo, { closeWindow = false, notifyTimeout = false } = {}) {
+  if (closeWindow && loginWindowInfo?.id !== undefined) {
+    try {
+      await chrome.windows.remove(loginWindowInfo.id);
+    }
+    catch (e) {
+      // The user may have already closed the OAuth window.
+    }
+  }
+
+  const { loginWindowInfo: currentLoginWindowInfo } = await chrome.storage.local.get('loginWindowInfo');
+  if (currentLoginWindowInfo?.id === loginWindowInfo?.id) {
+    await chrome.storage.local.remove('loginWindowInfo');
+  }
+
+  if (notifyTimeout && loginWindowInfo?.platform === 'thirdParty') {
+    await chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'images/logo128.png',
+      title: 'Connection timed out',
+      message: 'CRM login did not complete. Please try Connect again.'
+    });
+  }
+}
 
 async function focusExistingPopupWindow() {
   const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
@@ -255,6 +291,10 @@ chrome.windows.onRemoved.addListener(async (windowId) => {
     await chrome.storage.local.remove('popupWindowId');
     await chrome.storage.local.remove('errorLogRecordingStatus');
   }
+  const { loginWindowInfo } = await chrome.storage.local.get('loginWindowInfo');
+  if (loginWindowInfo?.id === windowId) {
+    await clearOAuthLoginWindow(loginWindowInfo);
+  }
 });
 
 chrome.windows.onBoundsChanged.addListener(async (window) => {
@@ -265,19 +305,47 @@ chrome.windows.onBoundsChanged.addListener(async (window) => {
   }
 });
 
-chrome.alarms.onAlarm.addListener(async () => {
-  const { loginWindowInfo } = await chrome.storage.local.get('loginWindowInfo');
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm?.name !== OAUTH_ALARM_NAME) {
+    return;
+  }
+
+  let { loginWindowInfo } = await chrome.storage.local.get('loginWindowInfo');
   if (!loginWindowInfo) {
     return;
   }
-  const tabs = await chrome.tabs.query({ windowId: loginWindowInfo.id });
-  if (tabs.length === 0) {
+
+  if (loginWindowInfo.platform === 'thirdParty' && !loginWindowInfo.deadline) {
+    loginWindowInfo = {
+      ...loginWindowInfo,
+      redirectUri: loginWindowInfo.redirectUri ?? await getOAuthRedirectUri(),
+      deadline: Date.now() + THIRD_PARTY_OAUTH_TIMEOUT_MS
+    };
+    await chrome.storage.local.set({ loginWindowInfo });
+  }
+
+  if (loginWindowInfo.platform === 'thirdParty' && Date.now() >= loginWindowInfo.deadline) {
+    await clearOAuthLoginWindow(loginWindowInfo, { closeWindow: true, notifyTimeout: true });
     return;
   }
-  const loginWindowUrl = tabs[0].url
+
+  let tabs;
+  try {
+    tabs = await chrome.tabs.query({ windowId: loginWindowInfo.id });
+  }
+  catch (e) {
+    await clearOAuthLoginWindow(loginWindowInfo);
+    return;
+  }
+  if (tabs.length === 0) {
+    await clearOAuthLoginWindow(loginWindowInfo);
+    return;
+  }
+  const loginWindowUrl = tabs[0].url;
   console.log('loginWindowUrl', loginWindowUrl);
-  if (loginWindowUrl.indexOf(redirectUri ?? baseManifest.redirectUri) !== 0) {
-    chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
+  const expectedRedirectUri = loginWindowInfo.redirectUri ?? await getOAuthRedirectUri();
+  if (typeof loginWindowUrl !== 'string' || loginWindowUrl.indexOf(expectedRedirectUri) !== 0) {
+    chrome.alarms.create(OAUTH_ALARM_NAME, { when: Date.now() + OAUTH_POLL_INTERVAL_MS });
     return;
   }
 
@@ -287,8 +355,7 @@ chrome.alarms.onAlarm.addListener(async () => {
     platform: loginWindowInfo.platform,
     callbackUri: loginWindowUrl
   });
-  await chrome.windows.remove(loginWindowInfo.id);
-  await chrome.storage.local.remove('loginWindowInfo');
+  await clearOAuthLoginWindow(loginWindowInfo, { closeWindow: true });
 });
 
 async function pipedriveCallbackHandler(request, sender) {
@@ -301,6 +368,7 @@ async function pipedriveCallbackHandler(request, sender) {
 }
 
 async function rcOAuthWindowHandler(request) {
+  const oauthRedirectUri = await getOAuthRedirectUri();
   const loginWindow = await chrome.windows.create({
     url: request.oAuthUri,
     type: 'popup',
@@ -310,13 +378,15 @@ async function rcOAuthWindowHandler(request) {
   await chrome.storage.local.set({
     loginWindowInfo: {
       platform: 'rc',
-      id: loginWindow.id
+      id: loginWindow.id,
+      redirectUri: oauthRedirectUri
     }
   });
-  chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
+  chrome.alarms.create(OAUTH_ALARM_NAME, { when: Date.now() + OAUTH_POLL_INTERVAL_MS });
 }
 
 async function thirdPartyOAuthWindowHandler(request) {
+  const oauthRedirectUri = await getOAuthRedirectUri();
   const loginWindow = await chrome.windows.create({
     url: request.oAuthUri,
     type: 'popup',
@@ -326,10 +396,12 @@ async function thirdPartyOAuthWindowHandler(request) {
   await chrome.storage.local.set({
     loginWindowInfo: {
       platform: 'thirdParty',
-      id: loginWindow.id
+      id: loginWindow.id,
+      redirectUri: oauthRedirectUri,
+      deadline: Date.now() + THIRD_PARTY_OAUTH_TIMEOUT_MS
     }
   });
-  chrome.alarms.create('oauthCheck', { when: Date.now() + 3000 });
+  chrome.alarms.create(OAUTH_ALARM_NAME, { when: Date.now() + OAUTH_POLL_INTERVAL_MS });
 }
 
 async function c2xWindowHandler(request) {
