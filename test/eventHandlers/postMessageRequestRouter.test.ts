@@ -9,6 +9,7 @@ import callLoggerMatchHandler from '../../src/eventHandlers/rc-post-message-requ
 import messageLoggerIndexHandler from '../../src/eventHandlers/rc-post-message-request/messageLogger/index.ts';
 import messageLoggerInputChangedHandler from '../../src/eventHandlers/rc-post-message-request/messageLogger/inputChanged/index.ts';
 import messageLoggerMatchHandler from '../../src/eventHandlers/rc-post-message-request/messageLogger/match/index.ts';
+import messageLoggerOpenLogHandler from '../../src/eventHandlers/rc-post-message-request/messageLogger/openLog/index.ts';
 import settingsHandler from '../../src/eventHandlers/rc-post-message-request/settings.ts';
 import customButtonClickHandler from '../../src/eventHandlers/rc-post-message-request/custom-button-click/index.ts';
 import { getManifest, getPlatformList } from '../../src/service/manifestService.ts';
@@ -77,6 +78,10 @@ vi.mock('../../src/eventHandlers/rc-post-message-request/messageLogger/match/ind
   default: { onEvent: vi.fn() },
 }));
 
+vi.mock('../../src/eventHandlers/rc-post-message-request/messageLogger/openLog/index.ts', () => ({
+  default: { onEvent: vi.fn() },
+}));
+
 vi.mock('../../src/eventHandlers/rc-post-message-request/settings.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
@@ -114,6 +119,7 @@ function childHandlers() {
     messageLoggerIndexHandler.onEvent,
     messageLoggerInputChangedHandler.onEvent,
     messageLoggerMatchHandler.onEvent,
+    messageLoggerOpenLogHandler.onEvent,
     settingsHandler.onEvent,
     customButtonClickHandler.onEvent,
   ];
@@ -201,6 +207,7 @@ describe('rc-post-message-request router', () => {
       ['/messageLogger', messageLoggerIndexHandler.onEvent],
       ['/messageLogger/inputChanged', messageLoggerInputChangedHandler.onEvent],
       ['/messageLogger/match', messageLoggerMatchHandler.onEvent],
+      ['/messageLogger/openLog', messageLoggerOpenLogHandler.onEvent],
       ['/settings', settingsHandler.onEvent],
       ['/custom-button-click', customButtonClickHandler.onEvent],
     ];

@@ -7,8 +7,52 @@ import { resolveVoicemailRecording } from '../lib/voicemail';
 
 type UnknownRecord = Record<string, any>;
 
+const MESSAGE_LOG_MATCH_BATCH_SIZE = 100;
+const MESSAGE_LOG_MATCH_MAX_CONCURRENCY = 3;
+
 function getWidgetFrameWindow(): Window {
   return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
+}
+
+function normalizeMessageIds(messageIds: unknown): string[] {
+  if (!Array.isArray(messageIds)) {
+    return [];
+  }
+  return messageIds.map((id) => String(id).trim()).filter(Boolean);
+}
+
+function extractMessageLogs(data: UnknownRecord): UnknownRecord {
+  // The server returns a flat `messageLogs` map (messageId -> CRM logId) and a
+  // parallel `logs` array ([{ messageId, matched, logId }]). Prefer the map;
+  // fall back to reconstructing it from the matched entries in `logs`.
+  let messageLogs = data.messageLogs as UnknownRecord | undefined;
+  if ((!messageLogs || isObjectEmpty(messageLogs)) && Array.isArray(data.logs)) {
+    messageLogs = {};
+    for (const entry of data.logs as UnknownRecord[]) {
+      if (entry?.matched && entry.logId && entry.messageId !== undefined && entry.messageId !== null) {
+        messageLogs[String(entry.messageId)] = entry.logId;
+      }
+    }
+  }
+  return messageLogs ?? {};
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  maxConcurrency: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = [];
+  let nextIndex = 0;
+  const workerCount = Math.min(maxConcurrency, items.length);
+  await Promise.all(Array.from({ length: workerCount }, async () => {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await worker(items[index], index);
+    }
+  }));
+  return results;
 }
 
 // Input {id} = sessionId from RC
@@ -25,8 +69,9 @@ export async function addLog({
   contactType,
   contactName,
   additionalSubmission,
+  selectedMessageIds,
   isShowNotification = true,
-}: UnknownRecord): Promise<void> {
+}: UnknownRecord): Promise<any> {
   const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as UnknownRecord;
   const { userSettings } = await chrome.storage.local.get({ userSettings: {} }) as UnknownRecord;
   const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} }) as UnknownRecord;
@@ -98,7 +143,18 @@ export async function addLog({
           // eslint-disable-next-line no-param-reassign
           logInfo.rcAccessToken = rcAccessToken;
         }
-        addLogRes = await axios.post(`${serverUrl}/messageLog`, { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName });
+        {
+          // Granular SMS logging: when the user selected specific messages,
+          // forward their RingCentral ids as a top-level `selectedMessageIds`
+          // array. The server keeps the full `logInfo.messages` for content and
+          // composes a single CRM entry from exactly the selected ids. Absent/
+          // empty selection keeps the existing daily-digest/auto behavior.
+          const messageLogBody: UnknownRecord = { logInfo, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName };
+          if (Array.isArray(selectedMessageIds) && selectedMessageIds.length > 0) {
+            messageLogBody.selectedMessageIds = selectedMessageIds.map((id: unknown) => String(id));
+          }
+          addLogRes = await axios.post(`${serverUrl}/messageLog`, messageLogBody);
+        }
         if (addLogRes.data.successful) {
           if ((isMain as any) & ((addLogRes.data.logIds.length > 0) as any)) {
             trackSyncMessageLog();
@@ -118,7 +174,14 @@ export async function addLog({
           }
           await chrome.storage.local.set({ [`rc-crm-conversation-log-${logInfo.conversationLogId}`]: { logged: true } });
         }
-        break;
+        // Return the log result so callers (e.g. the selected-message logging
+        // flow) can report the CRM log id back to the widget.
+        return {
+          successful: !!addLogRes?.data?.successful,
+          logId: addLogRes?.data?.logIds?.[0],
+          logIds: addLogRes?.data?.logIds,
+          messageLogs: addLogRes?.data?.messageLogs,
+        };
     }
   }
   else {
@@ -153,6 +216,40 @@ export async function getLog({ serverUrl, logType, sessionIds, requireDetails }:
   else {
     return { successful: false, message: t('notifications.warning.connectToCrm') };
   }
+}
+
+// Fetch which individual messages in a conversation are already logged, and to
+// which CRM log record. Used to hydrate the per-message "logged" state (icons)
+// when a thread loads. Returns a map of messageId -> { logId } (plus any extra
+// fields the server includes). Degrades to an empty map without CRM auth.
+export async function getMessageLog({ serverUrl, conversationId, messageIds }: UnknownRecord): Promise<any> {
+  const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as UnknownRecord;
+  if (!rcUnifiedCrmExtJwt) {
+    return { successful: false, messageLogs: {} };
+  }
+
+  const ids = normalizeMessageIds(messageIds);
+  const batches = ids.length > 0
+    ? Array.from({ length: Math.ceil(ids.length / MESSAGE_LOG_MATCH_BATCH_SIZE) }, (_, index) => (
+      ids.slice(index * MESSAGE_LOG_MATCH_BATCH_SIZE, (index + 1) * MESSAGE_LOG_MATCH_BATCH_SIZE)
+    ))
+    : [[]];
+
+  const responses = await mapWithConcurrency(batches, MESSAGE_LOG_MATCH_MAX_CONCURRENCY, async (batch) => {
+    const body: UnknownRecord = { conversationId: String(conversationId ?? '') };
+    if (batch.length > 0) {
+      body.messageIds = batch;
+    }
+    return axios.post(`${serverUrl}/messageLog/match`, body);
+  });
+
+  return responses.reduce((result, res) => ({
+    successful: result.successful && res.data.successful !== false,
+    messageLogs: {
+      ...result.messageLogs,
+      ...extractMessageLogs(res.data),
+    },
+  }), { successful: true, messageLogs: {} as UnknownRecord });
 }
 
 export function openLog({ manifest, platformName, hostname, logId, contactType, contactId, userSettings }: UnknownRecord): void {
@@ -273,6 +370,7 @@ export function getConflictContentFromUnresolvedLog(log: UnknownRecord): Unknown
 const logCore = {
   addLog,
   getLog,
+  getMessageLog,
   openLog,
   updateLog,
   cacheCallNote,

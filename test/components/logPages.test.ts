@@ -647,6 +647,34 @@ describe('logPage', () => {
     });
   });
 
+  it('adds an editable, prefilled title to the message log page when showActivityTitle is set', async () => {
+    const logPage = await loadLogPage();
+
+    const messagePage = logPage.getLogPageRender({
+      id: 'message-selected-1',
+      manifest: manifest(),
+      logType: 'Message',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [existingContact()],
+      logInfo: {},
+      contactPhoneNumber: '+16505550200',
+      useContactSearch: false,
+      showActivityTitle: true,
+    });
+
+    // Title field is present and editable, and prefilled in form data.
+    expect(messagePage.schema.properties).toHaveProperty('activityTitle');
+    expect(messagePage.schema.properties.activityTitle).toMatchObject({
+      type: 'string',
+      manuallyEdited: false,
+    });
+    expect(messagePage.uiSchema).toHaveProperty('activityTitle');
+    expect(typeof messagePage.formData.activityTitle).toBe('string');
+    expect(messagePage.formData.activityTitle.length).toBeGreaterThan(0);
+  });
+
   it('renders fallback edit and new-contact-only log pages', async () => {
     const logPage = await loadLogPage();
     const noContactTypesManifest = manifest();

@@ -77,6 +77,17 @@ async function getServiceManifest() {
         enabled: !!platform?.trackSmsTypingDuration,
     }, '*');
 
+    // `autoLogSMS` (Log SMS conversations automatically) and `selectedMessageLog`
+    // (Log selected messages) are mutually exclusive: enabling one hides the other.
+    // An item still shows while it is itself ON so the user can turn it back off
+    // (prevents both being hidden if a legacy state had both enabled at once).
+    const autoLogSMSValue = userCore.getAutoLogSMSSetting(userSettings).value === true;
+    const selectedMessageLogSupported = platform?.isSelectedMessageLogSupported === true;
+    const selectedMessageLogValue = selectedMessageLogSupported
+        && userCore.getSelectedMessageLogSetting(userSettings).value === true;
+    const showAutoLogSMS = autoLogSMSValue || !selectedMessageLogValue;
+    const showSelectedMessageLog = selectedMessageLogSupported && (selectedMessageLogValue || !autoLogSMSValue);
+
     const services: UnknownRecord = {
         name: platformName,
         displayName: platform.displayName,
@@ -113,6 +124,18 @@ async function getServiceManifest() {
         messageLoggerPath: '/messageLogger',
         messagesLogPageInputChangedEventPath: '/messageLogger/inputChanged',
         messageLogEntityMatcherPath: '/messageLogger/match',
+        // Where the widget posts a click on a message's "logged" icon so we can
+        // open the corresponding CRM log record.
+        messageLoggerOpenLogPath: '/messageLogger/openLog',
+        // Enable per-message selection UI ONLY when the platform manifest opts in
+        // via `isSelectedMessageLogSupported: true`. Otherwise the widget keeps
+        // the existing message-logging behavior (for both auto and manual).
+        // NOTE: the embeddable widget reads this exact key (`messageLoggerGranularSelectionEnabled`)
+        // to decide whether to render per-message checkboxes; the widget additionally
+        // requires manual SMS mode (auto-log off) and a non-thread conversation.
+        // The feature also honors the user/admin `selectedMessageLog` setting: when
+        // turned off, checkboxes are hidden and message logging stays whole-conversation.
+        messageLoggerGranularSelectionEnabled: userCore.isSelectedMessageLogEnabled({ platform, userSettings }),
         messageLoggerAutoSettingLabel: t('settings.logging.autoLogSMS'),
         messageLoggerAutoSettingReadOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
         messageLoggerAutoSettingReadOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
@@ -137,7 +160,7 @@ async function getServiceManifest() {
                         readOnlyReason: userCore.getAutoLogCallSetting(userSettings, isAdmin).warning ?? userCore.getAutoLogCallSetting(userSettings, isAdmin).readOnlyReason,
                         value: userCore.getAutoLogCallSetting(userSettings, isAdmin).value,
                     },
-                    {
+                    ...(showAutoLogSMS ? [{
                         id: 'autoLogSMS',
                         type: 'boolean',
                         name: t('settings.logging.autoLogSMS'),
@@ -145,7 +168,7 @@ async function getServiceManifest() {
                         readOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
                         value: userCore.getAutoLogSMSSetting(userSettings).value,
-                    },
+                    }] : []),
                     {
                         id: 'autoLogVoicemail',
                         type: 'boolean',
@@ -190,7 +213,19 @@ async function getServiceManifest() {
                         readOnly: userCore.getOneTimeLogSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getOneTimeLogSetting(userSettings).readOnlyReason,
                         value: userCore.getOneTimeLogSetting(userSettings).value
-                    }
+                    },
+                    // Per-message (granular) SMS logging toggle. Only surfaced when the
+                    // platform manifest supports it; otherwise the setting is meaningless.
+                    // When off, message logging reverts to whole-conversation behavior.
+                    ...(showSelectedMessageLog ? [{
+                        id: "selectedMessageLog",
+                        type: "boolean",
+                        name: t('settings.logging.selectedMessageLog'),
+                        description: t('settings.logging.selectedMessageLogDesc'),
+                        readOnly: userCore.getSelectedMessageLogSetting(userSettings).readOnly,
+                        readOnlyReason: userCore.getSelectedMessageLogSetting(userSettings).readOnlyReason,
+                        value: userCore.getSelectedMessageLogSetting(userSettings).value
+                    }] : [])
                 ]
             },
             {
