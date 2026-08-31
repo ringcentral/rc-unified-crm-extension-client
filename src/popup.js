@@ -101,6 +101,12 @@ let manifest = {};
 let platform = null;
 let hasOngoingCall = false;
 let lastUserSettingSyncDate = new Date();
+// The embeddable widget always emits one spurious `rc-adapter-ai-assistant-settings-notify`
+// with its default (disabled) state right after (re)load, before it has adopted the
+// settings App Connect pushes to it. Persisting that would wipe the user's saved choice
+// on every reload, so ignore AI-assistant notifications until App Connect has completed
+// its initial authoritative settings push to the widget.
+let aiAssistantSettingsSynced = false;
 const RETRO_AUTO_LOG_INTERVAL_MS = 10 * 60 * 1000;
 let retroAutoCallLogIntervalId;
 let retroAutoCallLogInProgress = false;
@@ -500,6 +506,9 @@ window.addEventListener('message', async (e) => {
             const adminSettingResults = await adminCore.refreshAdminSettings();
             adminSettings = adminSettingResults.adminSettings;
             userSettings = await userCore.refreshUserSettings({ platformName });
+            // App Connect has now pushed the persisted AI assistant settings to the widget,
+            // so subsequent ai-assistant notifications represent genuine user changes.
+            aiAssistantSettingsSynced = true;
             await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: rcUnifiedCrmExtJwt });
             document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
               type: 'rc-adapter-update-authorization-status',
@@ -739,6 +748,12 @@ window.addEventListener('message', async (e) => {
           }
           break;
         case 'rc-adapter-ai-assistant-settings-notify':
+          // Ignore the widget's spurious startup notification (see aiAssistantSettingsSynced).
+          // Until App Connect has pushed the persisted settings to the widget, any notify
+          // reflects the widget's uninitialized default rather than a real user action.
+          if (!aiAssistantSettingsSynced) {
+            break;
+          }
           userSettings = await userCore.refreshUserSettings({
             changedSettings: {
               showAiAssistantWidget: {
@@ -750,6 +765,7 @@ window.addEventListener('message', async (e) => {
             },
             isAvoidForceChange: true
           });
+          showNotification({ level: 'success', message: `Settings saved.`, ttl: 3000 });
           break;
         case 'rc-post-message-request':
           await syncCrmAuthedFromStorage();
