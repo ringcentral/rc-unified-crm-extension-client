@@ -1062,7 +1062,7 @@ async function getServiceManifest() {
             });
         services.settings.find(s => s.id === optionSectionName).items.push(...numberFormatterComponent);
     }
-    if (platformName === 'googleSheets' || platformName === 'google_sheets_sushil_local') {
+    if (platformName === 'googleSheets') {
         services.settings.unshift(
             {
                 id: 'googleSheetsConfig',

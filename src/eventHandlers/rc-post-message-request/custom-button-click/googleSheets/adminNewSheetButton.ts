@@ -53,7 +53,6 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
       ttl: 5000,
     });
   } catch (error) {
-    console.error(error);
     void error;
     showNotification({ level: 'warning', message: 'Failed to create new sheet', ttl: 5000 });
   }
