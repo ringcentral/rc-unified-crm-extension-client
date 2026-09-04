@@ -26,9 +26,10 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   const rcAccessTokenNewSheet = getRcAccessToken();
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
   const { adminSettings } = await chrome.storage.local.get('adminSettings') as { adminSettings: UnknownRecord };
+  const { rcUnifiedCrmExtJwt: jwtToken } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as { rcUnifiedCrmExtJwt?: string };
 
   try {
-    const adminNewSheetResponse = await axios.post(`${manifest.serverUrl}/admin/googleSheets/sheet?rcAccessToken=${rcAccessTokenNewSheet}`,
+    const adminNewSheetResponse = await axios.post(`${manifest.serverUrl}/admin/googleSheets/sheet?jwtToken=${jwtToken}&rcAccessToken=${rcAccessTokenNewSheet}`,
       {
         name: data.body.button.formData.newSheetName,
       },
