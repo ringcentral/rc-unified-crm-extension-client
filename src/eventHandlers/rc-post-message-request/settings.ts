@@ -77,6 +77,15 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   const languageChanged = await maybeApplyLanguageChange({ changedSettings, manifest, platformName, userSettings });
 
   const setting = data.body.setting;
+  // `autoLogSMS` and `selectedMessageLog` are mutually exclusive in the settings
+  // UI. Re-register the service so the now-hidden/shown item updates immediately
+  // after the toggle instead of only on the next reload.
+  if (setting?.id === 'autoLogSMS' || setting?.id === 'selectedMessageLog') {
+    getWidgetFrameWindow().postMessage({
+      type: 'rc-adapter-register-third-party-service',
+      service: (await embeddableServices.getServiceManifest()),
+    }, '*');
+  }
   if (setting?.id === 'developerMode') {
     showNotification({ level: 'success', message: `Developer mode is turned ${setting.value ? 'ON' : 'OFF'}.`, ttl: 5000 });
     await chrome.storage.local.set({ developerMode: setting.value });

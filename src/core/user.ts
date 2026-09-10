@@ -323,6 +323,27 @@ function getOneTimeLogSetting(userSettings) {
     }
 }
 
+// Whether the per-message (granular) SMS logging feature is turned ON for this
+// user. Defaults to OFF so platforms that support it retain whole-conversation
+// logging until an admin/user explicitly turns selected-message logging on.
+function getSelectedMessageLogSetting(userSettings) {
+    return {
+        value: userSettings?.selectedMessageLog?.value ?? false,
+        readOnly: userSettings?.selectedMessageLog?.customizable === undefined ? false : !userSettings?.selectedMessageLog?.customizable,
+        readOnlyReason: !userSettings?.selectedMessageLog?.customizable ? 'This setting is managed by admin' : ''
+    }
+}
+
+// Effective gate for the selected-message logging feature: the platform must
+// advertise support (`isSelectedMessageLogSupported`) AND the user/admin setting
+// must be enabled. Used by both the service manifest (to toggle the widget UI)
+// and the message-logger handler (to toggle the runtime behavior) so they never
+// diverge.
+function isSelectedMessageLogEnabled({ platform, userSettings }) {
+    return platform?.isSelectedMessageLogSupported === true
+        && getSelectedMessageLogSetting(userSettings).value === true;
+}
+
 function getCallPopSetting(userSettings) {
     return {
         value: userSettings?.popupLogPageAfterCall?.value ?? false,
@@ -747,6 +768,8 @@ const userCore = {
     getAutoLogOutboundFaxSetting,
     getEnableRetroCallLogSync,
     getOneTimeLogSetting,
+    getSelectedMessageLogSetting,
+    isSelectedMessageLogEnabled,
     getCallPopSetting,
     getSMSPopSetting,
     getIncomingCallPop,
@@ -814,6 +837,8 @@ export {
     getAutoLogOutboundFaxSetting,
     getEnableRetroCallLogSync,
     getOneTimeLogSetting,
+    getSelectedMessageLogSetting,
+    isSelectedMessageLogEnabled,
     getCallPopSetting,
     getSMSPopSetting,
     getIncomingCallPop,

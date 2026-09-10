@@ -13,6 +13,7 @@ import callLoggerMatchHandler from './callLogger/match';
 import messageLoggerIndexHandler from './messageLogger';
 import messageLoggerInputChangedHandler from './messageLogger/inputChanged';
 import messageLoggerMatchHandler from './messageLogger/match';
+import messageLoggerOpenLogHandler from './messageLogger/openLog';
 import settingsHandler from './settings';
 import customButtonClickHandler from './custom-button-click';
 import authCore from '../../core/auth';
@@ -70,6 +71,9 @@ async function onEvent({ data }: EventOptions) {
       break;
     case '/messageLogger/match':
       await messageLoggerMatchHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+      break;
+    case '/messageLogger/openLog':
+      await messageLoggerOpenLogHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
       break;
     case '/settings':
       await settingsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
