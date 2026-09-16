@@ -59,7 +59,6 @@ async function recoverManualReadiness(sessionId: string, readiness: UnknownRecor
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
     void platformInfo;
-    void platformName;
     void platform;
     let callLogMatchData: UnknownRecord = {};
     let noLocalMatchedSessionIds: string[] = [];
@@ -131,7 +130,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             await chrome.storage.local.set(newLocalMatchedCallLogRecords);
         }
     }
-    if (userCore.getOneTimeLogSetting(userSettings).value) {
+    const shouldWaitForCompleteCallData =
+        userCore.getOneTimeLogSetting(userSettings).value ||
+        (
+            platformName === 'redtail' &&
+            (userSettings?.redtailActivityCompletionMode?.value ?? 'autoWhenAllDataAvailable') === 'autoWhenAllDataAvailable'
+        );
+    if (shouldWaitForCompleteCallData) {
         const loggedSessionIds = Object.keys(callLogMatchData);
         for (const sessionId of data.body.sessionIds) {
             if (loggedSessionIds.includes(sessionId)) {

@@ -356,6 +356,62 @@ describe('contact and call-log match handlers', () => {
     });
   });
 
+  it('shows preparing data status for Redtail auto activity completion when one-time logging is off', async () => {
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: false },
+        redtailActivityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+      },
+      'call-log-data-ready-pending-redtail-session': {
+        isReady: false,
+        autoReady: false,
+        manualReady: false,
+      },
+    });
+    const { handler, util } = await loadMatchHandler(
+      '../../src/eventHandlers/rc-post-message-request/callLogger/match/index.ts',
+      {
+        userCore: {
+          getOneTimeLogSetting: vi.fn(() => ({ value: false })),
+        },
+        logCore: {
+          getLog: vi.fn(async () => ({
+            successful: true,
+            callLogs: [
+              {
+                sessionId: 'pending-redtail-session',
+                matched: false,
+              },
+            ],
+          })),
+        },
+      },
+    );
+
+    await handler.onEvent({
+      data: {
+        requestId: 'request-redtail-preparing',
+        body: {
+          sessionIds: ['pending-redtail-session'],
+        },
+      },
+      manifest: manifest(),
+      platformName: 'redtail',
+    });
+
+    expect(util.responseMessage).toHaveBeenCalledWith('request-redtail-preparing', {
+      data: {
+        'pending-redtail-session': [
+          {
+            type: 'status',
+            status: 'failed',
+            message: 'preparing data...',
+          },
+        ],
+      },
+    });
+  });
+
   it('recovers a stuck one-time call from complete adapter data', async () => {
     seedStorage({
       userSettings: {

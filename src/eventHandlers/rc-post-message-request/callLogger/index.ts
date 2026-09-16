@@ -120,7 +120,20 @@ async function onEvent(options: EventOptions) {
     await chrome.storage.local.set({
         [readinessKey]: readiness,
     });
-    if (userCore.getOneTimeLogSetting(userSettings).value) {
+    data = {
+        ...data,
+        body: {
+            ...data.body,
+            activityCompletionReady: readiness.autoReady,
+        },
+    };
+    const shouldWaitForCompleteCallData =
+        userCore.getOneTimeLogSetting(userSettings).value ||
+        (
+            platformName === 'redtail' &&
+            (userSettings?.redtailActivityCompletionMode?.value ?? 'autoWhenAllDataAvailable') === 'autoWhenAllDataAvailable'
+        );
+    if (shouldWaitForCompleteCallData) {
         const readyForCurrentRequest = data.body.redirect
             ? readiness.autoReady || isCallDataComplete(data.body.call)
             : readiness.autoReady;

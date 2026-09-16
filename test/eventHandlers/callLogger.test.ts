@@ -462,11 +462,125 @@ describe('callLogger index', () => {
     expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         body: expect.objectContaining({
+          activityCompletionReady: false,
           call: expect.objectContaining({ sessionId: 'session-1' }),
         }),
       }),
     }));
     expect(tempLogNotePage.getTempLogNotePageRender).not.toHaveBeenCalled();
+  });
+
+  it('marks activity completion ready when one-time auto data is final', async () => {
+    const { callLogger, handlers } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: true },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        call: baseCall({
+          action: 'Disconnected',
+          recording: undefined,
+        }),
+      }),
+      ...context,
+    });
+
+    expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        body: expect.objectContaining({
+          activityCompletionReady: true,
+        }),
+      }),
+    }));
+  });
+
+  it('waits for complete data when Redtail auto activity completion is enabled', async () => {
+    const { callLogger, logCore, tempLogNotePage, handlers } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: false },
+        redtailActivityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        redirect: true,
+        call: baseCall({
+          recording: { link: 'https://recording.example' },
+          duration: undefined,
+        }),
+      }),
+      ...context,
+      platformName: 'redtail',
+      platform: { ...context.platform, name: 'redtail' },
+    });
+
+    expect(tempLogNotePage.getTempLogNotePageRender).toHaveBeenCalledWith({
+      sessionId: 'session-1',
+      cachedNote: 'cached note',
+    });
+    expect(logCore.getCachedNote).toHaveBeenCalledWith({ sessionId: 'session-1' });
+    expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+  });
+
+  it('blocks Redtail automatic logging until auto activity completion data is ready', async () => {
+    const { callLogger, handlers, util } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        autoLogCall: { value: true },
+        oneTimeLog: { value: false },
+        redtailActivityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        triggerType: 'callLogSync',
+        call: baseCall({
+          recording: { link: 'https://recording.example' },
+          duration: undefined,
+        }),
+      }),
+      ...context,
+      platformName: 'redtail',
+      platform: { ...context.platform, name: 'redtail' },
+    });
+
+    expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('does not use Redtail manual completion mode as a one-time logging gate', async () => {
+    const { callLogger, handlers } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        autoLogCall: { value: true },
+        oneTimeLog: { value: false },
+        redtailActivityCompletionMode: { value: 'manual' },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        triggerType: 'callLogSync',
+        call: baseCall({
+          recording: { link: 'https://recording.example' },
+          duration: undefined,
+        }),
+      }),
+      ...context,
+      platformName: 'redtail',
+      platform: { ...context.platform, name: 'redtail' },
+    });
+
+    expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      triggerTypeInUse: 'createLog',
+      isAutoLog: true,
+    }));
   });
 
   it('blocks extension-number logging when extension logging is disabled', async () => {
