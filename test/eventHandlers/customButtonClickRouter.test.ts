@@ -79,7 +79,7 @@ async function loadRouter() {
   for (const [name, modulePath] of Object.entries(handlerModules)) {
     vi.doMock(modulePath, () => {
       handlers[name] = {
-        onEvent: vi.fn(async () => {}),
+        onEvent: vi.fn(async () => { }),
       };
       return {
         default: handlers[name],
@@ -94,7 +94,7 @@ async function loadRouter() {
   vi.doMock('../../src/lib/util.ts', () => util);
 
   const authCore = {
-    refreshLicenseStatus: vi.fn(async () => {}),
+    refreshLicenseStatus: vi.fn(async () => { }),
   };
   vi.doMock('../../src/core/auth.ts', () => ({
     default: authCore,
@@ -110,7 +110,7 @@ async function loadRouter() {
   }));
 
   const platformService = {
-    clearPlatformInfo: vi.fn(async () => {}),
+    clearPlatformInfo: vi.fn(async () => { }),
   };
   vi.doMock('../../src/service/platformService.ts', () => platformService);
 
@@ -407,7 +407,7 @@ describe('custom button click router', () => {
     const { router } = await loadRouter();
 
     for (const [id, expectedUrl] of [
-      ['openCommunityPageButton-row-1-action', 'https://community.ringcentral.com/groups/app-connect-22'],
+      ['openCommunityPageButton-row-1-action', 'https://community.ringcentral.com/integrations-app-connect-33'],
       ['releaseNotes-row-1-action', 'https://release.example'],
       ['getSupport-row-1-action', 'https://support.example'],
       ['writeReview-row-1-action', 'https://review.example'],

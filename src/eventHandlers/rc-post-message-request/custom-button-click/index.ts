@@ -48,6 +48,7 @@ import refreshAccountDataHandler from './adminSettings/refreshAccountData';
 import managedAuthOrgPageHandler from './adminSettings/managedAuthOrgPage';
 import managedAuthUserPageHandler from './adminSettings/managedAuthUserPage';
 import managedAuthUserEditHandler from './adminSettings/managedAuthUserEdit';
+import managedAuthOptionsHandler from './adminSettings/managedAuthOptions';
 import deleteManagedOAuthAccountHandler from './adminSettings/deleteManagedOAuthAccount';
 
 import googleSheetsConfigHandler from './googleSheets/googleSheetsConfig';
@@ -236,6 +237,24 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
         case 'managedOAuthSetupPage':
             await (managedOAuthSetupPageHandler as UnknownRecord).onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
+        case 'managedAuthOptionsAuth':
+            await managedAuthOptionsHandler.onEvent({
+                data,
+                manifest,
+                platformName,
+                fieldConst: decodeURIComponent(listButtonItemId),
+                mode: 'auth',
+            });
+            break;
+        case 'managedAuthOptionsUser':
+            await managedAuthOptionsHandler.onEvent({
+                data,
+                manifest,
+                platformName,
+                fieldConst: decodeURIComponent(listButtonItemId),
+                mode: 'user',
+            });
+            break;
         case 'feedbackPage':
             await feedbackPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
@@ -261,7 +280,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             await reportIssueButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'openCommunityPageButton':
-            window.open('https://community.ringcentral.com/groups/app-connect-22', '_blank');
+            window.open('https://community.ringcentral.com/integrations-app-connect-33', '_blank');
             break;
         case 'documentation':
             await documentationHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

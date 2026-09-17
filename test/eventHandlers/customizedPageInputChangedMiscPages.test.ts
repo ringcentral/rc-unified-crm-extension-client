@@ -131,6 +131,12 @@ async function loadPageHandler(modulePath, overrides: Record<string, any> = {}) 
 
   const manifestService = {
     getPlatformList: vi.fn(async () => [{ id: 'salesforce', name: 'salesforce' }]),
+    getPluginList: vi.fn(async () => [{
+      id: 'plugin-1',
+      name: 'Plugin One',
+      access: 'shared',
+      accountId: 'owner-account-1',
+    }]),
     getPluginDetails: vi.fn(async ({ pluginId, selectedPlugin }) => ({
       id: pluginId,
       name: selectedPlugin?.name ?? 'Plugin One',
@@ -767,7 +773,7 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     expect(readStorage().adminSettings.userSettings.googleSheetsName.customizable).toBe(false);
   });
 
-  it('renders plugin admin details from stored admin plugin settings', async () => {
+  it('uses the catalog plugin owner when rendering shared plugin admin details', async () => {
     const loaded = await loadPageHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/pages/pluginAdminSettingsPage.ts',
     );
@@ -779,8 +785,10 @@ describe('customizedPage inputChanged remaining page handlers', () => {
     expect(loaded.manifestService.getPluginDetails).toHaveBeenCalledWith({
       pluginId: 'plugin-1',
       selectedPlugin: {
+        id: 'plugin-1',
         name: 'Plugin One',
-        config: {},
+        access: 'shared',
+        accountId: 'owner-account-1',
       },
     });
     expect(loaded.pluginDetailsSettingPage.getPluginDetailsSettingPageRender).toHaveBeenCalledWith(expect.objectContaining({

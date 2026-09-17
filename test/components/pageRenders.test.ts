@@ -213,6 +213,54 @@ describe('basic page renderers', () => {
     expect(adminAuth.uiSchema.secret).toEqual({ 'ui:widget': 'password' });
   });
 
+  it('renders connector-driven user fields as searchable dropdowns with update buttons', async () => {
+    const authPage = await loadPage('../../src/components/authPage.ts');
+    const dynamicManifest: any = manifest();
+    dynamicManifest.platforms.salesforce.auth.apiKey.page.content.push({
+      const: 'crmUserId',
+      title: 'CRM user',
+      type: 'string',
+      required: true,
+      managed: true,
+      managedScope: 'user',
+      managedFieldType: 'dynamic',
+    });
+
+    const adminAuth = authPage.getAuthPageRender({
+      manifest: dynamicManifest,
+      platformName: 'salesforce',
+      isAdmin: true,
+      formData: { apiUrl: 'company-123', crmUserId: 'user-101' },
+      dynamicOptions: {
+        crmUserId: [{ value: 'user-101', label: 'Ada Lovelace' }],
+      },
+    });
+
+    expect(adminAuth.schema.properties['managedAuthOptionsAuth-crmUserId-action']).toEqual({
+      type: 'string',
+      title: 'Refresh User List',
+    });
+    const propertyKeys = Object.keys(adminAuth.schema.properties);
+    expect(propertyKeys.indexOf('managedAuthOptionsAuth-crmUserId-action'))
+      .toBeLessThan(propertyKeys.indexOf('crmUserId'));
+    expect(adminAuth.schema.properties.crmUserId).toMatchObject({
+      type: 'string',
+      enum: ['user-101'],
+      enumNames: ['Ada Lovelace'],
+    });
+    expect(adminAuth.uiSchema.crmUserId).toMatchObject({
+      'ui:widget': 'AutocompleteWidget',
+      'ui:options': {
+        multiple: false,
+        enumOptions: [{ value: 'user-101', label: 'Ada Lovelace' }],
+      },
+    });
+    expect(adminAuth.formData).toMatchObject({
+      apiUrl: 'company-123',
+      crmUserId: 'user-101',
+    });
+  });
+
   it('renders dynamic hostname input pages with validation and private connector metadata', async () => {
     const hostnamePage = await loadPage('../../src/components/hostnameInputPage.ts');
     const dynamicHost = hostnamePage.getHostnameInputPageRender({
@@ -322,6 +370,30 @@ describe('basic page renderers', () => {
     expect(firstLoadSelection.formData.platformSearch.filter).toBe('common.labels.all');
   });
 
+  it('sorts platform selection by access section and CRM name', async () => {
+    const platformSelectionPage = await loadPage('../../src/components/platformSelectionPage.ts');
+    const platformList = [
+      { id: 'private-z', access: 'private', displayName: 'Zendesk', developer: { name: 'Private Dev' } },
+      { id: 'shared-z', access: 'shared', displayName: 'Zoho', developer: { name: 'Shared Dev' } },
+      { id: 'public-s', access: 'public', displayName: 'Salesforce', developer: { name: 'RingCentral' } },
+      { id: 'private-a', access: 'private', displayName: 'Agile CRM', developer: { name: 'Private Dev' } },
+      { id: 'public-b', access: 'public', displayName: 'Bullhorn', developer: { name: 'RingCentral' } },
+      { id: 'shared-a', access: 'shared', displayName: 'Affinity', developer: { name: 'Shared Dev' } },
+    ];
+
+    const selection = platformSelectionPage.getPlatformSelectionPageRender({ platformList });
+
+    expect(selection.schema.properties.platforms.oneOf.map((platform: { const: string }) => platform.const)).toEqual([
+      'public-b=public',
+      'public-s=public',
+      'shared-a=shared',
+      'shared-z=shared',
+      'private-a=private',
+      'private-z=private',
+    ]);
+    expect(selection.formData.platformList).toBe(platformList);
+  });
+
   it('renders managed OAuth setup pages with pending credentials', async () => {
     const managedOAuthSetupPage = await loadPage('../../src/components/managedOAuthSetupPage.ts');
 
@@ -423,7 +495,8 @@ describe('basic page renderers', () => {
       licenseStatusDescription: 'Expired',
     });
 
-    expect(page.schema.required).toEqual(['region']);
+    expect(page.schema.required).toEqual([]);
+    expect(page.schema.properties.config.required).toEqual(['region']);
     expect(page.schema.properties.config.properties.region).toMatchObject({
       readOnly: true,
       default: 'us',
@@ -721,6 +794,34 @@ describe('admin page renderers', () => {
       searchWord: 'jane',
       filter: 'Configured',
     });
+  });
+
+  it('renders dynamic fields on managed auth user edit pages', async () => {
+    const managedAuthUserEditPage = await loadPage('../../src/components/admin/managedAuthUserEditPage.ts');
+    const edit = managedAuthUserEditPage.getManagedAuthUserEditPageRender({
+      userFields: [{
+        const: 'crmUserId',
+        title: 'CRM user',
+        type: 'string',
+        managed: true,
+        managedScope: 'user',
+        managedFieldType: 'dynamic',
+      }],
+      rcExtension: { id: 'ext-1', name: 'Jane Smith' },
+      dynamicOptions: {
+        crmUserId: [{ value: 'crm-101', label: 'Ada Lovelace' }],
+      },
+    });
+
+    expect(edit.schema.properties['managedAuthOptionsUser-crmUserId-action']).toBeUndefined();
+    expect(edit.schema.properties.crmUserId).toMatchObject({
+      type: 'string',
+      enum: ['crm-101'],
+      enumNames: ['Ada Lovelace'],
+    });
+    expect(edit.uiSchema.crmUserId['ui:options'].enumOptions).toEqual([
+      { value: 'crm-101', label: 'Ada Lovelace' },
+    ]);
   });
 
   it('renders appearance setting detail page navigation', async () => {

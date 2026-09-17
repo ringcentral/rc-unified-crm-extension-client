@@ -176,20 +176,25 @@ axios.interceptors.request.use(
     const requestConfig = config as UnknownRecord;
     const { sanitizedUrl, jwtToken: tokenFromUrl } = extractJwtTokenFromUrl(requestConfig.url, requestConfig.baseURL);
     const { sanitizedParams, jwtToken: tokenFromParams } = extractJwtTokenFromParams(requestConfig.params);
-    if (tokenFromUrl) {
-      requestConfig.url = sanitizedUrl;
-    }
-    if (tokenFromParams !== null) {
-      requestConfig.params = sanitizedParams;
+    const manifest = await getManifest();
+    const isManifestServerRequest = isRequestToManifestServer(requestConfig, manifest?.serverUrl);
+    // Keep jwtToken on the wire for the App Connect server (query + Bearer).
+    // Strip it from any other origin so a leaked URL cannot send the token elsewhere.
+    if (!isManifestServerRequest) {
+      if (tokenFromUrl) {
+        requestConfig.url = sanitizedUrl;
+      }
+      if (tokenFromParams !== null) {
+        requestConfig.params = sanitizedParams;
+      }
     }
     if (!requestConfig.skipAuthorization) {
       const { rcUnifiedCrmExtJwt } = await chromeStorageLocal.get({ rcUnifiedCrmExtJwt: null });
       const tokenToUse = tokenFromUrl || tokenFromParams || rcUnifiedCrmExtJwt;
       if (tokenToUse) {
         requestConfig.headers = requestConfig.headers || {};
-        const manifest = await getManifest();
         if (
-          isRequestToManifestServer(requestConfig, manifest?.serverUrl)
+          isManifestServerRequest
           && !requestConfig.headers.Authorization
           && !requestConfig.headers.authorization
         ) {

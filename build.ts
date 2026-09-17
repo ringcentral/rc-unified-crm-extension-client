@@ -4,7 +4,7 @@ const { execSync } = require('child_process');
 require('dotenv').config();
 
 function getManifestNameForBranch({ name, currentBranch, isBranchedFromBeta }) {
-    const betaSuffix = ' - BETA';
+    const betaSuffix = ' - Release Candidate';
     if (currentBranch === 'beta' || isBranchedFromBeta) {
         return name.includes(betaSuffix) ? name : `${name}${betaSuffix}`;
     }
@@ -22,7 +22,7 @@ function updateManifestNameForBranch({ manifestPath, currentBranch, isBranchedFr
     if (nextName !== currentName) {
         manifest.name = nextName;
         fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-        if (nextName.includes(' - BETA')) {
+        if (nextName.includes(' - Release Candidate')) {
             console.log(`Updated manifest name for beta branch: ${manifest.name}`);
         } else {
             console.log(`Updated manifest name for ${currentBranch} branch: ${manifest.name}`);
@@ -53,7 +53,7 @@ async function runBuild() {
     try {
         const currentBranch = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
         const manifestPath = './public/manifest.json';
-        
+
         // Check if current branch is branched from 'beta'
         let isBranchedFromBeta = false;
         try {
@@ -64,7 +64,7 @@ async function runBuild() {
         }
 
         updateManifestNameForBranch({ manifestPath, currentBranch, isBranchedFromBeta });
-    } catch (e) { 
+    } catch (e) {
         console.log('Error updating manifest for branch:', e.message);
     }
 

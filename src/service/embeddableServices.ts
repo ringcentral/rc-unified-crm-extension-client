@@ -17,9 +17,8 @@ function getWidgetFrame(): UnknownRecord {
     return document.querySelector("#rc-widget-adapter-frame") as UnknownRecord;
 }
 
-async function preconfigureServiceManifest() {
-    const manifest = await getManifest();
-    const services: UnknownRecord = {
+function getPreconfiguredServiceManifest(): UnknownRecord {
+    return {
         name: 'placeholder',
         displayName: t('settings.preconfigure.noCrmSelected'),
         authorizationPath: '/platform-selection',
@@ -33,7 +32,11 @@ async function preconfigureServiceManifest() {
             { label: 'Support', uri: 'https://community.ringcentral.com/groups/unified-crm-extension-22' },
             { label: 'Terms of use', uri: 'https://www.ringcentral.com/ca/en/a/legal/eulatos.html' },
         ]
-    }
+    };
+}
+
+async function preconfigureServiceManifest() {
+    const services = getPreconfiguredServiceManifest();
     getWidgetFrame().contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',
         service: services
@@ -47,9 +50,15 @@ async function getServiceManifest() {
     const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false }) as UnknownRecord;
     const { developerMode } = await chrome.storage.local.get({ developerMode: false }) as UnknownRecord;
     const { crmUserInfo } = await chrome.storage.local.get({ crmUserInfo: null }) as UnknownRecord;
-    const platformInfo = await getPlatformInfo() as UnknownRecord;
+    const platformInfo = await getPlatformInfo() as UnknownRecord | null | undefined;
+    if (!platformInfo?.platformName) {
+        return getPreconfiguredServiceManifest();
+    }
     const manifest = await getManifest();
-    const platform = manifest.platforms[platformInfo.platformName];
+    const platform = manifest?.platforms?.[platformInfo.platformName];
+    if (!platform) {
+        return getPreconfiguredServiceManifest();
+    }
     const platformName = platform.name;
     const customSettings = platform.settings;
     const apptCfg = manifest?.platforms?.[platformInfo.platformName]?.page?.appointment ?? {};

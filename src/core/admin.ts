@@ -544,6 +544,19 @@ async function saveManagedAuthSettings({
     return response.data;
 }
 
+async function getManagedAuthOptions({ serverUrl, platformName, fieldConst, accountValues }: UnknownRecord): Promise<any> {
+    const platformInfo = await getPlatformInfo();
+    const response = await axios.post(
+        `${serverUrl}/admin/managedAuth/options?platform=${encodeURIComponent(platformName ?? platformInfo?.platformName ?? '')}&connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&devRcAccountId=${encodeURIComponent(platformInfo?.devRcAccountId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
+        {
+            fieldConst,
+            ...(accountValues === undefined ? {} : { accountValues }),
+        },
+        getRcAccessTokenHeaderConfig(),
+    );
+    return response.data;
+}
+
 async function deleteManagedOAuthAccount({ serverUrl, platformName }: UnknownRecord): Promise<any> {
     const response = await axios.delete(
         `${serverUrl}/admin/managedOAuth/account?platform=${encodeURIComponent(platformName)}`,
@@ -600,6 +613,7 @@ const adminCore = {
     reinitializeUserMapping,
     getManagedAuthSettings,
     saveManagedAuthSettings,
+    getManagedAuthOptions,
     deleteManagedOAuthAccount,
     getAccountData,
 };
@@ -622,6 +636,7 @@ export {
     reinitializeUserMapping,
     getManagedAuthSettings,
     saveManagedAuthSettings,
+    getManagedAuthOptions,
     deleteManagedOAuthAccount,
     getAccountData,
 };

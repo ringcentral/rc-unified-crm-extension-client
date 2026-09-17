@@ -206,6 +206,41 @@ describe('auth core', () => {
     );
   });
 
+  it('injects the tenant hostname into a templated OAuth authorization URL', async () => {
+    const authCore = await loadAuthCore();
+
+    expect(authCore.buildOAuthUrl({
+      authorizationUri: 'https://{hostname}/oauth',
+      hostname: 'tenant.crm.example',
+      clientId: 'client',
+      redirectUri: 'https://redirect.example/callback',
+      platformName: 'custom',
+    })).toBe(
+      'https://tenant.crm.example/oauth?response_type=code&client_id=client&state=platform=custom&redirect_uri=https%3A%2F%2Fredirect.example%2Fcallback',
+    );
+
+    await authCore.onUserClickConnectButton({
+      manifest: { serverUrl: 'https://server.example' },
+      platformName: 'custom',
+      platform: {
+        name: 'custom',
+        auth: {
+          type: 'oauth',
+          oauth: {
+            authUrl: 'https://{hostname}/oauth',
+            clientId: 'client',
+          },
+        },
+      },
+    });
+
+    expect(getPlatformInfo).toHaveBeenCalled();
+    expect(chrome.runtime.sendMessage).toHaveBeenLastCalledWith({
+      type: 'openThirdPartyAuthWindow',
+      oAuthUri: 'https://crm.example/oauth?response_type=code&client_id=client&state=platform=custom&redirect_uri=https%3A%2F%2Fringcentral.github.io%2Fringcentral-embeddable%2Fredirect.html',
+    });
+  });
+
   it('builds OAuth URLs without scopes and uses connector custom state/default redirect', async () => {
     const authCore = await loadAuthCore();
 

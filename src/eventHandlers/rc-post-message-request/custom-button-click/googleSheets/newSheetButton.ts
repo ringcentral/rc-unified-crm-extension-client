@@ -22,7 +22,8 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   void platformName;
   void platform;
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
-  const newSheetResponse = await axios.post(`${manifest.serverUrl}/googleSheets/sheet`,
+  const { rcUnifiedCrmExtJwt: jwtToken } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as { rcUnifiedCrmExtJwt?: string };
+  const newSheetResponse = await axios.post(`${manifest.serverUrl}/googleSheets/sheet?jwtToken=${jwtToken}`,
     {
       name: data.body.button.formData.newSheetName,
     },

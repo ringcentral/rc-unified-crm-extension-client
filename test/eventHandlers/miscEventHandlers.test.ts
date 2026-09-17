@@ -1100,6 +1100,7 @@ describe('miscellaneous rc-post-message-request handlers', () => {
       platform: manifest().platforms.salesforce,
       platformName: 'salesforce',
       manifest: manifest(),
+      hostname: 'crm.example',
     });
   });
 

@@ -422,6 +422,7 @@ describe('callLogger index', () => {
         redirect: true,
         call: baseCall({
           recording: { link: 'https://recording.example' },
+          duration: undefined,
         }),
       }),
       ...context,
@@ -440,6 +441,32 @@ describe('callLogger index', () => {
       },
     ]));
     expect(logCore.getCachedNote).toHaveBeenCalledWith({ sessionId: 'session-1' });
+  });
+
+  it('allows a manual one-time log when call data is complete without the final action marker', async () => {
+    const { callLogger, handlers, tempLogNotePage } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: true },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        redirect: true,
+        call: baseCall({ action: undefined }),
+      }),
+      ...context,
+    });
+
+    expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        body: expect.objectContaining({
+          call: expect.objectContaining({ sessionId: 'session-1' }),
+        }),
+      }),
+    }));
+    expect(tempLogNotePage.getTempLogNotePageRender).not.toHaveBeenCalled();
   });
 
   it('blocks extension-number logging when extension logging is disabled', async () => {

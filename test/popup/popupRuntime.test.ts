@@ -325,7 +325,7 @@ describe('popup runtime', () => {
       params: { page: 1 },
       data: { sample: true },
     });
-    expect(request.url).toBe('https://server.example/records?search=Jane');
+    expect(request.url).toBe('/records?jwtToken=url-token&search=Jane');
     expect(request.headers.Authorization).toBe('Bearer url-token');
     expect(request.params).toEqual({ page: 1 });
     expect(runtime.logRecorder.logAction).toHaveBeenCalledWith(expect.objectContaining({
@@ -347,7 +347,10 @@ describe('popup runtime', () => {
     });
 
     expect(request.url).toBe('/records');
-    expect(request.params).toEqual({ search: 'Jane' });
+    expect(request.params).toEqual({
+      jwtToken: 'params-token',
+      search: 'Jane',
+    });
     expect(request.headers.Authorization).toBe('Bearer params-token');
   });
 
@@ -360,7 +363,7 @@ describe('popup runtime', () => {
       params: new URLSearchParams('search=Jane'),
       headers: {},
     });
-    expect(relativeUrlRequest.url).toBe('https://server.example/records?search=Jane');
+    expect(relativeUrlRequest.url).toBe('/records?jwtToken=relative-token&search=Jane');
     expect(relativeUrlRequest.params.get('search')).toBe('Jane');
     expect(relativeUrlRequest.headers.Authorization).toBe('Bearer relative-token');
 
@@ -370,7 +373,7 @@ describe('popup runtime', () => {
       params: new URLSearchParams('jwtToken=params-token&search=Jane'),
       headers: {},
     });
-    expect(searchParamsRequest.params.get('jwtToken')).toBeNull();
+    expect(searchParamsRequest.params.get('jwtToken')).toBe('params-token');
     expect(searchParamsRequest.params.get('search')).toBe('Jane');
     expect(searchParamsRequest.headers.Authorization).toBe('Bearer params-token');
 
@@ -458,7 +461,7 @@ describe('popup runtime', () => {
       baseURL: 'https://server.example/api',
       headers: {},
     });
-    expect(basePathTokenRequest.url).toBe('https://server.example/api/records');
+    expect(basePathTokenRequest.url).toBe('/records?jwtToken=url-token');
     expect(basePathTokenRequest.headers.Authorization).toBe('Bearer url-token');
 
     for (const config of [

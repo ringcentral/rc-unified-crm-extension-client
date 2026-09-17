@@ -22,6 +22,19 @@ function getMergedPluginConfigFromFormData(formData: UnknownRecord = {}): Unknow
     return config;
 }
 
+function getMissingRequiredPluginConfigFields(plugin: UnknownRecord = {}, config: UnknownRecord = {}): UnknownRecord[] {
+    return (plugin.pageContent ?? []).filter((field: UnknownRecord) => {
+        if (field.hidden === true || !field.required) {
+            return false;
+        }
+        const configEntry = config[field.const];
+        const value = configEntry && typeof configEntry === 'object' && 'value' in configEntry
+            ? configEntry.value
+            : configEntry;
+        return value === undefined || value === null || value === '';
+    });
+}
+
 function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, isLoggedIn, hasValidLicense = false, licenseStatusDescription = '' }: UnknownRecord): UnknownRecord {
     const customForm = plugin.pageContent;
     const visibleCustomForm = customForm?.filter(field => field.hidden !== true);
@@ -77,7 +90,10 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
         type: 'page',
         schema: {
             type: 'object',
-            required: customFormRequired,
+            // Embeddable checks root-level required values against root-level formData.
+            // Plugin values live under formData.config, so keeping their keys here makes
+            // the Save button permanently disabled. Nested validation belongs on config.
+            required: [],
             properties: {
                 basicInfo: {
                     type: 'string',
@@ -129,6 +145,7 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
         page.schema.properties.config = {
             type: 'object',
             title: 'Configuration',
+            required: customFormRequired,
             properties: customFormProperties
         }
         page.uiSchema.config = customFormUiSchema;
@@ -171,8 +188,9 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
     return page;
 }
 
-export { getMergedPluginConfigFromFormData, getPluginConfigurePageRender };
+export { getMergedPluginConfigFromFormData, getMissingRequiredPluginConfigFields, getPluginConfigurePageRender };
 export default {
     getMergedPluginConfigFromFormData,
+    getMissingRequiredPluginConfigFields,
     getPluginConfigurePageRender,
 };

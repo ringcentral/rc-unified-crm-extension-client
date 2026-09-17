@@ -67,6 +67,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
     platform: selectedPlatform,
     platformName: data.body.button.formData.platformId,
     manifest: refreshedManifest,
+    hostname: inputHostname,
   });
 }
 

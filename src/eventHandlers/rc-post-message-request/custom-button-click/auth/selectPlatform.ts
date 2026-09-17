@@ -112,6 +112,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
       platform: manifest.platforms[selectedPlatform.name],
       platformName: selectedPlatform.name,
       manifest,
+      hostname: inputHostname,
     });
   }
   else {

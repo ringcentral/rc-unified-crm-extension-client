@@ -1,3 +1,9 @@
+import {
+    getDynamicManagedAuthSchema,
+    getDynamicManagedAuthUiSchema,
+    isDynamicUserManagedField,
+} from '../managedAuthField';
+
 type UnknownRecord = Record<string, any>;
 
 function getManagedAuthUserEditPageRender({
@@ -6,7 +12,8 @@ function getManagedAuthUserEditPageRender({
     rcExtension,
     formData = {},
     searchWord = '',
-    filter = 'All'
+    filter = 'All',
+    dynamicOptions = {},
 }: UnknownRecord): UnknownRecord {
     const nextFormData: UnknownRecord = {
         ...(formData ?? {})
@@ -32,12 +39,18 @@ function getManagedAuthUserEditPageRender({
     userFields.forEach((field: UnknownRecord) => {
         const storedValue = selectedEntry?.fields?.[field.const] ?? {};
         const hasFormValue = Object.prototype.hasOwnProperty.call(nextFormData, field.const);
-        properties[field.const] = {
-            title: field.title,
-            type: field.type,
-            description: field.description
-        };
-        uiSchema[field.const] = field.uiSchema ?? {};
+        if (isDynamicUserManagedField(field)) {
+            properties[field.const] = getDynamicManagedAuthSchema(field, dynamicOptions[field.const] ?? []);
+            uiSchema[field.const] = getDynamicManagedAuthUiSchema(field, dynamicOptions[field.const] ?? []);
+        }
+        else {
+            properties[field.const] = {
+                title: field.title,
+                type: field.type,
+                description: field.description
+            };
+            uiSchema[field.const] = field.uiSchema ?? {};
+        }
         if (!hasFormValue && storedValue.hasValue) {
             nextFormData[field.const] = storedValue.value;
         }

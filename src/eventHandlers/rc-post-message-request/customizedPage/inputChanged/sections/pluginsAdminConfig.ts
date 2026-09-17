@@ -22,25 +22,30 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   void platformInfo;
   void platformName;
   void platform;
-  const pluginList = await getPluginList() as UnknownRecord[];
-  const { adminSettings } = await chrome.storage.local.get('adminSettings') as { adminSettings?: UnknownRecord };
-  const adminUserSettings = adminSettings?.userSettings;
-  const installedPluginList: UnknownRecord[] = [];
-  for (const pluginId in getAllPluginSettings(adminUserSettings)) {
-    const targetPlugin = pluginList.find(plugin => plugin.id === pluginId);
-    if (targetPlugin) {
-      installedPluginList.push(targetPlugin);
+  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+  try {
+    const pluginList = await getPluginList() as UnknownRecord[];
+    const { adminSettings } = await chrome.storage.local.get('adminSettings') as { adminSettings?: UnknownRecord };
+    const adminUserSettings = adminSettings?.userSettings;
+    const installedPluginList: UnknownRecord[] = [];
+    for (const pluginId in getAllPluginSettings(adminUserSettings)) {
+      const targetPlugin = pluginList.find(plugin => plugin.id === pluginId);
+      if (targetPlugin) {
+        installedPluginList.push(targetPlugin);
+      }
     }
+    const pluginsSettingPageRender = getPluginsSettingPageRender({ installedPluginList });
+    getWidgetFrameWindow().postMessage({
+      type: 'rc-adapter-register-customized-page',
+      page: pluginsSettingPageRender,
+    });
+    getWidgetFrameWindow().postMessage({
+      type: 'rc-adapter-navigate-to',
+      path: `/customized/${pluginsSettingPageRender.id}`, // page id
+    }, '*');
+  } finally {
+    window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
   }
-  const pluginsSettingPageRender = getPluginsSettingPageRender({ installedPluginList });
-  getWidgetFrameWindow().postMessage({
-    type: 'rc-adapter-register-customized-page',
-    page: pluginsSettingPageRender,
-  });
-  getWidgetFrameWindow().postMessage({
-    type: 'rc-adapter-navigate-to',
-    path: `/customized/${pluginsSettingPageRender.id}`, // page id
-  }, '*');
 }
 
 export default {

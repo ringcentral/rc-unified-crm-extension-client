@@ -115,7 +115,7 @@ describe('custom-button Google Sheets handlers', () => {
       data: dataFor({ newSheetName: 'New Calls' }),
       manifest: manifest(),
     });
-    expect(axios.post).toHaveBeenCalledWith('https://server.example/googleSheets/sheet', {
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/googleSheets/sheet?jwtToken=jwt-1', {
       name: 'New Calls',
     });
     expect(loaded.userCore.refreshUserSettings).toHaveBeenCalledWith({
@@ -273,7 +273,7 @@ describe('custom-button Google Sheets handlers', () => {
       }),
       manifest: manifest(),
     });
-    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/googleSheets/sheet?rcAccessToken=rc-access-token', {
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/admin/googleSheets/sheet?jwtToken=jwt-1&rcAccessToken=rc-access-token', {
       name: 'Admin Calls',
     });
     expect(readStorage().adminSettings.userSettings).toMatchObject({
