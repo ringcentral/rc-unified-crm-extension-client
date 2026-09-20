@@ -12,6 +12,7 @@ import logPage from './components/logPage';
 import authPage from './components/authPage';
 import feedbackPage from './components/feedbackPage';
 import releaseNotesPage from './components/releaseNotesPage';
+import appConnect2AnnouncementPage from './components/appConnect2AnnouncementPage';
 import supportPage from './components/supportPage';
 import aboutPage from './components/aboutPage';
 import developerSettingsPage from './components/developerSettingsPage';
@@ -87,6 +88,7 @@ window.__ON_RC_POPUP_WINDOW = 1;
 
 let platformName = '';
 let registered = false;
+let appConnect2AnnouncementChecked = false;
 let platformHostname = '';
 let rcUserInfo = {};
 let firstTimeLogoutAbsorbed = false;
@@ -499,6 +501,23 @@ window.addEventListener('message', async (e) => {
                 path: `/customized/${releaseNotesPageRender.id}`, // '/meeting', '/dialer', '//history', '/settings'
               }, '*');
               showNotification({ level: 'success', message: `Updated to the latest version ${manifest.version}`, ttl: 60000 });
+            }
+          }
+          // Check App Connect 2.0 upgrade announcement (show once per week until dismissed)
+          if (!appConnect2AnnouncementChecked) {
+            appConnect2AnnouncementChecked = true;
+            const { appConnect2AnnouncementDismissedAt } = await chrome.storage.local.get({ appConnect2AnnouncementDismissedAt: 0 });
+            const announcementCooldownMs = 7 * 24 * 60 * 60 * 1000; // 1 week
+            if (Date.now() - appConnect2AnnouncementDismissedAt > announcementCooldownMs) {
+              const appConnect2AnnouncementPageRender = appConnect2AnnouncementPage.getAppConnect2AnnouncementPageRender();
+              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-register-customized-page',
+                page: appConnect2AnnouncementPageRender
+              });
+              document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                type: 'rc-adapter-navigate-to',
+                path: `/customized/${appConnect2AnnouncementPageRender.id}`,
+              }, '*');
             }
           }
 
@@ -2366,6 +2385,15 @@ window.addEventListener('message', async (e) => {
             case '/custom-button-click':
               if (data.body.button.id === 'my-banner' && data.body.button.dismissed) {
                 await chrome.storage.local.set({ 'myBannerDismissedDate': new Date().getDate() });
+                responseMessage(data.requestId, { data: 'ok' });
+                break;
+              }
+              if (data.body.button.id === 'announcementDismissButton') {
+                await chrome.storage.local.set({ appConnect2AnnouncementDismissedAt: Date.now() });
+                document.querySelector("#rc-widget-adapter-frame").contentWindow.postMessage({
+                  type: 'rc-adapter-navigate-to',
+                  path: 'goBack',
+                }, '*');
                 responseMessage(data.requestId, { data: 'ok' });
                 break;
               }
