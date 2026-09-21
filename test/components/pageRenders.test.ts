@@ -608,6 +608,7 @@ describe('admin page renderers', () => {
       'managedAuthentication',
       'managedOAuth',
       'serverSideLoggingSetting',
+      'extensionAdoption',
       'plugins',
     ]);
 

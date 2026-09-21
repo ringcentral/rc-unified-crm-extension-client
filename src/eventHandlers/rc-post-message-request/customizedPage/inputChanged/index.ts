@@ -30,6 +30,7 @@ import phoneNumberFormatHandler from './sections/phoneNumberFormat';
 import clickToDialEmbedHandler from './sections/clickToDialEmbed';
 import callAndSMSLoggingHandler from './sections/callAndSMSLogging';
 import serverSideLoggingSettingHandler from './sections/serverSideLoggingSetting';
+import extensionAdoptionHandler from './sections/extensionAdoption';
 import contactSettingHandler from './sections/contactSetting';
 import advancedFeaturesSettingHandler from './sections/advancedFeaturesSetting';
 import customSettingsHandler from './sections/customSettings';
@@ -211,6 +212,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             break;
         case 'serverSideLoggingSetting':
             await serverSideLoggingSettingHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'extensionAdoption':
+            await extensionAdoptionHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'contactSetting':
             await contactSettingHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

@@ -77,7 +77,8 @@
       "title": "Admin",
       "managedSettings": "Managed settings",
       "plugins": "Plugins",
-      "serverSideLogging": "Server side logging (Beta)"
+      "serverSideLogging": "Server side logging (Beta)",
+      "extensionAdoption": "Extension adoption"
     },
     "managedSettings": {
       "title": "Managed settings",
@@ -162,6 +163,17 @@
       "title": "Plugins",
       "installedPlugins": "Installed plugins",
       "pluginMarket": "Available plugins"
+    },
+    "extensionAdoption": {
+      "summaryTitle": "App Connect adoption",
+      "rcUsers": "RingCentral users",
+      "activated": "activated App Connect",
+      "connected": "connected to CRM",
+      "activatedShare": "Activated: {percent} of RingCentral users",
+      "connectedShare": "Connected to CRM: {percent} of activated users",
+      "lastActive": "Last connection activity: {time}",
+      "notAvailable": "N/A",
+      "unsupported": "This connector server does not support adoption stats yet. Ask your connector developer to upgrade @app-connect/core."
     }
   },
   "plugins": {

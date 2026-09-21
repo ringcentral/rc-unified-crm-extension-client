@@ -77,7 +77,8 @@
       "title": "관리자",
       "managedSettings": "관리 설정",
       "plugins": "플러그인",
-      "serverSideLogging": "서버 측 로깅 (베타)"
+      "serverSideLogging": "서버 측 로깅 (베타)",
+      "extensionAdoption": "확장 프로그램 도입 현황"
     },
     "managedSettings": {
       "title": "관리 설정",
@@ -162,6 +163,17 @@
       "title": "플러그인",
       "installedPlugins": "설치된 플러그인",
       "pluginMarket": "사용 가능한 플러그인"
+    },
+    "extensionAdoption": {
+      "summaryTitle": "App Connect 도입 현황",
+      "rcUsers": "RingCentral 사용자",
+      "activated": "App Connect 활성화",
+      "connected": "CRM 연결됨",
+      "activatedShare": "활성화: RingCentral 사용자의 {percent}",
+      "connectedShare": "CRM 연결: 활성화된 사용자의 {percent}",
+      "lastActive": "마지막 연결 활동: {time}",
+      "notAvailable": "해당 없음",
+      "unsupported": "이 커넥터 서버는 아직 도입 통계를 지원하지 않습니다. 커넥터 개발자에게 @app-connect/core 업그레이드를 요청하세요."
     }
   },
   "plugins": {

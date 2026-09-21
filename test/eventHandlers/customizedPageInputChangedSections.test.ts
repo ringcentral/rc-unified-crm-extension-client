@@ -47,6 +47,24 @@ async function loadSectionHandler(modulePath, overrides: Record<string, any> = {
   };
   vi.doMock('../../src/components/admin/serverSideLoggingPage.ts', () => ({ default: serverSideLoggingPage }));
 
+  const extensionAdoptionPage = {
+    getExtensionAdoptionPageRender: vi.fn((props) => ({ id: 'extensionAdoptionPage', props })),
+  };
+  vi.doMock('../../src/components/admin/extensionAdoptionPage.ts', () => ({ default: extensionAdoptionPage }));
+
+  const rcAPI = {
+    getRcExtensionList: vi.fn(async () => [
+      { id: '101', name: 'Jane User' },
+      { id: '102', name: 'John User' },
+    ]),
+    ...overrides.rcAPI,
+  };
+  vi.doMock('../../src/lib/rcAPI.ts', () => ({
+    RcAPI: vi.fn(function RcAPI(this: Record<string, any>) {
+      this.getRcExtensionList = rcAPI.getRcExtensionList;
+    }),
+  }));
+
   const managedAuthenticationPage = {
     getManagedAuthenticationPageRender: vi.fn((props) => ({ id: 'managedAuthenticationPage', props })),
   };
@@ -104,6 +122,11 @@ async function loadSectionHandler(modulePath, overrides: Record<string, any> = {
     refreshAdminSettings: vi.fn(async () => ({
       adminSettings: (await chrome.storage.local.get('adminSettings')).adminSettings,
     })),
+    getExtensionAdoptionStats: vi.fn(async () => ({
+      installedCount: 5,
+      connectedCount: 3,
+      lastActiveAt: '2026-09-21T08:15:30.000Z',
+    })),
     ...overrides.adminCore,
   };
   vi.doMock('../../src/core/admin.ts', () => ({ default: adminCore }));
@@ -149,6 +172,8 @@ async function loadSectionHandler(modulePath, overrides: Record<string, any> = {
       { id: 'account', type: 'Company', name: 'Acme' },
     ]),
     showNotification: vi.fn(),
+    getRcAccessToken: vi.fn(() => 'rc-access-token'),
+    refreshRCToken: vi.fn(async () => {}),
     ...overrides.util,
   };
   vi.doMock('../../src/lib/util.ts', () => util);
@@ -159,6 +184,8 @@ async function loadSectionHandler(modulePath, overrides: Record<string, any> = {
     pageMocks,
     callLogDetailsSettingPage,
     serverSideLoggingPage,
+    extensionAdoptionPage,
+    rcAPI,
     managedAuthenticationPage,
     managedAuthUserPage,
     adminGoogleSheetsPage,
@@ -328,6 +355,67 @@ describe('customizedPage inputChanged section handlers', () => {
       additionalFieldValues: { region: 'US' },
       sources: ['Voice'],
       userPermissions: { edit: true },
+    }));
+  });
+
+  it('renders extension adoption section with connector stats and RingCentral user total', async () => {
+    const loaded = await loadSectionHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/extensionAdoption.ts',
+    );
+
+    await loaded.handler.onEvent(context);
+
+    expect(loaded.adminCore.getExtensionAdoptionStats).toHaveBeenCalledWith({ serverUrl: 'https://server.example' });
+    expect(loaded.util.refreshRCToken).toHaveBeenCalled();
+    expect(loaded.rcAPI.getRcExtensionList).toHaveBeenCalledWith({ rcAccessToken: 'rc-access-token' });
+    expect(loaded.extensionAdoptionPage.getExtensionAdoptionPageRender).toHaveBeenCalledWith({
+      stats: { installedCount: 5, connectedCount: 3, lastActiveAt: '2026-09-21T08:15:30.000Z' },
+      rcExtensions: [
+        { id: '101', name: 'Jane User' },
+        { id: '102', name: 'John User' },
+      ],
+    });
+    const messages = getWidgetPostMessages();
+    expect(messages).toContainEqual(expect.objectContaining({
+      message: expect.objectContaining({
+        type: 'rc-adapter-register-customized-page',
+        page: expect.objectContaining({ id: 'extensionAdoptionPage' }),
+      }),
+    }));
+    expect(messages).toContainEqual(expect.objectContaining({
+      message: expect.objectContaining({
+        type: 'rc-adapter-navigate-to',
+        path: '/customized/extensionAdoptionPage',
+      }),
+    }));
+  });
+
+  it('renders extension adoption section without a user total when the RingCentral directory fails', async () => {
+    const loaded = await loadSectionHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/extensionAdoption.ts',
+      {
+        rcAPI: {
+          getRcExtensionList: vi.fn(async () => {
+            throw new Error('directory unavailable');
+          }),
+        },
+        adminCore: {
+          getExtensionAdoptionStats: vi.fn(async () => null),
+        },
+      },
+    );
+
+    await loaded.handler.onEvent(context);
+
+    expect(loaded.extensionAdoptionPage.getExtensionAdoptionPageRender).toHaveBeenCalledWith({
+      stats: null,
+      rcExtensions: null,
+    });
+    expect(getWidgetPostMessages()).toContainEqual(expect.objectContaining({
+      message: expect.objectContaining({
+        type: 'rc-adapter-navigate-to',
+        path: '/customized/extensionAdoptionPage',
+      }),
     }));
   });
 

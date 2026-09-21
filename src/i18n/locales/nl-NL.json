@@ -77,7 +77,8 @@
       "title": "Admin",
       "managedSettings": "Beheerde instellingen",
       "plugins": "Plugins",
-      "serverSideLogging": "Server-side logging (Beta)"
+      "serverSideLogging": "Server-side logging (Beta)",
+      "extensionAdoption": "Gebruik van de extensie"
     },
     "managedSettings": {
       "title": "Beheerde instellingen",
@@ -162,6 +163,17 @@
       "title": "Plug-ins",
       "installedPlugins": "Geïnstalleerde plug-ins",
       "pluginMarket": "Beschikbare plug-ins"
+    },
+    "extensionAdoption": {
+      "summaryTitle": "Gebruik van App Connect",
+      "rcUsers": "RingCentral-gebruikers",
+      "activated": "App Connect geactiveerd",
+      "connected": "verbonden met CRM",
+      "activatedShare": "Geactiveerd: {percent} van de RingCentral-gebruikers",
+      "connectedShare": "Verbonden met CRM: {percent} van de geactiveerde gebruikers",
+      "lastActive": "Laatste verbindingsactiviteit: {time}",
+      "notAvailable": "N.v.t.",
+      "unsupported": "Deze connectorserver ondersteunt nog geen gebruiksstatistieken. Vraag uw connectorontwikkelaar om @app-connect/core bij te werken."
     }
   },
   "plugins": {

@@ -77,7 +77,8 @@
       "title": "Ylläpitäjä",
       "managedSettings": "Hallitut asetukset",
       "plugins": "Lisäosat",
-      "serverSideLogging": "Palvelinpuolen lokitus (Beta)"
+      "serverSideLogging": "Palvelinpuolen lokitus (Beta)",
+      "extensionAdoption": "Laajennuksen käyttöönotto"
     },
     "managedSettings": {
       "title": "Hallitut asetukset",
@@ -162,6 +163,17 @@
       "title": "Lisäosat",
       "installedPlugins": "Asennetut lisäosat",
       "pluginMarket": "Saatavilla olevat lisäosat"
+    },
+    "extensionAdoption": {
+      "summaryTitle": "App Connectin käyttöönotto",
+      "rcUsers": "RingCentral-käyttäjät",
+      "activated": "App Connect aktivoitu",
+      "connected": "yhdistetty CRM:ään",
+      "activatedShare": "Aktivoitu: {percent} RingCentral-käyttäjistä",
+      "connectedShare": "Yhdistetty CRM:ään: {percent} aktivoiduista käyttäjistä",
+      "lastActive": "Viimeisin yhteysaktiviteetti: {time}",
+      "notAvailable": "Ei saatavilla",
+      "unsupported": "Tämä liitinpalvelin ei vielä tue käyttöönottotilastoja. Pyydä liittimen kehittäjää päivittämään @app-connect/core."
     }
   },
   "plugins": {

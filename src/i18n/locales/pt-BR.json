@@ -77,7 +77,8 @@
       "title": "Admin",
       "managedSettings": "Configurações gerenciadas",
       "plugins": "Plugins",
-      "serverSideLogging": "Log do lado do servidor (Beta)"
+      "serverSideLogging": "Log do lado do servidor (Beta)",
+      "extensionAdoption": "Adoção da extensão"
     },
     "managedSettings": {
       "title": "Configurações gerenciadas",
@@ -162,6 +163,17 @@
       "title": "Plugins",
       "installedPlugins": "Plugins instalados",
       "pluginMarket": "Plugins disponíveis"
+    },
+    "extensionAdoption": {
+      "summaryTitle": "Adoção do App Connect",
+      "rcUsers": "Usuários do RingCentral",
+      "activated": "App Connect ativado",
+      "connected": "conectados ao CRM",
+      "activatedShare": "Ativados: {percent} dos usuários do RingCentral",
+      "connectedShare": "Conectados ao CRM: {percent} dos usuários ativados",
+      "lastActive": "Última atividade de conexão: {time}",
+      "notAvailable": "N/D",
+      "unsupported": "Este servidor do conector ainda não oferece estatísticas de adoção. Peça ao desenvolvedor do conector para atualizar o @app-connect/core."
     }
   },
   "plugins": {

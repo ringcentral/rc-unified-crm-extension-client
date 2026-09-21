@@ -77,7 +77,8 @@
       "title": "Admin",
       "managedSettings": "Verwaltete Einstellungen",
       "plugins": "Plugins",
-      "serverSideLogging": "Serverseitige Protokollierung (Beta)"
+      "serverSideLogging": "Serverseitige Protokollierung (Beta)",
+      "extensionAdoption": "Nutzung der Erweiterung"
     },
     "managedSettings": {
       "title": "Verwaltete Einstellungen",
@@ -162,6 +163,17 @@
       "title": "Plug-ins",
       "installedPlugins": "Installierte Plug-ins",
       "pluginMarket": "Verfügbare Plug-ins"
+    },
+    "extensionAdoption": {
+      "summaryTitle": "App Connect-Nutzung",
+      "rcUsers": "RingCentral-Benutzer",
+      "activated": "App Connect aktiviert",
+      "connected": "mit CRM verbunden",
+      "activatedShare": "Aktiviert: {percent} der RingCentral-Benutzer",
+      "connectedShare": "Mit CRM verbunden: {percent} der aktivierten Benutzer",
+      "lastActive": "Letzte Verbindungsaktivität: {time}",
+      "notAvailable": "k. A.",
+      "unsupported": "Dieser Connector-Server unterstützt noch keine Nutzungsstatistiken. Bitten Sie Ihren Connector-Entwickler, @app-connect/core zu aktualisieren."
     }
   },
   "plugins": {

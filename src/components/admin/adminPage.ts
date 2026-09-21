@@ -50,6 +50,12 @@ function getAdminPageRender({ platform }: UnknownRecord): UnknownRecord {
                             const: "serverSideLoggingSetting",
                             title: t('pages.admin.serverSideLogging'),
                         }] : [],
+                        // Always shown: adoption stats apply to every connector. Older connector
+                        // servers are handled inside the section page with an unsupported notice.
+                        {
+                            const: "extensionAdoption",
+                            title: t('pages.admin.extensionAdoption'),
+                        },
                         {
                             const: "plugins",
                             title: t('pages.admin.plugins'),

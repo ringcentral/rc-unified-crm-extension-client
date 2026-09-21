@@ -77,7 +77,8 @@
       "title": "एडमिन",
       "managedSettings": "प्रबंधित सेटिंग्स",
       "plugins": "प्लगइन",
-      "serverSideLogging": "सर्वर-साइड लॉगिंग (बीटा)"
+      "serverSideLogging": "सर्वर-साइड लॉगिंग (बीटा)",
+      "extensionAdoption": "एक्सटेंशन अपनाना"
     },
     "managedSettings": {
       "title": "प्रबंधित सेटिंग्स",
@@ -162,6 +163,17 @@
       "title": "प्लगइन",
       "installedPlugins": "इंस्टॉल किए गए प्लगइन",
       "pluginMarket": "उपलब्ध प्लगइन"
+    },
+    "extensionAdoption": {
+      "summaryTitle": "App Connect अपनाने की स्थिति",
+      "rcUsers": "RingCentral उपयोगकर्ता",
+      "activated": "App Connect सक्रिय",
+      "connected": "CRM से कनेक्टेड",
+      "activatedShare": "सक्रिय: RingCentral उपयोगकर्ताओं का {percent}",
+      "connectedShare": "CRM से कनेक्टेड: सक्रिय उपयोगकर्ताओं का {percent}",
+      "lastActive": "अंतिम कनेक्शन गतिविधि: {time}",
+      "notAvailable": "उपलब्ध नहीं",
+      "unsupported": "यह कनेक्टर सर्वर अभी अपनाने के आँकड़ों का समर्थन नहीं करता। अपने कनेक्टर डेवलपर से @app-connect/core अपग्रेड करने के लिए कहें।"
     }
   },
   "plugins": {

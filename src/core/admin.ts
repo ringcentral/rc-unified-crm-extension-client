@@ -42,6 +42,31 @@ async function getAdminSettings({ serverUrl }: UnknownRecord): Promise<UnknownRe
     }
 }
 
+// Read-only adoption funnel for the Admin tab. null = connector server without the route
+// (older @app-connect/core returns 404) or any other failure; the page shows an unsupported notice.
+async function getExtensionAdoptionStats({ serverUrl }: UnknownRecord): Promise<UnknownRecord | null> {
+    try {
+        const response = await axios.get(
+            `${serverUrl}/admin/extensionAdoptionStats`,
+            getRcAccessTokenHeaderConfig(),
+        );
+        const stats = response.data;
+        if (!stats || typeof stats !== 'object'
+            || typeof stats.installedCount !== 'number'
+            || typeof stats.connectedCount !== 'number') {
+            return null;
+        }
+        return {
+            installedCount: stats.installedCount,
+            connectedCount: stats.connectedCount,
+            lastActiveAt: typeof stats.lastActiveAt === 'string' ? stats.lastActiveAt : null,
+        };
+    }
+    catch (e) {
+        return null;
+    }
+}
+
 async function uploadAdminSettings({ serverUrl, adminSettings }: UnknownRecord): Promise<any> {
     const uploadAdminSettingsResponse = await axios.post(
         `${serverUrl}/admin/settings`,
@@ -597,6 +622,7 @@ async function getAccountData({ serverUrl, keys, forceRefresh = false }: Unknown
 
 const adminCore = {
     getAdminSettings,
+    getExtensionAdoptionStats,
     uploadAdminSettings,
     refreshAdminSettings,
     getServerSideLogging,
@@ -620,6 +646,7 @@ const adminCore = {
 
 export {
     getAdminSettings,
+    getExtensionAdoptionStats,
     uploadAdminSettings,
     refreshAdminSettings,
     getServerSideLogging,

@@ -114,6 +114,42 @@ describe('admin core', () => {
     });
   });
 
+  it('gets extension adoption stats with the RingCentral access token header', async () => {
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: { installedCount: 12, connectedCount: 7, lastActiveAt: '2026-09-21T08:15:30.000Z', extra: 'ignored' },
+    });
+    const adminCore = await loadAdminCore();
+
+    await expect(adminCore.getExtensionAdoptionStats({ serverUrl: 'https://server.example' })).resolves.toEqual({
+      installedCount: 12,
+      connectedCount: 7,
+      lastActiveAt: '2026-09-21T08:15:30.000Z',
+    });
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/admin/extensionAdoptionStats', {
+      headers: { 'X-RC-Access-Token': 'rc-access-token' },
+    });
+  });
+
+  it('returns null extension adoption stats for older servers, failures, and malformed payloads', async () => {
+    const adminCore = await loadAdminCore();
+
+    vi.mocked(axios.get).mockRejectedValueOnce({ response: { status: 404 } });
+    await expect(adminCore.getExtensionAdoptionStats({ serverUrl: 'https://server.example' })).resolves.toBeNull();
+
+    vi.mocked(axios.get).mockRejectedValueOnce(new Error('network down'));
+    await expect(adminCore.getExtensionAdoptionStats({ serverUrl: 'https://server.example' })).resolves.toBeNull();
+
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: '<html>not json</html>' });
+    await expect(adminCore.getExtensionAdoptionStats({ serverUrl: 'https://server.example' })).resolves.toBeNull();
+
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { installedCount: 1, connectedCount: 0, lastActiveAt: null } });
+    await expect(adminCore.getExtensionAdoptionStats({ serverUrl: 'https://server.example' })).resolves.toEqual({
+      installedCount: 1,
+      connectedCount: 0,
+      lastActiveAt: null,
+    });
+  });
+
   it('gets and uploads admin settings with RingCentral access token', async () => {
     vi.mocked(axios.get).mockResolvedValueOnce({ data: { userSettings: { autoLogCall: { value: true } } } });
     vi.mocked(axios.post).mockResolvedValueOnce({ data: {} });

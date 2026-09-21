@@ -77,7 +77,8 @@
       "title": "管理者",
       "managedSettings": "管理設定",
       "plugins": "プラグイン",
-      "serverSideLogging": "サーバーサイドロギング（ベータ）"
+      "serverSideLogging": "サーバーサイドロギング（ベータ）",
+      "extensionAdoption": "拡張機能の利用状況"
     },
     "managedSettings": {
       "title": "管理設定",
@@ -162,6 +163,17 @@
       "title": "プラグイン",
       "installedPlugins": "インストール済みプラグイン",
       "pluginMarket": "利用可能なプラグイン"
+    },
+    "extensionAdoption": {
+      "summaryTitle": "App Connect の利用状況",
+      "rcUsers": "RingCentral ユーザー",
+      "activated": "App Connect を有効化",
+      "connected": "CRM に接続済み",
+      "activatedShare": "有効化済み: RingCentral ユーザーの {percent}",
+      "connectedShare": "CRM 接続済み: 有効化済みユーザーの {percent}",
+      "lastActive": "最終接続アクティビティ: {time}",
+      "notAvailable": "なし",
+      "unsupported": "このコネクタサーバーは利用状況の統計にまだ対応していません。コネクタ開発者に @app-connect/core のアップグレードを依頼してください。"
     }
   },
   "plugins": {

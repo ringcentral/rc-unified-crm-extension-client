@@ -77,7 +77,8 @@
       "title": "管理员",
       "managedSettings": "托管设置",
       "plugins": "插件",
-      "serverSideLogging": "服务器端日志记录（测试版）"
+      "serverSideLogging": "服务器端日志记录（测试版）",
+      "extensionAdoption": "插件采纳情况"
     },
     "managedSettings": {
       "title": "托管设置",
@@ -162,6 +163,17 @@
       "title": "插件",
       "installedPlugins": "已安装插件",
       "pluginMarket": "可用插件"
+    },
+    "extensionAdoption": {
+      "summaryTitle": "App Connect 采纳情况",
+      "rcUsers": "RingCentral 用户",
+      "activated": "已激活 App Connect",
+      "connected": "已连接 CRM",
+      "activatedShare": "已激活：占 RingCentral 用户的 {percent}",
+      "connectedShare": "已连接 CRM：占已激活用户的 {percent}",
+      "lastActive": "最近连接活跃于：{time}",
+      "notAvailable": "暂无",
+      "unsupported": "当前 connector server 尚不支持此统计，请联系连接器开发者升级 @app-connect/core。"
     }
   },
   "plugins": {
