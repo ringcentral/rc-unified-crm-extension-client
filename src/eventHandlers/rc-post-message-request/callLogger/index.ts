@@ -124,16 +124,10 @@ async function onEvent(options: EventOptions) {
         ...data,
         body: {
             ...data.body,
-            activityCompletionReady: readiness.autoReady,
+            activityCompletionReady: userCore.isAutoActivityCompletionEnabled(userSettings, platform) && readiness.autoReady,
         },
     };
-    const shouldWaitForCompleteCallData =
-        userCore.getOneTimeLogSetting(userSettings).value ||
-        (
-            platformName === 'redtail' &&
-            (userSettings?.redtailActivityCompletionMode?.value ?? 'autoWhenAllDataAvailable') === 'autoWhenAllDataAvailable'
-        );
-    if (shouldWaitForCompleteCallData) {
+    if (userCore.shouldWaitForCompleteCallData(userSettings, platform)) {
         const readyForCurrentRequest = data.body.redirect
             ? readiness.autoReady || isCallDataComplete(data.body.call)
             : readiness.autoReady;

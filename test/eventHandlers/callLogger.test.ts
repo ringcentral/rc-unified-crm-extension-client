@@ -95,11 +95,18 @@ async function loadCallLoggerIndex() {
   };
   vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
-  const userCore = {
+  const userCore: Record<string, any> = {
     getOneTimeLogSetting: vi.fn((settings) => ({ value: settings?.oneTimeLog?.value ?? false })),
     getCallPopSetting: vi.fn((settings) => ({ value: settings?.popupLogPageAfterCall?.value ?? false })),
     getAutoLogCallSetting: vi.fn((settings) => ({ value: settings?.autoLogCall?.value ?? false })),
   };
+  userCore.isAutoActivityCompletionEnabled = vi.fn((settings, platform) => (
+    !!platform?.supportActivityCompletion
+    && (settings?.activityCompletionMode?.value ?? 'autoWhenAllDataAvailable') === 'autoWhenAllDataAvailable'
+  ));
+  userCore.shouldWaitForCompleteCallData = vi.fn((settings, platform) => (
+    userCore.getOneTimeLogSetting(settings).value || userCore.isAutoActivityCompletionEnabled(settings, platform)
+  ));
   vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
   const tempLogNotePage = {
@@ -470,11 +477,12 @@ describe('callLogger index', () => {
     expect(tempLogNotePage.getTempLogNotePageRender).not.toHaveBeenCalled();
   });
 
-  it('marks activity completion ready when one-time auto data is final', async () => {
+  it('marks activity completion ready when auto completion is on and data is final', async () => {
     const { callLogger, handlers } = await loadCallLoggerIndex();
     seedStorage({
       userSettings: {
         oneTimeLog: { value: true },
+        activityCompletionMode: { value: 'autoWhenAllDataAvailable' },
       },
     });
 
@@ -486,6 +494,7 @@ describe('callLogger index', () => {
         }),
       }),
       ...context,
+      platform: { ...context.platform, supportActivityCompletion: true },
     });
 
     expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
@@ -497,12 +506,40 @@ describe('callLogger index', () => {
     }));
   });
 
-  it('waits for complete data when Redtail auto activity completion is enabled', async () => {
+  it('keeps activity completion unready under manual completion even when one-time data is final', async () => {
+    const { callLogger, handlers } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: true },
+        activityCompletionMode: { value: 'manual' },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        call: baseCall({
+          action: 'Disconnected',
+          recording: undefined,
+        }),
+      }),
+      ...context,
+      platform: { ...context.platform, supportActivityCompletion: true },
+    });
+
+    expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        body: expect.objectContaining({
+          activityCompletionReady: false,
+        }),
+      }),
+    }));
+  });
+
+  it('waits for complete data on the manifest default before activity completion is ever saved', async () => {
     const { callLogger, logCore, tempLogNotePage, handlers } = await loadCallLoggerIndex();
     seedStorage({
       userSettings: {
         oneTimeLog: { value: false },
-        redtailActivityCompletionMode: { value: 'autoWhenAllDataAvailable' },
       },
     });
 
@@ -515,8 +552,7 @@ describe('callLogger index', () => {
         }),
       }),
       ...context,
-      platformName: 'redtail',
-      platform: { ...context.platform, name: 'redtail' },
+      platform: { ...context.platform, supportActivityCompletion: true },
     });
 
     expect(tempLogNotePage.getTempLogNotePageRender).toHaveBeenCalledWith({
@@ -527,13 +563,42 @@ describe('callLogger index', () => {
     expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
   });
 
-  it('blocks Redtail automatic logging until auto activity completion data is ready', async () => {
+  it('waits for complete data when the connector implements activity completion', async () => {
+    const { callLogger, logCore, tempLogNotePage, handlers } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: false },
+        activityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        redirect: true,
+        call: baseCall({
+          recording: { link: 'https://recording.example' },
+          duration: undefined,
+        }),
+      }),
+      ...context,
+      platform: { ...context.platform, supportActivityCompletion: true },
+    });
+
+    expect(tempLogNotePage.getTempLogNotePageRender).toHaveBeenCalledWith({
+      sessionId: 'session-1',
+      cachedNote: 'cached note',
+    });
+    expect(logCore.getCachedNote).toHaveBeenCalledWith({ sessionId: 'session-1' });
+    expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+  });
+
+  it('blocks automatic logging until activity completion data is ready', async () => {
     const { callLogger, handlers, util } = await loadCallLoggerIndex();
     seedStorage({
       userSettings: {
         autoLogCall: { value: true },
         oneTimeLog: { value: false },
-        redtailActivityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+        activityCompletionMode: { value: 'autoWhenAllDataAvailable' },
       },
     });
 
@@ -546,21 +611,20 @@ describe('callLogger index', () => {
         }),
       }),
       ...context,
-      platformName: 'redtail',
-      platform: { ...context.platform, name: 'redtail' },
+      platform: { ...context.platform, supportActivityCompletion: true },
     });
 
     expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
   });
 
-  it('does not use Redtail manual completion mode as a one-time logging gate', async () => {
+  it('does not use manual completion mode as a one-time logging gate', async () => {
     const { callLogger, handlers } = await loadCallLoggerIndex();
     seedStorage({
       userSettings: {
         autoLogCall: { value: true },
         oneTimeLog: { value: false },
-        redtailActivityCompletionMode: { value: 'manual' },
+        activityCompletionMode: { value: 'manual' },
       },
     });
 
@@ -573,8 +637,7 @@ describe('callLogger index', () => {
         }),
       }),
       ...context,
-      platformName: 'redtail',
-      platform: { ...context.platform, name: 'redtail' },
+      platform: { ...context.platform, supportActivityCompletion: true },
     });
 
     expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({

@@ -46,11 +46,18 @@ async function loadMatchHandler(modulePath, overrides: Record<string, any> = {})
   };
   vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
-  const userCore = {
+  const userCore: Record<string, any> = {
     getOneTimeLogSetting: vi.fn(() => ({ value: true })),
     getCallPopMultiMatchBehavior: vi.fn(() => ({ value: 'prompt' })),
     ...overrides.userCore,
   };
+  userCore.shouldWaitForCompleteCallData ??= vi.fn((settings, platform) => (
+    userCore.getOneTimeLogSetting(settings).value
+    || (
+      !!platform?.supportActivityCompletion
+      && (settings?.activityCompletionMode?.value ?? 'autoWhenAllDataAvailable') === 'autoWhenAllDataAvailable'
+    )
+  ));
   vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
   const util = {
@@ -356,13 +363,13 @@ describe('contact and call-log match handlers', () => {
     });
   });
 
-  it('shows preparing data status for Redtail auto activity completion when one-time logging is off', async () => {
+  it('shows preparing data status for auto activity completion when one-time logging is off', async () => {
     seedStorage({
       userSettings: {
         oneTimeLog: { value: false },
-        redtailActivityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+        activityCompletionMode: { value: 'autoWhenAllDataAvailable' },
       },
-      'call-log-data-ready-pending-redtail-session': {
+      'call-log-data-ready-pending-activity-session': {
         isReady: false,
         autoReady: false,
         manualReady: false,
@@ -379,7 +386,7 @@ describe('contact and call-log match handlers', () => {
             successful: true,
             callLogs: [
               {
-                sessionId: 'pending-redtail-session',
+                sessionId: 'pending-activity-session',
                 matched: false,
               },
             ],
@@ -390,18 +397,18 @@ describe('contact and call-log match handlers', () => {
 
     await handler.onEvent({
       data: {
-        requestId: 'request-redtail-preparing',
+        requestId: 'request-activity-preparing',
         body: {
-          sessionIds: ['pending-redtail-session'],
+          sessionIds: ['pending-activity-session'],
         },
       },
       manifest: manifest(),
-      platformName: 'redtail',
+      platform: { supportActivityCompletion: true },
     });
 
-    expect(util.responseMessage).toHaveBeenCalledWith('request-redtail-preparing', {
+    expect(util.responseMessage).toHaveBeenCalledWith('request-activity-preparing', {
       data: {
-        'pending-redtail-session': [
+        'pending-activity-session': [
           {
             type: 'status',
             status: 'failed',
@@ -412,13 +419,13 @@ describe('contact and call-log match handlers', () => {
     });
   });
 
-  it('skips the readiness gate for Redtail manual activity completion when one-time logging is off', async () => {
+  it('skips the readiness gate for manual activity completion when one-time logging is off', async () => {
     seedStorage({
       userSettings: {
         oneTimeLog: { value: false },
-        redtailActivityCompletionMode: { value: 'manual' },
+        activityCompletionMode: { value: 'manual' },
       },
-      'call-log-data-ready-pending-redtail-session': {
+      'call-log-data-ready-pending-activity-session': {
         isReady: false,
         autoReady: false,
         manualReady: false,
@@ -435,7 +442,7 @@ describe('contact and call-log match handlers', () => {
             successful: true,
             callLogs: [
               {
-                sessionId: 'pending-redtail-session',
+                sessionId: 'pending-activity-session',
                 matched: false,
               },
             ],
@@ -446,16 +453,16 @@ describe('contact and call-log match handlers', () => {
 
     await handler.onEvent({
       data: {
-        requestId: 'request-redtail-manual',
+        requestId: 'request-activity-manual',
         body: {
-          sessionIds: ['pending-redtail-session'],
+          sessionIds: ['pending-activity-session'],
         },
       },
       manifest: manifest(),
-      platformName: 'redtail',
+      platform: { supportActivityCompletion: true },
     });
 
-    expect(util.responseMessage).toHaveBeenCalledWith('request-redtail-manual', {
+    expect(util.responseMessage).toHaveBeenCalledWith('request-activity-manual', {
       data: {},
     });
   });

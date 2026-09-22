@@ -78,6 +78,8 @@ async function loadUserCore() {
   return loadModule('../../src/core/user.ts');
 }
 
+const supportingPlatform = { name: 'redtail', supportActivityCompletion: true };
+
 describe('user service behavior', () => {
   beforeEach(() => {
     vi.mocked(axios.get).mockReset();
@@ -652,5 +654,74 @@ describe('user service behavior', () => {
 
     expect(adminCore.authServerSideLogging).toHaveBeenCalledTimes(1);
     expect(axios.post).not.toHaveBeenCalled();
+  });
+
+  it('waits for complete call data whenever one-time logging is on, regardless of connector support', async () => {
+    const userCore = await loadUserCore();
+
+    expect(userCore.shouldWaitForCompleteCallData({ oneTimeLog: { value: true } })).toBe(true);
+  });
+
+  it('does not wait for connectors that do not support activity completion', async () => {
+    const userCore = await loadUserCore();
+
+    expect(userCore.shouldWaitForCompleteCallData({ oneTimeLog: { value: false } })).toBe(false);
+    expect(userCore.shouldWaitForCompleteCallData({
+      oneTimeLog: { value: false },
+      activityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+    }, { name: 'salesforce' })).toBe(false);
+  });
+
+  it('waits for complete call data when activity completion is automatic', async () => {
+    const userCore = await loadUserCore();
+
+    expect(userCore.shouldWaitForCompleteCallData({
+      oneTimeLog: { value: false },
+      activityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+    }, supportingPlatform)).toBe(true);
+  });
+
+  it('does not wait for complete call data when activity completion is set to manual', async () => {
+    const userCore = await loadUserCore();
+
+    expect(userCore.shouldWaitForCompleteCallData({
+      oneTimeLog: { value: false },
+      activityCompletionMode: { value: 'manual' },
+    }, supportingPlatform)).toBe(false);
+  });
+
+  it('still waits for complete call data under manual completion when one-time logging is on', async () => {
+    const userCore = await loadUserCore();
+    const userSettings = {
+      oneTimeLog: { value: true },
+      activityCompletionMode: { value: 'manual' },
+    };
+
+    expect(userCore.shouldWaitForCompleteCallData(userSettings, supportingPlatform)).toBe(true);
+    // Waiting for data must not imply the activity may be completed automatically.
+    expect(userCore.isAutoActivityCompletionEnabled(userSettings, supportingPlatform)).toBe(false);
+  });
+
+  it('defaults to automatic completion before the user saves connector options', async () => {
+    const userCore = await loadUserCore();
+
+    expect(userCore.isAutoActivityCompletionEnabled({}, supportingPlatform)).toBe(true);
+    expect(userCore.shouldWaitForCompleteCallData({ oneTimeLog: { value: false } }, supportingPlatform)).toBe(true);
+  });
+
+  it('prefers the saved activity completion value over the default', async () => {
+    const userCore = await loadUserCore();
+
+    expect(userCore.isAutoActivityCompletionEnabled({
+      activityCompletionMode: { value: 'manual' },
+    }, supportingPlatform)).toBe(false);
+  });
+
+  it('reads the legacy connector-prefixed activity completion setting', async () => {
+    const userCore = await loadUserCore();
+
+    expect(userCore.isAutoActivityCompletionEnabled({
+      redtailActivityCompletionMode: { value: 'manual' },
+    }, supportingPlatform)).toBe(false);
   });
 });
