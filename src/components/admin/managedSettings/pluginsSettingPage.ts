@@ -4,7 +4,7 @@ function getPluginsSettingPageRender({ installedPluginList }: UnknownRecord): Un
     const pluginListToRender = installedPluginList.map((plugin: UnknownRecord) => { return { const: plugin.id, title: plugin.displayName } });
     const page = {
         id: 'pluginAdminSettingsPage',
-        title: 'Plugin admin settings',
+        title: 'Plugins',
         type: 'page',
         schema: {
             type: 'object',

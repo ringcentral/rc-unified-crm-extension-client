@@ -72,7 +72,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
     const pageRender: UnknownRecord =
     {
         id: 'serverSideLoggingSetting',
-        title: 'Server side logging (Beta)',
+        title: 'Universal Logging',
         type: 'page',
         schema: {
             type: 'object',
@@ -81,7 +81,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                 ...warningProperty,
                 serverSideLoggingHolder: {
                     type: 'object',
-                    title: 'Server side logging',
+                    title: 'Logging settings',
                     properties: {
                         serverSideLogging: {
                             type: 'string',
@@ -104,7 +104,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                         },
                         activityRecordOwner: {
                             readOnly: !!subscribedByOtherAdmin,
-                            title: 'Activity record owner (Who should be the owner of the activity record?)',
+                            title: 'Activity record owner',
                             type: 'string',
                             oneOf: [
                                 {
@@ -128,7 +128,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                 doNotLogNumbersHolder: {
                     readOnly: !!subscribedByOtherAdmin,
                     type: 'object',
-                    title: 'Do not log numbers',
+                    title: 'Do not log',
                     properties: {
                         doNotLogNumbers: {
                             type: 'string',
@@ -136,7 +136,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                         },
                         doNotLogNumbersWarning: {
                             type: 'string',
-                            description: 'All numbers will be auto-formatted as E.164 standard. Eg. (123) 456-7890 -> +11234567890'
+                            description: 'Calls to or from these numbers will never be logged, regardless of any other setting. Numbers are automatically normalized to E.164 format. For example, (123) 456-7890 becomes +11234567890.'
                         },
                         doNotLogNumbersSubmitButton: {
                             type: 'string',

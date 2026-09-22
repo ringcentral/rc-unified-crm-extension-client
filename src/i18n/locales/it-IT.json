@@ -77,20 +77,20 @@
       "title": "Admin",
       "managedSettings": "Impostazioni gestite",
       "plugins": "Plugin",
-      "serverSideLogging": "Logging lato server (Beta)"
+      "serverSideLogging": "Registrazione universale"
     },
     "managedSettings": {
       "title": "Impostazioni gestite",
-      "general": "Generale",
-      "googleSheetsConfig": "Configurazione Google Sheets",
-      "activityLogging": "Registrazione attività",
-      "callPop": "Pop chiamata",
+      "general": "Interfaccia",
+      "googleSheetsConfig": "Google Sheets",
+      "activityLogging": "Registrazione e record",
+      "callPop": "Chiamate",
       "advancedFeatures": "Funzionalità avanzate",
-      "customSettings": "Impostazioni personalizzate",
+      "customSettings": "Impostazioni CRM",
       "plugins": "Plugin"
     },
     "generalSettings": {
-      "title": "Generale",
+      "title": "Interfaccia",
       "appearance": "Aspetto",
       "enabledDomains": "Domini abilitati"
     },

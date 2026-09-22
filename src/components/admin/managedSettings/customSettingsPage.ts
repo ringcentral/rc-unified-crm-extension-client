@@ -7,7 +7,7 @@ function getCustomSettingsPageRender({ crmManifest, adminUserSettings, userSetti
     let page: UnknownRecord =
     {
         id: 'customSettingsPage',
-        title: 'Custom Settings',
+        title: 'CRM settings',
         type: 'page',
         schema: {
             type: 'object',

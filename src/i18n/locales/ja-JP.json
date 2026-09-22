@@ -77,20 +77,20 @@
       "title": "管理者",
       "managedSettings": "管理設定",
       "plugins": "プラグイン",
-      "serverSideLogging": "サーバーサイドロギング（ベータ）"
+      "serverSideLogging": "ユニバーサルロギング"
     },
     "managedSettings": {
       "title": "管理設定",
-      "general": "一般",
-      "googleSheetsConfig": "Google Sheets設定",
-      "activityLogging": "アクティビティログ",
-      "callPop": "通話ポップ",
+      "general": "インターフェース",
+      "googleSheetsConfig": "Google Sheets",
+      "activityLogging": "ログとレコード",
+      "callPop": "通話",
       "advancedFeatures": "高度な機能",
-      "customSettings": "カスタム設定",
+      "customSettings": "CRM 設定",
       "plugins": "プラグイン"
     },
     "generalSettings": {
-      "title": "一般",
+      "title": "インターフェース",
       "appearance": "外観",
       "enabledDomains": "有効なドメイン"
     },

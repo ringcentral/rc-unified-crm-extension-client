@@ -77,20 +77,20 @@
       "title": "Admin",
       "managedSettings": "Managed settings",
       "plugins": "Plugins",
-      "serverSideLogging": "Server side logging (Beta)"
+      "serverSideLogging": "Universal Logging"
     },
     "managedSettings": {
       "title": "Managed settings",
-      "general": "General",
-      "googleSheetsConfig": "Google Sheets Configuration",
-      "activityLogging": "Activity logging",
-      "callPop": "Call-pop",
+      "general": "Interface",
+      "googleSheetsConfig": "Google Sheets",
+      "activityLogging": "Logging & records",
+      "callPop": "Calls",
       "advancedFeatures": "Advanced features",
-      "customSettings": "Custom settings",
+      "customSettings": "CRM settings",
       "plugins": "Plugins"
     },
     "generalSettings": {
-      "title": "General",
+      "title": "Interface",
       "appearance": "Appearance",
       "enabledDomains": "Enabled domains"
     },
