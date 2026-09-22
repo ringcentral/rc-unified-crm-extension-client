@@ -668,7 +668,7 @@ describe('user service behavior', () => {
     expect(userCore.shouldWaitForCompleteCallData({ oneTimeLog: { value: false } })).toBe(false);
     expect(userCore.shouldWaitForCompleteCallData({
       oneTimeLog: { value: false },
-      activityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+      redtailActivityCompletionMode: { value: 'autoWhenAllDataAvailable' },
     }, { name: 'salesforce' })).toBe(false);
   });
 
@@ -677,7 +677,7 @@ describe('user service behavior', () => {
 
     expect(userCore.shouldWaitForCompleteCallData({
       oneTimeLog: { value: false },
-      activityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+      redtailActivityCompletionMode: { value: 'autoWhenAllDataAvailable' },
     }, supportingPlatform)).toBe(true);
   });
 
@@ -686,7 +686,7 @@ describe('user service behavior', () => {
 
     expect(userCore.shouldWaitForCompleteCallData({
       oneTimeLog: { value: false },
-      activityCompletionMode: { value: 'manual' },
+      redtailActivityCompletionMode: { value: 'manual' },
     }, supportingPlatform)).toBe(false);
   });
 
@@ -694,7 +694,7 @@ describe('user service behavior', () => {
     const userCore = await loadUserCore();
     const userSettings = {
       oneTimeLog: { value: true },
-      activityCompletionMode: { value: 'manual' },
+      redtailActivityCompletionMode: { value: 'manual' },
     };
 
     expect(userCore.shouldWaitForCompleteCallData(userSettings, supportingPlatform)).toBe(true);
@@ -713,15 +713,8 @@ describe('user service behavior', () => {
     const userCore = await loadUserCore();
 
     expect(userCore.isAutoActivityCompletionEnabled({
-      activityCompletionMode: { value: 'manual' },
-    }, supportingPlatform)).toBe(false);
-  });
-
-  it('reads the legacy connector-prefixed activity completion setting', async () => {
-    const userCore = await loadUserCore();
-
-    expect(userCore.isAutoActivityCompletionEnabled({
       redtailActivityCompletionMode: { value: 'manual' },
     }, supportingPlatform)).toBe(false);
   });
+
 });

@@ -55,7 +55,7 @@ async function loadMatchHandler(modulePath, overrides: Record<string, any> = {})
     userCore.getOneTimeLogSetting(settings).value
     || (
       !!platform?.supportActivityCompletion
-      && (settings?.activityCompletionMode?.value ?? 'autoWhenAllDataAvailable') === 'autoWhenAllDataAvailable'
+      && (settings?.redtailActivityCompletionMode?.value ?? 'autoWhenAllDataAvailable') === 'autoWhenAllDataAvailable'
     )
   ));
   vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
@@ -367,7 +367,7 @@ describe('contact and call-log match handlers', () => {
     seedStorage({
       userSettings: {
         oneTimeLog: { value: false },
-        activityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+        redtailActivityCompletionMode: { value: 'autoWhenAllDataAvailable' },
       },
       'call-log-data-ready-pending-activity-session': {
         isReady: false,
@@ -423,7 +423,7 @@ describe('contact and call-log match handlers', () => {
     seedStorage({
       userSettings: {
         oneTimeLog: { value: false },
-        activityCompletionMode: { value: 'manual' },
+        redtailActivityCompletionMode: { value: 'manual' },
       },
       'call-log-data-ready-pending-activity-session': {
         isReady: false,
