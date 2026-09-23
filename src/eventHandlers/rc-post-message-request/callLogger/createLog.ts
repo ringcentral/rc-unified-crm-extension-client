@@ -181,6 +181,7 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
                     direction: data.body.call.direction,
                     from: data.body.call.from,
                     to: data.body.call.to,
+                    activityCompletionReady: data.body.activityCompletionReady ?? false,
                     isShowNotification: true
                 });
             }
@@ -199,7 +200,8 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
                         additionalSubmission: autoSelectAdditionalSubmission,
                         contactId: defaultingContact?.id,
                         contactType: defaultingContact?.type,
-                        contactName: defaultingContact?.name
+                        contactName: defaultingContact?.name,
+                        activityCompletionReady: data.body.activityCompletionReady ?? false
                     });
                 const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null }) as { implementedInterfaces?: UnknownRecord | null };
                 const supportDisposition = implementedInterfaces?.upsertCallDisposition;

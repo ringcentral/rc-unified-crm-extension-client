@@ -95,11 +95,18 @@ async function loadCallLoggerIndex() {
   };
   vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
-  const userCore = {
+  const userCore: Record<string, any> = {
     getOneTimeLogSetting: vi.fn((settings) => ({ value: settings?.oneTimeLog?.value ?? false })),
     getCallPopSetting: vi.fn((settings) => ({ value: settings?.popupLogPageAfterCall?.value ?? false })),
     getAutoLogCallSetting: vi.fn((settings) => ({ value: settings?.autoLogCall?.value ?? false })),
   };
+  userCore.isAutoActivityCompletionEnabled = vi.fn((settings, platform) => (
+    !!platform?.supportActivityCompletion
+    && (settings?.redtailActivityCompletionMode?.value ?? 'autoWhenAllDataAvailable') === 'autoWhenAllDataAvailable'
+  ));
+  userCore.shouldWaitForCompleteCallData = vi.fn((settings, platform) => (
+    userCore.getOneTimeLogSetting(settings).value || userCore.isAutoActivityCompletionEnabled(settings, platform)
+  ));
   vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
   const tempLogNotePage = {
@@ -462,11 +469,181 @@ describe('callLogger index', () => {
     expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         body: expect.objectContaining({
+          activityCompletionReady: false,
           call: expect.objectContaining({ sessionId: 'session-1' }),
         }),
       }),
     }));
     expect(tempLogNotePage.getTempLogNotePageRender).not.toHaveBeenCalled();
+  });
+
+  it('marks activity completion ready when auto completion is on and data is final', async () => {
+    const { callLogger, handlers } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: true },
+        redtailActivityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        call: baseCall({
+          action: 'Disconnected',
+          recording: undefined,
+        }),
+      }),
+      ...context,
+      platform: { ...context.platform, supportActivityCompletion: true },
+    });
+
+    expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        body: expect.objectContaining({
+          activityCompletionReady: true,
+        }),
+      }),
+    }));
+  });
+
+  it('keeps activity completion unready under manual completion even when one-time data is final', async () => {
+    const { callLogger, handlers } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: true },
+        redtailActivityCompletionMode: { value: 'manual' },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        call: baseCall({
+          action: 'Disconnected',
+          recording: undefined,
+        }),
+      }),
+      ...context,
+      platform: { ...context.platform, supportActivityCompletion: true },
+    });
+
+    expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        body: expect.objectContaining({
+          activityCompletionReady: false,
+        }),
+      }),
+    }));
+  });
+
+  it('waits for complete data on the manifest default before activity completion is ever saved', async () => {
+    const { callLogger, logCore, tempLogNotePage, handlers } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: false },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        redirect: true,
+        call: baseCall({
+          recording: { link: 'https://recording.example' },
+          duration: undefined,
+        }),
+      }),
+      ...context,
+      platform: { ...context.platform, supportActivityCompletion: true },
+    });
+
+    expect(tempLogNotePage.getTempLogNotePageRender).toHaveBeenCalledWith({
+      sessionId: 'session-1',
+      cachedNote: 'cached note',
+    });
+    expect(logCore.getCachedNote).toHaveBeenCalledWith({ sessionId: 'session-1' });
+    expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+  });
+
+  it('waits for complete data when the connector implements activity completion', async () => {
+    const { callLogger, logCore, tempLogNotePage, handlers } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: false },
+        redtailActivityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        redirect: true,
+        call: baseCall({
+          recording: { link: 'https://recording.example' },
+          duration: undefined,
+        }),
+      }),
+      ...context,
+      platform: { ...context.platform, supportActivityCompletion: true },
+    });
+
+    expect(tempLogNotePage.getTempLogNotePageRender).toHaveBeenCalledWith({
+      sessionId: 'session-1',
+      cachedNote: 'cached note',
+    });
+    expect(logCore.getCachedNote).toHaveBeenCalledWith({ sessionId: 'session-1' });
+    expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+  });
+
+  it('blocks automatic logging until activity completion data is ready', async () => {
+    const { callLogger, handlers, util } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        autoLogCall: { value: true },
+        oneTimeLog: { value: false },
+        redtailActivityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        triggerType: 'callLogSync',
+        call: baseCall({
+          recording: { link: 'https://recording.example' },
+          duration: undefined,
+        }),
+      }),
+      ...context,
+      platform: { ...context.platform, supportActivityCompletion: true },
+    });
+
+    expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('does not use manual completion mode as a one-time logging gate', async () => {
+    const { callLogger, handlers } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        autoLogCall: { value: true },
+        oneTimeLog: { value: false },
+        redtailActivityCompletionMode: { value: 'manual' },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        triggerType: 'callLogSync',
+        call: baseCall({
+          recording: { link: 'https://recording.example' },
+          duration: undefined,
+        }),
+      }),
+      ...context,
+      platform: { ...context.platform, supportActivityCompletion: true },
+    });
+
+    expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      triggerTypeInUse: 'createLog',
+      isAutoLog: true,
+    }));
   });
 
   it('blocks extension-number logging when extension logging is disabled', async () => {
@@ -1134,6 +1311,85 @@ describe('callLogger createLog', () => {
     }));
     expect(logUtil.logPageFormDataDefaulting).not.toHaveBeenCalled();
   });
+
+  it('forwards activityCompletionReady on auto create and defaults it to false when omitted', async () => {
+    const { createLog, logCore } = await loadCreateLog();
+
+    await createLog.onEvent({
+      data: eventFor({
+        activityCompletionReady: true,
+      }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      activityCompletionReady: true,
+    }));
+
+    logCore.addLog.mockClear();
+    await createLog.onEvent({
+      data: eventFor(),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      activityCompletionReady: false,
+    }));
+  });
+
+  it('forwards activityCompletionReady on auto update and defaults it to false when omitted', async () => {
+    const { createLog, logCore } = await loadCreateLog();
+    const existingCalls = [{ matched: true, sessionId: 'session-1', logData: { note: 'existing note', subject: '' } }];
+
+    await createLog.onEvent({
+      data: eventFor({
+        activityCompletionReady: true,
+      }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls,
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(logCore.updateLog).toHaveBeenCalledWith(expect.objectContaining({
+      activityCompletionReady: true,
+    }));
+
+    logCore.updateLog.mockClear();
+    await createLog.onEvent({
+      data: eventFor(),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls,
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(logCore.updateLog).toHaveBeenCalledWith(expect.objectContaining({
+      activityCompletionReady: false,
+    }));
+  });
 });
 
 describe('callLogger logForm', () => {
@@ -1322,5 +1578,83 @@ describe('callLogger logForm', () => {
       sessionId: 'session-1',
     }));
     expect(dispositionCore.upsertDisposition).not.toHaveBeenCalled();
+  });
+
+  it('forwards activityCompletionReady on form create and defaults it to false when omitted', async () => {
+    seedStorage({ userSettings: {} });
+    const { logForm, logCore } = await loadLogForm();
+    const formData = {
+      triggerType: 'createLog',
+      contact: 'contact-1',
+      contactName: 'Existing Contact',
+      contactType: 'Lead',
+      newContactName: '',
+      newContactType: '',
+      activityTitle: 'Call title',
+      note: 'Call note',
+    };
+
+    await logForm.onEvent({
+      data: eventFor({
+        activityCompletionReady: true,
+        formData,
+      }),
+      contactPhoneNumber: '+16505550100',
+      ...context,
+    });
+
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      activityCompletionReady: true,
+    }));
+
+    logCore.addLog.mockClear();
+    await logForm.onEvent({
+      data: eventFor({ formData }),
+      contactPhoneNumber: '+16505550100',
+      ...context,
+    });
+
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      activityCompletionReady: false,
+    }));
+  });
+
+  it('forwards activityCompletionReady on form edit and defaults it to false when omitted', async () => {
+    seedStorage({ userSettings: {} });
+    const { logForm, logCore } = await loadLogForm();
+    const formData = {
+      triggerType: 'editLog',
+      contact: 'contact-1',
+      contactName: 'Jane',
+      contactType: 'Lead',
+      newContactName: '',
+      newContactType: '',
+      activityTitle: 'Updated title',
+      note: 'Updated note',
+    };
+
+    await logForm.onEvent({
+      data: eventFor({
+        activityCompletionReady: true,
+        formData,
+      }),
+      contactPhoneNumber: '+16505550100',
+      ...context,
+    });
+
+    expect(logCore.updateLog).toHaveBeenCalledWith(expect.objectContaining({
+      activityCompletionReady: true,
+    }));
+
+    logCore.updateLog.mockClear();
+    await logForm.onEvent({
+      data: eventFor({ formData }),
+      contactPhoneNumber: '+16505550100',
+      ...context,
+    });
+
+    expect(logCore.updateLog).toHaveBeenCalledWith(expect.objectContaining({
+      activityCompletionReady: false,
+    }));
   });
 });

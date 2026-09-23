@@ -323,6 +323,20 @@ function getOneTimeLogSetting(userSettings) {
     }
 }
 
+// Connectors declare supportActivityCompletion when their CRM activity is written once. The mode
+// setting is absent until the user saves connector options, so it defaults to the manifest value.
+function isAutoActivityCompletionEnabled(userSettings, platform) {
+    if (!platform?.supportActivityCompletion) {
+        return false;
+    }
+    const savedMode = userSettings?.redtailActivityCompletionMode?.value;
+    return (savedMode ?? 'autoWhenAllDataAvailable') === 'autoWhenAllDataAvailable';
+}
+
+function shouldWaitForCompleteCallData(userSettings, platform) {
+    return getOneTimeLogSetting(userSettings).value || isAutoActivityCompletionEnabled(userSettings, platform);
+}
+
 function getCallPopSetting(userSettings) {
     return {
         value: userSettings?.popupLogPageAfterCall?.value ?? false,
@@ -747,6 +761,8 @@ const userCore = {
     getAutoLogOutboundFaxSetting,
     getEnableRetroCallLogSync,
     getOneTimeLogSetting,
+    isAutoActivityCompletionEnabled,
+    shouldWaitForCompleteCallData,
     getCallPopSetting,
     getSMSPopSetting,
     getIncomingCallPop,
@@ -814,6 +830,8 @@ export {
     getAutoLogOutboundFaxSetting,
     getEnableRetroCallLogSync,
     getOneTimeLogSetting,
+    isAutoActivityCompletionEnabled,
+    shouldWaitForCompleteCallData,
     getCallPopSetting,
     getSMSPopSetting,
     getIncomingCallPop,

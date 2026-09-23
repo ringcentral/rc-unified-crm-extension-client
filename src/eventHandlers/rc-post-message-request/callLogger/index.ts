@@ -120,7 +120,14 @@ async function onEvent(options: EventOptions) {
     await chrome.storage.local.set({
         [readinessKey]: readiness,
     });
-    if (userCore.getOneTimeLogSetting(userSettings).value) {
+    data = {
+        ...data,
+        body: {
+            ...data.body,
+            activityCompletionReady: userCore.isAutoActivityCompletionEnabled(userSettings, platform) && readiness.autoReady,
+        },
+    };
+    if (userCore.shouldWaitForCompleteCallData(userSettings, platform)) {
         const readyForCurrentRequest = data.body.redirect
             ? readiness.autoReady || isCallDataComplete(data.body.call)
             : readiness.autoReady;

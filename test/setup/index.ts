@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, vi } from 'vitest';
 import { installChromeMock, resetChromeMock } from './chromeMock';
+import { installDomStorageMock } from './domStorageMock';
 import { resetWidgetFrameMock } from './widgetFrameMock';
 
+installDomStorageMock();
 installChromeMock();
 
 beforeEach(() => {

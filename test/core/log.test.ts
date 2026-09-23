@@ -82,6 +82,7 @@ describe('log core', () => {
       contactType: 'Lead',
       contactName: 'Jane Doe',
       additionalSubmission: { fromForm: true },
+      activityCompletionReady: true,
     });
 
     expect(axios.post).toHaveBeenCalledWith('https://server.example/callLog', {
@@ -106,6 +107,7 @@ describe('log core', () => {
       contactName: 'Jane Doe',
       extensionNumber: '101',
       hashedExtensionId: 'hash-1',
+      activityCompletionReady: true,
     });
     expect(trackSyncCallLog).toHaveBeenCalledWith({ hasNote: true });
     expect(readStorage()['rc-crm-call-log-session-1']).toEqual({
@@ -406,6 +408,7 @@ describe('log core', () => {
       logType: 'Call',
       sessionId: 'session-1',
       note: 'Updated note',
+      activityCompletionReady: false,
       isShowNotification: true,
     });
 
@@ -415,6 +418,7 @@ describe('log core', () => {
       note: 'Updated note',
       extensionNumber: '101',
       hashedExtensionId: 'hash-1',
+      activityCompletionReady: false,
     }));
     expect(axios.defaults.headers.common.Authorization).toBe('Bearer jwt-1');
   });
