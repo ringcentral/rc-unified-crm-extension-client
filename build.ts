@@ -1,35 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 require('dotenv').config();
-
-function getManifestNameForBranch({ name, currentBranch, isBranchedFromBeta }) {
-    const betaSuffix = ' - Release Candidate';
-    if (currentBranch === 'beta' || isBranchedFromBeta) {
-        return name.includes(betaSuffix) ? name : `${name}${betaSuffix}`;
-    }
-    return name.includes(betaSuffix) ? name.replace(betaSuffix, '') : name;
-}
-
-function updateManifestNameForBranch({ manifestPath, currentBranch, isBranchedFromBeta }) {
-    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-    const currentName = manifest.name;
-    const nextName = getManifestNameForBranch({
-        name: currentName,
-        currentBranch,
-        isBranchedFromBeta,
-    });
-    if (nextName !== currentName) {
-        manifest.name = nextName;
-        fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-        if (nextName.includes(' - Release Candidate')) {
-            console.log(`Updated manifest name for beta branch: ${manifest.name}`);
-        } else {
-            console.log(`Updated manifest name for ${currentBranch} branch: ${manifest.name}`);
-        }
-    }
-    return manifest;
-}
 
 async function runBuild() {
     const { build } = require('esbuild');
@@ -48,25 +19,6 @@ async function runBuild() {
         dependencyFile = dependencyFile.replaceAll('process.env.', 'process.env?.');
         fs.writeFileSync('./node_modules/styled-components/dist/styled-components.browser.esm.js', dependencyFile);
     } catch (e) { console.log(e) }
-
-    // Check git branch and update manifest.json name accordingly
-    try {
-        const currentBranch = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
-        const manifestPath = './public/manifest.json';
-
-        // Check if current branch is branched from 'beta'
-        let isBranchedFromBeta = false;
-        try {
-            execSync('git merge-base --is-ancestor beta HEAD', { encoding: 'utf8' });
-            isBranchedFromBeta = true;
-        } catch {
-            // beta is not an ancestor of current branch
-        }
-
-        updateManifestNameForBranch({ manifestPath, currentBranch, isBranchedFromBeta });
-    } catch (e) {
-        console.log('Error updating manifest for branch:', e.message);
-    }
 
     build({
         entryPoints: ['src/content.ts', 'src/popup.ts', 'src/sw.ts', 'src/root.tsx'],
@@ -103,7 +55,5 @@ if (require.main === module) {
 }
 
 module.exports = {
-    getManifestNameForBranch,
-    updateManifestNameForBranch,
     runBuild,
 };
