@@ -50,18 +50,23 @@ async function clearOAuthLoginWindow(loginWindowInfo, { closeWindow = false, not
   }
 }
 
-async function focusExistingPopupWindow() {
+async function focusExistingPopupWindow({ focus = true }: { focus?: boolean } = {}) {
   const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
   if (popupWindowId) {
     try {
       const popupWindow = await chrome.windows.get(popupWindowId);
       const wasMinimized = popupWindow.state === 'minimized';
       const wasFocused = popupWindow.focused;
-      const updateInfo: Record<string, any> = { focused: true };
+      const updateInfo: Record<string, any> = {};
+      if (focus) {
+        updateInfo.focused = true;
+      }
       if (wasMinimized) {
         updateInfo.state = 'normal';
       }
-      await chrome.windows.update(popupWindowId, updateInfo);
+      if (Object.keys(updateInfo).length > 0) {
+        await chrome.windows.update(popupWindowId, updateInfo);
+      }
       return { exists: true, popupWindowId, wasMinimized, wasFocused };
     } catch (e) {
       // ignore
@@ -70,9 +75,9 @@ async function focusExistingPopupWindow() {
   return { exists: false, popupWindowId: null, wasMinimized: false, wasFocused: false };
 }
 
-async function openPopupWindow() {
+async function openPopupWindow({ focus = true }: { focus?: boolean } = {}) {
   console.log('open popup');
-  const popupFocusResult = await focusExistingPopupWindow();
+  const popupFocusResult = await focusExistingPopupWindow({ focus });
   if (popupFocusResult.exists) {
     return true;
   }
@@ -87,7 +92,7 @@ async function openPopupWindow() {
     popup = await chrome.windows.create({
       url: popupUri,
       type: 'popup',
-      focused: true,
+      focused: focus,
       state: extensionWindowStatus.state
     });
   }
@@ -96,7 +101,7 @@ async function openPopupWindow() {
       popup = await chrome.windows.create({
         url: popupUri,
         type: 'popup',
-        focused: true,
+        focused: focus,
         width: extensionWindowStatus?.width ?? 450,
         height: extensionWindowStatus?.height ?? 848,
         left: extensionWindowStatus?.left ?? 50,
@@ -108,7 +113,7 @@ async function openPopupWindow() {
       popup = await chrome.windows.create({
         url: popupUri,
         type: 'popup',
-        focused: true,
+        focused: focus,
         width: 450,
         height: 848,
         left: 50,
@@ -119,6 +124,13 @@ async function openPopupWindow() {
   await chrome.storage.local.set({
     popupWindowId: popup.id,
   });
+  if (!focus) {
+    try {
+      await chrome.windows.update(popup.id, { drawAttention: true });
+    } catch (e) {
+      // ignore
+    }
+  }
   return false;
 }
 
@@ -194,9 +206,18 @@ async function showIncomingCallNotification({ callId, callerName, phoneNumber })
 
 async function incomingCallRingingHandler(request) {
   const callId = request.callId ?? request.telephonySessionId ?? request.sessionId ?? request.phoneNumber ?? Date.now();
-  const popupFocusResult = await focusExistingPopupWindow();
+  // Never steal OS focus from whatever the user is doing when a call rings.
+  // The notification toast + taskbar/dock attention flash are enough to alert
+  // the user; the popup window only gets focus once they explicitly interact
+  // (click the notification/action button), see openPopupWindowFromNotification.
+  const popupFocusResult = await focusExistingPopupWindow({ focus: false });
   if (!popupFocusResult.exists) {
-    await openPopupWindow();
+    await showIncomingCallNotification({
+      callId,
+      callerName: request.callerName,
+      phoneNumber: request.phoneNumber,
+    });
+    await openPopupWindow({ focus: false });
     return;
   }
   if (popupFocusResult.wasMinimized || !popupFocusResult.wasFocused) {

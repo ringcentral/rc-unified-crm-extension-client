@@ -104,7 +104,7 @@ describe('service worker incoming call notifications', () => {
     });
   });
 
-  it('opens the popup without notification when no popup exists and skips notification for focused popups', async () => {
+  it('opens the popup without stealing focus and still notifies when no popup exists, and skips notification for focused popups', async () => {
     const { onMessage } = await loadServiceWorkerListeners();
 
     onMessage({
@@ -114,10 +114,17 @@ describe('service worker incoming call notifications', () => {
     await vi.waitFor(() => {
       expect(chrome.windows.create).toHaveBeenCalled();
     });
-    expect(chrome.notifications.create).not.toHaveBeenCalled();
+    // Popup must not steal OS focus from whatever the user is doing.
+    expect(chrome.windows.create).toHaveBeenCalledWith(
+      expect.objectContaining({ focused: false }),
+    );
+    // The user should still be alerted via the OS notification toast.
+    expect(chrome.notifications.create).toHaveBeenCalled();
 
     seedStorage({ popupWindowId: 5 });
     vi.mocked(chrome.windows.create).mockClear();
+    vi.mocked(chrome.windows.update).mockClear();
+    vi.mocked(chrome.notifications.create).mockClear();
     vi.mocked(chrome.windows.get).mockResolvedValueOnce({
       id: 5,
       state: 'normal',
@@ -133,6 +140,8 @@ describe('service worker incoming call notifications', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(chrome.windows.create).not.toHaveBeenCalled();
+    // Already-focused popup means the user can already see the ringing call; no need to interrupt.
+    expect(chrome.windows.update).not.toHaveBeenCalled();
     expect(chrome.notifications.create).not.toHaveBeenCalled();
   });
 
