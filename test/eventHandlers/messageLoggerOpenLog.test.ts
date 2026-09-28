@@ -10,6 +10,7 @@ async function loadOpenLogHandler() {
   vi.doMock('../../src/lib/util.ts', () => util);
 
   const logCore: Record<string, any> = {
+    resolveMessageLogContactId: vi.fn(async () => 'contact-1'),
     openLog: vi.fn(),
   };
   vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
@@ -38,7 +39,11 @@ describe('messageLogger openLog handler', () => {
     await openLogHandler.onEvent({
       data: {
         requestId: 'request-1',
-        body: { logId: 'log-42', contactId: 'contact-1', contactType: 'Lead' },
+        body: {
+          logId: 'log-42',
+          messageId: 'message-42',
+          conversationId: 'conversation-1',
+        },
       },
       ...context,
     });
@@ -49,8 +54,13 @@ describe('messageLogger openLog handler', () => {
       hostname: 'crm.example',
       logId: 'log-42',
       contactId: 'contact-1',
-      contactType: 'Lead',
       userSettings: { some: 'setting' },
+    });
+    expect(logCore.resolveMessageLogContactId).toHaveBeenCalledWith({
+      serverUrl: 'https://server.example',
+      logId: 'log-42',
+      messageId: 'message-42',
+      conversationId: 'conversation-1',
     });
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
   });

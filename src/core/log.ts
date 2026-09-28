@@ -252,6 +252,32 @@ export async function getMessageLog({ serverUrl, conversationId, messageIds }: U
   }), { successful: true, messageLogs: {} as UnknownRecord });
 }
 
+export async function resolveMessageLogContactId({
+  serverUrl,
+  logId,
+  conversationId,
+  messageId,
+}: UnknownRecord): Promise<string | number | undefined> {
+  if (messageId == null || conversationId == null) {
+    return undefined;
+  }
+  const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as UnknownRecord;
+  if (!rcUnifiedCrmExtJwt) {
+    return undefined;
+  }
+  const response = await axios.post(`${serverUrl}/messageLog/match`, {
+    conversationId: String(conversationId),
+    messageIds: [String(messageId)],
+  });
+  const match = (Array.isArray(response.data?.logs) ? response.data.logs : []).find(
+    (entry: UnknownRecord) =>
+      entry?.matched
+      && String(entry.messageId) === String(messageId)
+      && String(entry.logId) === String(logId),
+  );
+  return match?.contactId;
+}
+
 export function openLog({ manifest, platformName, hostname, logId, contactType, contactId, userSettings }: UnknownRecord): void {
   const logPageUrl = renderUrlTemplate({
     template: manifest.platforms[platformName].logPageUrl,
@@ -371,6 +397,7 @@ const logCore = {
   addLog,
   getLog,
   getMessageLog,
+  resolveMessageLogContactId,
   openLog,
   updateLog,
   cacheCallNote,

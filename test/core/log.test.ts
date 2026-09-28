@@ -363,9 +363,9 @@ describe('log core', () => {
       data: {
         successful: true,
         logs: [
-          { messageId: '6424569101', matched: true, logId: 'crm-entry-1' },
+          { messageId: '6424569101', matched: true, logId: 'crm-entry-1', contactId: 'contact-42' },
           { messageId: '6424569102', matched: false },
-          { messageId: '6424569105', matched: true, logId: 'crm-entry-1' },
+          { messageId: '6424569105', matched: true, logId: 'crm-entry-1', contactId: 'contact-42' },
         ],
       },
     });
@@ -378,6 +378,37 @@ describe('log core', () => {
       successful: true,
       messageLogs: { '6424569101': 'crm-entry-1', '6424569105': 'crm-entry-1' },
     });
+  });
+
+  it('resolves a message log contact from the server when the cache is empty', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const logCore = await loadLogCore();
+    vi.mocked(axios.post).mockClear();
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        logs: [{
+          messageId: 'message-42',
+          matched: true,
+          logId: 'crm-entry-42',
+          contactId: 'contact-42',
+        }],
+      },
+    });
+
+    await expect(logCore.resolveMessageLogContactId({
+      serverUrl: 'https://server.example',
+      logId: 'crm-entry-42',
+      conversationId: 'conversation-42',
+      messageId: 'message-42',
+    })).resolves.toBe('contact-42');
+    expect(axios.post).toHaveBeenCalledWith(
+      'https://server.example/messageLog/match',
+      {
+        conversationId: 'conversation-42',
+        messageIds: ['message-42'],
+      },
+    );
   });
 
   it('batches per-message logged-state lookups to keep requests bounded', async () => {

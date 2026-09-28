@@ -51,13 +51,18 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
   if (data.body?.triggerType === 'openLog') {
     const logId = data.body?.logId;
     if (logId) {
+      const contactId = await logCore.resolveMessageLogContactId({
+        serverUrl: manifest.serverUrl,
+        logId,
+        conversationId: data.body?.conversationId,
+        messageId: data.body?.messageId,
+      });
       logCore.openLog({
         manifest,
         platformName,
         hostname: platformInfo?.hostname,
         logId,
-        contactId: data.body?.contactId,
-        contactType: data.body?.contactType,
+        contactId,
         userSettings,
       });
     }

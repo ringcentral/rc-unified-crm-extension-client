@@ -29,6 +29,7 @@ async function loadMessageLogger() {
   const logCore: Record<string, any> = {
     addLog: vi.fn(async () => ({})),
     getConflictContentFromUnresolvedLog: vi.fn(() => ({ description: 'Multiple contacts found' })),
+    resolveMessageLogContactId: vi.fn(async () => 'contact-9'),
     openLog: vi.fn(() => {}),
   };
   vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
@@ -1399,8 +1400,8 @@ describe('messageLogger', () => {
         body: {
           triggerType: 'openLog',
           logId: 'crm-log-123',
-          contactId: 'contact-9',
-          contactType: 'Lead',
+          messageId: 'message-123',
+          conversationId: 'conversation-123',
         },
       },
       ...context,
@@ -1410,8 +1411,13 @@ describe('messageLogger', () => {
       platformName: 'salesforce',
       logId: 'crm-log-123',
       contactId: 'contact-9',
-      contactType: 'Lead',
     }));
+    expect(logCore.resolveMessageLogContactId).toHaveBeenCalledWith({
+      serverUrl: 'https://server.example',
+      logId: 'crm-log-123',
+      messageId: 'message-123',
+      conversationId: 'conversation-123',
+    });
     expect(logCore.addLog).not.toHaveBeenCalled();
     expect(util.responseMessage).toHaveBeenCalledWith('open-log-request', { data: 'ok' });
   });

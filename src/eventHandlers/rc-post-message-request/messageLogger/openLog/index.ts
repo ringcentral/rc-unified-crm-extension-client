@@ -12,20 +12,24 @@ type EventOptions = {
 };
 
 // Handle a click on a message's "logged" icon: open the corresponding CRM log
-// record in a new tab. The widget sends the `logId` it received from the
-// per-message match; optional contact fields are used by URL templates that
-// need them.
+// record in a new tab. The widget sends log/message identity but no contact
+// data; contactId is resolved from the server's message-log database.
 export async function onEvent({ data, manifest, platformInfo, platformName }: EventOptions): Promise<void> {
   const { userSettings } = await chrome.storage.local.get({ userSettings: {} }) as UnknownRecord;
   const logId = data.body?.logId;
   if (logId) {
+    const contactId = await logCore.resolveMessageLogContactId({
+      serverUrl: manifest.serverUrl,
+      logId,
+      conversationId: data.body?.conversationId,
+      messageId: data.body?.messageId,
+    });
     logCore.openLog({
       manifest,
       platformName,
       hostname: platformInfo?.hostname,
       logId,
-      contactId: data.body?.contactId,
-      contactType: data.body?.contactType,
+      contactId,
       userSettings,
     });
   }
