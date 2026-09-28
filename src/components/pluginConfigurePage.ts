@@ -54,7 +54,23 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
                 schemaProp.description = field.description;
             }
             if (field.type === 'selection' && field.oneOf) {
-                if (field.multiSelect) {
+                if (field.searchable) {
+                    const optionValues = field.oneOf.map(option => option.const);
+                    const optionLabels = field.oneOf.map(option => option.title);
+                    if (field.multiSelect) {
+                        schemaProp.type = 'array';
+                        schemaProp.items = {
+                            type: 'string',
+                            enum: optionValues,
+                            enumNames: optionLabels
+                        };
+                        schemaProp.uniqueItems = true;
+                    } else {
+                        schemaProp.enum = optionValues;
+                        schemaProp.enumNames = optionLabels;
+                    }
+                }
+                else if (field.multiSelect) {
                     schemaProp.type = 'array';
                     schemaProp.items = {
                         type: 'string',
@@ -75,7 +91,16 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
 
             const uiEntry = { ...(field.uiSchema ?? {}) };
             if (field.type === 'selection') {
-                if (field.multiSelect) {
+                if (field.searchable) {
+                    uiEntry['ui:widget'] = 'AutocompleteWidget';
+                    uiEntry['ui:placeholder'] = uiEntry['ui:placeholder'] || 'Start typing to search...';
+                    uiEntry['ui:options'] = {
+                        ...(uiEntry['ui:options'] ?? {}),
+                        multiple: !!field.multiSelect,
+                        enumOptions: (field.oneOf ?? []).map(option => ({ value: option.const, label: option.title })),
+                    };
+                }
+                else if (field.multiSelect) {
                     uiEntry['ui:widget'] = 'checkboxes';
                 } else {
                     uiEntry['ui:widget'] = 'select';

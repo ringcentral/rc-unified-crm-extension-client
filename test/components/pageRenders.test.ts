@@ -115,6 +115,27 @@ function workflowPlugin() {
         title: 'Hidden',
         hidden: true,
       },
+      {
+        const: 'searchableCity',
+        type: 'selection',
+        title: 'City',
+        searchable: true,
+        oneOf: [
+          { const: 'nyc', title: 'New York' },
+          { const: 'la', title: 'Los Angeles' },
+        ],
+      },
+      {
+        const: 'searchableTags',
+        type: 'selection',
+        title: 'Tags',
+        searchable: true,
+        multiSelect: true,
+        oneOf: [
+          { const: 'vip', title: 'VIP' },
+          { const: 'lead', title: 'Lead' },
+        ],
+      },
     ],
   };
 }
@@ -506,6 +527,40 @@ describe('basic page renderers', () => {
       uniqueItems: true,
     });
     expect(page.uiSchema.config.scopes['ui:widget']).toBe('checkboxes');
+    expect(page.schema.properties.config.properties.searchableCity).toMatchObject({
+      type: 'string',
+      enum: ['nyc', 'la'],
+      enumNames: ['New York', 'Los Angeles'],
+    });
+    expect(page.uiSchema.config.searchableCity).toMatchObject({
+      'ui:widget': 'AutocompleteWidget',
+      'ui:placeholder': 'Start typing to search...',
+      'ui:options': {
+        multiple: false,
+        enumOptions: [
+          { value: 'nyc', label: 'New York' },
+          { value: 'la', label: 'Los Angeles' },
+        ],
+      },
+    });
+    expect(page.schema.properties.config.properties.searchableTags).toMatchObject({
+      type: 'array',
+      uniqueItems: true,
+      items: {
+        enum: ['vip', 'lead'],
+        enumNames: ['VIP', 'Lead'],
+      },
+    });
+    expect(page.uiSchema.config.searchableTags).toMatchObject({
+      'ui:widget': 'AutocompleteWidget',
+      'ui:options': {
+        multiple: true,
+        enumOptions: [
+          { value: 'vip', label: 'VIP' },
+          { value: 'lead', label: 'Lead' },
+        ],
+      },
+    });
     expect(page.schema.properties.basicInfo.oneOf).toEqual(expect.arrayContaining([
       expect.objectContaining({ const: 'licenseStatus', descriptionColor: 'error' }),
     ]));

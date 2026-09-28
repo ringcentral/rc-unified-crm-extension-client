@@ -250,6 +250,38 @@ describe('logPageUtils', () => {
     expect(result.requiredFieldNames).toEqual(['disposition', 'followUp', 'caseId']);
   });
 
+  it('builds an AutocompleteWidget uiSchema for selection fields marked searchable', async () => {
+    const utils = await loadLogPageUtils();
+
+    const result = utils.buildAdditionalFieldsSchema({
+      allAdditionalFields: [
+        { const: 'territory', title: 'Territory', type: 'selection', searchable: true, contactDependent: true },
+      ],
+      contact: existingContact({
+        additionalInfo: {
+          territory: [
+            { const: 'east', title: 'East' },
+            { const: 'west', title: 'West' },
+          ],
+        },
+      }),
+      logInfo: {},
+    });
+
+    expect(result.additionalWarningUISchemas.territory).toMatchObject({
+      'ui:widget': 'AutocompleteWidget',
+      'ui:placeholder': 'Start typing to search...',
+      'ui:options': {
+        multiple: false,
+        enumOptions: [
+          { value: 'east', label: 'East' },
+          { value: 'west', label: 'West' },
+          { value: 'none', label: expect.any(String) },
+        ],
+      },
+    });
+  });
+
   it('builds a reusable single-contact message log section', async () => {
     const utils = await loadLogPageUtils();
 
@@ -398,6 +430,49 @@ describe('logPage', () => {
       },
     });
     expect(editedTitle.schema.properties.activityTitle.manuallyEdited).toBe(true);
+  });
+
+  it('rebuilds a searchable selection field as an AutocompleteWidget on initial render and after switching contacts', async () => {
+    const logPage = await loadLogPage();
+    const searchableManifest = manifest();
+    searchableManifest.platforms.salesforce.page.callLog.additionalFields = [
+      { const: 'territory', title: 'Territory', type: 'selection', searchable: true, contactDependent: true } as any,
+    ];
+    const contactA = existingContact({ additionalInfo: { territory: [{ const: 'east', title: 'East' }] } });
+    const contactB = existingContact({ id: 'contact-2', name: 'Alex Green', additionalInfo: { territory: [{ const: 'west', title: 'West' }] } });
+
+    const page = logPage.getLogPageRender({
+      id: 'session-searchable',
+      manifest: searchableManifest,
+      logType: 'Call',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [contactA, contactB],
+      logInfo: {},
+      contactPhoneNumber: '+16505550100',
+    });
+
+    expect(page.uiSchema.territory).toMatchObject({
+      'ui:widget': 'AutocompleteWidget',
+      'ui:options': { enumOptions: expect.arrayContaining([{ value: 'east', label: 'East' }]) },
+    });
+
+    const switched = logPage.getUpdatedLogPageRender({
+      manifest: searchableManifest,
+      logType: 'Call',
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['contact'],
+        page,
+        formData: { ...page.formData, contact: 'contact-2' },
+      },
+    });
+
+    expect(switched.uiSchema.territory).toMatchObject({
+      'ui:widget': 'AutocompleteWidget',
+      'ui:options': { enumOptions: expect.arrayContaining([{ value: 'west', label: 'West' }]) },
+    });
   });
 
   it('clears callback date and required state when scheduling is cancelled', async () => {

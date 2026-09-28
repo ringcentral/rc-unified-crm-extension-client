@@ -82,6 +82,16 @@ function buildAdditionalFieldsSchema({ allAdditionalFields, contact, logInfo }: 
                 if (additionalFieldsValue[f.const] && !additionalFields[f.const].oneOf.some(af => af.const === additionalFieldsValue[f.const])) {
                     additionalFields[f.const].oneOf.push({ const: additionalFieldsValue[f.const], title: additionalFieldsValue[f.const] });
                 }
+                if (f.searchable) {
+                    additionalWarningUISchemas[f.const] = {
+                        'ui:widget': 'AutocompleteWidget',
+                        'ui:placeholder': 'Start typing to search...',
+                        'ui:options': {
+                            multiple: false,
+                            enumOptions: additionalFields[f.const].oneOf.map(option => ({ value: option.const, label: option.title })),
+                        },
+                    };
+                }
                 if (f.required) {
                     requiredFieldNames.push(f.const);
                 }

@@ -428,6 +428,16 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                             else {
                                 additionalFieldsValue[f.const] = page.formData[f.const];
                             }
+                            if (f.searchable) {
+                                addiitionalWarningUISchemas[f.const] = {
+                                    'ui:widget': 'AutocompleteWidget',
+                                    'ui:placeholder': 'Start typing to search...',
+                                    'ui:options': {
+                                        multiple: false,
+                                        enumOptions: additionalFields[f.const].oneOf.map(option => ({ value: option.const, label: option.title })),
+                                    },
+                                };
+                            }
                             if (f.required) {
                                 page.schema.required.push(f.const);
                             }
