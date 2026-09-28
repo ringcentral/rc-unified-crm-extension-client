@@ -451,6 +451,52 @@ describe('log core', () => {
     });
   });
 
+  it('sends a conversation-only lookup when message ids are missing and tolerates an empty response', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const logCore = await loadLogCore();
+    vi.mocked(axios.post).mockClear();
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { successful: true } });
+
+    await expect(logCore.getMessageLog({
+      serverUrl: 'https://server.example',
+      conversationId: undefined,
+      messageIds: 'not-an-array',
+    })).resolves.toEqual({ successful: true, messageLogs: {} });
+    expect(axios.post).toHaveBeenCalledTimes(1);
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/messageLog/match', {
+      conversationId: '',
+    });
+  });
+
+  it('does not resolve a message log contact without ids, CRM auth, or a logs array', async () => {
+    const logCore = await loadLogCore();
+    vi.mocked(axios.post).mockClear();
+
+    await expect(logCore.resolveMessageLogContactId({
+      serverUrl: 'https://server.example',
+      logId: 'crm-entry-1',
+      conversationId: 'conversation-1',
+      messageId: null,
+    })).resolves.toBeUndefined();
+    await expect(logCore.resolveMessageLogContactId({
+      serverUrl: 'https://server.example',
+      logId: 'crm-entry-1',
+      conversationId: 'conversation-1',
+      messageId: 'message-1',
+    })).resolves.toBeUndefined();
+    expect(axios.post).not.toHaveBeenCalled();
+
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { successful: true } });
+    await expect(logCore.resolveMessageLogContactId({
+      serverUrl: 'https://server.example',
+      logId: 'crm-entry-1',
+      conversationId: 'conversation-1',
+      messageId: 'message-1',
+    })).resolves.toBeUndefined();
+    expect(axios.post).toHaveBeenCalledTimes(1);
+  });
+
   it('limits concurrent per-message logged-state lookup requests', async () => {
     seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
     const logCore = await loadLogCore();

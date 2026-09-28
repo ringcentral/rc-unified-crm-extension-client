@@ -36,7 +36,7 @@ async function matchByConversationLogIds(data: UnknownRecord): Promise<void> {
 // render per-message "logged" icons that navigate straight to the CRM entry.
 async function matchByMessageIds(data: UnknownRecord, manifest?: UnknownRecord): Promise<void> {
   const conversationId = data.body.conversationId;
-  const messageIds: string[] = (Array.isArray(data.body.messageIds) ? data.body.messageIds : []).map((id: unknown) => String(id));
+  const messageIds: string[] = data.body.messageIds.map((id: unknown) => String(id));
 
   // The widget's `matchMessagesLogState` reads `data[messageId].logId` (an
   // object per message), unlike the legacy conversationLogIds path which

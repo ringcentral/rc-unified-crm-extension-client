@@ -1387,6 +1387,250 @@ describe('messageLogger', () => {
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
   });
 
+  it('warns when selectedLog arrives without selected ids or conversation messages', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
+      },
+    });
+    const { messageLogger, logCore, logPage, util } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        conversation: conversation({ messages: undefined }),
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      message: 'No messages selected to log.',
+    }));
+    expect(logPage.getLogPageRender).not.toHaveBeenCalled();
+    expect(logCore.addLog).not.toHaveBeenCalled();
+  });
+
+  it('defaults additionalSubmission when logging selected messages with a widget-provided contact', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
+      },
+    });
+    const { messageLogger, logCore, util } = await loadMessageLogger();
+    logCore.addLog.mockResolvedValueOnce(undefined);
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        selectedMessageIds: [1],
+        contactId: 'contact-7',
+        contactType: 'Lead',
+        contactName: 'Jane Smith',
+        conversation: conversation({
+          messages: [{ id: 1, creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' }],
+        }),
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      additionalSubmission: {},
+      selectedMessageIds: ['1'],
+    }));
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', {
+      data: { logId: undefined, logIds: undefined, messageLogs: undefined },
+    });
+  });
+
+  it('falls back to the first conversation message date, or an empty date, for the selected-message title', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
+      },
+    });
+    const { messageLogger, logPage } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        selectedMessageIds: ['m2'],
+        conversation: conversation({
+          conversationId: 'first-message-date',
+          messages: [
+            { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
+            { id: 'm2', direction: 'Inbound' },
+          ],
+        }),
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    expect(logPage.getLogPageRender).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      showActivityTitle: true,
+      messageDate: expect.stringMatching(/^07\/03\/2026 \d{2}:\d{2} (AM|PM)$/),
+    }));
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        selectedMessageIds: ['m1'],
+        conversation: conversation({
+          conversationId: 'no-message-date',
+          messages: [{ id: 'm1', direction: 'Outbound' }],
+        }),
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    expect(logPage.getLogPageRender).toHaveBeenNthCalledWith(2, expect.objectContaining({ messageDate: '' }));
+  });
+
+  describe('selected-message logForm submit with a new contact', () => {
+    async function stageSelection(messageLogger: any, manifestValue: Record<string, any>) {
+      await messageLogger.onEvent({
+        data: eventFor({
+          triggerType: 'selectedLog',
+          selectedMessageIds: ['m1'],
+          conversation: conversation({
+            conversationId: 'new-contact-conversation',
+            messages: [{ id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' }],
+          }),
+        }),
+        ...context,
+        manifest: manifestValue,
+        platform: { isSelectedMessageLogSupported: true },
+      });
+    }
+
+    function submitForm(messageLogger: any, manifestValue: Record<string, any>, overrides: Record<string, any>) {
+      return messageLogger.onEvent({
+        data: eventFor({
+          triggerType: 'logForm',
+          conversation: conversation({
+            conversationId: 'new-contact-conversation',
+            messages: [{ id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' }],
+          }),
+          ...overrides,
+        }),
+        ...context,
+        manifest: manifestValue,
+        platform: { isSelectedMessageLogSupported: true },
+      });
+    }
+
+    it('creates the contact, opens its page, and logs against it', async () => {
+      seedStorage({
+        userSettings: {
+          autoLogSMS: { value: false },
+          selectedMessageLog: { value: true },
+          openContactPageAfterCreation: { value: true },
+        },
+      });
+      const { messageLogger, logCore, contactCore } = await loadMessageLogger();
+      await stageSelection(messageLogger, manifest());
+
+      await submitForm(messageLogger, manifest(), {
+        redirect: true,
+        formData: {
+          contact: 'createNewContact',
+          contactType: '',
+          contactName: '',
+          newContactName: 'New Person',
+          newContactType: 'Lead',
+          messageType: 'none',
+          ignoreNone: 'kept',
+          newCategory: 'prospect',
+        },
+      });
+
+      expect(contactCore.createContact).toHaveBeenCalledWith({
+        serverUrl: 'https://server.example',
+        phoneNumber: '+16505550100',
+        newContactName: 'New Person',
+        newContactType: 'Lead',
+        additionalSubmission: { ignoreNone: 'kept', newCategory: 'prospect' },
+      });
+      expect(contactCore.openContactPage).toHaveBeenCalledWith(expect.objectContaining({
+        phoneNumber: '+16505550100',
+        contactId: 'new-contact',
+        contactType: 'Lead',
+      }));
+      expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+        contactId: 'new-contact',
+        contactType: 'Lead',
+        contactName: 'New Person',
+        selectedMessageIds: ['m1'],
+      }));
+    });
+
+    it('creates the contact without opening its page when that setting is off and no fields are configured', async () => {
+      seedStorage({
+        userSettings: {
+          autoLogSMS: { value: false },
+          selectedMessageLog: { value: true },
+          openContactPageAfterCreation: { value: false },
+        },
+      });
+      const minimalManifest = { serverUrl: 'https://server.example', platforms: { salesforce: { page: {} } } };
+      const { messageLogger, logCore, contactCore } = await loadMessageLogger();
+      await stageSelection(messageLogger, minimalManifest);
+
+      await submitForm(messageLogger, minimalManifest, {
+        redirect: true,
+        formData: {
+          contact: 'createNewContact',
+          contactType: '',
+          contactName: '',
+          newContactName: 'New Person',
+          newContactType: 'Lead',
+        },
+      });
+
+      expect(contactCore.createContact).toHaveBeenCalledWith(expect.objectContaining({ additionalSubmission: {} }));
+      expect(contactCore.openContactPage).not.toHaveBeenCalled();
+      expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+        contactId: 'new-contact',
+        additionalSubmission: {},
+      }));
+    });
+
+    it('does not create a contact when the form is submitted without redirect', async () => {
+      seedStorage({
+        userSettings: {
+          autoLogSMS: { value: false },
+          selectedMessageLog: { value: true },
+        },
+      });
+      const { messageLogger, logCore, contactCore } = await loadMessageLogger();
+      await stageSelection(messageLogger, manifest());
+
+      await submitForm(messageLogger, manifest(), {
+        redirect: false,
+        formData: {
+          contact: 'createNewContact',
+          contactType: '',
+          contactName: '',
+          newContactName: 'New Person',
+          newContactType: 'Lead',
+        },
+      });
+
+      expect(contactCore.createContact).not.toHaveBeenCalled();
+      expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+        contactId: 'createNewContact',
+        contactType: 'Lead',
+        contactName: 'New Person',
+      }));
+    });
+  });
+
   it('opens the CRM log page when the widget falls back to the main path with triggerType openLog', async () => {
     seedStorage({ userSettings: { logDateFormat: { value: 'YYYY-MM-DD' } } });
     const { messageLogger, logCore, util } = await loadMessageLogger();

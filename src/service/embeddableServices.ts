@@ -83,7 +83,6 @@ async function getServiceManifest() {
     // one-directional: enabling `selectedMessageLog` never hides `autoLogSMS`.
     const autoLogSMSValue = userCore.getAutoLogSMSSetting(userSettings).value === true;
     const selectedMessageLogSupported = platform?.isSelectedMessageLogSupported === true;
-    const showAutoLogSMS = true;
     const showSelectedMessageLog = selectedMessageLogSupported && !autoLogSMSValue;
 
     // The embeddable widget only renders per-message selection checkboxes in
@@ -172,7 +171,7 @@ async function getServiceManifest() {
                         readOnlyReason: userCore.getAutoLogCallSetting(userSettings, isAdmin).warning ?? userCore.getAutoLogCallSetting(userSettings, isAdmin).readOnlyReason,
                         value: userCore.getAutoLogCallSetting(userSettings, isAdmin).value,
                     },
-                    ...(showAutoLogSMS ? [{
+                    {
                         id: 'autoLogSMS',
                         type: 'boolean',
                         name: t('settings.logging.autoLogSMS'),
@@ -180,7 +179,7 @@ async function getServiceManifest() {
                         readOnly: userCore.getAutoLogSMSSetting(userSettings).readOnly,
                         readOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,
                         value: userCore.getAutoLogSMSSetting(userSettings).value,
-                    }] : []),
+                    },
                     {
                         id: 'autoLogVoicemail',
                         type: 'boolean',

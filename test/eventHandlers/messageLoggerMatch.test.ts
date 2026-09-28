@@ -102,6 +102,37 @@ describe('messageLogger match handler', () => {
     });
   });
 
+  it('skips the server lookup when the manifest has no serverUrl', async () => {
+    const { matchHandler, util, logCore } = await loadMatchHandler();
+
+    await matchHandler.onEvent({
+      data: {
+        requestId: 'request-no-server',
+        body: { conversationId: 'conv4', messageIds: [101, 'm2'] },
+      },
+      ...context,
+      manifest: {},
+    });
+
+    expect(logCore.getMessageLog).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('request-no-server', { data: {} });
+  });
+
+  it('reports nothing logged when the server returns no messageLogs map', async () => {
+    const { matchHandler, util, logCore } = await loadMatchHandler();
+    logCore.getMessageLog.mockResolvedValueOnce({ successful: true, messageLogs: null });
+
+    await matchHandler.onEvent({
+      data: {
+        requestId: 'request-null-map',
+        body: { conversationId: 'conv5', messageIds: ['m1'] },
+      },
+      ...context,
+    });
+
+    expect(util.responseMessage).toHaveBeenCalledWith('request-null-map', { data: {} });
+  });
+
   it('reports nothing logged when the server request fails', async () => {
     const { matchHandler, util, logCore } = await loadMatchHandler();
     logCore.getMessageLog.mockRejectedValueOnce(new Error('network down'));
