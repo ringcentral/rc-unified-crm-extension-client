@@ -69,7 +69,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                     contactId: newContactInfo?.id ?? data.body.formData.contact,
                     contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
                     contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
-                    additionalSubmission
+                    additionalSubmission,
+                    activityCompletionReady: data.body.activityCompletionReady ?? false
                 });
             // Optional: schedule callback into Call Back after successful log creation
             try {
@@ -133,6 +134,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                 direction: data.body.call.direction,
                 from: data.body.call.from,
                 to: data.body.call.to,
+                activityCompletionReady: data.body.activityCompletionReady ?? false,
                 isShowNotification: true
             });
             if (supportDisposition && !isObjectEmpty(additionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {

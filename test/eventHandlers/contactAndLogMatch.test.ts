@@ -46,11 +46,18 @@ async function loadMatchHandler(modulePath, overrides: Record<string, any> = {})
   };
   vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
-  const userCore = {
+  const userCore: Record<string, any> = {
     getOneTimeLogSetting: vi.fn(() => ({ value: true })),
     getCallPopMultiMatchBehavior: vi.fn(() => ({ value: 'prompt' })),
     ...overrides.userCore,
   };
+  userCore.shouldWaitForCompleteCallData ??= vi.fn((settings, platform) => (
+    userCore.getOneTimeLogSetting(settings).value
+    || (
+      !!platform?.supportActivityCompletion
+      && (settings?.redtailActivityCompletionMode?.value ?? 'autoWhenAllDataAvailable') === 'autoWhenAllDataAvailable'
+    )
+  ));
   vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
   const util = {
@@ -353,6 +360,110 @@ describe('contact and call-log match handlers', () => {
           },
         ],
       },
+    });
+  });
+
+  it('shows preparing data status for auto activity completion when one-time logging is off', async () => {
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: false },
+        redtailActivityCompletionMode: { value: 'autoWhenAllDataAvailable' },
+      },
+      'call-log-data-ready-pending-activity-session': {
+        isReady: false,
+        autoReady: false,
+        manualReady: false,
+      },
+    });
+    const { handler, util } = await loadMatchHandler(
+      '../../src/eventHandlers/rc-post-message-request/callLogger/match/index.ts',
+      {
+        userCore: {
+          getOneTimeLogSetting: vi.fn(() => ({ value: false })),
+        },
+        logCore: {
+          getLog: vi.fn(async () => ({
+            successful: true,
+            callLogs: [
+              {
+                sessionId: 'pending-activity-session',
+                matched: false,
+              },
+            ],
+          })),
+        },
+      },
+    );
+
+    await handler.onEvent({
+      data: {
+        requestId: 'request-activity-preparing',
+        body: {
+          sessionIds: ['pending-activity-session'],
+        },
+      },
+      manifest: manifest(),
+      platform: { supportActivityCompletion: true },
+    });
+
+    expect(util.responseMessage).toHaveBeenCalledWith('request-activity-preparing', {
+      data: {
+        'pending-activity-session': [
+          {
+            type: 'status',
+            status: 'failed',
+            message: 'preparing data...',
+          },
+        ],
+      },
+    });
+  });
+
+  it('skips the readiness gate for manual activity completion when one-time logging is off', async () => {
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: false },
+        redtailActivityCompletionMode: { value: 'manual' },
+      },
+      'call-log-data-ready-pending-activity-session': {
+        isReady: false,
+        autoReady: false,
+        manualReady: false,
+      },
+    });
+    const { handler, util } = await loadMatchHandler(
+      '../../src/eventHandlers/rc-post-message-request/callLogger/match/index.ts',
+      {
+        userCore: {
+          getOneTimeLogSetting: vi.fn(() => ({ value: false })),
+        },
+        logCore: {
+          getLog: vi.fn(async () => ({
+            successful: true,
+            callLogs: [
+              {
+                sessionId: 'pending-activity-session',
+                matched: false,
+              },
+            ],
+          })),
+        },
+      },
+    );
+
+    await handler.onEvent({
+      data: {
+        requestId: 'request-activity-manual',
+        body: {
+          sessionIds: ['pending-activity-session'],
+        },
+      },
+      manifest: manifest(),
+      platform: { supportActivityCompletion: true },
+    });
+
+    expect(util.responseMessage).toHaveBeenCalledWith('request-activity-manual', {
+      data: {},
     });
   });
 

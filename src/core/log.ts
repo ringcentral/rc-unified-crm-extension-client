@@ -70,6 +70,7 @@ export async function addLog({
   contactName,
   additionalSubmission,
   selectedMessageIds,
+  activityCompletionReady,
   isShowNotification = true,
 }: UnknownRecord): Promise<any> {
   const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as UnknownRecord;
@@ -113,7 +114,7 @@ export async function addLog({
             }
           }
           const voicemailRecording = await resolveVoicemailRecording(logInfo);
-          addLogRes = await axios.post(`${serverUrl}/callLog`, { logInfo, note, aiNote, transcript, ...voicemailRecording, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName, extensionNumber, hashedExtensionId });
+          addLogRes = await axios.post(`${serverUrl}/callLog`, { logInfo, note, aiNote, transcript, ...voicemailRecording, additionalSubmission, overridingFormat: overridingPhoneNumberFormat, contactId, contactType, contactName, extensionNumber, hashedExtensionId, activityCompletionReady });
           if (addLogRes.data.successful) {
             trackSyncCallLog({ hasNote: note !== '' });
             if (isShowNotification) {
@@ -292,7 +293,7 @@ export function openLog({ manifest, platformName, hostname, logId, contactType, 
   window.open(logPageUrl);
 }
 
-export async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, recordingLink, recordingDownloadLink, voicemailLink, voicemailMessageId, call, subject, note, startTime, duration, aiNote, transcript, result, direction, from, to, isShowNotification }: UnknownRecord): Promise<void> {
+export async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, recordingLink, recordingDownloadLink, voicemailLink, voicemailMessageId, call, subject, note, startTime, duration, aiNote, transcript, result, direction, from, to, activityCompletionReady, isShowNotification }: UnknownRecord): Promise<void> {
   const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as UnknownRecord;
   const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} }) as UnknownRecord;
   void rcAdditionalSubmission;
@@ -323,6 +324,7 @@ export async function updateLog({ serverUrl, logType, telephonySessionId, sessio
             to,
             extensionNumber,
             hashedExtensionId,
+            activityCompletionReady,
           };
           const callLogRes = await axios.patch(`${serverUrl}/callLog`, patchBody);
           if (isShowNotification) {

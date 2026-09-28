@@ -60,7 +60,6 @@ async function recoverManualReadiness(sessionId: string, readiness: UnknownRecor
 async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
     void platformInfo;
     void platformName;
-    void platform;
     let callLogMatchData: UnknownRecord = {};
     let noLocalMatchedSessionIds: string[] = [];
     const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
@@ -131,7 +130,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             await chrome.storage.local.set(newLocalMatchedCallLogRecords);
         }
     }
-    if (userCore.getOneTimeLogSetting(userSettings).value) {
+    if (userCore.shouldWaitForCompleteCallData(userSettings, platform)) {
         const loggedSessionIds = Object.keys(callLogMatchData);
         for (const sessionId of data.body.sessionIds) {
             if (loggedSessionIds.includes(sessionId)) {

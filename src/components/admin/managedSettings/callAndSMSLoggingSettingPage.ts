@@ -5,7 +5,7 @@ type UnknownRecord = Record<string, any>;
 function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }: UnknownRecord): UnknownRecord {
     return {
         id: 'callAndSMSLoggingSettingPage',
-        title: t('settings.logging.groupName'),
+        title: t('pages.managedSettings.activityLogging'),
         type: 'page',
         schema: {
             type: 'object',

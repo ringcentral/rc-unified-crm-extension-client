@@ -77,20 +77,20 @@
       "title": "एडमिन",
       "managedSettings": "प्रबंधित सेटिंग्स",
       "plugins": "प्लगइन",
-      "serverSideLogging": "सर्वर-साइड लॉगिंग (बीटा)"
+      "serverSideLogging": "यूनिवर्सल लॉगिंग"
     },
     "managedSettings": {
       "title": "प्रबंधित सेटिंग्स",
-      "general": "सामान्य",
-      "googleSheetsConfig": "Google Sheets कॉन्फ़िगरेशन",
-      "activityLogging": "गतिविधि लॉगिंग",
-      "callPop": "कॉल पॉप",
+      "general": "इंटरफ़ेस",
+      "googleSheetsConfig": "Google Sheets",
+      "activityLogging": "लॉगिंग और रिकॉर्ड",
+      "callPop": "कॉल",
       "advancedFeatures": "उन्नत सुविधाएं",
-      "customSettings": "कस्टम सेटिंग्स",
+      "customSettings": "CRM सेटिंग्स",
       "plugins": "प्लगइन"
     },
     "generalSettings": {
-      "title": "सामान्य",
+      "title": "इंटरफ़ेस",
       "appearance": "दिखावट",
       "enabledDomains": "सक्षम डोमेन"
     },

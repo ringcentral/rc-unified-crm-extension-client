@@ -77,20 +77,20 @@
       "title": "管理员",
       "managedSettings": "托管设置",
       "plugins": "插件",
-      "serverSideLogging": "服务器端日志记录（测试版）"
+      "serverSideLogging": "云端通话自动记录"
     },
     "managedSettings": {
       "title": "托管设置",
-      "general": "常规",
-      "googleSheetsConfig": "Google Sheets 配置",
-      "activityLogging": "活动日志",
-      "callPop": "来电弹窗",
+      "general": "界面",
+      "googleSheetsConfig": "Google Sheets",
+      "activityLogging": "日志和记录",
+      "callPop": "通话",
       "advancedFeatures": "高级功能",
-      "customSettings": "自定义设置",
+      "customSettings": "CRM 设置",
       "plugins": "插件"
     },
     "generalSettings": {
-      "title": "常规",
+      "title": "界面",
       "appearance": "外观",
       "enabledDomains": "已启用的域"
     },

@@ -77,20 +77,20 @@
       "title": "Admin",
       "managedSettings": "Verwaltete Einstellungen",
       "plugins": "Plugins",
-      "serverSideLogging": "Serverseitige Protokollierung (Beta)"
+      "serverSideLogging": "Universelle Protokollierung"
     },
     "managedSettings": {
       "title": "Verwaltete Einstellungen",
-      "general": "Allgemein",
-      "googleSheetsConfig": "Google Sheets-Konfiguration",
-      "activityLogging": "Aktivitätsprotokollierung",
-      "callPop": "Anruf-Pop",
+      "general": "Oberfläche",
+      "googleSheetsConfig": "Google Sheets",
+      "activityLogging": "Protokollierung und Datensätze",
+      "callPop": "Anrufe",
       "advancedFeatures": "Erweiterte Funktionen",
-      "customSettings": "Benutzerdefinierte Einstellungen",
+      "customSettings": "CRM-Einstellungen",
       "plugins": "Plugins"
     },
     "generalSettings": {
-      "title": "Allgemein",
+      "title": "Oberfläche",
       "appearance": "Erscheinungsbild",
       "enabledDomains": "Aktivierte Domains"
     },

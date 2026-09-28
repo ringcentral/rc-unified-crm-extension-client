@@ -77,20 +77,20 @@
       "title": "관리자",
       "managedSettings": "관리 설정",
       "plugins": "플러그인",
-      "serverSideLogging": "서버 측 로깅 (베타)"
+      "serverSideLogging": "유니버설 로깅"
     },
     "managedSettings": {
       "title": "관리 설정",
-      "general": "일반",
-      "googleSheetsConfig": "Google Sheets 구성",
-      "activityLogging": "활동 로깅",
-      "callPop": "통화 팝업",
+      "general": "인터페이스",
+      "googleSheetsConfig": "Google Sheets",
+      "activityLogging": "로깅 및 레코드",
+      "callPop": "통화",
       "advancedFeatures": "고급 기능",
-      "customSettings": "사용자 정의 설정",
+      "customSettings": "CRM 설정",
       "plugins": "플러그인"
     },
     "generalSettings": {
-      "title": "일반",
+      "title": "인터페이스",
       "appearance": "외관",
       "enabledDomains": "활성화된 도메인"
     },

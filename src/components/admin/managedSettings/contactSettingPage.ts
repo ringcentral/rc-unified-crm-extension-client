@@ -4,7 +4,7 @@ function getContactSettingPageRender({ adminUserSettings, renderOverridingNumber
     const page: UnknownRecord =
     {
         id: 'contactSettingPage',
-        title: 'Call-pop',
+        title: 'Calls',
         type: 'page',
         schema: {
             type: 'object',

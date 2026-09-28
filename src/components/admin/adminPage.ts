@@ -40,7 +40,7 @@ function getAdminPageRender({ platform }: UnknownRecord): UnknownRecord {
                         }] : []),
                         ...hasManagedAuthFields ? [{
                             const: "managedAuthentication",
-                            title: 'Managed authentication',
+                            title: 'Authentication',
                         }] : [],
                         ...hasManagedOAuth ? [{
                             const: "managedOAuth",
