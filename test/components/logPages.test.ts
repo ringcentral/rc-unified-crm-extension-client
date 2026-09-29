@@ -17,6 +17,13 @@ async function loadLogPage() {
   return loadModule('../../src/components/logPage.ts');
 }
 
+async function loadLogPageWithEnglish() {
+  const logPage = await loadLogPage();
+  const i18n = await import('../../src/i18n/index.ts');
+  await i18n.init('US');
+  return logPage;
+}
+
 async function loadGroupLogPage() {
   vi.resetModules();
   return loadModule('../../src/components/groupLogPage.ts');
@@ -645,6 +652,131 @@ describe('logPage', () => {
       contactPhoneNumber: '+16505550200',
       messageType: 'sms',
     });
+  });
+
+  it('adds an editable, prefilled title to the message log page when showActivityTitle is set', async () => {
+    const logPage = await loadLogPage();
+
+    const messagePage = logPage.getLogPageRender({
+      id: 'message-selected-1',
+      manifest: manifest(),
+      logType: 'Message',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [existingContact()],
+      logInfo: {},
+      contactPhoneNumber: '+16505550200',
+      useContactSearch: false,
+      showActivityTitle: true,
+    });
+
+    // Title field is present and editable, and prefilled in form data.
+    expect(messagePage.schema.properties).toHaveProperty('activityTitle');
+    expect(messagePage.schema.properties.activityTitle).toMatchObject({
+      type: 'string',
+      manuallyEdited: false,
+    });
+    expect(messagePage.uiSchema).toHaveProperty('activityTitle');
+    expect(typeof messagePage.formData.activityTitle).toBe('string');
+    expect(messagePage.formData.activityTitle.length).toBeGreaterThan(0);
+  });
+
+  it('falls back to the phone number, an empty name, or the logged subject for message titles', async () => {
+    const logPage = await loadLogPageWithEnglish();
+    const render = (overrides: Record<string, any>) => logPage.getLogPageRender({
+      id: 'message-title-fallback',
+      manifest: manifest(),
+      logType: 'Message',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [],
+      logInfo: {},
+      useContactSearch: true,
+      showActivityTitle: true,
+      ...overrides,
+    });
+
+    const phoneTitle = render({ contactPhoneNumber: '+16505550300', messageDate: '07/03/2026 08:00 AM' });
+    expect(phoneTitle.formData.activityTitle).toBe('SMS conversation with +16505550300 - 07/03/2026 08:00 AM');
+    expect(phoneTitle.schema.properties.activityTitle.messageDate).toBe('07/03/2026 08:00 AM');
+
+    const emptyTitle = render({ contactPhoneNumber: undefined });
+    expect(emptyTitle.formData.activityTitle).toBe('SMS conversation with  - ');
+    expect(emptyTitle.schema.properties.activityTitle.messageDate).toBe('');
+
+    const subjectTitle = render({ contactPhoneNumber: '+16505550300', logInfo: { subject: 'Saved subject' } });
+    expect(subjectTitle.formData.activityTitle).toBe('Saved subject');
+  });
+
+  it('regenerates the message title with the stored message date when the contact changes', async () => {
+    const logPage = await loadLogPageWithEnglish();
+    const page = logPage.getLogPageRender({
+      id: 'message-title-update',
+      manifest: manifest(),
+      logType: 'Message',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [existingContact(), newContact()],
+      logInfo: {},
+      contactPhoneNumber: '+16505550200',
+      useContactSearch: false,
+      showActivityTitle: true,
+      messageDate: '07/03/2026 08:00 AM',
+    });
+    expect(page.formData.activityTitle).toBe('SMS conversation with Jane Smith - 07/03/2026 08:00 AM');
+
+    const updateMessagePage = (current: any, keys: string[], formData: Record<string, any>) => logPage.getUpdatedLogPageRender({
+      manifest: manifest(),
+      logType: 'Message',
+      platformName: 'salesforce',
+      updateData: { keys, page: current, formData: { ...current.formData, ...formData } },
+    });
+
+    const toNewContact = updateMessagePage(page, ['contact'], { contact: 'new-contact' });
+    expect(toNewContact.formData.activityTitle).toBe('SMS conversation with  - 07/03/2026 08:00 AM');
+
+    const renamed = updateMessagePage(toNewContact, ['newContactName'], { newContactName: 'Fresh Lead' });
+    expect(renamed.formData.activityTitle).toBe('SMS conversation with Fresh Lead - 07/03/2026 08:00 AM');
+
+    const backToExisting = updateMessagePage(renamed, ['contact'], { contact: 'contact-1' });
+    expect(backToExisting.formData.activityTitle).toBe('SMS conversation with Jane Smith - 07/03/2026 08:00 AM');
+
+    delete backToExisting.schema.properties.activityTitle.messageDate;
+    const undatedNewContact = updateMessagePage(backToExisting, ['contact'], { contact: 'new-contact' });
+    expect(undatedNewContact.formData.activityTitle).toBe('SMS conversation with  - ');
+    const undatedRenamed = updateMessagePage(undatedNewContact, ['newContactName'], { newContactName: 'Fresh Lead' });
+    expect(undatedRenamed.formData.activityTitle).toBe('SMS conversation with Fresh Lead - ');
+    const undatedExisting = updateMessagePage(undatedRenamed, ['contact'], { contact: 'contact-1' });
+    expect(undatedExisting.formData.activityTitle).toBe('SMS conversation with Jane Smith - ');
+  });
+
+  it('keeps the inbound call title prefix when the contact or new-contact name changes', async () => {
+    const logPage = await loadLogPageWithEnglish();
+    const page = logPage.getLogPageRender({
+      id: 'inbound-title-update',
+      manifest: manifest(),
+      logType: 'Call',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Inbound',
+      contactInfo: [existingContact(), newContact()],
+      logInfo: {},
+      contactPhoneNumber: '+16505550100',
+      useContactSearch: false,
+    });
+    expect(page.formData.activityTitle).toBe('Inbound Call from Jane Smith');
+
+    const toNewContact = updateCallLogPage(logPage, page, ['contact'], { contact: 'new-contact' });
+    expect(toNewContact.formData.activityTitle).toBe('Inbound call from ');
+
+    const renamed = updateCallLogPage(logPage, toNewContact, ['newContactName'], { newContactName: 'Fresh Lead' });
+    expect(renamed.formData.activityTitle).toBe('Inbound call from Fresh Lead');
+
+    const backToExisting = updateCallLogPage(logPage, renamed, ['contact'], { contact: 'contact-1' });
+    expect(backToExisting.formData.activityTitle).toBe('Inbound call from Jane Smith');
   });
 
   it('renders fallback edit and new-contact-only log pages', async () => {

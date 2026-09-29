@@ -179,6 +179,7 @@ describe('managed settings page renderers', () => {
       autoLogOutboundFax: { customizable: true, value: false },
       enableRetroCallLogSync: { customizable: true, value: true },
       oneTimeLog: { customizable: true, value: false },
+      selectedMessageLog: { customizable: true, value: false },
     });
   });
 

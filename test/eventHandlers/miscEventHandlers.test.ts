@@ -647,6 +647,7 @@ async function loadSettingsRequestHandler() {
     handler,
     userCore,
     util,
+    embeddableServices,
     appointmentsPage,
     reportPage,
     calldownPage,
@@ -841,6 +842,34 @@ describe('miscellaneous rc-post-message-request handlers', () => {
       message: 'Settings saved.',
       ttl: 3000,
     });
+  });
+
+  it('re-registers the service when the SMS auto-log/selected-message toggle changes', async () => {
+    for (const settingId of ['autoLogSMS', 'selectedMessageLog']) {
+      const { handler, embeddableServices } = await loadSettingsRequestHandler();
+
+      await handler.onEvent({
+        data: {
+          requestId: `settings-${settingId}`,
+          body: {
+            setting: { id: settingId, value: true },
+            settings: [],
+          },
+        },
+        ...baseContext(),
+      });
+
+      expect(embeddableServices.getServiceManifest).toHaveBeenCalled();
+      expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
+        {
+          message: {
+            type: 'rc-adapter-register-third-party-service',
+            service: { id: 'developer-service' },
+          },
+          targetOrigin: '*',
+        },
+      ]));
+    }
   });
 
   it('applies the selected UI language, persists the override, and re-registers the service', async () => {

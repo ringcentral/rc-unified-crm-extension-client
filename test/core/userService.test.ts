@@ -537,6 +537,90 @@ describe('user service behavior', () => {
       .toBeLessThan(vi.mocked(RCAdapter.setAutoLog).mock.invocationCallOrder[0]);
   });
 
+  it('forces message auto-log off so granular selected-message checkboxes can render', async () => {
+    seedStorage({
+      crmAuthed: true,
+      selectedRegion: 'US',
+    });
+    vi.mocked(getManifest).mockResolvedValue({
+      serverUrl: 'https://server.example',
+      platforms: {
+        salesforce: {
+          isSelectedMessageLogSupported: true,
+          page: {
+            appointment: {
+              supported: false,
+            },
+          },
+        },
+      },
+    });
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        selectedMessageLog: { value: true },
+        // Even with voicemail auto-log on, message auto-log must stay off so the
+        // widget stays in manual message mode and renders the checkboxes.
+        autoLogVoicemail: { value: true },
+        autoLogCall: { value: false },
+      },
+    });
+    vi.mocked(axios.post).mockImplementationOnce(async (_url, body) => ({
+      data: {
+        userSettings: getPostedUserSettings(body),
+      },
+    }));
+    const userCore = await loadUserCore();
+
+    await userCore.refreshUserSettings({});
+
+    expect(RCAdapter.setAutoLog).toHaveBeenCalledWith({
+      call: false,
+      message: false,
+    });
+  });
+
+  it('keeps message auto-log on when autoLogSMS wins over stored selectedMessageLog', async () => {
+    seedStorage({
+      crmAuthed: true,
+      selectedRegion: 'US',
+    });
+    vi.mocked(getManifest).mockResolvedValue({
+      serverUrl: 'https://server.example',
+      platforms: {
+        salesforce: {
+          isSelectedMessageLogSupported: true,
+          page: {
+            appointment: {
+              supported: false,
+            },
+          },
+        },
+      },
+    });
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: {
+        // Both are stored on; autoLogSMS must take precedence so messages log
+        // automatically and the per-message checkboxes stay hidden.
+        autoLogSMS: { value: true },
+        selectedMessageLog: { value: true },
+        autoLogCall: { value: false },
+      },
+    });
+    vi.mocked(axios.post).mockImplementationOnce(async (_url, body) => ({
+      data: {
+        userSettings: getPostedUserSettings(body),
+      },
+    }));
+    const userCore = await loadUserCore();
+
+    await userCore.refreshUserSettings({});
+
+    expect(RCAdapter.setAutoLog).toHaveBeenCalledWith({
+      call: false,
+      message: true,
+    });
+  });
+
   it('refreshes settings without changed settings and can skip forced AI updates', async () => {
     seedStorage({
       crmAuthed: true,
