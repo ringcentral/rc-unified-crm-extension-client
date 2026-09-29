@@ -157,7 +157,7 @@ export async function addLog({
           addLogRes = await axios.post(`${serverUrl}/messageLog`, messageLogBody);
         }
         if (addLogRes.data.successful) {
-          if ((isMain as any) & ((addLogRes.data.logIds.length > 0) as any)) {
+          if ((isMain as any) & (((addLogRes.data.logIds?.length ?? 0) > 0) as any)) {
             trackSyncMessageLog();
             const messageLogPrefCache: UnknownRecord = {};
             messageLogPrefCache[`rc-crm-conversation-pref-${logInfo.conversationLogId}`] = {
@@ -176,12 +176,18 @@ export async function addLog({
           await chrome.storage.local.set({ [`rc-crm-conversation-log-${logInfo.conversationLogId}`]: { logged: true } });
         }
         // Return the log result so callers (e.g. the selected-message logging
-        // flow) can report the CRM log id back to the widget.
+        // flow) can report the CRM log id back to the widget. Prefer the id the
+        // server assigns to this write. logIds[0] can be an older CRM entry
+        // when the response map includes previously logged messages.
+        const responseMessageLogs = addLogRes?.data?.messageLogs;
+        const selectedLogId = Array.isArray(selectedMessageIds)
+          ? selectedMessageIds.map((id: unknown) => responseMessageLogs?.[String(id)]).find(Boolean)
+          : undefined;
         return {
           successful: !!addLogRes?.data?.successful,
-          logId: addLogRes?.data?.logIds?.[0],
+          logId: addLogRes?.data?.logId ?? selectedLogId,
           logIds: addLogRes?.data?.logIds,
-          messageLogs: addLogRes?.data?.messageLogs,
+          messageLogs: responseMessageLogs,
         };
     }
   }

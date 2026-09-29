@@ -70,7 +70,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
     return;
   }
 
-  console.log('message log request for', data.body.conversation.conversationLogId, data.body.triggerType);
+  const activeConversationId = data.body?.conversation?.conversationId != null
+    ? String(data.body.conversation.conversationId)
+    : null;
+
   // Case: when auto log and auto pop turned ON, we need to know which event is for the conversation that user is looking at
   const { autoPopupMainConverastionId } = await chrome.storage.local.get({ autoPopupMainConverastionId: null }) as { autoPopupMainConverastionId?: string | null };
   if (!autoPopupMainConverastionId) {
@@ -172,13 +175,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
         logType: 'Message',
         triggerType: renderTriggerType,
         platformName,
-            direction: '',
-                contactInfo: contactInfo ?? [],
-                contactPhoneNumber: data.body?.conversation?.correspondents[0]?.phoneNumber,
-                useContactSearch,
-                showActivityTitle,
-                messageDate: activityTitleDate
-              });
+        direction: '',
+        contactInfo: contactInfo ?? [],
+        contactPhoneNumber: data.body?.conversation?.correspondents[0]?.phoneNumber,
+        useContactSearch,
+        showActivityTitle,
+        messageDate: activityTitleDate
+      });
     }
     switch (data.body.conversation.type) {
       case 'SMS':
@@ -557,14 +560,21 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
   else if (data.body.triggerType === 'logForm') {
     const conversationId = String(data.body.conversation.conversationId);
     const pending = pendingSelectedLogs.get(conversationId);
+    // Opening another log page clears pending state below, so a pending entry
+    // with a single selected contact identifies this selected-message submit.
+    // Group forms have no top-level contact and use the normal path.
+    const isSelectedFormSubmit = Boolean(pending && data.body.formData?.contact);
+    if (pending && !isSelectedFormSubmit) {
+      pendingSelectedLogs.delete(conversationId);
+    }
     // Granular single-POST path: when a message selection is pending for this
     // conversation, log every selected message as ONE CRM entry. The widget
     // fans out one `logForm` submit per day-bucket in parallel (Promise.all),
     // so we consume the selection exactly once (synchronous check-and-set, no
     // await in between) and ignore the sibling submits. Only the single
     // (non-group) contact form is supported for selected logging; group
-    // selections fall through to the normal per-day handling below.
-    if (pending && data.body.formData?.contact) {
+    // selections drop the pending entry and use the normal per-day handling.
+    if (isSelectedFormSubmit) {
       if (pending.consumed) {
         // Leftover parallel day-bucket submit for the same selection: skip.
         responseMessage(data.requestId, { data: 'ok' });
@@ -573,7 +583,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
       pending.consumed = true;
       // Clear shortly after so a later, unrelated manual log of this thread is
       // not treated as part of the (already-consumed) selection.
-      setTimeout(() => pendingSelectedLogs.delete(conversationId), 5000);
+      setTimeout(() => {
+        // Do not delete a newer selection started for the same conversation.
+        if (pendingSelectedLogs.get(conversationId) === pending) {
+          pendingSelectedLogs.delete(conversationId);
+        }
+      }, 5000);
 
       let additionalSubmission: UnknownRecord = {};
       const selAdditionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
@@ -710,6 +725,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
   }
   // Case: Open page OR auto pop up log page
   else {
+    // A manual reopen of this conversation means the earlier selected-message
+    // form was dismissed. Do not clear on auto/background events: those can
+    // arrive while the selected form is still open.
+    if (activeConversationId && data.body.triggerType === 'manual') {
+      pendingSelectedLogs.delete(activeConversationId);
+    }
     if (data.body.redirect || messageAutoPopup) {
       await openMessageLogPage();
     }

@@ -62,7 +62,7 @@ async function matchByMessageIds(data: UnknownRecord, manifest?: UnknownRecord):
         }
       }
     } catch (e) {
-      void e; // best-effort: on failure report nothing logged
+      console.debug('message log match failed', e);
     }
   }
   responseMessage(data.requestId, { data: perMessageResult });

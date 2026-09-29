@@ -324,6 +324,71 @@ describe('log core', () => {
     });
   });
 
+  it('reports the new CRM entry id instead of the first id in a mixed logIds list', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      userSettings: {},
+      rcAdditionalSubmission: {},
+    });
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        logId: 'crm-new',
+        logIds: ['crm-old', 'crm-new'],
+        messageLogs: { '6424569101': 'crm-old', '6424569105': 'crm-new' },
+      },
+    });
+    const logCore = await loadLogCore();
+
+    const result = await logCore.addLog({
+      serverUrl: 'https://server.example',
+      logType: 'Message',
+      logInfo: {
+        type: 'SMS',
+        conversationLogId: 'conv-granular-log',
+        messages: [{ id: '6424569105', attachments: [] }],
+      },
+      isMain: true,
+      contactId: 77001,
+      additionalSubmission: {},
+      selectedMessageIds: ['6424569105'],
+    });
+
+    expect(result.logId).toBe('crm-new');
+  });
+
+  it('uses the selected message map when the server does not return a logId', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      userSettings: {},
+      rcAdditionalSubmission: {},
+    });
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        logIds: ['crm-old', 'crm-new'],
+        messageLogs: { '6424569101': 'crm-old', '6424569105': 'crm-new' },
+      },
+    });
+    const logCore = await loadLogCore();
+
+    const result = await logCore.addLog({
+      serverUrl: 'https://server.example',
+      logType: 'Message',
+      logInfo: {
+        type: 'SMS',
+        conversationLogId: 'conv-granular-log',
+        messages: [{ id: '6424569105', attachments: [] }],
+      },
+      isMain: true,
+      contactId: 77001,
+      additionalSubmission: {},
+      selectedMessageIds: ['6424569105'],
+    });
+
+    expect(result.logId).toBe('crm-new');
+  });
+
   it('fetches per-message logged state and degrades without CRM auth', async () => {
     const logCore = await loadLogCore();
     vi.mocked(axios.post).mockClear();

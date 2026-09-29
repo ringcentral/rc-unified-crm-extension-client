@@ -1631,6 +1631,193 @@ describe('messageLogger', () => {
     });
   });
 
+  it('does not apply a dismissed selection to a later manual log of the same conversation', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
+      },
+    });
+    const { messageLogger, logCore } = await loadMessageLogger();
+    const thread = conversation({
+      conversationId: 'selected-conversation',
+      messages: [
+        { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
+        { id: 'm2', creationTime: '2026-07-03T08:05:00Z', direction: 'Inbound' },
+        { id: 'm3', creationTime: '2026-07-03T08:10:00Z', direction: 'Outbound' },
+      ],
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        selectedMessageIds: ['m1', 'm3'],
+        conversation: thread,
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'manual',
+        redirect: true,
+        conversation: thread,
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'logForm',
+        redirect: false,
+        conversation: thread,
+        formData: {
+          contact: 'contact-1',
+          contactType: 'Lead',
+          contactName: 'Jane Smith',
+          newContactName: '',
+          newContactType: '',
+          messageType: 'sms',
+        },
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    expect(logCore.addLog).toHaveBeenCalledTimes(1);
+    expect(logCore.addLog.mock.calls[0][0].selectedMessageIds).toBeUndefined();
+    expect(logCore.addLog.mock.calls[0][0].logInfo.messages.map((m: any) => m.id)).toEqual(['m1', 'm2', 'm3']);
+  });
+
+  it('keeps a pending selection when a background event arrives for another conversation', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
+      },
+    });
+    const { messageLogger, logCore } = await loadMessageLogger();
+    const selectedThread = conversation({
+      conversationId: 'selected-conversation',
+      messages: [
+        { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
+        { id: 'm2', creationTime: '2026-07-03T08:05:00Z', direction: 'Inbound' },
+      ],
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        selectedMessageIds: ['m1'],
+        conversation: selectedThread,
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'auto',
+        conversation: conversation({ conversationId: 'background-conversation' }),
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'logForm',
+        redirect: false,
+        conversation: selectedThread,
+        formData: {
+          contact: 'contact-1',
+          contactType: 'Lead',
+          contactName: 'Jane Smith',
+          newContactName: '',
+          newContactType: '',
+          activityTitle: 'Selected SMS title',
+        },
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    expect(logCore.addLog).toHaveBeenCalledTimes(1);
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      selectedMessageIds: ['m1'],
+      subject: 'Selected SMS title',
+    }));
+  });
+
+  it('drops a pending group selection instead of leaving it for a later log', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
+      },
+    });
+    const { messageLogger, logCore } = await loadMessageLogger();
+    const thread = conversation({
+      conversationId: 'group-conversation',
+      correspondents: [{ phoneNumber: '+16505550100' }, { phoneNumber: '+16505550200' }],
+      messages: [
+        { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
+        { id: 'm2', creationTime: '2026-07-03T08:10:00Z', direction: 'Inbound' },
+      ],
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        selectedMessageIds: ['m1'],
+        conversation: thread,
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'logForm',
+        redirect: false,
+        conversation: thread,
+        formData: {
+          section_0: {
+            contact: 'contact-1',
+            contactType: 'Lead',
+            contactName: 'Jane Smith',
+            newContactName: '',
+            newContactType: '',
+            contactPhoneNumber: '+16505550100',
+          },
+        },
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'logForm',
+        redirect: false,
+        conversation: thread,
+        formData: {
+          contact: 'contact-1',
+          contactType: 'Lead',
+          contactName: 'Jane Smith',
+          newContactName: '',
+          newContactType: '',
+        },
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    expect(logCore.addLog.mock.calls.every((call) => call[0].selectedMessageIds === undefined)).toBe(true);
+  });
+
   it('opens the CRM log page when the widget falls back to the main path with triggerType openLog', async () => {
     seedStorage({ userSettings: { logDateFormat: { value: 'YYYY-MM-DD' } } });
     const { messageLogger, logCore, util } = await loadMessageLogger();
