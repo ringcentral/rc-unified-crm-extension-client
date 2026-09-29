@@ -420,12 +420,12 @@ async function sideWidgetOpenHandler(request) {
   }
   const popupWindow = await chrome.windows.get(popupWindowId);
   if (request.opened) {
-    if (popupWindow.width < 600) {
-      await chrome.windows.update(popupWindowId, { width: popupWindow.width + 300 });
+    if (popupWindow.width < 660) {
+      await chrome.windows.update(popupWindowId, { width: popupWindow.width + 360 });
     }
   } else {
-    if (popupWindow.width >= 600) {
-      await chrome.windows.update(popupWindowId, { width: popupWindow.width - 300 });
+    if (popupWindow.width >= 660) {
+      await chrome.windows.update(popupWindowId, { width: popupWindow.width - 360 });
     }
   }
 }
