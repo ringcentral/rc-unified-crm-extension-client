@@ -389,6 +389,36 @@ describe('log core', () => {
     expect(result.logId).toBe('crm-new');
   });
 
+  it('handles a successful message response without logIds', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'jwt-1',
+      userSettings: {},
+      rcAdditionalSubmission: {},
+    });
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: {
+        successful: true,
+        messageLogs: {},
+      },
+    });
+    const logCore = await loadLogCore();
+
+    await expect(logCore.addLog({
+      serverUrl: 'https://server.example',
+      logType: 'Message',
+      logInfo: {
+        type: 'SMS',
+        conversationLogId: 'conv-without-log-ids',
+        messages: [{ id: 'm1', attachments: [] }],
+      },
+      isMain: true,
+      additionalSubmission: {},
+    })).resolves.toMatchObject({
+      successful: true,
+      logIds: undefined,
+    });
+  });
+
   it('fetches per-message logged state and degrades without CRM auth', async () => {
     const logCore = await loadLogCore();
     vi.mocked(axios.post).mockClear();

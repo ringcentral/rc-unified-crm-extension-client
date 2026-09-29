@@ -1298,6 +1298,68 @@ describe('messageLogger', () => {
     expect(logCore.addLog.mock.calls[0][0].logInfo.messages.map((m: any) => m.id)).toEqual(['m1', 'm3']);
   });
 
+  it('expires a consumed selection without deleting a newer selection for the same conversation', async () => {
+    vi.useFakeTimers();
+    try {
+      seedStorage({
+        userSettings: {
+          autoLogSMS: { value: false },
+          selectedMessageLog: { value: true },
+        },
+      });
+      const { messageLogger, logCore } = await loadMessageLogger();
+      const thread = conversation({
+        conversationId: 'selection-cleanup-conversation',
+        messages: [
+          { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
+          { id: 'm2', creationTime: '2026-07-03T08:05:00Z', direction: 'Inbound' },
+        ],
+      });
+      const select = (selectedMessageIds: string[]) => messageLogger.onEvent({
+        data: eventFor({
+          triggerType: 'selectedLog',
+          selectedMessageIds,
+          conversation: thread,
+        }),
+        ...context,
+        platform: { isSelectedMessageLogSupported: true },
+      });
+      const submit = () => messageLogger.onEvent({
+        data: eventFor({
+          triggerType: 'logForm',
+          redirect: false,
+          conversation: thread,
+          formData: {
+            contact: 'contact-1',
+            contactType: 'Lead',
+            contactName: 'Jane Smith',
+            newContactName: '',
+            newContactType: '',
+          },
+        }),
+        ...context,
+        platform: { isSelectedMessageLogSupported: true },
+      });
+
+      await select(['m1']);
+      await submit();
+      await select(['m2']);
+
+      // The first cleanup sees the newer map entry and must leave it intact.
+      vi.advanceTimersByTime(5000);
+      await submit();
+      expect(logCore.addLog.mock.calls[1][0].selectedMessageIds).toEqual(['m2']);
+
+      // The second cleanup still owns the map entry and removes it.
+      vi.advanceTimersByTime(5000);
+      await submit();
+      expect(logCore.addLog.mock.calls[2][0].selectedMessageIds).toBeUndefined();
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    }
+  });
+
   it('does not auto-append new messages when selected message logging is enabled', async () => {
     const prefKey = 'rc-crm-conversation-pref-selected-log';
     seedStorage({
