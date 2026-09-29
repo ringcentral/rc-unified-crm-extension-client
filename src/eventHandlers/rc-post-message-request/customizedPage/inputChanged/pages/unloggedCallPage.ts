@@ -46,7 +46,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   });
   getWidgetFrameWindow().postMessage({
     type: 'rc-adapter-navigate-to',
-    path: `/log/call/${callLogData.sessionId}`,
+    path: `/log/call/${callLogData.sessionId}?source=${callLogData.source}`,
   }, '*');
   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
 }

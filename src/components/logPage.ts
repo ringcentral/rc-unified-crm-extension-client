@@ -265,8 +265,10 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
 function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }: UnknownRecord): UnknownRecord {
     const updatedFieldKey = updateData.keys[0];
     let page = updateData.page;
-    // update target field value
-    page.formData = updateData.formData;
+    // Update target field value. The widget only reports the fields its form
+    // knows about, so merge instead of replace to keep the fields this page
+    // carries for itself, such as triggerType.
+    page.formData = { ...page.formData, ...updateData.formData };
     const contact = page.schema.properties.contact.oneOf.find(c => c.const === page.formData.contact);
     switch (updatedFieldKey) {
         case 'scheduleCallback':
@@ -350,7 +352,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                     page.schema.required.push('newContactName');
                 }
                 if (!!page.schema.properties.activityTitle && !page.schema.properties.activityTitle?.manuallyEdited) {
-                    page.formData.activityTitle = page.formData.activityTitle.startsWith('Inbound') ?
+                    page.formData.activityTitle = page.formData.activityTitle?.startsWith('Inbound') ?
                         t('pages.log.inboundCallFrom', { type: 'call', name: '' }) :
                         t('pages.log.outboundCallTo', { type: 'call', name: '' });
                 }
@@ -367,7 +369,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                 };
                 page.schema.required = [];
                 if (!!page.schema.properties.activityTitle && !page.schema.properties.activityTitle?.manuallyEdited) {
-                    page.formData.activityTitle = page.formData.activityTitle.startsWith('Inbound') ?
+                    page.formData.activityTitle = page.formData.activityTitle?.startsWith('Inbound') ?
                         t('pages.log.inboundCallFrom', { type: 'call', name: contact.title }) :
                         t('pages.log.outboundCallTo', { type: 'call', name: contact.title });
                 }
@@ -556,7 +558,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             break;
         case 'newContactName':
             if (!!page.schema.properties.activityTitle && !page.schema.properties.activityTitle.manuallyEdited) {
-                page.formData.activityTitle = page.formData.activityTitle.startsWith('Inbound') ?
+                page.formData.activityTitle = page.formData.activityTitle?.startsWith('Inbound') ?
                     t('pages.log.inboundCallFrom', { type: 'call', name: page.formData.newContactName }) :
                     t('pages.log.outboundCallTo', { type: 'call', name: page.formData.newContactName });
             }

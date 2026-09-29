@@ -235,7 +235,8 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
             direction: data.body.call.direction,
             contactInfo: callMatchedContact ?? [],
             logInfo,
-            loggedContactId
+            loggedContactId,
+            source: data.body.call.source,
         });
         const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null }) as { implementedInterfaces?: UnknownRecord | null };
         const useContactSearch = implementedInterfaces?.findContactWithName;
@@ -282,7 +283,7 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
         // navigate to call log page
         getWidgetFrameWindow().postMessage({
             type: 'rc-adapter-navigate-to',
-            path: `/log/call/${data.body.call.sessionId}`,
+            path: `/log/call/${data.body.call.sessionId}?source=${data.body.call.source}`,
         }, '*');
     }
 }

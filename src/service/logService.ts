@@ -185,7 +185,7 @@ export async function syncCallData({
   dataBody,
 }: SyncCallDataOptions): Promise<void> {
   const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} }) as { rcAdditionalSubmission: UnknownRecord };
-  const rcAccessToken = getRcAccessToken();
+  const rcAccessToken = await getRcAccessToken();
   const recordingLink = dataBody?.call?.recording?.link;
   const voicemailRecording = await resolveVoicemailRecording(dataBody.call);
 

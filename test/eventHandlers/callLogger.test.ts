@@ -311,6 +311,11 @@ async function loadLogForm() {
   };
   vi.doMock('../../src/components/logPage.ts', () => ({ default: logPage }));
 
+  const logUtil: Record<string, any> = {
+    getCachedLogPageData: vi.fn(async () => null),
+  };
+  vi.doMock('../../src/lib/logUtil.ts', () => logUtil);
+
   const logForm = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/logForm.ts');
   return {
     logForm,
@@ -321,6 +326,7 @@ async function loadLogForm() {
     calldownPage,
     dispositionCore,
     logPage,
+    logUtil,
   };
 }
 
@@ -1460,6 +1466,58 @@ describe('callLogger logForm', () => {
     expect(logPage.getUnloggedCallPageRender).toHaveBeenCalledWith({
       unloggedCalls: [{ sessionId: 'session-2' }],
     });
+  });
+
+  it('falls back to the cached page trigger type when the form drops it', async () => {
+    seedStorage({
+      userSettings: {},
+      implementedInterfaces: {},
+    });
+    const { logForm, logCore, logUtil } = await loadLogForm();
+    logUtil.getCachedLogPageData.mockResolvedValue({
+      id: 'session-1',
+      triggerType: 'createLog',
+    });
+
+    await logForm.onEvent({
+      data: eventFor({
+        formData: {
+          contact: 'contact-1',
+          contactName: 'Existing Contact',
+          contactType: 'Lead',
+          note: 'Call note',
+        },
+      }),
+      contactPhoneNumber: '+16505550100',
+      ...context,
+    });
+
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'contact-1',
+      note: 'Call note',
+    }));
+  });
+
+  it('ignores cached page data from another call when the form drops the trigger type', async () => {
+    seedStorage({
+      userSettings: {},
+      implementedInterfaces: {},
+    });
+    const { logForm, logCore, logUtil } = await loadLogForm();
+    logUtil.getCachedLogPageData.mockResolvedValue({
+      id: 'other-session',
+      triggerType: 'createLog',
+    });
+
+    await logForm.onEvent({
+      data: eventFor({
+        formData: { contact: 'contact-1', note: 'Call note' },
+      }),
+      contactPhoneNumber: '+16505550100',
+      ...context,
+    });
+
+    expect(logCore.addLog).not.toHaveBeenCalled();
   });
 
   it('updates existing call logs and dispositions', async () => {

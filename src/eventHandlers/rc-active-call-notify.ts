@@ -101,6 +101,7 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
           subject: callLogSubject,
           note: '',
         },
+        source: data.call.source,
       });
       break;
     case 'NoCall':
@@ -141,6 +142,7 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
             logInfo,
             loggedContactId: null,
             isUnresolved: undefined,
+            source: data.call.source,
           });
           const useContactSearch = implementedInterfaces?.findContactWithName;
           let callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId: null, contactPhoneNumber, useContactSearch });
@@ -169,7 +171,7 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
           // navigate to call log page
           getWidgetFrameWindow().postMessage({
             type: 'rc-adapter-navigate-to',
-            path: `/log/call/${data.call.sessionId}`,
+            path: `/log/call/${data.call.sessionId}?source=${data.call.source}`,
           }, '*');
         }
 

@@ -18,7 +18,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   void platformInfo;
   void platformName;
   void platform;
-  const rcAccessToken = getRcAccessToken();
+  const rcAccessToken = await getRcAccessToken();
   const { rcUnifiedCrmExtJwt: adminTokenForExistingSheet } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as { rcUnifiedCrmExtJwt?: string };
 
   // Store current form data to preserve forceGoogleSheets state
