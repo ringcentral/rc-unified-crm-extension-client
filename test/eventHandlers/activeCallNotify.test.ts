@@ -158,6 +158,7 @@ describe('rc-active-call-notify event handler', () => {
           terminationType: 'final',
           direction: 'Inbound',
           sessionId: 'session-2',
+          source: 'Phone',
           telephonySessionId: 'telephony-2',
           from: { phoneNumber: '+16505550200' },
           to: { phoneNumber: '+18005550100' },
@@ -204,7 +205,7 @@ describe('rc-active-call-notify event handler', () => {
       targetOrigin: '*',
     });
     expect(getWidgetPostMessages()).toContainEqual({
-      message: { type: 'rc-adapter-navigate-to', path: '/log/call/session-2' },
+      message: { type: 'rc-adapter-navigate-to', path: '/log/call/session-2?source=Phone' },
       targetOrigin: '*',
     });
     expect(getWidgetPostMessages()).toContainEqual({

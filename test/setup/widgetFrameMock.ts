@@ -9,9 +9,11 @@ export function installWidgetFrameMock() {
   frameElement.id = 'rc-widget-adapter-frame';
   frameWindow = {
     postMessage: vi.fn(),
-    phone: {
-      contactMatcher: {
-        data: {},
+    app: {
+      modules: {
+        ContactMatcher: {
+          data: {},
+        },
       },
     },
   };

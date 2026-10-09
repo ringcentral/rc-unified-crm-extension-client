@@ -96,6 +96,7 @@ describe('contact search custom-button and selection handlers', () => {
     seedStorage({
       cacheLogPageData: {
         id: 'session-1',
+        source: 'Phone',
         logType: 'Call',
         triggerType: 'createLog',
         contactInfo: [
@@ -285,7 +286,7 @@ describe('contact search custom-button and selection handlers', () => {
       {
         message: {
           type: 'rc-adapter-navigate-to',
-          path: '/log/call/session-1',
+          path: '/log/call/session-1?source=Phone',
         },
         targetOrigin: '*',
       },
