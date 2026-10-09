@@ -26,6 +26,13 @@ type EventOptions = {
     isExtensionNumber: boolean;
 };
 
+function getDispositionNote(data: UnknownRecord): string {
+    if (data.body.triggerType !== 'callDisposition') {
+        return '';
+    }
+    return data.body.note || data.body.call?.ringcx?.notes || '';
+}
+
 function getWidgetFrameWindow(): Window {
     return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
 }
@@ -66,7 +73,9 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
         logInfo = existingCalls.find(l => l.sessionId == data.body.call.sessionId).logData;
     }
     else {
-        logInfo.note = await logCore.getCachedNote({ sessionId: data.body.call.sessionId }) ?? "";
+        // RingCX: notes entered on the disposition page prefill a new call log
+        const dispositionNote = getDispositionNote(data);
+        logInfo.note = dispositionNote || (await logCore.getCachedNote({ sessionId: data.body.call.sessionId }) ?? "");
     }
     let { hasConflict, autoSelectAdditionalSubmission, requireManualDisposition, conflictType } = await getLogConflictInfo({
         platform,
