@@ -286,6 +286,27 @@ describe('manifestService', () => {
     });
   });
 
+  it('keeps a stored manifest object when refreshing without manifestUrl', async () => {
+    seedStorage({
+      customCrmManifest: {
+        serverUrl: 'https://stored.example',
+        platforms: {
+          salesforce: {},
+        },
+      },
+    });
+    const manifestService = await loadManifestService();
+
+    await expect(manifestService.refreshManifest()).resolves.toMatchObject({
+      serverUrl: 'https://stored.example',
+    });
+    expect(axios.get).not.toHaveBeenCalled();
+    expect(readStorage().manifestUrl).toBeUndefined();
+    expect(readStorage().customCrmManifest).toMatchObject({
+      serverUrl: 'https://stored.example',
+    });
+  });
+
   it('returns null when refresh has neither manifestUrl nor customCrmManifest', async () => {
     const manifestService = await loadManifestService();
 

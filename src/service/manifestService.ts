@@ -198,9 +198,13 @@ export async function saveManifest({ manifest }: { manifest: AppConnectManifest 
 export async function refreshManifest(): Promise<ManifestValue> {
   let { manifestUrl } = await chrome.storage.local.get({ manifestUrl: null }) as { manifestUrl: string | null };
   if (!manifestUrl) {
-    const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null }) as { customCrmManifest: string | null };
+    const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null }) as { customCrmManifest: ManifestValue };
     if (!customCrmManifest) {
       return null;
+    }
+    // Only legacy storage kept the manifest URL here; a stored manifest object has no URL to refresh from.
+    if (typeof customCrmManifest !== 'string') {
+      return getManifest();
     }
     else {
       manifestUrl = customCrmManifest;
