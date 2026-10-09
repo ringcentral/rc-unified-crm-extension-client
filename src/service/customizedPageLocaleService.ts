@@ -8,8 +8,8 @@ function getAdapterFrame(): HTMLIFrameElement | null {
 }
 
 function getCustomizedPages(adapterFrame: HTMLIFrameElement): UnknownRecord[] {
-  const widgetWindow = adapterFrame.contentWindow as (Window & { phone?: UnknownRecord }) | null;
-  return widgetWindow?.phone?.thirdPartyService?.customizedPages ?? [];
+  const widgetWindow = adapterFrame.contentWindow as (Window & { app?: UnknownRecord }) | null;
+  return widgetWindow?.app?.modules?.ThirdPartyService?.customizedPages ?? [];
 }
 
 function registerCustomizedPagePatch(adapterFrame: HTMLIFrameElement, page: UnknownRecord): void {
