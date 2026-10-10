@@ -60,6 +60,7 @@ const popupContext = {
 };
 
 let isLoggingOut = false;
+const rotatedJwtTokens = new Map<string, string>();
 
 function isAxiosAbsoluteUrl(url: string): boolean {
   return /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
@@ -126,6 +127,41 @@ function extractJwtTokenFromParams(params) {
   return { sanitizedParams: params, jwtToken: null };
 }
 
+function getBearerToken(headers): string | null {
+  const authorization = headers?.Authorization || headers?.authorization;
+  return typeof authorization === 'string' && authorization.startsWith('Bearer ')
+    ? authorization.slice('Bearer '.length)
+    : null;
+}
+
+function getCurrentJwtToken(token: string | null): string | null {
+  if (!token) {
+    return null;
+  }
+  const visited = new Set<string>();
+  let current = token;
+  while (rotatedJwtTokens.has(current) && !visited.has(current)) {
+    visited.add(current);
+    current = rotatedJwtTokens.get(current)!;
+  }
+  return current;
+}
+
+function replaceJwtTokenInUrl(url: string, token: string): string {
+  const parsed = new URL(url, window.location.origin);
+  parsed.searchParams.set('jwtToken', token);
+  return isAxiosAbsoluteUrl(url) ? parsed.toString() : `${parsed.pathname}${parsed.search}${parsed.hash}`;
+}
+
+function replaceJwtTokenInParams(params, token: string) {
+  if (params instanceof URLSearchParams) {
+    const updated = new URLSearchParams(params);
+    updated.set('jwtToken', token);
+    return updated;
+  }
+  return { ...params, jwtToken: token };
+}
+
 function normalizeServerBasePath(pathname: string): string {
   return pathname.replace(/\/+$/, '') || '/';
 }
@@ -162,9 +198,17 @@ function isRequestToManifestServer(config: UnknownRecord, manifestServerUrl: unk
   }
 }
 
-async function persistRefreshedJwtToken(headers) {
+async function persistRefreshedJwtToken(headers, requestConfig?) {
   const refreshedToken = headers?.['x-refreshed-jwt-token'] || headers?.['X-Refreshed-Jwt-Token'];
   if (refreshedToken) {
+    const previousToken = getBearerToken(requestConfig?.headers)
+      || extractJwtTokenFromUrl(requestConfig?.url, requestConfig?.baseURL).jwtToken
+      || extractJwtTokenFromParams(requestConfig?.params).jwtToken;
+    const manifest = previousToken ? await getManifest() : null;
+    if (previousToken && previousToken !== refreshedToken
+      && isRequestToManifestServer(requestConfig, manifest?.serverUrl)) {
+      rotatedJwtTokens.set(previousToken, refreshedToken);
+    }
     await chrome.storage.local.set({ rcUnifiedCrmExtJwt: refreshedToken });
   }
 }
@@ -190,9 +234,27 @@ axios.interceptors.request.use(
     }
     if (!requestConfig.skipAuthorization) {
       const { rcUnifiedCrmExtJwt } = await chromeStorageLocal.get({ rcUnifiedCrmExtJwt: null });
-      const tokenToUse = tokenFromUrl || tokenFromParams || rcUnifiedCrmExtJwt;
+      const requestedToken = getBearerToken(requestConfig.headers) || tokenFromUrl || tokenFromParams;
+      const tokenToUse = isManifestServerRequest
+        ? getCurrentJwtToken(requestedToken) || rcUnifiedCrmExtJwt
+        : requestedToken || rcUnifiedCrmExtJwt;
       if (tokenToUse) {
         requestConfig.headers = requestConfig.headers || {};
+        if (isManifestServerRequest && requestedToken && tokenToUse !== requestedToken) {
+          if (tokenFromUrl === requestedToken) {
+            requestConfig.url = replaceJwtTokenInUrl(requestConfig.url, tokenToUse);
+          }
+          if (tokenFromParams === requestedToken) {
+            requestConfig.params = replaceJwtTokenInParams(requestConfig.params, tokenToUse);
+          }
+          if (getBearerToken(requestConfig.headers) === requestedToken) {
+            if (requestConfig.headers.Authorization) {
+              requestConfig.headers.Authorization = `Bearer ${tokenToUse}`;
+            } else {
+              requestConfig.headers.authorization = `Bearer ${tokenToUse}`;
+            }
+          }
+        }
         if (
           isManifestServerRequest
           && !requestConfig.headers.Authorization
@@ -230,7 +292,7 @@ axios.interceptors.request.use(
 // Add response interceptor
 axios.interceptors.response.use(
   async (response) => {
-    await persistRefreshedJwtToken(response.headers);
+    await persistRefreshedJwtToken(response.headers, response.config);
     if (await logRecorder.isRecordingLogs()) {
       logRecorder.logAction({
         name: 'API_RESPONSE',
@@ -245,7 +307,7 @@ axios.interceptors.response.use(
     return response;
   },
   async (error) => {
-    await persistRefreshedJwtToken(error.response?.headers);
+    await persistRefreshedJwtToken(error.response?.headers, error.config);
     if (await logRecorder.isRecordingLogs()) {
       logRecorder.logAction({
         name: 'API_RESPONSE_ERROR',
