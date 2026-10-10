@@ -245,53 +245,6 @@ describe('service worker OAuth and click-to-X flows', () => {
     }));
   });
 
-  it('relays Pipedrive direct-page callback state between installation page and popup', async () => {
-    const { onMessage } = await loadServiceWorkerListeners();
-    const openResponse = vi.fn();
-
-    onMessage({
-      type: 'openPopupWindowOnPipedriveDirectPage',
-      platform: 'pipedrive',
-      hostname: 'acme.pipedrive.com',
-    }, { tab: { id: 42 } }, openResponse);
-
-    expect(openResponse).toHaveBeenCalledWith({ result: 'ok' });
-    await vi.waitFor(() => {
-      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(42, { action: 'needCallbackUri' });
-    });
-    expect(readStorage()['platform-info']).toEqual({
-      platformName: 'pipedrive',
-      hostname: 'acme.pipedrive.com',
-    });
-
-    const callbackResponse = vi.fn();
-    onMessage({
-      type: 'pipedriveCallbackUri',
-      callbackUri: 'https://pipedrive.example/callback?code=abc',
-    }, {}, callbackResponse);
-
-    expect(callbackResponse).toHaveBeenCalledWith({ result: 'ok' });
-    expect(chrome.runtime.sendMessage).toHaveBeenLastCalledWith({
-      type: 'pipedriveCallbackUri',
-      pipedriveCallbackUri: 'https://pipedrive.example/callback?code=abc',
-    });
-
-    const requestResponse = vi.fn();
-    onMessage({ type: 'popupWindowRequestPipedriveCallbackUri' }, {}, requestResponse);
-
-    expect(requestResponse).toHaveBeenCalledWith({ result: 'ok' });
-    expect(chrome.runtime.sendMessage).toHaveBeenLastCalledWith({
-      type: 'pipedriveCallbackUri',
-      pipedriveCallbackUri: 'https://pipedrive.example/callback?code=abc',
-    });
-
-    const doneResponse = vi.fn();
-    onMessage({ type: 'pipedriveAltAuthDone' }, {}, doneResponse);
-
-    expect(doneResponse).toHaveBeenCalledWith({ result: 'ok' });
-    expect(chrome.tabs.sendMessage).toHaveBeenLastCalledWith(42, { action: 'pipedriveAltAuthDone' });
-  });
-
   it('caches the latest cold-start click-to-X request and returns it once', async () => {
     const { onMessage } = await loadServiceWorkerListeners();
 

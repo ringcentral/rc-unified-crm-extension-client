@@ -92,11 +92,6 @@ async function onUserClickConnectButton({ platform, platformName, manifest, host
                 });
                 handleThirdPartyOAuthWindow(authUri);
             }
-            // Unique: Pipedrive
-            else if (platformName === 'pipedrive') {
-                authUri = manifest.platforms.pipedrive.auth.oauth.redirectUri;
-                handleThirdPartyOAuthWindow(authUri);
-            }
             // Unique: Bullhorn
             else if (platformName === 'bullhorn') {
                 await tryConnectToBullhorn({ platform });
