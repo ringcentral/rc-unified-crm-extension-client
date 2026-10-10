@@ -568,6 +568,45 @@ describe('popup runtime', () => {
     }));
   });
 
+  it('replaces a previously rotated JWT in later request URLs and params', async () => {
+    const runtime = await loadPopupRuntime();
+    const firstRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records?jwtToken=old-token',
+      baseURL: 'https://server.example',
+      headers: {},
+    });
+    await runtime.responseInterceptors[0].fulfilled({
+      headers: { 'x-refreshed-jwt-token': 'fresh-token' },
+      config: firstRequest,
+      status: 200,
+      data: {},
+    });
+
+    const urlRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records?jwtToken=old-token',
+      baseURL: 'https://server.example',
+      headers: {},
+    });
+    expect(urlRequest.url).toContain('jwtToken=fresh-token');
+    expect(urlRequest.headers.Authorization).toBe('Bearer fresh-token');
+
+    const paramsRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records',
+      baseURL: 'https://server.example',
+      params: { jwtToken: 'old-token' },
+      headers: {},
+    });
+    expect(paramsRequest.params.jwtToken).toBe('fresh-token');
+    expect(paramsRequest.headers.Authorization).toBe('Bearer fresh-token');
+
+    const otherUserRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records?jwtToken=another-token',
+      baseURL: 'https://server.example',
+      headers: {},
+    });
+    expect(otherUserRequest.headers.Authorization).toBe('Bearer another-token');
+  });
+
   it('leaves JWT storage unchanged when responses have no refreshed token', async () => {
     const runtime = await loadPopupRuntime();
 
