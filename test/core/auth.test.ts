@@ -724,28 +724,25 @@ describe('auth core', () => {
       oAuthUri: 'https://crm.example/oauth?response_type=code&client_id=client%20id&scope=contacts%20write&state=platform=salesforce&redirect_uri=https%3A%2F%2Fredirect.example%2Fcallback',
     });
 
+    // Pipedrive uses the standard flow: scopes live in the Pipedrive app config, not the URL
     await authCore.onUserClickConnectButton({
-      manifest: {
-        serverUrl: 'https://server.example',
-        platforms: {
-          pipedrive: {
-            auth: {
-              oauth: {
-                redirectUri: 'https://pipedrive.example/auth',
-              },
-            },
-          },
-        },
-      },
+      manifest: { serverUrl: 'https://server.example' },
       platformName: 'pipedrive',
       platform: {
         name: 'pipedrive',
-        auth: { type: 'oauth', oauth: {} },
+        auth: {
+          type: 'oauth',
+          oauth: {
+            authUrl: 'https://oauth.pipedrive.example/oauth/authorize',
+            clientId: 'pd client',
+            redirectUri: 'https://pipedrive.example/auth',
+          },
+        },
       },
     });
     expect(chrome.runtime.sendMessage).toHaveBeenLastCalledWith({
       type: 'openThirdPartyAuthWindow',
-      oAuthUri: 'https://pipedrive.example/auth',
+      oAuthUri: 'https://oauth.pipedrive.example/oauth/authorize?response_type=code&client_id=pd%20client&state=platform=pipedrive&redirect_uri=https%3A%2F%2Fpipedrive.example%2Fauth',
     });
 
     await authCore.onUserClickConnectButton({

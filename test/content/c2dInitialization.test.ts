@@ -356,16 +356,6 @@ describe('content click-to-dial initialization', () => {
     });
     expect(sendResponse).toHaveBeenLastCalledWith('ok');
 
-    listener({ action: 'needCallbackUri' }, {}, sendResponse);
-    expect(sendMessageToExtension).toHaveBeenCalledWith({
-      type: 'pipedriveCallbackUri',
-      callbackUri: window.location.href,
-    });
-
-    document.body.insertAdjacentHTML('beforeend', '<div id="rc-stepper"></div>');
-    listener({ action: 'pipedriveAltAuthDone' }, {}, sendResponse);
-    expect(document.querySelector('#rc-stepper').innerHTML).toBe('(3/3) Setup finished. You can close this page now.');
-
     document.cookie = 'bullhorn=%7B%22username%22%3A%22bh-user%22%2C%22masterUserId%22%3A1%7D';
     sendResponse.mockClear();
     listener({ action: 'fetchBullhornUsername' }, {}, sendResponse);

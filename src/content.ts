@@ -231,19 +231,6 @@ chrome.runtime.onMessage.addListener(
         minimized: false,
       }, '*');
     }
-    // Unique: Pipedrive
-    if (request.action === 'needCallbackUri') {
-      sendMessageToExtension({
-        type: 'pipedriveCallbackUri',
-        callbackUri: window.location.href
-      });
-    }
-    // Unique: Pipedrive
-    if (request.action === 'pipedriveAltAuthDone') {
-      console.log('pipedriveAltAuthDone')
-      const rcStepper = window.document.querySelector('#rc-stepper');
-      (rcStepper as UnknownRecord).innerHTML = '(3/3) Setup finished. You can close this page now.';
-    }
     // Unique: Bullhorn
     if (request.action === 'fetchBullhornUsername') {
       const decodedCookie = decodeURIComponent(window.document.cookie);
@@ -348,13 +335,6 @@ export async function Initialize() {
 }
 
 Initialize();
-// Unique: Pipedrive
-if (window.location.pathname === '/pipedrive-redirect') {
-  sendMessageToExtension({ type: "openPopupWindowOnPipedriveDirectPage", platform: 'pipedrive', hostname: 'temp' });
-  const rcStepper = window.document.querySelector('#rc-stepper');
-  (rcStepper as UnknownRecord).innerHTML = '(2/3) Please sign in on the extension with your RingCentral account. If nothing happens, please try refreshing this page and wait for a few seconds.';
-}
-
 // Unique: Insightly
 if (document.readyState !== 'loading') {
   registerInsightlyApiKey();

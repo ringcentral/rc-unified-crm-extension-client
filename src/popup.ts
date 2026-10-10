@@ -34,7 +34,6 @@ import { syncLocaleToEmbeddableWhenReady } from './lib/embeddableLocale';
 
 // message handlers
 import oauthCallBackHandler from './messageHandlers/oauthCallBack';
-import pipedriveCallbackUriHandler from './messageHandlers/pipedriveCallbackUri';
 import c2smsHandler from './messageHandlers/c2sms';
 import c2dHandler from './messageHandlers/c2d';
 import c2scheduleHandler from './messageHandlers/c2schedule';
@@ -293,6 +292,9 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
   async (response) => {
     await persistRefreshedJwtToken(response.headers, response.config);
+    if (!(response.config as UnknownRecord)?.skipAuthorization && !response.config?.url?.includes('/unAuthorize')) {
+      await apiErrorHandler.handleSessionInvalidResponse(response);
+    }
     if (await logRecorder.isRecordingLogs()) {
       logRecorder.logAction({
         name: 'API_RESPONSE',
@@ -328,7 +330,10 @@ axios.interceptors.response.use(
       if ((url.includes('jwtToken=') || hasBearerHeader) && !url.includes('/unAuthorize') && !(error.config as UnknownRecord)?.skipAuthorization) {
         isLoggingOut = true;
         try {
-          await authCore.clearLocalCrmAuthState();
+          const hadJwt = await authCore.clearLocalCrmAuthState();
+          if (hadJwt) {
+            await apiErrorHandler.requestAutoReconnect();
+          }
         } finally {
           isLoggingOut = false;
         }
@@ -527,12 +532,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     switch (request.type) {
       case 'oauthCallBack':
         await oauthCallBackHandler.onMessage({ request, sendResponse });
-        if (await logRecorder.isRecordingLogs()) {
-          logRecorder.logAction({ name: request.type, data: request });
-        }
-        break;
-      case 'pipedriveCallbackUri':
-        await pipedriveCallbackUriHandler.onMessage({ request, sendResponse });
         if (await logRecorder.isRecordingLogs()) {
           logRecorder.logAction({ name: request.type, data: request });
         }
