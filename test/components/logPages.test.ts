@@ -606,6 +606,51 @@ describe('logPage', () => {
     expect(contactTypeChanged.schema.properties).not.toHaveProperty('newOnly');
   });
 
+  it('keeps numeric-id selections for searchable contact-type-dependent fields when the contact type changes', async () => {
+    const logPage = await loadLogPage();
+    const searchableManifest = manifest();
+    searchableManifest.platforms.salesforce.page.newContact.additionalFields = [
+      { const: 'newCategory', title: 'New Category', type: 'selection', contactTypeDependent: true, searchable: true },
+    ] as any;
+    const contact = {
+      ...newContact(),
+      additionalInfo: {
+        Lead: { newCategory: [{ const: 11, title: 'Eleven' }] },
+        Contact: { newCategory: [{ const: 22, title: 'Twenty-two' }, { const: 33, title: 'Thirty-three' }] },
+      },
+    };
+    const page = logPage.getLogPageRender({
+      id: 'session-searchable-type',
+      manifest: searchableManifest,
+      logType: 'Call',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [contact],
+      logInfo: {},
+      contactPhoneNumber: '+16505550100',
+    });
+
+    const changed = logPage.getUpdatedLogPageRender({
+      manifest: searchableManifest,
+      logType: 'Call',
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['newContactType'],
+        page,
+        formData: { ...page.formData, newContactType: 'Contact', newCategory: '22' },
+      },
+    });
+
+    expect(changed.formData.newCategory).toBe('22');
+    expect(changed.schema.properties.newCategory.oneOf).toEqual([
+      { const: '22', title: 'Twenty-two' },
+      { const: '33', title: 'Thirty-three' },
+      { const: 'none', title: expect.any(String) },
+    ]);
+    expect(changed.uiSchema.newCategory['ui:widget']).toBe('AutocompleteWidget');
+  });
+
   it('clears pattern validation errors after a valid call-log field value is entered', async () => {
     const logPage = await loadLogPage();
     const page = logPage.getLogPageRender({

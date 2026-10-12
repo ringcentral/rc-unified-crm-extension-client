@@ -500,6 +500,31 @@ describe('basic page renderers', () => {
     expect(errorLogRecordPage.getErrorLogRecordPageRender({ step: 3 }).title).toBe('Recording in process');
   });
 
+  it('coerces saved numeric values to strings for searchable plugin selections', async () => {
+    const pluginConfigurePage = await loadPage('../../src/components/pluginConfigurePage.ts');
+
+    const page = pluginConfigurePage.getPluginConfigurePageRender({
+      pluginId: 'plugin-1',
+      pluginAccess: 'private',
+      plugin: {
+        ...workflowPlugin(),
+        pageContent: [
+          { const: 'pipeline', type: 'selection', title: 'Pipeline', searchable: true, oneOf: [{ const: 7, title: 'Seven' }] },
+          { const: 'stages', type: 'selection', title: 'Stages', searchable: true, multiSelect: true, oneOf: [{ const: 1, title: 'One' }, { const: 2, title: 'Two' }] },
+        ],
+      },
+      config: { pipeline: { value: 7 }, stages: { value: [1, 2] } },
+      isLoggedIn: true,
+      hasValidLicense: true,
+    });
+
+    const props = page.schema.properties.config.properties;
+    expect(props.pipeline.default).toBe('7');
+    expect(props.pipeline.enum).toEqual(['7']);
+    expect(props.stages.default).toEqual(['1', '2']);
+    expect(props.stages.items.enum).toEqual(['1', '2']);
+  });
+
   it('renders plugin configuration pages with config schema and license state', async () => {
     const pluginConfigurePage = await loadPage('../../src/components/pluginConfigurePage.ts');
 

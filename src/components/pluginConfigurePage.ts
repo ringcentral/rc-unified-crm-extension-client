@@ -58,7 +58,10 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
                     // AutocompleteWidget requires string option values/labels (it lowercases them).
                     const optionValues = field.oneOf.map(option => String(option.const));
                     const optionLabels = field.oneOf.map(option => String(option.title ?? option.const));
+                    // Saved values may be numeric; the widget matches option values as strings.
+                    const savedValue = config[key]?.value;
                     if (field.multiSelect) {
+                        schemaProp.default = Array.isArray(savedValue) ? savedValue.map(String) : [];
                         schemaProp.type = 'array';
                         schemaProp.items = {
                             type: 'string',
@@ -67,6 +70,7 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
                         };
                         schemaProp.uniqueItems = true;
                     } else {
+                        schemaProp.default = savedValue === undefined || savedValue === null ? '' : String(savedValue);
                         schemaProp.enum = optionValues;
                         schemaProp.enumNames = optionLabels;
                     }
