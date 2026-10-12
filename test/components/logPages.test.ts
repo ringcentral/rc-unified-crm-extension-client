@@ -282,6 +282,37 @@ describe('logPageUtils', () => {
     });
   });
 
+  it('stringifies numeric option ids for searchable selection fields so AutocompleteWidget can filter them', async () => {
+    const utils = await loadLogPageUtils();
+
+    const result = utils.buildAdditionalFieldsSchema({
+      allAdditionalFields: [
+        { const: 'deal', title: 'Deal', type: 'selection', searchable: true, contactDependent: true },
+      ],
+      contact: existingContact({
+        additionalInfo: {
+          deal: [
+            { const: 101, title: 'Big deal' },
+            { const: 202, title: 303 },
+          ],
+        },
+      }),
+      logInfo: {},
+    });
+
+    expect(result.additionalFields.deal.oneOf).toEqual([
+      { const: '101', title: 'Big deal' },
+      { const: '202', title: '303' },
+      { const: 'none', title: expect.any(String) },
+    ]);
+    expect(result.additionalFieldsValue.deal).toBe('101');
+    expect(result.additionalWarningUISchemas.deal['ui:options'].enumOptions).toEqual([
+      { value: '101', label: 'Big deal' },
+      { value: '202', label: '303' },
+      { value: 'none', label: expect.any(String) },
+    ]);
+  });
+
   it('builds a reusable single-contact message log section', async () => {
     const utils = await loadLogPageUtils();
 

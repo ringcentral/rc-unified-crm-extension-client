@@ -55,8 +55,9 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
             }
             if (field.type === 'selection' && field.oneOf) {
                 if (field.searchable) {
-                    const optionValues = field.oneOf.map(option => option.const);
-                    const optionLabels = field.oneOf.map(option => option.title);
+                    // AutocompleteWidget requires string option values/labels (it lowercases them).
+                    const optionValues = field.oneOf.map(option => String(option.const));
+                    const optionLabels = field.oneOf.map(option => String(option.title ?? option.const));
                     if (field.multiSelect) {
                         schemaProp.type = 'array';
                         schemaProp.items = {
@@ -97,7 +98,7 @@ function getPluginConfigurePageRender({ pluginId, pluginAccess, plugin, config, 
                     uiEntry['ui:options'] = {
                         ...(uiEntry['ui:options'] ?? {}),
                         multiple: !!field.multiSelect,
-                        enumOptions: (field.oneOf ?? []).map(option => ({ value: option.const, label: option.title })),
+                        enumOptions: (field.oneOf ?? []).map(option => ({ value: String(option.const), label: String(option.title ?? option.const) })),
                     };
                 }
                 else if (field.multiSelect) {

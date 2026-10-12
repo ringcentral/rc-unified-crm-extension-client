@@ -3,7 +3,7 @@ import inboundCallIcon from '../images/inboundCallIcon.png';
 import smsMessageIcon from '../images/smsMessageIcon.png';
 import logCore from '../core/log';
 import { t } from '../i18n';
-import { buildContactOptions, buildAdditionalFieldsSchema, buildContactWarningField, buildNewContactWidget, getContactFieldOptions } from './logPageUtils';
+import { buildContactOptions, buildAdditionalFieldsSchema, buildContactWarningField, buildNewContactWidget, buildSearchableUISchema, getContactFieldOptions, toSearchableOptions } from './logPageUtils';
 
 type UnknownRecord = Record<string, any>;
 
@@ -429,14 +429,11 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                                 additionalFieldsValue[f.const] = page.formData[f.const];
                             }
                             if (f.searchable) {
-                                addiitionalWarningUISchemas[f.const] = {
-                                    'ui:widget': 'AutocompleteWidget',
-                                    'ui:placeholder': 'Start typing to search...',
-                                    'ui:options': {
-                                        multiple: false,
-                                        enumOptions: additionalFields[f.const].oneOf.map(option => ({ value: option.const, label: option.title })),
-                                    },
-                                };
+                                additionalFields[f.const].oneOf = toSearchableOptions(additionalFields[f.const].oneOf);
+                                if (additionalFieldsValue[f.const] !== undefined && additionalFieldsValue[f.const] !== null) {
+                                    additionalFieldsValue[f.const] = String(additionalFieldsValue[f.const]);
+                                }
+                                addiitionalWarningUISchemas[f.const] = buildSearchableUISchema(additionalFields[f.const].oneOf);
                             }
                             if (f.required) {
                                 page.schema.required.push(f.const);
