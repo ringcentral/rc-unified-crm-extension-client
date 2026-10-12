@@ -182,18 +182,7 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
     }
     // 2.4. If CRM not authed
     else if (!rcUnifiedCrmExtJwt) {
-      // Unique: Pipedrive
-      if (platform?.name === 'pipedrive') {
-        chrome.runtime.sendMessage(
-          {
-            type: 'popupWindowRequestPipedriveCallbackUri',
-          }
-        );
-      }
-      // Others
-      else {
-        authCore.setAuth(false);
-      }
+      authCore.setAuth(false);
     }
 
     try {

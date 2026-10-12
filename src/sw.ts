@@ -6,8 +6,6 @@ const chrome = (globalThis as any).chrome;
 
 let manifest;
 let redirectUri;
-let pipedriveInstallationTabId;
-let pipedriveCallbackUri;
 let cachedClickToXRequest;
 
 const INCOMING_CALL_NOTIFICATION_PREFIX = 'incoming-call-';
@@ -358,15 +356,6 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   await clearOAuthLoginWindow(loginWindowInfo, { closeWindow: true });
 });
 
-async function pipedriveCallbackHandler(request, sender) {
-  await openPopupWindow();
-  chrome.tabs.sendMessage(sender.tab.id, { action: 'needCallbackUri' })
-  pipedriveInstallationTabId = sender.tab.id;
-  await chrome.storage.local.set({
-    ['platform-info']: { platformName: request.platform, hostname: request.hostname }
-  });
-}
-
 async function rcOAuthWindowHandler(request) {
   const oauthRedirectUri = await getOAuthRedirectUri();
   const loginWindow = await chrome.windows.create({
@@ -472,25 +461,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           sendResponse({ result: 'error', message: e.message });
         });
       return true;
-    // Unique: Pipedrive
-    case "openPopupWindowOnPipedriveDirectPage":
-      pipedriveCallbackHandler(request, sender);
-      sendResponse({ result: 'ok' });
-      break;
-    // Unique: Pipedrive
-    case "popupWindowRequestPipedriveCallbackUri":
-      chrome.runtime.sendMessage({
-        type: 'pipedriveCallbackUri',
-        pipedriveCallbackUri
-      });
-      sendResponse({ result: 'ok' });
-      break;
-    // Unique: Pipedrive
-    case "pipedriveAltAuthDone":
-      chrome.tabs.sendMessage(pipedriveInstallationTabId, { action: 'pipedriveAltAuthDone' });
-      console.log('pipedriveAltAuthDone')
-      sendResponse({ result: 'ok' });
-      break;
     case "openRCOAuthWindow":
       if (request.oAuthUri) {
         rcOAuthWindowHandler(request);
@@ -512,16 +482,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case "checkForClickToXCache":
       sendResponse(cachedClickToXRequest);
       cachedClickToXRequest = null;
-      break;
-    // Unique: Pipedrive
-    case "pipedriveCallbackUri":
-      pipedriveCallbackUri = request.callbackUri;
-      console.log('pipedrive callback uri: ', request.callbackUri);
-      chrome.runtime.sendMessage({
-        type: 'pipedriveCallbackUri',
-        pipedriveCallbackUri
-      });
-      sendResponse({ result: 'ok' });
       break;
     case "sideWidgetOpen":
       sideWidgetOpenHandler(request);
