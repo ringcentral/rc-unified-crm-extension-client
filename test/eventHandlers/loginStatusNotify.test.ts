@@ -444,34 +444,6 @@ describe('rc-login-status-notify event handler', () => {
     expect(adminCore.refreshAdminSettings).toHaveBeenCalled();
   });
 
-  it('asks the runtime for a Pipedrive callback URI when CRM is not authenticated', async () => {
-    vi.mocked(getPlatformInfo).mockResolvedValueOnce({ platformName: 'pipedrive' });
-    vi.mocked(getManifest).mockResolvedValueOnce({
-      serverUrl: 'https://server.example',
-      version: '1.7.35',
-      platforms: {
-        pipedrive: {
-          name: 'pipedrive',
-          useLicense: false,
-        },
-      },
-    });
-    const handler = await loadLoginStatusHandler();
-
-    await handler.onEvent({
-      data: {
-        loggedIn: true,
-        features: {},
-      },
-    });
-
-    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
-      type: 'popupWindowRequestPipedriveCallbackUri',
-    });
-    expect(authCore.setAuth).not.toHaveBeenCalled();
-    expect(readStorage().crmAuthed).toBe(false);
-  });
-
   it('shows release notes and updates the registered extension version', async () => {
     seedStorage({
       rcUnifiedCrmExtJwt: 'crm-jwt',

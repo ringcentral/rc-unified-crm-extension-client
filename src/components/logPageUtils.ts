@@ -9,6 +9,23 @@ function getContactFieldOptions(field: UnknownRecord, contact: UnknownRecord, ne
     return Array.isArray(options) ? options : [];
 }
 
+// AutocompleteWidget lowercases option labels/values and matches the form value with ===,
+// so searchable fields must use string options and string form values.
+function toSearchableOptions(options: UnknownRecord[] = []): UnknownRecord[] {
+    return options.map(option => ({ ...option, const: String(option.const), title: String(option.title ?? option.const) }));
+}
+
+function buildSearchableUISchema(options: UnknownRecord[] = []): UnknownRecord {
+    return {
+        'ui:widget': 'AutocompleteWidget',
+        'ui:placeholder': 'Start typing to search...',
+        'ui:options': {
+            multiple: false,
+            enumOptions: options.map(option => ({ value: option.const, label: option.title })),
+        },
+    };
+}
+
 function buildContactOptions(contactInfo: UnknownRecord[] = [], useContactSearch?: boolean): UnknownRecord[] {
     const contactList: UnknownRecord[] = contactInfo.map(c => {
         return {
@@ -81,6 +98,13 @@ function buildAdditionalFieldsSchema({ allAdditionalFields, contact, logInfo }: 
                 }
                 if (additionalFieldsValue[f.const] && !additionalFields[f.const].oneOf.some(af => af.const === additionalFieldsValue[f.const])) {
                     additionalFields[f.const].oneOf.push({ const: additionalFieldsValue[f.const], title: additionalFieldsValue[f.const] });
+                }
+                if (f.searchable) {
+                    additionalFields[f.const].oneOf = toSearchableOptions(additionalFields[f.const].oneOf);
+                    if (additionalFieldsValue[f.const] !== undefined && additionalFieldsValue[f.const] !== null) {
+                        additionalFieldsValue[f.const] = String(additionalFieldsValue[f.const]);
+                    }
+                    additionalWarningUISchemas[f.const] = buildSearchableUISchema(additionalFields[f.const].oneOf);
                 }
                 if (f.required) {
                     requiredFieldNames.push(f.const);
@@ -268,5 +292,7 @@ export {
     buildContactWarningField,
     buildNewContactWidget,
     buildSingleContactSection,
+    buildSearchableUISchema,
     getContactFieldOptions,
+    toSearchableOptions,
 };

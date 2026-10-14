@@ -257,6 +257,69 @@ describe('logPageUtils', () => {
     expect(result.requiredFieldNames).toEqual(['disposition', 'followUp', 'caseId']);
   });
 
+  it('builds an AutocompleteWidget uiSchema for selection fields marked searchable', async () => {
+    const utils = await loadLogPageUtils();
+
+    const result = utils.buildAdditionalFieldsSchema({
+      allAdditionalFields: [
+        { const: 'territory', title: 'Territory', type: 'selection', searchable: true, contactDependent: true },
+      ],
+      contact: existingContact({
+        additionalInfo: {
+          territory: [
+            { const: 'east', title: 'East' },
+            { const: 'west', title: 'West' },
+          ],
+        },
+      }),
+      logInfo: {},
+    });
+
+    expect(result.additionalWarningUISchemas.territory).toMatchObject({
+      'ui:widget': 'AutocompleteWidget',
+      'ui:placeholder': 'Start typing to search...',
+      'ui:options': {
+        multiple: false,
+        enumOptions: [
+          { value: 'east', label: 'East' },
+          { value: 'west', label: 'West' },
+          { value: 'none', label: expect.any(String) },
+        ],
+      },
+    });
+  });
+
+  it('stringifies numeric option ids for searchable selection fields so AutocompleteWidget can filter them', async () => {
+    const utils = await loadLogPageUtils();
+
+    const result = utils.buildAdditionalFieldsSchema({
+      allAdditionalFields: [
+        { const: 'deal', title: 'Deal', type: 'selection', searchable: true, contactDependent: true },
+      ],
+      contact: existingContact({
+        additionalInfo: {
+          deal: [
+            { const: 101, title: 'Big deal' },
+            { const: 202, title: 303 },
+          ],
+        },
+      }),
+      logInfo: {},
+    });
+
+    expect(result.additionalFields.deal.oneOf).toEqual([
+      { const: '101', title: 'Big deal' },
+      { const: '202', title: '303' },
+      { const: 'none', title: expect.any(String) },
+    ]);
+    expect(result.additionalFieldsValue.deal).toBe('101');
+    expect(result.additionalWarningUISchemas.deal['ui:options'].enumOptions).toEqual([
+      { value: '101', label: 'Big deal' },
+      { value: '202', label: '303' },
+      { value: 'none', label: expect.any(String) },
+    ]);
+  });
+
   it('builds a reusable single-contact message log section', async () => {
     const utils = await loadLogPageUtils();
 
@@ -407,6 +470,49 @@ describe('logPage', () => {
     expect(editedTitle.schema.properties.activityTitle.manuallyEdited).toBe(true);
   });
 
+  it('rebuilds a searchable selection field as an AutocompleteWidget on initial render and after switching contacts', async () => {
+    const logPage = await loadLogPage();
+    const searchableManifest = manifest();
+    searchableManifest.platforms.salesforce.page.callLog.additionalFields = [
+      { const: 'territory', title: 'Territory', type: 'selection', searchable: true, contactDependent: true } as any,
+    ];
+    const contactA = existingContact({ additionalInfo: { territory: [{ const: 'east', title: 'East' }] } });
+    const contactB = existingContact({ id: 'contact-2', name: 'Alex Green', additionalInfo: { territory: [{ const: 'west', title: 'West' }] } });
+
+    const page = logPage.getLogPageRender({
+      id: 'session-searchable',
+      manifest: searchableManifest,
+      logType: 'Call',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [contactA, contactB],
+      logInfo: {},
+      contactPhoneNumber: '+16505550100',
+    });
+
+    expect(page.uiSchema.territory).toMatchObject({
+      'ui:widget': 'AutocompleteWidget',
+      'ui:options': { enumOptions: expect.arrayContaining([{ value: 'east', label: 'East' }]) },
+    });
+
+    const switched = logPage.getUpdatedLogPageRender({
+      manifest: searchableManifest,
+      logType: 'Call',
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['contact'],
+        page,
+        formData: { ...page.formData, contact: 'contact-2' },
+      },
+    });
+
+    expect(switched.uiSchema.territory).toMatchObject({
+      'ui:widget': 'AutocompleteWidget',
+      'ui:options': { enumOptions: expect.arrayContaining([{ value: 'west', label: 'West' }]) },
+    });
+  });
+
   it('clears callback date and required state when scheduling is cancelled', async () => {
     vi.setSystemTime(new Date('2026-07-03T08:00:00.000Z'));
     const { logPage, basePage } = await createAdvancedCallLogPage();
@@ -505,6 +611,51 @@ describe('logPage', () => {
     ]);
     expect(contactTypeChanged.formData.newCategory).toBeUndefined();
     expect(contactTypeChanged.schema.properties).not.toHaveProperty('newOnly');
+  });
+
+  it('keeps numeric-id selections for searchable contact-type-dependent fields when the contact type changes', async () => {
+    const logPage = await loadLogPage();
+    const searchableManifest = manifest();
+    searchableManifest.platforms.salesforce.page.newContact.additionalFields = [
+      { const: 'newCategory', title: 'New Category', type: 'selection', contactTypeDependent: true, searchable: true },
+    ] as any;
+    const contact = {
+      ...newContact(),
+      additionalInfo: {
+        Lead: { newCategory: [{ const: 11, title: 'Eleven' }] },
+        Contact: { newCategory: [{ const: 22, title: 'Twenty-two' }, { const: 33, title: 'Thirty-three' }] },
+      },
+    };
+    const page = logPage.getLogPageRender({
+      id: 'session-searchable-type',
+      manifest: searchableManifest,
+      logType: 'Call',
+      triggerType: 'createLog',
+      platformName: 'salesforce',
+      direction: 'Outbound',
+      contactInfo: [contact],
+      logInfo: {},
+      contactPhoneNumber: '+16505550100',
+    });
+
+    const changed = logPage.getUpdatedLogPageRender({
+      manifest: searchableManifest,
+      logType: 'Call',
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['newContactType'],
+        page,
+        formData: { ...page.formData, newContactType: 'Contact', newCategory: '22' },
+      },
+    });
+
+    expect(changed.formData.newCategory).toBe('22');
+    expect(changed.schema.properties.newCategory.oneOf).toEqual([
+      { const: '22', title: 'Twenty-two' },
+      { const: '33', title: 'Thirty-three' },
+      { const: 'none', title: expect.any(String) },
+    ]);
+    expect(changed.uiSchema.newCategory['ui:widget']).toBe('AutocompleteWidget');
   });
 
   it('clears pattern validation errors after a valid call-log field value is entered', async () => {

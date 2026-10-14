@@ -27,7 +27,6 @@ const eventHandlerModules = {
 
 const messageHandlerModules = {
   oauthCallBack: '../../src/messageHandlers/oauthCallBack.ts',
-  pipedriveCallbackUri: '../../src/messageHandlers/pipedriveCallbackUri.ts',
   c2sms: '../../src/messageHandlers/c2sms.ts',
   c2d: '../../src/messageHandlers/c2d.ts',
   c2schedule: '../../src/messageHandlers/c2schedule.ts',
@@ -136,12 +135,14 @@ async function loadPopupRuntime(options: PopupRuntimeOptions = {}) {
 
   const authCore = {
     syncCrmAuthedFromStorage: vi.fn(async () => {}),
-    clearLocalCrmAuthState: vi.fn(async () => {}),
+    clearLocalCrmAuthState: vi.fn(async () => true),
   };
   vi.doMock('../../src/core/auth.ts', () => ({ default: authCore }));
 
   const apiErrorHandler = {
     handleApiError: vi.fn(async () => {}),
+    handleSessionInvalidResponse: vi.fn(async () => false),
+    requestAutoReconnect: vi.fn(async () => false),
     registerCrmAuthCacheClearedHandler: vi.fn(),
   };
   vi.doMock('../../src/lib/apiErrorHandler.ts', () => ({ default: apiErrorHandler }));
@@ -154,6 +155,7 @@ async function loadPopupRuntime(options: PopupRuntimeOptions = {}) {
   const manifestService = {
     getManifest: vi.fn(async () => manifest),
     saveManifestUrl: vi.fn(async () => {}),
+    migrateLegacyManifestUrl: vi.fn(async () => false),
   };
   vi.doMock('../../src/service/manifestService.ts', () => manifestService);
 
@@ -250,6 +252,7 @@ describe('popup runtime', () => {
     expect(runtime.i18n.restoreLocale).toHaveBeenCalled();
     expect(runtime.embeddableLocale.syncLocaleToEmbeddableWhenReady).toHaveBeenCalledWith('en-US');
     expect(runtime.util.checkC2DCollision).toHaveBeenCalled();
+    expect(runtime.manifestService.migrateLegacyManifestUrl).toHaveBeenCalled();
     expect(runtime.manifestService.saveManifestUrl).toHaveBeenCalledWith({
       manifestUrl: 'https://manifest.example/custom.json',
     });
@@ -568,6 +571,45 @@ describe('popup runtime', () => {
     }));
   });
 
+  it('replaces a previously rotated JWT in later request URLs and params', async () => {
+    const runtime = await loadPopupRuntime();
+    const firstRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records?jwtToken=old-token',
+      baseURL: 'https://server.example',
+      headers: {},
+    });
+    await runtime.responseInterceptors[0].fulfilled({
+      headers: { 'x-refreshed-jwt-token': 'fresh-token' },
+      config: firstRequest,
+      status: 200,
+      data: {},
+    });
+
+    const urlRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records?jwtToken=old-token',
+      baseURL: 'https://server.example',
+      headers: {},
+    });
+    expect(urlRequest.url).toContain('jwtToken=fresh-token');
+    expect(urlRequest.headers.Authorization).toBe('Bearer fresh-token');
+
+    const paramsRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records',
+      baseURL: 'https://server.example',
+      params: { jwtToken: 'old-token' },
+      headers: {},
+    });
+    expect(paramsRequest.params.jwtToken).toBe('fresh-token');
+    expect(paramsRequest.headers.Authorization).toBe('Bearer fresh-token');
+
+    const otherUserRequest = await runtime.requestInterceptors[0].fulfilled({
+      url: '/records?jwtToken=another-token',
+      baseURL: 'https://server.example',
+      headers: {},
+    });
+    expect(otherUserRequest.headers.Authorization).toBe('Bearer another-token');
+  });
+
   it('leaves JWT storage unchanged when responses have no refreshed token', async () => {
     const runtime = await loadPopupRuntime();
 
@@ -609,6 +651,7 @@ describe('popup runtime', () => {
     await expect(runtime.responseInterceptors[0].rejected(authError)).rejects.toThrow('unauthorized');
     expect(runtime.apiErrorHandler.handleApiError).toHaveBeenCalledWith(authError);
     expect(runtime.authCore.clearLocalCrmAuthState).toHaveBeenCalled();
+    expect(runtime.apiErrorHandler.requestAutoReconnect).toHaveBeenCalledTimes(1);
     expect(readStorage().rcUnifiedCrmExtJwt).toBe('error-fresh-token');
     expect(runtime.logRecorder.logAction).toHaveBeenCalledWith(expect.objectContaining({
       name: 'API_RESPONSE_ERROR',
@@ -794,7 +837,6 @@ describe('popup runtime', () => {
     const sendResponse = vi.fn();
     for (const [type, handlerName] of [
       ['oauthCallBack', 'oauthCallBack'],
-      ['pipedriveCallbackUri', 'pipedriveCallbackUri'],
       ['c2sms', 'c2sms'],
       ['c2d', 'c2d'],
       ['c2schedule', 'c2schedule'],
@@ -844,7 +886,6 @@ describe('popup runtime', () => {
 
     await runtime.runtimeMessageListener({ type: 'oauthCallBack' }, {}, sendResponse);
     for (const type of [
-      'pipedriveCallbackUri',
       'c2sms',
       'c2d',
       'c2schedule',

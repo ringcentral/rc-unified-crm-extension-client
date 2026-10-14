@@ -500,6 +500,26 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
   });
 
+  it('retires the legacy customCrmManifestUrl override when a connector is selected', async () => {
+    seedStorage({ customCrmManifestUrl: 'https://unified-crm-extension.labs.ringcentral.com/crmManifest' });
+    const loaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.ts',
+    );
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: fixedConnectorManifest() });
+
+    await loaded.handler.onEvent({
+      data: dataFor({
+        platformList: [{ id: 'salesforce', name: 'salesforce', displayName: 'Salesforce' }],
+      }, 'selectPlatform'),
+      manifest: baseManifest(),
+      platformName: 'salesforce',
+      platform: baseManifest().platforms.salesforce,
+      listButtonItemId: 'salesforce=public',
+    });
+
+    expect(readStorage().customCrmManifestUrl).toBeUndefined();
+  });
+
   it('selects a private dynamic connector manifest and opens hostname input', async () => {
     const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.ts',
