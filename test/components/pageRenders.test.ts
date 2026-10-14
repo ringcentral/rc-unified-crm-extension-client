@@ -115,6 +115,27 @@ function workflowPlugin() {
         title: 'Hidden',
         hidden: true,
       },
+      {
+        const: 'searchableCity',
+        type: 'selection',
+        title: 'City',
+        searchable: true,
+        oneOf: [
+          { const: 'nyc', title: 'New York' },
+          { const: 'la', title: 'Los Angeles' },
+        ],
+      },
+      {
+        const: 'searchableTags',
+        type: 'selection',
+        title: 'Tags',
+        searchable: true,
+        multiSelect: true,
+        oneOf: [
+          { const: 'vip', title: 'VIP' },
+          { const: 'lead', title: 'Lead' },
+        ],
+      },
     ],
   };
 }
@@ -479,6 +500,31 @@ describe('basic page renderers', () => {
     expect(errorLogRecordPage.getErrorLogRecordPageRender({ step: 3 }).title).toBe('Recording in process');
   });
 
+  it('coerces saved numeric values to strings for searchable plugin selections', async () => {
+    const pluginConfigurePage = await loadPage('../../src/components/pluginConfigurePage.ts');
+
+    const page = pluginConfigurePage.getPluginConfigurePageRender({
+      pluginId: 'plugin-1',
+      pluginAccess: 'private',
+      plugin: {
+        ...workflowPlugin(),
+        pageContent: [
+          { const: 'pipeline', type: 'selection', title: 'Pipeline', searchable: true, oneOf: [{ const: 7, title: 'Seven' }] },
+          { const: 'stages', type: 'selection', title: 'Stages', searchable: true, multiSelect: true, oneOf: [{ const: 1, title: 'One' }, { const: 2, title: 'Two' }] },
+        ],
+      },
+      config: { pipeline: { value: 7 }, stages: { value: [1, 2] } },
+      isLoggedIn: true,
+      hasValidLicense: true,
+    });
+
+    const props = page.schema.properties.config.properties;
+    expect(props.pipeline.default).toBe('7');
+    expect(props.pipeline.enum).toEqual(['7']);
+    expect(props.stages.default).toEqual(['1', '2']);
+    expect(props.stages.items.enum).toEqual(['1', '2']);
+  });
+
   it('renders plugin configuration pages with config schema and license state', async () => {
     const pluginConfigurePage = await loadPage('../../src/components/pluginConfigurePage.ts');
 
@@ -506,6 +552,40 @@ describe('basic page renderers', () => {
       uniqueItems: true,
     });
     expect(page.uiSchema.config.scopes['ui:widget']).toBe('checkboxes');
+    expect(page.schema.properties.config.properties.searchableCity).toMatchObject({
+      type: 'string',
+      enum: ['nyc', 'la'],
+      enumNames: ['New York', 'Los Angeles'],
+    });
+    expect(page.uiSchema.config.searchableCity).toMatchObject({
+      'ui:widget': 'AutocompleteWidget',
+      'ui:placeholder': 'Start typing to search...',
+      'ui:options': {
+        multiple: false,
+        enumOptions: [
+          { value: 'nyc', label: 'New York' },
+          { value: 'la', label: 'Los Angeles' },
+        ],
+      },
+    });
+    expect(page.schema.properties.config.properties.searchableTags).toMatchObject({
+      type: 'array',
+      uniqueItems: true,
+      items: {
+        enum: ['vip', 'lead'],
+        enumNames: ['VIP', 'Lead'],
+      },
+    });
+    expect(page.uiSchema.config.searchableTags).toMatchObject({
+      'ui:widget': 'AutocompleteWidget',
+      'ui:options': {
+        multiple: true,
+        enumOptions: [
+          { value: 'vip', label: 'VIP' },
+          { value: 'lead', label: 'Lead' },
+        ],
+      },
+    });
     expect(page.schema.properties.basicInfo.oneOf).toEqual(expect.arrayContaining([
       expect.objectContaining({ const: 'licenseStatus', descriptionColor: 'error' }),
     ]));

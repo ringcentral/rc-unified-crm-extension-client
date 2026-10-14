@@ -3,7 +3,7 @@ import inboundCallIcon from '../images/inboundCallIcon.png';
 import smsMessageIcon from '../images/smsMessageIcon.png';
 import logCore from '../core/log';
 import { t } from '../i18n';
-import { buildContactOptions, buildAdditionalFieldsSchema, buildContactWarningField, buildNewContactWidget, getContactFieldOptions } from './logPageUtils';
+import { buildContactOptions, buildAdditionalFieldsSchema, buildContactWarningField, buildNewContactWidget, buildSearchableUISchema, getContactFieldOptions, toSearchableOptions } from './logPageUtils';
 
 type UnknownRecord = Record<string, any>;
 
@@ -422,11 +422,18 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                             if (f.contactDependent) {
                                 additionalFieldsValue[f.const] = baseOptions[0]?.const;
                             }
-                            else if (f.contactTypeDependent && !baseOptions.some(option => option.const === page.formData[f.const])) {
+                            else if (f.contactTypeDependent && !baseOptions.some(option => String(option.const) === String(page.formData[f.const]))) {
                                 additionalFieldsValue[f.const] = undefined;
                             }
                             else {
                                 additionalFieldsValue[f.const] = page.formData[f.const];
+                            }
+                            if (f.searchable) {
+                                additionalFields[f.const].oneOf = toSearchableOptions(additionalFields[f.const].oneOf);
+                                if (additionalFieldsValue[f.const] !== undefined && additionalFieldsValue[f.const] !== null) {
+                                    additionalFieldsValue[f.const] = String(additionalFieldsValue[f.const]);
+                                }
+                                addiitionalWarningUISchemas[f.const] = buildSearchableUISchema(additionalFields[f.const].oneOf);
                             }
                             if (f.required) {
                                 page.schema.required.push(f.const);
@@ -511,8 +518,19 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                     ...options,
                     ...(includeNoneOption ? [{ const: 'none', title: t('common.labels.none') }] : [])
                 ];
-                if (page.formData[f.const] !== 'none' && !options.some(option => option.const === page.formData[f.const])) {
+                // searchable fields hold string form values, so compare as strings
+                if (page.formData[f.const] !== 'none' && !options.some(option => String(option.const) === String(page.formData[f.const]))) {
                     delete page.formData[f.const];
+                }
+                if (f.searchable) {
+                    page.schema.properties[f.const].oneOf = toSearchableOptions(page.schema.properties[f.const].oneOf);
+                    if (page.formData[f.const] !== undefined && page.formData[f.const] !== null) {
+                        page.formData[f.const] = String(page.formData[f.const]);
+                    }
+                    page.uiSchema[f.const] = {
+                        ...page.uiSchema[f.const],
+                        ...buildSearchableUISchema(page.schema.properties[f.const].oneOf),
+                    };
                 }
             }
 

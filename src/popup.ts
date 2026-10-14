@@ -5,7 +5,7 @@ import authCore from './core/auth';
 import apiErrorHandler from './lib/apiErrorHandler';
 import embeddableServices from './service/embeddableServices';
 import { getManifest as getManifestBase } from './service/manifestService';
-import { saveManifestUrl } from './service/manifestService';
+import { saveManifestUrl, migrateLegacyManifestUrl } from './service/manifestService';
 import logRecorder from './lib/logRecorder';
 import i18n from './i18n';
 
@@ -392,6 +392,7 @@ async function initializePopup() {
 }
 
 async function getCustomManifest() {
+  await migrateLegacyManifestUrl();
   const customCrmManifest = await getManifest();
   if (customCrmManifest) {
     const { customCrmManifestUrl } = await chromeStorageLocal.get({ customCrmManifestUrl: null });
