@@ -75,6 +75,8 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
       await saveManifestUrl({ manifestUrl: privateManifestUrl });
       break;
   }
+  // An explicit connector choice retires the legacy 1.x options override, which would otherwise be re-applied on popup open.
+  await chrome.storage.local.remove('customCrmManifestUrl');
   // eslint-disable-next-line no-param-reassign
   manifest = await saveManifest({ manifest: platformManifestResponse!.data as any }) as UnknownRecord;
   await getImplementedInterfaces({ manifest, platformName: selectedPlatform.name });

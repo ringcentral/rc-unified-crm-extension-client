@@ -46,10 +46,13 @@ async function fetchManifest({ party }) {
     try {
         let manifest = {};
         switch (party) {
-            case 'ringcentral':
-                manifest = await fetch('https://unified-crm-extension.labs.ringcentral.com/crmManifest').then(res => res.json());
-                await chrome.storage.local.set({ customCrmManifestUrl: 'https://unified-crm-extension.labs.ringcentral.com/crmManifest' });
-                break;
+            case 'ringcentral': {
+                // Official connectors come from the App Connect connector list; do not pin the legacy server-host manifest.
+                const status = document.getElementById('status');
+                status.style = 'color: green';
+                status.textContent = 'Options saved.';
+                return;
+            }
             case 'gate6':
                 manifest = await fetch('https://rcservicenowapi.gate6.com/crmManifest?platformName=servicenow').then(res => res.json());
                 await chrome.storage.local.set({ customCrmManifestUrl: 'https://rcservicenowapi.gate6.com/crmManifest?platformName=servicenow' });

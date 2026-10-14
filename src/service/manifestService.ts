@@ -1,7 +1,12 @@
 import axios from 'axios';
 import baseManifest from '../manifest.json';
 import { getRcAccessTokenHeaderConfig, getRcInfo } from '../lib/util';
-import { getPlatformInfo } from './platformService';
+import { getPlatformInfo, setPlatformInfo } from './platformService';
+import type { PlatformInfo } from './platformService';
+
+const LEGACY_PROD_MANIFEST_URL = 'https://unified-crm-extension.labs.ringcentral.com/crmManifest';
+const LEGACY_MANIFEST_MIGRATION_FLAG = 'manifestMigratedToPublicConnector';
+const PUBLIC_MIGRATION_PLATFORM_NAMES = ['bullhorn', 'clio', 'redtail', 'insightly', 'pipedrive', 'googleSheets', 'netsuite'];
 
 type UnknownRecord = Record<string, unknown>;
 type ManifestValue = AppConnectManifest | string | null;
@@ -29,6 +34,7 @@ interface ManifestOverrideObject {
 export interface CatalogItem extends UnknownRecord {
   id?: string;
   name?: string;
+  displayName?: string;
   access?: 'public' | 'shared' | 'private' | string;
   accountId?: string;
   version?: string;
@@ -207,6 +213,81 @@ export async function refreshManifest(): Promise<ManifestValue> {
   return manifest;
 }
 
+/**
+ * One-time migration for users who pinned the prod server-host manifest through the 1.x options page
+ * (`customCrmManifestUrl`). Eligible connectors are moved to their public dev console connector manifest.
+ * Returns true when the legacy URL was retired. Any failure leaves storage untouched so it retries next time.
+ */
+export async function migrateLegacyManifestUrl(): Promise<boolean> {
+  const stored = await chrome.storage.local.get({
+    [LEGACY_MANIFEST_MIGRATION_FLAG]: false,
+    customCrmManifestUrl: null,
+    manifestUrl: null,
+    'platform-info': null,
+  }) as {
+    [LEGACY_MANIFEST_MIGRATION_FLAG]: boolean;
+    customCrmManifestUrl: string | null;
+    manifestUrl: string | null;
+    'platform-info': PlatformInfo | null;
+  };
+  const platformInfo = stored['platform-info'];
+  try {
+    // The user already picked a dev console connector. The legacy URL (and the manifestUrl that
+    // popup.ts copied from it on earlier opens) is only a stale override, so point back at the connector.
+    if (platformInfo?.connectorId) {
+      const hasLegacyOverride = stored.customCrmManifestUrl === LEGACY_PROD_MANIFEST_URL
+        || stored.manifestUrl === LEGACY_PROD_MANIFEST_URL;
+      if (!hasLegacyOverride) {
+        return false;
+      }
+      if (stored.manifestUrl === LEGACY_PROD_MANIFEST_URL) {
+        const connectorManifestUrl = platformInfo.isPrivate
+          ? `${baseManifest.platformPublicListUrl}/${platformInfo.connectorId}/manifest?access=internal&type=connector&accountId=${platformInfo.devRcAccountId}`
+          : `${baseManifest.platformPublicListUrl}/${platformInfo.connectorId}/manifest?type=connector`;
+        const connectorManifestResponse = await axios.get(connectorManifestUrl);
+        await saveManifestUrl({ manifestUrl: connectorManifestUrl });
+        await saveManifest({ manifest: connectorManifestResponse.data as AppConnectManifest });
+      }
+      await chrome.storage.local.remove('customCrmManifestUrl');
+      await chrome.storage.local.set({ [LEGACY_MANIFEST_MIGRATION_FLAG]: true });
+      return true;
+    }
+    if (stored[LEGACY_MANIFEST_MIGRATION_FLAG] || stored.customCrmManifestUrl !== LEGACY_PROD_MANIFEST_URL) {
+      return false;
+    }
+    if (!platformInfo?.platformName || !PUBLIC_MIGRATION_PLATFORM_NAMES.includes(platformInfo.platformName)) {
+      return false;
+    }
+    const listResponse = await axios.get(`${baseManifest.platformPublicListUrl}?type=connector`);
+    const connector = asConnectorList(listResponse.data).connectors?.find(item => item.name === platformInfo.platformName);
+    if (!connector?.id) {
+      return false;
+    }
+    const manifestUrl = `${baseManifest.platformPublicListUrl}/${connector.id}/manifest?type=connector`;
+    const manifestResponse = await axios.get(manifestUrl);
+    const migratedPlatformInfo: PlatformInfo = {
+      ...platformInfo,
+      platformDisplayName: connector.displayName ?? connector.name,
+      connectorId: connector.id,
+      devRcAccountId: '',
+      isPrivate: false,
+    };
+    await setPlatformInfo({ platformInfo: migratedPlatformInfo });
+    await saveManifestUrl({ manifestUrl });
+    await saveManifest({ manifest: manifestResponse.data as AppConnectManifest });
+    await chrome.storage.local.set({
+      'platform-info': migratedPlatformInfo,
+      [LEGACY_MANIFEST_MIGRATION_FLAG]: true,
+    });
+    await chrome.storage.local.remove('customCrmManifestUrl');
+    return true;
+  }
+  catch (e) {
+    console.warn('[manifest] Legacy manifest URL migration failed, will retry next time', e);
+    return false;
+  }
+}
+
 export async function getManifest(forceRefresh = false): Promise<ManifestValue> {
   if (sessionManifest && !forceRefresh) {
     return sessionManifest;
@@ -254,6 +335,7 @@ const manifestService = {
   saveManifest,
   saveManifestUrl,
   refreshManifest,
+  migrateLegacyManifestUrl,
 };
 
 export default manifestService;
