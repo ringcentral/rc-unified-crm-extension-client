@@ -222,22 +222,38 @@ export async function migrateLegacyManifestUrl(): Promise<boolean> {
   const stored = await chrome.storage.local.get({
     [LEGACY_MANIFEST_MIGRATION_FLAG]: false,
     customCrmManifestUrl: null,
+    manifestUrl: null,
     'platform-info': null,
   }) as {
     [LEGACY_MANIFEST_MIGRATION_FLAG]: boolean;
     customCrmManifestUrl: string | null;
+    manifestUrl: string | null;
     'platform-info': PlatformInfo | null;
   };
-  if (stored[LEGACY_MANIFEST_MIGRATION_FLAG] || stored.customCrmManifestUrl !== LEGACY_PROD_MANIFEST_URL) {
-    return false;
-  }
   const platformInfo = stored['platform-info'];
   try {
-    // The user already picked a dev console connector, so the legacy URL is only a stale override.
+    // The user already picked a dev console connector. The legacy URL (and the manifestUrl that
+    // popup.ts copied from it on earlier opens) is only a stale override, so point back at the connector.
     if (platformInfo?.connectorId) {
+      const hasLegacyOverride = stored.customCrmManifestUrl === LEGACY_PROD_MANIFEST_URL
+        || stored.manifestUrl === LEGACY_PROD_MANIFEST_URL;
+      if (!hasLegacyOverride) {
+        return false;
+      }
+      if (stored.manifestUrl === LEGACY_PROD_MANIFEST_URL) {
+        const connectorManifestUrl = platformInfo.isPrivate
+          ? `${baseManifest.platformPublicListUrl}/${platformInfo.connectorId}/manifest?access=internal&type=connector&accountId=${platformInfo.devRcAccountId}`
+          : `${baseManifest.platformPublicListUrl}/${platformInfo.connectorId}/manifest?type=connector`;
+        const connectorManifestResponse = await axios.get(connectorManifestUrl);
+        await saveManifestUrl({ manifestUrl: connectorManifestUrl });
+        await saveManifest({ manifest: connectorManifestResponse.data as AppConnectManifest });
+      }
       await chrome.storage.local.remove('customCrmManifestUrl');
       await chrome.storage.local.set({ [LEGACY_MANIFEST_MIGRATION_FLAG]: true });
       return true;
+    }
+    if (stored[LEGACY_MANIFEST_MIGRATION_FLAG] || stored.customCrmManifestUrl !== LEGACY_PROD_MANIFEST_URL) {
+      return false;
     }
     if (!platformInfo?.platformName || !PUBLIC_MIGRATION_PLATFORM_NAMES.includes(platformInfo.platformName)) {
       return false;
