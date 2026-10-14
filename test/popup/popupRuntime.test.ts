@@ -155,6 +155,7 @@ async function loadPopupRuntime(options: PopupRuntimeOptions = {}) {
   const manifestService = {
     getManifest: vi.fn(async () => manifest),
     saveManifestUrl: vi.fn(async () => {}),
+    migrateLegacyManifestUrl: vi.fn(async () => false),
   };
   vi.doMock('../../src/service/manifestService.ts', () => manifestService);
 
@@ -251,6 +252,7 @@ describe('popup runtime', () => {
     expect(runtime.i18n.restoreLocale).toHaveBeenCalled();
     expect(runtime.embeddableLocale.syncLocaleToEmbeddableWhenReady).toHaveBeenCalledWith('en-US');
     expect(runtime.util.checkC2DCollision).toHaveBeenCalled();
+    expect(runtime.manifestService.migrateLegacyManifestUrl).toHaveBeenCalled();
     expect(runtime.manifestService.saveManifestUrl).toHaveBeenCalledWith({
       manifestUrl: 'https://manifest.example/custom.json',
     });

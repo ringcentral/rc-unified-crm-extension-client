@@ -12,6 +12,7 @@ vi.mock('axios', () => ({
 
 vi.mock('../../src/service/platformService.ts', () => ({
   getPlatformInfo: vi.fn(),
+  setPlatformInfo: vi.fn(),
 }));
 
 vi.mock('../../src/lib/util.ts', () => ({
@@ -342,6 +343,125 @@ describe('manifestService', () => {
     });
     await expect(manifestService.getManifest(true)).resolves.toMatchObject({
       serverUrl: 'https://storage.example',
+    });
+  });
+
+  describe('migrateLegacyManifestUrl', () => {
+    const prodManifestUrl = 'https://unified-crm-extension.labs.ringcentral.com/crmManifest';
+    const publicListUrl = 'https://appconnect.labs.ringcentral.com/public-api/connectors';
+    const clioManifest = {
+      serverUrl: 'https://unified-crm-extension.labs.ringcentral.com',
+      platforms: { clio: {} },
+    };
+
+    function mockPublicCatalog() {
+      vi.mocked(axios.get)
+        .mockResolvedValueOnce({
+          data: { connectors: [{ id: 'clio-id', name: 'clio', displayName: 'Clio' }] },
+        })
+        .mockResolvedValueOnce({ data: clioManifest });
+    }
+
+    it('moves an eligible legacy user to the public connector manifest', async () => {
+      seedStorage({
+        customCrmManifestUrl: prodManifestUrl,
+        'platform-info': { platformName: 'clio', hostname: 'app.clio.com' },
+      });
+      mockPublicCatalog();
+      const manifestService = await loadManifestService();
+
+      await expect(manifestService.migrateLegacyManifestUrl()).resolves.toBe(true);
+
+      expect(axios.get).toHaveBeenNthCalledWith(1, `${publicListUrl}?type=connector`);
+      expect(axios.get).toHaveBeenNthCalledWith(2, `${publicListUrl}/clio-id/manifest?type=connector`);
+      const storage = readStorage();
+      expect(storage.manifestUrl).toBe(`${publicListUrl}/clio-id/manifest?type=connector`);
+      expect(storage.customCrmManifest).toMatchObject({ serverUrl: clioManifest.serverUrl });
+      expect(storage.customCrmManifestUrl).toBeUndefined();
+      expect(storage.manifestMigratedToPublicConnector).toBe(true);
+      expect(storage['platform-info']).toEqual({
+        platformName: 'clio',
+        hostname: 'app.clio.com',
+        platformDisplayName: 'Clio',
+        connectorId: 'clio-id',
+        devRcAccountId: '',
+        isPrivate: false,
+      });
+    });
+
+    it('does nothing again once migrated', async () => {
+      seedStorage({
+        manifestMigratedToPublicConnector: true,
+        customCrmManifestUrl: prodManifestUrl,
+        'platform-info': { platformName: 'clio' },
+      });
+      const manifestService = await loadManifestService();
+
+      await expect(manifestService.migrateLegacyManifestUrl()).resolves.toBe(false);
+      expect(axios.get).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['a custom manifest URL', 'https://custom.example/crmManifest', { platformName: 'clio' }],
+      ['a connector outside the migration list', prodManifestUrl, { platformName: 'gohighlevel' }],
+      ['a legacy freshdesk platform', prodManifestUrl, { platformName: 'freshdesk' }],
+      ['no platform info', prodManifestUrl, null],
+    ])('leaves %s untouched', async (_label, customCrmManifestUrl, platformInfo) => {
+      seedStorage({ customCrmManifestUrl, 'platform-info': platformInfo });
+      const manifestService = await loadManifestService();
+
+      await expect(manifestService.migrateLegacyManifestUrl()).resolves.toBe(false);
+
+      expect(axios.get).not.toHaveBeenCalled();
+      expect(readStorage().customCrmManifestUrl).toBe(customCrmManifestUrl);
+      expect(readStorage().manifestMigratedToPublicConnector).toBeUndefined();
+    });
+
+    it('retires the legacy URL when the user already selected a dev console connector', async () => {
+      seedStorage({
+        customCrmManifestUrl: prodManifestUrl,
+        manifestUrl: 'https://private.example/manifest',
+        'platform-info': { platformName: 'gohighlevel', connectorId: 'private-id', isPrivate: true },
+      });
+      const manifestService = await loadManifestService();
+
+      await expect(manifestService.migrateLegacyManifestUrl()).resolves.toBe(true);
+
+      expect(axios.get).not.toHaveBeenCalled();
+      expect(readStorage().customCrmManifestUrl).toBeUndefined();
+      expect(readStorage().manifestUrl).toBe('https://private.example/manifest');
+      expect(readStorage().manifestMigratedToPublicConnector).toBe(true);
+    });
+
+    it('leaves storage untouched so it retries when the public connector is missing', async () => {
+      seedStorage({
+        customCrmManifestUrl: prodManifestUrl,
+        'platform-info': { platformName: 'clio' },
+      });
+      vi.mocked(axios.get).mockResolvedValueOnce({ data: { connectors: [{ id: 'other', name: 'other' }] } });
+      const manifestService = await loadManifestService();
+
+      await expect(manifestService.migrateLegacyManifestUrl()).resolves.toBe(false);
+
+      expect(readStorage().customCrmManifestUrl).toBe(prodManifestUrl);
+      expect(readStorage().manifestMigratedToPublicConnector).toBeUndefined();
+    });
+
+    it('leaves storage untouched so it retries when the network fails', async () => {
+      seedStorage({
+        customCrmManifestUrl: prodManifestUrl,
+        'platform-info': { platformName: 'clio' },
+      });
+      vi.mocked(axios.get).mockRejectedValueOnce(new Error('offline'));
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const manifestService = await loadManifestService();
+
+      await expect(manifestService.migrateLegacyManifestUrl()).resolves.toBe(false);
+
+      expect(readStorage().customCrmManifestUrl).toBe(prodManifestUrl);
+      expect(readStorage().manifestMigratedToPublicConnector).toBeUndefined();
+      expect(readStorage().manifestUrl).toBeUndefined();
+      warn.mockRestore();
     });
   });
 
