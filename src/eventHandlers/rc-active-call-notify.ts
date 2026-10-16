@@ -59,7 +59,10 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
   };
   switch (data.call.telephonyStatus) {
     case 'CallConnected':
-      window.postMessage({ type: 'rc-expandable-call-note-open', sessionId: data.call.sessionId }, '*');
+      // RingCX calls have their own notes on the disposition page, so skip the quick note button
+      if (data.call.source !== 'ringcx') {
+        window.postMessage({ type: 'rc-expandable-call-note-open', sessionId: data.call.sessionId }, '*');
+      }
       switch (data.call.direction) {
         case 'Inbound':
           chrome.runtime.sendMessage({

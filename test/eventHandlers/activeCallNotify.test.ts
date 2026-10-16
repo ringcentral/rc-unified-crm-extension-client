@@ -264,6 +264,38 @@ describe('rc-active-call-notify event handler', () => {
     }));
   });
 
+  it('does not open the quick call note for connected RingCX calls', async () => {
+    seedStorage({
+      userSettings: {},
+      implementedInterfaces: {},
+    });
+    const handler = await loadActiveCallHandler();
+
+    await handler.onEvent({
+      popupContext: {},
+      data: {
+        requestId: 'request-ringcx',
+        call: {
+          telephonyStatus: 'CallConnected',
+          direction: 'Outbound',
+          sessionId: 'session-ringcx',
+          telephonySessionId: 'telephony-ringcx',
+          source: 'ringcx',
+          from: { phoneNumber: '+18005550100' },
+          to: { phoneNumber: '+16505550300' },
+        },
+      },
+    });
+
+    expect(window.postMessage).not.toHaveBeenCalledWith(expect.objectContaining({
+      type: 'rc-expandable-call-note-open',
+    }), '*');
+    expect(cacheLogPageData).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'session-ringcx',
+      source: 'ringcx',
+    }));
+  });
+
   it('opens inbound call-pop on answer and skips transferred-on-hold calls', async () => {
     seedStorage({
       userSettings: {},
