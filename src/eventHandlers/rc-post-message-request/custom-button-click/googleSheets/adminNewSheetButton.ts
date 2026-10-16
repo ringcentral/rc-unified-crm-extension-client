@@ -23,7 +23,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   void platformName;
   void platform;
   void userCore;
-  const rcAccessTokenNewSheet = getRcAccessToken();
+  const rcAccessTokenNewSheet = await getRcAccessToken();
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
   const { adminSettings } = await chrome.storage.local.get('adminSettings') as { adminSettings: UnknownRecord };
   const { rcUnifiedCrmExtJwt: jwtToken } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as { rcUnifiedCrmExtJwt?: string };

@@ -57,51 +57,58 @@ async function showClickToDialWidgetForPhone(page) {
   return callButton;
 }
 
-async function seedRingCentralWidgetIdentity(page) {
-  await page.evaluate(() => {
-    localStorage.setItem('sdk-rc-widgetplatform', JSON.stringify({
-      owner_id: 'e2e-owner',
-      access_token: 'e2e-rc-access-token',
-    }));
-  });
-}
-
-async function seedRingCentralWidgetIndexedDb(page) {
+/**
+ * Seeds the embeddable widget's shared localforage store (`rc-widget`), which
+ * holds both the SDK platform cache and the persisted DataFetcher module state.
+ */
+async function seedRingCentralWidgetStorage(page) {
   await page.evaluate(async () => {
-    await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.open('rc-widget-storage-e2e-owner', 2);
+    const storeName = 'keyvaluepairs';
+    const openWidgetDb = (version?: number) => new Promise<IDBDatabase>((resolve, reject) => {
+      const request = version ? indexedDB.open('rc-widget', version) : indexedDB.open('rc-widget');
       request.onupgradeneeded = () => {
         const db = request.result;
-        if (!db.objectStoreNames.contains('keyvaluepairs')) {
-          db.createObjectStore('keyvaluepairs');
+        if (!db.objectStoreNames.contains(storeName)) {
+          db.createObjectStore(storeName);
         }
       };
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => {
-        const db = request.result;
-        const transaction = db.transaction('keyvaluepairs', 'readwrite');
-        transaction.objectStore('keyvaluepairs').put({
-          value: {
-            cachedData: {
-              extensionInfo: {
-                id: 'e2e-extension',
-                extensionNumber: '101',
-                account: {
-                  id: 'e2e-account',
-                },
-                contact: {
-                  email: 'agent@example.com',
-                },
+      request.onsuccess = () => resolve(request.result);
+    });
+    let db = await openWidgetDb();
+    if (!db.objectStoreNames.contains(storeName)) {
+      const nextVersion = db.version + 1;
+      db.close();
+      db = await openWidgetDb(nextVersion);
+    }
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(storeName, 'readwrite');
+      const store = transaction.objectStore(storeName);
+      store.put(JSON.stringify({
+        owner_id: 'e2e-owner',
+        access_token: 'e2e-rc-access-token',
+      }), 'sdk-rc-widgetplatform');
+      store.put(JSON.stringify({
+        storageData: JSON.stringify({
+          cachedData: {
+            extensionInfo: {
+              id: 'e2e-extension',
+              extensionNumber: '101',
+              account: {
+                id: 'e2e-account',
+              },
+              contact: {
+                email: 'agent@example.com',
               },
             },
           },
-        }, 'dataFetcherV2-storageData');
-        transaction.oncomplete = () => {
-          db.close();
-          resolve();
-        };
-        transaction.onerror = () => reject(transaction.error);
+        }),
+      }), 'persist:DataFetcher');
+      transaction.oncomplete = () => {
+        db.close();
+        resolve();
       };
+      transaction.onerror = () => reject(transaction.error);
     });
   });
 }
@@ -109,12 +116,10 @@ async function seedRingCentralWidgetIndexedDb(page) {
 async function openPopupPage(extension) {
   const popupPage = await extension.context.newPage();
   await popupPage.goto(`chrome-extension://${extension.extensionId}/options.html`);
-  await seedRingCentralWidgetIdentity(popupPage);
-  await seedRingCentralWidgetIndexedDb(popupPage);
+  await seedRingCentralWidgetStorage(popupPage);
   await popupPage.goto(`chrome-extension://${extension.extensionId}/popup.html`);
   await popupPage.locator('#rc-widget-adapter-frame').waitFor();
-  await seedRingCentralWidgetIdentity(popupPage);
-  await seedRingCentralWidgetIndexedDb(popupPage);
+  await seedRingCentralWidgetStorage(popupPage);
   return popupPage;
 }
 
@@ -1000,6 +1005,7 @@ test.describe('App Connect extension smoke', () => {
         triggerType: 'createLog',
         platformName: 'salesforce',
         direction: 'Inbound',
+        source: 'Phone',
         contactPhoneNumber: '+16505550100',
         logInfo: {},
         contactInfo: [
@@ -1076,7 +1082,7 @@ test.describe('App Connect extension smoke', () => {
       expect.objectContaining({
         message: {
           type: 'rc-adapter-navigate-to',
-          path: '/log/call/e2e-search-session-1',
+          path: '/log/call/e2e-search-session-1?source=Phone',
         },
         targetOrigin: '*',
       }),

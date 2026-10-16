@@ -105,7 +105,7 @@ async function getCalldownPageWithRecords({ manifest, filterName = '', filterSta
         try {
             const platformInfo = await chrome.storage.local.get('platform-info') as UnknownRecord;
             const platformName = platformInfo['platform-info']?.platformName ?? '';
-            const matcherRoot = (document.querySelector('#rc-widget-adapter-frame') as any)?.contentWindow?.phone?.contactMatcher?.data ?? {};
+            const matcherRoot = (document.querySelector('#rc-widget-adapter-frame') as any)?.contentWindow?.app?.modules?.ContactMatcher?.data ?? {};
             for (const [phone, platformData] of Object.entries(matcherRoot) as Array<[string, UnknownRecord]>) {
                 const arr = platformData?.[platformName]?.data ?? [];
                 for (const c of arr) {

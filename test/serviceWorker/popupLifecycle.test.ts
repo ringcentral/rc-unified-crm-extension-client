@@ -244,14 +244,14 @@ describe('service worker popup lifecycle', () => {
     onMessage({ type: 'sideWidgetOpen', opened: true }, {}, vi.fn());
 
     await vi.waitFor(() => {
-      expect(chrome.windows.update).toHaveBeenCalledWith(15, { width: 750 });
+      expect(chrome.windows.update).toHaveBeenCalledWith(15, { width: 810 });
     });
 
     vi.mocked(chrome.windows.get).mockResolvedValueOnce({
       id: 15,
       state: 'normal',
       focused: true,
-      width: 750,
+      width: 810,
       height: 848,
     });
 

@@ -100,7 +100,7 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
     // 2.2. Manifest case: use RC login to login CRM as well
     if (!crmAuthed && !!platform?.autoLoginCRMWithRingCentralLogin) {
       if (manifest) {
-        const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: getRcAccessToken(), useLicense: platform.useLicense });
+        const returnedToken = await authCore.apiKeyLogin({ serverUrl: manifest.serverUrl, apiKey: await getRcAccessToken(), useLicense: platform.useLicense });
         try {
           await userCore.updateSSCLToken({ serverUrl: manifest.serverUrl, platform, token: returnedToken });
         }

@@ -10,7 +10,7 @@ type UnknownRecord = Record<string, any>;
 function getLogPageRender({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, isUnresolved, contactPhoneNumber, useContactSearch }: UnknownRecord): UnknownRecord {
     const contactList = buildContactOptions(contactInfo, useContactSearch);
     const defaultContact = contactList.some(c => c.toNumberEntity) ? contactList.find(c => c.toNumberEntity) : (contactList[0] ?? null);
-    const hasOnlyContactSearch = contactList.length === 1 && defaultContact.const === 'searchContact';
+    const hasOnlyContactSearch = contactList.length === 1 && defaultContact?.const === 'searchContact';
     const defaultContactName = hasOnlyContactSearch ? '' : (defaultContact?.title ?? '');
     const defaultActivityTitle = direction === 'Inbound' ?
         t('pages.log.inboundCallFrom', { type: logType, name: defaultContactName }) :
@@ -70,11 +70,11 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
     }
     let page: UnknownRecord = {};
     let allAdditionalFields = logType === 'Call' ? manifest.platforms[platformName].page?.callLog?.additionalFields : manifest.platforms[platformName].page?.messageLog?.additionalFields;
-    if (defaultContact.isNewContact && !!manifest.platforms[platformName].page?.newContact?.additionalFields) {
+    if (defaultContact?.isNewContact && !!manifest.platforms[platformName].page?.newContact?.additionalFields) {
         allAdditionalFields = allAdditionalFields.concat(manifest.platforms[platformName].page.newContact.additionalFields);
     }
     if (allAdditionalFields) {
-        allAdditionalFields = allAdditionalFields.filter(f => !f.showIfContactType || f.showIfContactType.length === 0 || f.showIfContactType.includes(defaultContact.type ?? defaultContact.defaultContactType));
+        allAdditionalFields = allAdditionalFields.filter(f => !f.showIfContactType || f.showIfContactType.length === 0 || f.showIfContactType.includes(defaultContact?.type ?? defaultContact?.defaultContactType));
     }
     const { additionalFields, additionalFieldsValue, additionalWarningUISchemas, requiredFieldNames } =
         buildAdditionalFieldsSchema({ allAdditionalFields, contact: defaultContact, logInfo });
@@ -97,7 +97,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                             type: 'string'
                         },
                         contact: {
-                            title: hasOnlyContactSearch ? defaultContact.title : t('common.labels.contact'),
+                            title: hasOnlyContactSearch ? defaultContact?.title : t('common.labels.contact'),
                             type: 'string',
                             oneOf: contactList
                         },
@@ -173,8 +173,8 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 },
                 formData: {
                     id,
-                    contact: hasOnlyContactSearch ? '' : defaultContact.const,
-                    newContactType: defaultContact.defaultContactType ?? '',
+                    contact: hasOnlyContactSearch ? '' : defaultContact?.const,
+                    newContactType: defaultContact?.defaultContactType ?? '',
                     newContactName: '',
                     contactType: defaultContact?.type ?? '',
                     contactName: defaultContactName,
@@ -247,7 +247,7 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
                 },
                 formData: {
                     id,
-                    contact: loggedContactId ?? defaultContact.const,
+                    contact: loggedContactId ?? defaultContact?.const,
                     activityTitle: logInfo?.subject ?? '',
                     triggerType,
                     note: logInfo?.note ?? '',
@@ -265,8 +265,10 @@ function getLogPageRender({ id, manifest, logType, triggerType, platformName, di
 function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }: UnknownRecord): UnknownRecord {
     const updatedFieldKey = updateData.keys[0];
     let page = updateData.page;
-    // update target field value
-    page.formData = updateData.formData;
+    // Update target field value. The widget only reports the fields its form
+    // knows about, so merge instead of replace to keep the fields this page
+    // carries for itself, such as triggerType.
+    page.formData = { ...page.formData, ...updateData.formData };
     const contact = page.schema.properties.contact.oneOf.find(c => c.const === page.formData.contact);
     switch (updatedFieldKey) {
         case 'scheduleCallback':
@@ -350,7 +352,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                     page.schema.required.push('newContactName');
                 }
                 if (!!page.schema.properties.activityTitle && !page.schema.properties.activityTitle?.manuallyEdited) {
-                    page.formData.activityTitle = page.formData.activityTitle.startsWith('Inbound') ?
+                    page.formData.activityTitle = page.formData.activityTitle?.startsWith('Inbound') ?
                         t('pages.log.inboundCallFrom', { type: 'call', name: '' }) :
                         t('pages.log.outboundCallTo', { type: 'call', name: '' });
                 }
@@ -367,7 +369,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
                 };
                 page.schema.required = [];
                 if (!!page.schema.properties.activityTitle && !page.schema.properties.activityTitle?.manuallyEdited) {
-                    page.formData.activityTitle = page.formData.activityTitle.startsWith('Inbound') ?
+                    page.formData.activityTitle = page.formData.activityTitle?.startsWith('Inbound') ?
                         t('pages.log.inboundCallFrom', { type: 'call', name: contact.title }) :
                         t('pages.log.outboundCallTo', { type: 'call', name: contact.title });
                 }
@@ -556,7 +558,7 @@ function getUpdatedLogPageRender({ manifest, logType, platformName, updateData }
             break;
         case 'newContactName':
             if (!!page.schema.properties.activityTitle && !page.schema.properties.activityTitle.manuallyEdited) {
-                page.formData.activityTitle = page.formData.activityTitle.startsWith('Inbound') ?
+                page.formData.activityTitle = page.formData.activityTitle?.startsWith('Inbound') ?
                     t('pages.log.inboundCallFrom', { type: 'call', name: page.formData.newContactName }) :
                     t('pages.log.outboundCallTo', { type: 'call', name: page.formData.newContactName });
             }

@@ -311,6 +311,11 @@ async function loadLogForm() {
   };
   vi.doMock('../../src/components/logPage.ts', () => ({ default: logPage }));
 
+  const logUtil: Record<string, any> = {
+    getCachedLogPageData: vi.fn(async () => null),
+  };
+  vi.doMock('../../src/lib/logUtil.ts', () => logUtil);
+
   const logForm = await loadModule('../../src/eventHandlers/rc-post-message-request/callLogger/logForm.ts');
   return {
     logForm,
@@ -321,6 +326,7 @@ async function loadLogForm() {
     calldownPage,
     dispositionCore,
     logPage,
+    logUtil,
   };
 }
 
@@ -870,6 +876,90 @@ describe('callLogger createLog', () => {
         targetOrigin: '*',
       },
     ]));
+  });
+
+  it.each([
+    ['the request note', { note: 'disposition note', call: baseCall({ ringcx: { notes: 'ringcx note' } }) }, 'disposition note'],
+    ['the RingCX call notes', { call: baseCall({ ringcx: { notes: 'ringcx note' } }) }, 'ringcx note'],
+  ])('prefills a RingCX disposition log page with %s', async (_label, overrides, expectedNote) => {
+    const { createLog, logCore, logUtil, logPage } = await loadCreateLog();
+    await createLog.onEvent({
+      data: eventFor({
+        triggerType: 'callDisposition',
+        redirect: true,
+        ...overrides,
+      }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: false,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+    expect(logCore.getCachedNote).not.toHaveBeenCalled();
+    expect(logUtil.cacheLogPageData).toHaveBeenCalledWith(expect.objectContaining({
+      logInfo: { note: expectedNote, subject: '' },
+    }));
+    expect(logPage.getLogPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      logInfo: { note: expectedNote, subject: '' },
+    }));
+  });
+
+  it('falls back to the cached note when a RingCX disposition has no notes', async () => {
+    const { createLog, logCore, logPage } = await loadCreateLog();
+    await createLog.onEvent({
+      data: eventFor({ triggerType: 'callDisposition', redirect: true, note: '' }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: false,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+    expect(logCore.getCachedNote).toHaveBeenCalledWith({ sessionId: 'session-1' });
+    expect(logPage.getLogPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      logInfo: { note: 'cached note', subject: '' },
+    }));
+  });
+
+  it('keeps an existing log note over RingCX disposition notes', async () => {
+    const { createLog, logPage } = await loadCreateLog();
+    await createLog.onEvent({
+      data: eventFor({ triggerType: 'callDisposition', redirect: true, note: 'disposition note' }),
+      triggerTypeInUse: 'editLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [{ sessionId: 'session-1', logData: { note: 'existing', subject: 'Existing' } }],
+      isAutoLog: false,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+    expect(logPage.getLogPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      logInfo: { note: 'existing', subject: 'Existing' },
+    }));
+  });
+
+  it('ignores notes in the request outside RingCX dispositions', async () => {
+    const { createLog, logPage } = await loadCreateLog();
+    await createLog.onEvent({
+      data: eventFor({ redirect: true, note: 'other note' }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: false,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+    expect(logPage.getLogPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      logInfo: { note: 'cached note', subject: '' },
+    }));
   });
 
   it('auto creates an unknown contact and logs the call with disposition data', async () => {
@@ -1460,6 +1550,58 @@ describe('callLogger logForm', () => {
     expect(logPage.getUnloggedCallPageRender).toHaveBeenCalledWith({
       unloggedCalls: [{ sessionId: 'session-2' }],
     });
+  });
+
+  it('falls back to the cached page trigger type when the form drops it', async () => {
+    seedStorage({
+      userSettings: {},
+      implementedInterfaces: {},
+    });
+    const { logForm, logCore, logUtil } = await loadLogForm();
+    logUtil.getCachedLogPageData.mockResolvedValue({
+      id: 'session-1',
+      triggerType: 'createLog',
+    });
+
+    await logForm.onEvent({
+      data: eventFor({
+        formData: {
+          contact: 'contact-1',
+          contactName: 'Existing Contact',
+          contactType: 'Lead',
+          note: 'Call note',
+        },
+      }),
+      contactPhoneNumber: '+16505550100',
+      ...context,
+    });
+
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'contact-1',
+      note: 'Call note',
+    }));
+  });
+
+  it('ignores cached page data from another call when the form drops the trigger type', async () => {
+    seedStorage({
+      userSettings: {},
+      implementedInterfaces: {},
+    });
+    const { logForm, logCore, logUtil } = await loadLogForm();
+    logUtil.getCachedLogPageData.mockResolvedValue({
+      id: 'other-session',
+      triggerType: 'createLog',
+    });
+
+    await logForm.onEvent({
+      data: eventFor({
+        formData: { contact: 'contact-1', note: 'Call note' },
+      }),
+      contactPhoneNumber: '+16505550100',
+      ...context,
+    });
+
+    expect(logCore.addLog).not.toHaveBeenCalled();
   });
 
   it('updates existing call logs and dispositions', async () => {

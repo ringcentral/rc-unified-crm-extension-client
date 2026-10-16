@@ -158,6 +158,7 @@ describe('rc-active-call-notify event handler', () => {
           terminationType: 'final',
           direction: 'Inbound',
           sessionId: 'session-2',
+          source: 'Phone',
           telephonySessionId: 'telephony-2',
           from: { phoneNumber: '+16505550200' },
           to: { phoneNumber: '+18005550100' },
@@ -204,7 +205,7 @@ describe('rc-active-call-notify event handler', () => {
       targetOrigin: '*',
     });
     expect(getWidgetPostMessages()).toContainEqual({
-      message: { type: 'rc-adapter-navigate-to', path: '/log/call/session-2' },
+      message: { type: 'rc-adapter-navigate-to', path: '/log/call/session-2?source=Phone' },
       targetOrigin: '*',
     });
     expect(getWidgetPostMessages()).toContainEqual({
@@ -260,6 +261,38 @@ describe('rc-active-call-notify event handler', () => {
         subject: 'Outbound Call to Jane Smith',
         note: '',
       },
+    }));
+  });
+
+  it('does not open the quick call note for connected RingCX calls', async () => {
+    seedStorage({
+      userSettings: {},
+      implementedInterfaces: {},
+    });
+    const handler = await loadActiveCallHandler();
+
+    await handler.onEvent({
+      popupContext: {},
+      data: {
+        requestId: 'request-ringcx',
+        call: {
+          telephonyStatus: 'CallConnected',
+          direction: 'Outbound',
+          sessionId: 'session-ringcx',
+          telephonySessionId: 'telephony-ringcx',
+          source: 'ringcx',
+          from: { phoneNumber: '+18005550100' },
+          to: { phoneNumber: '+16505550300' },
+        },
+      },
+    });
+
+    expect(window.postMessage).not.toHaveBeenCalledWith(expect.objectContaining({
+      type: 'rc-expandable-call-note-open',
+    }), '*');
+    expect(cacheLogPageData).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'session-ringcx',
+      source: 'ringcx',
     }));
   });
 

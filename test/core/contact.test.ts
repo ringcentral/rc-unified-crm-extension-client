@@ -95,7 +95,7 @@ describe('contact core', () => {
   });
 
   it('reads locally cached widget contacts by phone number and platform', async () => {
-    getWidgetFrameWindow().phone.contactMatcher.data = {
+    getWidgetFrameWindow().app.modules.ContactMatcher.data = {
       '16505550100': {
         salesforce: {
           data: [
@@ -132,19 +132,19 @@ describe('contact core', () => {
   it('returns an empty local cache result when cache layers are missing', async () => {
     const contactCore = await loadContactCore();
 
-    getWidgetFrameWindow().phone.contactMatcher.data = null;
+    getWidgetFrameWindow().app.modules.ContactMatcher.data = null;
     expect(contactCore.getLocalCachedContact({
       phoneNumber: '16505550100',
       platformName: 'salesforce',
     })).toEqual([]);
 
-    getWidgetFrameWindow().phone.contactMatcher.data = {};
+    getWidgetFrameWindow().app.modules.ContactMatcher.data = {};
     expect(contactCore.getLocalCachedContact({
       phoneNumber: '16505550100',
       platformName: 'salesforce',
     })).toEqual([]);
 
-    getWidgetFrameWindow().phone.contactMatcher.data = {
+    getWidgetFrameWindow().app.modules.ContactMatcher.data = {
       '16505550100': {
         hubspot: { data: [] },
       },
@@ -156,7 +156,7 @@ describe('contact core', () => {
   });
 
   it('returns cached contact match without calling the server', async () => {
-    getWidgetFrameWindow().phone.contactMatcher.data = {
+    getWidgetFrameWindow().app.modules.ContactMatcher.data = {
       '16505550100': {
         salesforce: {
           data: [{ id: 'contact-1', name: 'Jane Doe', contactType: 'Lead' }],
@@ -461,7 +461,7 @@ describe('contact core', () => {
       },
       userSettings: {},
     });
-    getWidgetFrameWindow().phone.contactMatcher.data = {
+    getWidgetFrameWindow().app.modules.ContactMatcher.data = {
       '16505550100': {
         salesforce: {
           data: [{ id: 'contact-1', name: 'Jane Doe', contactType: 'Lead' }],

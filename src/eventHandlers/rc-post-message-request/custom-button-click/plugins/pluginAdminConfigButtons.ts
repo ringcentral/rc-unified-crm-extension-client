@@ -68,7 +68,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
             pluginName: data.body.button.formData.plugin.name,
             rcAccountId,
             ownerRcAccountId: data.body.button.formData.ownerRcAccountId,
-          }, getRcAccessTokenHeaderConfig());
+          }, await getRcAccessTokenHeaderConfig());
         } catch (registerError) {
           adminSettingsForInstall.userSettings[`plugin_${data.body.button.formData.pluginId}`].isRemoved = true;
           await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings: adminSettingsForInstall });
@@ -131,7 +131,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
           const rcInfo = await getRcInfo();
           const rcAccountId = rcInfo?.value?.cachedData?.accountInfo?.id?.toString()
             || rcInfo?.value?.cachedData?.extensionInfo?.account?.id?.toString();
-          await axios.delete(`${manifest.serverUrl}/plugin/unregister`, getRcAccessTokenHeaderConfig({
+          await axios.delete(`${manifest.serverUrl}/plugin/unregister`, await getRcAccessTokenHeaderConfig({
             params: {
               rcAccountId,
               pluginName: data.body.button.formData.plugin.name,

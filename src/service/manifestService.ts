@@ -65,7 +65,8 @@ let sessionManifest: ManifestValue = null;
 let platformList: CatalogItem[] | null = null;
 
 function getRcAccountId(rcInfo: RcInfo): string {
-  return String(rcInfo.value.cachedData.accountInfo.id);
+  const accountId = rcInfo?.value?.cachedData?.accountInfo?.id;
+  return accountId === undefined || accountId === null ? '' : String(accountId);
 }
 
 function asConnectorList(data: unknown): ConnectorListResponse {
@@ -117,7 +118,7 @@ export async function getPlatformList(): Promise<CatalogItem[]> {
   const rcAccountId = getRcAccountId(rcInfo);
   const platformInternalListResponse = await axios.get(
     `${baseManifest.platformInternalListUrl}?access=internal&type=connector&accountId=${rcAccountId}`,
-    getRcAccessTokenHeaderConfig(),
+    await getRcAccessTokenHeaderConfig(),
   );
   for (const platform of asConnectorList(platformInternalListResponse.data).sharedConnectors ?? []) {
     platform.access = 'shared';
@@ -142,7 +143,7 @@ export async function getPluginList(): Promise<CatalogItem[]> {
   const rcAccountId = getRcAccountId(rcInfo);
   const pluginInternalListResponse = await axios.get(
     `${baseManifest.platformInternalListUrl}?access=internal&type=plugin&accountId=${rcAccountId}`,
-    getRcAccessTokenHeaderConfig(),
+    await getRcAccessTokenHeaderConfig(),
   );
   for (const plugin of asConnectorList(pluginInternalListResponse.data).sharedConnectors ?? []) {
     plugin.access = 'shared';
@@ -197,9 +198,13 @@ export async function saveManifest({ manifest }: { manifest: AppConnectManifest 
 export async function refreshManifest(): Promise<ManifestValue> {
   let { manifestUrl } = await chrome.storage.local.get({ manifestUrl: null }) as { manifestUrl: string | null };
   if (!manifestUrl) {
-    const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null }) as { customCrmManifest: string | null };
+    const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null }) as { customCrmManifest: ManifestValue };
     if (!customCrmManifest) {
       return null;
+    }
+    // Only legacy storage kept the manifest URL here; a stored manifest object has no URL to refresh from.
+    if (typeof customCrmManifest !== 'string') {
+      return getManifest();
     }
     else {
       manifestUrl = customCrmManifest;

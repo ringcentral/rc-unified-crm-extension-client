@@ -128,7 +128,7 @@ export default () => {
                                     }, '*');
                                     (document.querySelector("#rc-widget-adapter-frame") as HTMLIFrameElement).contentWindow.postMessage({
                                         type: 'rc-adapter-navigate-to',
-                                        path: `/log/call/${cachedLogPageData.id}`,
+                                        path: `/log/call/${cachedLogPageData.id}?source=${cachedLogPageData.source}`,
                                     }, '*');
                                     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
                                     setIsDrawerOpen(false);

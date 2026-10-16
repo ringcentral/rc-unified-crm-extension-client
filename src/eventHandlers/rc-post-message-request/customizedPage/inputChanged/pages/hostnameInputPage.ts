@@ -21,12 +21,15 @@ function getWidgetFrameWindow(): Window {
 async function renderHostnameInputPage({ data, manifest }: Pick<EventOptions, 'data' | 'manifest'>): Promise<void> {
   let isUrlValid = true;
   const selectedPlatform = manifest.platforms[data.body.formData.platformId];
-  if (selectedPlatform?.environment?.url) {
+  if (!selectedPlatform) {
+    return;
+  }
+  if (selectedPlatform.environment?.url) {
     const urlIdentifierRegex = new RegExp(selectedPlatform.environment.url.replace(/\*/g, '.*'));
     isUrlValid = urlIdentifierRegex.test(data.body.formData.url);
   }
   const rcInfo = await getRcInfo();
-  const managedAuthState = selectedPlatform?.auth?.type === 'apiKey'
+  const managedAuthState = selectedPlatform.auth?.type === 'apiKey'
     ? await authCore.getManagedAuthState({
       serverUrl: manifest.serverUrl,
       platformName: data.body.formData.platformId,

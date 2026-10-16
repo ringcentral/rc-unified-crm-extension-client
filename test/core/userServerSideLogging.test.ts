@@ -30,7 +30,7 @@ describe('user server-side logging token update', () => {
     vi.mocked(axios.get).mockReset();
     vi.mocked(axios.post).mockReset();
     vi.mocked(adminCore.authServerSideLogging).mockReset();
-    vi.mocked(getRcAccessToken).mockReset().mockReturnValue('rc-access-token');
+    vi.mocked(getRcAccessToken).mockReset().mockResolvedValue('rc-access-token');
   });
 
   it('does nothing when server-side logging is disabled', async () => {

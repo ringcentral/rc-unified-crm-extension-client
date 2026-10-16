@@ -34,7 +34,7 @@ export async function resolveVoicemailRecording(
     await refreshRCToken();
     const message = await new RcAPI().getMessageByUri({
       uri: linkedMessage.uri,
-      rcAccessToken: getRcAccessToken(),
+      rcAccessToken: await getRcAccessToken(),
     });
     const audioAttachment = message.attachments?.find(
       (attachment: UnknownRecord) => attachment.type === 'AudioRecording'

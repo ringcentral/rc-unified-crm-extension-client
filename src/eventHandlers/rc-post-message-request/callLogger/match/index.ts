@@ -37,7 +37,8 @@ async function recoverManualReadiness(sessionId: string, readiness: UnknownRecor
             const recoveredCall = extractCallRecord(await RCAdapter.getCallLog({ sessionId }));
             manualReady = isCallDataComplete(recoveredCall);
         }
-        catch {
+        catch (e) {
+            console.error(e);
             // A transient recovery error must not break matching for the remaining calls.
         }
     }
