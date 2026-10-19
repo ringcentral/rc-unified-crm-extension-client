@@ -139,6 +139,33 @@ describe('rc-active-call-notify event handler', () => {
     });
   });
 
+  it('does not auto open the call log page for a RingCX call', async () => {
+    seedStorage({ userSettings: {}, implementedInterfaces: {} });
+    const handler = await loadActiveCallHandler();
+
+    await handler.onEvent({
+      popupContext: {},
+      data: {
+        requestId: 'request-ringcx',
+        call: {
+          telephonyStatus: 'NoCall',
+          terminationType: 'final',
+          direction: 'Inbound',
+          sessionId: 'session-ringcx',
+          source: 'ringcx',
+          telephonySessionId: 'telephony-ringcx',
+          from: { phoneNumber: '+16505550200' },
+          to: { phoneNumber: '+18005550100' },
+        },
+      },
+    });
+
+    expect(cacheLogPageData).not.toHaveBeenCalled();
+    expect(getWidgetPostMessages()).not.toContainEqual(expect.objectContaining({
+      message: expect.objectContaining({ type: 'rc-adapter-navigate-to' }),
+    }));
+  });
+
   it('builds and navigates to a call log page when a final inbound call ends', async () => {
     seedStorage({
       userSettings: {},
