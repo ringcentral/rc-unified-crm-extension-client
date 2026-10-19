@@ -15,6 +15,10 @@ const OAUTH_ALARM_NAME = 'oauthCheck';
 const OAUTH_POLL_INTERVAL_MS = 3000;
 const THIRD_PARTY_OAUTH_TIMEOUT_MS = 3 * 60 * 1000;
 
+function getRcOAuthRedirectUri() {
+  return redirectUri ?? baseManifest.redirectUri;
+}
+
 async function getOAuthRedirectUri() {
   const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
   const platformInfo = await chrome.storage.local.get('platform-info');
@@ -339,7 +343,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
   const loginWindowUrl = tabs[0].url;
   console.log('loginWindowUrl', loginWindowUrl);
-  const expectedRedirectUri = loginWindowInfo.redirectUri ?? await getOAuthRedirectUri();
+  const expectedRedirectUri = loginWindowInfo.redirectUri
+    ?? (loginWindowInfo.platform === 'rc' ? getRcOAuthRedirectUri() : await getOAuthRedirectUri());
   if (typeof loginWindowUrl !== 'string' || loginWindowUrl.indexOf(expectedRedirectUri) !== 0) {
     chrome.alarms.create(OAUTH_ALARM_NAME, { when: Date.now() + OAUTH_POLL_INTERVAL_MS });
     return;
@@ -355,7 +360,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 async function rcOAuthWindowHandler(request) {
-  const oauthRedirectUri = await getOAuthRedirectUri();
+  // RC sign-in always returns to the RC redirect page, regardless of the selected CRM's own redirect URI.
+  const oauthRedirectUri = getRcOAuthRedirectUri();
   const loginWindow = await chrome.windows.create({
     url: request.oAuthUri,
     type: 'popup',
