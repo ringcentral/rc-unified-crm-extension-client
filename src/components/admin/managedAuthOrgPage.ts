@@ -1,0 +1,44 @@
+type UnknownRecord = Record<string, any>;
+
+function getManagedAuthOrgPageRender({ orgFields = [], orgValues = {}, formData = {} }: UnknownRecord): UnknownRecord {
+    const properties: UnknownRecord = {};
+    const uiSchema: UnknownRecord = {
+        submitButtonOptions: {
+            submitText: 'Save'
+        }
+    };
+    const nextFormData = {
+        ...formData
+    };
+
+    orgFields.forEach((field: UnknownRecord) => {
+        const storedValue = orgValues[field.const] ?? {};
+        const hasFormValue = Object.prototype.hasOwnProperty.call(formData, field.const);
+        properties[field.const] = {
+            title: field.title,
+            type: field.type,
+            description: field.description
+        };
+        uiSchema[field.const] = field.uiSchema ?? {};
+        if (!hasFormValue && storedValue.hasValue) {
+            nextFormData[field.const] = storedValue.value;
+        }
+    });
+
+    return {
+        id: 'managedAuthOrgPage',
+        title: 'Account managed authentication',
+        type: 'page',
+        schema: {
+            type: 'object',
+            properties
+        },
+        uiSchema,
+        formData: nextFormData
+    };
+}
+
+export { getManagedAuthOrgPageRender };
+export default {
+    getManagedAuthOrgPageRender,
+};

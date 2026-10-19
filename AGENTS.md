@@ -8,18 +8,22 @@ This project is `rc-unified-crm-extension-client/`, the browser extension client
 - Focused tests should use:
   - `npm.cmd test -- <test paths>`
 - For broad runtime, storage, auth, logging, service-worker, content-script, build-tool, or shared test harness changes, run full verification:
+  - `npm.cmd run lint`
+  - `npm.cmd run typecheck`
+  - `npm.cmd run typecheck:test`
+  - `npm.cmd run typecheck:e2e`
   - `npm.cmd test`
   - `npm.cmd run test:coverage`
   - `npm.cmd run build`
-- For any change under `src/`, `public/`, `build.js`, `updateVersion.js`, or manifest files, run:
+- For any change under `src/`, `public/`, `build.ts`, `updateVersion.ts`, or manifest files, run:
   - `npm.cmd run build`
-- ESLint is currently a diagnostic command, not a clean gate, because baseline lint failures exist. When lint-sensitive files are touched, run and report:
-  - `npx.cmd eslint src build.js updateVersion.js eslint.config.mjs`
+- ESLint is a required clean gate. Run `npm.cmd run lint` for lint-sensitive changes.
+- For browser E2E or fixture changes, run both `npm.cmd run typecheck:e2e` and `npm.cmd run test:e2e`.
 - If no focused test exists for changed behavior, add or update one under `test/`, unless the behavior requires real browser-extension automation and is explicitly recorded as deferred.
 - Mock Chrome APIs, widget frames, storage, IndexedDB/localStorage, Axios, and network boundaries. Do not depend on a real browser extension runtime unless the task explicitly asks for browser E2E work.
 - Final summaries must list the exact verification commands run and any skipped commands with the reason.
 
-## Known Verification Caveats
+## CI and Release Gates
 
-- The GitHub workflow currently builds/packages the extension; it does not prove the Vitest suite.
-- Existing baseline lint errors should not be silently fixed during unrelated work, but new lint regressions in touched files should be avoided.
+- Pull-request CI and release verification require lint, source/test/E2E type checks, coverage, and Playwright E2E before packaging.
+- Root `package-lock.json` is intentionally ignored because developers may use environment-specific registries; use `npm.cmd install` and do not commit the generated lockfile.

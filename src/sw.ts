@@ -1,0 +1,514 @@
+import { isObjectEmpty } from './lib/util';
+import packageJson from '../package.json';
+import baseManifest from './manifest.json';
+
+const chrome = (globalThis as any).chrome;
+
+let manifest;
+let redirectUri;
+let cachedClickToXRequest;
+
+const INCOMING_CALL_NOTIFICATION_PREFIX = 'incoming-call-';
+const RECENT_INCOMING_CALL_NOTIFICATIONS_KEY = 'recentIncomingCallNotificationIds';
+const INCOMING_CALL_NOTIFICATION_TTL = 5 * 60 * 1000;
+const OAUTH_ALARM_NAME = 'oauthCheck';
+const OAUTH_POLL_INTERVAL_MS = 3000;
+const THIRD_PARTY_OAUTH_TIMEOUT_MS = 3 * 60 * 1000;
+
+function getRcOAuthRedirectUri() {
+  return redirectUri ?? baseManifest.redirectUri;
+}
+
+async function getOAuthRedirectUri() {
+  const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
+  const platformInfo = await chrome.storage.local.get('platform-info');
+  return customCrmManifest?.platforms?.[platformInfo?.['platform-info']?.platformName ?? '']?.auth?.oauth?.redirectUri
+    ?? redirectUri
+    ?? baseManifest.redirectUri;
+}
+
+async function clearOAuthLoginWindow(loginWindowInfo, { closeWindow = false, notifyTimeout = false } = {}) {
+  if (closeWindow && loginWindowInfo?.id !== undefined) {
+    try {
+      await chrome.windows.remove(loginWindowInfo.id);
+    }
+    catch (e) {
+      // The user may have already closed the OAuth window.
+    }
+  }
+
+  const { loginWindowInfo: currentLoginWindowInfo } = await chrome.storage.local.get('loginWindowInfo');
+  if (currentLoginWindowInfo?.id === loginWindowInfo?.id) {
+    await chrome.storage.local.remove('loginWindowInfo');
+  }
+
+  if (notifyTimeout && loginWindowInfo?.platform === 'thirdParty') {
+    await chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'images/logo128.png',
+      title: 'Connection timed out',
+      message: 'CRM login did not complete. Please try Connect again.'
+    });
+  }
+}
+
+async function focusExistingPopupWindow() {
+  const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
+  if (popupWindowId) {
+    try {
+      const popupWindow = await chrome.windows.get(popupWindowId);
+      const wasMinimized = popupWindow.state === 'minimized';
+      const wasFocused = popupWindow.focused;
+      const updateInfo: Record<string, any> = { focused: true };
+      if (wasMinimized) {
+        updateInfo.state = 'normal';
+      }
+      await chrome.windows.update(popupWindowId, updateInfo);
+      return { exists: true, popupWindowId, wasMinimized, wasFocused };
+    } catch (e) {
+      // ignore
+    }
+  }
+  return { exists: false, popupWindowId: null, wasMinimized: false, wasFocused: false };
+}
+
+async function openPopupWindow() {
+  console.log('open popup');
+  const popupFocusResult = await focusExistingPopupWindow();
+  if (popupFocusResult.exists) {
+    return true;
+  }
+  const { extensionWindowStatus } = await chrome.storage.local.get({ extensionWindowStatus: null });
+  redirectUri = 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
+  // const redirectUri = chrome.identity.getRedirectURL('redirect.html'); //  set this when oauth with chrome.identity.launchWebAuthFlow
+  const popupUri = `popup.html?multipleTabsSupport=1&disableLoginPopup=1&enableRingtoneSettings=1&appServer=https://platform.ringcentral.com&redirectUri=${redirectUri ?? 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html'}&enableAnalytics=1&showSignUpButton=1&clientId=3rJq9BxcTCm-I7CFcY19ew&appVersion=${packageJson.version}&userAgent=RingCentral CRM Extension&disableNoiseReduction=false&enableSMSTemplate=1&enableLoadMoreCalls=1&disableGlip=false&enableSmartNote=1&enableVoicemailDrop=1&enableSideWidget=1`;
+  let popup;
+  if (!!extensionWindowStatus?.state && (extensionWindowStatus.state === 'maximized' || extensionWindowStatus.state === 'fullscreen')) {
+    popup = await chrome.windows.create({
+      url: popupUri,
+      type: 'popup',
+      focused: true,
+      state: extensionWindowStatus.state
+    });
+  }
+  else {
+    try {
+      popup = await chrome.windows.create({
+        url: popupUri,
+        type: 'popup',
+        focused: true,
+        width: extensionWindowStatus?.width ?? 450,
+        height: extensionWindowStatus?.height ?? 848,
+        left: extensionWindowStatus?.left ?? 50,
+        top: extensionWindowStatus?.top ?? 50
+      });
+    }
+    // Case: position not reachable
+    catch (e) {
+      popup = await chrome.windows.create({
+        url: popupUri,
+        type: 'popup',
+        focused: true,
+        width: 450,
+        height: 848,
+        left: 50,
+        top: 50
+      });
+    }
+  }
+  await chrome.storage.local.set({
+    popupWindowId: popup.id,
+  });
+  return false;
+}
+
+function getIncomingCallNotificationId(callId) {
+  return `${INCOMING_CALL_NOTIFICATION_PREFIX}${String(callId ?? Date.now()).slice(0, 450)}`;
+}
+
+function createNotification(notificationId, options) {
+  return new Promise((resolve) => {
+    chrome.notifications.create(notificationId, options, resolve);
+  });
+}
+
+function clearNotification(notificationId) {
+  return new Promise((resolve) => {
+    chrome.notifications.clear(notificationId, resolve);
+  });
+}
+
+function getAllNotifications() {
+  return new Promise((resolve) => {
+    chrome.notifications.getAll(resolve);
+  });
+}
+
+async function shouldSkipIncomingCallNotification(callId) {
+  const now = Date.now();
+  const storage = await chrome.storage.local.get({ [RECENT_INCOMING_CALL_NOTIFICATIONS_KEY]: {} });
+  const recentNotifications = storage[RECENT_INCOMING_CALL_NOTIFICATIONS_KEY] ?? {};
+  const activeNotifications = Object.keys(recentNotifications).reduce((result, id) => {
+    if (recentNotifications[id] > now) {
+      // eslint-disable-next-line no-param-reassign
+      result[id] = recentNotifications[id];
+    }
+    return result;
+  }, {});
+  const shouldSkip = !!activeNotifications[callId];
+  activeNotifications[callId] = now + INCOMING_CALL_NOTIFICATION_TTL;
+  await chrome.storage.local.set({ [RECENT_INCOMING_CALL_NOTIFICATIONS_KEY]: activeNotifications });
+  return shouldSkip;
+}
+
+async function clearIncomingCallNotifications(notificationId?: string) {
+  if (notificationId) {
+    await clearNotification(notificationId);
+    return;
+  }
+  const notifications = await getAllNotifications();
+  await Promise.all(Object.keys(notifications)
+    .filter((id) => id.startsWith(INCOMING_CALL_NOTIFICATION_PREFIX))
+    .map((id) => clearNotification(id)));
+}
+
+async function showIncomingCallNotification({ callId, callerName, phoneNumber }) {
+  if (await shouldSkipIncomingCallNotification(callId)) {
+    return;
+  }
+  const caller = callerName || phoneNumber || 'Unknown caller';
+  await createNotification(getIncomingCallNotificationId(callId), {
+    type: 'basic',
+    iconUrl: chrome.runtime.getURL('images/logo128.png'),
+    title: 'Incoming call',
+    message: `Call from ${caller}`,
+    buttons: [
+      { title: 'Answer' },
+      { title: 'Ignore' },
+    ],
+    isClickable: true,
+    priority: 2,
+    requireInteraction: true,
+  });
+}
+
+async function incomingCallRingingHandler(request) {
+  const callId = request.callId ?? request.telephonySessionId ?? request.sessionId ?? request.phoneNumber ?? Date.now();
+  const popupFocusResult = await focusExistingPopupWindow();
+  if (!popupFocusResult.exists) {
+    await openPopupWindow();
+    return;
+  }
+  if (popupFocusResult.wasMinimized || !popupFocusResult.wasFocused) {
+    await showIncomingCallNotification({
+      callId,
+      callerName: request.callerName,
+      phoneNumber: request.phoneNumber,
+    });
+    try {
+      await chrome.windows.update(popupFocusResult.popupWindowId, { drawAttention: true });
+    } catch (e) {
+      // ignore
+    }
+  }
+}
+
+async function incomingCallResolvedHandler(request) {
+  const callId = request.callId ?? request.telephonySessionId ?? request.sessionId;
+  if (!callId) {
+    await clearIncomingCallNotifications();
+    return;
+  }
+  await clearIncomingCallNotifications(getIncomingCallNotificationId(callId));
+}
+
+chrome.action.onClicked.addListener(async function (tab) {
+  openPopupWindow();
+});
+
+chrome.windows.onFocusChanged.addListener(async (windowId) => {
+  const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
+  if (popupWindowId === windowId) {
+    try {
+      await chrome.windows.update(popupWindowId, { drawAttention: false });
+    } catch (e) {
+      // ignore
+    }
+  }
+});
+
+function openPopupWindowFromNotification(notificationId) {
+  if (!notificationId.startsWith(INCOMING_CALL_NOTIFICATION_PREFIX)) {
+    return;
+  }
+  openPopupWindow()
+    .catch((e) => {
+      console.error('Failed to open popup from notification', e);
+    })
+    .finally(() => {
+      clearIncomingCallNotifications(notificationId).catch((e) => {
+        console.error('Failed to clear incoming call notification', e);
+      });
+    });
+}
+
+chrome.notifications.onClicked.addListener(openPopupWindowFromNotification);
+
+function answerIncomingCallFromNotification(notificationId) {
+  chrome.runtime.sendMessage({
+    type: 'controlCall',
+    callAction: 'answer',
+  })
+    .catch((e) => {
+      console.error('Failed to answer incoming call from notification', e);
+    })
+    .finally(() => {
+      clearIncomingCallNotifications(notificationId).catch((e) => {
+        console.error('Failed to clear incoming call notification', e);
+      });
+    });
+}
+
+chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
+  if (!notificationId.startsWith(INCOMING_CALL_NOTIFICATION_PREFIX)) {
+    return;
+  }
+  if (buttonIndex === 0) {
+    answerIncomingCallFromNotification(notificationId);
+    return;
+  }
+  if (buttonIndex === 1) {
+    clearIncomingCallNotifications(notificationId).catch((e) => {
+      console.error('Failed to clear incoming call notification', e);
+    });
+  }
+});
+
+chrome.windows.onRemoved.addListener(async (windowId) => {
+  const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
+  if (popupWindowId === windowId) {
+    console.log('close popup');
+    await chrome.storage.local.remove('popupWindowId');
+    await chrome.storage.local.remove('errorLogRecordingStatus');
+  }
+  const { loginWindowInfo } = await chrome.storage.local.get('loginWindowInfo');
+  if (loginWindowInfo?.id === windowId) {
+    await clearOAuthLoginWindow(loginWindowInfo);
+  }
+});
+
+chrome.windows.onBoundsChanged.addListener(async (window) => {
+  const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
+  if (popupWindowId === window.id) {
+    const extensionWindowStatus = window;
+    await chrome.storage.local.set({ extensionWindowStatus });
+  }
+});
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm?.name !== OAUTH_ALARM_NAME) {
+    return;
+  }
+
+  let { loginWindowInfo } = await chrome.storage.local.get('loginWindowInfo');
+  if (!loginWindowInfo) {
+    return;
+  }
+
+  if (loginWindowInfo.platform === 'thirdParty' && !loginWindowInfo.deadline) {
+    loginWindowInfo = {
+      ...loginWindowInfo,
+      redirectUri: loginWindowInfo.redirectUri ?? await getOAuthRedirectUri(),
+      deadline: Date.now() + THIRD_PARTY_OAUTH_TIMEOUT_MS
+    };
+    await chrome.storage.local.set({ loginWindowInfo });
+  }
+
+  if (loginWindowInfo.platform === 'thirdParty' && Date.now() >= loginWindowInfo.deadline) {
+    await clearOAuthLoginWindow(loginWindowInfo, { closeWindow: true, notifyTimeout: true });
+    return;
+  }
+
+  let tabs;
+  try {
+    tabs = await chrome.tabs.query({ windowId: loginWindowInfo.id });
+  }
+  catch (e) {
+    await clearOAuthLoginWindow(loginWindowInfo);
+    return;
+  }
+  if (tabs.length === 0) {
+    await clearOAuthLoginWindow(loginWindowInfo);
+    return;
+  }
+  const loginWindowUrl = tabs[0].url;
+  console.log('loginWindowUrl', loginWindowUrl);
+  const expectedRedirectUri = loginWindowInfo.redirectUri
+    ?? (loginWindowInfo.platform === 'rc' ? getRcOAuthRedirectUri() : await getOAuthRedirectUri());
+  if (typeof loginWindowUrl !== 'string' || loginWindowUrl.indexOf(expectedRedirectUri) !== 0) {
+    chrome.alarms.create(OAUTH_ALARM_NAME, { when: Date.now() + OAUTH_POLL_INTERVAL_MS });
+    return;
+  }
+
+  console.log('login success', loginWindowUrl);
+  chrome.runtime.sendMessage({
+    type: 'oauthCallBack',
+    platform: loginWindowInfo.platform,
+    callbackUri: loginWindowUrl
+  });
+  await clearOAuthLoginWindow(loginWindowInfo, { closeWindow: true });
+});
+
+async function rcOAuthWindowHandler(request) {
+  // RC sign-in always returns to the RC redirect page, regardless of the selected CRM's own redirect URI.
+  const oauthRedirectUri = getRcOAuthRedirectUri();
+  const loginWindow = await chrome.windows.create({
+    url: request.oAuthUri,
+    type: 'popup',
+    width: 600,
+    height: 600,
+  });
+  await chrome.storage.local.set({
+    loginWindowInfo: {
+      platform: 'rc',
+      id: loginWindow.id,
+      redirectUri: oauthRedirectUri
+    }
+  });
+  chrome.alarms.create(OAUTH_ALARM_NAME, { when: Date.now() + OAUTH_POLL_INTERVAL_MS });
+}
+
+async function thirdPartyOAuthWindowHandler(request) {
+  const oauthRedirectUri = await getOAuthRedirectUri();
+  const loginWindow = await chrome.windows.create({
+    url: request.oAuthUri,
+    type: 'popup',
+    width: 600,
+    height: 600,
+  });
+  await chrome.storage.local.set({
+    loginWindowInfo: {
+      platform: 'thirdParty',
+      id: loginWindow.id,
+      redirectUri: oauthRedirectUri,
+      deadline: Date.now() + THIRD_PARTY_OAUTH_TIMEOUT_MS
+    }
+  });
+  chrome.alarms.create(OAUTH_ALARM_NAME, { when: Date.now() + OAUTH_POLL_INTERVAL_MS });
+}
+
+async function c2xWindowHandler(request) {
+  const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
+  if (popupWindowId) {
+    // Bring the existing popup to front
+    try {
+      const win = await chrome.windows.get(popupWindowId);
+      if (win.state === 'minimized') {
+        await chrome.windows.update(popupWindowId, { state: 'normal' });
+      }
+      await chrome.windows.update(popupWindowId, { focused: true });
+    } catch (e) { /* ignore */ }
+    // Popup already open: forward directly to ensure latest intent wins
+    chrome.runtime.sendMessage({ type: request.type, phoneNumber: request.phoneNumber });
+  } else {
+    // Cold start: cache latest intent (overwrite any previous) and open
+    cachedClickToXRequest = { type: request.type, phoneNumber: request.phoneNumber, at: Date.now() };
+    await openPopupWindow();
+  }
+}
+
+async function sideWidgetOpenHandler(request) {
+  const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
+  if (!popupWindowId) {
+    return;
+  }
+  const popupWindow = await chrome.windows.get(popupWindowId);
+  if (request.opened) {
+    if (popupWindow.width < 600) {
+      await chrome.windows.update(popupWindowId, { width: popupWindow.width + 300 });
+    }
+  } else {
+    if (popupWindow.width >= 600) {
+      await chrome.windows.update(popupWindowId, { width: popupWindow.width - 300 });
+    }
+  }
+}
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log(sender.tab ?
+    "from a content script:" + sender.tab.url :
+    "from the extension");
+  switch (request.type) {
+    case "openPopupWindow":
+      openPopupWindow();
+      sendResponse({ result: 'ok' });
+      if (request.navigationPath) {
+        chrome.runtime.sendMessage({
+          type: 'navigate',
+          path: request.navigationPath
+        })
+      }
+      break;
+    case "incomingCallRinging":
+      incomingCallRingingHandler(request)
+        .then(() => sendResponse({ result: 'ok' }))
+        .catch((e) => {
+          console.error('Failed to handle incoming call ringing', e);
+          sendResponse({ result: 'error', message: e.message });
+        });
+      return true;
+    case "incomingCallResolved":
+      incomingCallResolvedHandler(request)
+        .then(() => sendResponse({ result: 'ok' }))
+        .catch((e) => {
+          console.error('Failed to handle incoming call resolved', e);
+          sendResponse({ result: 'error', message: e.message });
+        });
+      return true;
+    case "openRCOAuthWindow":
+      if (request.oAuthUri) {
+        rcOAuthWindowHandler(request);
+      }
+      sendResponse({ result: 'ok' });
+      break;
+    case "openThirdPartyAuthWindow":
+      if (request.oAuthUri) {
+        thirdPartyOAuthWindowHandler(request);
+      }
+      sendResponse({ result: 'ok' });
+      break;
+    case "c2d":
+    case "c2sms":
+    case "c2schedule":
+      c2xWindowHandler(request);
+      sendResponse({ result: 'ok' });
+      break;
+    case "checkForClickToXCache":
+      sendResponse(cachedClickToXRequest);
+      cachedClickToXRequest = null;
+      break;
+    case "sideWidgetOpen":
+      sideWidgetOpenHandler(request);
+      sendResponse({ result: 'ok' });
+      break;
+  }
+});
+
+chrome.runtime.onMessageExternal.addListener(
+  (request, sender, sendResponse) => {
+    if (request.action === "isInstalled") {
+      sendResponse({ isInstalled: true });
+    }
+  }
+);
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.url && changeInfo.url.includes('ringcentral.com/ringsense.html') && changeInfo.url.includes('ref=AppConnect')) {
+    chrome.runtime.sendMessage({
+      type: 'ringsenseRefTrack'
+    }).catch(e => {
+      // popup might be closed, ignore error
+      console.log('Could not send trackRingSensePage message', e);
+    });
+  }
+});

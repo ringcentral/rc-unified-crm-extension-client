@@ -1,0 +1,70 @@
+import { t } from '../i18n';
+
+function getFeedbackPageRender({ pageConfig, version }) {
+    let properties = {};
+    let uiSchema = {
+        submitButtonOptions: {
+            submitText: t('common.buttons.submit')
+        }
+    };
+    let required = [];
+    for (const e of pageConfig.elements) {
+        if (e.required) {
+            required.push(e.const);
+        }
+        switch (e.type) {
+            case 'string':
+                properties[e.const] = {
+                    type: 'string',
+                    description: e.title
+                };
+                uiSchema[e.const] = {
+                    "ui:field": "typography",
+                    "ui:variant": e.bold ? "body2" : "body1", // "caption1", "caption2", "body1", "body2", "subheading2", "subheading1", "title2", "title1"
+                }
+                break;
+            case 'inputField':
+                properties[e.const] = {
+                    type: 'string',
+                    title: e.title
+                };
+                uiSchema[e.const] = {
+                    "ui:placeholder": e.placeholder ?? "",
+                    "ui:widget": "textarea",
+                }
+                break;
+            case 'selection':
+                properties[e.const] = {
+                    title: e.title,
+                    type: 'string',
+                    oneOf: e.selections
+                }
+                break;
+        }
+    }
+    properties['version'] = {
+        type: 'string',
+        title: 'Version'
+    };
+    uiSchema['version'] = {
+        "ui:widget": "hidden"
+    }
+    return {
+        id: 'feedbackPage',
+        title: t('pages.feedback.title'),
+        schema: {
+            type: 'object',
+            required,
+            properties
+        },
+        uiSchema,
+        formData: {
+            version
+        }
+    }
+}
+
+export { getFeedbackPageRender };
+export default {
+    getFeedbackPageRender,
+};

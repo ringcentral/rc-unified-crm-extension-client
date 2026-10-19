@@ -46,14 +46,25 @@ async function fetchManifest({ party }) {
     try {
         let manifest = {};
         switch (party) {
-            case 'ringcentral':
-                manifest = await fetch('https://unified-crm-extension.labs.ringcentral.com/crmManifest').then(res => res.json());
-                await chrome.storage.local.set({ customCrmManifestUrl: 'https://unified-crm-extension.labs.ringcentral.com/crmManifest' });
-                break;
+            case 'ringcentral': {
+                // Official connectors come from the App Connect connector list; do not pin the legacy server-host manifest.
+                const status = document.getElementById('status');
+                status.style = 'color: green';
+                status.textContent = 'Options saved.';
+                return;
+            }
             case 'gate6':
                 manifest = await fetch('https://rcservicenowapi.gate6.com/crmManifest?platformName=servicenow').then(res => res.json());
                 await chrome.storage.local.set({ customCrmManifestUrl: 'https://rcservicenowapi.gate6.com/crmManifest?platformName=servicenow' });
                 break;
+            case 'none':
+                // Update status to let user know options were saved.
+                const status = document.getElementById('status');
+                status.style = 'color: green';
+                status.textContent = `Saved as None`;
+                await chrome.storage.local.set({ customCrmManifestUrl: null });
+                await chrome.storage.local.set({ customCrmManifest: null });
+                return;
         }
         await chrome.storage.local.set({ customCrmManifest: manifest });
         // Update status to let user know options were saved.
@@ -75,6 +86,7 @@ async function setupConfig({ customCrmManifestUrl }) {
         const customCrmConfigJson = await (await fetch(customCrmManifestUrl)).json();
         if (customCrmConfigJson) {
             await chrome.storage.local.set({ customCrmManifestUrl });
+            await chrome.storage.local.set({ customCrmManifest: customCrmConfigJson });
         }
         // Update status to let user know options were saved.
         const status = document.getElementById('status');
@@ -89,7 +101,6 @@ async function setupConfig({ customCrmManifestUrl }) {
         await chrome.storage.local.remove('customCrmConfig');
     }
 }
-
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.getElementById('save').addEventListener('click', saveOptions);
 document.getElementById('clearPlatformInfo').addEventListener('click', clearPlatformInfo);

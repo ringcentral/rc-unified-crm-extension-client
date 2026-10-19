@@ -1,0 +1,163 @@
+import logCore from '../../../../core/log';
+import userCore from '../../../../core/user';
+import { responseMessage } from '../../../../lib/util';
+import {
+    extractCallRecord,
+    isCallDataComplete,
+    isManualLogReady,
+} from '../../../../lib/callLogReadiness';
+
+type UnknownRecord = Record<string, any>;
+
+type EventOptions = {
+    data: UnknownRecord;
+    manifest: UnknownRecord;
+    platformInfo?: UnknownRecord;
+    platformName?: string;
+    platform?: UnknownRecord;
+};
+
+const READINESS_RECHECK_INTERVAL_MS = 30000;
+const READINESS_TTL_MS = 60000 * 60 * 24 * 30;
+
+async function recoverManualReadiness(sessionId: string, readiness: UnknownRecord): Promise<boolean> {
+    if (isManualLogReady(readiness)) {
+        return true;
+    }
+
+    const now = Date.now();
+    if (typeof readiness.lastCheckedAt === 'number'
+        && now - readiness.lastCheckedAt < READINESS_RECHECK_INTERVAL_MS) {
+        return false;
+    }
+
+    let manualReady = false;
+    if (typeof RCAdapter.getCallLog === 'function') {
+        try {
+            const recoveredCall = extractCallRecord(await RCAdapter.getCallLog({ sessionId }));
+            manualReady = isCallDataComplete(recoveredCall);
+        }
+        catch {
+            // A transient recovery error must not break matching for the remaining calls.
+        }
+    }
+
+    const readinessKey = `call-log-data-ready-${sessionId}`;
+    await chrome.storage.local.set({
+        [readinessKey]: {
+            ...readiness,
+            isReady: readiness.isReady ?? false,
+            autoReady: readiness.autoReady ?? readiness.isReady ?? false,
+            manualReady,
+            reason: manualReady ? 'complete-data-fallback' : 'incomplete',
+            lastCheckedAt: now,
+            expiry: readiness.expiry ?? now + READINESS_TTL_MS,
+        },
+    });
+    return manualReady;
+}
+
+async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
+    void platformInfo;
+    void platformName;
+    let callLogMatchData: UnknownRecord = {};
+    let noLocalMatchedSessionIds: string[] = [];
+    const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
+    // existingCallLogRecords: call logs in local storage
+    const existingCallLogRecords = await chrome.storage.local.get(
+        data.body.sessionIds.map(sessionId => `rc-crm-call-log-${sessionId}`)
+    ) as UnknownRecord;
+    for (const sessionId of data.body.sessionIds) {
+        // match existing records
+        if (existingCallLogRecords[`rc-crm-call-log-${sessionId}`]) {
+            callLogMatchData[sessionId] = [{ id: sessionId, note: '', contact: { id: existingCallLogRecords[`rc-crm-call-log-${sessionId}`].contact?.id } }];
+        } else {
+            // register non-existing records to be checked online
+            noLocalMatchedSessionIds.push(sessionId);
+        }
+    }
+    if (noLocalMatchedSessionIds.length > 0) {
+        const { successful, callLogs = [] } = await logCore.getLog({ serverUrl: manifest.serverUrl, logType: 'Call', sessionIds: noLocalMatchedSessionIds.toString(), requireDetails: false }) as UnknownRecord;
+        // Case: no local record, but online DB check says YES
+        if (successful) {
+            const newLocalMatchedCallLogRecords: UnknownRecord = {};
+            for (const sessionId of noLocalMatchedSessionIds) {
+                const correspondingLog = callLogs.find(l => l.sessionId === sessionId);
+                const isCallQueue = await chrome.storage.local.get({ [`is-call-queue-${sessionId}`]: { isQueue: false } }) as UnknownRecord;
+                // Case: call queue but answered by someone else
+                if (isCallQueue[`is-call-queue-${sessionId}`]?.isQueue && isCallQueue[`is-call-queue-${sessionId}`]?.warning === 'Answered by someone else') {
+                    callLogMatchData[sessionId] = [
+                        {
+                            type: 'status',
+                            status: 'failed',
+                            message: isCallQueue[`is-call-queue-${sessionId}`]?.warning
+                        }
+                    ];
+                }
+                else {
+                    // correspondingLog: if matched => exsiting log record in online DB for this sessionId
+                    if (correspondingLog?.matched) {
+                        const localNote = await logCore.getCachedNote({ sessionId });
+                        if (localNote) {
+                            callLogMatchData[sessionId] = [{ id: sessionId, note: localNote }];
+                            // update online record with local note
+                            await logCore.updateLog({
+                                serverUrl: manifest.serverUrl,
+                                logType: 'Call',
+                                telephonySessionId: correspondingLog.telephonySessionId,
+                                sessionId,
+                                note: localNote
+                            })
+                        }
+                        else {
+                            callLogMatchData[sessionId] = [{ id: sessionId, note: '' }];
+                        }
+                        newLocalMatchedCallLogRecords[`rc-crm-call-log-${sessionId}`] = { logId: correspondingLog.logId, contact: { id: correspondingLog.contact?.id } };
+                    }
+                    else {
+                        if (isCallQueue[`is-call-queue-${sessionId}`]?.isQueue && isCallQueue[`is-call-queue-${sessionId}`]?.warning) {
+                            callLogMatchData[sessionId] = [
+                                {
+                                    type: 'status',
+                                    status: 'failed',
+                                    message: isCallQueue[`is-call-queue-${sessionId}`]?.warning
+                                }
+                            ];
+                        }
+                    }
+                }
+            }
+            await chrome.storage.local.set(newLocalMatchedCallLogRecords);
+        }
+    }
+    if (userCore.shouldWaitForCompleteCallData(userSettings, platform)) {
+        const loggedSessionIds = Object.keys(callLogMatchData);
+        for (const sessionId of data.body.sessionIds) {
+            if (loggedSessionIds.includes(sessionId)) {
+                continue;
+            }
+            const readinessKey = `call-log-data-ready-${sessionId}`;
+            const readinessStorage = await chrome.storage.local.get(readinessKey) as UnknownRecord;
+            const readiness = readinessStorage[readinessKey];
+            if (readiness && !await recoverManualReadiness(sessionId, readiness)) {
+                callLogMatchData[sessionId] = [
+                    {
+                        type: 'status',
+                        status: 'failed',
+                        message: 'preparing data...'
+                    }
+                ]
+            }
+        }
+    }
+    responseMessage(
+        data.requestId,
+        {
+            data: callLogMatchData
+        });
+}
+
+export { onEvent };
+export default {
+    onEvent,
+};
