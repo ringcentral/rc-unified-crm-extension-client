@@ -53,20 +53,6 @@ function getCallAndSMSLoggingSettingPageRender({ adminUserSettings }: UnknownRec
                         }
                     }
                 },
-                autoLogVoicemail: {
-                    type: 'object',
-                    title: 'Log voicemail messages automatically',
-                    properties: {
-                        customizable: {
-                            type: 'boolean',
-                            title: 'Customizable by user'
-                        },
-                        value: {
-                            type: 'boolean',
-                            title: 'Value'
-                        }
-                    }
-                },
                 autoLogInboundFax: {
                     type: 'object',
                     title: t('settings.logging.autoLogInboundFax'),
