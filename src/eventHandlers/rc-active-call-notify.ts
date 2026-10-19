@@ -122,7 +122,8 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
         if (implementedInterfaces?.cacheCallNote) {
           await logCore.uploadCacheNote({ serverUrl: manifest.serverUrl, sessionId: data.call.sessionId });
         }
-        const callAutoPopup = userCore.getCallPopSetting(userSettings).value;
+        // Auto popup only applies to EX calls, not RingCX
+        const callAutoPopup = userCore.getCallPopSetting(userSettings).value && data.call.source !== 'ringcx';
         if (callAutoPopup) {
           if (isExtensionNumber && !allowExtensionNumberLogging) {
             responseMessage(data.requestId, { data: 'ok' });
