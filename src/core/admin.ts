@@ -33,7 +33,7 @@ async function getAdminSettings({ serverUrl }: UnknownRecord): Promise<UnknownRe
     try {
         const getAdminSettingsResponse = await axios.get(
             `${serverUrl}/admin/settings`,
-            getRcAccessTokenHeaderConfig(),
+            await getRcAccessTokenHeaderConfig(),
         );
         return getAdminSettingsResponse.data;
     }
@@ -48,7 +48,7 @@ async function uploadAdminSettings({ serverUrl, adminSettings }: UnknownRecord):
         {
             adminSettings
         },
-        getRcAccessTokenHeaderConfig(),
+        await getRcAccessTokenHeaderConfig(),
     );
     await chrome.storage.local.set({ adminSettings });
 }
@@ -58,7 +58,7 @@ async function refreshAdminSettings(): Promise<UnknownRecord> {
     const platformInfo = await getPlatformInfo();
     const platform = manifest.platforms[platformInfo.platformName];
     const { rcUnifiedCrmExtJwt } = await chromeStorageLocal.get('rcUnifiedCrmExtJwt');
-    const rcAccessToken = getRcAccessToken();
+    const rcAccessToken = await getRcAccessToken();
     let adminSettings;
     // Admin tab render
     const storedAdminSettings = await getAdminSettings({ serverUrl: manifest.serverUrl, rcAccessToken });
@@ -173,7 +173,7 @@ async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel,
     if (!platform.serverSideLogging) {
         return;
     }
-    const rcAccessToken = getRcAccessToken();
+    const rcAccessToken = await getRcAccessToken();
     const serverDomainUrl = platform.serverSideLogging.url;
     const { rcUnifiedCrmExtJwt } = await chromeStorageLocal.get('rcUnifiedCrmExtJwt');
     const { serverSideLoggingToken } = await chromeStorageLocal.get('serverSideLoggingToken');
@@ -277,7 +277,7 @@ async function disableServerSideLogging({ platform }: UnknownRecord): Promise<an
     if (!platform.serverSideLogging) {
         return;
     }
-    const rcAccessToken = getRcAccessToken();
+    const rcAccessToken = await getRcAccessToken();
     const serverDomainUrl = platform.serverSideLogging.url;
     const { serverSideLoggingToken } = await chromeStorageLocal.get('serverSideLoggingToken');
     if (serverSideLoggingToken) {
@@ -398,7 +398,7 @@ async function authServerSideLogging({ platform }: UnknownRecord): Promise<any> 
     // Auth
     const rcAPI = new RcAPI();
     await refreshRCToken();
-    const rcAccessToken = getRcAccessToken();
+    const rcAccessToken = await getRcAccessToken();
     const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
     const serverSideLoggingTokenResp = await axios.get(
         `${serverDomainUrl}/oauth/callback?code=${rcInteropCode}&rcAccountId=${rcUserInfo?.rcAccountId}`,
@@ -418,7 +418,7 @@ async function authAppConnectServer({ serverUrl }: UnknownRecord): Promise<any> 
         const rcClientId = process.env.RC_CLIENT_ID;
         const rcAPI = new RcAPI();
         await refreshRCToken();
-        const rcAccessToken = getRcAccessToken();
+        const rcAccessToken = await getRcAccessToken();
         const rcInteropCode = await rcAPI.getInteropCode({ rcAccessToken, rcClientId });
         const serverSideLoggingTokenResp = await axios.get(
             `${serverUrl}/ringcentral/oauth/callback?code=${rcInteropCode}`,
@@ -485,7 +485,7 @@ async function getUserMapping({ serverUrl }: UnknownRecord): Promise<any> {
         {
             rcExtensionList
         },
-        getRcAccessTokenHeaderConfig(),
+        await getRcAccessTokenHeaderConfig(),
     );
     return userMappingResp.data;
 }
@@ -500,7 +500,7 @@ async function reinitializeUserMapping({ serverUrl }: UnknownRecord): Promise<an
         {
             rcExtensionList
         },
-        getRcAccessTokenHeaderConfig(),
+        await getRcAccessTokenHeaderConfig(),
     );
     return reinitializeUserMappingResp.data;
 }
@@ -510,7 +510,7 @@ async function getManagedAuthSettings({ serverUrl }: UnknownRecord): Promise<any
     const platformInfo = await getPlatformInfo();
     const response = await axios.get(
         `${serverUrl}/admin/managedAuth?connectorId=${encodeURIComponent(platformInfo?.connectorId ?? '')}&devRcAccountId=${encodeURIComponent(platformInfo?.devRcAccountId ?? '')}&isPrivate=${encodeURIComponent(platformInfo?.isPrivate ? 'true' : 'false')}`,
-        getRcAccessTokenHeaderConfig(getJwtAuthorizationConfig(rcUnifiedCrmExtJwt)),
+        await getRcAccessTokenHeaderConfig(getJwtAuthorizationConfig(rcUnifiedCrmExtJwt)),
     );
     await chrome.storage.local.set({ managedAuthSettings: response.data });
     return response.data;
@@ -536,7 +536,7 @@ async function saveManagedAuthSettings({
             rcUserName,
             fieldsToRemove
         },
-        getRcAccessTokenHeaderConfig(getJwtAuthorizationConfig(rcUnifiedCrmExtJwt)),
+        await getRcAccessTokenHeaderConfig(getJwtAuthorizationConfig(rcUnifiedCrmExtJwt)),
     );
     if (refreshAfterSave) {
         await getManagedAuthSettings({ serverUrl });
@@ -552,7 +552,7 @@ async function getManagedAuthOptions({ serverUrl, platformName, fieldConst, acco
             fieldConst,
             ...(accountValues === undefined ? {} : { accountValues }),
         },
-        getRcAccessTokenHeaderConfig(),
+        await getRcAccessTokenHeaderConfig(),
     );
     return response.data;
 }
@@ -560,7 +560,7 @@ async function getManagedAuthOptions({ serverUrl, platformName, fieldConst, acco
 async function deleteManagedOAuthAccount({ serverUrl, platformName }: UnknownRecord): Promise<any> {
     const response = await axios.delete(
         `${serverUrl}/admin/managedOAuth/account?platform=${encodeURIComponent(platformName)}`,
-        getRcAccessTokenHeaderConfig(),
+        await getRcAccessTokenHeaderConfig(),
     );
     return response.data;
 }

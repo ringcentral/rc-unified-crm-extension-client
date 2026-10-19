@@ -3,6 +3,14 @@ import { t } from '../i18n';
 
 type UnknownRecord = Record<string, any>;
 
+/** Matches the widget's storage `prefix`, which localforage uses as the database name. */
+const WIDGET_STORAGE_DB_NAME = 'rc-widget';
+const WIDGET_STORAGE_STORE_NAME = 'keyvaluepairs';
+const WIDGET_SDK_PLATFORM_KEY = 'sdk-rc-widgetplatform';
+const WIDGET_DATA_FETCHER_MODULE = 'DataFetcher';
+const WIDGET_CACHE_WAIT_TIMEOUT_MS = 3000;
+const WIDGET_CACHE_POLL_INTERVAL_MS = 100;
+
 declare const RCAdapter: {
   alertMessage(options: UnknownRecord): Promise<string> | string;
   dismissMessage(notificationId: unknown): Promise<unknown> | unknown;
@@ -57,11 +65,84 @@ function isObjectEmpty(obj: unknown): boolean {
   return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
 
+/**
+ * Reads one entry from the widget's storage.
+ *
+ * The widget keeps its module state and its SDK cache in a single localforage
+ * database named after its storage prefix. Returns `undefined` instead of
+ * throwing when the widget has not created the store yet, because callers run
+ * on widget events that must not be aborted.
+ */
+async function readWidgetStorage(key: string): Promise<unknown> {
+  const databases = await indexedDB.databases();
+  if (!databases.some((database) => database.name === WIDGET_STORAGE_DB_NAME)) {
+    return undefined;
+  }
+  const database = await openDB(WIDGET_STORAGE_DB_NAME);
+  try {
+    if (!database.objectStoreNames.contains(WIDGET_STORAGE_STORE_NAME)) {
+      return undefined;
+    }
+    return await database.get(WIDGET_STORAGE_STORE_NAME, key);
+  } finally {
+    database.close();
+  }
+}
+
+/** Module state is persisted with each field held as its own JSON-encoded string. */
+function parseStoredJson<T>(raw: unknown): T | undefined {
+  if (raw && typeof raw === 'object') {
+    return raw as T;
+  }
+  if (typeof raw !== 'string') {
+    return undefined;
+  }
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return undefined;
+  }
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => { setTimeout(resolve, milliseconds); });
+}
+
+async function readWidgetDataFetcherCache(): Promise<UnknownRecord | undefined> {
+  const dataFetcher = await readWidgetStorage(`persist:${WIDGET_DATA_FETCHER_MODULE}`);
+  return parseStoredJson<UnknownRecord>(parseStoredJson<UnknownRecord>(dataFetcher)?.storageData);
+}
+
+/** Polls until the widget has flushed its cache, or the deadline passes. */
+async function waitForWidgetDataFetcherCache(): Promise<UnknownRecord | undefined> {
+  const deadline = Date.now() + WIDGET_CACHE_WAIT_TIMEOUT_MS;
+  let storageData: UnknownRecord | undefined;
+  while (Date.now() < deadline) {
+    await delay(WIDGET_CACHE_POLL_INTERVAL_MS);
+    storageData = await readWidgetDataFetcherCache();
+    if (storageData?.cachedData) {
+      return storageData;
+    }
+  }
+  return storageData;
+}
+
+/**
+ * Reads the widget's cached RingCentral account data.
+ *
+ * The widget persists this cache asynchronously after it authenticates, so a
+ * host event can arrive before the write lands. While a widget session exists,
+ * wait briefly for the cache instead of reporting it as empty. The `value`
+ * wrapper is preserved so callers can keep reading
+ * `rcInfo.value.cachedData.extensionInfo` as they did with the previous
+ * per-user widget database.
+ */
 async function getRcInfo(): Promise<UnknownRecord> {
-  const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform') ?? '{}').owner_id;
-  const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
-  const rcInfo = await indexDB.get('keyvaluepairs', 'dataFetcherV2-storageData');
-  return rcInfo;
+  let storageData = await readWidgetDataFetcherCache();
+  if (!storageData?.cachedData && await getRcAccessToken()) {
+    storageData = await waitForWidgetDataFetcherCache();
+  }
+  return { value: storageData ?? {} };
 }
 
 async function getRcUserInfo(): Promise<UnknownRecord> {
@@ -78,12 +159,19 @@ async function getRcCallLogIdentity(): Promise<UnknownRecord> {
   };
 }
 
-function getRcAccessToken(): string {
-  return JSON.parse(localStorage.getItem('sdk-rc-widgetplatform') ?? '{}').access_token;
+/**
+ * Reads the access token from the widget's SDK cache.
+ *
+ * The widget backs its SDK cache with the same IndexedDB store as its modules,
+ * so this value is no longer available synchronously from `localStorage`.
+ */
+async function getRcAccessToken(): Promise<string> {
+  const platformData = await readWidgetStorage(WIDGET_SDK_PLATFORM_KEY);
+  return parseStoredJson<UnknownRecord>(platformData)?.access_token ?? '';
 }
 
-function getRcAccessTokenHeaderConfig(config: UnknownRecord = {}): UnknownRecord {
-  const rcAccessToken = getRcAccessToken();
+async function getRcAccessTokenHeaderConfig(config: UnknownRecord = {}): Promise<UnknownRecord> {
+  const rcAccessToken = await getRcAccessToken();
   return {
     ...config,
     headers: {
@@ -94,10 +182,9 @@ function getRcAccessTokenHeaderConfig(config: UnknownRecord = {}): UnknownRecord
 }
 
 async function getRcContactInfo(): Promise<UnknownRecord[]> {
-  const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform') ?? '{}').owner_id;
-  const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
-  const rcContactInfo = await indexDB.get('keyvaluepairs', 'CompanyContacts-companyContactsData');
-  return rcContactInfo?.value ?? [];
+  const rcInfo = await getRcInfo();
+  const companyContacts = rcInfo.value?.cachedData?.companyContacts;
+  return Array.isArray(companyContacts) ? companyContacts : [];
 }
 
 async function checkC2DCollision(): Promise<void> {

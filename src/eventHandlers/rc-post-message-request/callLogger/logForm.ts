@@ -6,6 +6,7 @@ import { isObjectEmpty, showNotification } from '../../../lib/util';
 import axios from 'axios';
 import dispositionCore from '../../../core/disposition';
 import logPage from '../../../components/logPage';
+import { getCachedLogPageData } from '../../../lib/logUtil';
 
 type UnknownRecord = Record<string, any>;
 
@@ -22,6 +23,20 @@ function getWidgetFrameWindow(): Window {
     return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
 }
 
+// The submitted form data normally carries the trigger type this page was
+// rendered with. Fall back to the cached page data when the widget reports a
+// form that dropped it, so the log is still saved.
+async function resolveFormTriggerType(data: UnknownRecord): Promise<string | undefined> {
+    if (data.body.formData?.triggerType) {
+        return data.body.formData.triggerType;
+    }
+    const cachedLogPageData = await getCachedLogPageData();
+    if (cachedLogPageData?.id === data.body.call?.sessionId) {
+        return cachedLogPageData.triggerType;
+    }
+    return undefined;
+}
+
 async function onEvent({ data, manifest, platformInfo, platformName, platform, contactPhoneNumber }: EventOptions) {
     void platformInfo;
     void platform;
@@ -36,7 +51,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
     }
     const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null }) as { implementedInterfaces?: UnknownRecord | null };
     const supportDisposition = implementedInterfaces?.upsertCallDisposition;
-    switch (data.body.formData.triggerType) {
+    switch (await resolveFormTriggerType(data)) {
         // Case 1.1: create log
         case 'createLog':
             let newContactInfo: UnknownRecord = {};

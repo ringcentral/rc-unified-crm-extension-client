@@ -70,32 +70,32 @@ describe('util', () => {
 
   it('posts widget responses and reads RingCentral storage values', async () => {
     const util = await loadUtil();
-    localStorage.setItem('sdk-rc-widgetplatform', JSON.stringify({
-      owner_id: 'ext-1',
-      access_token: 'token-1',
-    }));
+    vi.stubGlobal('indexedDB', {
+      databases: vi.fn(async () => [{ name: 'rc-widget' }]),
+    });
     seedStorage({
       rcUserInfo: {
         rcExtensionId: 'hashed-ext-1',
       },
     });
-    openDB.mockResolvedValue({
-      get: vi.fn(async (_store, key) => {
-        if (key === 'dataFetcherV2-storageData') {
-          return {
-            value: {
-              cachedData: {
-                extensionInfo: {
-                  extensionNumber: '101',
-                },
-              },
-            },
-          };
-        }
-        return {
-          value: [{ id: 'company-contact-1' }],
-        };
+    const widgetStorage = {
+      'sdk-rc-widgetplatform': JSON.stringify({
+        owner_id: 'ext-1',
+        access_token: 'token-1',
       }),
+      'persist:DataFetcher': JSON.stringify({
+        storageData: JSON.stringify({
+          cachedData: {
+            extensionInfo: { extensionNumber: '101' },
+            companyContacts: [{ id: 'company-contact-1' }],
+          },
+        }),
+      }),
+    };
+    openDB.mockResolvedValue({
+      objectStoreNames: { contains: vi.fn(() => true) },
+      get: vi.fn(async (_store, key) => widgetStorage[key]),
+      close: vi.fn(),
     });
 
     util.responseMessage('request-1', { data: 'ok' });
@@ -113,11 +113,11 @@ describe('util', () => {
       }),
     }));
     await expect(util.getRcContactInfo()).resolves.toEqual([{ id: 'company-contact-1' }]);
-    expect(util.getRcAccessToken()).toBe('token-1');
-    expect(util.getRcAccessTokenHeaderConfig({
+    await expect(util.getRcAccessToken()).resolves.toBe('token-1');
+    await expect(util.getRcAccessTokenHeaderConfig({
       headers: { Authorization: 'Bearer jwt-1' },
       params: { platform: 'salesforce' },
-    })).toEqual({
+    })).resolves.toEqual({
       headers: {
         Authorization: 'Bearer jwt-1',
         'X-RC-Access-Token': 'token-1',
@@ -129,7 +129,7 @@ describe('util', () => {
       extensionNumber: '101',
       hashedExtensionId: 'hashed-ext-1',
     });
-    expect(openDB).toHaveBeenCalledWith('rc-widget-storage-ext-1', 2);
+    expect(openDB).toHaveBeenCalledWith('rc-widget');
   });
 
   it('detects click-to-dial extension collision once and opens help from notification action', async () => {

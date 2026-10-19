@@ -82,8 +82,20 @@ function getWidgetFrameWindow(): Window & UnknownRecord {
   return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow! as Window & UnknownRecord;
 }
 
+/**
+ * Reads the widget's contact match cache.
+ *
+ * The widget exposes its modules through `app.modules` instead of the former
+ * `phone` module tree global. Entries are keyed by phone number and then by
+ * match source name. The module getter resolves the cache for the signed-in
+ * user, which the raw redux state does not.
+ */
+function getWidgetContactMatchCache(): UnknownRecord | undefined {
+  return getWidgetFrameWindow().app?.modules?.ContactMatcher?.data;
+}
+
 export function getLocalCachedContact({ phoneNumber, platformName }: UnknownRecord): UnknownRecord[] {
-  const allCachedContacts = getWidgetFrameWindow().phone.contactMatcher.data;
+  const allCachedContacts = getWidgetContactMatchCache();
   const result = [];
   if (!allCachedContacts) {
     return result;

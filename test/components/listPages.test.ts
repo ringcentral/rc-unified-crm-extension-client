@@ -239,7 +239,7 @@ describe('calldownPage', () => {
         },
       },
     });
-    getWidgetFrameWindow().phone.contactMatcher.data = {
+    getWidgetFrameWindow().app.modules.ContactMatcher.data = {
       '+16505550100': {
         salesforce: {
           data: [

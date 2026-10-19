@@ -49,7 +49,7 @@ export async function addLog({
     logInfo['customSubject'] = subject;
   }
   let addLogRes: any;
-  const rcAccessToken = getRcAccessToken();
+  const rcAccessToken = await getRcAccessToken();
   if (rcUnifiedCrmExtJwt) {
     switch (logType) {
       case 'Call':

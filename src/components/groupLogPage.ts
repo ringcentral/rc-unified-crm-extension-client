@@ -20,6 +20,22 @@ function normalizeCorrespondentsData(correspondentsData: UnknownRecord[] | Unkno
     }));
 }
 
+function isPlainObject(value: unknown): value is UnknownRecord {
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+// Merges reported section values over the values this page already holds.
+function mergeSectionFormData(currentFormData: UnknownRecord = {}, reportedFormData: UnknownRecord = {}): UnknownRecord {
+    const mergedFormData: UnknownRecord = { ...currentFormData };
+    for (const [key, reportedValue] of Object.entries(reportedFormData)) {
+        const currentValue = mergedFormData[key];
+        mergedFormData[key] = isPlainObject(currentValue) && isPlainObject(reportedValue)
+            ? { ...currentValue, ...reportedValue }
+            : reportedValue;
+    }
+    return mergedFormData;
+}
+
 // Builds a group message log page with one collapsible section per correspondent.
 // correspondentsData: [{ phoneNumber, displayName, contactInfo, logInfo? }] or { [phoneNumber]: contactInfo }
 function getGroupLogPageRender({ id, manifest, platformName, correspondentsData, useContactSearch }: UnknownRecord): UnknownRecord {
@@ -76,7 +92,10 @@ function getGroupLogPageRender({ id, manifest, platformName, correspondentsData,
 // and updateData.keys[1] to be the changed field name within that section.
 function getUpdatedGroupLogPageRender({ manifest, platformName, updateData }: UnknownRecord): UnknownRecord {
     let page = updateData.page;
-    page.formData = updateData.formData;
+    // The widget only reports the fields its form knows about, so merge each
+    // section instead of replacing it to keep the fields this page carries for
+    // itself, such as triggerType.
+    page.formData = mergeSectionFormData(page.formData, updateData.formData);
 
     const sectionKey = updateData.keys[0];
     const updatedFieldKey = updateData.keys.length > 1 ? updateData.keys[1] : null;

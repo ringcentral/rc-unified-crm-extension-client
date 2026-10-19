@@ -103,7 +103,8 @@ async function onEvent(options: EventOptions) {
                 };
             }
         }
-        catch {
+        catch(e) {
+            console.error(e)
             // Keep the existing preparing-data behavior when recovery is unavailable.
         }
     }
@@ -197,6 +198,11 @@ async function onEvent(options: EventOptions) {
             responseMessage(data.requestId, { data: 'ok' });
             return;
         }
+    }
+
+    if (data.body.triggerType === 'callDisposition') {
+        triggerTypeInUse = 'createLog';
+        isAutoLog = false;
     }
 
     // Translate: If want to create, but find log already exist, then change to edit

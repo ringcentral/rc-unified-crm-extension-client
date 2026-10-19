@@ -488,6 +488,7 @@ async function getServiceManifest() {
                 name: t('pages.support.title'),
                 buttonLabel: t('common.buttons.open'),
                 buttonType: "link",
+                groupId: 'support',
             },
             {
                 id: "openAboutPage",
@@ -495,6 +496,7 @@ async function getServiceManifest() {
                 name: t('pages.about.title'),
                 buttonLabel: t('common.buttons.open'),
                 buttonType: "link",
+                groupId: 'support',
             },
             {
                 id: "advancedFeatures",
@@ -1082,6 +1084,7 @@ async function getServiceManifest() {
                 name: t('pages.developerSettings.title'),
                 buttonLabel: t('common.buttons.open'),
                 buttonType: "link",
+                groupId: 'support'
             }
         )
     }

@@ -427,7 +427,7 @@ async function removePendingRecordingSessionId({ sessionId }: UnknownRecord): Pr
     await chrome.storage.local.set({ pendingRecordings });
 }
 
-async function cacheLogPageData({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId }: UnknownRecord): Promise<void> {
+async function cacheLogPageData({ id, manifest, logType, triggerType, platformName, direction, contactInfo, logInfo, loggedContactId, source }: UnknownRecord): Promise<void> {
     if(!manifest)
     {
         // eslint-disable-next-line no-param-reassign
@@ -448,7 +448,8 @@ async function cacheLogPageData({ id, manifest, logType, triggerType, platformNa
         direction,
         contactInfo,
         logInfo,
-        loggedContactId
+        loggedContactId,
+        source
     }
     await chrome.storage.local.set({ cacheLogPageData });
 }

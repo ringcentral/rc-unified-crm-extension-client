@@ -155,6 +155,7 @@ describe('ExpandableNote', () => {
     const { ExpandableNote, logCore, logUtil, logPage } = await loadComponent();
     vi.mocked(logUtil.getCachedLogPageData).mockResolvedValue({
       id: 'session-2',
+      source: 'Phone',
       manifest: {
         serverUrl: 'https://server.example',
       },
@@ -210,7 +211,7 @@ describe('ExpandableNote', () => {
       expect.objectContaining({
         message: {
           type: 'rc-adapter-navigate-to',
-          path: '/log/call/session-2',
+          path: '/log/call/session-2?source=Phone',
         },
       }),
     ]));
