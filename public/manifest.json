@@ -1,7 +1,7 @@
 {
   "name": "RingCentral App Connect - BETA - Release Candidate",
   "description": "A RingCentral extension for CRM platforms",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "permissions": [
     "storage",
     "alarms",
