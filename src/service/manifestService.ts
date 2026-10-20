@@ -42,6 +42,7 @@ export interface CatalogItem extends UnknownRecord {
 
 interface ConnectorListResponse {
   connectors?: CatalogItem[];
+  nextPageToken?: string;
   sharedConnectors?: CatalogItem[];
   privateConnectors?: CatalogItem[];
 }
@@ -70,6 +71,27 @@ function getRcAccountId(rcInfo: RcInfo): string {
 
 function asConnectorList(data: unknown): ConnectorListResponse {
   return (data ?? {}) as ConnectorListResponse;
+}
+
+// The public list endpoint is paginated (20 per page); follow nextPageToken until exhausted.
+async function getAllPublicConnectors(type: 'connector' | 'plugin'): Promise<CatalogItem[]> {
+  const result: CatalogItem[] = [];
+  const seenTokens = new Set<string>();
+  let pageToken: string | undefined;
+  do {
+    const pageQuery = pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : '';
+    const response = await axios.get(`${baseManifest.platformPublicListUrl}?type=${type}${pageQuery}`);
+    const page = asConnectorList(response.data);
+    result.push(...(page.connectors ?? []));
+    pageToken = page.nextPageToken;
+    if (pageToken) {
+      if (seenTokens.has(pageToken)) {
+        break;
+      }
+      seenTokens.add(pageToken);
+    }
+  } while (pageToken);
+  return result;
 }
 
 function getPlatformManifest(manifest: ManifestValue, platformName?: string): PlatformManifest | undefined {
@@ -108,8 +130,7 @@ export async function getPlatformList(): Promise<CatalogItem[]> {
     return platformList;
   }
   const result: CatalogItem[] = [];
-  const platformPublicListResponse = await axios.get(`${baseManifest.platformPublicListUrl}?type=connector`);
-  for (const platform of asConnectorList(platformPublicListResponse.data).connectors ?? []) {
+  for (const platform of await getAllPublicConnectors('connector')) {
     platform.access = 'public';
     result.push(platform);
   }
@@ -133,8 +154,7 @@ export async function getPlatformList(): Promise<CatalogItem[]> {
 
 export async function getPluginList(): Promise<CatalogItem[]> {
   const result: CatalogItem[] = [];
-  const pluginPublicListResponse = await axios.get(`${baseManifest.platformPublicListUrl}?type=plugin`);
-  for (const plugin of asConnectorList(pluginPublicListResponse.data).connectors ?? []) {
+  for (const plugin of await getAllPublicConnectors('plugin')) {
     plugin.access = 'public';
     result.push(plugin);
   }
@@ -258,8 +278,7 @@ export async function migrateLegacyManifestUrl(): Promise<boolean> {
     if (!platformInfo?.platformName || !PUBLIC_MIGRATION_PLATFORM_NAMES.includes(platformInfo.platformName)) {
       return false;
     }
-    const listResponse = await axios.get(`${baseManifest.platformPublicListUrl}?type=connector`);
-    const connector = asConnectorList(listResponse.data).connectors?.find(item => item.name === platformInfo.platformName);
+    const connector = (await getAllPublicConnectors('connector')).find(item => item.name === platformInfo.platformName);
     if (!connector?.id) {
       return false;
     }
