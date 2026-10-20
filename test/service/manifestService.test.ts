@@ -77,6 +77,40 @@ describe('manifestService', () => {
     expect(getRcAccessTokenHeaderConfig).toHaveBeenCalledTimes(1);
   });
 
+  it('follows nextPageToken to collect every public connector page', async () => {
+    vi.mocked(axios.get)
+      .mockResolvedValueOnce({ data: { connectors: [{ id: 'public-1' }], nextPageToken: 'token 1' } })
+      .mockResolvedValueOnce({ data: { connectors: [{ id: 'public-2' }], nextPageToken: 'token-2' } })
+      .mockResolvedValueOnce({ data: { connectors: [{ id: 'public-3' }] } })
+      .mockResolvedValueOnce({ data: { privateConnectors: [{ id: 'private-1' }] } });
+    const manifestService = await loadManifestService();
+
+    await expect(manifestService.getPlatformList()).resolves.toEqual([
+      { id: 'public-1', access: 'public' },
+      { id: 'public-2', access: 'public' },
+      { id: 'public-3', access: 'public' },
+      { id: 'private-1', access: 'private' },
+    ]);
+
+    expect(axios.get).toHaveBeenNthCalledWith(1, 'https://appconnect.labs.ringcentral.com/public-api/connectors?type=connector');
+    expect(axios.get).toHaveBeenNthCalledWith(2, 'https://appconnect.labs.ringcentral.com/public-api/connectors?type=connector&pageToken=token%201');
+    expect(axios.get).toHaveBeenNthCalledWith(3, 'https://appconnect.labs.ringcentral.com/public-api/connectors?type=connector&pageToken=token-2');
+  });
+
+  it('stops paging when the server repeats a page token', async () => {
+    vi.mocked(axios.get)
+      .mockResolvedValueOnce({ data: { connectors: [{ id: 'a' }], nextPageToken: 't' } })
+      .mockResolvedValueOnce({ data: { connectors: [{ id: 'b' }], nextPageToken: 't' } })
+      .mockResolvedValueOnce({ data: {} });
+    const manifestService = await loadManifestService();
+
+    await expect(manifestService.getPlatformList()).resolves.toEqual([
+      { id: 'a', access: 'public' },
+      { id: 'b', access: 'public' },
+    ]);
+    expect(axios.get).toHaveBeenCalledTimes(3);
+  });
+
   it('caches platform list results and handles empty catalog payloads', async () => {
     vi.mocked(axios.get)
       .mockResolvedValueOnce({ data: null })
