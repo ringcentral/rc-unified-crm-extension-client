@@ -72,10 +72,15 @@ export async function onEvent({ data, manifest, platformName, fieldConst, mode }
     setCachedManagedAuthOptions(contextKey, dynamicOptions);
 
     if (mode === 'auth') {
+      const { authPageContext } = await chrome.storage.local.get({ authPageContext: null }) as {
+        authPageContext?: { isAdmin?: boolean; visibleFieldConsts?: string[] | null } | null;
+      };
+      const isAdmin = !!authPageContext?.isAdmin;
       const page = authPage.getAuthPageRender({
         manifest,
         platformName,
-        isAdmin: true,
+        isAdmin,
+        visibleFieldConsts: isAdmin ? null : (authPageContext?.visibleFieldConsts ?? null),
         formData,
         dynamicOptions,
       });
