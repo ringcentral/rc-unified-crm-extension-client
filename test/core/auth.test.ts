@@ -1078,6 +1078,7 @@ describe('auth core', () => {
       visibleFieldConsts: null,
       isAdmin: false,
     }));
+    expect(readStorage().authPageContext).toEqual({ isAdmin: false, visibleFieldConsts: null });
   });
 
   it('opens platform selection when no platform is configured', async () => {
