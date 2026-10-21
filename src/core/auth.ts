@@ -143,10 +143,12 @@ async function onUserClickConnectButton({ platform, platformName, manifest, host
             }
             const rcInfo = await getRcInfo();
             const isAdmin = !!rcInfo?.value?.cachedData?.extensionInfo?.permissions?.admin?.enabled;
+            const visibleFieldConsts = managedAuthState?.visibleFieldConsts ?? null;
+            await chrome.storage.local.set({ authPageContext: { isAdmin, visibleFieldConsts } });
             const authPageRender = authPage.getAuthPageRender({
                 manifest,
                 platformName,
-                visibleFieldConsts: managedAuthState?.visibleFieldConsts ?? null,
+                visibleFieldConsts,
                 isAdmin
             });
             getWidgetFrame().contentWindow.postMessage({
