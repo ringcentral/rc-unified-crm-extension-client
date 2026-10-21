@@ -77,6 +77,7 @@ describe('managed auth dynamic option button', () => {
         platformName: 'salesforce',
         connectorId: 'connector-1',
       },
+      authPageContext: { isAdmin: true, visibleFieldConsts: null },
     });
   });
 
@@ -101,10 +102,59 @@ describe('managed auth dynamic option button', () => {
       accountValues: { companyId: 'company-123' },
     });
     expect(authPage.getAuthPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      isAdmin: true,
+      visibleFieldConsts: null,
       formData,
       dynamicOptions: {
         crmUserId: [{ value: 'crm-101', label: 'Ada Lovelace' }],
       },
+    }));
+  });
+
+  it('keeps a normal user on the visible connect fields after refreshing the list', async () => {
+    seedStorage({
+      'platform-info': { platformName: 'salesforce', connectorId: 'connector-1' },
+      authPageContext: { isAdmin: false, visibleFieldConsts: ['crmUserId'] },
+    });
+    vi.mocked(adminCore.getManagedAuthOptions).mockResolvedValue([
+      { value: 'crm-101', label: 'Ada Lovelace' },
+    ]);
+
+    await handler.onEvent({
+      data: data({ companyId: 'company-123', crmUserId: '' }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+      fieldConst: 'crmUserId',
+      mode: 'auth',
+    });
+
+    expect(authPage.getAuthPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      isAdmin: false,
+      visibleFieldConsts: ['crmUserId'],
+    }));
+  });
+
+  it.each([
+    ['no stored connect context', { authPageContext: null }],
+    ['a normal user context without visible fields', { authPageContext: { isAdmin: false } }],
+  ])('falls back to the non-admin connect form when there is %s', async (_label, extraStorage) => {
+    seedStorage({
+      'platform-info': { platformName: 'salesforce', connectorId: 'connector-1' },
+      ...extraStorage,
+    });
+    vi.mocked(adminCore.getManagedAuthOptions).mockResolvedValue([]);
+
+    await handler.onEvent({
+      data: data({ companyId: 'company-123', crmUserId: '' }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+      fieldConst: 'crmUserId',
+      mode: 'auth',
+    });
+
+    expect(authPage.getAuthPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      isAdmin: false,
+      visibleFieldConsts: null,
     }));
   });
 
