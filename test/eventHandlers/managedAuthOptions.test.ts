@@ -134,6 +134,30 @@ describe('managed auth dynamic option button', () => {
     }));
   });
 
+  it.each([
+    ['no stored connect context', { authPageContext: null }],
+    ['a normal user context without visible fields', { authPageContext: { isAdmin: false } }],
+  ])('falls back to the non-admin connect form when there is %s', async (_label, extraStorage) => {
+    seedStorage({
+      'platform-info': { platformName: 'salesforce', connectorId: 'connector-1' },
+      ...extraStorage,
+    });
+    vi.mocked(adminCore.getManagedAuthOptions).mockResolvedValue([]);
+
+    await handler.onEvent({
+      data: data({ companyId: 'company-123', crmUserId: '' }),
+      manifest: manifest(),
+      platformName: 'salesforce',
+      fieldConst: 'crmUserId',
+      mode: 'auth',
+    });
+
+    expect(authPage.getAuthPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      isAdmin: false,
+      visibleFieldConsts: null,
+    }));
+  });
+
   it('uses stored account values for the post-login user editor', async () => {
     seedStorage({
       'platform-info': { platformName: 'salesforce', connectorId: 'connector-1' },
