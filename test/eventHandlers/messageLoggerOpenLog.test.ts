@@ -10,8 +10,7 @@ async function loadOpenLogHandler() {
   vi.doMock('../../src/lib/util.ts', () => util);
 
   const logCore: Record<string, any> = {
-    resolveMessageLogContactId: vi.fn(async () => 'contact-1'),
-    openLog: vi.fn(),
+    openMessageLog: vi.fn(async () => true),
   };
   vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
@@ -48,21 +47,29 @@ describe('messageLogger openLog handler', () => {
       ...context,
     });
 
-    expect(logCore.openLog).toHaveBeenCalledWith({
+    expect(logCore.openMessageLog).toHaveBeenCalledWith({
       manifest,
       platformName: 'salesforce',
       hostname: 'crm.example',
       logId: 'log-42',
-      contactId: 'contact-1',
-      userSettings: { some: 'setting' },
-    });
-    expect(logCore.resolveMessageLogContactId).toHaveBeenCalledWith({
-      serverUrl: 'https://server.example',
-      logId: 'log-42',
       messageId: 'message-42',
       conversationId: 'conversation-1',
+      userSettings: { some: 'setting' },
     });
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('still answers the widget when opening the log record fails', async () => {
+    seedStorage({ userSettings: {} });
+    const { openLogHandler, util, logCore } = await loadOpenLogHandler();
+    logCore.openMessageLog.mockRejectedValueOnce(new Error('window blocked'));
+
+    await expect(openLogHandler.onEvent({
+      data: { requestId: 'request-3', body: { logId: 'log-42' } },
+      ...context,
+    })).rejects.toThrow('window blocked');
+
+    expect(util.responseMessage).toHaveBeenCalledWith('request-3', { data: 'ok' });
   });
 
   it('acknowledges without opening when no logId is provided', async () => {
@@ -74,7 +81,7 @@ describe('messageLogger openLog handler', () => {
       ...context,
     });
 
-    expect(logCore.openLog).not.toHaveBeenCalled();
+    expect(logCore.openMessageLog).not.toHaveBeenCalled();
     expect(util.responseMessage).toHaveBeenCalledWith('request-2', { data: 'ok' });
   });
 });

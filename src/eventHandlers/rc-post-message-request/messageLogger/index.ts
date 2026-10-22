@@ -30,7 +30,12 @@ type PendingSelectedLog = {
   // Guards against the widget's parallel per-day-bucket `logForm` fan-out so we
   // only emit ONE messageLog POST for the whole selection.
   consumed: boolean;
+  createdAt: number;
 };
+
+// A selection whose form was dismissed without a manual reopen of the thread
+// must not be applied to an unrelated log submitted much later.
+const PENDING_SELECTED_LOG_TTL_MS = 10 * 60 * 1000;
 
 // In-memory (not chrome.storage) so the check-and-consume in the `logForm`
 // handler is synchronous and immune to the race created by the widget firing
@@ -38,6 +43,15 @@ type PendingSelectedLog = {
 // conversation. Keyed by conversationId. Entries are short-lived: consumed
 // after the single POST and cleared shortly after.
 const pendingSelectedLogs = new Map<string, PendingSelectedLog>();
+
+function getPendingSelectedLog(conversationId: string): PendingSelectedLog | undefined {
+  const pending = pendingSelectedLogs.get(conversationId);
+  if (pending && Date.now() - pending.createdAt > PENDING_SELECTED_LOG_TTL_MS) {
+    pendingSelectedLogs.delete(conversationId);
+    return undefined;
+  }
+  return pending;
+}
 
 async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions) {
   const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
@@ -50,23 +64,22 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
   // a crash on the missing conversation payload.
   if (data.body?.triggerType === 'openLog') {
     const logId = data.body?.logId;
-    if (logId) {
-      const contactId = await logCore.resolveMessageLogContactId({
-        serverUrl: manifest.serverUrl,
-        logId,
-        conversationId: data.body?.conversationId,
-        messageId: data.body?.messageId,
-      });
-      logCore.openLog({
-        manifest,
-        platformName,
-        hostname: platformInfo?.hostname,
-        logId,
-        contactId,
-        userSettings,
-      });
+    try {
+      if (logId) {
+        await logCore.openMessageLog({
+          manifest,
+          platformName,
+          hostname: platformInfo?.hostname,
+          logId,
+          conversationId: data.body?.conversationId,
+          messageId: data.body?.messageId,
+          userSettings,
+        });
+      }
     }
-    responseMessage(data.requestId, { data: 'ok' });
+    finally {
+      responseMessage(data.requestId, { data: 'ok' });
+    }
     return;
   }
 
@@ -534,6 +547,13 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
       });
       return;
     }
+    // The group log form has no single contact, so its submit would log the
+    // whole conversation instead of the selection.
+    if ((data.body.conversation.correspondents?.length ?? 0) > 1) {
+      showNotification({ level: 'warning', message: 'Selecting messages to log is not supported for group conversations.', ttl: 3000 });
+      responseMessage(data.requestId, { data: 'ok' });
+      return;
+    }
     // Sub-case: no contact resolved yet. Keep the selection snapshot (the exact
     // selected messages + their ids) in memory so the subsequent logForm submit
     // for this conversation logs all of them as a SINGLE CRM entry (one POST),
@@ -542,6 +562,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
       conversation: { ...data.body.conversation, messages: selectedMessages },
       selectedMessageIds: selectedIds,
       consumed: false,
+      createdAt: Date.now(),
     });
     // Open the contact-selection log form (no CRM write yet). Render it as a
     // normal manual/new log page ('selectedLog' is not a valid render trigger
@@ -559,7 +580,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
   // Case: manual log, submit
   else if (data.body.triggerType === 'logForm') {
     const conversationId = String(data.body.conversation.conversationId);
-    const pending = pendingSelectedLogs.get(conversationId);
+    const pending = getPendingSelectedLog(conversationId);
     // Opening another log page clears pending state below, so a pending entry
     // with a single selected contact identifies this selected-message submit.
     // Group forms have no top-level contact and use the normal path.

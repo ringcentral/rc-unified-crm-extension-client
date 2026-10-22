@@ -242,19 +242,27 @@ export async function getMessageLog({ serverUrl, conversationId, messageIds }: U
     ))
     : [[]];
 
+  // A failed batch must not discard the logged state already returned by the
+  // other batches, so each batch settles independently.
   const responses = await mapWithConcurrency(batches, MESSAGE_LOG_MATCH_MAX_CONCURRENCY, async (batch) => {
     const body: UnknownRecord = { conversationId: String(conversationId ?? '') };
     if (batch.length > 0) {
       body.messageIds = batch;
     }
-    return axios.post(`${serverUrl}/messageLog/match`, body);
+    try {
+      return (await axios.post(`${serverUrl}/messageLog/match`, body)).data as UnknownRecord;
+    }
+    catch (error) {
+      console.debug('Message log match batch failed', error);
+      return null;
+    }
   });
 
-  return responses.reduce((result, res) => ({
-    successful: result.successful && res.data.successful !== false,
+  return responses.reduce((result, data) => ({
+    successful: result.successful && data !== null && data?.successful !== false,
     messageLogs: {
       ...result.messageLogs,
-      ...extractMessageLogs(res.data),
+      ...(data ? extractMessageLogs(data) : {}),
     },
   }), { successful: true, messageLogs: {} as UnknownRecord });
 }
@@ -272,10 +280,17 @@ export async function resolveMessageLogContactId({
   if (!rcUnifiedCrmExtJwt) {
     return undefined;
   }
-  const response = await axios.post(`${serverUrl}/messageLog/match`, {
-    conversationId: String(conversationId),
-    messageIds: [String(messageId)],
-  });
+  let response: UnknownRecord;
+  try {
+    response = await axios.post(`${serverUrl}/messageLog/match`, {
+      conversationId: String(conversationId),
+      messageIds: [String(messageId)],
+    });
+  }
+  catch (error) {
+    console.debug('Message log contact lookup failed', error);
+    return undefined;
+  }
   const match = (Array.isArray(response.data?.logs) ? response.data.logs : []).find(
     (entry: UnknownRecord) =>
       entry?.matched
@@ -283,6 +298,40 @@ export async function resolveMessageLogContactId({
       && String(entry.logId) === String(logId),
   );
   return match?.contactId;
+}
+
+// Opens the CRM record behind a message's "logged" icon. CRMs whose log page
+// URL is keyed by contact (e.g. Clio) cannot be opened without the contact id,
+// so report that instead of opening a broken `.../contacts/undefined` URL.
+export async function openMessageLog({
+  manifest,
+  platformName,
+  hostname,
+  logId,
+  conversationId,
+  messageId,
+  userSettings,
+}: UnknownRecord): Promise<boolean> {
+  const contactId = await resolveMessageLogContactId({
+    serverUrl: manifest.serverUrl,
+    logId,
+    conversationId,
+    messageId,
+  });
+  const template = manifest.platforms?.[platformName]?.logPageUrl;
+  if (contactId == null && typeof template === 'string' && template.includes('{contactId}')) {
+    showNotification({ level: 'warning', message: 'Could not open the logged record. Please try again later.', ttl: 3000 });
+    return false;
+  }
+  openLog({
+    manifest,
+    platformName,
+    hostname,
+    logId,
+    contactId,
+    userSettings,
+  });
+  return true;
 }
 
 export function openLog({ manifest, platformName, hostname, logId, contactType, contactId, userSettings }: UnknownRecord): void {
@@ -407,6 +456,7 @@ const logCore = {
   getMessageLog,
   resolveMessageLogContactId,
   openLog,
+  openMessageLog,
   updateLog,
   cacheCallNote,
   getCachedNote,

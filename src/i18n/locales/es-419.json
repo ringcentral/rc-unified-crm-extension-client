@@ -211,7 +211,7 @@
       "oneTimeLogDesc": "Retrasa el registro hasta que los detalles completos de la llamada estén disponibles",
       "enableOneTimeLog": "Habilitar registro de llamada único",
       "selectedMessageLog": "Registrar mensajes seleccionados",
-      "selectedMessageLogDesc": "Elija mensajes SMS individuales para registrar en lugar de toda la conversación. Cuando está desactivado, se registra toda la conversación.",
+      "selectedMessageLogDesc": "Elija mensajes SMS individuales para registrar en lugar de toda la conversación. Cuando está desactivado, se registra toda la conversación. Cuando está activado, se desactiva el registro automático de SMS, buzón de voz y fax.",
       "popupLogPageAfterCall": "(Registro manual) Abrir página de registro después de la llamada",
       "popupLogPageAfterCallDesc": "Abrir automáticamente el formulario de registro después de cada llamada",
       "popupLogPageAfterSMS": "(Registro manual) Abrir página de registro SMS después del mensaje",

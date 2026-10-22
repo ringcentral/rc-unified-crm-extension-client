@@ -546,6 +546,101 @@ describe('log core', () => {
     });
   });
 
+  it('keeps logged state from successful batches when another batch fails', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const logCore = await loadLogCore();
+    vi.mocked(axios.post).mockClear();
+    const messageIds = Array.from({ length: 101 }, (_, index) => `m${index + 1}`);
+    vi.mocked(axios.post)
+      .mockResolvedValueOnce({ data: { successful: true, messageLogs: { m1: 'log-1' } } })
+      .mockRejectedValueOnce(new Error('Request failed with status code 500'));
+
+    await expect(logCore.getMessageLog({
+      serverUrl: 'https://server.example',
+      conversationId: 'conv-partial',
+      messageIds,
+    })).resolves.toEqual({
+      successful: false,
+      messageLogs: { m1: 'log-1' },
+    });
+  });
+
+  it('resolves no message log contact when the lookup request fails', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const logCore = await loadLogCore();
+    vi.mocked(axios.post).mockRejectedValueOnce(new Error('Network Error'));
+
+    await expect(logCore.resolveMessageLogContactId({
+      serverUrl: 'https://server.example',
+      logId: 'crm-entry-1',
+      conversationId: 'conversation-1',
+      messageId: 'message-1',
+    })).resolves.toBeUndefined();
+  });
+
+  it('opens a message log record with the resolved contact id', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const logCore = await loadLogCore();
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: { logs: [{ messageId: 'message-1', matched: true, logId: 'crm-entry-1', contactId: 'contact-1' }] },
+    });
+
+    await expect(logCore.openMessageLog({
+      manifest: {
+        serverUrl: 'https://server.example',
+        platforms: { clio: { logPageUrl: 'https://{hostname}/contacts/{contactId}/notes/{logId}' } },
+      },
+      platformName: 'clio',
+      hostname: 'app.clio.com',
+      logId: 'crm-entry-1',
+      conversationId: 'conversation-1',
+      messageId: 'message-1',
+      userSettings: {},
+    })).resolves.toBe(true);
+    expect(openSpy).toHaveBeenCalledWith('https://app.clio.com/contacts/contact-1/notes/crm-entry-1');
+  });
+
+  it('does not open a contact-keyed message log URL when the contact cannot be resolved', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    vi.mocked(showNotification).mockClear();
+    const logCore = await loadLogCore();
+    vi.mocked(axios.post).mockRejectedValueOnce(new Error('Network Error'));
+
+    await expect(logCore.openMessageLog({
+      manifest: {
+        serverUrl: 'https://server.example',
+        platforms: { clio: { logPageUrl: 'https://{hostname}/contacts/{contactId}/notes/{logId}' } },
+      },
+      platformName: 'clio',
+      hostname: 'app.clio.com',
+      logId: 'crm-entry-1',
+      conversationId: 'conversation-1',
+      messageId: 'message-1',
+      userSettings: {},
+    })).resolves.toBe(false);
+    expect(openSpy).not.toHaveBeenCalled();
+    expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ level: 'warning' }));
+  });
+
+  it('opens a message log URL that does not need a contact id even without a resolved contact', async () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const logCore = await loadLogCore();
+
+    await expect(logCore.openMessageLog({
+      manifest: {
+        serverUrl: 'https://server.example',
+        platforms: { salesforce: { logPageUrl: 'https://{hostname}/log/{logId}' } },
+      },
+      platformName: 'salesforce',
+      hostname: 'crm.example',
+      logId: 'log-1',
+      userSettings: {},
+    })).resolves.toBe(true);
+    expect(openSpy).toHaveBeenCalledWith('https://crm.example/log/log-1');
+  });
+
   it('sends a conversation-only lookup when message ids are missing and tolerates an empty response', async () => {
     seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
     const logCore = await loadLogCore();

@@ -17,23 +17,22 @@ type EventOptions = {
 export async function onEvent({ data, manifest, platformInfo, platformName }: EventOptions): Promise<void> {
   const { userSettings } = await chrome.storage.local.get({ userSettings: {} }) as UnknownRecord;
   const logId = data.body?.logId;
-  if (logId) {
-    const contactId = await logCore.resolveMessageLogContactId({
-      serverUrl: manifest.serverUrl,
-      logId,
-      conversationId: data.body?.conversationId,
-      messageId: data.body?.messageId,
-    });
-    logCore.openLog({
-      manifest,
-      platformName,
-      hostname: platformInfo?.hostname,
-      logId,
-      contactId,
-      userSettings,
-    });
+  try {
+    if (logId) {
+      await logCore.openMessageLog({
+        manifest,
+        platformName,
+        hostname: platformInfo?.hostname,
+        logId,
+        conversationId: data.body?.conversationId,
+        messageId: data.body?.messageId,
+        userSettings,
+      });
+    }
   }
-  responseMessage(data.requestId, { data: 'ok' });
+  finally {
+    responseMessage(data.requestId, { data: 'ok' });
+  }
 }
 
 export default {

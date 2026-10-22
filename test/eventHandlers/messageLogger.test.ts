@@ -29,8 +29,7 @@ async function loadMessageLogger() {
   const logCore: Record<string, any> = {
     addLog: vi.fn(async () => ({})),
     getConflictContentFromUnresolvedLog: vi.fn(() => ({ description: 'Multiple contacts found' })),
-    resolveMessageLogContactId: vi.fn(async () => 'contact-9'),
-    openLog: vi.fn(() => {}),
+    openMessageLog: vi.fn(async () => true),
   };
   vi.doMock('../../src/core/log.ts', () => ({ default: logCore }));
 
@@ -1900,17 +1899,12 @@ describe('messageLogger', () => {
       ...context,
     });
 
-    expect(logCore.openLog).toHaveBeenCalledWith(expect.objectContaining({
+    expect(logCore.openMessageLog).toHaveBeenCalledWith(expect.objectContaining({
       platformName: 'salesforce',
-      logId: 'crm-log-123',
-      contactId: 'contact-9',
-    }));
-    expect(logCore.resolveMessageLogContactId).toHaveBeenCalledWith({
-      serverUrl: 'https://server.example',
       logId: 'crm-log-123',
       messageId: 'message-123',
       conversationId: 'conversation-123',
-    });
+    }));
     expect(logCore.addLog).not.toHaveBeenCalled();
     expect(util.responseMessage).toHaveBeenCalledWith('open-log-request', { data: 'ok' });
   });
@@ -1927,8 +1921,90 @@ describe('messageLogger', () => {
       ...context,
     });
 
-    expect(logCore.openLog).not.toHaveBeenCalled();
+    expect(logCore.openMessageLog).not.toHaveBeenCalled();
     expect(util.responseMessage).toHaveBeenCalledWith('open-log-no-id', { data: 'ok' });
+  });
+
+  it('warns and does not open the log form when messages are selected in a group conversation', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
+      },
+    });
+    const { messageLogger, logCore, util, groupLogPage } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'selectedLog',
+        selectedMessageIds: ['m1'],
+        conversation: conversation({
+          conversationId: 'group-selected-conversation',
+          correspondents: [{ phoneNumber: '+16505550100' }, { phoneNumber: '+16505550200' }],
+          messages: [{ id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' }],
+        }),
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      level: 'warning',
+      message: 'Selecting messages to log is not supported for group conversations.',
+    }));
+    expect(groupLogPage.getGroupLogPageRender).not.toHaveBeenCalled();
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('ignores a pending selection that was abandoned longer than the expiry window', async () => {
+    vi.useFakeTimers();
+    try {
+      seedStorage({
+        userSettings: {
+          autoLogSMS: { value: false },
+          selectedMessageLog: { value: true },
+        },
+      });
+      const { messageLogger, logCore } = await loadMessageLogger();
+      const thread = conversation({
+        conversationId: 'abandoned-selection-conversation',
+        messages: [
+          { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
+          { id: 'm2', creationTime: '2026-07-03T08:05:00Z', direction: 'Inbound' },
+        ],
+      });
+
+      await messageLogger.onEvent({
+        data: eventFor({ triggerType: 'selectedLog', selectedMessageIds: ['m1'], conversation: thread }),
+        ...context,
+        platform: { isSelectedMessageLogSupported: true },
+      });
+      vi.advanceTimersByTime(10 * 60 * 1000 + 1);
+      await messageLogger.onEvent({
+        data: eventFor({
+          triggerType: 'logForm',
+          redirect: false,
+          conversation: thread,
+          formData: {
+            contact: 'contact-1',
+            contactType: 'Lead',
+            contactName: 'Jane Smith',
+            newContactName: '',
+            newContactType: '',
+          },
+        }),
+        ...context,
+        platform: { isSelectedMessageLogSupported: true },
+      });
+
+      expect(logCore.addLog).toHaveBeenCalledTimes(1);
+      expect(logCore.addLog.mock.calls[0][0].selectedMessageIds).toBeUndefined();
+      expect(logCore.addLog.mock.calls[0][0].logInfo.messages.map((m: any) => m.id)).toEqual(['m1', 'm2']);
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    }
   });
 
   it('does not open message pages when neither redirect nor auto popup is enabled', async () => {
