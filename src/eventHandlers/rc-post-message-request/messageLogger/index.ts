@@ -611,54 +611,60 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
         }
       }, 5000);
 
-      let additionalSubmission: UnknownRecord = {};
-      const selAdditionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
-      const selNewContactAdditionalFields = manifest.platforms[platformName].page?.newContact?.additionalFields ?? [];
-      for (const f of selAdditionalFields.concat(selNewContactAdditionalFields)) {
-        if (data.body.formData[f.const] != "none") {
-          additionalSubmission[f.const] = data.body.formData[f.const];
+      window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+      try {
+        let additionalSubmission: UnknownRecord = {};
+        const selAdditionalFields = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
+        const selNewContactAdditionalFields = manifest.platforms[platformName].page?.newContact?.additionalFields ?? [];
+        for (const f of selAdditionalFields.concat(selNewContactAdditionalFields)) {
+          if (data.body.formData[f.const] != "none") {
+            additionalSubmission[f.const] = data.body.formData[f.const];
+          }
         }
-      }
-      let selectedNewContactInfo: UnknownRecord = {};
-      if (data.body.formData.contact === 'createNewContact' && data.body.redirect) {
-        const newContactResp = await contactCore.createContact({
+        let selectedNewContactInfo: UnknownRecord = {};
+        if (data.body.formData.contact === 'createNewContact' && data.body.redirect) {
+          const newContactResp = await contactCore.createContact({
+            serverUrl: manifest.serverUrl,
+            phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
+            newContactName: data.body.formData.newContactName,
+            newContactType: data.body.formData.newContactType,
+            additionalSubmission
+          }) as UnknownRecord;
+          selectedNewContactInfo = newContactResp.contactInfo;
+          if (userCore.getopenContactPageAfterCreationSetting(userSettings).value) {
+            await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: selectedNewContactInfo.id, contactType: data.body.formData.newContactType });
+          }
+        }
+        // Carry every selected message (across all day-buckets) in a single
+        // conversation payload so exactly one POST /messageLog is sent with all
+        // selectedMessageIds and logged at once.
+        const selectedConversation = { ...data.body.conversation, messages: pending.conversation.messages };
+        const addLogResult = await logCore.addLog({
           serverUrl: manifest.serverUrl,
-          phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
-          newContactName: data.body.formData.newContactName,
-          newContactType: data.body.formData.newContactType,
-          additionalSubmission
-        }) as UnknownRecord;
-        selectedNewContactInfo = newContactResp.contactInfo;
-        if (userCore.getopenContactPageAfterCreationSetting(userSettings).value) {
-          await contactCore.openContactPage({ manifest, platformName, phoneNumber: data.body.conversation.correspondents[0].phoneNumber, contactId: selectedNewContactInfo.id, contactType: data.body.formData.newContactType });
-        }
+          logType: 'Message',
+          logInfo: selectedConversation,
+          isMain: true,
+          // User-editable title from the selected-message log form; forwarded to
+          // the server as `logInfo.customSubject`.
+          subject: data.body.formData.activityTitle,
+          note: '',
+          additionalSubmission,
+          contactId: selectedNewContactInfo?.id ?? data.body.formData.contact,
+          contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
+          contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
+          selectedMessageIds: pending.selectedMessageIds,
+        });
+        responseMessage(data.requestId, {
+          data: {
+            logId: addLogResult?.logId,
+            logIds: addLogResult?.logIds,
+            messageLogs: addLogResult?.messageLogs,
+          }
+        });
       }
-      // Carry every selected message (across all day-buckets) in a single
-      // conversation payload so exactly one POST /messageLog is sent with all
-      // selectedMessageIds and logged at once.
-      const selectedConversation = { ...data.body.conversation, messages: pending.conversation.messages };
-      const addLogResult = await logCore.addLog({
-        serverUrl: manifest.serverUrl,
-        logType: 'Message',
-        logInfo: selectedConversation,
-        isMain: true,
-        // User-editable title from the selected-message log form; forwarded to
-        // the server as `logInfo.customSubject`.
-        subject: data.body.formData.activityTitle,
-        note: '',
-        additionalSubmission,
-        contactId: selectedNewContactInfo?.id ?? data.body.formData.contact,
-        contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
-        contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
-        selectedMessageIds: pending.selectedMessageIds,
-      });
-      responseMessage(data.requestId, {
-        data: {
-          logId: addLogResult?.logId,
-          logIds: addLogResult?.logIds,
-          messageLogs: addLogResult?.messageLogs,
-        }
-      });
+      finally {
+        window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+      }
       return;
     }
     // Non-granular path: existing daily-digest behavior (no selection filter).

@@ -1241,6 +1241,71 @@ describe('messageLogger', () => {
     expect(addLogArgs.subject).toBe('My custom SMS title');
   });
 
+  describe('loader while saving the selected-message log form', () => {
+    const loadingOn = [{ type: 'rc-log-modal-loading-on' }, '*'];
+    const loadingOff = [{ type: 'rc-log-modal-loading-off' }, '*'];
+    const selectedConversation = () => conversation({
+      conversationId: 'loader-conversation',
+      conversationLogId: 'loader-log',
+      messages: [{ id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' }],
+    });
+
+    async function selectThenSubmit(messageLogger: any) {
+      await messageLogger.onEvent({
+        data: eventFor({ triggerType: 'selectedLog', selectedMessageIds: ['m1'], conversation: selectedConversation() }),
+        ...context,
+        platform: { isSelectedMessageLogSupported: true },
+      });
+      vi.mocked(window.postMessage).mockClear();
+      return messageLogger.onEvent({
+        data: eventFor({
+          triggerType: 'logForm',
+          redirect: false,
+          conversation: selectedConversation(),
+          formData: { contact: 'contact-1', contactType: 'Lead', contactName: 'Jane Smith', newContactName: '', newContactType: '' },
+        }),
+        ...context,
+        platform: { isSelectedMessageLogSupported: true },
+      });
+    }
+
+    beforeEach(() => {
+      seedStorage({
+        userSettings: {
+          autoLogSMS: { value: false },
+          selectedMessageLog: { value: true },
+        },
+      });
+    });
+
+    it('shows the loader while the log is saved and hides it afterwards', async () => {
+      const { messageLogger, logCore, util } = await loadMessageLogger();
+      let callsDuringSave: unknown[][] = [];
+      logCore.addLog.mockImplementation(async () => {
+        callsDuringSave = vi.mocked(window.postMessage).mock.calls.map(call => [...call]);
+        return { logId: 'crm-1' };
+      });
+
+      await selectThenSubmit(messageLogger);
+
+      expect(callsDuringSave).toEqual([loadingOn]);
+      expect(window.postMessage).toHaveBeenLastCalledWith(...loadingOff);
+      expect(util.responseMessage).toHaveBeenCalledWith('request-1', expect.objectContaining({
+        data: expect.objectContaining({ logId: 'crm-1' }),
+      }));
+    });
+
+    it('hides the loader when saving the log fails', async () => {
+      const { messageLogger, logCore } = await loadMessageLogger();
+      logCore.addLog.mockRejectedValue(new Error('network down'));
+
+      await expect(selectThenSubmit(messageLogger)).rejects.toThrow('network down');
+
+      expect(window.postMessage).toHaveBeenCalledWith(...loadingOn);
+      expect(window.postMessage).toHaveBeenLastCalledWith(...loadingOff);
+    });
+  });
+
   it('sends only one POST when the widget fans out parallel per-day-bucket logForm submits', async () => {
     seedStorage({
       userSettings: {
