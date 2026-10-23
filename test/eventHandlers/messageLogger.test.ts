@@ -1241,6 +1241,58 @@ describe('messageLogger', () => {
     expect(addLogArgs.subject).toBe('My custom SMS title');
   });
 
+  it('drops a pending selection when a group log form is submitted for the conversation', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: false },
+        selectedMessageLog: { value: true },
+      },
+    });
+    const { messageLogger, logCore } = await loadMessageLogger();
+    const pendingConversation = () => conversation({
+      conversationId: 'group-submit-conversation',
+      conversationLogId: 'group-submit-log',
+      messages: [
+        { id: 'm1', creationTime: '2026-07-03T08:00:00Z', direction: 'Outbound' },
+        { id: 'm2', creationTime: '2026-07-03T08:05:00Z', direction: 'Inbound' },
+      ],
+    });
+    const singleContactForm = {
+      contact: 'contact-1',
+      contactType: 'Lead',
+      contactName: 'Jane Smith',
+      newContactName: '',
+      newContactType: '',
+    };
+
+    await messageLogger.onEvent({
+      data: eventFor({ triggerType: 'selectedLog', selectedMessageIds: ['m1'], conversation: pendingConversation() }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+    await messageLogger.onEvent({
+      data: eventFor({
+        triggerType: 'logForm',
+        conversation: pendingConversation(),
+        formData: { section_0: { ...singleContactForm, contactPhoneNumber: '+16505550200' } },
+      }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+    await messageLogger.onEvent({
+      data: eventFor({ triggerType: 'logForm', conversation: pendingConversation(), formData: singleContactForm }),
+      ...context,
+      platform: { isSelectedMessageLogSupported: true },
+    });
+
+    expect(logCore.addLog).toHaveBeenCalledTimes(2);
+    for (const [args] of logCore.addLog.mock.calls) {
+      expect(args.selectedMessageIds).toBeUndefined();
+      expect(args.logInfo.messages.map((m: any) => m.id)).toEqual(['m1', 'm2']);
+    }
+    expect(logCore.addLog.mock.calls[0][0].contactPhoneNumber).toBe('+16505550200');
+  });
+
   describe('loader while saving the selected-message log form', () => {
     const loadingOn = [{ type: 'rc-log-modal-loading-on' }, '*'];
     const loadingOff = [{ type: 'rc-log-modal-loading-off' }, '*'];
