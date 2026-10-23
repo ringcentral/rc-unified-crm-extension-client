@@ -15,6 +15,10 @@ const OAUTH_ALARM_NAME = 'oauthCheck';
 const OAUTH_POLL_INTERVAL_MS = 3000;
 const THIRD_PARTY_OAUTH_TIMEOUT_MS = 3 * 60 * 1000;
 
+function getRcOAuthRedirectUri() {
+  return redirectUri ?? baseManifest.redirectUri;
+}
+
 async function getOAuthRedirectUri() {
   const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
   const platformInfo = await chrome.storage.local.get('platform-info');
@@ -75,11 +79,9 @@ async function openPopupWindow() {
     return true;
   }
   const { extensionWindowStatus } = await chrome.storage.local.get({ extensionWindowStatus: null });
-  const { customCrmManifest } = await chrome.storage.local.get({ customCrmManifest: null });
-  const platformInfo = await chrome.storage.local.get('platform-info');
-  redirectUri = customCrmManifest?.platforms[platformInfo?.['platform-info']?.platformName ?? '']?.auth?.oauth?.redirectUri ?? 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
+  redirectUri = 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html';
   // const redirectUri = chrome.identity.getRedirectURL('redirect.html'); //  set this when oauth with chrome.identity.launchWebAuthFlow
-  const popupUri = `popup.html?multipleTabsSupport=1&disableLoginPopup=1&enableRingtoneSettings=1&appServer=https://platform.ringcentral.com&redirectUri=${redirectUri ?? 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html'}&enableAnalytics=1&showSignUpButton=1&clientId=3rJq9BxcTCm-I7CFcY19ew&appVersion=${packageJson.version}&userAgent=RingCentral CRM Extension&disableNoiseReduction=false&enableSMSTemplate=1&enableLoadMoreCalls=1&disableGlip=false&enableSmartNote=1&enableVoicemailDrop=1&enableSideWidget=1`;
+  const popupUri = `popup.html?multipleTabsSupport=1&disableLoginPopup=1&enableRingtoneSettings=1&appServer=https://platform.ringcentral.com&redirectUri=${redirectUri ?? 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html'}&enableAnalytics=1&showSignUpButton=1&clientId=3rJq9BxcTCm-I7CFcY19ew&appVersion=${packageJson.version}&userAgent=RingCentral CRM Extension&disableNoiseReduction=false&enableSMSTemplate=1&enableLoadMoreCalls=1&disableGlip=false&enableSmartNote=1&enableVoicemailDrop=1&enableSideWidget=1&enableRingCX=1&enableAgentScript=1`;
   let popup;
   if (!!extensionWindowStatus?.state && (extensionWindowStatus.state === 'maximized' || extensionWindowStatus.state === 'fullscreen')) {
     popup = await chrome.windows.create({
@@ -341,7 +343,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
   const loginWindowUrl = tabs[0].url;
   console.log('loginWindowUrl', loginWindowUrl);
-  const expectedRedirectUri = loginWindowInfo.redirectUri ?? await getOAuthRedirectUri();
+  const expectedRedirectUri = loginWindowInfo.redirectUri
+    ?? (loginWindowInfo.platform === 'rc' ? getRcOAuthRedirectUri() : await getOAuthRedirectUri());
   if (typeof loginWindowUrl !== 'string' || loginWindowUrl.indexOf(expectedRedirectUri) !== 0) {
     chrome.alarms.create(OAUTH_ALARM_NAME, { when: Date.now() + OAUTH_POLL_INTERVAL_MS });
     return;
@@ -357,7 +360,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 async function rcOAuthWindowHandler(request) {
-  const oauthRedirectUri = await getOAuthRedirectUri();
+  // RC sign-in always returns to the RC redirect page, regardless of the selected CRM's own redirect URI.
+  const oauthRedirectUri = getRcOAuthRedirectUri();
   const loginWindow = await chrome.windows.create({
     url: request.oAuthUri,
     type: 'popup',
@@ -420,12 +424,12 @@ async function sideWidgetOpenHandler(request) {
   }
   const popupWindow = await chrome.windows.get(popupWindowId);
   if (request.opened) {
-    if (popupWindow.width < 600) {
-      await chrome.windows.update(popupWindowId, { width: popupWindow.width + 300 });
+    if (popupWindow.width < 660) {
+      await chrome.windows.update(popupWindowId, { width: popupWindow.width + 360 });
     }
   } else {
-    if (popupWindow.width >= 600) {
-      await chrome.windows.update(popupWindowId, { width: popupWindow.width - 300 });
+    if (popupWindow.width >= 660) {
+      await chrome.windows.update(popupWindowId, { width: popupWindow.width - 360 });
     }
   }
 }

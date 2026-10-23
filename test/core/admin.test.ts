@@ -93,7 +93,7 @@ describe('admin core', () => {
     vi.mocked(authCore.setAuth).mockReset();
     rcApiMocks.RcAPI.mockClear();
     rcApiMocks.getInteropCode.mockReset().mockResolvedValue('interop-code');
-    vi.mocked(getRcAccessToken).mockReset().mockReturnValue('rc-access-token');
+    vi.mocked(getRcAccessToken).mockReset().mockResolvedValue('rc-access-token');
     vi.mocked(getRcContactInfo).mockReset().mockResolvedValue([
       { id: 'user-1', type: 'User' },
       { id: 'site-1', type: 'Site' },

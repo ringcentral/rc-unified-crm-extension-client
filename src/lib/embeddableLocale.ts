@@ -45,28 +45,28 @@ function delay(ms: number): Promise<void> {
 }
 
 function getEmbeddablePhone(): UnknownRecord | undefined {
-  const widgetWindow = document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')?.contentWindow as (Window & { phone?: UnknownRecord }) | null | undefined;
-  return widgetWindow?.phone;
+  const widgetWindow = document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')?.contentWindow as (Window & { app?: UnknownRecord }) | null | undefined;
+  return widgetWindow?.app;
 }
 
-function getLocaleForPhone(phone: UnknownRecord | undefined, localeCode: string): string {
-  return phone?.locale?.normalizeLocale
-    ? phone.locale.normalizeLocale(localeCode)
+function getLocaleForPhone(app: UnknownRecord | undefined, localeCode: string): string {
+  return app?.modules?.Locale?.normalizeLocale
+    ? app?.modules?.Locale?.normalizeLocale(localeCode)
     : normalizeEmbeddableLocale(localeCode);
 }
 
-async function applyLocaleToPhone(phone: UnknownRecord | undefined, locale: string): Promise<boolean> {
-  if (!phone) {
+async function applyLocaleToPhone(app: UnknownRecord | undefined, locale: string): Promise<boolean> {
+  if (!app) {
     return false;
   }
 
   try {
-    if (phone.localeSettings?.saveLocale) {
-      await phone.localeSettings.saveLocale(locale);
+    if (app.modules.LocaleSettings?.saveLocale) {
+      await app.modules.LocaleSettings.saveLocale(locale);
       return true;
     }
-    if (phone.locale?.setLocale) {
-      await phone.locale.setLocale(locale);
+    if (app.modules.Locale?.setLocale) {
+      await app.modules.Locale.setLocale(locale);
       return true;
     }
   } catch (e) {
@@ -82,10 +82,10 @@ export async function getEffectiveLocale(): Promise<string> {
 
 export async function syncLocaleToEmbeddable(localeCode?: string): Promise<string> {
   const effectiveLocale = localeCode || await getEffectiveLocale();
-  const phone = getEmbeddablePhone();
-  const locale = getLocaleForPhone(phone, effectiveLocale);
+  const app = getEmbeddablePhone();
+  const locale = getLocaleForPhone(app, effectiveLocale);
 
-  await applyLocaleToPhone(phone, locale);
+  await applyLocaleToPhone(app, locale);
 
   return locale;
 }
@@ -101,10 +101,10 @@ export async function syncLocaleToEmbeddableWhenReady(
   let locale = normalizeEmbeddableLocale(effectiveLocale);
 
   for (let attempt = 0; attempt < attempts; attempt += 1) {
-    const phone = getEmbeddablePhone();
-    locale = getLocaleForPhone(phone, effectiveLocale);
+    const app = getEmbeddablePhone();
+    locale = getLocaleForPhone(app, effectiveLocale);
 
-    if (await applyLocaleToPhone(phone, locale)) {
+    if (await applyLocaleToPhone(app, locale)) {
       return locale;
     }
 

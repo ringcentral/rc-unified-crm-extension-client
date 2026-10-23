@@ -29,7 +29,7 @@ async function getUserReportStats({ dateRange, customStartDate, customEndDate }:
     }
     const rcAPI = new RcAPI();
     await refreshRCToken();
-    let rcAccessToken = getRcAccessToken();
+    let rcAccessToken = await getRcAccessToken();
     const callLogData = await rcAPI.getRcCallLog({ rcAccessToken, dateRange, customStartDate, customEndDate });
     // phone activity
     const inboundCallCount = callLogData.records.filter(call => call.direction === 'Inbound').length;
@@ -41,7 +41,7 @@ async function getUserReportStats({ dateRange, customStartDate, customEndDate }:
     const averageTalkTime = Math.round(totalTalkTime / (inboundCallCount + outboundCallCount)) || 0;
     // sms activity
     await refreshRCToken();
-    rcAccessToken = getRcAccessToken();
+    rcAccessToken = await getRcAccessToken();
     const smsLogData = await rcAPI.getRcSMSLog({ rcAccessToken, dateRange, customStartDate, customEndDate });
     const smsSentCount = smsLogData.records.filter(sms => sms.direction === 'Outbound').length;
     const smsReceivedCount = smsLogData.records.filter(sms => sms.direction === 'Inbound').length;
@@ -143,7 +143,7 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
     if (!crmAuthed) {
         return;
     }
-    const rcAccessToken = getRcAccessToken();
+    const rcAccessToken = await getRcAccessToken();
     const manifest = await getManifest();
     const platformInfo = await getPlatformInfo();
     const platformName = platformInfo?.platformName ?? '';
@@ -246,7 +246,7 @@ async function refreshUserInfo({ serverUrl }: UnknownRecord): Promise<any> {
 }
 
 async function updateSSCLToken({ serverUrl, platform, token }: UnknownRecord): Promise<any> {
-    const userSettings = await getUserSettingsOnline({ serverUrl, rcAccessToken: getRcAccessToken() });
+    const userSettings = await getUserSettingsOnline({ serverUrl, rcAccessToken: await getRcAccessToken() });
     const serverSideLoggingEnabled = userSettings?.serverSideLogging?.enable ?? false;
     if (serverSideLoggingEnabled && token !== undefined) {
         const serverSideLoggingToken = await adminCore.authServerSideLogging({ platform });

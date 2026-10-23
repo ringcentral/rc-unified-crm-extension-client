@@ -103,7 +103,8 @@ async function onEvent(options: EventOptions) {
                 };
             }
         }
-        catch {
+        catch(e) {
+            console.error(e)
             // Keep the existing preparing-data behavior when recovery is unavailable.
         }
     }
@@ -150,7 +151,8 @@ async function onEvent(options: EventOptions) {
         }
     }
     let isAutoLog = false;
-    const isCallAutoPopup = userCore.getCallPopSetting(userSettings).value;
+    // Auto popup only applies to EX calls, not RingCX
+    const isCallAutoPopup = userCore.getCallPopSetting(userSettings).value && data.body.call?.source !== 'ringcx';
     // extensions numbers should NOT be logged unless explicitly allowed
     const allowExtensionNumberLogging = userSettings?.allowExtensionNumberLogging?.value ?? false;
     const isExtensionNumber = data.body.call.direction === 'Inbound' ?
@@ -197,6 +199,11 @@ async function onEvent(options: EventOptions) {
             responseMessage(data.requestId, { data: 'ok' });
             return;
         }
+    }
+
+    if (data.body.triggerType === 'callDisposition') {
+        triggerTypeInUse = 'createLog';
+        isAutoLog = false;
     }
 
     // Translate: If want to create, but find log already exist, then change to edit

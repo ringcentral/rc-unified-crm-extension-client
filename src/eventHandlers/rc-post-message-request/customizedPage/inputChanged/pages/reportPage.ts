@@ -31,7 +31,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   if (isAdmin) {
     const rcAPI = new RcAPI();
     await refreshRCToken();
-    rcExtensions = await rcAPI.getRcExtensionList({ rcAccessToken: getRcAccessToken() });
+    rcExtensions = await rcAPI.getRcExtensionList({ rcAccessToken: await getRcAccessToken() });
     if (data.body.keys.some((k: string) => k === 'rcExtensionList')) {
       if (!rcExtensions?.some(rcExtension => rcExtension.id == data.body.formData.rcExtensionList) && data.body.formData.rcExtensionList !== 'me') {
         return;

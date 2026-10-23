@@ -24,7 +24,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
     // Case: this is a follow-up contact match event triggered by other functions so to register the matched contacts
     const tempContactMatchTask = ((await chrome.storage.local.get(`tempContactMatchTask-${data.body.phoneNumbers[0]}`)) as UnknownRecord)[`tempContactMatchTask-${data.body.phoneNumbers[0]}`] as UnknownRecord[] & { phone?: string };
     if (data.body.phoneNumbers.length === 1 && tempContactMatchTask?.length > 0) {
-        const cachedMatching = getWidgetFrameWindow().phone.contactMatcher.data[tempContactMatchTask.phone];
+        const cachedMatching = getWidgetFrameWindow().app.modules.ContactMatcher.data[tempContactMatchTask.phone];
         const platformContactMatching = cachedMatching ? cachedMatching[platformName]?.data : [];
         const formattedMactchContacts = tempContactMatchTask.map(c => ({
             id: c.id,

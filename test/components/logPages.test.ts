@@ -1296,6 +1296,36 @@ describe('groupLogPage', () => {
     expect(untouched).toBe(updated);
   });
 
+  it('keeps section-owned form fields when the widget reports a partial section', async () => {
+    const groupLogPage = await loadGroupLogPage();
+    const rendered = groupLogPage.getGroupLogPageRender({
+      id: 'group-partial',
+      manifest: manifest(),
+      platformName: 'salesforce',
+      correspondentsData: { '+16505550100': [existingContact()] },
+      useContactSearch: false,
+    });
+
+    const updated = groupLogPage.getUpdatedGroupLogPageRender({
+      manifest: manifest(),
+      platformName: 'salesforce',
+      updateData: {
+        keys: ['section_0', 'contact'],
+        page: rendered,
+        // The widget form only knows about the fields it rendered defaults for.
+        formData: { section_0: { contact: 'contact-1' } },
+      },
+    });
+
+    expect(updated.formData.section_0).toMatchObject({
+      contact: 'contact-1',
+      triggerType: 'createLog',
+      logType: 'Message',
+      id: 'group-partial',
+      contactPhoneNumber: '+16505550100',
+    });
+  });
+
   it('updates grouped new-contact sections with additional fields and validation state', async () => {
     const groupLogPage = await loadGroupLogPage();
     const groupedManifest = richMessageManifest();

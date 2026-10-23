@@ -3,7 +3,6 @@ import { getRcAccessToken, getRcAccessTokenHeaderConfig, getRcInfo, showNotifica
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest as getManifestBase } from '../service/manifestService';
 import { trackCrmLogin, trackCrmLogout } from '../lib/analytics';
-import { openDB } from 'idb';
 import platformSelectionPage from '../components/platformSelectionPage';
 import embeddableServices from '../service/embeddableServices';
 import authPage from '../components/authPage';
@@ -144,10 +143,12 @@ async function onUserClickConnectButton({ platform, platformName, manifest, host
             }
             const rcInfo = await getRcInfo();
             const isAdmin = !!rcInfo?.value?.cachedData?.extensionInfo?.permissions?.admin?.enabled;
+            const visibleFieldConsts = managedAuthState?.visibleFieldConsts ?? null;
+            await chrome.storage.local.set({ authPageContext: { isAdmin, visibleFieldConsts } });
             const authPageRender = authPage.getAuthPageRender({
                 manifest,
                 platformName,
-                visibleFieldConsts: managedAuthState?.visibleFieldConsts ?? null,
+                visibleFieldConsts,
                 isAdmin
             });
             getWidgetFrame().contentWindow.postMessage({
@@ -167,7 +168,7 @@ async function getManagedOAuthState({ serverUrl, platformName }: UnknownRecord):
     try {
         const response = await axios.get(
             `${serverUrl}/oauthManagedAuthState?platform=${encodeURIComponent(platformName)}`,
-            getRcAccessTokenHeaderConfig(),
+            await getRcAccessTokenHeaderConfig(),
         );
         return response.data;
     }
@@ -180,7 +181,7 @@ async function saveManagedOAuthPendingValues({ serverUrl, values }: UnknownRecor
     const response = await axios.post(
         `${serverUrl}/admin/managedOAuth/cache`,
         { values },
-        getRcAccessTokenHeaderConfig(),
+        await getRcAccessTokenHeaderConfig(),
     );
     return response.data;
 }
@@ -228,7 +229,7 @@ async function getManagedAuthState({ serverUrl, platformName, connectorId = null
         const resolvedRcExtensionId = rcExtensionId ?? resolvedRcInfo?.value?.cachedData?.extensionInfo?.id;
         const response = await axios.get(
             `${serverUrl}/apiKeyManagedAuthState?platform=${encodeURIComponent(platformName)}&connectorId=${encodeURIComponent(connectorId ?? '')}&devRcAccountId=${encodeURIComponent(devRcAccountId ?? '')}&isPrivate=${encodeURIComponent(isPrivate ? 'true' : 'false')}&rcAccountId=${encodeURIComponent(resolvedRcAccountId ?? '')}&rcExtensionId=${encodeURIComponent(resolvedRcExtensionId ?? '')}`,
-            getRcAccessTokenHeaderConfig(),
+            await getRcAccessTokenHeaderConfig(),
         );
         return response.data;
     }
@@ -267,7 +268,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }: UnknownR
         const platform = manifest?.platforms[platformName];
         const proxyId = platform.proxyId ? platform.proxyId : '';
         const rcInfo = await getRcInfo();
-        const rcAccessToken = getRcAccessToken();
+        const rcAccessToken = await getRcAccessToken();
         const rcAdditionalSubmission = await setRcAdditionalSubmission({ rcInfo, platform });
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
             apiKey,
@@ -285,7 +286,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }: UnknownR
                 ...formData,
                 ...rcAdditionalSubmission
             }
-        }, getRcAccessTokenHeaderConfig());
+        }, await getRcAccessTokenHeaderConfig());
         setAuth(true);
         showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? t('notifications.success.authorized'), ttl: res.data.returnMessage?.ttl ?? 3000 });
         await chrome.storage.local.set({
@@ -346,9 +347,7 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }: UnknownRec
         console.warn('Auth callback not from plugin');
     }
     // Case: connectors
-    const extId = JSON.parse(localStorage.getItem('sdk-rc-widgetplatform')).owner_id;
-    const indexDB = await openDB(`rc-widget-storage-${extId}`, 2);
-    const rcInfo = await indexDB.get('keyvaluepairs', 'dataFetcherV2-storageData');
+    const rcInfo = await getRcInfo();
     const platformInfo = await chromeStorageLocal.get('platform-info');
     const hostname = platformInfo['platform-info'].hostname;
     const manifest = await getManifest();

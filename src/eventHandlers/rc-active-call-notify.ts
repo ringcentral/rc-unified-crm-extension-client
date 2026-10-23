@@ -59,7 +59,10 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
   };
   switch (data.call.telephonyStatus) {
     case 'CallConnected':
-      window.postMessage({ type: 'rc-expandable-call-note-open', sessionId: data.call.sessionId }, '*');
+      // RingCX calls have their own notes on the disposition page, so skip the quick note button
+      if (data.call.source !== 'ringcx') {
+        window.postMessage({ type: 'rc-expandable-call-note-open', sessionId: data.call.sessionId }, '*');
+      }
       switch (data.call.direction) {
         case 'Inbound':
           chrome.runtime.sendMessage({
@@ -101,6 +104,7 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
           subject: callLogSubject,
           note: '',
         },
+        source: data.call.source,
       });
       break;
     case 'NoCall':
@@ -118,7 +122,8 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
         if (implementedInterfaces?.cacheCallNote) {
           await logCore.uploadCacheNote({ serverUrl: manifest.serverUrl, sessionId: data.call.sessionId });
         }
-        const callAutoPopup = userCore.getCallPopSetting(userSettings).value;
+        // Auto popup only applies to EX calls, not RingCX
+        const callAutoPopup = userCore.getCallPopSetting(userSettings).value && data.call.source !== 'ringcx';
         if (callAutoPopup) {
           if (isExtensionNumber && !allowExtensionNumberLogging) {
             responseMessage(data.requestId, { data: 'ok' });
@@ -141,6 +146,7 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
             logInfo,
             loggedContactId: null,
             isUnresolved: undefined,
+            source: data.call.source,
           });
           const useContactSearch = implementedInterfaces?.findContactWithName;
           let callPage = logPage.getLogPageRender({ id: data.call.sessionId, manifest, logType: 'Call', triggerType: 'createLog', platformName, direction: data.call.direction, contactInfo: callMatchedContact ?? [], logInfo, loggedContactId: null, contactPhoneNumber, useContactSearch });
@@ -169,7 +175,7 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
           // navigate to call log page
           getWidgetFrameWindow().postMessage({
             type: 'rc-adapter-navigate-to',
-            path: `/log/call/${data.call.sessionId}`,
+            path: `/log/call/${data.call.sessionId}?source=${data.call.source}`,
           }, '*');
         }
 

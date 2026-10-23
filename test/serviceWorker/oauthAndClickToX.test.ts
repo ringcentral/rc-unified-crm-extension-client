@@ -192,6 +192,44 @@ describe('service worker OAuth and click-to-X flows', () => {
     });
   });
 
+  it('keeps the RC redirect URI for RC sign-in when the selected CRM has its own redirect URI', async () => {
+    seedStorage({
+      ['platform-info']: { platformName: 'pipedrive' },
+      customCrmManifest: {
+        platforms: {
+          pipedrive: {
+            auth: {
+              oauth: { redirectUri: 'https://pipedrive.example/oauth/callback' },
+            },
+          },
+        },
+      },
+    });
+    const { onMessage, onAlarm } = await loadServiceWorkerListeners();
+
+    onMessage({
+      type: 'openRCOAuthWindow',
+      oAuthUri: 'https://login.example/oauth',
+    }, {}, vi.fn());
+
+    await vi.waitFor(() => {
+      expect(readStorage().loginWindowInfo?.redirectUri).toBe(
+        'https://ringcentral.github.io/ringcentral-embeddable/redirect.html',
+      );
+    });
+    vi.mocked(chrome.tabs.query).mockResolvedValueOnce([
+      { url: 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html?code=abc' },
+    ]);
+
+    await onAlarm({ name: 'oauthCheck' });
+
+    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
+      type: 'oauthCallBack',
+      platform: 'rc',
+      callbackUri: 'https://ringcentral.github.io/ringcentral-embeddable/redirect.html?code=abc',
+    });
+  });
+
   it('persists and matches a connector-specific OAuth redirect URI', async () => {
     seedStorage({
       ['platform-info']: { platformName: 'zendesk' },

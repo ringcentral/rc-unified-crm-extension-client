@@ -35,7 +35,7 @@ function getAuthPageRender({
     } : {};
     let content = {};
     for (const c of filteredContent) {
-        if (isAdmin && isDynamicUserManagedField(c)) {
+        if (isDynamicUserManagedField(c)) {
             const buttonId = getManagedAuthOptionsButtonId(AUTH_OPTIONS_ACTION, c.const);
             content[buttonId] = {
                 type: 'string',
@@ -62,9 +62,7 @@ function getAuthPageRender({
     for (const c of filteredContent) {
         if (isDynamicUserManagedField(c)) {
             uiSchema[c.const] = getDynamicManagedAuthUiSchema(c, dynamicOptions[c.const] ?? []);
-            if (isAdmin) {
-                uiSchema[getManagedAuthOptionsButtonId(AUTH_OPTIONS_ACTION, c.const)] = getUpdateListButtonUiSchema();
-            }
+            uiSchema[getManagedAuthOptionsButtonId(AUTH_OPTIONS_ACTION, c.const)] = getUpdateListButtonUiSchema();
         }
         else if (c.uiSchema) {
             uiSchema[c.const] = c.uiSchema;

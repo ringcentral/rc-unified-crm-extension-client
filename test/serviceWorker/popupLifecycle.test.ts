@@ -51,6 +51,7 @@ describe('service worker popup lifecycle', () => {
         platformName: 'salesforce',
       },
     });
+    // The popup's RingCentral login redirect no longer depends on the CRM manifest.
     const { onMessage } = await loadServiceWorkerListeners();
     const sendResponse = vi.fn();
 
@@ -65,7 +66,7 @@ describe('service worker popup lifecycle', () => {
         height: 760,
         left: 100,
         top: 80,
-        url: expect.stringContaining('redirectUri=https://crm.example/oauth/callback'),
+        url: expect.stringContaining('redirectUri=https://ringcentral.github.io/ringcentral-embeddable/redirect.html'),
       }));
     });
     expect(readStorage().popupWindowId).toBe(7);
@@ -244,14 +245,14 @@ describe('service worker popup lifecycle', () => {
     onMessage({ type: 'sideWidgetOpen', opened: true }, {}, vi.fn());
 
     await vi.waitFor(() => {
-      expect(chrome.windows.update).toHaveBeenCalledWith(15, { width: 750 });
+      expect(chrome.windows.update).toHaveBeenCalledWith(15, { width: 810 });
     });
 
     vi.mocked(chrome.windows.get).mockResolvedValueOnce({
       id: 15,
       state: 'normal',
       focused: true,
-      width: 750,
+      width: 810,
       height: 848,
     });
 

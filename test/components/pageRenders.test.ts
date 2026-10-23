@@ -280,6 +280,24 @@ describe('basic page renderers', () => {
       apiUrl: 'company-123',
       crmUserId: 'user-101',
     });
+
+    const userAuth = authPage.getAuthPageRender({
+      manifest: dynamicManifest,
+      platformName: 'salesforce',
+      isAdmin: false,
+      visibleFieldConsts: ['apiUrl', 'crmUserId'],
+      dynamicOptions: {
+        crmUserId: [{ value: 'user-101', label: 'Ada Lovelace' }],
+      },
+    });
+    expect(userAuth.schema.properties['managedAuthOptionsAuth-crmUserId-action']).toEqual({
+      type: 'string',
+      title: 'Refresh User List',
+    });
+    expect(userAuth.uiSchema['managedAuthOptionsAuth-crmUserId-action']).toMatchObject({
+      'ui:field': 'button',
+    });
+    expect(userAuth.schema.properties).not.toHaveProperty('secret');
   });
 
   it('renders dynamic hostname input pages with validation and private connector metadata', async () => {

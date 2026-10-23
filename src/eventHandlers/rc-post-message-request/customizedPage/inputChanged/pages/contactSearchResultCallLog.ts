@@ -77,7 +77,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   }, '*');
   getWidgetFrameWindow().postMessage({
     type: 'rc-adapter-navigate-to',
-    path: `/log/call/${cacheLogPageData.id}`,
+    path: `/log/call/${cacheLogPageData.id}?source=${cacheLogPageData.source}`,
   }, '*');
 }
 

@@ -69,7 +69,7 @@ function buildAdditionalFieldsSchema({ allAdditionalFields, contact, logInfo }: 
         switch (f.type) {
             case 'selection': {
                 // deprecated
-                if (contact.isNewContact && f.contactTypeDependent) {
+                if (contact?.isNewContact && f.contactTypeDependent) {
                     const baseOptions = getContactFieldOptions(f, contact, contact.defaultContactType);
                     const includeNoneOption = f.includeNoneOption !== false;
                     additionalFields[f.const] = {
@@ -172,7 +172,7 @@ function buildContactWarningField(contactList: UnknownRecord[], defaultContact: 
             }
         };
     }
-    if (contactList.length === 1 && defaultContact.isNewContact) {
+    if (contactList.length === 1 && defaultContact?.isNewContact) {
         return {
             warning: {
                 type: 'string',
@@ -189,7 +189,7 @@ function buildNewContactWidget(defaultContact: UnknownRecord, manifest: UnknownR
         newContactName: { "ui:widget": "hidden" },
         newContactType: { "ui:widget": "hidden" }
     };
-    if (defaultContact.isNewContact) {
+    if (defaultContact?.isNewContact) {
         if (manifest.platforms[platformName].contactTypes?.length > 0) {
             newContactWidget.newContactType = {};
         }
@@ -209,7 +209,7 @@ function buildSingleContactSection({ contactInfo, manifest, platformName, logInf
         : (contactList[0] ?? null);
 
     let allAdditionalFields: UnknownRecord[] = manifest.platforms[platformName].page?.messageLog?.additionalFields ?? [];
-    if (defaultContact.isNewContact) {
+    if (defaultContact?.isNewContact) {
         allAdditionalFields = allAdditionalFields.concat(
             manifest.platforms[platformName].page?.newContact?.additionalFields ?? []
         );
@@ -271,8 +271,8 @@ function buildSingleContactSection({ contactInfo, manifest, platformName, logInf
 
     const sectionFormData: UnknownRecord = {
         id,
-        contact: defaultContact.const,
-        newContactType: defaultContact.defaultContactType ?? '',
+        contact: defaultContact?.const,
+        newContactType: defaultContact?.defaultContactType ?? '',
         newContactName: '',
         contactType: defaultContact?.type ?? '',
         contactName: defaultContact?.title ?? '',
