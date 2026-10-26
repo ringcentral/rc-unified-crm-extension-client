@@ -174,6 +174,35 @@ describe('appointmentService', () => {
     expect(input).toHaveProperty('participantName');
   });
 
+  it.each(['create', 'update'])('preserves scalar IDs and normalizes optional contact types on %s', async (operation) => {
+    vi.mocked(axios.post).mockResolvedValue({ data: { successful: true } });
+    vi.mocked(axios.patch).mockResolvedValue({ data: { successful: true } });
+    const service = await loadAppointmentService();
+    const contacts = [
+      '123',
+      456,
+      { id: '789', contactType: 'Lead', name: 'Legacy reference' },
+      { id: 234, name: 'Untyped reference' },
+    ];
+    const input = { title: 'Visit', contacts };
+    const expected = { title: 'Visit', contacts: ['123', 456, { id: '789', type: 'Lead' }, { id: 234 }] };
+
+    if (operation === 'create') {
+      await expect(service.createAppointment({ serverUrl: 'https://server.example', payload: input }))
+        .resolves.toEqual({ successful: true });
+      expect(axios.post).toHaveBeenCalledWith('https://server.example/appointments', { payload: expected }, {});
+    } else {
+      await expect(service.updateAppointment({ serverUrl: 'https://server.example', appointmentId: '1', patch: input }))
+        .resolves.toEqual({ successful: true });
+      expect(axios.patch).toHaveBeenCalledWith('https://server.example/appointments/1', { patch: expected }, {});
+    }
+    expect(input.contacts).toEqual([
+      '123', 456,
+      { id: '789', contactType: 'Lead', name: 'Legacy reference' },
+      { id: 234, name: 'Untyped reference' },
+    ]);
+  });
+
   it('updates, refreshes, and creates appointments with null-on-error behavior', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.mocked(axios.patch).mockResolvedValueOnce({ data: { id: 'updated' } });

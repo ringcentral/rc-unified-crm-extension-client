@@ -398,6 +398,24 @@ describe('appointment create page', () => {
 });
 
 describe('appointment create manifest submission', () => {
+  it.each([null, { platformName: 'unconfigured' }])('creates with safe defaults when appointment configuration is unavailable (%j)', async (platformInfo) => {
+    vi.mocked(getPlatformInfo).mockReset().mockResolvedValue(platformInfo);
+    vi.mocked(createAppointment).mockReset().mockResolvedValue({ successful: true });
+    const pageModule = await loadCreatePage();
+    await expect(pageModule.submitAppointmentCreate({
+      manifest: { serverUrl: manifest.serverUrl },
+      jwtToken: 'jwt-1',
+      formData: { dateTime: '2026-07-04T09:30', duration: 'PT1H', status: ' Scheduled ' },
+    })).resolves.toEqual({ successful: true });
+    expect(createAppointment).toHaveBeenCalledWith({
+      serverUrl: manifest.serverUrl, jwtToken: 'jwt-1',
+      payload: {
+        title: 'Appointment', summary: '', contacts: [], status: 'scheduled',
+        startTimeUtc: new Date('2026-07-04T09:30').toISOString(), durationMinutes: 60,
+      },
+    });
+  });
+
   it('omits a hidden status and supplies a title when the manifest hides its input', async () => {
     vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'salesforce' });
     vi.mocked(createAppointment).mockReset().mockResolvedValue({ successful: true });
@@ -706,6 +724,43 @@ describe('appointment edit page', () => {
     expect(updateAppointmentStatus).toHaveBeenCalledWith({
       serverUrl: manifest.serverUrl, jwtToken: 'jwt-1', appointmentId: 'appt-2', status: 'canceled',
     });
+  });
+
+  it.each([
+    { platformInfo: null, duration: 'PT0M' },
+    { platformInfo: { platformName: 'unconfigured' }, duration: 'not-a-duration' },
+  ])('saves a valid UTC time with a positive default duration when configuration is unavailable (%j)', async ({ platformInfo, duration }) => {
+    vi.mocked(getPlatformInfo).mockResolvedValueOnce(platformInfo);
+    vi.mocked(updateAppointment).mockResolvedValueOnce({ successful: true });
+    vi.mocked(updateAppointmentStatus).mockResolvedValueOnce({ successful: true, status: 'confirmed' });
+    const pageModule = await loadEditPage();
+    await expect(pageModule.saveAppointmentEdits({
+      manifest: { serverUrl: manifest.serverUrl }, jwtToken: 'jwt-1',
+      formData: {
+        thirdPartyAppointmentId: '1', title: 'Updated visit', dateTime: '2026-07-04T09:30', duration,
+        status: 'Confirmed', originalStatus: 'scheduled',
+      },
+    })).resolves.toEqual({ successful: true, status: 'confirmed' });
+    expect(updateAppointment).toHaveBeenCalledWith({
+      serverUrl: manifest.serverUrl, jwtToken: 'jwt-1', appointmentId: '1',
+      patch: {
+        title: 'Updated visit', summary: '', contacts: [],
+        startTimeUtc: new Date('2026-07-04T09:30').toISOString(), durationMinutes: 60,
+      },
+    });
+    expect(updateAppointmentStatus).toHaveBeenCalledWith({
+      serverUrl: manifest.serverUrl, jwtToken: 'jwt-1', appointmentId: '1', status: 'confirmed',
+    });
+  });
+
+  it('does not update status after the server rejects the detail patch', async () => {
+    const failure = { successful: false, returnMessage: { message: 'Appointment not found' } };
+    vi.mocked(updateAppointment).mockResolvedValueOnce(failure);
+    const pageModule = await loadEditPage();
+    await expect(pageModule.saveAppointmentEdits({
+      manifest, formData: { thirdPartyAppointmentId: '1', status: 'confirmed', originalStatus: 'scheduled' },
+    })).resolves.toEqual(failure);
+    expect(updateAppointmentStatus).not.toHaveBeenCalled();
   });
 
   it('reports a status failure after details were saved instead of masking it', async () => {
