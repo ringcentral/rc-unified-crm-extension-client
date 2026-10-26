@@ -154,6 +154,26 @@ describe('appointmentService', () => {
     expect(axios.post).toHaveBeenNthCalledWith(3, 'https://server.example/appointments/appt-1/status', { status: '' }, {});
   });
 
+  it('sends canonical mutation fields and minimal contact references only', async () => {
+    vi.mocked(axios.patch).mockResolvedValueOnce({ data: { successful: true } });
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { successful: true } });
+    const service = await loadAppointmentService();
+    const input = {
+      title: 'Visit', summary: 'Test', startTimeUtc: '2026-10-26T12:00:00.000Z', durationMinutes: 60,
+      status: 'scheduled', contacts: [{ id: '2288275906', type: 'contact', name: 'Sushiltest Contactname', emailChecked: true }],
+      participantName: 'Sushiltest Contactname', attendees: [], attendeeIds: [], contactId: '', contactType: '', startTime: 'legacy',
+    };
+    const fields = {
+      title: 'Visit', summary: 'Test', startTimeUtc: '2026-10-26T12:00:00.000Z', durationMinutes: 60,
+      contacts: [{ id: '2288275906', type: 'contact' }],
+    };
+    await service.updateAppointment({ serverUrl: 'https://server.example', appointmentId: '1', patch: input });
+    await service.createAppointment({ serverUrl: 'https://server.example', payload: input });
+    expect(axios.patch).toHaveBeenCalledWith('https://server.example/appointments/1', { patch: fields }, {});
+    expect(axios.post).toHaveBeenCalledWith('https://server.example/appointments', { payload: { ...fields, status: 'scheduled' } }, {});
+    expect(input).toHaveProperty('participantName');
+  });
+
   it('updates, refreshes, and creates appointments with null-on-error behavior', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.mocked(axios.patch).mockResolvedValueOnce({ data: { id: 'updated' } });
@@ -183,7 +203,7 @@ describe('appointmentService', () => {
       payload: { title: 'New' },
     })).resolves.toBeNull();
 
-    expect(axios.patch).toHaveBeenCalledWith('https://server.example/appointments/appt-1', { title: 'Updated' }, {
+    expect(axios.patch).toHaveBeenCalledWith('https://server.example/appointments/appt-1', { patch: { title: 'Updated' } }, {
       headers: {
         Authorization: 'Bearer jwt-1',
       },
@@ -193,7 +213,7 @@ describe('appointmentService', () => {
         Authorization: 'Bearer jwt-1',
       },
     });
-    expect(axios.post).toHaveBeenNthCalledWith(1, 'https://server.example/appointments', { title: 'New' }, {
+    expect(axios.post).toHaveBeenNthCalledWith(1, 'https://server.example/appointments', { payload: { title: 'New' } }, {
       headers: {
         Authorization: 'Bearer jwt-1',
       },

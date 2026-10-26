@@ -67,6 +67,24 @@ function getJwtAuthorizationConfig(jwtToken?: string) {
     : {};
 }
 
+// Keep response-only aliases and form state out of mutation requests.
+function appointmentMutationFields(record: AppointmentRecord, includeStatus = false): AppointmentRecord {
+  const fields = ['title', 'summary', 'startTimeUtc', 'durationMinutes', 'contacts'];
+  if (includeStatus) fields.push('status');
+  const result = Object.fromEntries(fields
+    .filter(field => record[field] !== undefined)
+    .map(field => [field, record[field]]));
+  if (Array.isArray(result.contacts)) {
+    result.contacts = result.contacts.map(contact => {
+      if (!contact || typeof contact !== 'object') return contact;
+      const reference = contact as AppointmentRecord;
+      const type = reference.type ?? reference.contactType;
+      return { id: reference.id, ...(type ? { type } : {}) };
+    });
+  }
+  return result;
+}
+
 export async function listAppointments({
   serverUrl,
   jwtToken,
@@ -125,7 +143,7 @@ export async function updateAppointment({
   patch,
 }: UpdateAppointmentOptions): Promise<unknown | null> {
   try {
-    const { data } = await axios.patch(`${serverUrl}/appointments/${appointmentId}`, patch, getJwtAuthorizationConfig(jwtToken));
+    const { data } = await axios.patch(`${serverUrl}/appointments/${appointmentId}`, { patch: appointmentMutationFields(patch) }, getJwtAuthorizationConfig(jwtToken));
     return data;
   } catch (e) {
     return null;
@@ -151,7 +169,7 @@ export async function createAppointment({
   payload,
 }: CreateAppointmentOptions): Promise<unknown | null> {
   try {
-    const { data } = await axios.post(`${serverUrl}/appointments`, payload, getJwtAuthorizationConfig(jwtToken));
+    const { data } = await axios.post(`${serverUrl}/appointments`, { payload: appointmentMutationFields(payload, true) }, getJwtAuthorizationConfig(jwtToken));
     return data;
   } catch (e) {
     return null;
