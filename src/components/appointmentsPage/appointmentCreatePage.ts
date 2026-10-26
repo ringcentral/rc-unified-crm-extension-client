@@ -1,3 +1,4 @@
+import { getPlatformInfo } from '../../service/platformService';
 import { createAppointment } from '../../service/appointmentService';
 
 type UnknownRecord = Record<string, any>;
@@ -445,13 +446,12 @@ async function submitAppointmentCreate({ manifest, jwtToken, formData }: Unknown
   const durationMinutesTotal = durationMinutesFromIso(formData?.duration);
   const safeDurationMinutes = Number.isFinite(durationMinutesTotal) ? durationMinutesTotal : 60;
 
-  const { participantName, participantContacts, primaryParticipant } = resolveParticipantsForSubmit(formData);
+  const { platformName } = await getPlatformInfo() || {};
+  const config = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+  const { participantContacts } = resolveParticipantsForSubmit(formData);
   const uniqueParticipantContacts = dedupeContactsByIdType(participantContacts);
 
   const payload: UnknownRecord = {
-    participantName: normalizeParticipantNameForSubmit(participantName || formData?.participantName),
-    contactId: primaryParticipant?.id ?? '',
-    contactType: primaryParticipant?.type ?? '',
     // Always pass contacts as an array (even when only one is selected).
     contacts: uniqueParticipantContacts.length > 0
       ? uniqueParticipantContacts
@@ -465,10 +465,13 @@ async function submitAppointmentCreate({ manifest, jwtToken, formData }: Unknown
     summary: formData?.summary ?? '',
     startTimeUtc,
     durationMinutes: safeDurationMinutes,
-    status: formData?.status ?? 'scheduled',
+    ...(config.status?.isVisible !== false && normalizeStatusKey(formData?.status)
+      ? { status: normalizeStatusKey(formData.status) } : {}),
   };
   const title = String(formData?.title ?? '').trim();
-  if (title) payload.title = title;
+  payload.title = config.titleField?.isVisible === false
+    ? singularizeAppointmentTitle(config.title)
+    : title || singularizeAppointmentTitle(config.title);
   return await createAppointment({
     serverUrl: manifest.serverUrl,
     jwtToken,

@@ -65,6 +65,7 @@ function toLocalDateTimeValue(dt: string | number | Date) {
 describe('appointment create page', () => {
   beforeEach(() => {
     vi.mocked(createAppointment).mockReset();
+    vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'salesforce' });
   });
 
   it('renders configured title, status, participant candidates, and required fields', async () => {
@@ -299,9 +300,6 @@ describe('appointment create page', () => {
       jwtToken: 'jwt-1',
       payload: {
         title: 'Install router',
-        participantName: 'Jane Smith, Alex Green, manual visitor',
-        contactId: 'c2',
-        contactType: 'Contact',
         contacts: [
           { id: 'c1', type: 'Lead', name: 'Jane Smith' },
           { id: 'c2', type: 'Contact', name: 'Alex Green' },
@@ -332,15 +330,11 @@ describe('appointment create page', () => {
 
     expect(createAppointment).toHaveBeenCalledWith(expect.objectContaining({
       payload: expect.objectContaining({
-        participantName: 'Manual Contact',
-        contactId: 'manual-1',
-        contactType: 'Lead',
         contacts: [
           { id: 'manual-1', type: 'Lead', name: 'Manual Contact' },
         ],
         startTimeUtc: undefined,
         durationMinutes: 60,
-        status: 'scheduled',
       }),
     }));
   });
@@ -367,9 +361,6 @@ describe('appointment create page', () => {
 
     expect(createAppointment).toHaveBeenCalledWith(expect.objectContaining({
       payload: expect.objectContaining({
-        participantName: 'Jane Smith',
-        contactId: '',
-        contactType: '',
         contacts: [
           { id: 'c1', type: 'Lead', name: 'Jane Smith', email: 'jane@example.test', emailChecked: true },
         ],
@@ -398,9 +389,6 @@ describe('appointment create page', () => {
 
     expect(createAppointment).toHaveBeenCalledWith(expect.objectContaining({
       payload: expect.objectContaining({
-        participantName: 'Manual One, Manual Two',
-        contactId: '',
-        contactType: '',
         contacts: [],
         startTimeUtc: undefined,
         durationMinutes: 60,
@@ -409,8 +397,29 @@ describe('appointment create page', () => {
   });
 });
 
+describe('appointment create manifest submission', () => {
+  it('omits a hidden status and supplies a title when the manifest hides its input', async () => {
+    vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'salesforce' });
+    vi.mocked(createAppointment).mockReset().mockResolvedValue({ successful: true });
+    const pageModule = await loadCreatePage();
+    const hiddenManifest = { ...manifest, platforms: { salesforce: { page: { appointment: {
+      title: 'Service Appointments', titleField: { isVisible: false }, status: { isVisible: false },
+    } } } } };
+    await pageModule.submitAppointmentCreate({ manifest: hiddenManifest, formData: {
+      title: 'Stale hidden title', status: 'confirmed', dateTime: '2026-07-04T09:30', duration: 'PT1H',
+    } });
+    const request = vi.mocked(createAppointment).mock.calls[0][0];
+    expect(request.payload.title).toBe('Service Appointment');
+    expect(request.payload).not.toHaveProperty('status');
+    expect(request.payload).not.toHaveProperty('participantName');
+    expect(request.payload).not.toHaveProperty('contactId');
+    expect(request.payload).not.toHaveProperty('contactType');
+  });
+});
+
 describe('appointment edit page', () => {
   beforeEach(() => {
+    vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'salesforce' });
     vi.mocked(updateAppointment).mockReset();
     vi.mocked(updateAppointmentStatus).mockReset();
   });
@@ -457,6 +466,7 @@ describe('appointment edit page', () => {
         participantContactId: 'c1',
         participantContactType: 'Lead',
         status: 'confirmed',
+        originalStatus: 'confirmed',
       },
     });
     expect(page.uiSchema.participantContactIds['ui:options'].enumOptions).toEqual([
@@ -638,7 +648,7 @@ describe('appointment edit page', () => {
     ]);
   });
 
-  it('saves a full patch with title, participants, attendees, and normalized status', async () => {
+  it('saves canonical fields without duplicating participants or resubmitting unchanged status', async () => {
     vi.mocked(updateAppointment).mockResolvedValueOnce({ id: 'appt-1', saved: true });
     const pageModule = await loadEditPage();
 
@@ -652,6 +662,7 @@ describe('appointment edit page', () => {
         duration: 'PT2H',
         summary: 'Updated summary',
         status: 'Confirmed',
+        originalStatus: 'confirmed',
         participantContactIds: ['c2', 'manual visitor'],
         participantCandidates: [
           { id: 'c1', type: 'Lead', name: 'Jane Smith' },
@@ -667,67 +678,58 @@ describe('appointment edit page', () => {
       appointmentId: 'appt-1',
       patch: {
         title: 'Updated repair',
-        participantName: 'Alex Green, manual visitor',
         summary: 'Updated summary',
-        startTime: new Date('2026-07-04T09:30').toISOString(),
+        startTimeUtc: new Date('2026-07-04T09:30').toISOString(),
         durationMinutes: 120,
-        contactId: 'c2',
-        contactType: 'Contact',
         contacts: [{ id: 'c2', type: 'Contact', name: 'Alex Green' }],
-        attendees: [{ id: 'c2', type: 'Contact', name: 'Alex Green' }],
-        attendeeIds: ['c2'],
-        status: 'confirmed',
       },
     });
     expect(updateAppointmentStatus).not.toHaveBeenCalled();
   });
 
-  it('falls back to split core update and status update when status patch is rejected', async () => {
-    vi.mocked(updateAppointment)
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ id: 'appt-2', saved: true });
-    vi.mocked(updateAppointmentStatus).mockResolvedValueOnce({ id: 'appt-2', status: 'canceled' });
+  it('uses the status endpoint after one successful canonical patch when status changes', async () => {
+    vi.mocked(updateAppointment).mockResolvedValueOnce({ successful: true });
+    vi.mocked(updateAppointmentStatus).mockResolvedValueOnce({ successful: true, status: 'canceled' });
     const pageModule = await loadEditPage();
-
     await expect(pageModule.saveAppointmentEdits({
-      manifest,
-      jwtToken: 'jwt-1',
-      formData: {
-        thirdPartyAppointmentId: 'appt-2',
-        dateTime: '',
-        duration: 'bad-duration',
-        summary: 'Fallback summary',
-        status: 'Canceled',
-        participantName: 'Jane Smith\nAlex Green',
-        participantContacts: [
-          { id: 'c1', type: 'Lead', name: 'Jane Smith' },
-          { id: 'c2', type: 'Contact', name: 'Alex Green' },
-          { id: 'c3', type: 'Lead', name: 'Removed Person' },
-        ],
-        participantContactId: 'c1',
+      manifest, jwtToken: 'jwt-1', formData: {
+        thirdPartyAppointmentId: 'appt-2', summary: 'Updated', status: 'Canceled', originalStatus: 'scheduled',
+        dateTime: '2026-07-04T09:30', duration: 'PT1H', participantContacts: [],
       },
-    })).resolves.toEqual({ id: 'appt-2', status: 'canceled' });
-
-    expect(updateAppointment).toHaveBeenNthCalledWith(1, expect.objectContaining({
-      appointmentId: 'appt-2',
-      patch: expect.objectContaining({
-        participantName: 'Jane Smith, Alex Green, Removed Person',
-        durationMinutes: 60,
-        status: 'canceled',
-      }),
-    }));
-    expect(updateAppointment).toHaveBeenNthCalledWith(2, expect.objectContaining({
-      appointmentId: 'appt-2',
-      patch: expect.not.objectContaining({
-        status: expect.anything(),
-      }),
-    }));
-    expect(updateAppointmentStatus).toHaveBeenCalledWith({
-      serverUrl: 'https://server.example',
-      jwtToken: 'jwt-1',
-      appointmentId: 'appt-2',
-      status: 'canceled',
+    })).resolves.toEqual({ successful: true, status: 'canceled' });
+    expect(updateAppointment).toHaveBeenCalledTimes(1);
+    expect(updateAppointment).toHaveBeenCalledWith({
+      serverUrl: manifest.serverUrl, jwtToken: 'jwt-1', appointmentId: 'appt-2', patch: {
+        summary: 'Updated', contacts: [], startTimeUtc: new Date('2026-07-04T09:30').toISOString(), durationMinutes: 60,
+      },
     });
+    expect(updateAppointmentStatus).toHaveBeenCalledWith({
+      serverUrl: manifest.serverUrl, jwtToken: 'jwt-1', appointmentId: 'appt-2', status: 'canceled',
+    });
+  });
+
+  it('reports a status failure after details were saved instead of masking it', async () => {
+    vi.mocked(updateAppointment).mockResolvedValueOnce({ successful: true });
+    vi.mocked(updateAppointmentStatus).mockResolvedValueOnce(null);
+    const pageModule = await loadEditPage();
+    await expect(pageModule.saveAppointmentEdits({
+      manifest, jwtToken: 'jwt-1', formData: { thirdPartyAppointmentId: '1', status: 'confirmed', originalStatus: 'scheduled' },
+    })).resolves.toMatchObject({ successful: false, returnMessage: { messageType: 'warning' } });
+  });
+
+  it('does not submit hidden title or status fields from stale form state', async () => {
+    vi.mocked(updateAppointment).mockResolvedValueOnce({ successful: true });
+    const pageModule = await loadEditPage();
+    const hiddenManifest = {
+      ...manifest, platforms: { salesforce: { page: { appointment: {
+        titleField: { isVisible: false }, status: { isVisible: false },
+      } } } },
+    };
+    await pageModule.saveAppointmentEdits({ manifest: hiddenManifest, jwtToken: 'jwt-1', formData: {
+      thirdPartyAppointmentId: '1', title: 'Hidden', status: 'confirmed', originalStatus: 'scheduled', summary: 'Visible summary',
+    } });
+    expect(updateAppointment).toHaveBeenCalledWith(expect.objectContaining({ patch: { summary: 'Visible summary', contacts: [] } }));
+    expect(updateAppointmentStatus).not.toHaveBeenCalled();
   });
 
   it('reconciles manually selected participant names when saving without status', async () => {
@@ -756,20 +758,16 @@ describe('appointment edit page', () => {
     expect(updateAppointment).toHaveBeenCalledWith(expect.objectContaining({
       appointmentId: 'appt-3',
       patch: expect.objectContaining({
-        participantName: 'Jane Smith, Missing Person',
-        contactId: 'c2',
-        contactType: 'Contact',
         contacts: [
           { id: 'c1', type: 'Lead', name: 'Jane Smith' },
           { id: 'c2', type: 'Contact', name: 'Alex Green' },
         ],
-        attendeeIds: ['c1', 'c2'],
       }),
     }));
     expect(updateAppointmentStatus).not.toHaveBeenCalled();
   });
 
-  it('returns null when both status patch and core patch fail', async () => {
+  it('does not attempt a status update when the detail patch fails', async () => {
     vi.mocked(updateAppointment)
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(null);
@@ -822,13 +820,7 @@ describe('appointment edit page', () => {
     expect(updateAppointment).toHaveBeenCalledWith(expect.objectContaining({
       appointmentId: 'appt-5',
       patch: expect.objectContaining({
-        participantName: '',
-        durationMinutes: 0,
-        contactId: '',
-        contactType: '',
         contacts: [],
-        attendees: [],
-        attendeeIds: [],
       }),
     }));
     expect(updateAppointmentStatus).not.toHaveBeenCalled();
@@ -859,19 +851,11 @@ describe('appointment edit page', () => {
     expect(updateAppointment).toHaveBeenCalledWith(expect.objectContaining({
       appointmentId: 'appt-6',
       patch: expect.objectContaining({
-        participantName: 'Jane Smith, Alex Green',
         durationMinutes: 1500,
-        contactId: 'c1',
-        contactType: 'Lead',
         contacts: [
           { id: 'c1', type: 'Lead', name: 'Jane Smith' },
           { id: 'c2', type: 'Contact', name: 'Alex Green' },
         ],
-        attendees: [
-          { id: 'c1', type: 'Lead', name: 'Jane Smith' },
-          { id: 'c2', type: 'Contact', name: 'Alex Green' },
-        ],
-        attendeeIds: ['c1', 'c2'],
       }),
     }));
   });

@@ -191,6 +191,7 @@ function e2eAppointmentManifest(serverOrigin) {
             supported: true,
             title: 'Service Visits',
             showConfirm: true,
+            titleField: { isVisible: true, value: 'Title' },
             status: {
               isVisible: true,
               value: ['scheduled', 'confirmed', 'canceled', 'tentative'],
@@ -239,17 +240,18 @@ function e2eAppointmentFormData(overrides = {}) {
     duration: 'PT45M',
     summary: 'Appointment from extension E2E',
     participantName: 'E2E Caller',
-    participantContactId: 'e2e-contact-1',
+    participantContactId: '2288275906',
     participantContactType: 'Lead',
-    participantContactIds: ['e2e-contact-1'],
+    participantContactIds: ['2288275906'],
     participantContacts: [
       {
-        id: 'e2e-contact-1',
+        id: '2288275906',
         type: 'Lead',
         name: 'E2E Caller',
       },
     ],
     status: 'scheduled',
+    originalStatus: 'scheduled',
     returnTab: 'upcoming',
     returnSearch: '',
     returnFilter: 'All',
@@ -1317,14 +1319,11 @@ test.describe('App Connect extension smoke', () => {
     const createRequest = server.requests.find((request) => (
       request.method === 'POST' && request.path === '/appointments'
     ));
-    expect(createRequest.body).toMatchObject({
-      title: 'Created E2E appointment',
-      participantName: 'E2E Caller',
-      contactId: 'e2e-contact-1',
-      contactType: 'Lead',
-      status: 'scheduled',
-      durationMinutes: 45,
-    });
+    expect(createRequest.body).toEqual({ payload: {
+      title: 'Created E2E appointment', summary: 'Appointment from extension E2E',
+      contacts: [{ id: '2288275906', type: 'Lead' }], status: 'scheduled', durationMinutes: 45,
+      startTimeUtc: await popupPage.evaluate(() => new Date('2026-07-08T09:00').toISOString()),
+    } });
     await expect.poll(() => server.requests.some((request) => (
       request.method === 'GET' && request.path === '/appointments'
     ))).toBe(true);
@@ -1338,14 +1337,14 @@ test.describe('App Connect extension smoke', () => {
     const editRequest = server.requests.find((request) => (
       request.method === 'PATCH' && request.path === '/appointments/e2e-appt-1'
     ));
-    expect(editRequest.body).toMatchObject({
-      title: 'Updated E2E appointment',
-      participantName: 'E2E Caller',
-      contactId: 'e2e-contact-1',
-      contactType: 'Lead',
-      status: 'tentative',
-      durationMinutes: 45,
-    });
+    expect(editRequest.body).toEqual({ patch: {
+      title: 'Updated E2E appointment', summary: 'Appointment from extension E2E',
+      contacts: [{ id: '2288275906', type: 'Lead' }], durationMinutes: 45,
+      startTimeUtc: await popupPage.evaluate(() => new Date('2026-07-08T09:00').toISOString()),
+    } });
+    await expect.poll(() => server.requests.find(request => (
+      request.method === 'POST' && request.path === '/appointments/e2e-appt-1/status'
+    ))?.body).toEqual({ status: 'tentative' });
     await expect.poll(() => server.requests.some((request) => (
       request.method === 'GET' && request.path === '/appointments'
     ))).toBe(true);
