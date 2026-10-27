@@ -251,7 +251,7 @@ export function startFixtureServer() {
         appointmentId: 'e2e-created-appt-1',
         appointment: {
           id: 'e2e-created-appt-1',
-          ...body,
+          ...body?.payload,
         },
         returnMessage: {
           messageType: 'success',
@@ -268,7 +268,7 @@ export function startFixtureServer() {
         appointmentId: 'e2e-appt-1',
         appointment: {
           id: 'e2e-appt-1',
-          ...body,
+          ...body?.patch,
         },
         returnMessage: {
           messageType: 'success',
