@@ -1,3 +1,4 @@
+import { getPlatformInfo } from '../../service/platformService';
 import { updateAppointment, updateAppointmentStatus } from '../../service/appointmentService';
 import { formatAttendeeNames, normalizeAttendees } from '../../lib/appointmentUtils';
 
@@ -326,6 +327,7 @@ function getAppointmentEditPageRender({
   const entityTitle = singularizeAppointmentTitle(appointmentTitle);
   const defaults: UnknownRecord = {
     thirdPartyAppointmentId: String(id),
+    originalStatus: normalizeStatusKey(source?.status) || defaultStatus,
     returnTab: String(source?.returnTab ?? 'upcoming'),
     returnSearch: String(source?.returnSearch ?? ''),
     returnFilter: String(source?.returnFilter ?? 'All'),
@@ -388,6 +390,7 @@ function getAppointmentEditPageRender({
       properties: {
         // Hidden but required for save.
         thirdPartyAppointmentId: { type: 'string', title: '' },
+        originalStatus: { type: 'string', title: '' },
         // Used to return to the same list view after update (no local cache).
         returnTab: { type: 'string', title: '' },
         returnSearch: { type: 'string', title: '' },
@@ -439,6 +442,7 @@ function getAppointmentEditPageRender({
         submitText: 'Update',
       },
       thirdPartyAppointmentId: { 'ui:widget': 'hidden' },
+      originalStatus: { 'ui:widget': 'hidden' },
       returnTab: { 'ui:widget': 'hidden' },
       returnSearch: { 'ui:widget': 'hidden' },
       returnFilter: { 'ui:widget': 'hidden' },
@@ -490,6 +494,7 @@ function getAppointmentEditPageRender({
       participantsLabel: { 'ui:field': 'typography', 'ui:variant': 'caption1', 'ui:style': { marginBottom: '-8px' } },
       'ui:order': [
         'thirdPartyAppointmentId',
+        'originalStatus',
         'returnTab',
         'returnSearch',
         'returnFilter',
@@ -536,7 +541,9 @@ async function saveAppointmentEdits({ manifest, jwtToken, formData }: UnknownRec
   const appointmentId = formData?.thirdPartyAppointmentId;
   if (!appointmentId) return null;
 
-  const startTime = toUtcIsoFromLocalDateTimeValue(formData?.dateTime);
+  const { platformName } = await getPlatformInfo() || {};
+  const config = manifest?.platforms?.[platformName]?.page?.appointment ?? {};
+  const startTimeUtc = toUtcIsoFromLocalDateTimeValue(formData?.dateTime);
   const durationMinutesTotal = durationMinutesFromIso(formData?.duration);
   const safeDurationMinutes = Number.isFinite(durationMinutesTotal) ? durationMinutesTotal : 60;
 
@@ -548,62 +555,38 @@ async function saveAppointmentEdits({ manifest, jwtToken, formData }: UnknownRec
         participantName: formData?.participantName,
         participantContacts: Array.isArray(formData?.participantContacts) ? formData.participantContacts : [],
       });
-  const primaryParticipant =
-    resolvedFromIds.primaryParticipant
-    || resolvedContacts.find((c) => String(c?.id) === String(formData?.participantContactId ?? '').trim())
-    || resolvedContacts[0]
-    || null;
-
-  const participantNameToSubmit =
-    resolvedFromIds.participantName
-    || normalizeParticipantNameForSubmit(formData?.participantName);
-
-  const patchBase: UnknownRecord = {
-    participantName: participantNameToSubmit,
+  const patch: UnknownRecord = {
     summary: formData?.summary ?? '',
-    startTime,
-    durationMinutes: safeDurationMinutes,
-    contactId: primaryParticipant?.id ?? '',
-    contactType: primaryParticipant?.type ?? '',
-    // Some backends use "attendees" while others use "contacts".
     contacts: resolvedContacts,
-    attendees: resolvedContacts,
-    attendeeIds: resolvedContacts.map((c) => c.id),
+    ...(startTimeUtc ? { startTimeUtc, durationMinutes: safeDurationMinutes > 0 ? safeDurationMinutes : 60 } : {}),
   };
   const title = String(formData?.title ?? '').trim();
-  if (title) patchBase.title = title;
+  if (config.titleField?.isVisible !== false && title) patch.title = title;
 
-  const normalizedStatus = formData?.status ? normalizeStatusKey(formData.status) : '';
-  const patchWithStatus = normalizedStatus ? { ...patchBase, status: normalizedStatus } : patchBase;
-
-  // Try to save everything in a single PATCH first.
   const saved = await updateAppointment({
     serverUrl: manifest.serverUrl,
     jwtToken,
     appointmentId,
-    patch: patchWithStatus,
-  });
-  if (saved) return saved;
+    patch,
+  }) as UnknownRecord | null;
+  if (!saved || saved.successful === false) return saved;
 
-  // Fallback: some backends may not accept status in PATCH; try splitting the calls.
-  if (normalizedStatus) {
-    const savedCore = await updateAppointment({
-      serverUrl: manifest.serverUrl,
-      jwtToken,
-      appointmentId,
-      patch: patchBase,
-    });
-    if (!savedCore) return null;
+  const status = normalizeStatusKey(formData?.status);
+  const originalStatus = normalizeStatusKey(formData?.originalStatus);
+  if (config.status?.isVisible !== false && status && status !== originalStatus) {
     const statusSaved = await updateAppointmentStatus({
-      serverUrl: manifest.serverUrl,
-      jwtToken,
-      appointmentId,
-      status: normalizedStatus,
+      serverUrl: manifest.serverUrl, jwtToken, appointmentId, status,
     });
-    return statusSaved || savedCore;
+    return statusSaved || {
+      successful: false,
+      returnMessage: {
+        messageType: 'warning',
+        message: 'Appointment details were saved, but its status could not be updated.',
+        ttl: 3000,
+      },
+    };
   }
-
-  return null;
+  return saved;
 }
 
 export { getAppointmentEditPageRender, saveAppointmentEdits };
