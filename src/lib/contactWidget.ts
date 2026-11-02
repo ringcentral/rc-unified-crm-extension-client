@@ -4,6 +4,11 @@ type UnknownRecord = Record<string, any>;
 
 export const CONTACT_WIDGET_APP_ID = 'app-connect-contact';
 export const CONTACT_WIDGET_APP_NAME = 'App Connect Contact';
+
+/** The side panel tab is named after the connected CRM, e.g. "Clio Contact". */
+export function getContactWidgetAppName(crmName?: string): string {
+  return crmName ? `${crmName} Contact` : CONTACT_WIDGET_APP_NAME;
+}
 export const CONTACT_WIDGET_PAGE_PATH = '/sidebarApps/app-connect-contact';
 export const CONTACT_WIDGET_INPUT_CHANGED_PATH = '/sidebarApps/app-connect-contact/inputChanged';
 export const CONTACT_WIDGET_BUTTON_CLICK_PATH = '/sidebarApps/app-connect-contact/button-click';
@@ -19,7 +24,7 @@ function getWidgetFrameWindow(): Window | null {
 // Embeddable only opens its widget panel for a call when an app is already registered as the call rings,
 // so the app is registered at startup for platforms that returned a widget before, and again when one is found.
 // Registering twice is harmless: Embeddable merges by app id.
-export function registerContactWidgetApp(): void {
+export function registerContactWidgetApp(crmName?: string): void {
   const frameWindow = getWidgetFrameWindow();
   if (!frameWindow) {
     return;
@@ -28,7 +33,7 @@ export function registerContactWidgetApp(): void {
     type: 'rc-adapter-register-widget-app',
     app: {
       id: CONTACT_WIDGET_APP_ID,
-      name: CONTACT_WIDGET_APP_NAME,
+      name: getContactWidgetAppName(crmName),
       iconUri: chrome.runtime.getURL('images/logo128.png'),
       pagePath: CONTACT_WIDGET_PAGE_PATH,
       inputChangedPath: CONTACT_WIDGET_INPUT_CHANGED_PATH,
@@ -41,7 +46,7 @@ export function registerContactWidgetApp(): void {
  * Keeps the matched contacts that carry a widget for the duration of a call.
  * The widget app is registered the first time a widget is seen, so connectors without one never get an empty tab.
  */
-export function rememberContactWidgets({ phoneNumber, contacts, platformName }: { phoneNumber?: string; contacts?: UnknownRecord[] | null; platformName?: string }): boolean {
+export function rememberContactWidgets({ phoneNumber, contacts, platformName, crmName }: { phoneNumber?: string; contacts?: UnknownRecord[] | null; platformName?: string; crmName?: string }): boolean {
   if (!phoneNumber) {
     return false;
   }
@@ -55,7 +60,7 @@ export function rememberContactWidgets({ phoneNumber, contacts, platformName }: 
     selectedContactId = '';
   }
   latestPhoneNumber = phoneNumber;
-  registerContactWidgetApp();
+  registerContactWidgetApp(crmName);
   if (platformName) {
     void chrome.storage.local.set({ [contactWidgetSeenKey(platformName)]: true });
   }
@@ -67,14 +72,14 @@ function contactWidgetSeenKey(platformName: string): string {
 }
 
 /** Called at startup so the app is already registered when the next call rings. */
-export async function registerContactWidgetAppIfSeen(platformName?: string): Promise<void> {
+export async function registerContactWidgetAppIfSeen(platformName?: string, crmName?: string): Promise<void> {
   if (!platformName) {
     return;
   }
   const key = contactWidgetSeenKey(platformName);
   const stored = await chrome.storage.local.get(key) as UnknownRecord;
   if (stored[key]) {
-    registerContactWidgetApp();
+    registerContactWidgetApp(crmName);
   }
 }
 

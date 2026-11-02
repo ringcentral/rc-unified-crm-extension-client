@@ -65,7 +65,7 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
     if (hasWidget(contactInfo)) {
       contactWidgetResolvedSessions.add(data.call.sessionId);
       console.log(`contact widget found for ${contactPhoneNumber}`);
-      rememberContactWidgets({ phoneNumber: contactPhoneNumber, contacts: contactInfo, platformName });
+      rememberContactWidgets({ phoneNumber: contactPhoneNumber, contacts: contactInfo, platformName, crmName: platform?.displayName });
     }
   }
   const callMatchedContact = contactInfo ?? [];

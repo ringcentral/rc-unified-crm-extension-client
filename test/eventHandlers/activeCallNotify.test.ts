@@ -71,6 +71,7 @@ function manifest() {
     platforms: {
       salesforce: {
         name: 'salesforce',
+        displayName: 'Salesforce',
       },
     },
   };
@@ -631,7 +632,7 @@ describe('rc-active-call-notify event handler', () => {
     expect(contactCore.getContact).toHaveBeenCalledTimes(2);
     const registrations = getWidgetPostMessages().filter(({ message }) => message.type === 'rc-adapter-register-widget-app');
     expect(registrations).toHaveLength(1);
-    expect(registrations[0].message.app).toMatchObject({ id: 'app-connect-contact', name: 'App Connect Contact' });
+    expect(registrations[0].message.app).toMatchObject({ id: 'app-connect-contact', name: 'Salesforce Contact' });
     const widgetLib = await import('../../src/lib/contactWidget.ts');
     expect(widgetLib.getContactsWithWidget('+16505550100')).toHaveLength(1);
 

@@ -42,6 +42,16 @@ describe('contactWidget', () => {
       });
     });
 
+    it('names the widget app after the CRM', () => {
+      registerContactWidgetApp('Clio');
+      rememberContactWidgets({ phoneNumber: '+1650', contacts: [{ id: '2', widget: widget() }], crmName: 'Salesforce' });
+
+      const names = getWidgetPostMessages()
+        .filter(({ message }) => message.type === 'rc-adapter-register-widget-app')
+        .map(({ message }) => message.app.name);
+      expect(names).toEqual(['Clio Contact', 'Salesforce Contact']);
+    });
+
     it('remembers only contacts with a widget and registers the app lazily', () => {
       expect(rememberContactWidgets({ phoneNumber: '+1650', contacts: [{ id: '1' }] })).toBe(false);
       expect(getWidgetPostMessages()).toHaveLength(0);
@@ -70,12 +80,13 @@ describe('contactWidget', () => {
 
       rememberContactWidgets({ phoneNumber: '+1650', contacts: [{ id: '2', widget: widget() }], platformName: 'clio' });
       resetContactWidgetsForTest();
-      await registerContactWidgetAppIfSeen('clio');
+      await registerContactWidgetAppIfSeen('clio', 'Clio');
       await registerContactWidgetAppIfSeen('salesforce');
       await registerContactWidgetAppIfSeen(undefined);
 
       const registrations = getWidgetPostMessages().filter(({ message }) => message.type === 'rc-adapter-register-widget-app');
       expect(registrations).toHaveLength(2);
+      expect(registrations[1].message.app.name).toBe('Clio Contact');
     });
 
     it('ignores a missing phone number', () => {

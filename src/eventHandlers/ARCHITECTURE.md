@@ -51,7 +51,7 @@ Routed by `data.path`.
 | `/messageLogger/inputChanged` | `messageLogger/inputChanged/index.js` | Live form update for message log |
 | `/messageLogger/match` | `messageLogger/match/index.js` | Message log match check |
 | `/settings` | `settings.js` | Settings page save |
-| `/sidebarApps/app-connect-contact` (+ `/inputChanged`, `/button-click`) | `sidebarApps/appConnectContact.ts` | Call pop widget for the **App Connect Contact** side panel; renders the matched contact's `widget` and opens its `links`. State lives in `lib/contactWidget.ts`, filled by `rc-active-call-notify` when a matched contact carries a `widget` |
+| `/sidebarApps/app-connect-contact` (+ `/inputChanged`, `/button-click`) | `sidebarApps/appConnectContact.ts` | Call pop widget for the **{CRM name} Contact** side panel (e.g. "Clio Contact"); renders the matched contact's `widget` and opens its `links`. State lives in `lib/contactWidget.ts`, filled by `rc-active-call-notify` when a matched contact carries a `widget` |
 | `/custom-button-click` | `custom-button-click/index.js` | **Sub-router** — see section below |
 | `/customizedPage/inputChanged` | `customizedPage/inputChanged/index.js` | **Sub-router** — see section below |
 

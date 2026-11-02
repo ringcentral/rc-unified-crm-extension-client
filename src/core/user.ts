@@ -225,7 +225,7 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
         type: 'rc-adapter-register-third-party-service',
         service
     }, '*');
-    await registerContactWidgetAppIfSeen(platformName);
+    await registerContactWidgetAppIfSeen(platformName, manifest?.platforms?.[platformName]?.displayName);
     // CallLogger ignores auto-log updates until the third-party service is ready.
     RCAdapter.setAutoLog({ call: getEffectiveAutoLogCallValue(userSettings, isAdmin), message: autoLogMessagesGroupTrigger })
     // custom tabs
