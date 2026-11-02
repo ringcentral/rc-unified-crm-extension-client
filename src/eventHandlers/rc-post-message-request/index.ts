@@ -25,6 +25,30 @@ type EventOptions = {
   data: UnknownRecord;
 };
 
+// Sent by the widget without a user action (e.g. replayed for recent calls and
+// conversations on every reload), so they prompt the user to connect only once
+// per session instead of once per event.
+const BACKGROUND_LOGGER_TRIGGER_TYPES = new Set(['callLogSync', 'presenceUpdate', 'auto']);
+const CONNECT_CRM_NOTIFICATION_COOLDOWN_MS = 5000;
+let lastConnectCrmNotificationAt = 0;
+let connectCrmNotifiedForBackground = false;
+
+function notifyConnectCrm(displayName: string, triggerType?: string) {
+  const isBackground = BACKGROUND_LOGGER_TRIGGER_TYPES.has(triggerType ?? '');
+  if (isBackground && connectCrmNotifiedForBackground) {
+    return;
+  }
+  const now = Date.now();
+  if (now - lastConnectCrmNotificationAt < CONNECT_CRM_NOTIFICATION_COOLDOWN_MS) {
+    return;
+  }
+  lastConnectCrmNotificationAt = now;
+  if (isBackground) {
+    connectCrmNotifiedForBackground = true;
+  }
+  showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${displayName} account.`, ttl: 60000 });
+}
+
 async function onEvent({ data }: EventOptions) {
   const crmAuthed = await authCore.syncCrmAuthedFromStorage();
   const manifest = await getManifest() as UnknownRecord;
@@ -32,7 +56,7 @@ async function onEvent({ data }: EventOptions) {
   const platformName = platformInfo?.platformName ?? '';;
   const platform = manifest?.platforms[platformName];
   if (!crmAuthed && (data.path === '/callLogger' || data.path === '/messageLogger')) {
-    showNotification({ level: 'warning', message: `Please go to user settings page and connect to your ${manifest.platforms[platformName].displayName} account.`, ttl: 60000 });
+    notifyConnectCrm(manifest.platforms[platformName].displayName, data.body?.triggerType);
     responseMessage(data.requestId, { data: 'ok' });
     return;
   }
