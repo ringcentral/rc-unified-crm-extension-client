@@ -142,6 +142,17 @@ describe('contactWidget', () => {
       expect(orderContactsBySelection(contacts).map(c => c.id)).toEqual([2, 1]);
     });
 
+    it('keeps the dropdown first and respects the connector ui:order', () => {
+      const contacts = [
+        { id: 1, name: 'Jane', widget: widget({ uiSchema: { 'ui:order': ['b', 'a'] } }) },
+        { id: 2, name: 'John', widget: widget() },
+      ];
+
+      expect(buildContactWidgetPage(contacts).data.page.uiSchema['ui:order']).toEqual(['contactSelect', 'b', 'a']);
+      selectContactWidget('2');
+      expect(buildContactWidgetPage(contacts).data.page.uiSchema['ui:order']).toEqual(['contactSelect', '*']);
+    });
+
     it('falls back to the first contact when the selection is unknown and resets when the call ends', () => {
       const contacts = [{ id: 1, name: 'Jane', widget: widget() }, { id: 2, name: 'John', widget: widget() }];
       rememberContactWidgets({ phoneNumber: '+1650', contacts });

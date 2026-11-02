@@ -120,6 +120,12 @@ export function orderContactsBySelection(contacts: UnknownRecord[]): UnknownReco
   return selected ? [selected, ...contacts.filter(c => c !== selected)] : contacts;
 }
 
+/** Puts the dropdown first without dropping the connector's own `ui:order`; `*` covers any property not listed. */
+function withSelectFirst(order: unknown): string[] {
+  const rest = Array.isArray(order) ? order.filter(key => key !== CONTACT_SELECT_KEY) : ['*'];
+  return [CONTACT_SELECT_KEY, ...rest];
+}
+
 export function buildContactWidgetPage(contacts: UnknownRecord[]): UnknownRecord {
   const selected = getSelectedContact(contacts);
   if (!selected) {
@@ -146,7 +152,7 @@ export function buildContactWidgetPage(contacts: UnknownRecord[]): UnknownRecord
             ...schema.properties,
           },
         },
-        uiSchema: { ...(uiSchema ?? {}) },
+        uiSchema: { ...(uiSchema ?? {}), 'ui:order': withSelectFirst(uiSchema?.['ui:order']) },
         formData: { [CONTACT_SELECT_KEY]: String(selected.id), ...(formData ?? {}) },
       },
       actions: actions ?? [],
