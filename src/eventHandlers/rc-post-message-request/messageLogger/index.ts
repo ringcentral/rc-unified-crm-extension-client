@@ -97,10 +97,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
     responseMessage(data.requestId, { data: 'ok' });
     return;
   }
-  // Effective gate for per-message (granular) SMS logging: platform support AND
-  // the user/admin `selectedMessageLog` setting. When off, message logging keeps
-  // the existing whole-conversation behavior (both manual and auto).
-  const selectedMessageLogEnabled = userCore.isSelectedMessageLogEnabled({ platform, userSettings });
+  // Effective gate for per-message (granular) SMS logging: the user/admin
+  // `selectedMessageLog` setting. When off, message logging keeps the existing
+  // whole-conversation behavior (both manual and auto).
+  const selectedMessageLogEnabled = userCore.isSelectedMessageLogEnabled({ userSettings });
   const isAutoLogSMS = userSettings?.autoLogSMS?.value ?? false;
   const isAutoLogVoicemail = userSettings?.autoLogVoicemail?.value ?? false;
   const isAutoLogInboundFax = userSettings?.autoLogInboundFax?.value ?? false;
@@ -507,9 +507,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
   // return the resulting log id. If no contact was resolved, we fall back to
   // opening the contact-selection form and logging on submit.
   else if (data.body.triggerType === 'selectedLog') {
-    // Gate: this feature is only available when the platform manifest opts in
-    // (`isSelectedMessageLogSupported: true`) AND the user/admin `selectedMessageLog`
-    // setting is enabled. Otherwise keep existing behavior and ignore the event.
+    // Gate: only when the user/admin `selectedMessageLog` setting is enabled.
+    // Otherwise keep existing behavior and ignore the event.
     if (!selectedMessageLogEnabled) {
       responseMessage(data.requestId, { data: 'ok' });
       return;
