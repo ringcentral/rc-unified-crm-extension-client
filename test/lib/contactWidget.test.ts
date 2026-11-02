@@ -35,7 +35,7 @@ describe('contactWidget', () => {
       expect(registrations[0].message.app).toEqual({
         id: 'app-connect-contact',
         name: 'App Connect Contact',
-        iconUri: 'chrome-extension://test-extension/images/logo128.png',
+        iconUri: expect.stringMatching(/^(data:image\/png|.*contactWidgetIcon)/),
         pagePath: '/sidebarApps/app-connect-contact',
         inputChangedPath: '/sidebarApps/app-connect-contact/inputChanged',
         buttonEventPath: '/sidebarApps/app-connect-contact/button-click',

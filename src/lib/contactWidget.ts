@@ -1,3 +1,4 @@
+import contactWidgetIcon from '../images/contactWidgetIcon.png';
 import { isSafeHttpUrl } from './urlTemplate';
 
 type UnknownRecord = Record<string, any>;
@@ -34,7 +35,7 @@ export function registerContactWidgetApp(crmName?: string): void {
     app: {
       id: CONTACT_WIDGET_APP_ID,
       name: getContactWidgetAppName(crmName),
-      iconUri: chrome.runtime.getURL('images/logo128.png'),
+      iconUri: contactWidgetIcon,
       pagePath: CONTACT_WIDGET_PAGE_PATH,
       inputChangedPath: CONTACT_WIDGET_INPUT_CHANGED_PATH,
       buttonEventPath: CONTACT_WIDGET_BUTTON_CLICK_PATH,
