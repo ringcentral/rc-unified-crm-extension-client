@@ -7,6 +7,7 @@ import logPage from '../components/logPage';
 import { logPageFormDataDefaulting, cacheLogPageData } from '../lib/logUtil';
 import { responseMessage } from '../lib/util';
 import { resolveCallLogReadiness } from '../lib/callLogReadiness';
+import { forgetContactWidgets, rememberContactWidgets, shouldProbeContactWidget } from '../lib/contactWidget';
 
 type UnknownRecord = Record<string, any>;
 
@@ -14,6 +15,9 @@ type EventOptions = {
   data: UnknownRecord;
   popupContext: UnknownRecord;
 };
+
+// Calls whose contact widget has already been picked up. Later events of the same call reuse it.
+const contactWidgetResolvedSessions = new Set<string>();
 
 function getWidgetFrameWindow(): Window {
   return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
@@ -43,9 +47,27 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
   const contactPhoneNumber = data.call.direction === 'Inbound' ?
     (data.call.from.phoneNumber ?? data.call.from.extensionNumber) :
     (data.call.to.phoneNumber ?? data.call.to.extensionNumber);
-  const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
-  void callContactMatched;
-  void callLogContactMatchMessage;
+  let { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo, isFromLocalCache } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
+  // Contact widget: picked up from the first event of the call whose matched contacts carry one, so a lookup
+  // that misses early (not matched yet) is retried on later events. A widget from the local matched-contact
+  // cache can be days old, and a cached entry may predate widget support, so cached results are refreshed
+  // from the server (bypassing the server-side account cache too) once per call (without a widget, at most once a day per platform).
+  if (!contactWidgetResolvedSessions.has(data.call.sessionId)) {
+    const hasWidget = (list?: UnknownRecord[] | null) => !!list?.some(c => c.widget);
+    console.log('[contact widget] check', { phoneNumber: contactPhoneNumber, contacts: contactInfo?.length ?? 0, withWidget: contactInfo?.filter((c: UnknownRecord) => c.widget).length ?? 0, isFromLocalCache: !!isFromLocalCache });
+    if (isFromLocalCache && (hasWidget(contactInfo) || await shouldProbeContactWidget({ platformName, contacts: contactInfo }))) {
+      contactWidgetResolvedSessions.add(data.call.sessionId);
+      const refreshed = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber, isForceRefresh: true, isForceRefreshAccountData: true });
+      if (refreshed.contactInfo?.length) {
+        ({ matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo } = refreshed);
+      }
+    }
+    if (hasWidget(contactInfo)) {
+      contactWidgetResolvedSessions.add(data.call.sessionId);
+      console.log(`contact widget found for ${contactPhoneNumber}`);
+      rememberContactWidgets({ phoneNumber: contactPhoneNumber, contacts: contactInfo, platformName });
+    }
+  }
   const callMatchedContact = contactInfo ?? [];
   const callLogSubject = data.call.direction === 'Inbound' ?
     `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
@@ -116,6 +138,8 @@ export async function onEvent({ data, popupContext }: EventOptions): Promise<voi
           });
         }
         window.postMessage({ type: 'rc-expandable-call-note-terminate' }, '*');
+        forgetContactWidgets(contactPhoneNumber);
+        contactWidgetResolvedSessions.delete(data.call.sessionId);
         const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null }) as {
           implementedInterfaces: UnknownRecord | null;
         };

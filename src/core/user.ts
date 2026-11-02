@@ -1,3 +1,4 @@
+import { registerContactWidgetAppIfSeen } from '../lib/contactWidget';
 import axios from 'axios';
 import moment from 'moment';
 import { getRcAccessToken, refreshRCToken } from '../lib/util';
@@ -224,6 +225,7 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
         type: 'rc-adapter-register-third-party-service',
         service
     }, '*');
+    await registerContactWidgetAppIfSeen(platformName);
     // CallLogger ignores auto-log updates until the third-party service is ready.
     RCAdapter.setAutoLog({ call: getEffectiveAutoLogCallValue(userSettings, isAdmin), message: autoLogMessagesGroupTrigger })
     // custom tabs

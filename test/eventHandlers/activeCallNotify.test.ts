@@ -607,4 +607,106 @@ describe('rc-active-call-notify event handler', () => {
       reason: 'complete-data-fallback',
     });
   });
+
+  const widgetCall = {
+    direction: 'Inbound',
+    sessionId: 'session-w',
+    telephonySessionId: 'telephony-w',
+    from: { phoneNumber: '+16505550100' },
+    to: { phoneNumber: '+18005550100' },
+  };
+  const widget = { schema: { type: 'object', properties: { title: { type: 'string' } } } };
+
+  it('shows the contact widget when the matched contact carries one, and clears it when the call ends', async () => {
+    seedStorage({ userSettings: {} });
+    vi.mocked(contactCore.getContact).mockResolvedValue({
+      matched: true,
+      contactInfo: [{ id: 'contact-1', name: 'Jane Smith', type: 'Lead', widget }],
+    });
+    const handler = await loadActiveCallHandler();
+
+    await handler.onEvent({ popupContext: {}, data: { requestId: 'r1', call: { ...widgetCall, telephonyStatus: 'Ringing' } } });
+    await handler.onEvent({ popupContext: {}, data: { requestId: 'r2', call: { ...widgetCall, telephonyStatus: 'CallConnected' } } });
+
+    expect(contactCore.getContact).toHaveBeenCalledTimes(2);
+    const registrations = getWidgetPostMessages().filter(({ message }) => message.type === 'rc-adapter-register-widget-app');
+    expect(registrations).toHaveLength(1);
+    expect(registrations[0].message.app).toMatchObject({ id: 'app-connect-contact', name: 'App Connect Contact' });
+    const widgetLib = await import('../../src/lib/contactWidget.ts');
+    expect(widgetLib.getContactsWithWidget('+16505550100')).toHaveLength(1);
+
+    await handler.onEvent({ popupContext: {}, data: { requestId: 'r3', call: { ...widgetCall, telephonyStatus: 'NoCall', terminationType: 'final' } } });
+
+    expect(widgetLib.getContactsWithWidget('+16505550100')).toHaveLength(0);
+  });
+
+  it('refreshes a widget that came from the local contact cache once per call', async () => {
+    seedStorage({ userSettings: {} });
+    const fresh = { ...widget, formData: { title: 'fresh' } };
+    vi.mocked(contactCore.getContact)
+      .mockResolvedValueOnce({ matched: true, isFromLocalCache: true, contactInfo: [{ id: 'contact-1', name: 'Jane Smith', widget }] })
+      .mockResolvedValueOnce({ matched: true, contactInfo: [{ id: 'contact-1', name: 'Jane Smith', widget: fresh }] })
+      .mockResolvedValue({ matched: true, isFromLocalCache: true, contactInfo: [{ id: 'contact-1', name: 'Jane Smith', widget }] });
+    const handler = await loadActiveCallHandler();
+
+    await handler.onEvent({ popupContext: {}, data: { requestId: 'r1', call: { ...widgetCall, telephonyStatus: 'Ringing' } } });
+    await handler.onEvent({ popupContext: {}, data: { requestId: 'r2', call: { ...widgetCall, telephonyStatus: 'CallConnected' } } });
+
+    const calls = vi.mocked(contactCore.getContact).mock.calls;
+    expect(calls).toHaveLength(3);
+    expect(calls[1][0]).toMatchObject({ isForceRefresh: true, isForceRefreshAccountData: true });
+    expect(calls[2][0]).not.toHaveProperty('isForceRefresh');
+    const widgetLib = await import('../../src/lib/contactWidget.ts');
+    expect(widgetLib.getContactsWithWidget('+16505550100')[0].widget).toEqual(fresh);
+  });
+
+  it('keeps looking on later events when the first lookup has no widget', async () => {
+    seedStorage({ userSettings: {} });
+    vi.mocked(contactCore.getContact)
+      .mockResolvedValueOnce({ matched: false, contactInfo: null })
+      .mockResolvedValue({ matched: true, contactInfo: [{ id: 'contact-1', name: 'Jane Smith', widget }] });
+    const handler = await loadActiveCallHandler();
+
+    await handler.onEvent({ popupContext: {}, data: { requestId: 'r1', call: { ...widgetCall, telephonyStatus: 'Ringing' } } });
+    expect(getWidgetPostMessages().some(({ message }) => message.type === 'rc-adapter-register-widget-app')).toBe(false);
+
+    await handler.onEvent({ popupContext: {}, data: { requestId: 'r2', call: { ...widgetCall, telephonyStatus: 'CallConnected' } } });
+
+    expect(getWidgetPostMessages().filter(({ message }) => message.type === 'rc-adapter-register-widget-app')).toHaveLength(1);
+  });
+
+  it('probes a cached contact without a widget once, then picks up the widget the server returns', async () => {
+    seedStorage({ userSettings: {} });
+    vi.mocked(contactCore.getContact)
+      .mockResolvedValueOnce({ matched: true, isFromLocalCache: true, contactInfo: [{ id: 'contact-1', name: 'Jane Smith' }] })
+      .mockResolvedValueOnce({ matched: true, contactInfo: [{ id: 'contact-1', name: 'Jane Smith', widget }] });
+    const handler = await loadActiveCallHandler();
+
+    await handler.onEvent({ popupContext: {}, data: { requestId: 'r1', call: { ...widgetCall, telephonyStatus: 'Ringing' } } });
+
+    const calls = vi.mocked(contactCore.getContact).mock.calls;
+    expect(calls).toHaveLength(2);
+    expect(calls[1][0]).toMatchObject({ isForceRefresh: true, isForceRefreshAccountData: true });
+    expect(getWidgetPostMessages().filter(({ message }) => message.type === 'rc-adapter-register-widget-app')).toHaveLength(1);
+  });
+
+  it('does not probe a cached contact without a widget again within a day', async () => {
+    seedStorage({ userSettings: {}, 'contactWidgetProbeAt-salesforce': Date.now() });
+    vi.mocked(contactCore.getContact).mockResolvedValue({ matched: true, isFromLocalCache: true, contactInfo: [{ id: 'contact-1', name: 'Jane Smith' }] });
+    const handler = await loadActiveCallHandler();
+
+    await handler.onEvent({ popupContext: {}, data: { requestId: 'r1', call: { ...widgetCall, telephonyStatus: 'Ringing' } } });
+
+    expect(contactCore.getContact).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not register a widget app when no matched contact carries a widget', async () => {
+    seedStorage({ userSettings: {} });
+    const handler = await loadActiveCallHandler();
+
+    await handler.onEvent({ popupContext: {}, data: { requestId: 'r1', call: { ...widgetCall, telephonyStatus: 'Ringing' } } });
+
+    expect(contactCore.getContact).toHaveBeenCalledTimes(1);
+    expect(getWidgetPostMessages().some(({ message }) => message.type === 'rc-adapter-register-widget-app')).toBe(false);
+  });
 });

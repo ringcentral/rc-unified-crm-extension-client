@@ -129,6 +129,19 @@ describe('contact core', () => {
     ]);
   });
 
+  it('keeps the contact widget from the local cache and flags the result as cached', async () => {
+    const widget = { schema: { type: 'object', properties: { title: { type: 'string' } } } };
+    getWidgetFrameWindow().app.modules.ContactMatcher.data = {
+      '16505550100': { salesforce: { data: [{ id: 'contact-1', name: 'Jane Doe', contactType: 'Lead', widget }] } },
+    };
+    const contactCore = await loadContactCore();
+
+    expect(contactCore.getLocalCachedContact({ phoneNumber: '16505550100', platformName: 'salesforce' })[0].widget).toEqual(widget);
+    const result = await contactCore.getContact({ serverUrl: 'https://server.example', phoneNumber: '16505550100', platformName: 'salesforce' });
+    expect(result.isFromLocalCache).toBe(true);
+    expect(result.contactInfo[0].widget).toEqual(widget);
+  });
+
   it('returns an empty local cache result when cache layers are missing', async () => {
     const contactCore = await loadContactCore();
 

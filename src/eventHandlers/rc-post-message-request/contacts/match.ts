@@ -40,7 +40,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             contactType: c.type,
             createdDate: c.createdDate,
             mostRecentActivityDate: c.mostRecentActivityDate,
-            additionalInfo: c.additionalInfo
+            additionalInfo: c.additionalInfo,
+            widget: c.widget
         }));
         const cachedSearchContactKey = `rc-crm-search-contact-${data.body.phoneNumbers[0]}`;
         const storageObj = await chrome.storage.local.get(cachedSearchContactKey) as UnknownRecord;
@@ -61,7 +62,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
                     contactType: cachedContact.type,
                     createdDate: cachedContact.createdDate,
                     mostRecentActivityDate: cachedContact.mostRecentActivityDate,
-                    additionalInfo: cachedContact.additionalInfo
+                    additionalInfo: cachedContact.additionalInfo,
+                    widget: cachedContact.widget
                 });
             }
         }
@@ -106,6 +108,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
                             contactType: contactInfoItem.type,
                             createdDate: contactInfoItem.createdDate,
                             additionalInfo: contactInfoItem.additionalInfo,
+                            widget: contactInfoItem.widget,
                             mostRecentActivityDate: contactInfoItem.mostRecentActivityDate
                         });
                     }

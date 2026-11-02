@@ -16,6 +16,7 @@ import messageLoggerMatchHandler from './messageLogger/match';
 import messageLoggerOpenLogHandler from './messageLogger/openLog';
 import settingsHandler from './settings';
 import customButtonClickHandler from './custom-button-click';
+import appConnectContactWidgetHandler from './sidebarApps/appConnectContact';
 import authCore from '../../core/auth';
 
 type UnknownRecord = Record<string, any>;
@@ -77,6 +78,11 @@ async function onEvent({ data }: EventOptions) {
       break;
     case '/settings':
       await settingsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+      break;
+    case '/sidebarApps/app-connect-contact':
+    case '/sidebarApps/app-connect-contact/inputChanged':
+    case '/sidebarApps/app-connect-contact/button-click':
+      await appConnectContactWidgetHandler.onEvent({ data, manifest, platformName });
       break;
     case '/custom-button-click':
       await customButtonClickHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
