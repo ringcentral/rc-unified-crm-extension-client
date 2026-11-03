@@ -546,7 +546,6 @@ describe('user service behavior', () => {
       serverUrl: 'https://server.example',
       platforms: {
         salesforce: {
-          isSelectedMessageLogSupported: true,
           page: {
             appointment: {
               supported: false,
@@ -588,7 +587,6 @@ describe('user service behavior', () => {
       serverUrl: 'https://server.example',
       platforms: {
         salesforce: {
-          isSelectedMessageLogSupported: true,
           page: {
             appointment: {
               supported: false,

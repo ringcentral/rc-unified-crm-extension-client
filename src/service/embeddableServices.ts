@@ -82,8 +82,7 @@ async function getServiceManifest() {
     // is enabled, so the two never apply at the same time. The relationship is
     // one-directional: enabling `selectedMessageLog` never hides `autoLogSMS`.
     const autoLogSMSValue = userCore.getAutoLogSMSSetting(userSettings).value === true;
-    const selectedMessageLogSupported = platform?.isSelectedMessageLogSupported === true;
-    const showSelectedMessageLog = selectedMessageLogSupported && !autoLogSMSValue;
+    const showSelectedMessageLog = !autoLogSMSValue;
 
     // The embeddable widget only renders per-message selection checkboxes in
     // manual SMS mode (`!conversationLogger.autoLog`). It syncs its internal
@@ -92,12 +91,9 @@ async function getServiceManifest() {
     // keeps its own persisted flag, which can get stuck ON and permanently
     // suppress the checkboxes. Because the in-widget auto-log toggle is hidden
     // (`messageLoggerAutoSettingHidden: true`) the extension settings page is the
-    // sole source of truth, so on platforms that support selected-message logging
-    // we mark the auto setting read-only. That makes the widget always adopt our
-    // `autoLogSMS` value (off => manual mode => checkboxes render).
-    const messageLoggerAutoSettingReadOnly = selectedMessageLogSupported
-        ? true
-        : userCore.getAutoLogSMSSetting(userSettings).readOnly;
+    // sole source of truth, so we mark the auto setting read-only. That makes the
+    // widget always adopt our `autoLogSMS` value (off => manual mode => checkboxes render).
+    const messageLoggerAutoSettingReadOnly = true;
 
     const services: UnknownRecord = {
         name: platformName,
@@ -138,15 +134,12 @@ async function getServiceManifest() {
         // Where the widget posts a click on a message's "logged" icon so we can
         // open the corresponding CRM log record.
         messageLoggerOpenLogPath: '/messageLogger/openLog',
-        // Enable per-message selection UI ONLY when the platform manifest opts in
-        // via `isSelectedMessageLogSupported: true`. Otherwise the widget keeps
-        // the existing message-logging behavior (for both auto and manual).
         // NOTE: the embeddable widget reads this exact key (`messageLoggerGranularSelectionEnabled`)
         // to decide whether to render per-message checkboxes; the widget additionally
         // requires manual SMS mode (auto-log off) and a non-thread conversation.
-        // The feature also honors the user/admin `selectedMessageLog` setting: when
-        // turned off, checkboxes are hidden and message logging stays whole-conversation.
-        messageLoggerGranularSelectionEnabled: userCore.isSelectedMessageLogEnabled({ platform, userSettings }),
+        // Controlled by the user/admin `selectedMessageLog` setting: when turned
+        // off, checkboxes are hidden and message logging stays whole-conversation.
+        messageLoggerGranularSelectionEnabled: userCore.isSelectedMessageLogEnabled({ userSettings }),
         messageLoggerAutoSettingLabel: t('settings.logging.autoLogSMS'),
         messageLoggerAutoSettingReadOnly,
         messageLoggerAutoSettingReadOnlyReason: userCore.getAutoLogSMSSetting(userSettings).readOnlyReason,

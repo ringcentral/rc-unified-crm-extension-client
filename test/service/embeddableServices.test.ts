@@ -60,11 +60,10 @@ function userCoreProxy(overrides: Record<PropertyKey, any> = {}) {
             case 'getSelectedMessageLogSetting':
               return setting(userSettings?.selectedMessageLog?.value ?? false);
             case 'isSelectedMessageLogEnabled': {
-              // Called as isSelectedMessageLogEnabled({ platform, userSettings }),
-              // so the first (userSettings) arg is actually the options object.
-              const opts = (userSettings ?? {}) as { platform?: any; userSettings?: any };
-              return opts?.platform?.isSelectedMessageLogSupported === true
-                && (opts?.userSettings?.selectedMessageLog?.value ?? false) === true;
+              // Called as isSelectedMessageLogEnabled({ userSettings }), so the
+              // first (userSettings) arg is actually the options object.
+              const opts = (userSettings ?? {}) as { userSettings?: any };
+              return (opts?.userSettings?.selectedMessageLog?.value ?? false) === true;
             }
             default:
               return setting(userSettings?.[prop]?.value ?? false);
@@ -299,7 +298,7 @@ describe('embeddableServices', () => {
     expect(authCore.getLicenseStatus).toHaveBeenCalledWith({ serverUrl: 'https://server.example' });
   });
 
-  it('enables selected-message logging when the platform opts in and the setting is enabled', async () => {
+  it('enables selected-message logging when the setting is enabled, without a manifest flag', async () => {
     seedStorage({
       isAdmin: false,
       crmAuthed: true,
@@ -308,7 +307,6 @@ describe('embeddableServices', () => {
       userSettings: { selectedMessageLog: { value: true } },
     });
     const manifestValue = manifest();
-    (manifestValue.platforms.googleSheets as Record<string, any>).isSelectedMessageLogSupported = true;
     const { embeddableServices } = await loadEmbeddableServices({ manifestValue });
 
     const service = await embeddableServices.getServiceManifest();
@@ -316,7 +314,7 @@ describe('embeddableServices', () => {
     expect(service.messageLoggerGranularSelectionEnabled).toBe(true);
   });
 
-  it('marks the message auto setting read-only on platforms that support selected-message logging so the widget adopts our auto value', async () => {
+  it('marks the message auto setting read-only so the widget adopts our auto value', async () => {
     seedStorage({
       isAdmin: false,
       crmAuthed: true,
@@ -325,10 +323,9 @@ describe('embeddableServices', () => {
       userSettings: { selectedMessageLog: { value: true } },
     });
     const manifestValue = manifest();
-    (manifestValue.platforms.googleSheets as Record<string, any>).isSelectedMessageLogSupported = true;
     // Even though the auto-log SMS setting is customizable (readOnly false),
-    // supporting platforms must register read-only so the widget syncs its
-    // internal autoLog from our value and cannot stay stuck ON.
+    // it must register read-only so the widget syncs its internal autoLog from
+    // our value and cannot stay stuck ON.
     const { embeddableServices } = await loadEmbeddableServices({
       manifestValue,
       userCoreOverrides: { getAutoLogSMSSetting: false },
@@ -349,7 +346,6 @@ describe('embeddableServices', () => {
       userSettings: { selectedMessageLog: { value: false } },
     });
     const manifestValue = manifest();
-    (manifestValue.platforms.googleSheets as Record<string, any>).isSelectedMessageLogSupported = true;
     const { embeddableServices } = await loadEmbeddableServices({ manifestValue });
 
     const service = await embeddableServices.getServiceManifest();
@@ -366,7 +362,6 @@ describe('embeddableServices', () => {
       userSettings: { selectedMessageLog: { value: false } },
     });
     const manifestValue = manifest();
-    (manifestValue.platforms.googleSheets as Record<string, any>).isSelectedMessageLogSupported = true;
     // Default getAutoLogSMSSetting mock returns value true.
     const { embeddableServices } = await loadEmbeddableServices({ manifestValue });
 
@@ -388,7 +383,6 @@ describe('embeddableServices', () => {
       userSettings: { selectedMessageLog: { value: true } },
     });
     const manifestValue = manifest();
-    (manifestValue.platforms.googleSheets as Record<string, any>).isSelectedMessageLogSupported = true;
     const { embeddableServices } = await loadEmbeddableServices({
       manifestValue,
       userCoreOverrides: { getAutoLogSMSSetting: false },

@@ -199,7 +199,7 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
     // granular selected-message logging is enabled we MUST keep message auto-log
     // off — otherwise a user with voicemail/fax (or SMS) auto-log on would force
     // `autoLog` true and permanently suppress the checkboxes.
-    const selectedMessageLogEnabled = isSelectedMessageLogEnabled({ platform: manifest?.platforms?.[platformName], userSettings });
+    const selectedMessageLogEnabled = isSelectedMessageLogEnabled({ userSettings });
     const autoLogMessagesGroupTrigger = !selectedMessageLogEnabled
         && ((userSettings?.autoLogSMS?.value ?? false) || (userSettings?.autoLogInboundFax?.value ?? false) || (userSettings?.autoLogOutboundFax?.value ?? false) || (userSettings?.autoLogVoicemail?.value ?? false));
     const isServerSideLoggingEnabledForEndUsers = (userSettings?.serverSideLogging?.enable && userSettings?.serverSideLogging?.loggingLevel === 'Account') ?? false;
@@ -345,12 +345,11 @@ function getSelectedMessageLogSetting(userSettings) {
     }
 }
 
-// Effective gate for the selected-message logging feature: the platform must
-// advertise support (`isSelectedMessageLogSupported`) AND the user/admin setting
-// must be enabled. Used by both the service manifest (to toggle the widget UI)
-// and the message-logger handler (to toggle the runtime behavior) so they never
-// diverge.
-function isSelectedMessageLogEnabled({ platform, userSettings }) {
+// Effective gate for the selected-message logging feature, available on every
+// platform: the user/admin setting must be enabled. Used by both the service
+// manifest (to toggle the widget UI) and the message-logger handler (to toggle
+// the runtime behavior) so they never diverge.
+function isSelectedMessageLogEnabled({ userSettings }) {
     // Automatic SMS logging takes precedence over granular selection. When
     // `autoLogSMS` is on, messages must be logged automatically as whole
     // conversations, so per-message selection is disabled (the widget hides the
@@ -358,8 +357,7 @@ function isSelectedMessageLogEnabled({ platform, userSettings }) {
     // still stored as `true`. The two values are not mutually exclusive at the
     // storage level (we only hide the `selectedMessageLog` UI while `autoLogSMS`
     // is enabled), so the precedence must be enforced here.
-    return platform?.isSelectedMessageLogSupported === true
-        && getSelectedMessageLogSetting(userSettings).value === true
+    return getSelectedMessageLogSetting(userSettings).value === true
         && getAutoLogSMSSetting(userSettings).value !== true;
 }
 

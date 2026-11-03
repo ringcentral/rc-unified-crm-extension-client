@@ -20,9 +20,8 @@ async function loadMessageLogger() {
     getNewContactTypeSetting: vi.fn((settings) => ({ value: settings?.newContactType?.value ?? null })),
     getNewContactNamePrefixSetting: vi.fn((settings) => ({ value: settings?.newContactNamePrefix?.value ?? 'PlaceholderContact' })),
     getSelectedMessageLogSetting: vi.fn((settings) => ({ value: settings?.selectedMessageLog?.value ?? false })),
-    isSelectedMessageLogEnabled: vi.fn(({ platform, userSettings } = {}) =>
-      platform?.isSelectedMessageLogSupported === true
-      && (userSettings?.selectedMessageLog?.value ?? false) === true),
+    isSelectedMessageLogEnabled: vi.fn(({ userSettings } = {}) =>
+      (userSettings?.selectedMessageLog?.value ?? false) === true),
   };
   vi.doMock('../../src/core/user.ts', () => ({ default: userCore }));
 
@@ -1053,7 +1052,7 @@ describe('messageLogger', () => {
         }),
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     // No CRM write on click; the contact-selection form is opened instead.
@@ -1103,7 +1102,7 @@ describe('messageLogger', () => {
         }),
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     // Feature turned off => selectedLog is a no-op: no CRM write and no form.
@@ -1146,7 +1145,7 @@ describe('messageLogger', () => {
         }),
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     // Logs directly (no form) using the same payload shape as normal manual
@@ -1199,7 +1198,7 @@ describe('messageLogger', () => {
         }),
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
     expect(logCore.addLog).not.toHaveBeenCalled();
 
@@ -1228,7 +1227,7 @@ describe('messageLogger', () => {
         },
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     expect(logCore.addLog).toHaveBeenCalledTimes(1);
@@ -1268,7 +1267,7 @@ describe('messageLogger', () => {
     await messageLogger.onEvent({
       data: eventFor({ triggerType: 'selectedLog', selectedMessageIds: ['m1'], conversation: pendingConversation() }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
     await messageLogger.onEvent({
       data: eventFor({
@@ -1277,12 +1276,12 @@ describe('messageLogger', () => {
         formData: { section_0: { ...singleContactForm, contactPhoneNumber: '+16505550200' } },
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
     await messageLogger.onEvent({
       data: eventFor({ triggerType: 'logForm', conversation: pendingConversation(), formData: singleContactForm }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     expect(logCore.addLog).toHaveBeenCalledTimes(2);
@@ -1306,7 +1305,7 @@ describe('messageLogger', () => {
       await messageLogger.onEvent({
         data: eventFor({ triggerType: 'selectedLog', selectedMessageIds: ['m1'], conversation: selectedConversation() }),
         ...context,
-        platform: { isSelectedMessageLogSupported: true },
+        platform: {},
       });
       vi.mocked(window.postMessage).mockClear();
       return messageLogger.onEvent({
@@ -1317,7 +1316,7 @@ describe('messageLogger', () => {
           formData: { contact: 'contact-1', contactType: 'Lead', contactName: 'Jane Smith', newContactName: '', newContactType: '' },
         }),
         ...context,
-        platform: { isSelectedMessageLogSupported: true },
+        platform: {},
       });
     }
 
@@ -1381,7 +1380,7 @@ describe('messageLogger', () => {
         }),
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     // The widget submits one logForm per day-bucket in parallel (Promise.all).
@@ -1404,7 +1403,7 @@ describe('messageLogger', () => {
         },
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
     await Promise.all([dayBucket('day-1', 'm1'), dayBucket('day-2', 'm3')]);
 
@@ -1438,7 +1437,7 @@ describe('messageLogger', () => {
           conversation: thread,
         }),
         ...context,
-        platform: { isSelectedMessageLogSupported: true },
+        platform: {},
       });
       const submit = () => messageLogger.onEvent({
         data: eventFor({
@@ -1454,7 +1453,7 @@ describe('messageLogger', () => {
           },
         }),
         ...context,
-        platform: { isSelectedMessageLogSupported: true },
+        platform: {},
       });
 
       await select(['m1']);
@@ -1499,7 +1498,7 @@ describe('messageLogger', () => {
         }),
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     // Auto-update ("keep already-logged conversation in sync") is disabled in
@@ -1508,14 +1507,14 @@ describe('messageLogger', () => {
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
   });
 
-  it('ignores selectedLog events when the platform does not support selected message logging', async () => {
+  it('handles selectedLog events on platforms whose manifest has no selected-message flag', async () => {
     seedStorage({
       userSettings: {
         autoLogSMS: { value: false },
         selectedMessageLog: { value: true },
       },
     });
-    const { messageLogger, logCore, logPage, contactCore, util } = await loadMessageLogger();
+    const { messageLogger, logCore, logPage, util } = await loadMessageLogger();
 
     await messageLogger.onEvent({
       data: eventFor({
@@ -1529,8 +1528,8 @@ describe('messageLogger', () => {
       platform: {},
     });
 
-    expect(contactCore.getContact).not.toHaveBeenCalled();
-    expect(logPage.getLogPageRender).not.toHaveBeenCalled();
+    // No contact resolved yet, so the selection is kept and the log form opens.
+    expect(logPage.getLogPageRender).toHaveBeenCalled();
     expect(logCore.addLog).not.toHaveBeenCalled();
     expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
   });
@@ -1553,7 +1552,7 @@ describe('messageLogger', () => {
         }),
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
@@ -1580,7 +1579,7 @@ describe('messageLogger', () => {
         conversation: conversation({ messages: undefined }),
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
@@ -1612,7 +1611,7 @@ describe('messageLogger', () => {
         }),
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
@@ -1646,7 +1645,7 @@ describe('messageLogger', () => {
         }),
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     expect(logPage.getLogPageRender).toHaveBeenNthCalledWith(1, expect.objectContaining({
@@ -1664,7 +1663,7 @@ describe('messageLogger', () => {
         }),
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     expect(logPage.getLogPageRender).toHaveBeenNthCalledWith(2, expect.objectContaining({ messageDate: '' }));
@@ -1683,7 +1682,7 @@ describe('messageLogger', () => {
         }),
         ...context,
         manifest: manifestValue,
-        platform: { isSelectedMessageLogSupported: true },
+        platform: {},
       });
     }
 
@@ -1699,7 +1698,7 @@ describe('messageLogger', () => {
         }),
         ...context,
         manifest: manifestValue,
-        platform: { isSelectedMessageLogSupported: true },
+        platform: {},
       });
     }
 
@@ -1833,7 +1832,7 @@ describe('messageLogger', () => {
         conversation: thread,
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     await messageLogger.onEvent({
@@ -1843,7 +1842,7 @@ describe('messageLogger', () => {
         conversation: thread,
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     await messageLogger.onEvent({
@@ -1861,7 +1860,7 @@ describe('messageLogger', () => {
         },
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     expect(logCore.addLog).toHaveBeenCalledTimes(1);
@@ -1892,7 +1891,7 @@ describe('messageLogger', () => {
         conversation: selectedThread,
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     await messageLogger.onEvent({
@@ -1901,7 +1900,7 @@ describe('messageLogger', () => {
         conversation: conversation({ conversationId: 'background-conversation' }),
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     await messageLogger.onEvent({
@@ -1919,7 +1918,7 @@ describe('messageLogger', () => {
         },
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     expect(logCore.addLog).toHaveBeenCalledTimes(1);
@@ -1953,7 +1952,7 @@ describe('messageLogger', () => {
         conversation: thread,
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     await messageLogger.onEvent({
@@ -1973,7 +1972,7 @@ describe('messageLogger', () => {
         },
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     await messageLogger.onEvent({
@@ -1990,7 +1989,7 @@ describe('messageLogger', () => {
         },
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     expect(logCore.addLog.mock.calls.every((call) => call[0].selectedMessageIds === undefined)).toBe(true);
@@ -2062,7 +2061,7 @@ describe('messageLogger', () => {
         }),
       }),
       ...context,
-      platform: { isSelectedMessageLogSupported: true },
+      platform: {},
     });
 
     expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
@@ -2095,7 +2094,7 @@ describe('messageLogger', () => {
       await messageLogger.onEvent({
         data: eventFor({ triggerType: 'selectedLog', selectedMessageIds: ['m1'], conversation: thread }),
         ...context,
-        platform: { isSelectedMessageLogSupported: true },
+        platform: {},
       });
       vi.advanceTimersByTime(10 * 60 * 1000 + 1);
       await messageLogger.onEvent({
@@ -2112,7 +2111,7 @@ describe('messageLogger', () => {
           },
         }),
         ...context,
-        platform: { isSelectedMessageLogSupported: true },
+        platform: {},
       });
 
       expect(logCore.addLog).toHaveBeenCalledTimes(1);

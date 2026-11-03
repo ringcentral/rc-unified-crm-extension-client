@@ -391,32 +391,20 @@ describe('user settings getters', () => {
       });
     });
 
-    it('is effectively enabled only when the platform supports it and the setting is on', () => {
-      const supported = { isSelectedMessageLogSupported: true };
-      const unsupported = { isSelectedMessageLogSupported: false };
-      // Platform supports + default (off) => disabled
-      expect(userCore.isSelectedMessageLogEnabled({ platform: supported, userSettings: {} })).toBe(false);
-      // Platform supports + user turned it on => enabled
+    it('is effectively enabled on every platform when the setting is on', () => {
+      // Default (off) => disabled
+      expect(userCore.isSelectedMessageLogEnabled({ userSettings: {} })).toBe(false);
+      // User turned it on => enabled
       expect(userCore.isSelectedMessageLogEnabled({
-        platform: supported,
         userSettings: { selectedMessageLog: { value: true } },
       })).toBe(true);
-      // Platform supports + user turned it off => disabled
+      // User turned it off => disabled
       expect(userCore.isSelectedMessageLogEnabled({
-        platform: supported,
         userSettings: { selectedMessageLog: { value: false } },
       })).toBe(false);
-      // Platform does not support => disabled regardless of setting
-      expect(userCore.isSelectedMessageLogEnabled({
-        platform: unsupported,
-        userSettings: { selectedMessageLog: { value: true } },
-      })).toBe(false);
-      // Missing platform => disabled
-      expect(userCore.isSelectedMessageLogEnabled({ userSettings: {} })).toBe(false);
       // Automatic SMS logging takes precedence: even with selected-message logging
       // stored as on, granular selection is disabled while autoLogSMS is on.
       expect(userCore.isSelectedMessageLogEnabled({
-        platform: supported,
         userSettings: {
           selectedMessageLog: { value: true },
           autoLogSMS: { value: true },
