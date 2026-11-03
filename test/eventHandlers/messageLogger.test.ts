@@ -50,6 +50,30 @@ async function loadMessageLogger() {
       defaulted: true,
     })),
     cacheLogPageData: vi.fn(async () => {}),
+    resolveMultipleContactsByPreference: vi.fn(({ contactInfo = [], preference } = {}) => {
+      const existingContacts = (contactInfo || []).filter((contact) => !contact.isNewContact);
+      if (preference === 'firstAlphabetical') {
+        const contact = [...existingContacts].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))[0] ?? null;
+        return { contact, resolved: !!contact, missingCreatedDate: false };
+      }
+      if (preference === 'mostRecentActivity') {
+        const contact = [...existingContacts]
+          .filter((item) => item.mostRecentActivityDate)
+          .sort((a, b) => new Date(b.mostRecentActivityDate).getTime() - new Date(a.mostRecentActivityDate).getTime())[0] ?? null;
+        return { contact, resolved: !!contact, missingCreatedDate: false };
+      }
+      if (preference === 'earliestCreated') {
+        const missingCreatedDate = existingContacts.some((contact) => !contact.createdDate);
+        if (missingCreatedDate) {
+          return { contact: null, resolved: false, missingCreatedDate: true };
+        }
+        const contact = [...existingContacts].sort(
+          (a, b) => new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime(),
+        )[0] ?? null;
+        return { contact, resolved: !!contact, missingCreatedDate: false };
+      }
+      return { contact: null, resolved: false, missingCreatedDate: false };
+    }),
   };
   vi.doMock('../../src/lib/logUtil.ts', () => logUtil);
 
@@ -649,6 +673,9 @@ describe('messageLogger', () => {
       }),
       ...context,
     });
+    expect(logUtil.resolveMultipleContactsByPreference).toHaveBeenCalledWith(expect.objectContaining({
+      preference: 'firstAlphabetical',
+    }));
     expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
       contactId: 'a-contact',
     }));
@@ -674,8 +701,236 @@ describe('messageLogger', () => {
       }),
       ...context,
     });
+    expect(logUtil.resolveMultipleContactsByPreference).toHaveBeenCalledWith(expect.objectContaining({
+      preference: 'mostRecentActivity',
+    }));
     expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
       contactId: 'a-contact',
+    }));
+  });
+
+  it('logs one-to-one SMS, voicemail, and fax using the multiple-contact preference', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: true },
+        multipleContactsPreference: { value: 'firstAlphabetical' },
+      },
+    });
+    const { messageLogger, contactCore, logUtil, logCore, util } = await loadMessageLogger();
+    const matchedContacts = [
+      { id: 'z-contact', type: 'Lead', name: 'Zoe Zeta', createdDate: '2026-07-02T08:00:00Z', mostRecentActivityDate: '2026-07-01T08:00:00Z' },
+      { id: 'a-contact', type: 'Lead', name: 'Amy Alpha', createdDate: '2026-07-01T08:00:00Z', mostRecentActivityDate: '2026-07-03T08:00:00Z' },
+    ];
+    contactCore.getContact.mockResolvedValue({ contactInfo: matchedContacts });
+    logUtil.getLogConflictInfo.mockResolvedValue({
+      hasConflict: true,
+      conflictType: CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE,
+      autoSelectAdditionalSubmission: { disposition: 'sms' },
+      requireManualDisposition: false,
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor(),
+      ...context,
+    });
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'a-contact',
+      contactName: 'Amy Alpha',
+      additionalSubmission: { disposition: 'sms' },
+    }));
+    expect(util.showNotification).not.toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('Message not logged'),
+    }));
+
+    seedStorage({
+      userSettings: {
+        autoLogVoicemail: { value: true },
+        multipleContactsPreference: { value: 'mostRecentActivity' },
+      },
+    });
+    logCore.addLog.mockClear();
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          conversationId: 'voicemail-pref',
+          conversationLogId: 'voicemail-pref-log',
+          type: 'VoiceMail',
+        }),
+      }),
+      ...context,
+    });
+    expect(logUtil.resolveMultipleContactsByPreference).toHaveBeenCalledWith(expect.objectContaining({
+      preference: 'mostRecentActivity',
+    }));
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'a-contact',
+      contactName: 'Amy Alpha',
+    }));
+
+    seedStorage({
+      userSettings: {
+        autoLogInboundFax: { value: true },
+        multipleContactsPreference: { value: 'earliestCreated' },
+      },
+    });
+    logCore.addLog.mockClear();
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          conversationId: 'fax-pref',
+          conversationLogId: 'fax-pref-log',
+          type: 'Fax',
+          messages: [{ creationTime: '2026-07-03T08:00:00Z', direction: 'Inbound' }],
+        }),
+      }),
+      ...context,
+    });
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'a-contact',
+      contactName: 'Amy Alpha',
+    }));
+  });
+
+  it('still skips one-to-one SMS when the multiple-contact preference is skip logging', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: true },
+        multipleContactsPreference: { value: 'skipLogging' },
+      },
+    });
+    const { messageLogger, contactCore, logUtil, logCore, util } = await loadMessageLogger();
+    contactCore.getContact.mockResolvedValue({
+      contactInfo: [
+        { id: 'contact-a', type: 'Lead', name: 'Amy Alpha' },
+        { id: 'contact-b', type: 'Lead', name: 'Zoe Zeta' },
+      ],
+    });
+    logUtil.getLogConflictInfo.mockResolvedValue({
+      hasConflict: true,
+      conflictType: CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE,
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor(),
+      ...context,
+    });
+
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      message: 'Message not logged. Multiple contacts found.',
+    }));
+  });
+
+  it('warns and skips when the earliest-created preference is missing created dates', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: true },
+        multipleContactsPreference: { value: 'earliestCreated' },
+      },
+    });
+    const { messageLogger, contactCore, logUtil, logCore, util } = await loadMessageLogger();
+    contactCore.getContact.mockResolvedValue({
+      contactInfo: [
+        { id: 'contact-a', type: 'Lead', name: 'Amy Alpha', createdDate: '2026-07-01T08:00:00Z' },
+        { id: 'contact-b', type: 'Lead', name: 'Zoe Zeta' },
+      ],
+    });
+    logUtil.getLogConflictInfo.mockResolvedValue({
+      hasConflict: true,
+      conflictType: CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE,
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor(),
+      ...context,
+    });
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('Message not logged. The earliest-created contact resolver requires every matched contact to include a created date.'),
+    }));
+
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: true },
+        multipleContactsPreference: { value: 'earliestCreated' },
+      },
+    });
+    util.showNotification.mockClear();
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          conversationId: 'group-missing-created',
+          conversationLogId: 'group-missing-created-log',
+          correspondents: [
+            { phoneNumber: '+16505550100' },
+            { phoneNumber: '+16505550200' },
+          ],
+        }),
+      }),
+      ...context,
+    });
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('Group message not logged. The earliest-created contact resolver requires every matched contact to include a created date.'),
+    }));
+  });
+
+  it('creates a placeholder contact for an unknown one-to-one SMS when configured', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: true },
+        unknownContactPreference: { value: 'createNewPlaceholderContact' },
+        newContactType: { value: 'Lead' },
+        newContactNamePrefix: { value: 'Prefix ' },
+      },
+    });
+    const { messageLogger, contactCore, logUtil, logCore } = await loadMessageLogger();
+    contactCore.getContact.mockResolvedValue({
+      contactInfo: [{
+        isNewContact: true,
+        additionalInfo: {
+          Lead: {
+            category: [{ const: 'prospect', title: 'Prospect' }],
+          },
+        },
+      }],
+    });
+    logUtil.getLogConflictInfo.mockResolvedValue({
+      hasConflict: true,
+      conflictType: CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE,
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          correspondents: [{ phoneNumber: '+16505550100', name: 'Jane' }],
+        }),
+      }),
+      ...context,
+      platform: {
+        page: {
+          newContact: {
+            additionalFields: [{ const: 'category' }],
+          },
+        },
+      },
+    });
+
+    expect(contactCore.createContact).toHaveBeenCalledWith(expect.objectContaining({
+      phoneNumber: '+16505550100',
+      newContactName: 'Prefix Jane +16505550100',
+      newContactType: 'Lead',
+      additionalSubmission: { category: 'prospect' },
+    }));
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'new-contact',
+      contactName: 'New Contact',
     }));
   });
 
