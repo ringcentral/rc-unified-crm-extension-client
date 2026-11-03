@@ -159,6 +159,65 @@ describe('rc-post-message-request router', () => {
     expect(callLoggerIndexHandler.onEvent).not.toHaveBeenCalled();
   });
 
+  it('shows the connect warning only once per session for background logger events', async () => {
+    vi.mocked(authCore.syncCrmAuthedFromStorage).mockResolvedValue(false);
+    const router = await loadPostMessageRouter();
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1_000_000);
+
+    try {
+      const backgroundEvents = [
+        ['/callLogger', 'callLogSync'],
+        ['/callLogger', 'presenceUpdate'],
+        ['/messageLogger', 'auto'],
+      ];
+      for (const [index, [path, triggerType]] of backgroundEvents.entries()) {
+        await router.onEvent({ data: { path, requestId: `bg-${index}`, body: { triggerType } } });
+      }
+      // Background replays after the cooldown still do not repeat the warning.
+      nowSpy.mockReturnValue(1_000_000 + 60_000);
+      await router.onEvent({ data: { path: '/messageLogger', requestId: 'bg-late', body: { triggerType: 'auto' } } });
+
+      expect(showNotification).toHaveBeenCalledTimes(1);
+      expect(showNotification).toHaveBeenCalledWith({
+        level: 'warning',
+        message: 'Please go to user settings page and connect to your Salesforce account.',
+        ttl: 60000,
+      });
+      for (const requestId of ['bg-0', 'bg-1', 'bg-2', 'bg-late']) {
+        expect(responseMessage).toHaveBeenCalledWith(requestId, { data: 'ok' });
+      }
+      expect(callLoggerIndexHandler.onEvent).not.toHaveBeenCalled();
+      expect(messageLoggerIndexHandler.onEvent).not.toHaveBeenCalled();
+
+      // A user action after the cooldown still reminds the user.
+      await router.onEvent({ data: { path: '/callLogger', requestId: 'user-1', body: { triggerType: 'createLog' } } });
+      expect(showNotification).toHaveBeenCalledTimes(2);
+    }
+    finally {
+      nowSpy.mockRestore();
+    }
+  });
+
+  it('shows the connect warning once for a burst of user-triggered logger requests', async () => {
+    vi.mocked(authCore.syncCrmAuthedFromStorage).mockResolvedValue(false);
+    const router = await loadPostMessageRouter();
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1_000_000);
+
+    try {
+      await router.onEvent({ data: { path: '/messageLogger', requestId: 'r1', body: { triggerType: 'manual' } } });
+      await router.onEvent({ data: { path: '/callLogger', requestId: 'r2', body: { triggerType: 'createLog' } } });
+      expect(showNotification).toHaveBeenCalledTimes(1);
+      expect(responseMessage).toHaveBeenCalledWith('r2', { data: 'ok' });
+
+      nowSpy.mockReturnValue(1_000_000 + 5000);
+      await router.onEvent({ data: { path: '/messageLogger', requestId: 'r3', body: { triggerType: 'manual' } } });
+      expect(showNotification).toHaveBeenCalledTimes(2);
+    }
+    finally {
+      nowSpy.mockRestore();
+    }
+  });
+
   it('routes authorize requests with manifest and platform context', async () => {
     const router = await loadPostMessageRouter();
     const data = {
