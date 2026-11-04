@@ -497,6 +497,37 @@ describe('logUtil', () => {
       resolved: false,
       missingCreatedDate: true,
     });
+    expect(logUtil.resolveMultipleContactsByPreference({
+      contactInfo: [
+        { id: 'blank-b' },
+        { id: 'blank-a', name: null },
+      ],
+      preference: 'firstAlphabetical',
+    })).toMatchObject({
+      resolved: true,
+      missingCreatedDate: false,
+    });
+    expect(logUtil.resolveMultipleContactsByPreference({
+      contactInfo: [{ id: 'placeholder', name: 'New', isNewContact: true }],
+      preference: 'firstAlphabetical',
+    })).toEqual({
+      contact: null,
+      resolved: false,
+      missingCreatedDate: false,
+    });
+    expect(logUtil.resolveMultipleContactsByPreference({
+      contactInfo: [],
+      preference: 'mostRecentActivity',
+    })).toEqual({
+      contact: null,
+      resolved: false,
+      missingCreatedDate: false,
+    });
+    expect(logUtil.resolveMultipleContactsByPreference()).toEqual({
+      contact: null,
+      resolved: false,
+      missingCreatedDate: false,
+    });
   });
 
   it('resolves most recent activity for ISO timestamps with timezone offsets', async () => {

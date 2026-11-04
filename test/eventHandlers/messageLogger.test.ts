@@ -934,6 +934,133 @@ describe('messageLogger', () => {
     }));
   });
 
+  it('skips auto logging for unsupported message types and empty contact matches', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: true },
+      },
+    });
+    const { messageLogger, contactCore, logUtil, logCore, util } = await loadMessageLogger();
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          conversationId: 'thread-1',
+          conversationLogId: 'thread-log-1',
+          type: 'Thread',
+        }),
+      }),
+      ...context,
+    });
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(logUtil.getLogConflictInfo).toHaveBeenCalledWith(expect.objectContaining({
+      isAutoLog: false,
+    }));
+
+    contactCore.getContact.mockResolvedValueOnce({ contactInfo: null });
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: true,
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          conversationId: 'sms-null-match',
+          conversationLogId: 'sms-null-match-log',
+        }),
+      }),
+      ...context,
+    });
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(util.showNotification).toHaveBeenCalledWith(expect.objectContaining({
+      message: 'Message not logged. Multiple contacts found.',
+    }));
+
+    contactCore.getContact.mockResolvedValueOnce({ contactInfo: [] });
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: true,
+      conflictType: CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE,
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          conversationId: 'sms-empty-match',
+          conversationLogId: 'sms-empty-match-log',
+        }),
+      }),
+      ...context,
+    });
+    expect(logCore.addLog).not.toHaveBeenCalled();
+  });
+
+  it('creates a one-to-one placeholder when the platform has no new-contact fields', async () => {
+    seedStorage({
+      userSettings: {
+        autoLogSMS: { value: true },
+        unknownContactPreference: { value: 'createNewPlaceholderContact' },
+        newContactType: { value: 'Lead' },
+        newContactNamePrefix: { value: 'Prefix ' },
+      },
+    });
+    const { messageLogger, contactCore, logUtil, logCore } = await loadMessageLogger();
+    contactCore.getContact.mockResolvedValue({ contactInfo: [] });
+    logUtil.getLogConflictInfo.mockResolvedValue({
+      hasConflict: true,
+      conflictType: CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE,
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          correspondents: [{ phoneNumber: '+16505550100' }],
+        }),
+      }),
+      ...context,
+      platform: {
+        page: {
+          newContact: {},
+        },
+      },
+    });
+
+    expect(contactCore.createContact).toHaveBeenCalledWith(expect.objectContaining({
+      phoneNumber: '+16505550100',
+      newContactName: 'Prefix +16505550100',
+      additionalSubmission: {},
+    }));
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'new-contact',
+    }));
+
+    contactCore.createContact.mockClear();
+    await messageLogger.onEvent({
+      data: eventFor({
+        conversation: conversation({
+          conversationId: 'sms-placeholder-no-values',
+          conversationLogId: 'sms-placeholder-no-values-log',
+          correspondents: [{ phoneNumber: '+16505550123' }],
+        }),
+      }),
+      ...context,
+      platform: {
+        page: {
+          newContact: {
+            additionalFields: [{ const: 'category' }],
+          },
+        },
+      },
+    });
+    expect(contactCore.createContact).toHaveBeenCalledWith(expect.objectContaining({
+      phoneNumber: '+16505550123',
+      additionalSubmission: {},
+    }));
+  });
+
   it('skips SMS auto logging when disabled and logs voicemail without conflicts', async () => {
     seedStorage({
       userSettings: {
