@@ -2,7 +2,7 @@ import userCore from '../../../core/user';
 import { showNotification, responseMessage } from '../../../lib/util';
 import logCore from '../../../core/log';
 import contactCore from '../../../core/contact';
-import { getLogConflictInfo, logPageFormDataDefaulting, cacheLogPageData } from '../../../lib/logUtil';
+import { getLogConflictInfo, logPageFormDataDefaulting, cacheLogPageData, resolveMultipleContactsByPreference } from '../../../lib/logUtil';
 import moment from 'moment';
 import logPage from '../../../components/logPage';
 import groupLogPage from '../../../components/groupLogPage';
@@ -43,6 +43,70 @@ const PENDING_SELECTED_LOG_TTL_MS = 10 * 60 * 1000;
 // conversation. Keyed by conversationId. Entries are short-lived: consumed
 // after the single POST and cleared shortly after.
 const pendingSelectedLogs = new Map<string, PendingSelectedLog>();
+
+function unresolvedMessageLabel(conversationType: string): string {
+  switch (conversationType) {
+    case 'VoiceMail':
+      return 'Voicemail';
+    case 'Fax':
+      return 'Fax';
+    default:
+      return 'Message';
+  }
+}
+
+function earliestCreatedMissingFieldMessage(activityLabel: string): string {
+  return `${activityLabel} not logged. The earliest-created contact resolver requires every matched contact to include a created date. Contact your App Connect developer to add createdDate to the connector findContact response.`;
+}
+
+function isConversationAutoLogEnabled({
+  conversation,
+  isAutoLogSMS,
+  isAutoLogVoicemail,
+  isAutoLogInboundFax,
+  isAutoLogOutboundFax,
+}: UnknownRecord): boolean {
+  const direction = conversation.messages?.[0]?.direction;
+  switch (conversation.type) {
+    case 'SMS':
+      return isAutoLogSMS;
+    case 'VoiceMail':
+      return isAutoLogVoicemail;
+    case 'Fax':
+      return (direction === 'Inbound' && isAutoLogInboundFax) || (direction === 'Outbound' && isAutoLogOutboundFax);
+    default:
+      return false;
+  }
+}
+
+async function createAutoLogPlaceholderContact({
+  manifest,
+  platform,
+  userSettings,
+  phoneNumber,
+  correspondentName,
+  contactInfo,
+}: UnknownRecord): Promise<UnknownRecord> {
+  const newContactType = userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value;
+  const newContactName = userCore.getNewContactNamePrefixSetting(userSettings).value + (correspondentName ? `${correspondentName} ` : '') + phoneNumber;
+  const additionalSubmission: UnknownRecord = {};
+  if (platform.page?.newContact?.additionalFields) {
+    const newContactUnderType = contactInfo?.[0]?.additionalInfo?.[newContactType];
+    if (newContactUnderType) {
+      for (const fieldKey of Object.keys(newContactUnderType)) {
+        additionalSubmission[fieldKey] = Array.isArray(newContactUnderType[fieldKey]) ? newContactUnderType[fieldKey][0].const : newContactUnderType[fieldKey];
+      }
+    }
+  }
+  const newContactResp = await contactCore.createContact({
+    serverUrl: manifest.serverUrl,
+    phoneNumber,
+    newContactName,
+    newContactType,
+    additionalSubmission,
+  }) as UnknownRecord;
+  return newContactResp.contactInfo;
+}
 
 function getPendingSelectedLog(conversationId: string): PendingSelectedLog | undefined {
   const pending = pendingSelectedLogs.get(conversationId);
@@ -110,9 +174,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
   const messageLogPrefId = `rc-crm-conversation-pref-${data.body.conversation.conversationLogId}`;
   const existingConversationLogPref = await chrome.storage.local.get(messageLogPrefId) as UnknownRecord;
   let getContactMatchResult: any = null;
-  let hasConflict = false;
-  let autoSelectAdditionalSubmission: UnknownRecord = {};
-  let requireManualDisposition = false;
 
   // Render and open the message log form (contact-selection page) for the
   // current conversation. Shared by the auto-popup/manual-open flow and by the
@@ -266,6 +327,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
         const multipleContactsPreference = userCore.getMultipleContactsPreferenceSetting(userSettings).value;
         let groupRequireManualDisposition = false;
         let skippedMemberCount = 0;
+        let missingCreatedDateCount = 0;
         for (const correspondent of data.body.conversation.correspondents) {
           const contactInfo = (await contactCore.getContact({
             serverUrl: manifest.serverUrl,
@@ -286,26 +348,14 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
           // Sub-case: no matching contact for this member
           if (conflictInfo.conflictType === CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE) {
             if (unknownContactPreference === 'createNewPlaceholderContact') {
-              const newContactType = userCore.getNewContactTypeSetting(userSettings, platform.contactTypes).value;
-              let newContactName = (correspondent.name ? `${correspondent.name} ` : '') + correspondent.phoneNumber;
-              newContactName = userCore.getNewContactNamePrefixSetting(userSettings).value + newContactName;
-              let additionalSubmission = {};
-              if (platform.page?.newContact?.additionalFields) {
-                const newContactUnderType = contactInfo[0]?.additionalInfo?.[newContactType];
-                if (newContactUnderType) {
-                  for (const fieldKey of Object.keys(newContactUnderType)) {
-                    additionalSubmission[fieldKey] = Array.isArray(newContactUnderType[fieldKey]) ? newContactUnderType[fieldKey][0].const : newContactUnderType[fieldKey];
-                  }
-                }
-              }
-              const newContactResp = await contactCore.createContact({
-                serverUrl: manifest.serverUrl,
+              defaultingContact = await createAutoLogPlaceholderContact({
+                manifest,
+                platform,
+                userSettings,
                 phoneNumber: correspondent.phoneNumber,
-                newContactName,
-                newContactType,
-                additionalSubmission
-              }) as UnknownRecord;
-              defaultingContact = newContactResp.contactInfo;
+                correspondentName: correspondent.name,
+                contactInfo,
+              });
             }
             else {
               // Default: skip logging for this member
@@ -315,19 +365,19 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
           }
           // Sub-case: multiple contacts matched for this member
           else if (conflictInfo.conflictType === CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE) {
-            switch (multipleContactsPreference) {
-              case 'firstAlphabetical':
-                defaultingContact = [...existingContacts].sort((a, b) => a.name.localeCompare(b.name))[0];
-                break;
-              case 'mostRecentActivity':
-                defaultingContact = [...existingContacts].sort((a, b) => new Date(b.mostRecentActivityDate).getTime() - new Date(a.mostRecentActivityDate).getTime())[0];
-                break;
-              case 'skipLogging':
-              default:
-                // Default: skip logging for this member
-                skippedMemberCount++;
-                continue;
+            const resolution = resolveMultipleContactsByPreference({
+              contactInfo,
+              preference: multipleContactsPreference,
+            });
+            if (resolution.missingCreatedDate) {
+              missingCreatedDateCount++;
+              continue;
             }
+            if (!resolution.resolved || !resolution.contact) {
+              skippedMemberCount++;
+              continue;
+            }
+            defaultingContact = resolution.contact;
           }
           if (conflictInfo.requireManualDisposition) {
             groupRequireManualDisposition = true;
@@ -344,6 +394,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             contactName: defaultingContact?.name,
             contactPhoneNumber: correspondent.phoneNumber
           });
+        }
+        if (missingCreatedDateCount > 0) {
+          showNotification({ level: 'warning', message: earliestCreatedMissingFieldMessage('Group message'), ttl: 5000 });
         }
         if (skippedMemberCount > 0) {
           showNotification({ level: 'warning', message: `${skippedMemberCount} group member(s) could not be auto-logged (no match or multiple matches). Please log them manually.`, ttl: 5000 });
@@ -373,29 +426,66 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
       return;
     }
     else {
+      const correspondent = data.body.conversation.correspondents[0];
+      const shouldAutoLog = isConversationAutoLogEnabled({
+        conversation: data.body.conversation,
+        isAutoLogSMS,
+        isAutoLogVoicemail,
+        isAutoLogInboundFax,
+        isAutoLogOutboundFax,
+      });
       getContactMatchResult = (await contactCore.getContact({
         serverUrl: manifest.serverUrl,
-        phoneNumber: data.body.conversation.correspondents[0].phoneNumber,
+        phoneNumber: correspondent.phoneNumber,
         platformName
       })).contactInfo;
+      const matchedContacts = Array.isArray(getContactMatchResult) ? getContactMatchResult : [];
       const getLogConflictInfoResult = await getLogConflictInfo({
         platform,
-        isAutoLog: isAutoLogSMS,
+        isAutoLog: shouldAutoLog,
         contactInfo: getContactMatchResult,
         logType: 'messageLog',
         direction: '',
         isVoicemail: data.body.conversation.type === 'VoiceMail',
         isFax: data.body.conversation.type === 'Fax'
       });
-      hasConflict = getLogConflictInfoResult.hasConflict;
-      autoSelectAdditionalSubmission = getLogConflictInfoResult.autoSelectAdditionalSubmission;
-      requireManualDisposition = getLogConflictInfoResult.requireManualDisposition;
-    }
-    switch (data.body.conversation.type) {
-      case 'SMS':
-        if (isAutoLogSMS) {
-          // Sub-case: has conflict
-          if (hasConflict) {
+      let hasConflict = getLogConflictInfoResult.hasConflict;
+      const autoSelectAdditionalSubmission = getLogConflictInfoResult.autoSelectAdditionalSubmission;
+      const requireManualDisposition = getLogConflictInfoResult.requireManualDisposition;
+      let defaultingContact = matchedContacts[0] ?? null;
+      let autoLogSkipMessage: string | null = null;
+      if (shouldAutoLog && hasConflict) {
+        if (getLogConflictInfoResult.conflictType === CONSTANTS.UNKNOWN_CONTACT_CONFLICT_TYPE && userCore.getUnknownContactPreferenceSetting(userSettings).value === 'createNewPlaceholderContact') {
+          defaultingContact = await createAutoLogPlaceholderContact({
+            manifest,
+            platform,
+            userSettings,
+            phoneNumber: correspondent.phoneNumber,
+            correspondentName: correspondent.name,
+            contactInfo: matchedContacts,
+          });
+          hasConflict = false;
+        }
+        else if (getLogConflictInfoResult.conflictType === CONSTANTS.MULTIPLE_CONTACTS_CONFLICT_TYPE) {
+          const resolution = resolveMultipleContactsByPreference({
+            contactInfo: matchedContacts,
+            preference: userCore.getMultipleContactsPreferenceSetting(userSettings).value,
+          });
+          if (resolution.missingCreatedDate) {
+            autoLogSkipMessage = earliestCreatedMissingFieldMessage(unresolvedMessageLabel(data.body.conversation.type));
+          }
+          else if (resolution.resolved && resolution.contact) {
+            defaultingContact = resolution.contact;
+            hasConflict = false;
+          }
+        }
+      }
+      if (shouldAutoLog) {
+        if (hasConflict) {
+          if (autoLogSkipMessage) {
+            showNotification({ level: 'warning', message: autoLogSkipMessage, ttl: 5000 });
+          }
+          else {
             const conflictLog = {
               type: 'Message',
               id: data.body.conversation.conversationId,
@@ -404,97 +494,26 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
               date: moment(data.body.conversation.messages[0].creationTime).format('MM/DD/YYYY')
             };
             const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
-            showNotification({ level: 'warning', message: `Message not logged. ${conflictContent.description}.`, ttl: 5000 });
-          }
-          // Sub-case: no conflict, log directly
-          else {
-            // auto log, no pref, no conflict
-            await logCore.addLog({
-              serverUrl: manifest.serverUrl,
-              logType: 'Message',
-              logInfo: data.body.conversation,
-              isMain: true,
-              note: '',
-              additionalSubmission: autoSelectAdditionalSubmission,
-              contactId: getContactMatchResult[0]?.id,
-              contactType: getContactMatchResult[0]?.type,
-              contactName: getContactMatchResult[0]?.name,
-            });
-          }
-          if (requireManualDisposition) {
-            showNotification({ level: 'warning', message: 'Manual disposition might be needed. Please edit logged message to disposition.', ttl: 5000 });
+            showNotification({ level: 'warning', message: `${unresolvedMessageLabel(data.body.conversation.type)} not logged. ${conflictContent.description}.`, ttl: 5000 });
           }
         }
-        break;
-      case 'VoiceMail':
-        if (isAutoLogVoicemail) {
-          // Sub-case: has conflict
-          if (hasConflict) {
-            const conflictLog = {
-              type: 'Message',
-              id: data.body.conversation.conversationId,
-              direction: '',
-              contactInfo: getContactMatchResult ?? [],
-              date: moment(data.body.conversation.messages[0].creationTime).format('MM/DD/YYYY')
-            };
-            const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
-            showNotification({ level: 'warning', message: `Voicemail not logged. ${conflictContent.description}.`, ttl: 5000 });
-          }
-          // Sub-case: no conflict, log directly
-          else {
-            // auto log, no pref, no conflict
-            await logCore.addLog({
-              serverUrl: manifest.serverUrl,
-              logType: 'Message',
-              logInfo: data.body.conversation,
-              isMain: true,
-              note: '',
-              additionalSubmission: autoSelectAdditionalSubmission,
-              contactId: getContactMatchResult[0]?.id,
-              contactType: getContactMatchResult[0]?.type,
-              contactName: getContactMatchResult[0]?.name,
-            });
-          }
-          if (requireManualDisposition) {
-            showNotification({ level: 'warning', message: 'Manual disposition might be needed. Please edit logged message to disposition.', ttl: 5000 });
-          }
+        else {
+          await logCore.addLog({
+            serverUrl: manifest.serverUrl,
+            logType: 'Message',
+            logInfo: data.body.conversation,
+            isMain: true,
+            note: '',
+            additionalSubmission: autoSelectAdditionalSubmission,
+            contactId: defaultingContact?.id,
+            contactType: defaultingContact?.type,
+            contactName: defaultingContact?.name,
+          });
         }
-        break;
-      case 'Fax':
-        const faxMessage = data.body.conversation.messages[0];
-        if (faxMessage.direction === 'Inbound' && isAutoLogInboundFax || faxMessage.direction === 'Outbound' && isAutoLogOutboundFax) {
-          // Sub-case: has conflict
-          if (hasConflict) {
-            const conflictLog = {
-              type: 'Message',
-              id: data.body.conversation.conversationId,
-              direction: '',
-              contactInfo: getContactMatchResult ?? [],
-              date: moment(data.body.conversation.messages[0].creationTime).format('MM/DD/YYYY')
-            };
-            const conflictContent = logCore.getConflictContentFromUnresolvedLog(conflictLog);
-            showNotification({ level: 'warning', message: `Fax not logged. ${conflictContent.description}.`, ttl: 5000 });
-          }
-          // Sub-case: no conflict, log directly
-          else {
-            // auto log, no pref, no conflict
-            await logCore.addLog({
-              serverUrl: manifest.serverUrl,
-              logType: 'Message',
-              logInfo: data.body.conversation,
-              isMain: true,
-              note: '',
-              additionalSubmission: autoSelectAdditionalSubmission,
-              contactId: getContactMatchResult[0]?.id,
-              contactType: getContactMatchResult[0]?.type,
-              contactName: getContactMatchResult[0]?.name,
-            });
-          }
-          if (requireManualDisposition) {
-            showNotification({ level: 'warning', message: 'Manual disposition might be needed. Please edit logged message to disposition.', ttl: 5000 });
-          }
+        if (requireManualDisposition) {
+          showNotification({ level: 'warning', message: 'Manual disposition might be needed. Please edit logged message to disposition.', ttl: 5000 });
         }
-        break;
+      }
     }
   }
   // Case: granular, message-level logging.
