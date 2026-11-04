@@ -274,6 +274,29 @@ function resolveMostRecentActivityContact(contactInfo: UnknownRecord[] = []): Un
         .sort((a, b) => b.mostRecentActivityTimestamp - a.mostRecentActivityTimestamp)[0]?.contact ?? null;
 }
 
+function resolveMultipleContactsByPreference({ contactInfo = [], preference }: UnknownRecord = {}): UnknownRecord {
+    const existingContacts = getExistingContacts(contactInfo);
+    switch (preference) {
+        case 'firstAlphabetical': {
+            const contact = [...existingContacts].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))[0] ?? null;
+            return { contact, resolved: !!contact, missingCreatedDate: false };
+        }
+        case 'mostRecentActivity': {
+            const contact = resolveMostRecentActivityContact(contactInfo);
+            return { contact, resolved: !!contact, missingCreatedDate: false };
+        }
+        case 'earliestCreated': {
+            const { contact, missingCreatedDate } = resolveEarliestCreatedContact(contactInfo);
+            if (missingCreatedDate) {
+                return { contact: null, resolved: false, missingCreatedDate: true };
+            }
+            return { contact, resolved: !!contact, missingCreatedDate: false };
+        }
+        default:
+            return { contact: null, resolved: false, missingCreatedDate: false };
+    }
+}
+
 async function getLogConflictInfo({
     platform,
     isAutoLog,
@@ -467,6 +490,7 @@ export {
     hasValidDateValue,
     resolveMostRecentActivityContact,
     resolveEarliestCreatedContact,
+    resolveMultipleContactsByPreference,
     addPendingRecordingSessionId,
     triggerPendingRecordingCheck,
     removePendingRecordingSessionId,
@@ -482,6 +506,7 @@ const logUtil = {
     hasValidDateValue,
     resolveMostRecentActivityContact,
     resolveEarliestCreatedContact,
+    resolveMultipleContactsByPreference,
     addPendingRecordingSessionId,
     triggerPendingRecordingCheck,
     removePendingRecordingSessionId,

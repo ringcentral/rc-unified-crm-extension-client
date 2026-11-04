@@ -459,6 +459,77 @@ describe('logUtil', () => {
     ])).toBeNull();
   });
 
+  it('resolves multiple matched contacts with the auto-log preference', async () => {
+    const logUtil = await loadLogUtil();
+    const contacts = [
+      { id: 'zoe', name: 'Zoe Zeta', createdDate: '2026-07-02T08:00:00Z', mostRecentActivityDate: '2026-07-01T08:00:00Z' },
+      { id: 'amy', name: 'Amy Alpha', createdDate: '2026-07-01T08:00:00Z', mostRecentActivityDate: '2026-07-03T08:00:00Z' },
+      { id: 'placeholder', name: 'Placeholder', isNewContact: true, createdDate: '2020-01-01T00:00:00Z', mostRecentActivityDate: '2030-01-01T00:00:00Z' },
+    ];
+
+    expect(logUtil.resolveMultipleContactsByPreference({ contactInfo: contacts, preference: 'firstAlphabetical' })).toMatchObject({
+      contact: expect.objectContaining({ id: 'amy' }),
+      resolved: true,
+      missingCreatedDate: false,
+    });
+    expect(logUtil.resolveMultipleContactsByPreference({ contactInfo: contacts, preference: 'mostRecentActivity' })).toMatchObject({
+      contact: expect.objectContaining({ id: 'amy' }),
+      resolved: true,
+    });
+    expect(logUtil.resolveMultipleContactsByPreference({ contactInfo: contacts, preference: 'earliestCreated' })).toMatchObject({
+      contact: expect.objectContaining({ id: 'amy' }),
+      resolved: true,
+      missingCreatedDate: false,
+    });
+    expect(logUtil.resolveMultipleContactsByPreference({ contactInfo: contacts, preference: 'skipLogging' })).toEqual({
+      contact: null,
+      resolved: false,
+      missingCreatedDate: false,
+    });
+    expect(logUtil.resolveMultipleContactsByPreference({
+      contactInfo: [
+        { id: 'dated', name: 'Dated', createdDate: '2026-07-01T08:00:00Z' },
+        { id: 'undated', name: 'Undated' },
+      ],
+      preference: 'earliestCreated',
+    })).toEqual({
+      contact: null,
+      resolved: false,
+      missingCreatedDate: true,
+    });
+    expect(logUtil.resolveMultipleContactsByPreference({
+      contactInfo: [
+        { id: 'blank-b' },
+        { id: 'blank-a', name: null },
+      ],
+      preference: 'firstAlphabetical',
+    })).toMatchObject({
+      resolved: true,
+      missingCreatedDate: false,
+    });
+    expect(logUtil.resolveMultipleContactsByPreference({
+      contactInfo: [{ id: 'placeholder', name: 'New', isNewContact: true }],
+      preference: 'firstAlphabetical',
+    })).toEqual({
+      contact: null,
+      resolved: false,
+      missingCreatedDate: false,
+    });
+    expect(logUtil.resolveMultipleContactsByPreference({
+      contactInfo: [],
+      preference: 'mostRecentActivity',
+    })).toEqual({
+      contact: null,
+      resolved: false,
+      missingCreatedDate: false,
+    });
+    expect(logUtil.resolveMultipleContactsByPreference()).toEqual({
+      contact: null,
+      resolved: false,
+      missingCreatedDate: false,
+    });
+  });
+
   it('resolves most recent activity for ISO timestamps with timezone offsets', async () => {
     const logUtil = await loadLogUtil();
     const contacts = [
