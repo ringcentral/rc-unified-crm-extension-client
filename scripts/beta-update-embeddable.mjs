@@ -1,12 +1,15 @@
 /**
  * Updates public/embeddable with the latest ringcentral-embeddable extension build.
  *
- * 1. Switches this repo to the beta branch
+ * 1. Switches this repo to the beta branch (skipped with --no-checkout)
  * 2. Downloads the zip of ringcentral-embeddable branch 3.1.x-extension-build
  * 3. Extracts it over public/embeddable (overwriting existing files)
  * 4. Deletes public/embeddable/index.html
  *
- * Usage: node scripts/beta-update-embeddable.mjs
+ * Usage: node scripts/beta-update-embeddable.mjs [--no-checkout]
+ *
+ * --no-checkout leaves the current branch alone, for runners (e.g. auto-dev)
+ * that manage the branch/worktree themselves.
  */
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -19,6 +22,7 @@ const EMBEDDABLE_BRANCH = '3.1.x-extension-build';
 const ZIP_URL = `https://github.com/ringcentral/ringcentral-embeddable/archive/refs/heads/${EMBEDDABLE_BRANCH}.zip`;
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const skipCheckout = process.argv.includes('--no-checkout');
 const target = path.join(repoRoot, 'public', 'embeddable');
 
 function run(command, args, options = {}) {
@@ -42,8 +46,10 @@ function extractZip(zipPath, destination) {
 
 const work = fs.mkdtempSync(path.join(os.tmpdir(), 'embeddable-'));
 try {
-  console.log(`Switching to ${BRANCH}...`);
-  run('git', ['-C', repoRoot, 'checkout', BRANCH]);
+  if (!skipCheckout) {
+    console.log(`Switching to ${BRANCH}...`);
+    run('git', ['-C', repoRoot, 'checkout', BRANCH]);
+  }
 
   console.log(`Downloading ${ZIP_URL}...`);
   const response = await fetch(ZIP_URL);
