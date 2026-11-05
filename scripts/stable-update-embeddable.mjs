@@ -2,7 +2,7 @@
  * Updates public/embeddable with the latest ringcentral-embeddable extension build.
  *
  * 1. Switches this repo to the stable branch
- * 2. Downloads the zip of ringcentral-embeddable branch 3.x-extension-build
+ * 2. Downloads the zip of ringcentral-embeddable branch extension-build
  * 3. Extracts it over public/embeddable (overwriting existing files)
  * 4. Deletes public/embeddable/index.html
  *
@@ -15,7 +15,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const BRANCH = 'stable';
-const EMBEDDABLE_BRANCH = '3.x-extension-build';
+const EMBEDDABLE_BRANCH = 'extension-build';
 const ZIP_URL = `https://github.com/ringcentral/ringcentral-embeddable/archive/refs/heads/${EMBEDDABLE_BRANCH}.zip`;
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
