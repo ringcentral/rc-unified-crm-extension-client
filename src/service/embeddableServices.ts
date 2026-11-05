@@ -101,6 +101,8 @@ async function getServiceManifest() {
         customizedPageInputChangedEventPath: '/customizedPage/inputChanged',
         contactMatchPath: '/contacts/match',
         viewMatchedContactPath: '/contacts/view',
+        // Ask the host whether a number is on the Do Not Contact lists before a call or text
+        doNotContactPath: '/doNotContact',
         // Where the embeddable will post button click events to
         buttonEventPath: '/custom-button-click',
         // Direct button registration (older/newer builds may read this)

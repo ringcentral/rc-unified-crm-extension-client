@@ -28,6 +28,7 @@ import notificationLevelHandler from './sections/notificationLevel';
 import languageHandler from './sections/language';
 import phoneNumberFormatHandler from './sections/phoneNumberFormat';
 import clickToDialEmbedHandler from './sections/clickToDialEmbed';
+import doNotContactSectionHandler from './sections/doNotContact';
 import callAndSMSLoggingHandler from './sections/callAndSMSLogging';
 import serverSideLoggingSettingHandler from './sections/serverSideLoggingSetting';
 import contactSettingHandler from './sections/contactSetting';
@@ -205,6 +206,9 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             break;
         case 'clickToDialEmbed':
             await clickToDialEmbedHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'doNotContact':
+            await doNotContactSectionHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'callAndSMSLogging':
             await callAndSMSLoggingHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

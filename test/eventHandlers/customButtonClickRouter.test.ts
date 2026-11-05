@@ -326,13 +326,14 @@ describe('custom button click router', () => {
       'notificationLevelSettingPage-row-1-action',
       'phoneNumberFormatPage-row-1-action',
       'clickToDialEmbedPage-row-1-action',
+      'doNotContactPage-row-1-action',
     ]) {
       await router.onEvent({
         data: eventFor({ id }),
         ...baseContext,
       });
     }
-    expect(handlers.generalSettings.onEvent).toHaveBeenCalledTimes(12);
+    expect(handlers.generalSettings.onEvent).toHaveBeenCalledTimes(13);
   });
 
   it('refreshes license status from the router refresh action', async () => {

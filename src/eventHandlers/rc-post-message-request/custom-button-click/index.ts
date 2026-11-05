@@ -407,6 +407,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
         case 'languageSettingPage':
         case 'phoneNumberFormatPage':
         case 'clickToDialEmbedPage':
+        case 'doNotContactPage':
         case 'accountSettingsPage':
             await generalHandler.onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage });
             break;

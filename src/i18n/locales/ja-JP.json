@@ -87,7 +87,8 @@
       "callPop": "通話",
       "advancedFeatures": "高度な機能",
       "customSettings": "CRM 設定",
-      "plugins": "プラグイン"
+      "plugins": "プラグイン",
+      "doNotContact": "Do not contact"
     },
     "generalSettings": {
       "title": "インターフェース",
@@ -436,5 +437,22 @@
     "pipedriveStep2": "（2/3）RingCentralアカウントで拡張機能にサインインしてください。何も起こらない場合は、このページを更新して数秒待ってください。",
     "pipedriveStep3": "（3/3）セットアップ完了。このページを閉じることができます。",
     "setup": "セットアップ"
+  },
+  "doNotContact": {
+    "pageTitle": "Do not contact",
+    "restrictListTitle": "Block list",
+    "restrictListDescription": "Calls and texts to these numbers are blocked.",
+    "warnListTitle": "Warn list",
+    "warnListDescription": "Users see a warning and can choose to continue.",
+    "formatHelp": "Enter full numbers (+14155551234), extensions (1234), or wildcards that start with + and a country code (+1415*).",
+    "invalidEntry": "Can't save \"{entry}\": {reason}",
+    "reasonCharacters": "use only digits, spaces, a leading +, and * as a wildcard",
+    "reasonNoDigit": "include at least one digit",
+    "reasonWildcardNeedsCountryCode": "start wildcard numbers with + and a country code, like +1415*",
+    "reasonUnparsable": "this isn't a valid phone number for your region",
+    "restrictMessage": "This number is on your organization's Do Not Contact list.",
+    "restrictMessageMultiple": "These numbers are on your organization's Do Not Contact list: {numbers}",
+    "warnMessage": "This number is on a Do Not Contact warning list. Do you want to continue?",
+    "warnMessageMultiple": "These numbers are on a Do Not Contact warning list: {numbers}. Do you want to continue?"
   }
 }

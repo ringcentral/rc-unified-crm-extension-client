@@ -10,6 +10,7 @@ import messageLoggerIndexHandler from '../../src/eventHandlers/rc-post-message-r
 import messageLoggerInputChangedHandler from '../../src/eventHandlers/rc-post-message-request/messageLogger/inputChanged/index.ts';
 import messageLoggerMatchHandler from '../../src/eventHandlers/rc-post-message-request/messageLogger/match/index.ts';
 import messageLoggerOpenLogHandler from '../../src/eventHandlers/rc-post-message-request/messageLogger/openLog/index.ts';
+import doNotContactHandler from '../../src/eventHandlers/rc-post-message-request/doNotContact.ts';
 import settingsHandler from '../../src/eventHandlers/rc-post-message-request/settings.ts';
 import customButtonClickHandler from '../../src/eventHandlers/rc-post-message-request/custom-button-click/index.ts';
 import { getManifest, getPlatformList } from '../../src/service/manifestService.ts';
@@ -82,6 +83,10 @@ vi.mock('../../src/eventHandlers/rc-post-message-request/messageLogger/openLog/i
   default: { onEvent: vi.fn() },
 }));
 
+vi.mock('../../src/eventHandlers/rc-post-message-request/doNotContact.ts', () => ({
+  default: { onEvent: vi.fn() },
+}));
+
 vi.mock('../../src/eventHandlers/rc-post-message-request/settings.ts', () => ({
   default: { onEvent: vi.fn() },
 }));
@@ -120,6 +125,7 @@ function childHandlers() {
     messageLoggerInputChangedHandler.onEvent,
     messageLoggerMatchHandler.onEvent,
     messageLoggerOpenLogHandler.onEvent,
+    doNotContactHandler.onEvent,
     settingsHandler.onEvent,
     customButtonClickHandler.onEvent,
   ];
@@ -267,6 +273,7 @@ describe('rc-post-message-request router', () => {
       ['/messageLogger/inputChanged', messageLoggerInputChangedHandler.onEvent],
       ['/messageLogger/match', messageLoggerMatchHandler.onEvent],
       ['/messageLogger/openLog', messageLoggerOpenLogHandler.onEvent],
+      ['/doNotContact', doNotContactHandler.onEvent],
       ['/settings', settingsHandler.onEvent],
       ['/custom-button-click', customButtonClickHandler.onEvent],
     ];

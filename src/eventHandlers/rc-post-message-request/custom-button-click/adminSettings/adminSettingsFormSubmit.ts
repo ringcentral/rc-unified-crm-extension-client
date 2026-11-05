@@ -1,6 +1,8 @@
 import adminCore from '../../../../core/admin';
 import userCore from '../../../../core/user';
+import doNotContactLib from '../../../../lib/doNotContact';
 import { showNotification } from '../../../../lib/util';
+import { t } from '../../../../i18n';
 
 type UnknownRecord = Record<string, any>;
 
@@ -17,17 +19,55 @@ function getWidgetFrameWindow(): Window {
   return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
 }
 
+const DO_NOT_CONTACT_KEYS = ['doNotContactRestrictNumbers', 'doNotContactWarnNumbers'];
+
+const DO_NOT_CONTACT_REASON_KEYS: Record<string, string> = {
+  characters: 'doNotContact.reasonCharacters',
+  noDigit: 'doNotContact.reasonNoDigit',
+  wildcardNeedsCountryCode: 'doNotContact.reasonWildcardNeedsCountryCode',
+  unparsable: 'doNotContact.reasonUnparsable',
+};
+
+// Returns the cleaned form data, or an error message for the first entry that can't be saved.
+async function normalizeDoNotContactFormData(formData: UnknownRecord): Promise<{ formData?: UnknownRecord; error?: string }> {
+  const { selectedRegion } = await chrome.storage.local.get({ selectedRegion: 'US' }) as { selectedRegion: string };
+  const cleaned: UnknownRecord = { ...formData };
+  for (const key of DO_NOT_CONTACT_KEYS) {
+    const { entries, invalid } = doNotContactLib.normalizeEntryList(formData[key]?.value, selectedRegion);
+    if (invalid) {
+      return {
+        error: t('doNotContact.invalidEntry', {
+          entry: invalid.entry,
+          reason: t(DO_NOT_CONTACT_REASON_KEYS[invalid.reason] ?? 'doNotContact.reasonUnparsable'),
+        }),
+      };
+    }
+    cleaned[key] = { value: entries };
+  }
+  return { formData: cleaned };
+}
+
 export async function onEvent({ data, manifest, platformInfo, platformName, platform, responseMessage }: EventOptions): Promise<void> {
   void platformInfo;
   void platformName;
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
   const { adminSettings } = await chrome.storage.local.get('adminSettings') as { adminSettings: UnknownRecord };
-  const settingDataKeys = Object.keys(data.body.button.formData);
+  let submittedFormData: UnknownRecord = data.body.button.formData;
+  if (data.body.button.id === 'doNotContactPage') {
+    const normalized = await normalizeDoNotContactFormData(submittedFormData);
+    if (normalized.error) {
+      showNotification({ level: 'error', message: normalized.error, ttl: 8000 });
+      window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+      return;
+    }
+    submittedFormData = normalized.formData!;
+  }
+  const settingDataKeys = Object.keys(submittedFormData);
   if (!adminSettings.userSettings) {
     adminSettings.userSettings = {};
   }
   for (const k of settingDataKeys) {
-    adminSettings.userSettings[k] = data.body.button.formData[k];
+    adminSettings.userSettings[k] = submittedFormData[k];
   }
 
   // Map custom settings override format fields back into overridingNumberFormat object

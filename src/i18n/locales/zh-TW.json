@@ -87,7 +87,8 @@
       "callPop": "通話",
       "advancedFeatures": "高级功能",
       "customSettings": "CRM 設定",
-      "plugins": "插件"
+      "plugins": "插件",
+      "doNotContact": "禁止聯絡"
     },
     "generalSettings": {
       "title": "介面",
@@ -436,5 +437,22 @@
     "pipedriveStep2": "(2/3) 请使用您的 RingCentral 账户登录扩展程序。如果没有任何反应，请尝试刷新此页面并等待几秒钟。",
     "pipedriveStep3": "(3/3) 设置完成。您现在可以关闭此页面。",
     "setup": "设置"
+  },
+  "doNotContact": {
+    "pageTitle": "禁止聯絡",
+    "restrictListTitle": "禁止清單",
+    "restrictListDescription": "撥打這些號碼或向其傳送簡訊將被攔截。",
+    "warnListTitle": "警告清單",
+    "warnListDescription": "使用者會看到警告，並可選擇繼續。",
+    "formatHelp": "可輸入完整號碼（+14155551234）、分機號碼（1234），或以 + 和國家/地區碼開頭的萬用字元號碼（+1415*）。",
+    "invalidEntry": "無法儲存「{entry}」：{reason}",
+    "reasonCharacters": "只能包含數字、空格、開頭的 + 以及作為萬用字元的 *",
+    "reasonNoDigit": "至少包含一位數字",
+    "reasonWildcardNeedsCountryCode": "萬用字元號碼需以 + 和國家/地區碼開頭，例如 +1415*",
+    "reasonUnparsable": "這不是所在地區的有效電話號碼",
+    "restrictMessage": "此號碼在貴組織的禁止聯絡清單中。",
+    "restrictMessageMultiple": "以下號碼在貴組織的禁止聯絡清單中：{numbers}",
+    "warnMessage": "此號碼在禁止聯絡的警告清單中。是否繼續？",
+    "warnMessageMultiple": "以下號碼在禁止聯絡的警告清單中：{numbers}。是否繼續？"
   }
 }

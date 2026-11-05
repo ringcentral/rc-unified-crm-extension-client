@@ -575,6 +575,24 @@ function getQuickAccessButtonUrls(userSettings) {
     }
 }
 
+function getDoNumberList(setting) {
+    const value = setting?.value;
+    if (Array.isArray(value)) {
+        return value.map(String).map(n => n.trim()).filter(Boolean);
+    }
+    if (typeof value === 'string') {
+        return value.split(',').map(n => n.trim()).filter(Boolean);
+    }
+    return [];
+}
+
+function getDoNotContactNumbers(userSettings) {
+    return {
+        restrict: getDoNumberList(userSettings?.doNotContactRestrictNumbers),
+        warn: getDoNumberList(userSettings?.doNotContactWarnNumbers),
+    }
+}
+
 function getNotificationLevelSetting(userSettings) {
     return {
         value: userSettings?.notificationLevelSetting?.value ?? ['success', 'warning', 'error'],
@@ -826,6 +844,7 @@ const userCore = {
     getClickToDialUrls,
     getQuickAccessButtonEmbedMode,
     getQuickAccessButtonUrls,
+    getDoNotContactNumbers,
     getNotificationLevelSetting,
     getLanguageSetting,
     getAddCallLogNoteSetting,
@@ -897,6 +916,7 @@ export {
     getClickToDialUrls,
     getQuickAccessButtonEmbedMode,
     getQuickAccessButtonUrls,
+    getDoNotContactNumbers,
     getNotificationLevelSetting,
     getLanguageSetting,
     getAddCallLogNoteSetting,

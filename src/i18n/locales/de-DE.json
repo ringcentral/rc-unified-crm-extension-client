@@ -87,7 +87,8 @@
       "callPop": "Anrufe",
       "advancedFeatures": "Erweiterte Funktionen",
       "customSettings": "CRM-Einstellungen",
-      "plugins": "Plugins"
+      "plugins": "Plugins",
+      "doNotContact": "Do not contact"
     },
     "generalSettings": {
       "title": "Oberfläche",
@@ -436,5 +437,22 @@
     "pipedriveStep2": "(2/3) Bitte melden Sie sich in der Erweiterung mit Ihrem RingCentral-Konto an. Wenn nichts passiert, aktualisieren Sie diese Seite und warten Sie einige Sekunden.",
     "pipedriveStep3": "(3/3) Einrichtung abgeschlossen. Sie können diese Seite jetzt schließen.",
     "setup": "Einrichtung"
+  },
+  "doNotContact": {
+    "pageTitle": "Do not contact",
+    "restrictListTitle": "Block list",
+    "restrictListDescription": "Calls and texts to these numbers are blocked.",
+    "warnListTitle": "Warn list",
+    "warnListDescription": "Users see a warning and can choose to continue.",
+    "formatHelp": "Enter full numbers (+14155551234), extensions (1234), or wildcards that start with + and a country code (+1415*).",
+    "invalidEntry": "Can't save \"{entry}\": {reason}",
+    "reasonCharacters": "use only digits, spaces, a leading +, and * as a wildcard",
+    "reasonNoDigit": "include at least one digit",
+    "reasonWildcardNeedsCountryCode": "start wildcard numbers with + and a country code, like +1415*",
+    "reasonUnparsable": "this isn't a valid phone number for your region",
+    "restrictMessage": "This number is on your organization's Do Not Contact list.",
+    "restrictMessageMultiple": "These numbers are on your organization's Do Not Contact list: {numbers}",
+    "warnMessage": "This number is on a Do Not Contact warning list. Do you want to continue?",
+    "warnMessageMultiple": "These numbers are on a Do Not Contact warning list: {numbers}. Do you want to continue?"
   }
 }

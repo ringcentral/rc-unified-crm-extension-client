@@ -408,6 +408,28 @@ describe('managed settings page renderers', () => {
     expect(embed.uiSchema.clickToDialUrls.value['ui:options'].orderable).toBe(false);
   });
 
+  it('renders the do-not-contact lists with saved numbers and empty defaults', async () => {
+    const doNotContactPage = await loadPage('../../src/components/admin/doNotContactPage.ts');
+    const saved = doNotContactPage.getDoNotContactPageRender({
+      adminUserSettings: {
+        doNotContactRestrictNumbers: { value: ['+14155552671', '+1650*'] },
+        doNotContactWarnNumbers: { value: ['1234'] },
+      },
+    });
+    expect(saved.id).toBe('doNotContactPage');
+    expect(saved.formData).toEqual({
+      doNotContactRestrictNumbers: { value: ['+14155552671', '+1650*'] },
+      doNotContactWarnNumbers: { value: ['1234'] },
+    });
+    expect(saved.schema.properties.doNotContactRestrictNumbers.properties.value.type).toBe('array');
+    expect(saved.uiSchema.doNotContactWarnNumbers.value['ui:options'].orderable).toBe(false);
+
+    expect(doNotContactPage.getDoNotContactPageRender({ adminUserSettings: undefined }).formData).toEqual({
+      doNotContactRestrictNumbers: { value: [] },
+      doNotContactWarnNumbers: { value: [] },
+    });
+  });
+
   it('renders customize-tabs settings with appointment tab title from manifest', async () => {
     const customizeTabsPage = await loadPage('../../src/components/admin/generalSettings/customizeTabsSettingPage.ts');
     const tabs = customizeTabsPage.getCustomizeTabsSettingPageRender({

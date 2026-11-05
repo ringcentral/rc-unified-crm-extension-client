@@ -426,6 +426,7 @@ describe('embeddableServices', () => {
   it('builds visible custom connector settings and filters hidden or unauthorized entries', async () => {
     const { service } = await loadAuthedAdminServiceManifest();
 
+    expect(service.doNotContactPath).toBe('/doNotContact');
     const settingIds = service.settings.map((item) => item.id);
     expect(settingIds).toEqual(expect.arrayContaining([
       'googleSheetsConfig',

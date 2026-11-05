@@ -50,6 +50,7 @@ Routed by `data.path`.
 | `/messageLogger` | `messageLogger/index.js` | Message log main flow (auto/manual/view) |
 | `/messageLogger/inputChanged` | `messageLogger/inputChanged/index.js` | Live form update for message log |
 | `/messageLogger/match` | `messageLogger/match/index.js` | Message log match check |
+| `/doNotContact` | `doNotContact.ts` | Answer the widget's Do Not Contact check for a call or SMS: restrict, warn, or allow. Fails open |
 | `/settings` | `settings.js` | Settings page save |
 | `/sidebarApps/app-connect-contact` (+ `/inputChanged`, `/button-click`) | `sidebarApps/appConnectContact.ts` | Call pop widget for the **{CRM name} Contact** side panel (e.g. "Clio Contact"); renders the matched contact's `widget` and opens its `links`. State lives in `lib/contactWidget.ts`, filled by `rc-active-call-notify` when a matched contact carries a `widget` |
 | `/custom-button-click` | `custom-button-click/index.js` | **Sub-router** — see section below |
@@ -102,7 +103,7 @@ Routed by `data.body.button.id` (parsed as `{actionId}-{itemId}-action`).
 
 | Button ID | File | What it does |
 |---|---|---|
-| `callAndSMSLoggingSettingPage`, `contactSettingPage`, `callLogDetailsSettingPage`, `autoLogPreferenceSettingPage`, `advancedFeaturesSettingPage`, `customSettingsPage`, `customizeTabsSettingPage`, `widgetSettingsPage`, `notificationLevelSettingPage`, `phoneNumberFormatPage`, `clickToDialEmbedPage` | `adminSettings/adminSettingsFormSubmit.js` | Generic admin settings save for all settings form pages |
+| `doNotContactPage` (cleans and validates both lists first), `callAndSMSLoggingSettingPage`, `contactSettingPage`, `callLogDetailsSettingPage`, `autoLogPreferenceSettingPage`, `advancedFeaturesSettingPage`, `customSettingsPage`, `customizeTabsSettingPage`, `widgetSettingsPage`, `notificationLevelSettingPage`, `phoneNumberFormatPage`, `clickToDialEmbedPage` | `adminSettings/adminSettingsFormSubmit.js` | Generic admin settings save for all settings form pages |
 | `saveServerSideLoggingButton` | `adminSettings/saveServerSideLogging.js` | Save server-side logging config |
 | `doNotLogNumbersSubmitButton` | `adminSettings/doNotLogNumbersSubmit.js` | Save the "do not log" phone number list |
 
@@ -209,6 +210,7 @@ This router has two separate dispatch passes on each event:
 | `notificationLevel` | `sections/notificationLevel.js` | Render notification level settings section |
 | `phoneNumberFormat` | `sections/phoneNumberFormat.js` | Render phone number format settings section |
 | `clickToDialEmbed` | `sections/clickToDialEmbed.js` | Render click-to-dial embed settings section |
+| `doNotContact` | `sections/doNotContact.ts` | Render the admin Do Not Contact block and warn lists |
 | `callAndSMSLogging` | `sections/callAndSMSLogging.js` | Render call & SMS logging settings section |
 | `serverSideLoggingSetting` | `sections/serverSideLoggingSetting.js` | Render server-side logging settings section |
 | `contactSetting` | `sections/contactSetting.js` | Render contact settings section |

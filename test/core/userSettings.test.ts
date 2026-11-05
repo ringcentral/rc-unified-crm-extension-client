@@ -97,6 +97,21 @@ describe('user settings getters', () => {
       .toEqual(['https://crm.example/*']);
   });
 
+  it('reads the do-not-contact lists with safe defaults', () => {
+    expect(userCore.getDoNotContactNumbers({})).toEqual({ restrict: [], warn: [] });
+    expect(userCore.getDoNotContactNumbers({
+      doNotContactRestrictNumbers: { value: [' +14155552671 ', '', '+1650*'] },
+      doNotContactWarnNumbers: { value: '+442079460958, 1234' },
+    })).toEqual({
+      restrict: ['+14155552671', '+1650*'],
+      warn: ['+442079460958', '1234'],
+    });
+    expect(userCore.getDoNotContactNumbers({
+      doNotContactRestrictNumbers: { value: null },
+      doNotContactWarnNumbers: { value: 42 },
+    })).toEqual({ restrict: [], warn: [] });
+  });
+
   it('returns custom setting values, defaults, options, and read-only state', () => {
     expect(userCore.getCustomSetting({
       crmStage: {

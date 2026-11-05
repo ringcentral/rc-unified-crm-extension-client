@@ -14,6 +14,7 @@ import messageLoggerIndexHandler from './messageLogger';
 import messageLoggerInputChangedHandler from './messageLogger/inputChanged';
 import messageLoggerMatchHandler from './messageLogger/match';
 import messageLoggerOpenLogHandler from './messageLogger/openLog';
+import doNotContactHandler from './doNotContact';
 import settingsHandler from './settings';
 import customButtonClickHandler from './custom-button-click';
 import appConnectContactWidgetHandler from './sidebarApps/appConnectContact';
@@ -99,6 +100,9 @@ async function onEvent({ data }: EventOptions) {
       break;
     case '/messageLogger/openLog':
       await messageLoggerOpenLogHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+      break;
+    case '/doNotContact':
+      await doNotContactHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
       break;
     case '/settings':
       await settingsHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

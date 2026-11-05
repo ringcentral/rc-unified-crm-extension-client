@@ -30,6 +30,10 @@ function getManagedSettingsPageRender({ crmManifest }: UnknownRecord): UnknownRe
                         title: t('pages.managedSettings.callPop')
                     },
                     {
+                        const: "doNotContact",
+                        title: t('pages.managedSettings.doNotContact')
+                    },
+                    {
                         const: "plugins",
                         title: t('pages.managedSettings.plugins'),
                     },

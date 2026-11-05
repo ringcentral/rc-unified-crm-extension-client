@@ -756,6 +756,7 @@ describe('admin page renderers', () => {
     });
     expect(managedSettings.schema.properties.section.oneOf.map((item) => item.const)).toEqual(expect.arrayContaining([
       'googleSheetsAdminConfig',
+      'doNotContact',
       'customSettings',
     ]));
   });

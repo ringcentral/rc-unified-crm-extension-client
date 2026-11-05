@@ -878,6 +878,53 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
   });
 
+  it('cleans the do-not-contact lists before saving them', async () => {
+    seedStorage({ selectedRegion: 'US', adminSettings: { userSettings: {} } });
+    const loaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/adminSettingsFormSubmit.ts',
+    );
+
+    await loaded.handler.onEvent({
+      data: dataFor({
+        doNotContactRestrictNumbers: { value: [' +14155552671 ', '', '+14155552671', '+1650*'] },
+        doNotContactWarnNumbers: { value: ['1234'] },
+      }, 'doNotContactPage'),
+      manifest: baseManifest(),
+      platformName: 'salesforce',
+      platform: baseManifest().platforms.salesforce,
+      responseMessage: vi.fn(),
+    });
+
+    expect(readStorage().adminSettings.userSettings).toEqual({
+      doNotContactRestrictNumbers: { value: ['+14155552671', '+1650*'] },
+      doNotContactWarnNumbers: { value: ['1234'] },
+    });
+    expect(loaded.adminCore.uploadAdminSettings).toHaveBeenCalled();
+  });
+
+  it('rejects a do-not-contact list with an invalid entry without saving', async () => {
+    seedStorage({ selectedRegion: 'US', adminSettings: { userSettings: {} } });
+    const loaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/adminSettingsFormSubmit.ts',
+    );
+
+    await loaded.handler.onEvent({
+      data: dataFor({
+        doNotContactRestrictNumbers: { value: ['415*'] },
+        doNotContactWarnNumbers: { value: [] },
+      }, 'doNotContactPage'),
+      manifest: baseManifest(),
+      platformName: 'salesforce',
+      platform: baseManifest().platforms.salesforce,
+      responseMessage: vi.fn(),
+    });
+
+    expect(loaded.util.showNotification).toHaveBeenCalledWith(expect.objectContaining({ level: 'error' }));
+    expect(loaded.adminCore.uploadAdminSettings).not.toHaveBeenCalled();
+    expect(readStorage().adminSettings.userSettings).toEqual({});
+    expect(window.postMessage).toHaveBeenCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
+  });
+
   it('refreshes server-side logging subscriptions after admin call-log settings save', async () => {
     const responseMessage = vi.fn();
     seedStorage({
