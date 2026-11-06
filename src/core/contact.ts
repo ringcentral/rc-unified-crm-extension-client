@@ -118,7 +118,6 @@ export function getLocalCachedContact({ phoneNumber, platformName }: UnknownReco
       createdDate: c.createdDate,
       mostRecentActivityDate: c.mostRecentActivityDate,
       additionalInfo: c.additionalInfo,
-      widget: c.widget,
     });
   }
   return result;
@@ -151,7 +150,6 @@ export async function getContact({
       return {
         matched: true,
         returnMessage: null,
-        isFromLocalCache: true,
         contactInfo: await hydratePlatformContacts({
           contacts: cachedContact,
           platformName,

@@ -1,9 +1,9 @@
-import { registerContactWidgetAppIfSeen } from '../lib/contactWidget';
 import axios from 'axios';
 import moment from 'moment';
 import { getRcAccessToken, refreshRCToken } from '../lib/util';
 import { getManifest as getManifestBase } from '../service/manifestService';
 import { getPlatformInfo } from '../service/platformService';
+import { getImplementedInterfaces } from '../service/implementedInterfacesService';
 import adminCore from './admin';
 import embeddableServices from '../service/embeddableServices';
 import reportPage from '../components/reportPage/reportPage';
@@ -220,12 +220,18 @@ async function refreshUserSettings({ changedSettings, settingKeysToRemove = [], 
     const notificationLevelSetting = getNotificationLevelSetting(userSettings).value;
     const c2dMatcherType = getC2DMatcherTypeSetting(userSettings).value;
     await chrome.storage.local.set({ notificationLevelSetting, c2dMatcherType });
+    // Refreshed on every open so features gated on an interface (e.g. the contact widget) follow the connector's current state.
+    try {
+        await getImplementedInterfaces({ manifest, platformName });
+    }
+    catch (e) {
+        console.error('Failed to refresh implemented interfaces', e);
+    }
     const service = await embeddableServices.getServiceManifest();
     getWidgetFrame().contentWindow.postMessage({
         type: 'rc-adapter-register-third-party-service',
         service
     }, '*');
-    await registerContactWidgetAppIfSeen(platformName, manifest?.platforms?.[platformName]?.displayName);
     // CallLogger ignores auto-log updates until the third-party service is ready.
     RCAdapter.setAutoLog({ call: getEffectiveAutoLogCallValue(userSettings, isAdmin), message: autoLogMessagesGroupTrigger })
     // custom tabs
