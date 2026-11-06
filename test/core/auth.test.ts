@@ -1142,6 +1142,30 @@ describe('auth core', () => {
     expect(readStorage().cachedPluginConfigFormData).toBeUndefined();
   });
 
+  it('surfaces plugin OAuth callback failures instead of falling through to the connector flow', async () => {
+    seedStorage({ rcUserInfo: { rcExtensionId: 'hashed-ext-1' } });
+    vi.mocked(axios.get).mockRejectedValueOnce(new Error('plugin callback failed'));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const authCore = await loadAuthCore();
+    const state = encodeURIComponent(JSON.stringify({
+      from: 'plugin',
+      redirectTo: 'https://plugin.example/callback',
+    }));
+
+    await expect(authCore.onAuthCallback({
+      serverUrl: 'https://server.example',
+      callbackUri: `https://redirect.example/callback?state=${state}&code=abc`,
+      useLicense: false,
+    })).resolves.toBeUndefined();
+
+    expect(errorSpy).toHaveBeenCalledWith('Plugin auth callback failed', expect.any(Error));
+    expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ level: 'warning' }));
+    expect(axios.get).toHaveBeenCalledTimes(1);
+    expect(axios.get).not.toHaveBeenCalledWith(expect.stringContaining('/oauth-callback'));
+    expect(readStorage().rcUnifiedCrmExtJwt).toBeUndefined();
+    errorSpy.mockRestore();
+  });
+
   it('handles connector OAuth callbacks, stores JWT, and refreshes license status', async () => {
     localStorage.setItem('sdk-rc-widgetplatform', JSON.stringify({ owner_id: 'ext-1' }));
     seedStorage({
