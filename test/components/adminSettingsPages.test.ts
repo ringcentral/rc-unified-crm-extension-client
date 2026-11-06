@@ -422,7 +422,8 @@ describe('managed settings page renderers', () => {
       doNotContactWarnNumbers: { value: ['1234'] },
     });
     expect(saved.schema.properties.doNotContactRestrictNumbers.properties.value.type).toBe('array');
-    expect(saved.uiSchema.doNotContactWarnNumbers.value['ui:options'].orderable).toBe(false);
+    expect(saved.uiSchema.doNotContactWarnNumbers.value['ui:options']).toEqual({ orderable: false, label: false });
+    expect(saved.uiSchema.doNotContactWarnNumbers.value.items['ui:options']).toEqual({ label: false });
 
     expect(doNotContactPage.getDoNotContactPageRender({ adminUserSettings: undefined }).formData).toEqual({
       doNotContactRestrictNumbers: { value: [] },

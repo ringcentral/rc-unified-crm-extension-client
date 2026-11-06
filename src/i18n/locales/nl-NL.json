@@ -441,9 +441,9 @@
   "doNotContact": {
     "pageTitle": "Do not contact",
     "restrictListTitle": "Block list",
-    "restrictListDescription": "Calls and texts to these numbers are blocked.",
+    "restrictListDescription": "Calls and texts to these numbers will be blocked.",
     "warnListTitle": "Warn list",
-    "warnListDescription": "Users see a warning and can choose to continue.",
+    "warnListDescription": "Users will see a warning and can choose to continue.",
     "formatHelp": "Enter full numbers (+14155551234), extensions (1234), or wildcards that start with + and a country code (+1415*).",
     "invalidEntry": "Can't save \"{entry}\": {reason}",
     "reasonCharacters": "use only digits, spaces, a leading +, and * as a wildcard",

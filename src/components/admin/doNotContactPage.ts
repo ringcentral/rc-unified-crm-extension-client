@@ -6,7 +6,7 @@ function numberListSchema(titleKey: string, descriptionKey: string): UnknownReco
     return {
         type: 'object',
         title: t(titleKey),
-        description: `${t(descriptionKey)} ${t('doNotContact.formatHelp')}`,
+        description: t(descriptionKey),
         properties: {
             value: {
                 type: 'array',
@@ -19,6 +19,23 @@ function numberListSchema(titleKey: string, descriptionKey: string): UnknownReco
         }
     };
 }
+
+// The list title above already names the list, so the array and its rows render without labels.
+const NUMBER_LIST_UI_SCHEMA: UnknownRecord = {
+    "ui:collapsible": true,
+    value: {
+        "ui:options": {
+            "orderable": false,
+            "label": false
+        },
+        items: {
+            "ui:options": {
+                "label": false
+            },
+            "ui:placeholder": "+14155551234, 1234, +1415*"
+        }
+    }
+};
 
 function numberListFormData(setting: UnknownRecord | undefined): UnknownRecord {
     return { value: Array.isArray(setting?.value) ? setting.value : [] };
@@ -38,22 +55,8 @@ function getDoNotContactPageRender({ adminUserSettings }: UnknownRecord): Unknow
             }
         },
         uiSchema: {
-            doNotContactRestrictNumbers: {
-                "ui:collapsible": true,
-                value: {
-                    "ui:options": {
-                        "orderable": false
-                    }
-                }
-            },
-            doNotContactWarnNumbers: {
-                "ui:collapsible": true,
-                value: {
-                    "ui:options": {
-                        "orderable": false
-                    }
-                }
-            },
+            doNotContactRestrictNumbers: NUMBER_LIST_UI_SCHEMA,
+            doNotContactWarnNumbers: NUMBER_LIST_UI_SCHEMA,
             submitButtonOptions: {
                 submitText: 'Save',
             }
