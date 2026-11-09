@@ -51,7 +51,7 @@ Routed by `data.path`.
 | `/messageLogger/inputChanged` | `messageLogger/inputChanged/index.js` | Live form update for message log |
 | `/messageLogger/match` | `messageLogger/match/index.js` | Message log match check |
 | `/settings` | `settings.js` | Settings page save |
-| `/sidebarApps/app-connect-contact` (+ `/inputChanged`, `/button-click`) | `sidebarApps/appConnectContact.ts` | Call pop widget for the **{CRM name} Contact** side panel (e.g. "Clio Contact"); renders the matched contact's `widget` and opens its `links`. State lives in `lib/contactWidget.ts`, filled by `rc-active-call-notify` when a matched contact carries a `widget` |
+| `/sidebarApps/app-connect-contact` (+ `/inputChanged`, `/button-click`) | `sidebarApps/appConnectContact.ts` | Contact widget for the **{CRM name} Contact** side panel (e.g. "Clio Contact"). When the app is opened or refreshed it calls the connector's `getContactWidget` (`service/contactWidgetService.ts`, `POST /contact/widget`) with the matched contacts, renders the returned widgets and opens their `links`. State lives in `lib/contactWidget.ts`; `rc-active-call-notify` stores the matched contacts and registers the app when `implementedInterfaces.getContactWidget` is true and a real contact matched |
 | `/custom-button-click` | `custom-button-click/index.js` | **Sub-router** — see section below |
 | `/customizedPage/inputChanged` | `customizedPage/inputChanged/index.js` | **Sub-router** — see section below |
 

@@ -537,6 +537,34 @@ describe('user service behavior', () => {
       .toBeLessThan(vi.mocked(RCAdapter.setAutoLog).mock.invocationCallOrder[0]);
   });
 
+  it('refreshes the implemented interfaces on every open and keeps going when that fails', async () => {
+    seedStorage({
+      crmAuthed: true,
+      selectedRegion: 'US',
+    });
+    vi.mocked(axios.get)
+      .mockResolvedValueOnce({ data: { autoLogCall: { customizable: false, value: false } } })
+      .mockResolvedValueOnce({ data: { getContactWidget: true } });
+    vi.mocked(axios.post).mockImplementation(async (_url, body) => ({
+      data: {
+        userSettings: getPostedUserSettings(body),
+      },
+    }));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const userCore = await loadUserCore();
+
+    await userCore.refreshUserSettings({});
+
+    expect(vi.mocked(axios.get).mock.calls.map(([url]) => url)).toContainEqual(expect.stringContaining('/implementedInterfaces?platform='));
+    expect(readStorage().implementedInterfaces).toEqual({ getContactWidget: true });
+
+    vi.mocked(axios.get).mockReset()
+      .mockResolvedValueOnce({ data: { autoLogCall: { customizable: false, value: false } } })
+      .mockRejectedValueOnce(new Error('offline'));
+    await expect(userCore.refreshUserSettings({})).resolves.toBeDefined();
+    expect(readStorage().implementedInterfaces).toEqual({ getContactWidget: true });
+  });
+
   it('forces message auto-log off so granular selected-message checkboxes can render', async () => {
     seedStorage({
       crmAuthed: true,

@@ -14,6 +14,9 @@ export const CONTACT_WIDGET_PAGE_PATH = '/sidebarApps/app-connect-contact';
 export const CONTACT_WIDGET_INPUT_CHANGED_PATH = '/sidebarApps/app-connect-contact/inputChanged';
 export const CONTACT_WIDGET_BUTTON_CLICK_PATH = '/sidebarApps/app-connect-contact/button-click';
 
+// Matched contacts (from findContact) of the calls in progress, and the contacts that came back with a widget.
+// The widget content is never kept across requests: opening or refreshing the app asks the connector again.
+const matchedContactsByPhone = new Map<string, UnknownRecord[]>();
 const contactsWithWidgetByPhone = new Map<string, UnknownRecord[]>();
 let latestPhoneNumber = '';
 let selectedContactId = '';
@@ -22,8 +25,6 @@ function getWidgetFrameWindow(): Window | null {
   return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')?.contentWindow ?? null;
 }
 
-// Embeddable only opens its widget panel for a call when an app is already registered as the call rings,
-// so the app is registered at startup for platforms that returned a widget before, and again when one is found.
 // Registering twice is harmless: Embeddable merges by app id.
 export function registerContactWidgetApp(crmName?: string): void {
   const frameWindow = getWidgetFrameWindow();
@@ -43,51 +44,38 @@ export function registerContactWidgetApp(crmName?: string): void {
   }, '*');
 }
 
+async function isContactWidgetImplemented(): Promise<boolean> {
+  const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null }) as {
+    implementedInterfaces: UnknownRecord | null;
+  };
+  return implementedInterfaces?.getContactWidget === true;
+}
+
 /**
- * Keeps the matched contacts that carry a widget for the duration of a call.
- * The widget app is registered the first time a widget is seen, so connectors without one never get an empty tab.
+ * Keeps the matched contacts of a call and registers the contact widget app, when the connector implements
+ * getContactWidget and at least one real contact matched. The widget itself is fetched when the user opens the app.
  */
-export function rememberContactWidgets({ phoneNumber, contacts, platformName, crmName }: { phoneNumber?: string; contacts?: UnknownRecord[] | null; platformName?: string; crmName?: string }): boolean {
+export async function rememberMatchedContacts({ phoneNumber, contacts, platformName, crmName }: { phoneNumber?: string; contacts?: UnknownRecord[] | null; platformName?: string; crmName?: string }): Promise<boolean> {
+  void platformName;
   if (!phoneNumber) {
     return false;
   }
-  const withWidget = (contacts ?? []).filter(c => c?.widget?.schema);
-  if (withWidget.length === 0) {
-    contactsWithWidgetByPhone.delete(phoneNumber);
+  const matched = (contacts ?? []).filter(c => c && !c.isNewContact);
+  if (matched.length === 0 || !await isContactWidgetImplemented()) {
+    matchedContactsByPhone.delete(phoneNumber);
     return false;
   }
-  contactsWithWidgetByPhone.set(phoneNumber, withWidget);
-  if (!withWidget.some(c => String(c.id) === selectedContactId)) {
-    selectedContactId = '';
-  }
+  matchedContactsByPhone.set(phoneNumber, matched);
   latestPhoneNumber = phoneNumber;
   registerContactWidgetApp(crmName);
-  if (platformName) {
-    void chrome.storage.local.set({ [contactWidgetSeenKey(platformName)]: true });
-  }
   return true;
-}
-
-function contactWidgetSeenKey(platformName: string): string {
-  return `contactWidgetSeen-${platformName}`;
-}
-
-/** Called at startup so the app is already registered when the next call rings. */
-export async function registerContactWidgetAppIfSeen(platformName?: string, crmName?: string): Promise<void> {
-  if (!platformName) {
-    return;
-  }
-  const key = contactWidgetSeenKey(platformName);
-  const stored = await chrome.storage.local.get(key) as UnknownRecord;
-  if (stored[key]) {
-    registerContactWidgetApp(crmName);
-  }
 }
 
 export function forgetContactWidgets(phoneNumber?: string): void {
   if (!phoneNumber) {
     return;
   }
+  matchedContactsByPhone.delete(phoneNumber);
   contactsWithWidgetByPhone.delete(phoneNumber);
   if (latestPhoneNumber === phoneNumber) {
     latestPhoneNumber = '';
@@ -96,11 +84,51 @@ export function forgetContactWidgets(phoneNumber?: string): void {
 }
 
 /** Looks up by the phone number Embeddable sends; falls back to the most recent call's contacts. */
-export function getContactsWithWidget(phoneNumber?: string): UnknownRecord[] {
-  if (phoneNumber && contactsWithWidgetByPhone.has(phoneNumber)) {
-    return contactsWithWidgetByPhone.get(phoneNumber)!;
+function getByPhone(map: Map<string, UnknownRecord[]>, phoneNumber?: string): UnknownRecord[] {
+  if (phoneNumber && map.has(phoneNumber)) {
+    return map.get(phoneNumber)!;
   }
-  return contactsWithWidgetByPhone.get(latestPhoneNumber) ?? [];
+  return map.get(latestPhoneNumber) ?? [];
+}
+
+export function getMatchedContacts(phoneNumber?: string): UnknownRecord[] {
+  return getByPhone(matchedContactsByPhone, phoneNumber);
+}
+
+export function getContactsWithWidget(phoneNumber?: string): UnknownRecord[] {
+  return getByPhone(contactsWithWidgetByPhone, phoneNumber);
+}
+
+/**
+ * Pairs each matched contact with the widget the connector returned for it and stores the result for the
+ * call. Contacts without a widget are left out. Resets the dropdown selection if that contact is gone.
+ */
+export function setContactWidgets({ phoneNumber, contacts, widgets }: { phoneNumber: string; contacts: UnknownRecord[]; widgets: { contactId?: unknown; widget?: UnknownRecord }[] }): UnknownRecord[] {
+  const widgetById = new Map<string, UnknownRecord>(widgets.filter(w => w?.widget?.schema).map(w => [String(w.contactId), w.widget!] as [string, UnknownRecord]));
+  const withWidget: UnknownRecord[] = contacts
+    .filter(c => widgetById.has(String(c.id)))
+    .map(c => ({ ...c, widget: widgetById.get(String(c.id)) }));
+  contactsWithWidgetByPhone.set(phoneNumber, withWidget);
+  latestPhoneNumber = phoneNumber;
+  if (!withWidget.some(c => String(c.id) === selectedContactId)) {
+    selectedContactId = '';
+  }
+  return withWidget;
+}
+
+/** A page with one line of text, for "nothing to show" and error states. */
+export function buildContactWidgetMessagePage(message: string, severity: 'info' | 'warning' | 'error' = 'info'): UnknownRecord {
+  return {
+    data: {
+      page: {
+        type: 'json-schema',
+        schema: { type: 'object', properties: { message: { type: 'string', description: message } } },
+        uiSchema: { message: { 'ui:field': 'admonition', 'ui:severity': severity } },
+        formData: {},
+      },
+      actions: [],
+    },
+  };
 }
 
 /** Property name of the contact dropdown shown when several matched contacts have a widget. */
@@ -200,26 +228,8 @@ export function openContactWidgetLink(url: string): void {
   window.open(url, '_blank', 'noopener');
 }
 
-const WIDGET_PROBE_INTERVAL_MS = 24 * 60 * 60 * 1000;
-
-/**
- * Local matched-contact cache entries written before widget support carry no widget, and a platform that never
- * returns one looks the same. Re-fetch from the server at most once a day per platform to tell them apart.
- */
-export async function shouldProbeContactWidget({ platformName, contacts }: { platformName: string; contacts?: UnknownRecord[] | null }): Promise<boolean> {
-  if (!platformName || !contacts?.some(c => !c.isNewContact)) {
-    return false;
-  }
-  const key = `contactWidgetProbeAt-${platformName}`;
-  const stored = await chrome.storage.local.get(key) as UnknownRecord;
-  if (Date.now() - (stored[key] ?? 0) < WIDGET_PROBE_INTERVAL_MS) {
-    return false;
-  }
-  await chrome.storage.local.set({ [key]: Date.now() });
-  return true;
-}
-
 export function resetContactWidgetsForTest(): void {
+  matchedContactsByPhone.clear();
   contactsWithWidgetByPhone.clear();
   latestPhoneNumber = '';
   selectedContactId = '';

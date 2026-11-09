@@ -106,7 +106,7 @@ async function onEvent({ data }: EventOptions) {
     case '/sidebarApps/app-connect-contact':
     case '/sidebarApps/app-connect-contact/inputChanged':
     case '/sidebarApps/app-connect-contact/button-click':
-      await appConnectContactWidgetHandler.onEvent({ data, manifest, platformName });
+      await appConnectContactWidgetHandler.onEvent({ data, manifest, platformName, crmName: platform?.displayName });
       break;
     case '/custom-button-click':
       await customButtonClickHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

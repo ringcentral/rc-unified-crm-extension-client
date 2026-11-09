@@ -6,12 +6,15 @@ import {
   getContactsWithWidget,
   registerContactWidgetApp,
   orderContactsBySelection,
-  registerContactWidgetAppIfSeen,
-  rememberContactWidgets,
+  getMatchedContacts,
+  buildContactWidgetMessagePage,
+  rememberMatchedContacts,
   resetContactWidgetsForTest,
   resolveContactWidgetLink,
   selectContactWidget,
+  setContactWidgets,
 } from '../../src/lib/contactWidget.ts';
+import { seedStorage } from '../setup/storageHelpers';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
 
 const widget = (overrides = {}) => ({
@@ -44,7 +47,7 @@ describe('contactWidget', () => {
 
     it('names the widget app after the CRM', () => {
       registerContactWidgetApp('Clio');
-      rememberContactWidgets({ phoneNumber: '+1650', contacts: [{ id: '2', widget: widget() }], crmName: 'Salesforce' });
+      registerContactWidgetApp('Salesforce');
 
       const names = getWidgetPostMessages()
         .filter(({ message }) => message.type === 'rc-adapter-register-widget-app')
@@ -52,46 +55,77 @@ describe('contactWidget', () => {
       expect(names).toEqual(['Clio Contact', 'Salesforce Contact']);
     });
 
-    it('remembers only contacts with a widget and registers the app lazily', () => {
-      expect(rememberContactWidgets({ phoneNumber: '+1650', contacts: [{ id: '1' }] })).toBe(false);
+    it('registers the app once a real contact matched and the connector implements getContactWidget', async () => {
+      seedStorage({ implementedInterfaces: { getContactWidget: true } });
+
+      expect(await rememberMatchedContacts({ phoneNumber: '+1650', contacts: [{ id: 'createNewContact', isNewContact: true }] })).toBe(false);
+      expect(await rememberMatchedContacts({ phoneNumber: '+1650', contacts: null })).toBe(false);
       expect(getWidgetPostMessages()).toHaveLength(0);
 
-      expect(rememberContactWidgets({ phoneNumber: '+1650', contacts: [{ id: '1' }, { id: '2', widget: widget() }] })).toBe(true);
+      expect(await rememberMatchedContacts({ phoneNumber: '+1650', contacts: [{ id: '1' }, { id: 'createNewContact', isNewContact: true }], crmName: 'Clio' })).toBe(true);
 
-      expect(getContactsWithWidget('+1650').map(c => c.id)).toEqual(['2']);
-      expect(getWidgetPostMessages()).toHaveLength(1);
+      expect(getMatchedContacts('+1650').map(c => c.id)).toEqual(['1']);
+      const registrations = getWidgetPostMessages().filter(({ message }) => message.type === 'rc-adapter-register-widget-app');
+      expect(registrations).toHaveLength(1);
+      expect(registrations[0].message.app.name).toBe('Clio Contact');
     });
 
-    it('falls back to the latest call and forgets on call end', () => {
-      rememberContactWidgets({ phoneNumber: '+1650', contacts: [{ id: '2', widget: widget() }] });
+    it('does not register the app when the connector does not implement getContactWidget', async () => {
+      seedStorage({ implementedInterfaces: { getContactWidget: false } });
 
+      expect(await rememberMatchedContacts({ phoneNumber: '+1650', contacts: [{ id: '1' }] })).toBe(false);
+      seedStorage({ implementedInterfaces: null });
+      expect(await rememberMatchedContacts({ phoneNumber: '+1650', contacts: [{ id: '1' }] })).toBe(false);
+
+      expect(getMatchedContacts('+1650')).toEqual([]);
+      expect(getWidgetPostMessages()).toHaveLength(0);
+    });
+
+    it('ignores a missing phone number', async () => {
+      seedStorage({ implementedInterfaces: { getContactWidget: true } });
+
+      expect(await rememberMatchedContacts({ phoneNumber: '', contacts: [{ id: '1' }] })).toBe(false);
+      forgetContactWidgets('');
+    });
+
+    it('pairs matched contacts with their widgets by id and leaves out contacts without one', () => {
+      const contacts = [{ id: 1, name: 'Jane' }, { id: 2, name: 'John' }, { id: 3, name: 'Jim' }];
+
+      const result = setContactWidgets({
+        phoneNumber: '+1650',
+        contacts,
+        widgets: [{ contactId: '2', widget: widget() }, { contactId: '3', widget: { uiSchema: {} } }, { contactId: '9', widget: widget() }],
+      });
+
+      expect(result.map(c => c.id)).toEqual([2]);
+      expect(result[0].widget).toEqual(widget());
+      expect(getContactsWithWidget('+1650').map(c => c.id)).toEqual([2]);
+    });
+
+    it('falls back to the latest call and forgets on call end', async () => {
+      seedStorage({ implementedInterfaces: { getContactWidget: true } });
+      await rememberMatchedContacts({ phoneNumber: '+1650', contacts: [{ id: '2' }] });
+      setContactWidgets({ phoneNumber: '+1650', contacts: [{ id: '2' }], widgets: [{ contactId: '2', widget: widget() }] });
+
+      expect(getMatchedContacts('+1999').map(c => c.id)).toEqual(['2']);
       expect(getContactsWithWidget('+1999').map(c => c.id)).toEqual(['2']);
       expect(getContactsWithWidget(undefined).map(c => c.id)).toEqual(['2']);
 
       forgetContactWidgets('+1650');
 
+      expect(getMatchedContacts('+1650')).toEqual([]);
       expect(getContactsWithWidget('+1650')).toEqual([]);
       expect(getContactsWithWidget('+1999')).toEqual([]);
     });
+  });
 
-    it('remembers that the platform returned a widget and registers the app at startup afterwards', async () => {
-      await registerContactWidgetAppIfSeen('clio');
-      expect(getWidgetPostMessages()).toHaveLength(0);
+  describe('buildContactWidgetMessagePage', () => {
+    it('shows a single admonition line with the message', () => {
+      const result = buildContactWidgetMessagePage('Nothing here', 'warning');
 
-      rememberContactWidgets({ phoneNumber: '+1650', contacts: [{ id: '2', widget: widget() }], platformName: 'clio' });
-      resetContactWidgetsForTest();
-      await registerContactWidgetAppIfSeen('clio', 'Clio');
-      await registerContactWidgetAppIfSeen('salesforce');
-      await registerContactWidgetAppIfSeen(undefined);
-
-      const registrations = getWidgetPostMessages().filter(({ message }) => message.type === 'rc-adapter-register-widget-app');
-      expect(registrations).toHaveLength(2);
-      expect(registrations[1].message.app.name).toBe('Clio Contact');
-    });
-
-    it('ignores a missing phone number', () => {
-      expect(rememberContactWidgets({ phoneNumber: '', contacts: [{ id: '2', widget: widget() }] })).toBe(false);
-      forgetContactWidgets('');
+      expect(result.data.page.schema.properties.message).toEqual({ type: 'string', description: 'Nothing here' });
+      expect(result.data.page.uiSchema.message).toEqual({ 'ui:field': 'admonition', 'ui:severity': 'warning' });
+      expect(result.data.actions).toEqual([]);
     });
   });
 
@@ -155,7 +189,7 @@ describe('contactWidget', () => {
 
     it('falls back to the first contact when the selection is unknown and resets when the call ends', () => {
       const contacts = [{ id: 1, name: 'Jane', widget: widget() }, { id: 2, name: 'John', widget: widget() }];
-      rememberContactWidgets({ phoneNumber: '+1650', contacts });
+      setContactWidgets({ phoneNumber: '+1650', contacts, widgets: contacts.map(c => ({ contactId: String(c.id), widget: c.widget })) });
       selectContactWidget('2');
       expect(getSelectedContact(contacts)?.id).toBe(2);
 
