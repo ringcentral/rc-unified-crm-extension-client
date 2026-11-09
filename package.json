@@ -5,7 +5,7 @@
   "main": "background.js",
   "scripts": {
     "build": "node ./build.ts",
-    "update:em": "node scripts/stable-update-embeddable.mjs",
+    "update:em": "node scripts/update-embeddable.mjs",
     "update": "node ./updateVersion.ts",
     "lint": "eslint src build.ts updateVersion.ts eslint.config.ts",
     "test": "vitest run",
