@@ -5,6 +5,7 @@
  * 2. Downloads the zip of ringcentral-embeddable branch extension-build
  * 3. Extracts it over public/embeddable (overwriting existing files)
  * 4. Deletes public/embeddable/index.html
+ * 5. Commits public/embeddable with message "update: Embeddable" and pushes
  *
  * Usage: node scripts/stable-update-embeddable.mjs [--no-checkout]
  *
@@ -70,6 +71,15 @@ try {
 
   fs.rmSync(path.join(target, 'index.html'), { force: true });
   console.log('Removed index.html');
+
+  run('git', ['-C', repoRoot, 'add', '-A', target]);
+  const staged = spawnSync('git', ['-C', repoRoot, 'diff', '--cached', '--quiet']);
+  if (staged.status === 0) {
+    console.log('No changes to commit.');
+  } else {
+    run('git', ['-C', repoRoot, 'commit', '-m', 'update: Embeddable']);
+    run('git', ['-C', repoRoot, 'push']);
+  }
   console.log('Done.');
 } finally {
   fs.rmSync(work, { recursive: true, force: true });
