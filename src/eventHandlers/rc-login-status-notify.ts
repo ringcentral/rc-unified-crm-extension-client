@@ -15,6 +15,7 @@ import adminCore from '../core/admin';
 import logService from '../service/logService';
 import { RcAPI } from '../lib/rcAPI';
 import pluginService from '../service/pluginService';
+import { clearRawAnalyticsRequestHeaders, setRawAnalyticsRequestHeaders } from '../lib/analyticsRequestHeaders';
 
 type UnknownRecord = Record<string, any>;
 
@@ -26,6 +27,31 @@ let firstTimeLogoutAbsorbed = false;
 
 function getWidgetFrameWindow(): Window {
   return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
+}
+
+function clearAnalyticsHeaders() {
+  clearRawAnalyticsRequestHeaders();
+  for (const name of ['rc-extension-id', 'rc-account-id', 'rc-analytics-account-id', 'rc-analytics-extension-id']) {
+    delete axios.defaults.headers.common[name];
+  }
+}
+
+async function applyAnalyticsIdentity(rcUserInfo: UnknownRecord, extensionInfo: UnknownRecord, platformName: string, manifest: UnknownRecord) {
+  const identity = {
+    extensionId: rcUserInfo.rcExtensionId,
+    rcAccountId: rcUserInfo.rcAccountId,
+    platformName,
+    rcAccountIdRaw: extensionInfo.account?.id,
+    rcExtensionIdRaw: extensionInfo.id,
+  };
+  await chrome.storage.local.set({ rcUserInfo, analyticsIdentity: identity });
+  identify(identity);
+  group({ rcAccountId: rcUserInfo.rcAccountId });
+  clearAnalyticsHeaders();
+  axios.defaults.headers.common['rc-extension-id'] = rcUserInfo.rcExtensionId;
+  axios.defaults.headers.common['rc-account-id'] = rcUserInfo.rcAccountId;
+  setRawAnalyticsRequestHeaders(manifest.serverUrl, identity.rcAccountIdRaw, identity.rcExtensionIdRaw);
+  axios.defaults.headers.common['developer-author-name'] = manifest?.author?.name ?? '';
 }
 
 export async function onEvent({ data }: EventOptions): Promise<void> {
@@ -42,6 +68,7 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
   const { rcUserInfo: previousRcUserInfo } = await chrome.storage.local.get('rcUserInfo') as { rcUserInfo?: UnknownRecord };
   let rcInfo: UnknownRecord | undefined;
   let currentRcUserInfo: UnknownRecord | undefined;
+  let analyticsEstablished = false;
   // get login status from widget
   const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} }) as { userPermissions: UnknownRecord };
   if (data.loggedIn) {
@@ -50,6 +77,14 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
     userPermissions.ringCX = data.features && data.features.ringCX;
     userPermissions.sms = data.features && data.features.sms;
     rcInfo = await getRcInfo() as UnknownRecord;
+    const { analyticsIdentity: storedAnalyticsIdentity } = await chrome.storage.local.get('analyticsIdentity') as { analyticsIdentity?: UnknownRecord };
+    const extensionInfoForAnalytics = rcInfo?.value?.cachedData?.extensionInfo;
+    if (storedAnalyticsIdentity && (String(storedAnalyticsIdentity.rcExtensionIdRaw) !== String(extensionInfoForAnalytics?.id) ||
+        String(storedAnalyticsIdentity.rcAccountIdRaw) !== String(extensionInfoForAnalytics?.account?.id))) {
+      reset();
+      clearAnalyticsHeaders();
+      await chrome.storage.local.remove('analyticsIdentity');
+    }
     const smsSendingEnabled = rcInfo?.value?.cachedData?.extensionFeatures?.records?.find((ef: UnknownRecord) => ef.id === 'SMSSending')?.available ?? false;
     if (smsSendingEnabled) {
       userPermissions.c2sms = true;
@@ -79,8 +114,13 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
           await authCore.clearLocalCrmAuthState();
           rcUnifiedCrmExtJwt = undefined;
         }
+        await applyAnalyticsIdentity(currentRcUserInfo, extensionInfo, platformName, manifest);
+        analyticsEstablished = true;
       }
       catch (e) {
+        reset();
+        clearAnalyticsHeaders();
+        await chrome.storage.local.remove('analyticsIdentity');
         console.error('Failed to compare RingCentral user identity', e);
       }
     }
@@ -203,15 +243,9 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
             rcExtensionId: userInfoResponse.extensionId,
           };
         }
-        const rcUserInfo = currentRcUserInfo;
-        await chrome.storage.local.set({ ['rcUserInfo']: rcUserInfo });
-        reset();
-        identify({ extensionId: rcUserInfo?.rcExtensionId, rcAccountId: rcUserInfo?.rcAccountId, platformName });
-        group({ rcAccountId: rcUserInfo?.rcAccountId });
-        // setup headers for server side analytics
-        axios.defaults.headers.common['rc-extension-id'] = rcUserInfo?.rcExtensionId;
-        axios.defaults.headers.common['rc-account-id'] = rcUserInfo?.rcAccountId;
-        axios.defaults.headers.common['developer-author-name'] = manifest?.author?.name ?? '';
+        if (!analyticsEstablished) {
+          await applyAnalyticsIdentity(currentRcUserInfo, rcInfo.value.cachedData.extensionInfo, platformName, manifest);
+        }
       }
       if (platformInfo && platform && authCore.isAdminManagedOAuthEnabled(platform)) {
         await authCore.checkManagedOAuthBeforeCrmVisible({ manifest, platformName, platform });
@@ -219,6 +253,8 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
     }
     catch (e) {
       reset();
+      clearAnalyticsHeaders();
+      await chrome.storage.local.remove('analyticsIdentity');
       console.error(e);
     }
   }
@@ -259,6 +295,11 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
         await chrome.storage.local.set({ ['rcLoginStatus']: rcLoginStatus });
       }
     }
+  }
+  if (!data.loggedIn) {
+    reset();
+    clearAnalyticsHeaders();
+    await chrome.storage.local.remove('analyticsIdentity');
   }
   // Check version and show release notes
   const registeredVersionInfo = await chrome.storage.local.get('rc-crm-extension-version') as UnknownRecord;

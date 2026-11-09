@@ -22,6 +22,45 @@ const eventAddedVia = 'client';
 const version = manifest.version;
 let author = '';
 let platformName = '';
+let rawIdentity: AnalyticsPayload = {};
+let identifiedExtensionId: string | undefined;
+let identityRevision = 0;
+
+function normalizeRawId(value: unknown): string | undefined {
+    if (typeof value === 'number') {
+        return Number.isSafeInteger(value) && value > 0 ? String(value) : undefined;
+    }
+    return typeof value === 'string' && /^[1-9]\d{0,31}$/.test(value) ? value : undefined;
+}
+
+function rawProperties() {
+    if (process.env.MIXPANEL_RAW_IDS_ENABLED === 'false') return { analyticsIdentityStatus: 'disabled' };
+    const { rcAccountIdRaw, rcExtensionIdRaw } = rawIdentity;
+    return {
+        ...rawIdentity,
+        analyticsIdentityStatus: rcAccountIdRaw && rcExtensionIdRaw ? 'complete' :
+            rcAccountIdRaw || rcExtensionIdRaw ? 'partial' : 'missing'
+    };
+}
+
+async function restoreStoredIdentity() {
+    const revision = identityRevision;
+    const { analyticsIdentity, rcUserInfo, rcLoginStatus } = await chrome.storage.local.get(['analyticsIdentity', 'rcUserInfo', 'rcLoginStatus']) as {
+        analyticsIdentity?: AnalyticsPayload; rcUserInfo?: AnalyticsPayload; rcLoginStatus?: boolean;
+    };
+    if (revision !== identityRevision) return;
+    if (rcLoginStatus !== true || !analyticsIdentity ||
+        analyticsIdentity.extensionId !== rcUserInfo?.rcExtensionId ||
+        analyticsIdentity.rcAccountId !== rcUserInfo?.rcAccountId) {
+        rawIdentity = {};
+        if (rcLoginStatus === false || analyticsIdentity) reset();
+        return;
+    }
+    if (identifiedExtensionId === analyticsIdentity.extensionId &&
+        rawIdentity.rcExtensionIdRaw === normalizeRawId(analyticsIdentity.rcExtensionIdRaw) &&
+        rawIdentity.rcAccountIdRaw === normalizeRawId(analyticsIdentity.rcAccountIdRaw)) return;
+    identify(analyticsIdentity);
+}
 
 function setAuthor(authorName: string) {
     if (!useAnalytics) {
@@ -31,13 +70,27 @@ function setAuthor(authorName: string) {
 }
 
 function reset() {
+    rawIdentity = {};
+    platformName = '';
+    identifiedExtensionId = undefined;
+    identityRevision++;
     if (!useAnalytics) {
         return;
     }
     mixpanel.reset();
 }
 
-function identify({ platformName: nextPlatformName, rcAccountId, extensionId }: AnalyticsPayload = {}) {
+function identify({ platformName: nextPlatformName, rcAccountId, extensionId, rcAccountIdRaw, rcExtensionIdRaw }: AnalyticsPayload = {}) {
+    if (!extensionId) { reset(); return; }
+    if (identifiedExtensionId && identifiedExtensionId !== extensionId) reset();
+    identityRevision++;
+    identifiedExtensionId = extensionId;
+    const account = normalizeRawId(rcAccountIdRaw);
+    const extension = normalizeRawId(rcExtensionIdRaw);
+    rawIdentity = {
+        ...(account ? { rcAccountIdRaw: account } : {}),
+        ...(extension ? { rcExtensionIdRaw: extension } : {})
+    };
     if (!useAnalytics) {
         return;
     }
@@ -46,7 +99,8 @@ function identify({ platformName: nextPlatformName, rcAccountId, extensionId }: 
         crmPlatform: nextPlatformName,
         rcAccountId,
         version,
-        author
+        author,
+        ...(process.env.MIXPANEL_RAW_IDS_ENABLED === 'false' ? {} : rawIdentity)
     });
     platformName = nextPlatformName;
 }
@@ -63,7 +117,10 @@ function track(event: string, properties: AnalyticsPayload = {}) {
     if (!useAnalytics) {
         return;
     }
-    mixpanel.track(event, { appName, via: eventAddedVia, version, collectedFrom: 'client', ...properties });
+    const eventProperties = { ...properties };
+    delete eventProperties.rcAccountIdRaw;
+    delete eventProperties.rcExtensionIdRaw;
+    mixpanel.track(event, { appName, via: eventAddedVia, version, collectedFrom: 'client', ...eventProperties, analyticsSchemaVersion: 2, ...rawProperties() });
 }
 
 function trackPage(name: string, properties: AnalyticsPayload = {}) {
@@ -71,6 +128,9 @@ function trackPage(name: string, properties: AnalyticsPayload = {}) {
         return;
     }
     try {
+        const eventProperties = { ...properties };
+        delete eventProperties.rcAccountIdRaw;
+        delete eventProperties.rcExtensionIdRaw;
         const pathSegments = name.split('/');
         const rootPath = `/${pathSegments[1]}`;
         const childPath = name.split(rootPath)[1];
@@ -84,7 +144,9 @@ function trackPage(name: string, properties: AnalyticsPayload = {}) {
                 childPath,
                 search: window.location.search,
                 url: window.location.href,
-                ...properties
+                ...eventProperties,
+                analyticsSchemaVersion: 2,
+                ...rawProperties()
             },
             {
                 event_name: `Viewed ${rootPath}`
@@ -284,6 +346,7 @@ function trackUpdateCallRecordingLink({ processState }: AnalyticsPayload = {}) {
 }
 
 async function trackMissingServiceWorker() {
+    await restoreStoredIdentity();
     const platformInfo = await chrome.storage.local.get('platform-info') as AnalyticsPayload;
     const platformName = platformInfo['platform-info'].platformName;
     const userInfo = await chrome.storage.local.get('rcUserInfo') as AnalyticsPayload;
@@ -301,6 +364,7 @@ async function trackMissingServiceWorker() {
 }
 
 async function trackChromeAPIError(errorMessage?: string) {
+    await restoreStoredIdentity();
     track('Chrome API error ', {
         appName,
         via: eventAddedVia,

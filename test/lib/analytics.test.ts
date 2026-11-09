@@ -254,4 +254,47 @@ describe('analytics', () => {
       crmPlatform: 'salesforce',
     }));
   });
+  it('adds raw IDs to events, pages and profiles, and clears them on reset or account switch', async () => {
+    const analytics = await loadAnalytics({ token: 'token-1' });
+    analytics.identify({ extensionId: 'hash-101', rcAccountId: 'hash-900', rcExtensionIdRaw: 101, rcAccountIdRaw: '900' });
+    analytics.trackRcLogin();
+    analytics.trackPage('/settings');
+    expect(mixpanel.identify).toHaveBeenLastCalledWith('hash-101');
+    expect(mixpanel.people.set).toHaveBeenLastCalledWith(expect.objectContaining({ rcAccountIdRaw: '900', rcExtensionIdRaw: '101' }));
+    expect(mixpanel.track).toHaveBeenLastCalledWith('Login with RingCentral account', expect.objectContaining({
+      rcAccountIdRaw: '900', rcExtensionIdRaw: '101', analyticsSchemaVersion: 2, analyticsIdentityStatus: 'complete'
+    }));
+    expect(mixpanel.track_pageview).toHaveBeenLastCalledWith(expect.objectContaining({ rcExtensionIdRaw: '101' }), expect.any(Object));
+    analytics.identify({ extensionId: 'hash-202', rcAccountId: 'hash-901' });
+    analytics.trackRcLogin();
+    expect(mixpanel.reset).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(mixpanel.track).mock.calls.at(-1)?.[1]).not.toHaveProperty('rcExtensionIdRaw');
+    analytics.reset();
+    analytics.trackPage('/settings');
+    expect(vi.mocked(mixpanel.track_pageview).mock.calls.at(-1)?.[0]).not.toHaveProperty('rcAccountIdRaw');
+  });
+
+  it('restores background context only when stored raw and current legacy identities agree', async () => {
+    seedStorage({ rcLoginStatus: true, rcUserInfo: { rcExtensionId: 'hash-101', rcAccountId: 'hash-900' },
+      analyticsIdentity: { extensionId: 'hash-101', rcAccountId: 'hash-900', rcExtensionIdRaw: '101', rcAccountIdRaw: '900' } });
+    const analytics = await loadAnalytics({ token: 'token-1' });
+    await analytics.trackChromeAPIError('test');
+    expect(mixpanel.track).toHaveBeenLastCalledWith('Chrome API error ', expect.objectContaining({ rcExtensionIdRaw: '101' }));
+    seedStorage({ rcLoginStatus: true, rcUserInfo: { rcExtensionId: 'hash-202', rcAccountId: 'hash-900' },
+      analyticsIdentity: { extensionId: 'hash-101', rcAccountId: 'hash-900', rcExtensionIdRaw: '101' } });
+    await analytics.trackChromeAPIError('test');
+    expect(vi.mocked(mixpanel.track).mock.calls.at(-1)?.[1]).not.toHaveProperty('rcExtensionIdRaw');
+  });
+
+  it('supports disabling raw properties and does not accept hashes or unsafe numeric IDs as raw', async () => {
+    const analytics = await loadAnalytics({ token: 'token-1' });
+    analytics.identify({ extensionId: 'hash', rcAccountIdRaw: 'a'.repeat(64), rcExtensionIdRaw: Number.MAX_SAFE_INTEGER + 1 });
+    analytics.trackRcLogin();
+    expect(vi.mocked(mixpanel.track).mock.calls.at(-1)?.[1]).not.toHaveProperty('rcExtensionIdRaw');
+    vi.stubEnv('MIXPANEL_RAW_IDS_ENABLED', 'false');
+    analytics.identify({ extensionId: 'hash', rcAccountIdRaw: '900', rcExtensionIdRaw: '101' });
+    analytics.trackRcLogin();
+    expect(vi.mocked(mixpanel.track).mock.calls.at(-1)?.[1]).not.toHaveProperty('rcAccountIdRaw');
+  });
+
 });

@@ -36,6 +36,11 @@ const axiosMock = vi.hoisted(() => ({
   },
 }));
 
+vi.mock('../../src/lib/analyticsRequestHeaders.ts', () => ({
+  clearRawAnalyticsRequestHeaders: vi.fn(),
+  setRawAnalyticsRequestHeaders: vi.fn(),
+}));
+
 vi.mock('axios', () => ({
   default: axiosMock,
 }));
@@ -362,6 +367,8 @@ describe('rc-login-status-notify event handler', () => {
       extensionId: 'extension-1',
       rcAccountId: 'account-1',
       platformName: 'salesforce',
+      rcAccountIdRaw: 'account-local',
+      rcExtensionIdRaw: 'extension-local',
     });
     expect(group).toHaveBeenCalledWith({ rcAccountId: 'account-1' });
     expect(axios.defaults.headers.common).toMatchObject({
@@ -626,4 +633,17 @@ describe('rc-login-status-notify event handler', () => {
     expect(showNotification).not.toHaveBeenCalled();
     expect(readStorage()['rc-crm-extension-version']).toBe('1.7.34');
   });
+  it('clears raw storage and all analytics headers on logout, including an absorbed notification', async () => {
+    seedStorage({ rcLoginStatus: true, analyticsIdentity: { rcExtensionIdRaw: '101' } });
+    axios.defaults.headers.common['rc-analytics-extension-id'] = '101';
+    axios.defaults.headers.common['rc-analytics-account-id'] = '900';
+    axios.defaults.headers.common['rc-extension-id'] = 'hash-101';
+    const handler = await loadLoginStatusHandler();
+    await handler.onEvent({ data: { loggedIn: false, features: {} } });
+    expect(readStorage()).not.toHaveProperty('analyticsIdentity');
+    expect(axios.defaults.headers.common).not.toHaveProperty('rc-analytics-extension-id');
+    expect(axios.defaults.headers.common).not.toHaveProperty('rc-extension-id');
+    expect(reset).toHaveBeenCalled();
+  });
+
 });
