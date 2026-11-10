@@ -1,3 +1,4 @@
+import { trackPluginEvent } from '../../../../lib/analytics';
 import axios from 'axios';
 import { getPluginAdminConfigurePageRender } from '../../../../components/pluginAdminConfigurePage';
 import { getPluginConfigurePageRender } from '../../../../components/pluginConfigurePage';
@@ -85,6 +86,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
     type: 'rc-adapter-navigate-to',
     path: `/customized/${pluginConfigurePageRender.id}`,
   }, '*');
+  trackPluginEvent(formData.isFromAdmin ? 'Viewed plugin overview' : 'Viewed plugin settings', { pluginId: selectedPluginId, plugin, pluginAccess: selectedPluginAccess, surface: formData.isFromAdmin ? 'admin' : 'user' });
   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
 }
 

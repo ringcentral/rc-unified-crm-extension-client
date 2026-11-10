@@ -54,6 +54,18 @@ async function loadIdentifiedAnalytics() {
 }
 
 describe('analytics', () => {
+  it('tracks plugin metadata with the existing raw identity and excludes configuration', async () => {
+    const analytics = await loadAnalytics({ token: 'token-1' });
+    analytics.identify({ platformName: 'clio', rcAccountId: 'account-hash', extensionId: 'extension-hash', rcAccountIdRaw: '900', rcExtensionIdRaw: '101' });
+    analytics.trackPluginEvent('Plugin Configuration Saved', { pluginId: 'p', settingsScope: 'user',
+      plugin: { version: '1.0', isAsync: true, jwtToken: 'secret', config: { apiKey: 'secret' } } });
+    expect(mixpanel.track).toHaveBeenCalledWith('Plugin Configuration Saved', expect.objectContaining({
+      pluginId: 'p', pluginVersion: '1.0', executionMode: 'async', settingsScope: 'user',
+      rcAccountIdRaw: '900', rcExtensionIdRaw: '101', analyticsSchemaVersion: 2,
+    }));
+    expect(JSON.stringify(vi.mocked(mixpanel.track).mock.calls)).not.toContain('secret');
+  });
+
   afterEach(() => {
     vi.unstubAllEnvs();
   });

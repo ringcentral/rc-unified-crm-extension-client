@@ -3,7 +3,7 @@ import { openDB } from 'idb';
 import { getRcAccessToken, getRcInfo, setRcAdditionalSubmission, showNotification } from '../../src/lib/util.ts';
 import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { getManifest } from '../../src/service/manifestService.ts';
-import { trackCrmLogin, trackCrmLogout } from '../../src/lib/analytics.ts';
+import { trackCrmLogin, trackCrmLogout, trackPluginEvent } from '../../src/lib/analytics.ts';
 import platformSelectionPage from '../../src/components/platformSelectionPage.ts';
 import authPage from '../../src/components/authPage.ts';
 import managedOAuthSetupPage from '../../src/components/managedOAuthSetupPage.ts';
@@ -52,6 +52,7 @@ vi.mock('../../src/service/manifestService.ts', () => ({
 }));
 
 vi.mock('../../src/lib/analytics.ts', () => ({
+  trackPluginEvent: vi.fn(),
   trackCrmLogin: vi.fn(),
   trackCrmLogout: vi.fn(),
 }));
@@ -1140,6 +1141,7 @@ describe('auth core', () => {
       hasValidLicense: true,
     }));
     expect(readStorage().cachedPluginConfigFormData).toBeUndefined();
+    expect(trackPluginEvent).toHaveBeenCalledWith('Plugin Connection Result', expect.objectContaining({ success: true, operation: 'connect' }));
   });
 
   it('surfaces plugin OAuth callback failures instead of falling through to the connector flow', async () => {
@@ -1164,6 +1166,7 @@ describe('auth core', () => {
     expect(axios.get).not.toHaveBeenCalledWith(expect.stringContaining('/oauth-callback'));
     expect(readStorage().rcUnifiedCrmExtJwt).toBeUndefined();
     errorSpy.mockRestore();
+    expect(trackPluginEvent).toHaveBeenCalledWith('Plugin Connection Result', expect.objectContaining({ success: false, errorCode: 'authorization_failed' }));
   });
 
   it('handles connector OAuth callbacks, stores JWT, and refreshes license status', async () => {

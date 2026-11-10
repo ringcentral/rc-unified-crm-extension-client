@@ -1,3 +1,4 @@
+import { trackPluginEvent } from '../../../../lib/analytics';
 import { refreshUserSettings } from '../../../../core/user';
 import { getRcInfo, showNotification } from '../../../../lib/util';
 import { getMergedPluginConfigFromFormData, getMissingRequiredPluginConfigFields } from '../../../../components/pluginConfigurePage';
@@ -52,7 +53,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
     },
   };
   const userSettings = await refreshUserSettings({ changedSettings });
-  void userSettings;
+  if (userSettings) trackPluginEvent('Plugin Configuration Saved', { pluginId: form.pluginId, plugin: form.plugin, pluginAccess: form.access, settingsScope: 'user' });
   getWidgetFrameWindow().postMessage({
     type: 'rc-adapter-navigate-to',
     path: 'goBack',
