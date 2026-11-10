@@ -137,8 +137,13 @@ export async function addLog({
             type: 'rc-adapter-trigger-call-logger-match',
             sessionIds: [logInfo.sessionId],
           }, '*');
+          // Return the save result so the call log form can report a failure
+          return {
+            successful: !!addLogRes?.data?.successful,
+            logId: addLogRes?.data?.logId,
+            returnMessage: addLogRes?.data?.returnMessage,
+          };
         }
-        break;
       case 'Message':
         if (logInfo.type === 'Fax' || (logInfo.type === 'SMS' && logInfo.messages.some((m: UnknownRecord) => m.attachments.some((a: UnknownRecord) => a.type === 'MmsAttachment')))) {
           // eslint-disable-next-line no-param-reassign
@@ -345,7 +350,7 @@ export function openLog({ manifest, platformName, hostname, logId, contactType, 
   window.open(logPageUrl);
 }
 
-export async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, recordingLink, recordingDownloadLink, voicemailLink, voicemailMessageId, call, subject, note, startTime, duration, aiNote, transcript, result, direction, from, to, activityCompletionReady, isShowNotification }: UnknownRecord): Promise<void> {
+export async function updateLog({ serverUrl, logType, telephonySessionId, sessionId, recordingLink, recordingDownloadLink, voicemailLink, voicemailMessageId, call, subject, note, startTime, duration, aiNote, transcript, result, direction, from, to, activityCompletionReady, isShowNotification }: UnknownRecord): Promise<any> {
   const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as UnknownRecord;
   const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} }) as UnknownRecord;
   void rcAdditionalSubmission;
@@ -382,6 +387,11 @@ export async function updateLog({ serverUrl, logType, telephonySessionId, sessio
           if (isShowNotification) {
             showNotification({ level: callLogRes.data.returnMessage?.messageType ?? 'warning', message: callLogRes.data.returnMessage?.message ?? t('notifications.warning.callLogUpdateFailed'), ttl: callLogRes.data.returnMessage?.ttl ?? 3000, details: callLogRes.data.returnMessage?.details });
           }
+          // Return the save result so the call log form can report a failure
+          return {
+            successful: !!callLogRes.data.successful,
+            returnMessage: callLogRes.data.returnMessage,
+          };
         }
     }
   }

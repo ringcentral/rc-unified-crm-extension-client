@@ -24,10 +24,12 @@ type EventOptions = {
     isAutoLog: boolean;
     isCallAutoPopup: boolean;
     isExtensionNumber: boolean;
+    // RingCX wrap-up: build and post the log form only, without opening the log page
+    prepareOnly?: boolean;
 };
 
 function getDispositionNote(data: UnknownRecord): string {
-    if (data.body.triggerType !== 'callDisposition') {
+    if (data.body.triggerType !== 'prepareLogForm') {
         return '';
     }
     return data.body.note || data.body.call?.ringcx?.notes || '';
@@ -37,7 +39,7 @@ function getWidgetFrameWindow(): Window {
     return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
 }
 
-async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber }: EventOptions) {
+async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber, prepareOnly = false }: EventOptions) {
     void platformInfo;
     const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName, isExtensionNumber });
     const cachedSearchContactKey = `rc-crm-search-contact-${contactPhoneNumber}`;
@@ -48,6 +50,11 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
         // Unique: Google Sheets
         if (platformName === 'googleSheets') {
             showNotification({ level: callLogContactMatchMessage?.messageType, message: callLogContactMatchMessage?.message, ttl: callLogContactMatchMessage?.ttl, details: callLogContactMatchMessage?.details });
+        }
+        if (prepareOnly) {
+            // This is the first answer to the request, so the widget shows this reason instead of a form
+            responseMessage(data.requestId, { data: 'ok', noLogForm: callLogContactMatchMessage?.message || t('notifications.warning.noContactFound') });
+            return;
         }
         responseMessage(data.requestId, { data: 'ok' });
         return;
@@ -229,7 +236,8 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
         }
     }
     // Case: auto log OFF and manual -> open log page
-    else if (data.body.redirect) {
+    // RingCX wrap-up (prepareOnly): build the same form, the widget shows it in its own page
+    else if (data.body.redirect || prepareOnly) {
         let loggedContactId = null;
         const existingCallLogRecord = await chrome.storage.local.get(`rc-crm-call-log-${data.body.call.sessionId}`) as UnknownRecord;
         if (existingCallLogRecord[`rc-crm-call-log-${data.body.call.sessionId}`]) {
@@ -289,6 +297,9 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
             page: callPage,
         }, '*');
 
+        if (prepareOnly) {
+            return;
+        }
         // navigate to call log page
         getWidgetFrameWindow().postMessage({
             type: 'rc-adapter-navigate-to',

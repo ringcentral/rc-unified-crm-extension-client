@@ -754,6 +754,130 @@ describe('callLogger index', () => {
     expect(handlers.logForm.onEvent).toHaveBeenCalled();
   });
 
+  it('answers a saved log form with ok', async () => {
+    const { callLogger, util, handlers } = await loadCallLoggerIndex();
+    handlers.logForm.onEvent.mockResolvedValueOnce({ successful: true });
+
+    await callLogger.onEvent({
+      data: eventFor({ triggerType: 'logForm' }),
+      ...context,
+    });
+
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('answers a failed log form save with its error', async () => {
+    const { callLogger, util, handlers } = await loadCallLoggerIndex();
+    handlers.logForm.onEvent.mockResolvedValueOnce({ successful: false, message: 'CRM is down' });
+
+    await callLogger.onEvent({
+      data: eventFor({ triggerType: 'logForm' }),
+      ...context,
+    });
+
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { error: 'CRM is down' });
+    expect(util.responseMessage).not.toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
+  it('builds the RingCX wrap-up form without the overlay or the one-time log page', async () => {
+    const { callLogger, util, handlers, tempLogNotePage } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        oneTimeLog: { value: true },
+      },
+    });
+    const postMessage = vi.spyOn(window, 'postMessage');
+
+    // A live call: no final action and no duration yet.
+    await callLogger.onEvent({
+      data: eventFor({
+        triggerType: 'prepareLogForm',
+        redirect: true,
+        call: baseCall({
+          source: 'ringcx',
+          action: undefined,
+          duration: undefined,
+          ringcx: { notes: 'ringcx note' },
+        }),
+      }),
+      ...context,
+    });
+
+    expect(tempLogNotePage.getTempLogNotePageRender).not.toHaveBeenCalled();
+    expect(postMessage).not.toHaveBeenCalledWith({ type: 'rc-log-modal-loading-on' }, '*');
+    expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      triggerTypeInUse: 'createLog',
+      isAutoLog: false,
+      prepareOnly: true,
+    }));
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+    postMessage.mockRestore();
+  });
+
+  it('builds the RingCX wrap-up edit form when the call is already logged', async () => {
+    const { callLogger, logCore, handlers } = await loadCallLoggerIndex();
+    logCore.getLog
+      .mockResolvedValueOnce({ callLogs: [{ matched: true, sessionId: 'session-1' }] })
+      .mockResolvedValueOnce({ callLogs: [{ matched: true, sessionId: 'session-1', logData: { note: 'existing' } }] });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        triggerType: 'prepareLogForm',
+        call: baseCall({ source: 'ringcx' }),
+      }),
+      ...context,
+    });
+
+    expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      triggerTypeInUse: 'editLog',
+      prepareOnly: true,
+      existingCalls: [{ matched: true, sessionId: 'session-1', logData: { note: 'existing' } }],
+    }));
+  });
+
+  it('answers a RingCX wrap-up form request for an extension number with noLogForm', async () => {
+    const { callLogger, util, handlers } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        allowExtensionNumberLogging: { value: false },
+      },
+    });
+
+    await callLogger.onEvent({
+      data: eventFor({
+        triggerType: 'prepareLogForm',
+        call: baseCall({
+          source: 'ringcx',
+          from: { extensionNumber: '101' },
+        }),
+      }),
+      ...context,
+    });
+
+    expect(util.showNotification).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', {
+      data: 'ok',
+      noLogForm: expect.any(String),
+    });
+    expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+  });
+
+  it('no longer opens a log form for a RingCX callDisposition request', async () => {
+    const { callLogger, util, handlers } = await loadCallLoggerIndex();
+
+    await callLogger.onEvent({
+      data: eventFor({
+        triggerType: 'callDisposition',
+        redirect: true,
+        call: baseCall({ source: 'ringcx' }),
+      }),
+      ...context,
+    });
+
+    expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+  });
+
   it('acknowledges ringing presence updates without logging', async () => {
     const { callLogger, util, handlers } = await loadCallLoggerIndex();
 
@@ -881,14 +1005,14 @@ describe('callLogger createLog', () => {
   it.each([
     ['the request note', { note: 'disposition note', call: baseCall({ ringcx: { notes: 'ringcx note' } }) }, 'disposition note'],
     ['the RingCX call notes', { call: baseCall({ ringcx: { notes: 'ringcx note' } }) }, 'ringcx note'],
-  ])('prefills a RingCX disposition log page with %s', async (_label, overrides, expectedNote) => {
+  ])('prefills a RingCX wrap-up form with %s', async (_label, overrides, expectedNote) => {
     const { createLog, logCore, logUtil, logPage } = await loadCreateLog();
     await createLog.onEvent({
       data: eventFor({
-        triggerType: 'callDisposition',
-        redirect: true,
+        triggerType: 'prepareLogForm',
         ...overrides,
       }),
+      prepareOnly: true,
       triggerTypeInUse: 'createLog',
       contactPhoneNumber: '+16505550100',
       userSettings: {},
@@ -907,10 +1031,11 @@ describe('callLogger createLog', () => {
     }));
   });
 
-  it('falls back to the cached note when a RingCX disposition has no notes', async () => {
+  it('falls back to the cached note when a RingCX wrap-up has no notes', async () => {
     const { createLog, logCore, logPage } = await loadCreateLog();
     await createLog.onEvent({
-      data: eventFor({ triggerType: 'callDisposition', redirect: true, note: '' }),
+      data: eventFor({ triggerType: 'prepareLogForm', note: '' }),
+      prepareOnly: true,
       triggerTypeInUse: 'createLog',
       contactPhoneNumber: '+16505550100',
       userSettings: {},
@@ -926,10 +1051,11 @@ describe('callLogger createLog', () => {
     }));
   });
 
-  it('keeps an existing log note over RingCX disposition notes', async () => {
+  it('keeps an existing log note over RingCX wrap-up notes', async () => {
     const { createLog, logPage } = await loadCreateLog();
     await createLog.onEvent({
-      data: eventFor({ triggerType: 'callDisposition', redirect: true, note: 'disposition note' }),
+      data: eventFor({ triggerType: 'prepareLogForm', note: 'disposition note' }),
+      prepareOnly: true,
       triggerTypeInUse: 'editLog',
       contactPhoneNumber: '+16505550100',
       userSettings: {},
@@ -944,7 +1070,62 @@ describe('callLogger createLog', () => {
     }));
   });
 
-  it('ignores notes in the request outside RingCX dispositions', async () => {
+  it('posts the RingCX wrap-up form without navigating or answering', async () => {
+    const { createLog, util } = await loadCreateLog();
+    await createLog.onEvent({
+      data: eventFor({
+        triggerType: 'prepareLogForm',
+        call: baseCall({ source: 'ringcx', ringcx: { notes: 'ringcx note' } }),
+      }),
+      prepareOnly: true,
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: false,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    const messageTypes = getWidgetPostMessages().map(({ message }) => message.type);
+    expect(messageTypes).toContain('rc-adapter-update-call-log-page');
+    expect(messageTypes).not.toContain('rc-adapter-navigate-to');
+    // The call logger index answers once the form is posted.
+    expect(util.responseMessage).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['the contact match message', { messageType: 'warning', message: 'No match', ttl: 3000 }, 'No match'],
+    ['a default reason', undefined, 'notifications.warning.noContactFound'],
+  ])('answers a RingCX wrap-up form request with no contact match with %s', async (_label, returnMessage, expectedReason) => {
+    const { createLog, contactCore, util, logPage } = await loadCreateLog();
+    contactCore.getContact.mockResolvedValueOnce({
+      matched: false,
+      returnMessage,
+      contactInfo: [],
+    });
+
+    await createLog.onEvent({
+      data: eventFor({ triggerType: 'prepareLogForm' }),
+      prepareOnly: true,
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: false,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(util.responseMessage).toHaveBeenCalledTimes(1);
+    expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok', noLogForm: expectedReason });
+    expect(logPage.getLogPageRender).not.toHaveBeenCalled();
+    expect(getWidgetPostMessages()).toEqual([]);
+  });
+
+  it('ignores notes in the request outside RingCX wrap-ups', async () => {
     const { createLog, logPage } = await loadCreateLog();
     await createLog.onEvent({
       data: eventFor({ redirect: true, note: 'other note' }),
@@ -1593,7 +1774,7 @@ describe('callLogger logForm', () => {
       triggerType: 'createLog',
     });
 
-    await logForm.onEvent({
+    const result = await logForm.onEvent({
       data: eventFor({
         formData: { contact: 'contact-1', note: 'Call note' },
       }),
@@ -1602,6 +1783,40 @@ describe('callLogger logForm', () => {
     });
 
     expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(result).toEqual({ successful: false, message: expect.any(String) });
+  });
+
+  it.each([
+    ['a saved create', 'createLog', { successful: true }, { successful: true }],
+    ['a failed create, with the server message', 'createLog', { successful: false, returnMessage: { message: 'Duplicate log' } }, { successful: false, message: 'Duplicate log' }],
+    ['a failed create, with a default message', 'createLog', { successful: false }, { successful: false, message: expect.any(String) }],
+    ['a saved edit', 'editLog', { successful: true }, { successful: true }],
+    ['a failed edit, with the server message', 'editLog', { successful: false, returnMessage: { message: 'Log is locked' } }, { successful: false, message: 'Log is locked' }],
+  ])('returns the save result for %s', async (_label, triggerType, saveResult, expected) => {
+    seedStorage({
+      userSettings: {},
+      implementedInterfaces: {},
+    });
+    const { logForm, logCore } = await loadLogForm();
+    logCore.addLog.mockResolvedValueOnce(saveResult);
+    logCore.updateLog.mockResolvedValueOnce(saveResult);
+
+    const result = await logForm.onEvent({
+      data: eventFor({
+        formData: {
+          triggerType,
+          contact: 'contact-1',
+          contactName: 'Existing Contact',
+          contactType: 'Lead',
+          activityTitle: 'Title',
+          note: 'Call note',
+        },
+      }),
+      contactPhoneNumber: '+16505550100',
+      ...context,
+    });
+
+    expect(result).toEqual(expected);
   });
 
   it('updates existing call logs and dispositions', async () => {
