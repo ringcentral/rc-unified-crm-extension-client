@@ -77,6 +77,7 @@ async function runBuild() {
         outdir: 'dist',
         define: {
             'process.env.MIXPANEL_TOKEN': JSON.stringify(process.env?.MIXPANEL_TOKEN ?? ""),
+            'process.env.MIXPANEL_RAW_IDS_ENABLED': JSON.stringify(process.env?.MIXPANEL_RAW_IDS_ENABLED ?? "true"),
             'process.env.RC_CLIENT_ID': JSON.stringify(process.env?.RC_CLIENT_ID ?? "")
         },
         plugins: [
