@@ -424,6 +424,41 @@ describe('popup runtime', () => {
     expect(skipped.headers).toBeUndefined();
   });
 
+  it('uses the new OAuth JWT after reading call logs and stops sending it after logout', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'old-expired-jwt' });
+    const runtime = await loadPopupRuntime();
+    const actualAxios = await vi.importActual<typeof import('axios')>('axios');
+    // Keep real Axios default-header merging; only replace the network boundary.
+    const client = actualAxios.default.create({
+      adapter: async (config) => ({
+        data: { successful: true, logs: [], returnMessage: {}, sentAuthorization: config.headers.Authorization },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      }),
+    });
+    Object.assign(runtime.axiosMock, { defaults: client.defaults, get: client.get.bind(client) });
+    Object.assign(runtime.util, {
+      getRcCallLogIdentity: vi.fn(async () => ({ extensionNumber: '101', hashedExtensionId: '' })),
+    });
+    client.interceptors.request.use(runtime.requestInterceptors[0].fulfilled);
+    const logCore = await import('../../src/core/log.ts');
+    await logCore.getLog({
+      serverUrl: 'https://server.example', logType: 'Call', sessionIds: 'session-1', requireDetails: false,
+    });
+
+    // Successful OAuth callbacks persist the new JWT in local storage.
+    await chrome.storage.local.set({ rcUnifiedCrmExtJwt: 'new-oauth-jwt' });
+    for (const path of ['/user/settings', '/callLog', '/calldown', '/admin/settings']) {
+      const response = await client.get(`https://server.example${path}`);
+      expect(response.data.sentAuthorization).toBe('Bearer new-oauth-jwt');
+    }
+    await chrome.storage.local.remove('rcUnifiedCrmExtJwt');
+    const response = await client.get('https://server.example/user/settings');
+    expect(response.data.sentAuthorization).toBeUndefined();
+  });
+
   it('uses stored JWT authorization for the manifest server when request token inputs are absent', async () => {
     const runtime = await loadPopupRuntime();
 

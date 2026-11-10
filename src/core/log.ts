@@ -134,11 +134,8 @@ export async function getLog({ serverUrl, logType, sessionIds, requireDetails }:
       case 'Call':
         {
           const { extensionNumber, hashedExtensionId } = await getRcCallLogIdentity();
-          // check if axios default has jwtToken in bearer, if not, add it
-          const commonHeaders = axios.defaults.headers.common as UnknownRecord;
-          if (!commonHeaders.Authorization?.startsWith('Bearer ')) {
-            commonHeaders.Authorization = `Bearer ${rcUnifiedCrmExtJwt}`;
-          }
+          // The request interceptor reads the current CRM JWT from storage.
+          // Caching it in Axios defaults would retain it after reauthorization or logout.
           const query = new URLSearchParams({
             sessionIds,
             requireDetails: requireDetails ? 'true' : 'false',
