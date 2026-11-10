@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getRcAccessToken, getRcAccessTokenHeaderConfig, getRcInfo, showNotification, setRcAdditionalSubmission } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest as getManifestBase } from '../service/manifestService';
-import { trackCrmLogin, trackCrmLogout } from '../lib/analytics';
+import { trackCrmLogin, trackCrmLogout, trackPluginEvent } from '../lib/analytics';
 import { openDB } from 'idb';
 import platformSelectionPage from '../components/platformSelectionPage';
 import embeddableServices from '../service/embeddableServices';
@@ -338,10 +338,16 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }: UnknownRec
     // state is JSON for plugin callbacks, but a query string (e.g. "platform=clio") for CRM connectors
     const stateData = parseAuthCallbackState(callbackUri);
     if (stateData?.from === 'plugin' && stateData?.redirectTo) {
+        let pluginForm: UnknownRecord = {};
+        let connectionTracked = false;
         try {
+            pluginForm = (await chromeStorageLocal.get('cachedPluginConfigFormData')).cachedPluginConfigFormData ?? {};
             const { rcUserInfo } = await chromeStorageLocal.get({ rcUserInfo: null });
             const hashedExtensionId = rcUserInfo?.rcExtensionId ?? '';
-            await axios.get(`${stateData.redirectTo}?hashedExtensionId=${hashedExtensionId}&callbackUri=${callbackUri}`);
+            const response = await axios.get(`${stateData.redirectTo}?hashedExtensionId=${hashedExtensionId}&callbackUri=${callbackUri}`);
+            if (response.data?.successful === false) throw new Error('Plugin authorization failed');
+            trackPluginEvent('Plugin Connection Result', { pluginId: pluginForm.pluginId, plugin: pluginForm.plugin, pluginAccess: pluginForm.access, success: true, operation: 'connect' });
+            connectionTracked = true;
             showNotification({ level: 'success', message: 'Successfully authorized plugin.' });
             const { cachedPluginConfigFormData } = await chromeStorageLocal.get('cachedPluginConfigFormData');
             const { licenseStatus, licenseStatusDescription } = await pluginService.getPluginLicenseStatus({ pluginId: cachedPluginConfigFormData.pluginId, plugin: cachedPluginConfigFormData.plugin });
@@ -365,6 +371,7 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }: UnknownRec
             await chrome.storage.local.remove('cachedPluginConfigFormData');
         }
         catch (e) {
+            if (!connectionTracked) trackPluginEvent('Plugin Connection Result', { pluginId: pluginForm.pluginId, plugin: pluginForm.plugin, success: false, errorCode: 'authorization_failed', operation: 'connect' });
             // A plugin callback must not fall through to the CRM connector flow.
             console.error('Plugin auth callback failed', e);
             showNotification({ level: 'warning', message: e.response?.data?.returnMessage?.message ?? 'Failed to authorize plugin.', ttl: 5000 });

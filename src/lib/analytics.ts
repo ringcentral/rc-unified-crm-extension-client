@@ -123,6 +123,19 @@ function track(event: string, properties: AnalyticsPayload = {}) {
     mixpanel.track(event, { appName, via: eventAddedVia, version, collectedFrom: 'client', ...eventProperties, analyticsSchemaVersion: 2, ...rawProperties() });
 }
 
+/** Plugin telemetry only includes manifest metadata, never configuration values or OAuth URLs. */
+function trackPluginEvent(event: string, { pluginId, plugin = {}, pluginAccess, surface, settingsScope, success, errorCode, operation }: AnalyticsPayload = {}) {
+    try {
+        track(event, {
+            pluginId, pluginVersion: plugin.version, pluginAccess: pluginAccess ?? plugin.access,
+            executionMode: plugin.isAsync ? 'async' : 'sync', adapterName: platformName,
+            surface, settingsScope, success, errorCode, operation,
+        });
+    } catch {
+        console.warn('Plugin analytics emission failed');
+    }
+}
+
 function trackPage(name: string, properties: AnalyticsPayload = {}) {
     if (!useAnalytics) {
         return;
@@ -409,6 +422,7 @@ const analytics = {
     reset,
     identify,
     group,
+    trackPluginEvent,
     trackPage,
     trackFirstTimeSetup,
     trackRcLogin,
@@ -442,6 +456,7 @@ export {
     reset,
     identify,
     group,
+    trackPluginEvent,
     trackPage,
     trackFirstTimeSetup,
     trackRcLogin,

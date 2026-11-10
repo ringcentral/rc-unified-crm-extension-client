@@ -1123,6 +1123,8 @@ describe('miscellaneous rc-post-message-request handlers', () => {
 
   it('renders plugin market results excluding installed plugins', async () => {
     vi.resetModules();
+    const trackPluginEvent = vi.fn();
+    vi.doMock('../../src/lib/analytics.ts', () => ({ trackPluginEvent }));
     const pluginList = [
       { id: 'plugin-1', name: 'Installed' },
       { id: 'plugin-2', name: 'Available' },
@@ -1181,6 +1183,7 @@ describe('miscellaneous rc-post-message-request handlers', () => {
         targetOrigin: '*',
       },
     ]));
+    expect(trackPluginEvent).toHaveBeenCalledWith('Viewed plugins', { surface: 'marketplace' });
   });
 
   it('opens contact pages using active-call context during ongoing calls', async () => {

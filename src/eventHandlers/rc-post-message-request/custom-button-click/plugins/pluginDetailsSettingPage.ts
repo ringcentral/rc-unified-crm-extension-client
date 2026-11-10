@@ -1,3 +1,4 @@
+import { trackPluginEvent } from '../../../../lib/analytics';
 import { getPluginSetting } from '../../../../core/user';
 import { uploadAdminSettings } from '../../../../core/admin';
 
@@ -33,6 +34,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
     };
   }
   await uploadAdminSettings({ serverUrl: manifest.serverUrl, adminSettings });
+  trackPluginEvent('Plugin Configuration Saved', { pluginId, plugin: pluginSetting, pluginAccess: pluginSetting.access, settingsScope: 'admin' });
   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
   // go back
   getWidgetFrameWindow().postMessage({

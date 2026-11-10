@@ -1,3 +1,4 @@
+import { trackPluginEvent } from '../../lib/analytics';
 import { getPluginMarketListPageRender } from '../../components/pluginMarketListPage';
 import { getPluginList } from '../../service/manifestService';
 import { getAllPluginSettings, getUserSettingsOnline } from '../../core/user';
@@ -45,6 +46,7 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
     type: 'rc-adapter-navigate-to',
     path: `/customized/${pluginMarketListPageRender.id}`,
   }, '*');
+  trackPluginEvent('Viewed plugins', { surface: 'marketplace' });
   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
 }
 

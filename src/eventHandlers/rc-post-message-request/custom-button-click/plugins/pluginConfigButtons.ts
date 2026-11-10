@@ -1,3 +1,4 @@
+import { trackPluginEvent } from '../../../../lib/analytics';
 import axios from 'axios';
 import authCore from '../../../../core/auth';
 import { showNotification } from '../../../../lib/util';
@@ -29,10 +30,15 @@ export async function onEvent({ data, buttonId, manifest, platformInfo, platform
   const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as { rcUnifiedCrmExtJwt?: string };
   switch (buttonId) {
     case 'pluginAuthButton':
-      const getAuthUriResponse = await axios.get(`${data.body.button.formData.plugin.authorizationUrl}?pluginId=${data.body.button.formData.pluginId}`);
-      const authUri = getAuthUriResponse.data?.authUrl ?? getAuthUriResponse.data;
-      authCore.handleThirdPartyOAuthWindow(authUri);
-      await chrome.storage.local.set({ cachedPluginConfigFormData: data.body.button.formData });
+      try {
+        const getAuthUriResponse = await axios.get(`${data.body.button.formData.plugin.authorizationUrl}?pluginId=${data.body.button.formData.pluginId}`);
+        const authUri = getAuthUriResponse.data?.authUrl ?? getAuthUriResponse.data;
+        authCore.handleThirdPartyOAuthWindow(authUri);
+        await chrome.storage.local.set({ cachedPluginConfigFormData: data.body.button.formData });
+      } catch (error) {
+        trackPluginEvent('Plugin Connection Result', { pluginId: data.body.button.formData.pluginId, plugin: data.body.button.formData.plugin, success: false, operation: 'connect', errorCode: 'authorization_start_failed' });
+        throw error;
+      }
       break;
     case 'pluginLogoutButton':
       const logoutResponse = await axios.post(`${data.body.button.formData.plugin.logoutUrl}`,

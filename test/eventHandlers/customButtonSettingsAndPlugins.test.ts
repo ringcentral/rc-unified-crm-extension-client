@@ -227,6 +227,7 @@ async function loadButtonHandler(modulePath, overrides: Record<string, any> = {}
 
   const analytics = {
     trackFactoryReset: vi.fn(),
+    trackPluginEvent: vi.fn(),
     ...overrides.analytics,
   };
   vi.doMock('../../src/lib/analytics.ts', () => analytics);
@@ -1160,6 +1161,14 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
   });
 
+  it('does not emit configuration saved when persistence fails', async () => {
+    const loaded = await loadButtonHandler('../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/pluginConfigurePageSubmit.ts', {
+      userCore: { refreshUserSettings: vi.fn().mockRejectedValue(new Error('save failed')) },
+    });
+    await expect(loaded.handler.onEvent({ data: dataFor({ pluginId: 'plugin-1', plugin: { pageContent: [] } }) })).rejects.toThrow('save failed');
+    expect(loaded.analytics.trackPluginEvent).not.toHaveBeenCalled();
+  });
+
   it('warns and skips plugin configuration rendering when CRM auth is missing', async () => {
     const loaded = await loadButtonHandler(
       '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/selectPlugin.ts',
@@ -1464,6 +1473,7 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       platform: baseManifest().platforms.salesforce,
     });
 
+    expect(configLoaded.analytics.trackPluginEvent).toHaveBeenCalledWith('Plugin Configuration Saved', expect.objectContaining({ pluginId: 'plugin-1', settingsScope: 'user' }));
     expect(configLoaded.userCore.refreshUserSettings).toHaveBeenCalledWith({
       changedSettings: {
         'plugin_plugin-1': {
