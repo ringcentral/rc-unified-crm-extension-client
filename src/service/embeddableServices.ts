@@ -124,6 +124,7 @@ async function getServiceManifest() {
 
         // Enable call log sync feature
         callLoggerPath: '/callLogger',
+        callLoggerPrepareLogForm: true,
         callLogPageInputChangedEventPath: '/callLogger/inputChanged',
         callLogEntityMatcherPath: '/callLogger/match',
         callLoggerHideEditLogButton: manifest.platforms[platformName].hideEditLogButton ?? false,

@@ -7,6 +7,7 @@ import {
     isCallDataComplete,
     resolveCallLogReadiness,
 } from '../../../lib/callLogReadiness';
+import { t } from '../../../i18n';
 
 import logFormHandler from './logForm';
 import callLogSyncHandler from './callLogSync';
@@ -30,6 +31,10 @@ function getWidgetFrameWindow(): Window {
 async function onEvent(options: EventOptions) {
     const { manifest, platformInfo, platformName, platform } = options;
     let { data } = options;
+    // RingCX wrap-up: the widget asks for the log form when its wrap-up page opens, during
+    // the call or after it ended, and saves it with logForm once the call is over. Build and
+    // post the form only. No navigation, no loading overlay and no "call data not ready" page.
+    const prepareOnly = data.body.triggerType === 'prepareLogForm';
     if (data.body?.call?.action) {
         const isQueue = await chrome.storage.local.get(`is-call-queue-${data.body.call.sessionId}`) as UnknownRecord;
         if ((data.body.call.result === 'Missed' && isQueue[`is-call-queue-${data.body.call.sessionId}`]?.isQueue) || (data.body.call.delegationType === 'QueueForwarding' && data.body.call.result === 'Answered Elsewhere')) {
@@ -90,7 +95,7 @@ async function onEvent(options: EventOptions) {
     ]) as UnknownRecord;
     const userSettings = storedData.userSettings as UnknownRecord;
 
-    if (data.body.redirect && !isCallDataComplete(data.body.call) && typeof RCAdapter.getCallLog === 'function') {
+    if (!prepareOnly && data.body.redirect && !isCallDataComplete(data.body.call) && typeof RCAdapter.getCallLog === 'function') {
         try {
             const recoveredCall = extractCallRecord(await RCAdapter.getCallLog({ sessionId: data.body.call.sessionId }));
             if (isCallDataComplete(recoveredCall)) {
@@ -128,7 +133,7 @@ async function onEvent(options: EventOptions) {
             activityCompletionReady: userCore.isAutoActivityCompletionEnabled(userSettings, platform) && readiness.autoReady,
         },
     };
-    if (userCore.shouldWaitForCompleteCallData(userSettings, platform)) {
+    if (!prepareOnly && userCore.shouldWaitForCompleteCallData(userSettings, platform)) {
         const readyForCurrentRequest = data.body.redirect
             ? readiness.autoReady || isCallDataComplete(data.body.call)
             : readiness.autoReady;
@@ -159,6 +164,11 @@ async function onEvent(options: EventOptions) {
         ((!!data.body.call.from.extensionNumber && !data.body.call.from.phoneNumber) || (data.body.call.from.phoneNumber && data.body.call.from.phoneNumber.length <= 6)) :
         ((!!data.body.call.to.extensionNumber && !data.body.call.to.phoneNumber) || (data.body.call.to.phoneNumber && data.body.call.to.phoneNumber.length <= 6));
     if (!allowExtensionNumberLogging) {
+        if (isExtensionNumber && prepareOnly) {
+            // The widget shows the reason in its CRM section
+            responseMessage(data.requestId, { data: 'ok', noLogForm: t('notifications.warning.extensionNumberNotLoggable') });
+            return;
+        }
         if (isExtensionNumber) {
             showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
             responseMessage(data.requestId, { data: 'ok' });
@@ -171,7 +181,7 @@ async function onEvent(options: EventOptions) {
         (data.body.call.to.phoneNumber ?? data.body.call.to.extensionNumber);
 
     // If user click, show loading animation
-    if (data.body.redirect) {
+    if (data.body.redirect && !prepareOnly) {
         window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
     }
 
@@ -201,8 +211,9 @@ async function onEvent(options: EventOptions) {
         }
     }
 
-    if (data.body.triggerType === 'callDisposition') {
-        triggerTypeInUse = 'createLog';
+    // RingCX wrap-up: open the create form, or the edit form when the call is already logged
+    if (prepareOnly) {
+        triggerTypeInUse = existingCalls?.find(l => l.sessionId == data.body.call.sessionId)?.matched ? 'editLog' : 'createLog';
         isAutoLog = false;
     }
 
@@ -215,10 +226,11 @@ async function onEvent(options: EventOptions) {
     // Case 2: call log sync 
     // Case 3: view log
     // Case 4: open log form
+    let logFormResult: UnknownRecord | undefined;
     switch (triggerTypeInUse) {
         // Case 1: User manual log via form
         case 'logForm':
-            await logFormHandler.onEvent({ data, manifest, platformInfo, platformName, platform, contactPhoneNumber });
+            logFormResult = await logFormHandler.onEvent({ data, manifest, platformInfo, platformName, platform, contactPhoneNumber });
             break;
         // Case 2: call log sync
         case 'callLogSync':
@@ -236,14 +248,19 @@ async function onEvent(options: EventOptions) {
                 sessionIds: data.body.call.sessionId,
                 requireDetails: true
             }) as { callLogs?: UnknownRecord[] }).callLogs;
-            await createLogHandler.onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber });
+            await createLogHandler.onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber, prepareOnly });
             break;
         case 'createLog':
-            await createLogHandler.onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber });
+            await createLogHandler.onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber, prepareOnly });
             break;
     }
-    // response to widget
-    responseMessage(data.requestId, { data: 'ok' });
+    // response to widget, with the error when the log form save failed
+    if (logFormResult && !logFormResult.successful) {
+        responseMessage(data.requestId, { error: logFormResult.message });
+    }
+    else {
+        responseMessage(data.requestId, { data: 'ok' });
+    }
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
 }
 

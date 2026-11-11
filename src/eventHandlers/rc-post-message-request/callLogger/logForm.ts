@@ -7,6 +7,7 @@ import axios from 'axios';
 import dispositionCore from '../../../core/disposition';
 import logPage from '../../../components/logPage';
 import { getCachedLogPageData } from '../../../lib/logUtil';
+import { t } from '../../../i18n';
 
 type UnknownRecord = Record<string, any>;
 
@@ -37,7 +38,12 @@ async function resolveFormTriggerType(data: UnknownRecord): Promise<string | und
     return undefined;
 }
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform, contactPhoneNumber }: EventOptions) {
+type LogFormResult = {
+    successful: boolean;
+    message?: string;
+};
+
+async function onEvent({ data, manifest, platformInfo, platformName, platform, contactPhoneNumber }: EventOptions): Promise<LogFormResult> {
     void platformInfo;
     void platform;
     const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
@@ -51,6 +57,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
     }
     const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null }) as { implementedInterfaces?: UnknownRecord | null };
     const supportDisposition = implementedInterfaces?.upsertCallDisposition;
+    let saveResult: UnknownRecord | undefined;
+    let saveFailedMessage = t('notifications.warning.callLogFailed');
     switch (await resolveFormTriggerType(data)) {
         // Case 1.1: create log
         case 'createLog':
@@ -71,7 +79,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                 }
             }
 
-            await logCore.addLog(
+            saveResult = await logCore.addLog(
                 {
                     serverUrl: manifest.serverUrl,
                     logType: 'Call',
@@ -133,7 +141,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
             break;
         // Case 1.2: update log
         case 'editLog':
-            await logCore.updateLog({
+            saveFailedMessage = t('notifications.warning.callLogUpdateFailed');
+            saveResult = await logCore.updateLog({
                 serverUrl: manifest.serverUrl,
                 logType: 'Call',
                 telephonySessionId: data.body.call.telephonySessionId,
@@ -162,6 +171,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
             }
             break;
     }
+    if (!saveResult?.successful) {
+        return { successful: false, message: saveResult?.returnMessage?.message ?? saveFailedMessage };
+    }
+    return { successful: true };
 }
 
 export { onEvent };
