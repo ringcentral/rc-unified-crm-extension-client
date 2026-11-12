@@ -325,6 +325,61 @@ async function loadLogForm() {
 }
 
 describe('callLogger index', () => {
+  it.each([
+    { result: 'CallConnected' },
+    { result: 'OnHold' },
+    { result: undefined, telephonyStatus: 'CallConnected' },
+    { result: undefined, telephonyStatus: 'OnHold' },
+  ])('opens a live manual log without waiting for record recovery: %j', async (status) => {
+    const { callLogger, logCore, handlers } = await loadCallLoggerIndex();
+    seedStorage({ userSettings: {} });
+    const recovery = vi.mocked(RCAdapter.getCallLog!);
+    recovery.mockImplementationOnce(() => new Promise(resolve => setTimeout(() => resolve(null), 12000)));
+    vi.useFakeTimers();
+    try {
+      const call = baseCall({ action: undefined, duration: undefined, ...status });
+      const pending = callLogger.onEvent({ data: eventFor({ redirect: true, call }), ...context });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(logCore.getLog).toHaveBeenCalled();
+      expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({ body: expect.objectContaining({ call, activityCompletionReady: false }) }),
+      }));
+      expect(recovery).not.toHaveBeenCalled();
+      await pending;
+    } finally {
+      await vi.runAllTimersAsync();
+      vi.useRealTimers();
+      recovery.mockReset().mockResolvedValue(null);
+    }
+  });
+
+  it('opens temporary notes for a live one-time log without recovering a final record', async () => {
+    const { callLogger, logCore, tempLogNotePage, handlers } = await loadCallLoggerIndex();
+    seedStorage({ userSettings: { oneTimeLog: { value: true } } });
+    await callLogger.onEvent({
+      data: eventFor({ redirect: true, call: baseCall({ action: undefined, duration: undefined, result: 'CallConnected' }) }),
+      ...context,
+    });
+    expect(RCAdapter.getCallLog).not.toHaveBeenCalled();
+    expect(tempLogNotePage.getTempLogNotePageRender).toHaveBeenCalled();
+    expect(logCore.getLog).not.toHaveBeenCalled();
+    expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+  });
+
+  it('still recovers incomplete historical data before opening a manual form', async () => {
+    const { callLogger, handlers } = await loadCallLoggerIndex();
+    seedStorage({ userSettings: { oneTimeLog: { value: true } } });
+    vi.mocked(RCAdapter.getCallLog!).mockResolvedValueOnce({ call: baseCall() });
+    await callLogger.onEvent({
+      data: eventFor({ redirect: true, call: baseCall({ action: undefined, duration: undefined }) }),
+      ...context,
+    });
+    expect(RCAdapter.getCallLog).toHaveBeenCalledWith({ sessionId: 'session-1' });
+    expect(handlers.createLog.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ body: expect.objectContaining({ call: baseCall() }) }),
+    }));
+  });
+
   it('notifies and triggers matching when a missed queue call was answered elsewhere', async () => {
     const { callLogger, util } = await loadCallLoggerIndex();
     seedStorage({
