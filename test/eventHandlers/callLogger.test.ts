@@ -185,6 +185,7 @@ async function loadCreateLog() {
     createContact: vi.fn(async () => ({
       contactInfo: { id: 'new-contact', type: 'Lead', name: 'Created Contact' },
     })),
+    openContactPage: vi.fn(async () => {}),
   };
   vi.doMock('../../src/core/contact.ts', () => ({ default: contactCore }));
 
@@ -200,6 +201,7 @@ async function loadCreateLog() {
     getUnknownContactPreferenceSetting: vi.fn(() => ({ value: 'createNewPlaceholderContact' })),
     getNewContactNamePrefixSetting: vi.fn(() => ({ value: 'Auto ' })),
     getNewContactTypeSetting: vi.fn(() => ({ value: 'Lead' })),
+    getopenContactPageAfterCreationSetting: vi.fn((settings) => ({ value: settings?.openContactPageAfterCreation?.value ?? false })),
     getMultipleContactsPreferenceSetting: vi.fn(() => ({ value: 'firstAlphabetical' })),
     getOneTimeLogSetting: vi.fn(() => ({ value: false })),
   };
@@ -1237,6 +1239,83 @@ describe('callLogger createLog', () => {
     expect(dispositionCore.upsertDisposition).toHaveBeenCalledWith(expect.objectContaining({
       dispositions: { disposition: 'demo', note: 'cached note' },
     }));
+  });
+
+  it.each([
+    ['Inbound', true, 'Contact'],
+    ['Outbound', true, 'Contact'],
+    ['Inbound', false, 'Contact'],
+    ['Outbound', false, 'Contact'],
+    ['Inbound', undefined, 'Contact'],
+    ['Outbound', true, undefined],
+  ])('respects contact-created call pop for %s placeholders (setting: %s, returned type: %s)', async (direction, enabled, contactType) => {
+    const { createLog, contactCore, logCore, logUtil } = await loadCreateLog();
+    contactCore.createContact.mockResolvedValueOnce({
+      matched: true,
+      contactInfo: { id: 'created-contact', type: contactType, name: 'Created Contact' },
+    });
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: true,
+      conflictType: 'Unknown contact',
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+    const contactPhoneNumber = direction === 'Inbound' ? '+16505550100' : '+16505550200';
+
+    await createLog.onEvent({
+      data: eventFor({ call: baseCall({ direction }) }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber,
+      userSettings: { openContactPageAfterCreation: { value: enabled } },
+      existingCalls: [],
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(contactCore.createContact).toHaveBeenCalledTimes(1);
+    if (enabled) {
+      expect(contactCore.openContactPage).toHaveBeenCalledExactlyOnceWith({
+        manifest: context.manifest,
+        platformName: context.platformName,
+        phoneNumber: contactPhoneNumber,
+        contactId: 'created-contact',
+        contactType: contactType ?? 'Lead',
+      });
+    } else {
+      expect(contactCore.openContactPage).not.toHaveBeenCalled();
+    }
+    expect(logCore.addLog).toHaveBeenCalledWith(expect.objectContaining({
+      contactId: 'created-contact',
+      contactType,
+    }));
+  });
+
+  it.each([null, {}])('does not pop a contact page when placeholder creation returns %s', async (contactInfo) => {
+    const { createLog, contactCore, logUtil } = await loadCreateLog();
+    contactCore.createContact.mockResolvedValueOnce({ matched: false, contactInfo });
+    logUtil.getLogConflictInfo.mockResolvedValueOnce({
+      hasConflict: true,
+      conflictType: 'Unknown contact',
+      autoSelectAdditionalSubmission: {},
+      requireManualDisposition: false,
+    });
+
+    await createLog.onEvent({
+      data: eventFor(),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: { openContactPageAfterCreation: { value: true } },
+      existingCalls: [],
+      isAutoLog: true,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(contactCore.createContact).toHaveBeenCalledTimes(1);
+    expect(contactCore.openContactPage).not.toHaveBeenCalled();
   });
 
   it('uses cached contacts, toNumberEntity, and empty note fallback during auto logging', async () => {
