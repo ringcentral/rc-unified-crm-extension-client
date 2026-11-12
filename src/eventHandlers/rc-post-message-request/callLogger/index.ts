@@ -95,7 +95,11 @@ async function onEvent(options: EventOptions) {
     ]) as UnknownRecord;
     const userSettings = storedData.userSettings as UnknownRecord;
 
-    if (!prepareOnly && data.body.redirect && !isCallDataComplete(data.body.call) && typeof RCAdapter.getCallLog === 'function') {
+    // Live calls have no final record to recover. Opening the manual form (or
+    // temporary note page) must not wait for the widget's record/AI lookups.
+    const isLiveCall = data.body.call.action === undefined
+        && ['CallConnected', 'OnHold'].includes(data.body.call.result ?? data.body.call.telephonyStatus);
+    if (!prepareOnly && data.body.redirect && !isLiveCall && !isCallDataComplete(data.body.call) && typeof RCAdapter.getCallLog === 'function') {
         try {
             const recoveredCall = extractCallRecord(await RCAdapter.getCallLog({ sessionId: data.body.call.sessionId }));
             if (isCallDataComplete(recoveredCall)) {
