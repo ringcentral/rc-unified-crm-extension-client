@@ -103,6 +103,15 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
                         additionalSubmission
                     }) as UnknownRecord;
                     defaultingContact = newContactInfo.contactInfo;
+                    if (defaultingContact?.id && userCore.getopenContactPageAfterCreationSetting(userSettings).value) {
+                        await contactCore.openContactPage({
+                            manifest,
+                            platformName,
+                            phoneNumber: contactPhoneNumber,
+                            contactId: defaultingContact.id,
+                            contactType: defaultingContact.type ?? newContactType,
+                        });
+                    }
                     hasConflict = false;
                 }
             }
