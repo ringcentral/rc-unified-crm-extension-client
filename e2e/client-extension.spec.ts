@@ -772,7 +772,11 @@ test.describe('App Connect extension smoke', () => {
   });
 
   test('keeps the in-call note button above the dialer and opens the note drawer', async () => {
-    const state = await seedCallLoggerState(extension, server.origin);
+    const serverSideLogging = { enable: true, loggingLevel: 'Account' };
+    server.setUserSettings({ serverSideLogging });
+    const state = await seedCallLoggerState(extension, server.origin, {
+      userSettings: { ...defaultExtensionState.userSettings, serverSideLogging },
+    });
     const popupPage = await openPopupPage(extension);
     await popupPage.setViewportSize({ width: 400, height: 600 });
     await refreshExtensionStateInPopup(popupPage, state);
