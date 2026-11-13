@@ -456,6 +456,39 @@ describe('customizedPage inputChanged section handlers', () => {
     ]);
   });
 
+  it.each([true, false])('opens the admin plugin list when saved plugins are unavailable (available plugin: %s)', async (hasAvailablePlugin) => {
+    const adminSettings = {
+      userSettings: {
+        'plugin_unavailable-plugin': { value: { requireLicense: true } },
+        ...(hasAvailablePlugin ? { 'plugin_plugin-1': { value: { requireLicense: true } } } : {}),
+      },
+    };
+    seedStorage({ adminSettings });
+    const loaded = await loadSectionHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/installedPlugins.ts',
+    );
+
+    await loaded.handler.onEvent(context);
+
+    expect(loaded.pluginService.getPluginLicenseStatus).toHaveBeenCalledTimes(hasAvailablePlugin ? 1 : 0);
+    if (hasAvailablePlugin) {
+      expect(loaded.pluginService.getPluginLicenseStatus).toHaveBeenCalledWith({
+        pluginId: 'plugin-1',
+        plugin: expect.objectContaining({ requireLicense: true }),
+      });
+    }
+    expect(loaded.pluginPages.getInstalledPluginListPageRender).toHaveBeenCalledWith({
+      pluginList: hasAvailablePlugin ? [expect.objectContaining({ id: 'plugin-1', licenseStatus: true })] : [],
+      isFromAdmin: true,
+    });
+    expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ message: expect.objectContaining({ page: expect.objectContaining({ id: 'installedPluginListPage' }) }) }),
+      expect.objectContaining({ message: { type: 'rc-adapter-navigate-to', path: '/customized/installedPluginListPage' } }),
+    ]));
+    expect(vi.mocked(window.postMessage)).toHaveBeenLastCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
+    expect((await chrome.storage.local.get('adminSettings')).adminSettings).toEqual(adminSettings);
+  });
+
   it('renders installed plugin list section with license status', async () => {
     const loaded = await loadSectionHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/installedPlugins.ts',

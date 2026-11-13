@@ -1308,6 +1308,40 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     ]));
   });
 
+  it.each([true, false])('opens the user plugin list when saved plugins are unavailable (available plugin: %s)', async (hasAvailablePlugin) => {
+    const userSettings = {
+      'plugin_unavailable-plugin': { value: { requireLicense: true } },
+      ...(hasAvailablePlugin ? { 'plugin_plugin-1': { value: { requireLicense: true } } } : {}),
+    };
+    seedStorage({ userSettings });
+    const loaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/plugins/installedPluginListPage.ts',
+    );
+
+    await loaded.handler.onEvent({
+      data: dataFor({}, 'openInstalledPluginListPage'),
+      manifest: baseManifest(),
+    });
+
+    expect(loaded.pluginService.getPluginLicenseStatus).toHaveBeenCalledTimes(hasAvailablePlugin ? 1 : 0);
+    if (hasAvailablePlugin) {
+      expect(loaded.pluginService.getPluginLicenseStatus).toHaveBeenCalledWith({
+        pluginId: 'plugin-1',
+        plugin: expect.objectContaining({ requireLicense: true }),
+      });
+    }
+    expect(loaded.pluginPages.getInstalledPluginListPageRender).toHaveBeenCalledWith({
+      pluginList: hasAvailablePlugin ? [expect.objectContaining({ id: 'plugin-1', licenseStatus: true })] : [],
+      isFromAdmin: false,
+    });
+    expect(getWidgetPostMessages()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ message: expect.objectContaining({ page: expect.objectContaining({ id: 'installedPluginListPage' }) }) }),
+      expect.objectContaining({ message: { type: 'rc-adapter-navigate-to', path: '/customized/installedPluginListPage' } }),
+    ]));
+    expect(vi.mocked(window.postMessage)).toHaveBeenLastCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
+    expect(readStorage().userSettings).toEqual(userSettings);
+  });
+
   it('installs an admin plugin, registers it remotely, and refreshes plugin pages', async () => {
     seedStorage({
       adminSettings: {
