@@ -412,7 +412,9 @@ describe('log core', () => {
       isShowNotification: true,
     });
 
-    expect(axios.get).toHaveBeenCalledWith('https://server.example/callLog?sessionIds=session-1&requireDetails=true&extensionNumber=101&hashedExtensionId=hash-1');
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/callLog?sessionIds=session-1&requireDetails=true&extensionNumber=101&hashedExtensionId=hash-1', {
+      headers: { Authorization: 'Bearer jwt-1' },
+    });
     expect(axios.patch).toHaveBeenCalledWith('https://server.example/callLog', expect.objectContaining({
       sessionId: 'session-1',
       note: 'Updated note',
@@ -420,7 +422,6 @@ describe('log core', () => {
       hashedExtensionId: 'hash-1',
       activityCompletionReady: false,
     }));
-    expect(axios.defaults.headers.common.Authorization).toBe('Bearer jwt-1');
   });
 
   it('resolves and includes a linked voicemail media-reader URL when updating a call log', async () => {
@@ -465,7 +466,35 @@ describe('log core', () => {
     );
   });
 
-  it('keeps existing bearer auth when getting call logs without details', async () => {
+  it('authenticates standalone call-log lookups with the current CRM token without caching it in Axios defaults', async () => {
+    axios.defaults.headers.common.Authorization = 'Bearer stale-token';
+    vi.mocked(axios.get).mockImplementation(async (_url, config) => {
+      if (config?.headers?.Authorization !== `Bearer ${readStorage().rcUnifiedCrmExtJwt}`) {
+        throw Object.assign(new Error('Please go to Settings and authorize CRM platform'), {
+          response: { status: 400 },
+        });
+      }
+      return { data: { successful: true, logs: [] } };
+    });
+    const logCore = await loadLogCore();
+
+    for (const token of ['current-token', 'reauthorized-token']) {
+      seedStorage({ rcUnifiedCrmExtJwt: token });
+      await expect(logCore.getLog({
+        serverUrl: 'https://server.example',
+        logType: 'Call',
+        sessionIds: 'active-session',
+        requireDetails: false,
+      })).resolves.toEqual({ successful: true, callLogs: [] });
+      expect(axios.get).toHaveBeenLastCalledWith(
+        'https://server.example/callLog?sessionIds=active-session&requireDetails=false&extensionNumber=101&hashedExtensionId=hash-1',
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      expect(axios.defaults.headers.common.Authorization).toBe('Bearer stale-token');
+    }
+  });
+
+  it('preserves Axios defaults while authenticating call-log requests with the stored token', async () => {
     seedStorage({ rcUnifiedCrmExtJwt: 'jwt-2' });
     axios.defaults.headers.common.Authorization = 'Bearer existing';
     vi.mocked(axios.get).mockResolvedValueOnce({
@@ -488,7 +517,9 @@ describe('log core', () => {
     });
 
     expect(axios.defaults.headers.common.Authorization).toBe('Bearer existing');
-    expect(axios.get).toHaveBeenCalledWith('https://server.example/callLog?sessionIds=session-2&requireDetails=false&extensionNumber=101&hashedExtensionId=hash-1');
+    expect(axios.get).toHaveBeenCalledWith('https://server.example/callLog?sessionIds=session-2&requireDetails=false&extensionNumber=101&hashedExtensionId=hash-1', {
+      headers: { Authorization: 'Bearer jwt-2' },
+    });
   });
 
   it('handles message log variants without MMS or main log ids', async () => {
