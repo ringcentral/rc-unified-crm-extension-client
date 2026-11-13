@@ -779,7 +779,11 @@ test.describe('App Connect extension smoke', () => {
   });
 
   test('keeps the in-call note button above the dialer and opens the note drawer', async () => {
-    const state = await seedCallLoggerState(extension, server.origin);
+    const serverSideLogging = { enable: true, loggingLevel: 'Account' };
+    server.setUserSettings({ serverSideLogging });
+    const state = await seedCallLoggerState(extension, server.origin, {
+      userSettings: { ...defaultExtensionState.userSettings, serverSideLogging },
+    });
     const popupPage = await openPopupPage(extension);
     await popupPage.setViewportSize({ width: 400, height: 600 });
     await refreshExtensionStateInPopup(popupPage, state);
@@ -791,6 +795,7 @@ test.describe('App Connect extension smoke', () => {
         call: {
           telephonyStatus: 'CallConnected',
           direction: 'Outbound',
+          source: 'Phone',
           sessionId: 'e2e-active-note-session',
           telephonySessionId: 'e2e-active-note-telephony',
           from: { phoneNumber: '+16505550200' },
@@ -828,6 +833,7 @@ test.describe('App Connect extension smoke', () => {
         call: {
           telephonyStatus: 'CallConnected',
           direction: 'Outbound',
+          source: 'Phone',
           sessionId: 'e2e-active-note-session',
           telephonySessionId: 'e2e-active-note-telephony',
           from: { phoneNumber: '+16505550200' },
@@ -846,7 +852,7 @@ test.describe('App Connect extension smoke', () => {
     expect(response.status()).toBe(200);
     await expect.poll(() => getWidgetMessages(popupPage)).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        message: { type: 'rc-adapter-navigate-to', path: '/log/call/e2e-active-note-session' },
+        message: { type: 'rc-adapter-navigate-to', path: '/log/call/e2e-active-note-session?source=Phone' },
       }),
     ]));
   });
