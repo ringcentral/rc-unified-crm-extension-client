@@ -773,6 +773,79 @@ test.describe('App Connect extension smoke', () => {
     })).toBeNull();
   });
 
+  test('keeps the in-call note button above the dialer and opens the note drawer', async () => {
+    const state = await seedCallLoggerState(extension, server.origin);
+    const popupPage = await openPopupPage(extension);
+    await popupPage.setViewportSize({ width: 400, height: 600 });
+    await refreshExtensionStateInPopup(popupPage, state);
+
+    await popupPage.evaluate(() => {
+      window.postMessage({ type: 'rc-server-side-logging-enabled', enabled: true }, '*');
+      window.postMessage({
+        type: 'rc-active-call-notify',
+        call: {
+          telephonyStatus: 'CallConnected',
+          direction: 'Outbound',
+          sessionId: 'e2e-active-note-session',
+          telephonySessionId: 'e2e-active-note-telephony',
+          from: { phoneNumber: '+16505550200' },
+          to: { phoneNumber: '+16505550100' },
+        },
+      }, '*');
+    });
+
+    const noteButton = popupPage.locator('#react-container button').first();
+    await expect(noteButton).toBeVisible();
+    await noteButton.click({ timeout: 5000 });
+    await expect(popupPage.getByLabel('Note', { exact: true })).toBeVisible();
+    await popupPage.getByLabel('Note', { exact: true }).fill('Notes taken during the call');
+    await expect.poll(async () => (
+      await readExtensionStorage(extension, ['e2e-active-note-session'])
+    )['e2e-active-note-session']).toBe('Notes taken during the call');
+  });
+
+  test('authenticates expandable note lookups from the standalone root bundle', async () => {
+    const state = await seedCallLoggerState(extension, server.origin);
+    const popupPage = await openPopupPage(extension);
+    await popupPage.setViewportSize({ width: 400, height: 600 });
+    await refreshExtensionStateInPopup(popupPage, state);
+    await installWidgetMessageCapture(popupPage);
+    await extension.context.route(`${server.origin}/callLog?**`, (route) => {
+      if (route.request().headers().authorization !== `Bearer ${state.rcUnifiedCrmExtJwt}`) {
+        return route.fulfill({ status: 400, body: 'Please go to Settings and authorize CRM platform' });
+      }
+      return route.continue();
+    });
+
+    await popupPage.evaluate(() => {
+      window.postMessage({
+        type: 'rc-active-call-notify',
+        call: {
+          telephonyStatus: 'CallConnected',
+          direction: 'Outbound',
+          sessionId: 'e2e-active-note-session',
+          telephonySessionId: 'e2e-active-note-telephony',
+          from: { phoneNumber: '+16505550200' },
+          to: { phoneNumber: '+16505550100' },
+        },
+      }, '*');
+    });
+
+    const noteButton = popupPage.locator('#react-container button').first();
+    await expect(noteButton).toBeVisible();
+    const [response] = await Promise.all([
+      popupPage.waitForResponse((response) => new URL(response.url()).pathname === '/callLog'),
+      noteButton.click({ timeout: 5000 }),
+    ]);
+    expect(response.request().headers().authorization).toBe(`Bearer ${state.rcUnifiedCrmExtJwt}`);
+    expect(response.status()).toBe(200);
+    await expect.poll(() => getWidgetMessages(popupPage)).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        message: { type: 'rc-adapter-navigate-to', path: '/log/call/e2e-active-note-session' },
+      }),
+    ]));
+  });
+
   test('logs an inbound call through the popup call logger flow', async () => {
     const state = await seedCallLoggerState(extension, server.origin);
     const popupPage = await openPopupPage(extension);

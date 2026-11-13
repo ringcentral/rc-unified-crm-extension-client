@@ -134,15 +134,17 @@ export async function getLog({ serverUrl, logType, sessionIds, requireDetails }:
       case 'Call':
         {
           const { extensionNumber, hashedExtensionId } = await getRcCallLogIdentity();
-          // The request interceptor reads the current CRM JWT from storage.
-          // Caching it in Axios defaults would retain it after reauthorization or logout.
+          // root.js has its own Axios instance without popup.js request interceptors.
+          // Authenticate this request without retaining the token in Axios defaults.
           const query = new URLSearchParams({
             sessionIds,
             requireDetails: requireDetails ? 'true' : 'false',
             extensionNumber,
             hashedExtensionId,
           });
-          const callLogRes = await axios.get(`${serverUrl}/callLog?${query.toString()}`);
+          const callLogRes = await axios.get(`${serverUrl}/callLog?${query.toString()}`, {
+            headers: { Authorization: `Bearer ${rcUnifiedCrmExtJwt}` },
+          });
           showNotification({ level: callLogRes.data.returnMessage?.messageType, message: callLogRes.data.returnMessage?.message, ttl: callLogRes.data.returnMessage?.ttl, details: callLogRes.data.returnMessage?.details });
           return { successful: callLogRes.data.successful, callLogs: callLogRes.data.logs };
         }
