@@ -29,9 +29,9 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   const { adminSettings } = await chrome.storage.local.get('adminSettings') as { adminSettings: UnknownRecord };
   const installedPlugins = getAllPluginSettings(adminSettings.userSettings);
   for (const pluginId in installedPlugins) {
-    const targetPlugin = pluginList.find(plugin => plugin.id === pluginId) as UnknownRecord;
-    targetPlugin.requireLicense = installedPlugins[pluginId]?.requireLicense ?? false;
+    const targetPlugin = pluginList.find(plugin => plugin.id === pluginId);
     if (targetPlugin) {
+      targetPlugin.requireLicense = installedPlugins[pluginId]?.requireLicense ?? false;
       pluginListToRender.push(targetPlugin);
     }
   }
