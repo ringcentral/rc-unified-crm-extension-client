@@ -1,3 +1,11 @@
+---
+type: module-readme
+title: RingCentral App Connect Client
+description: Setup, dependency installation, and verification for the App Connect browser extension client.
+owner: NEEDS_OWNER
+status: proposed
+---
+
 # RingCentral App Connect Client
 
 [![Coverage](https://codecov.io/gh/ringcentral/rc-unified-crm-extension-client/branch/beta/graph/badge.svg)](https://codecov.io/gh/ringcentral/rc-unified-crm-extension-client?branch=beta)
@@ -8,13 +16,23 @@ It is to work with the server code: https://github.com/ringcentral/rc-unified-cr
 
 Assuming you have already setup your local server, let's then start setting up your client app. Here are the steps:
 
-1. `npm i`
+1. `npm ci`
 2. In `src`, there's a `manifest.json`. Change values in it to your server manifest url and version.
 3. `npm run build`
 4. The build will be in `dist` folder
 5. To install it, go to chrome://extensions/ and toggle on "Developer mode" and click "Load unpacked"
 
-## Test
+## Dependencies
+
+Commit `package-lock.json` with dependency updates so clean installs and CI use the reviewed versions. Use `npm install` when intentionally updating dependencies, then verify with `npm ci` and the checks below before committing both manifests.
+
+The project [npm configuration](.npmrc) keeps versions and integrity hashes in the lock without embedding registry URLs. npm uses your configured registry, including Nexus. Nexus may lag npmjs: verify the required versions are available there before updating; keep security minimums and resolve mirror gaps before merging.
+
+## Verification
+
+Run `npm ci` to verify that the lock matches the manifest and that the configured registry serves the pinned dependencies. The [test workflow](.github/workflows/tests.yml) and [release workflow](.github/workflows/build.yml) enforce clean installation plus lint, source/test/E2E type checks, coverage, and browser E2E.
+
+### Test
 
 Run unit and integration tests:
 

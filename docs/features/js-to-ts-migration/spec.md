@@ -27,7 +27,7 @@ Current migration state:
 - `allowJs` is disabled in `tsconfig.json`.
 - Test and E2E files no longer use `@ts-nocheck`; separate TypeScript projects check them before Vitest and Playwright verify runtime behavior.
 - `npm run lint`, source/test/E2E type checks, coverage, and Playwright are required in pull-request and release workflows.
-- npm remains the package manager, but the root `package-lock.json` is intentionally not committed because developer environments may resolve through different registries; CI installs from `package.json` with `npm install` against its configured registry.
+- npm remains the package manager. The root `package-lock.json` is committed, and CI uses `npm ci` to enforce the reviewed dependency versions. `.npmrc` omits registry-specific resolved URLs while retaining integrity hashes so installations use the configured registry, including Nexus.
 - `strict` mode is enabled with explicit transitional exceptions for `noImplicitAny`, `strictNullChecks`, `strictPropertyInitialization`, and `useUnknownInCatchVariables`.
 - Extension runtime output filenames remain JavaScript in `dist/` and `public/manifest.json`.
 - `public/**/*.js` is treated as copied dependency/runtime asset content and is intentionally excluded from source conversion scope.
@@ -40,7 +40,7 @@ Goal: introduce TypeScript as an incremental safety layer while preserving the c
 - Do not upgrade React, Juno, esbuild, Vitest, Playwright, or the Chrome extension manifest model unless a separate reviewed change requires it.
 - Do not change `public/manifest.json` permissions, `manifest_version`, content-script match policy, externally connectable hosts, or extension output filenames as part of type conversion.
 - Do not change App Connect server APIs, platform manifest behavior, CRM connector behavior, or message payload semantics.
-- Do not migrate away from npm as part of TypeScript work. Root lockfiles MUST NOT be committed; dependency compatibility is verified by CI installation plus the required lint, type, unit, build, and E2E gates.
+- Do not migrate away from npm as part of TypeScript work. Commit the root lockfile with dependency changes; dependency compatibility is verified by `npm ci` plus the required lint, type, unit, build, and E2E gates. Nexus can lag npmjs, so verify required versions through the configured mirror without bypassing it or weakening security minimums.
 
 ## Migration Principles
 
@@ -235,10 +235,11 @@ Runtime production monitoring for extension errors is NEEDS_REVIEW because the r
 - `NEEDS_OWNER`: confirm the owning team/person for the migration and final approval.
 - `NEEDS_REVIEW`: decide final timeline for removing the transitional strict exceptions.
 
-Resolved implementation decisions are encoded in `package.json`, `.gitignore`, TypeScript project configs, and GitHub workflows: npm is retained, root lockfiles remain environment-local, CI uses `npm install`, and lint plus source/test/E2E type checks are blocking gates.
+Resolved implementation decisions are encoded in `package.json`, `package-lock.json`, `.npmrc`, TypeScript project configs, and GitHub workflows: npm is retained, the root lockfile is committed, CI uses `npm ci`, and lint plus source/test/E2E type checks are blocking gates.
 
 ## Verification
 
+- Rule: clean installations enforce the committed dependency graph through the configured registry -> `npm ci` in the test and release workflows; verify lockfile versions and integrity hashes when reviewing dependency updates.
 - Rule: migration must not change extension runtime behavior -> `npm test`, `npm run test:coverage`, `npm run build`, `npm run test:e2e`, and unpacked-extension smoke test.
 - Rule: message payload behavior must remain compatible -> `test/eventHandlers/*`, `test/messageHandlers/*`, `test/popup/popupRuntime.test.ts`, and `src/eventHandlers/ARCHITECTURE.md` review.
 - Rule: service worker and content script startup must remain intact -> `test/serviceWorker/*`, `test/content/*`, `test/lib/c2d/*`, `npm run test:e2e`.

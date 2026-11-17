@@ -26,7 +26,7 @@ jobs:
           package-manager-cache: false
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run lint
         run: npm run lint
@@ -76,7 +76,7 @@ jobs:
 
       # 3. Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       # 4. Run the build script
       - name: Build project
