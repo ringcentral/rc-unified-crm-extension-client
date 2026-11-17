@@ -811,6 +811,21 @@ describe('callLogger index', () => {
     expect(handlers.logForm.onEvent).toHaveBeenCalled();
   });
 
+  it('passes the call logs found at save time to the log form handler', async () => {
+    const { callLogger, logCore, handlers } = await loadCallLoggerIndex();
+    logCore.getLog.mockResolvedValueOnce({ callLogs: [{ matched: true, sessionId: 'session-1' }] });
+
+    await callLogger.onEvent({
+      data: eventFor({ triggerType: 'logForm' }),
+      ...context,
+    });
+
+    expect(logCore.getLog).toHaveBeenCalledWith(expect.objectContaining({ sessionIds: 'session-1' }));
+    expect(handlers.logForm.onEvent).toHaveBeenCalledWith(expect.objectContaining({
+      existingCalls: [{ matched: true, sessionId: 'session-1' }],
+    }));
+  });
+
   it('answers a saved log form with ok', async () => {
     const { callLogger, util, handlers } = await loadCallLoggerIndex();
     handlers.logForm.onEvent.mockResolvedValueOnce({ successful: true });
@@ -1124,6 +1139,47 @@ describe('callLogger createLog', () => {
     });
     expect(logPage.getLogPageRender).toHaveBeenCalledWith(expect.objectContaining({
       logInfo: { note: 'existing', subject: 'Existing' },
+    }));
+  });
+
+  it.each([
+    ['the automatic note', 'From auto logging'],
+    ['the pending automatic note', 'From auto logging (Pending)'],
+    ['no note', ''],
+  ])('prefills RingCX wrap-up notes into a server-side log with %s', async (_label, existingNote) => {
+    const { createLog, logPage } = await loadCreateLog();
+    await createLog.onEvent({
+      data: eventFor({ triggerType: 'prepareLogForm', note: 'disposition note' }),
+      prepareOnly: true,
+      triggerTypeInUse: 'editLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [{ sessionId: 'session-1', logData: { note: existingNote, subject: 'Existing' } }],
+      isAutoLog: false,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+    expect(logPage.getLogPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      logInfo: { note: 'disposition note', subject: 'Existing' },
+    }));
+  });
+
+  it('keeps the automatic note of an existing log outside RingCX wrap-ups', async () => {
+    const { createLog, logPage } = await loadCreateLog();
+    await createLog.onEvent({
+      data: eventFor({ triggerType: 'createLog', redirect: true, note: 'request note' }),
+      triggerTypeInUse: 'editLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [{ sessionId: 'session-1', logData: { note: 'From auto logging', subject: 'Existing' } }],
+      isAutoLog: false,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+    expect(logPage.getLogPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      logInfo: { note: 'From auto logging', subject: 'Existing' },
     }));
   });
 
@@ -2147,5 +2203,102 @@ describe('callLogger logForm', () => {
     expect(logCore.updateLog).toHaveBeenCalledWith(expect.objectContaining({
       activityCompletionReady: false,
     }));
+  });
+  describe('create form for a call that is already logged', () => {
+    const createFormData = {
+      triggerType: 'createLog',
+      contact: 'contact-1',
+      contactName: 'Existing Contact',
+      contactType: 'Lead',
+      newContactName: '',
+      newContactType: '',
+      activityTitle: 'Wrap-up title',
+      note: 'Wrap-up note',
+      disposition: 'sale',
+    };
+
+    it('updates the log instead of creating another when the call was logged after the form was built', async () => {
+      seedStorage({
+        userSettings: {},
+        implementedInterfaces: { upsertCallDisposition: true },
+      });
+      const { logForm, logCore, dispositionCore } = await loadLogForm();
+      logCore.updateLog.mockResolvedValueOnce({ successful: true });
+
+      const result = await logForm.onEvent({
+        data: eventFor({ formData: createFormData }),
+        contactPhoneNumber: '+16505550100',
+        existingCalls: [{ matched: true, sessionId: 'session-1' }],
+        ...context,
+      });
+
+      expect(logCore.addLog).not.toHaveBeenCalled();
+      expect(logCore.updateLog).toHaveBeenCalledWith(expect.objectContaining({
+        sessionId: 'session-1',
+        subject: 'Wrap-up title',
+        note: 'Wrap-up note',
+        call: expect.objectContaining({ sessionId: 'session-1' }),
+      }));
+      expect(dispositionCore.upsertDisposition).toHaveBeenCalledWith(expect.objectContaining({
+        sessionId: 'session-1',
+        dispositions: { disposition: 'sale', note: 'Wrap-up note' },
+      }));
+      expect(result).toEqual({ successful: true });
+    });
+
+    it('updates the log when App Connect says the session was logged after the lookup', async () => {
+      seedStorage({ userSettings: {}, implementedInterfaces: {} });
+      const { logForm, logCore } = await loadLogForm();
+      logCore.addLog.mockResolvedValueOnce({
+        successful: false,
+        returnMessage: { message: 'Existing log for session session-1', messageType: 'warning' },
+      });
+      logCore.updateLog.mockResolvedValueOnce({ successful: true });
+
+      const result = await logForm.onEvent({
+        data: eventFor({ formData: createFormData }),
+        contactPhoneNumber: '+16505550100',
+        existingCalls: [{ matched: false, sessionId: 'session-1' }],
+        ...context,
+      });
+
+      expect(logCore.addLog).toHaveBeenCalledTimes(1);
+      expect(logCore.updateLog).toHaveBeenCalledWith(expect.objectContaining({
+        sessionId: 'session-1',
+        note: 'Wrap-up note',
+      }));
+      expect(result).toEqual({ successful: true });
+    });
+
+    it('reports a failed update with its server message', async () => {
+      seedStorage({ userSettings: {}, implementedInterfaces: {} });
+      const { logForm, logCore } = await loadLogForm();
+      logCore.updateLog.mockResolvedValueOnce({ successful: false, returnMessage: { message: 'Log is locked' } });
+
+      const result = await logForm.onEvent({
+        data: eventFor({ formData: createFormData }),
+        contactPhoneNumber: '+16505550100',
+        existingCalls: [{ matched: true, sessionId: 'session-1' }],
+        ...context,
+      });
+
+      expect(result).toEqual({ successful: false, message: 'Log is locked' });
+    });
+
+    it('creates the log when only another call is logged', async () => {
+      seedStorage({ userSettings: {}, implementedInterfaces: {} });
+      const { logForm, logCore } = await loadLogForm();
+      logCore.addLog.mockResolvedValueOnce({ successful: true });
+
+      await logForm.onEvent({
+        data: eventFor({ formData: createFormData }),
+        contactPhoneNumber: '+16505550100',
+        existingCalls: [{ matched: true, sessionId: 'session-2' }, { matched: false, sessionId: 'session-1' }],
+        ...context,
+      });
+
+      expect(logCore.addLog).toHaveBeenCalledTimes(1);
+      expect(logCore.updateLog).not.toHaveBeenCalled();
+    });
   });
 });

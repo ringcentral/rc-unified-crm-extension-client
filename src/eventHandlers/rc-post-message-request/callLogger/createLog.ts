@@ -35,6 +35,12 @@ function getDispositionNote(data: UnknownRecord): string {
     return data.body.note || data.body.call?.ringcx?.notes || '';
 }
 
+// The note server-side logging writes on the logs it creates.
+function isAutomaticLogNote(note: unknown): boolean {
+    const text = typeof note === 'string' ? note.trim() : '';
+    return text === '' || text === 'From auto logging' || text === 'From auto logging (Pending)';
+}
+
 function getWidgetFrameWindow(): Window {
     return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
 }
@@ -76,8 +82,15 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
         note: '',
         subject: ''
     }
-    if (existingCalls && existingCalls.find(l => l.sessionId == data.body.call.sessionId)?.logData) {
-        logInfo = existingCalls.find(l => l.sessionId == data.body.call.sessionId).logData;
+    const existingLogData = existingCalls?.find(l => l.sessionId == data.body.call.sessionId)?.logData;
+    if (existingLogData) {
+        logInfo = existingLogData;
+        // RingCX: a log made by server-side logging has only its automatic note, so the notes
+        // entered on the disposition page prefill it. A note someone wrote is kept.
+        const dispositionNote = getDispositionNote(data);
+        if (dispositionNote && isAutomaticLogNote(logInfo.note)) {
+            logInfo = { ...logInfo, note: dispositionNote };
+        }
     }
     else {
         // RingCX: notes entered on the disposition page prefill a new call log

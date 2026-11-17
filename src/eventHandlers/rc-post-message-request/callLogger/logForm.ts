@@ -18,6 +18,8 @@ type EventOptions = {
     platformName: string;
     platform: UnknownRecord;
     contactPhoneNumber: string;
+    // The call's logs in App Connect, looked up when the form was saved
+    existingCalls?: UnknownRecord[];
 };
 
 function getWidgetFrameWindow(): Window {
@@ -38,12 +40,44 @@ async function resolveFormTriggerType(data: UnknownRecord): Promise<string | und
     return undefined;
 }
 
+function isCallLogged(existingCalls: UnknownRecord[] | undefined, sessionId: string): boolean {
+    return !!existingCalls?.find(l => l.sessionId == sessionId)?.matched;
+}
+
+// App Connect refuses a second log for a session it already logged with this message.
+function isExistingLogResult(result: UnknownRecord | undefined): boolean {
+    const message = result?.returnMessage?.message;
+    return !result?.successful && typeof message === 'string' && message.startsWith('Existing log for session');
+}
+
+function updateLogFromForm(data: UnknownRecord, manifest: UnknownRecord): Promise<UnknownRecord | undefined> {
+    return logCore.updateLog({
+        serverUrl: manifest.serverUrl,
+        logType: 'Call',
+        telephonySessionId: data.body.call.telephonySessionId,
+        sessionId: data.body.call.sessionId,
+        call: data.body.call,
+        subject: data.body.formData.activityTitle ?? "",
+        note: data.body.formData.note ?? "",
+        aiNote: data.body.aiNote,
+        transcript: data.body.transcript,
+        startTime: data.body.call.startTime,
+        duration: data.body.call.duration,
+        result: data.body.call.result,
+        direction: data.body.call.direction,
+        from: data.body.call.from,
+        to: data.body.call.to,
+        activityCompletionReady: data.body.activityCompletionReady ?? false,
+        isShowNotification: true
+    });
+}
+
 type LogFormResult = {
     successful: boolean;
     message?: string;
 };
 
-async function onEvent({ data, manifest, platformInfo, platformName, platform, contactPhoneNumber }: EventOptions): Promise<LogFormResult> {
+async function onEvent({ data, manifest, platformInfo, platformName, platform, contactPhoneNumber, existingCalls }: EventOptions): Promise<LogFormResult> {
     void platformInfo;
     void platform;
     const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
@@ -79,22 +113,33 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                 }
             }
 
-            saveResult = await logCore.addLog(
-                {
-                    serverUrl: manifest.serverUrl,
-                    logType: 'Call',
-                    logInfo: data.body.call,
-                    isMain: true,
-                    note: data.body.formData.note ?? "",
-                    aiNote: data.body.aiNote,
-                    transcript: data.body.transcript,
-                    subject: data.body.formData.activityTitle ?? "",
-                    contactId: newContactInfo?.id ?? data.body.formData.contact,
-                    contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
-                    contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
-                    additionalSubmission,
-                    activityCompletionReady: data.body.activityCompletionReady ?? false
-                });
+            // The call may have been logged after this create form was built, for example by
+            // server-side logging when a RingCX call ends while its wrap-up form is open. Save the
+            // form into that log then, as the edit form built after logging would.
+            const loggedBeforeSave = isCallLogged(existingCalls, data.body.call.sessionId);
+            if (!loggedBeforeSave) {
+                saveResult = await logCore.addLog(
+                    {
+                        serverUrl: manifest.serverUrl,
+                        logType: 'Call',
+                        logInfo: data.body.call,
+                        isMain: true,
+                        note: data.body.formData.note ?? "",
+                        aiNote: data.body.aiNote,
+                        transcript: data.body.transcript,
+                        subject: data.body.formData.activityTitle ?? "",
+                        contactId: newContactInfo?.id ?? data.body.formData.contact,
+                        contactType: data.body.formData.newContactType === '' ? data.body.formData.contactType : data.body.formData.newContactType,
+                        contactName: data.body.formData.newContactName === '' ? data.body.formData.contactName : data.body.formData.newContactName,
+                        additionalSubmission,
+                        activityCompletionReady: data.body.activityCompletionReady ?? false
+                    });
+            }
+            // Also covers a log made between the lookup above and this save
+            if (loggedBeforeSave || isExistingLogResult(saveResult)) {
+                saveFailedMessage = t('notifications.warning.callLogUpdateFailed');
+                saveResult = await updateLogFromForm(data, manifest);
+            }
             // Optional: schedule callback into Call Back after successful log creation
             try {
                 if (data.body.formData.scheduleCallback && data.body.formData.callbackDateTime) {
@@ -142,25 +187,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
         // Case 1.2: update log
         case 'editLog':
             saveFailedMessage = t('notifications.warning.callLogUpdateFailed');
-            saveResult = await logCore.updateLog({
-                serverUrl: manifest.serverUrl,
-                logType: 'Call',
-                telephonySessionId: data.body.call.telephonySessionId,
-                sessionId: data.body.call.sessionId,
-                call: data.body.call,
-                subject: data.body.formData.activityTitle ?? "",
-                note: data.body.formData.note ?? "",
-                aiNote: data.body.aiNote,
-                transcript: data.body.transcript,
-                startTime: data.body.call.startTime,
-                duration: data.body.call.duration,
-                result: data.body.call.result,
-                direction: data.body.call.direction,
-                from: data.body.call.from,
-                to: data.body.call.to,
-                activityCompletionReady: data.body.activityCompletionReady ?? false,
-                isShowNotification: true
-            });
+            saveResult = await updateLogFromForm(data, manifest);
             if (supportDisposition && !isObjectEmpty(additionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
                 await dispositionCore.upsertDisposition({
                     serverUrl: manifest.serverUrl,

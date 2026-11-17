@@ -234,7 +234,7 @@ async function onEvent(options: EventOptions) {
     switch (triggerTypeInUse) {
         // Case 1: User manual log via form
         case 'logForm':
-            logFormResult = await logFormHandler.onEvent({ data, manifest, platformInfo, platformName, platform, contactPhoneNumber });
+            logFormResult = await logFormHandler.onEvent({ data, manifest, platformInfo, platformName, platform, contactPhoneNumber, existingCalls });
             break;
         // Case 2: call log sync
         case 'callLogSync':
