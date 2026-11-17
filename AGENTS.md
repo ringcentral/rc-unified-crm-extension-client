@@ -26,4 +26,5 @@ This project is `rc-unified-crm-extension-client/`, the browser extension client
 ## CI and Release Gates
 
 - Pull-request CI and release verification require lint, source/test/E2E type checks, coverage, and Playwright E2E before packaging.
-- Root `package-lock.json` is intentionally ignored because developers may use environment-specific registries; use `npm.cmd install` and do not commit the generated lockfile.
+- Commit the root `package-lock.json` with dependency changes. Use `npm.cmd ci` for clean installs and CI; use `npm.cmd install` only when intentionally updating dependencies and review the resulting lockfile.
+- Preserve `.npmrc`'s `omit-lockfile-registry-resolved=true` so the lock pins versions and integrity without hardcoding a registry. Resolve and verify updates against the configured Nexus registry, which may lag npmjs; do not bypass it or lower security minimums to work around unavailable packages.
