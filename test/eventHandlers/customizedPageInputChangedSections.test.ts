@@ -331,6 +331,56 @@ describe('customizedPage inputChanged section handlers', () => {
     }));
   });
 
+  it('passes the RingCX call events URL to the owning admin only', async () => {
+    const sectionPath = '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/serverSideLoggingSetting.ts';
+    const owner = await loadSectionHandler(sectionPath, {
+      adminCore: {
+        getServerSideLogging: vi.fn(async () => ({
+          subscribed: true,
+          subscriptionLevel: 'Account',
+          sources: ['ex', 'cx'],
+          ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/token-1',
+        })),
+      },
+    });
+    await owner.handler.onEvent(context);
+    expect(owner.serverSideLoggingPage.getServerSideLoggingSettingPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      sources: ['ex', 'cx'],
+      ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/token-1',
+    }));
+
+    const otherAdmin = await loadSectionHandler(sectionPath, {
+      adminCore: {
+        getServerSideLogging: vi.fn(async () => ({
+          ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/token-1',
+          subscribedByOtherAdmin: {
+            name: 'Pat Admin',
+            setting: { subscriptionLevel: 'Account', sources: ['ex', 'cx'] },
+          },
+        })),
+      },
+    });
+    await otherAdmin.handler.onEvent(context);
+    expect(otherAdmin.serverSideLoggingPage.getServerSideLoggingSettingPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      ringcxWebhookUrl: null,
+    }));
+  });
+
+  it('refreshes the server-side logging page in place without navigating', async () => {
+    const loaded = await loadSectionHandler(
+      '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/serverSideLoggingSetting.ts',
+    );
+
+    await loaded.handler.renderServerSideLoggingSettingPage({ platform: context.platform, navigate: false });
+
+    const messages = getWidgetPostMessages().map(({ message }) => message);
+    expect(messages).toContainEqual(expect.objectContaining({
+      type: 'rc-adapter-register-customized-page',
+      page: expect.objectContaining({ id: 'serverSideLoggingSettingPage' }),
+    }));
+    expect(messages.some((message) => message?.type === 'rc-adapter-navigate-to')).toBe(false);
+  });
+
   it('renders managed authentication section availability', async () => {
     const loaded = await loadSectionHandler(
       '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/managedAuthentication.ts',

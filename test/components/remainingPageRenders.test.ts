@@ -237,6 +237,8 @@ describe('google sheets and server-side logging page renderers', () => {
       owner: 'admin',
     });
     expect(page.uiSchema.serverSideLoggingHolder.region).toEqual({ 'ui:widget': 'select' });
+    // The RingCX call events URL belongs to the admin who owns the subscription.
+    expect(page.schema.properties).not.toHaveProperty('ringcxWebhookHolder');
   });
 
   it('renders server-side logging defaults without RingCX permissions', async () => {
@@ -249,6 +251,113 @@ describe('google sheets and server-side logging page renderers', () => {
     });
     expect(noCxPage.formData.serverSideLoggingHolder.sources).toEqual(['ex']);
     expect(noCxPage.schema.properties.serverSideLoggingHolder.properties).not.toHaveProperty('sources');
+  });
+
+  describe('RingCX call events URL', () => {
+    const webhookUrl = 'https://ssl.example/ringcx/webhooks/token-1';
+    const guideUrl = 'https://appconnect.labs.ringcentral.com/users/ringcx/#setting-up-ringcx-logging';
+
+    async function renderPage(props: Record<string, unknown> = {}) {
+      const serverSideLoggingPage = await loadPage('../../src/components/admin/serverSideLoggingPage.ts');
+      return serverSideLoggingPage.getServerSideLoggingSettingPageRender({
+        subscriptionLevel: 'Account',
+        doNotLogNumbers: '',
+        loggingByAdmin: false,
+        userPermissions: { ringCX: true },
+        sources: ['ex', 'cx'],
+        ringcxWebhookUrl: webhookUrl,
+        ...props,
+      });
+    }
+
+    it('offers call sources with RingCX but without RingSense insights', async () => {
+      const page = await renderPage({ sources: ['ex'], ringcxWebhookUrl: null });
+      const sources = page.schema.properties.serverSideLoggingHolder.properties.sources;
+      expect(sources.title).toBe('Call sources');
+      expect(sources.description).toBe('Choose which RingCentral products have their calls logged server-side.');
+      expect(page.formData.serverSideLoggingHolder.sources).toEqual(['ex']);
+    });
+
+    it('shows the saved URL read-only with regenerate, setup steps and the setup guide', async () => {
+      const page = await renderPage();
+      const holder = page.schema.properties.ringcxWebhookHolder;
+      expect(holder.title).toBe('RingCX call events URL');
+      expect(holder.properties.ringcxWebhookUrl).toEqual({
+        type: 'string',
+        title: 'Call Event URL',
+        readOnly: true,
+      });
+      expect(page.uiSchema.ringcxWebhookHolder).not.toHaveProperty('ringcxWebhookUrl');
+      expect(page.formData.ringcxWebhookHolder).toEqual({ ringcxWebhookUrl: webhookUrl });
+      expect(holder.properties).not.toHaveProperty('copyRingcxWebhookUrlButton');
+      expect(holder.properties.regenerateRingcxWebhookUrlButton.title).toBe('Regenerate URL');
+      // The guide text uses the smaller caption style.
+      expect(page.uiSchema.ringcxWebhookHolder.ringcxWebhookDescription['ui:variant']).toBe('caption1');
+      for (let step = 1; step <= 5; step += 1) {
+        expect(page.uiSchema.ringcxWebhookHolder[`ringcxWebhookStep${step}`]).toEqual({
+          'ui:field': 'typography',
+          'ui:variant': 'caption1',
+        });
+      }
+      expect(holder.properties.ringcxWebhookStep1.description).toContain('open Integrations > Generic HTTP');
+      expect(holder.properties.ringcxWebhookStep2.description).toContain('turn on Send body as JSON');
+      // Without the Outbound call event, dial group and campaign calls send nothing.
+      expect(holder.properties.ringcxWebhookStep3.description).toContain('both the Call Ended event and the Outbound call event');
+      // RingCX rejects the Generic HTTP form without a header.
+      expect(holder.properties.ringcxWebhookStep4.description).toContain('Add a header, for example X-App-Connect');
+      expect(holder.properties.ringcxWebhookStep5.description).toContain('Repeat for each RingCX sub-account');
+      expect(holder.properties.ringcxSetupGuide.description).toBe('RingCX setup guide');
+      expect(page.uiSchema.ringcxWebhookHolder.ringcxSetupGuide).toMatchObject({
+        'ui:field': 'link',
+        'ui:href': guideUrl,
+      });
+      expect(holder.properties).not.toHaveProperty('ringcxWebhookSaveFirst');
+      expect(holder.properties).not.toHaveProperty('generateRingcxWebhookUrlButton');
+    });
+
+    it('offers to generate a URL for a RingCX subscription that has none', async () => {
+      const page = await renderPage({ ringcxWebhookUrl: null });
+      const holder = page.schema.properties.ringcxWebhookHolder;
+      expect(holder.properties.ringcxWebhookMissing.description)
+        .toBe('No RingCX call events URL has been generated for this account yet.');
+      expect(holder.properties.generateRingcxWebhookUrlButton.title).toBe('Generate URL');
+      expect(holder.properties).not.toHaveProperty('ringcxWebhookUrl');
+      expect(page.formData.ringcxWebhookHolder).toEqual({});
+      expect(holder.properties).toHaveProperty('ringcxSetupGuide');
+    });
+
+    it.each([
+      ['RingCX is not a saved source', { sources: ['ex'], ringcxWebhookUrl: null }],
+      ['logging is disabled', { subscriptionLevel: 'Disable', ringcxWebhookUrl: null }],
+    ])('asks to save first with the setup guide when %s', async (_name, props) => {
+      const page = await renderPage(props);
+      const holder = page.schema.properties.ringcxWebhookHolder;
+      expect(holder.properties.ringcxWebhookSaveFirst.description).toContain('then save to get the RingCX call events URL');
+      expect(page.uiSchema.ringcxWebhookHolder.ringcxWebhookSaveFirst).toEqual({
+        'ui:field': 'admonition',
+        'ui:severity': 'info',
+      });
+      expect(page.uiSchema.ringcxWebhookHolder.ringcxSetupGuide['ui:href']).toBe(guideUrl);
+      expect(holder.properties).not.toHaveProperty('ringcxWebhookUrl');
+      expect(holder.properties).not.toHaveProperty('generateRingcxWebhookUrlButton');
+    });
+
+    it('hides the RingCX section without the RingCX feature', async () => {
+      const page = await renderPage({ userPermissions: { ringSenseInsights: true } });
+      expect(page.schema.properties).not.toHaveProperty('ringcxWebhookHolder');
+      expect(page.uiSchema).not.toHaveProperty('ringcxWebhookHolder');
+      expect(page.formData).not.toHaveProperty('ringcxWebhookHolder');
+    });
+
+    it('renders the regenerate confirmation page', async () => {
+      const serverSideLoggingPage = await loadPage('../../src/components/admin/serverSideLoggingPage.ts');
+      const page = serverSideLoggingPage.getRingCXWebhookRotatePageRender();
+      expect(page.id).toBe('ringcxWebhookRotatePage');
+      expect(page.schema.properties.ringcxWebhookRotateWarning.description).toContain('stops logging calls immediately');
+      expect(page.uiSchema.ringcxWebhookRotateWarning['ui:severity']).toBe('warning');
+      expect(page.schema.properties.confirmRingcxWebhookRotateButton.title).toBe('Regenerate URL');
+      expect(page.schema.properties.cancelRingcxWebhookRotateButton.title).toBe('Cancel');
+    });
   });
 });
 

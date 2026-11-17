@@ -249,7 +249,9 @@ async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel,
                         crmAdapterUrl: serverUrl,
                         subscriptionLevel,
                         loggingByAdmin,
-                        loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false
+                        loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false,
+                        detailedCallLog: adminSettings?.userSettings?.addCallLogLegs?.value ?? false,
+                        sources
                     },
                     {
                         headers: {
@@ -328,6 +330,46 @@ async function disableServerSideLogging({ platform }: UnknownRecord): Promise<an
             }
         }
     }
+}
+
+// Issues a new RingCX call events URL. The previous URL stops logging immediately.
+async function rotateRingCXWebhookUrl({ platform }: UnknownRecord): Promise<string> {
+    if (!platform.serverSideLogging) {
+        throw new Error('Server side logging is not supported.');
+    }
+    const serverDomainUrl = platform.serverSideLogging.url;
+    const rotate = async (token: string) => axios.post(
+        `${serverDomainUrl}/ringcx/webhook-url/rotate`,
+        {},
+        {
+            headers: {
+                Accept: 'application/json',
+                'X-Access-Token': token
+            }
+        }
+    );
+    let { serverSideLoggingToken } = await chromeStorageLocal.get('serverSideLoggingToken');
+    let response;
+    try {
+        if (!serverSideLoggingToken) {
+            serverSideLoggingToken = await authServerSideLogging({ platform });
+        }
+        response = await rotate(serverSideLoggingToken);
+    }
+    catch (e) {
+        if (e?.response?.status === 401) {
+            // Token expired
+            response = await rotate(await authServerSideLogging({ platform }));
+        }
+        else {
+            throw new Error(e?.response?.data?.result?.message || 'Failed to generate the RingCX call events URL.');
+        }
+    }
+    const ringcxWebhookUrl = response?.data?.result?.ringcxWebhookUrl;
+    if (!ringcxWebhookUrl) {
+        throw new Error('Failed to generate the RingCX call events URL.');
+    }
+    return ringcxWebhookUrl;
 }
 
 async function updateServerSideDoNotLogNumbers({ platform, doNotLogNumbers }: UnknownRecord): Promise<any> {
@@ -602,6 +644,7 @@ const adminCore = {
     getServerSideLogging,
     enableServerSideLogging,
     disableServerSideLogging,
+    rotateRingCXWebhookUrl,
     updateServerSideDoNotLogNumbers,
     authServerSideLogging,
     getServerSideLoggingAdditionalFieldValues,
@@ -625,6 +668,7 @@ export {
     getServerSideLogging,
     enableServerSideLogging,
     disableServerSideLogging,
+    rotateRingCXWebhookUrl,
     updateServerSideDoNotLogNumbers,
     authServerSideLogging,
     getServerSideLoggingAdditionalFieldValues,

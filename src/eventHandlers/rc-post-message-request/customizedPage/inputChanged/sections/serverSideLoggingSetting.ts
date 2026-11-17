@@ -15,12 +15,9 @@ function getWidgetFrameWindow(): Window {
   return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
 }
 
-export async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions): Promise<void> {
-  void data;
-  void manifest;
-  void platformInfo;
-  void platformName;
-  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+// Registers the Universal Logging page from the saved subscription. Without `navigate`, an open
+// page is refreshed in place, e.g. to show the RingCX call events URL after saving.
+export async function renderServerSideLoggingSettingPage({ platform, navigate = true }: { platform: UnknownRecord; navigate?: boolean }): Promise<void> {
   const serverSideLoggingSubscription = await adminCore.getServerSideLogging({ platform });
   const subscriptionLevel = serverSideLoggingSubscription.subscribed ? serverSideLoggingSubscription.subscriptionLevel : 'Disable';
   const sources = serverSideLoggingSubscription.sources ?? ['ex'];
@@ -38,18 +35,32 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
     additionalFieldValues,
     sources,
     userPermissions,
+    // Only the admin who owns the subscription gets the URL.
+    ringcxWebhookUrl: serverSideLoggingSubscription.subscribedByOtherAdmin ? null : (serverSideLoggingSubscription.ringcxWebhookUrl ?? null),
   });
   getWidgetFrameWindow().postMessage({
     type: 'rc-adapter-register-customized-page',
     page: serverSideLoggingSettingPageRender,
   });
-  getWidgetFrameWindow().postMessage({
-    type: 'rc-adapter-navigate-to',
-    path: `/customized/${serverSideLoggingSettingPageRender.id}`, // page id
-  }, '*');
+  if (navigate) {
+    getWidgetFrameWindow().postMessage({
+      type: 'rc-adapter-navigate-to',
+      path: `/customized/${serverSideLoggingSettingPageRender.id}`, // page id
+    }, '*');
+  }
+}
+
+export async function onEvent({ data, manifest, platformInfo, platformName, platform }: EventOptions): Promise<void> {
+  void data;
+  void manifest;
+  void platformInfo;
+  void platformName;
+  window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+  await renderServerSideLoggingSettingPage({ platform });
   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
 }
 
 export default {
   onEvent,
+  renderServerSideLoggingSettingPage,
 };

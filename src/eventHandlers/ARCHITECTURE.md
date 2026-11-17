@@ -104,6 +104,7 @@ Routed by `data.body.button.id` (parsed as `{actionId}-{itemId}-action`).
 |---|---|---|
 | `callAndSMSLoggingSettingPage`, `contactSettingPage`, `callLogDetailsSettingPage`, `autoLogPreferenceSettingPage`, `advancedFeaturesSettingPage`, `customSettingsPage`, `customizeTabsSettingPage`, `widgetSettingsPage`, `notificationLevelSettingPage`, `phoneNumberFormatPage`, `clickToDialEmbedPage` | `adminSettings/adminSettingsFormSubmit.js` | Generic admin settings save for all settings form pages |
 | `saveServerSideLoggingButton` | `adminSettings/saveServerSideLogging.js` | Save server-side logging config |
+| `generateRingcxWebhookUrlButton`, `regenerateRingcxWebhookUrlButton`, `confirmRingcxWebhookRotateButton`, `cancelRingcxWebhookRotateButton` | `adminSettings/ringcxWebhookUrl.js` | Generate, or regenerate (after confirmation), the RingCX call events URL |
 | `doNotLogNumbersSubmitButton` | `adminSettings/doNotLogNumbersSubmit.js` | Save the "do not log" phone number list |
 
 ### `userMapping/` — User mapping management

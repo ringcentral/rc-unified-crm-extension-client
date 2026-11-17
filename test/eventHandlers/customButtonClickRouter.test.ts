@@ -35,6 +35,7 @@ const handlerModules = {
   logRecordSubmitButton: '../../src/eventHandlers/rc-post-message-request/custom-button-click/errorLogging/logRecordSubmit.ts',
   saveServerSideLoggingButton: '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/saveServerSideLogging.ts',
   doNotLogNumbersSubmitButton: '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/doNotLogNumbersSubmit.ts',
+  ringcxWebhookUrl: '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/ringcxWebhookUrl.ts',
   generalSettings: '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/adminSettingsFormSubmit.ts',
   refreshAccountData: '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/refreshAccountData.ts',
   managedAuthOrgPage: '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/managedAuthOrgPage.ts',
@@ -300,6 +301,10 @@ describe('custom button click router', () => {
     await expectActionRoutesTo(router, handlers, [
       ['saveServerSideLoggingButton-row-1-action', 'saveServerSideLoggingButton'],
       ['doNotLogNumbersSubmitButton-row-1-action', 'doNotLogNumbersSubmitButton'],
+      ['generateRingcxWebhookUrlButton', 'ringcxWebhookUrl'],
+      ['regenerateRingcxWebhookUrlButton', 'ringcxWebhookUrl'],
+      ['confirmRingcxWebhookRotateButton', 'ringcxWebhookUrl'],
+      ['cancelRingcxWebhookRotateButton', 'ringcxWebhookUrl'],
       ['openImplementedInterfacesPageButton-row-1-action', 'openImplementedInterfacesPageButton'],
       ['accountDataPage', 'refreshAccountData'],
       ['managedAuthOrgPage-row-1-action', 'managedAuthOrgPage'],

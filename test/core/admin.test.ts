@@ -555,6 +555,121 @@ describe('admin core', () => {
     });
   });
 
+  it('keeps sources and detailed call log when subscribing after the logging token expires', async () => {
+    seedStorage({
+      rcUserInfo: { rcAccountId: 'account-1' },
+      rcUnifiedCrmExtJwt: 'crm-jwt',
+      serverSideLoggingToken: 'expired-token',
+      adminSettings: { userSettings: { addCallLogLegs: { value: true } } },
+    });
+    vi.mocked(axios.get)
+      .mockRejectedValueOnce({ response: { status: 401 } })
+      .mockResolvedValueOnce({ data: { jwtToken: 'new-token' } })
+      .mockResolvedValueOnce({ data: { subscribed: false } });
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { success: true } });
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const adminCore = await loadAdminCore();
+
+    await adminCore.enableServerSideLogging({
+      serverUrl: 'https://server.example',
+      platform: platform(),
+      subscriptionLevel: 'Account',
+      loggingByAdmin: true,
+      sources: ['ex', 'cx'],
+    });
+
+    // Without sources the server would subscribe RingEX only and turn RingCX logging off.
+    expect(axios.post).toHaveBeenCalledWith('https://ssl.example/subscribe', expect.objectContaining({
+      detailedCallLog: true,
+      sources: ['ex', 'cx'],
+    }), {
+      headers: {
+        Accept: 'application/json',
+        'X-Access-Token': 'new-token',
+      },
+    });
+    consoleError.mockRestore();
+  });
+
+  describe('rotateRingCXWebhookUrl', () => {
+    const rotateUrl = 'https://ssl.example/ringcx/webhook-url/rotate';
+
+    it('returns the new RingCX call events URL', async () => {
+      seedStorage({ serverSideLoggingToken: 'ssl-token' });
+      vi.mocked(axios.post).mockResolvedValueOnce({
+        data: { success: true, result: { ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/new' } },
+      });
+      const adminCore = await loadAdminCore();
+
+      await expect(adminCore.rotateRingCXWebhookUrl({ platform: platform() }))
+        .resolves.toBe('https://ssl.example/ringcx/webhooks/new');
+      expect(axios.post).toHaveBeenCalledWith(rotateUrl, {}, {
+        headers: {
+          Accept: 'application/json',
+          'X-Access-Token': 'ssl-token',
+        },
+      });
+    });
+
+    it('authenticates first when there is no logging token', async () => {
+      seedStorage({ rcUserInfo: { rcAccountId: 'account-1' } });
+      vi.mocked(axios.get).mockResolvedValueOnce({ data: { jwtToken: 'new-token' } });
+      vi.mocked(axios.post).mockResolvedValueOnce({
+        data: { result: { ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/new' } },
+      });
+      const adminCore = await loadAdminCore();
+
+      await adminCore.rotateRingCXWebhookUrl({ platform: platform() });
+      expect(axios.post).toHaveBeenCalledWith(rotateUrl, {}, expect.objectContaining({
+        headers: expect.objectContaining({ 'X-Access-Token': 'new-token' }),
+      }));
+    });
+
+    it('retries once with a fresh token after the logging token expires', async () => {
+      seedStorage({
+        rcUserInfo: { rcAccountId: 'account-1' },
+        serverSideLoggingToken: 'expired-token',
+      });
+      vi.mocked(axios.get).mockResolvedValueOnce({ data: { jwtToken: 'new-token' } });
+      vi.mocked(axios.post)
+        .mockRejectedValueOnce({ response: { status: 401 } })
+        .mockResolvedValueOnce({ data: { result: { ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/new' } } });
+      const adminCore = await loadAdminCore();
+
+      await expect(adminCore.rotateRingCXWebhookUrl({ platform: platform() }))
+        .resolves.toBe('https://ssl.example/ringcx/webhooks/new');
+      expect(axios.post).toHaveBeenNthCalledWith(2, rotateUrl, {}, expect.objectContaining({
+        headers: expect.objectContaining({ 'X-Access-Token': 'new-token' }),
+      }));
+    });
+
+    it('rejects with the logging service message', async () => {
+      seedStorage({ serverSideLoggingToken: 'ssl-token' });
+      vi.mocked(axios.post).mockRejectedValueOnce({
+        response: { status: 400, data: { result: { message: 'Server side logging for RingCX is not enabled' } } },
+      });
+      const adminCore = await loadAdminCore();
+
+      await expect(adminCore.rotateRingCXWebhookUrl({ platform: platform() }))
+        .rejects.toThrow('Server side logging for RingCX is not enabled');
+    });
+
+    it('rejects when the response has no URL or the connector has no logging service', async () => {
+      seedStorage({ serverSideLoggingToken: 'ssl-token' });
+      vi.mocked(axios.post)
+        .mockResolvedValueOnce({ data: { success: true, result: {} } })
+        .mockRejectedValueOnce(new Error('Network Error'));
+      const adminCore = await loadAdminCore();
+
+      await expect(adminCore.rotateRingCXWebhookUrl({ platform: platform() }))
+        .rejects.toThrow('Failed to generate the RingCX call events URL.');
+      await expect(adminCore.rotateRingCXWebhookUrl({ platform: platform() }))
+        .rejects.toThrow('Failed to generate the RingCX call events URL.');
+      await expect(adminCore.rotateRingCXWebhookUrl({ platform: { name: 'salesforce' } }))
+        .rejects.toThrow('Server side logging is not supported.');
+    });
+  });
+
   it('updates do-not-log numbers with parsed phone numbers and retries on expired token', async () => {
     seedStorage({
       rcUserInfo: { rcAccountId: 'account-1' },
