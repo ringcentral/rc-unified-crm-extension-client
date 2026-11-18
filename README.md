@@ -65,3 +65,4 @@ Login establishes the context before CRM calls. Logout, account changes and iden
 Set `MIXPANEL_RAW_IDS_ENABLED=false` before `npm run build` to disable raw fields and the new `rc-analytics-account-id` / `rc-analytics-extension-id` request headers. Raw request headers are limited to the configured adapter server, not other Axios destinations. Rebuild and distribute the extension for the setting to take effect. Existing profile/event values are not removed by this switch.
 
 Deploy the compatible App Connect Server before distributing the updated extension. Validate in Dev & QA, then Beta for at least 48 hours before Stable. See the Server repository's `docs/developers/mixpanel-raw-ids.md` for historical profile enrichment and rollout verification.
+
