@@ -1122,7 +1122,10 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
           ringcxWebhookUrl: rotatedUrl,
         })),
         getServerSideLoggingAdditionalFieldValues: vi.fn(async () => ({})),
-        rotateRingCXWebhookUrl: vi.fn(async () => rotatedUrl),
+        rotateRingCXWebhookUrl: vi.fn(async () => ({
+          ringcxWebhookUrl: rotatedUrl,
+          ringcxWebhookHeader: { name: 'x-ringcx-webhook-secret', value: 'a'.repeat(64) },
+        })),
         ...overrides,
       };
     }

@@ -331,7 +331,8 @@ describe('customizedPage inputChanged section handlers', () => {
     }));
   });
 
-  it('passes the RingCX call events URL to the owning admin only', async () => {
+  it('passes the RingCX call events URL and header to the owning admin only', async () => {
+    const webhookHeader = { name: 'x-ringcx-webhook-secret', value: 'a'.repeat(64) };
     const sectionPath = '../../src/eventHandlers/rc-post-message-request/customizedPage/inputChanged/sections/serverSideLoggingSetting.ts';
     const owner = await loadSectionHandler(sectionPath, {
       adminCore: {
@@ -340,6 +341,7 @@ describe('customizedPage inputChanged section handlers', () => {
           subscriptionLevel: 'Account',
           sources: ['ex', 'cx'],
           ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/token-1',
+          ringcxWebhookHeader: webhookHeader,
         })),
       },
     });
@@ -347,12 +349,14 @@ describe('customizedPage inputChanged section handlers', () => {
     expect(owner.serverSideLoggingPage.getServerSideLoggingSettingPageRender).toHaveBeenCalledWith(expect.objectContaining({
       sources: ['ex', 'cx'],
       ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/token-1',
+      ringcxWebhookHeader: webhookHeader,
     }));
 
     const otherAdmin = await loadSectionHandler(sectionPath, {
       adminCore: {
         getServerSideLogging: vi.fn(async () => ({
           ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/token-1',
+          ringcxWebhookHeader: webhookHeader,
           subscribedByOtherAdmin: {
             name: 'Pat Admin',
             setting: { subscriptionLevel: 'Account', sources: ['ex', 'cx'] },
@@ -363,6 +367,7 @@ describe('customizedPage inputChanged section handlers', () => {
     await otherAdmin.handler.onEvent(context);
     expect(otherAdmin.serverSideLoggingPage.getServerSideLoggingSettingPageRender).toHaveBeenCalledWith(expect.objectContaining({
       ringcxWebhookUrl: null,
+      ringcxWebhookHeader: null,
     }));
   });
 

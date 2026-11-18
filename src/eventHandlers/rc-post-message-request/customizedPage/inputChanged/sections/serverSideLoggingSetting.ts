@@ -1,5 +1,6 @@
 import adminCore from '../../../../../core/admin';
 import serverSideLoggingPage from '../../../../../components/admin/serverSideLoggingPage';
+import { getRingCXWebhookHeader } from '../../../../../lib/ringcxWebhookHeader';
 
 type UnknownRecord = Record<string, any>;
 
@@ -35,8 +36,9 @@ export async function renderServerSideLoggingSettingPage({ platform, navigate = 
     additionalFieldValues,
     sources,
     userPermissions,
-    // Only the admin who owns the subscription gets the URL.
+    // Only the admin who owns the subscription gets the URL and the header RingCX must send with it.
     ringcxWebhookUrl: serverSideLoggingSubscription.subscribedByOtherAdmin ? null : (serverSideLoggingSubscription.ringcxWebhookUrl ?? null),
+    ringcxWebhookHeader: serverSideLoggingSubscription.subscribedByOtherAdmin ? null : getRingCXWebhookHeader(serverSideLoggingSubscription),
   });
   getWidgetFrameWindow().postMessage({
     type: 'rc-adapter-register-customized-page',

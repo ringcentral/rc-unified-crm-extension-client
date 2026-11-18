@@ -3,6 +3,7 @@ import moment from 'moment';
 import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import { RcAPI } from '../lib/rcAPI';
+import { getRingCXWebhookHeader, type RingCXWebhookHeader } from '../lib/ringcxWebhookHeader';
 import { parsePhoneNumber } from 'awesome-phonenumber';
 import { getRcAccessToken, getRcAccessTokenHeaderConfig, getRcContactInfo, refreshRCToken, showNotification } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
@@ -332,8 +333,8 @@ async function disableServerSideLogging({ platform }: UnknownRecord): Promise<an
     }
 }
 
-// Issues a new RingCX call events URL. The previous URL stops logging immediately.
-async function rotateRingCXWebhookUrl({ platform }: UnknownRecord): Promise<string> {
+// Issues a new RingCX call events URL and header value. The previous ones stop logging immediately.
+async function rotateRingCXWebhookUrl({ platform }: UnknownRecord): Promise<{ ringcxWebhookUrl: string; ringcxWebhookHeader: RingCXWebhookHeader | null }> {
     if (!platform.serverSideLogging) {
         throw new Error('Server side logging is not supported.');
     }
@@ -369,7 +370,10 @@ async function rotateRingCXWebhookUrl({ platform }: UnknownRecord): Promise<stri
     if (!ringcxWebhookUrl) {
         throw new Error('Failed to generate the RingCX call events URL.');
     }
-    return ringcxWebhookUrl;
+    return {
+        ringcxWebhookUrl,
+        ringcxWebhookHeader: getRingCXWebhookHeader(response?.data?.result),
+    };
 }
 
 async function updateServerSideDoNotLogNumbers({ platform, doNotLogNumbers }: UnknownRecord): Promise<any> {

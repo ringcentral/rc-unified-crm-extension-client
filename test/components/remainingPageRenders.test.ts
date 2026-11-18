@@ -255,6 +255,7 @@ describe('google sheets and server-side logging page renderers', () => {
 
   describe('RingCX call events URL', () => {
     const webhookUrl = 'https://ssl.example/ringcx/webhooks/token-1';
+    const webhookHeader = { name: 'x-ringcx-webhook-secret', value: 'a'.repeat(64) };
     const guideUrl = 'https://appconnect.labs.ringcentral.com/users/ringcx/#setting-up-ringcx-logging';
 
     async function renderPage(props: Record<string, unknown> = {}) {
@@ -266,6 +267,7 @@ describe('google sheets and server-side logging page renderers', () => {
         userPermissions: { ringCX: true },
         sources: ['ex', 'cx'],
         ringcxWebhookUrl: webhookUrl,
+        ringcxWebhookHeader: webhookHeader,
         ...props,
       });
     }
@@ -278,7 +280,7 @@ describe('google sheets and server-side logging page renderers', () => {
       expect(page.formData.serverSideLoggingHolder.sources).toEqual(['ex']);
     });
 
-    it('shows the saved URL read-only with regenerate, setup steps and the setup guide', async () => {
+    it('shows the saved URL and header read-only with regenerate, setup steps and the setup guide', async () => {
       const page = await renderPage();
       const holder = page.schema.properties.ringcxWebhookHolder;
       expect(holder.title).toBe('RingCX call events URL');
@@ -288,7 +290,16 @@ describe('google sheets and server-side logging page renderers', () => {
         readOnly: true,
       });
       expect(page.uiSchema.ringcxWebhookHolder).not.toHaveProperty('ringcxWebhookUrl');
-      expect(page.formData.ringcxWebhookHolder).toEqual({ ringcxWebhookUrl: webhookUrl });
+      // RingCX must send this exact custom header; the server rejects call events without it.
+      expect(holder.properties.ringcxWebhookHeaderName).toEqual({ type: 'string', title: 'Header name', readOnly: true });
+      expect(holder.properties.ringcxWebhookHeaderValue).toEqual({ type: 'string', title: 'Header value', readOnly: true });
+      expect(page.formData.ringcxWebhookHolder).toEqual({
+        ringcxWebhookUrl: webhookUrl,
+        ringcxWebhookHeaderName: webhookHeader.name,
+        ringcxWebhookHeaderValue: webhookHeader.value,
+      });
+      expect(holder.properties).not.toHaveProperty('ringcxWebhookHeaderMissing');
+      expect(holder.properties.ringcxWebhookDescription.description).toContain('Keep the URL and the header value private');
       expect(holder.properties).not.toHaveProperty('copyRingcxWebhookUrlButton');
       expect(holder.properties.regenerateRingcxWebhookUrlButton.title).toBe('Regenerate URL');
       // The guide text uses the smaller caption style.
@@ -303,8 +314,9 @@ describe('google sheets and server-side logging page renderers', () => {
       expect(holder.properties.ringcxWebhookStep2.description).toContain('turn on Send body as JSON');
       // Without the Outbound call event, dial group and campaign calls send nothing.
       expect(holder.properties.ringcxWebhookStep3.description).toContain('both the Call Ended event and the Outbound call event');
-      // RingCX rejects the Generic HTTP form without a header.
-      expect(holder.properties.ringcxWebhookStep4.description).toContain('Add a header, for example X-App-Connect');
+      expect(holder.properties.ringcxWebhookStep4.description)
+        .toBe('4. Add a custom header named x-ringcx-webhook-secret with the header value shown above, then save. App Connect rejects call events without this exact header.');
+      expect(holder.properties.ringcxWebhookStep4.description).not.toContain('X-App-Connect');
       expect(holder.properties.ringcxWebhookStep5.description).toContain('Repeat for each RingCX sub-account');
       expect(holder.properties.ringcxSetupGuide.description).toBe('RingCX setup guide');
       expect(page.uiSchema.ringcxWebhookHolder.ringcxSetupGuide).toMatchObject({
@@ -313,6 +325,20 @@ describe('google sheets and server-side logging page renderers', () => {
       });
       expect(holder.properties).not.toHaveProperty('ringcxWebhookSaveFirst');
       expect(holder.properties).not.toHaveProperty('generateRingcxWebhookUrlButton');
+    });
+
+    it('asks to regenerate when the server returns no header for the URL', async () => {
+      const page = await renderPage({ ringcxWebhookHeader: null });
+      const holder = page.schema.properties.ringcxWebhookHolder;
+      expect(holder.properties.ringcxWebhookHeaderMissing.description).toContain('Regenerate the URL to get the header RingCX must send');
+      expect(page.uiSchema.ringcxWebhookHolder.ringcxWebhookHeaderMissing).toEqual({
+        'ui:field': 'admonition',
+        'ui:severity': 'warning',
+      });
+      expect(holder.properties).not.toHaveProperty('ringcxWebhookHeaderName');
+      expect(holder.properties).not.toHaveProperty('ringcxWebhookHeaderValue');
+      expect(page.formData.ringcxWebhookHolder).toEqual({ ringcxWebhookUrl: webhookUrl });
+      expect(holder.properties.ringcxWebhookStep4.description).toContain('x-ringcx-webhook-secret');
     });
 
     it('offers to generate a URL for a RingCX subscription that has none', async () => {
@@ -353,7 +379,10 @@ describe('google sheets and server-side logging page renderers', () => {
       const serverSideLoggingPage = await loadPage('../../src/components/admin/serverSideLoggingPage.ts');
       const page = serverSideLoggingPage.getRingCXWebhookRotatePageRender();
       expect(page.id).toBe('ringcxWebhookRotatePage');
-      expect(page.schema.properties.ringcxWebhookRotateWarning.description).toContain('stops logging calls immediately');
+      expect(page.schema.properties.ringcxWebhookRotateWarning.description).toContain('stop logging calls immediately');
+      // The header value is derived from the URL version, so it changes too.
+      expect(page.schema.properties.ringcxWebhookRotateWarning.description).toContain('The header value changes too');
+      expect(page.schema.properties.ringcxWebhookRotateWarning.description).toContain('Paste the new URL and header value into every RingCX sub-account');
       expect(page.uiSchema.ringcxWebhookRotateWarning['ui:severity']).toBe('warning');
       expect(page.schema.properties.confirmRingcxWebhookRotateButton.title).toBe('Regenerate URL');
       expect(page.schema.properties.cancelRingcxWebhookRotateButton.title).toBe('Cancel');

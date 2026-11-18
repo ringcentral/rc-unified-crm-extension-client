@@ -594,15 +594,17 @@ describe('admin core', () => {
   describe('rotateRingCXWebhookUrl', () => {
     const rotateUrl = 'https://ssl.example/ringcx/webhook-url/rotate';
 
-    it('returns the new RingCX call events URL', async () => {
+    const webhookHeader = { name: 'x-ringcx-webhook-secret', value: 'a'.repeat(64) };
+
+    it('returns the new RingCX call events URL and its custom header', async () => {
       seedStorage({ serverSideLoggingToken: 'ssl-token' });
       vi.mocked(axios.post).mockResolvedValueOnce({
-        data: { success: true, result: { ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/new' } },
+        data: { success: true, result: { ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/new', ringcxWebhookHeader: webhookHeader } },
       });
       const adminCore = await loadAdminCore();
 
       await expect(adminCore.rotateRingCXWebhookUrl({ platform: platform() }))
-        .resolves.toBe('https://ssl.example/ringcx/webhooks/new');
+        .resolves.toEqual({ ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/new', ringcxWebhookHeader: webhookHeader });
       expect(axios.post).toHaveBeenCalledWith(rotateUrl, {}, {
         headers: {
           Accept: 'application/json',
@@ -636,8 +638,9 @@ describe('admin core', () => {
         .mockResolvedValueOnce({ data: { result: { ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/new' } } });
       const adminCore = await loadAdminCore();
 
+      // A server without the header check returns no header.
       await expect(adminCore.rotateRingCXWebhookUrl({ platform: platform() }))
-        .resolves.toBe('https://ssl.example/ringcx/webhooks/new');
+        .resolves.toEqual({ ringcxWebhookUrl: 'https://ssl.example/ringcx/webhooks/new', ringcxWebhookHeader: null });
       expect(axios.post).toHaveBeenNthCalledWith(2, rotateUrl, {}, expect.objectContaining({
         headers: expect.objectContaining({ 'X-Access-Token': 'new-token' }),
       }));
