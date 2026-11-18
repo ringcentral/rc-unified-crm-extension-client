@@ -19,6 +19,11 @@ import userCore from './user';
 type UnknownRecord = Record<string, any>;
 
 const chromeStorageLocal = chrome.storage.local as any;
+const trustedOAuthCallbackOrigins = new Set([
+    'https://unified-crm-extension.labs.ringcentral.com',
+    'https://unified-crm-extension-test.labs.ringcentral.com',
+    'https://unified-crm-extension-test-beta.labs.ringcentral.com',
+]);
 
 async function getManifest(forceReload?: boolean): Promise<UnknownRecord> {
     return (await getManifestBase(forceReload as any)) as UnknownRecord;
@@ -413,7 +418,13 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }: UnknownRec
         });
     }
     const oauthCallbackUrl = `${serverUrl}/oauth-callback?${params.toString()}`;
-    const res = await axios.get(oauthCallbackUrl);
+    const callbackDestination = new URL(oauthCallbackUrl, window.location.href);
+    // A connector manifest can name a custom adapter. Send RC credentials only to known App Connect servers.
+    const isTrustedCallback = trustedOAuthCallbackOrigins.has(callbackDestination.origin)
+        && callbackDestination.pathname === '/oauth-callback';
+    const res = isTrustedCallback
+        ? await axios.get(oauthCallbackUrl, await getRcAccessTokenHeaderConfig())
+        : await axios.get(oauthCallbackUrl);
     showNotification({ level: res.data.returnMessage?.messageType ?? 'success', message: res.data.returnMessage?.message ?? t('notifications.success.authorized'), ttl: res.data.returnMessage?.ttl ?? 3000 });
     if (!res.data.jwtToken) {
         return;
