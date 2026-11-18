@@ -398,6 +398,11 @@
     "warning": {
       "callLogFailed": "Failed to save call log",
       "callLogUpdateFailed": "Call log update failed",
+      "callAlreadyLogged": "This call was already logged automatically. Your title and note were saved to that log.",
+      "changesNotSaved": "Not saved",
+      "existingLogContactNotChanged": "Contact: the log keeps the contact it was logged with. Change it in the CRM if needed.",
+      "existingLogNewContactNotLinked": "New contact: not linked to this log. Link it in the CRM if needed.",
+      "existingLogFieldsNotSaved": "Fields: {fields}",
       "connectToCrm": "Please go to Settings and connect to CRM platform",
       "apiKeyFailed": "Failed to register api key.",
       "noContactFound": "No contact found",

@@ -398,6 +398,11 @@
     "warning": {
       "callLogFailed": "Opslaan van oproeplog mislukt",
       "callLogUpdateFailed": "Bijwerken van oproeplog mislukt",
+      "callAlreadyLogged": "Dit gesprek is al automatisch gelogd. Je titel en notitie zijn in die log opgeslagen.",
+      "changesNotSaved": "Niet opgeslagen",
+      "existingLogContactNotChanged": "Contact: de log behoudt het contact waarmee hij is gemaakt. Wijzig het zo nodig in het CRM.",
+      "existingLogNewContactNotLinked": "Nieuw contact: niet aan deze log gekoppeld. Koppel het zo nodig in het CRM.",
+      "existingLogFieldsNotSaved": "Velden: {fields}",
       "connectToCrm": "Ga naar Instellingen en maak verbinding met het CRM-platform",
       "apiKeyFailed": "Registreren van API-sleutel mislukt.",
       "noContactFound": "Geen contact gevonden",

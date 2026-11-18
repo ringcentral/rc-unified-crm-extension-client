@@ -398,6 +398,11 @@
     "warning": {
       "callLogFailed": "保存通话日志失败",
       "callLogUpdateFailed": "通话日志更新失败",
+      "callAlreadyLogged": "此通話已被自動記錄。你的標題和備註已儲存到該記錄中。",
+      "changesNotSaved": "未儲存",
+      "existingLogContactNotChanged": "聯絡人：記錄保留建立時的聯絡人。如有需要，請在 CRM 中更改。",
+      "existingLogNewContactNotLinked": "新聯絡人：未連結到此記錄。如有需要，請在 CRM 中連結。",
+      "existingLogFieldsNotSaved": "欄位：{fields}",
       "connectToCrm": "请前往设置并连接到 CRM 平台",
       "apiKeyFailed": "注册 API 密钥失败。",
       "noContactFound": "未找到联系人",

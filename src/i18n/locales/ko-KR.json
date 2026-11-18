@@ -398,6 +398,11 @@
     "warning": {
       "callLogFailed": "통화 로그 저장 실패",
       "callLogUpdateFailed": "통화 로그 업데이트 실패",
+      "callAlreadyLogged": "이 통화는 이미 자동으로 기록되었습니다. 제목과 메모는 해당 기록에 저장되었습니다.",
+      "changesNotSaved": "저장되지 않음",
+      "existingLogContactNotChanged": "연락처: 기록은 생성 시의 연락처를 유지합니다. 필요하면 CRM에서 변경하세요.",
+      "existingLogNewContactNotLinked": "새 연락처: 이 기록에 연결되지 않았습니다. 필요하면 CRM에서 연결하세요.",
+      "existingLogFieldsNotSaved": "필드: {fields}",
       "connectToCrm": "설정으로 이동하여 CRM 플랫폼에 연결하세요",
       "apiKeyFailed": "API 키 등록 실패.",
       "noContactFound": "연락처를 찾을 수 없습니다",

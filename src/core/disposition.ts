@@ -19,6 +19,12 @@ interface ReturnMessage {
 }
 
 interface CallDispositionResponse {
+  successful?: boolean;
+  returnMessage?: ReturnMessage;
+}
+
+export interface UpsertDispositionResult {
+  successful: boolean;
   returnMessage?: ReturnMessage;
 }
 
@@ -27,7 +33,7 @@ export async function upsertDisposition({
   logType,
   sessionId,
   dispositions,
-}: UpsertDispositionOptions): Promise<void> {
+}: UpsertDispositionOptions): Promise<UpsertDispositionResult | undefined> {
   const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as {
     rcUnifiedCrmExtJwt?: string;
   };
@@ -55,10 +61,13 @@ export async function upsertDisposition({
             details: data.returnMessage?.details,
           });
         }
-        break;
+        // Some connectors answer successful: false without a message when the dispositions
+        // carry nothing they can apply, such as Clio without a matter.
+        return { successful: !!data.successful, returnMessage: data.returnMessage };
       }
     }
   }
+  return undefined;
 }
 
 const dispositionCore = {

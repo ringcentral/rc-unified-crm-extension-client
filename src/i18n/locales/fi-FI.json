@@ -398,6 +398,11 @@
     "warning": {
       "callLogFailed": "Puhelulokin tallennus epäonnistui",
       "callLogUpdateFailed": "Puhelulokin päivitys epäonnistui",
+      "callAlreadyLogged": "Tämä puhelu kirjattiin jo automaattisesti. Otsikkosi ja muistiinpanosi tallennettiin siihen kirjaukseen.",
+      "changesNotSaved": "Ei tallennettu",
+      "existingLogContactNotChanged": "Yhteystieto: kirjaus säilyttää yhteystiedon, jolla se luotiin. Muuta sitä CRM:ssä tarvittaessa.",
+      "existingLogNewContactNotLinked": "Uusi yhteystieto: ei linkitetty tähän kirjaukseen. Linkitä se CRM:ssä tarvittaessa.",
+      "existingLogFieldsNotSaved": "Kentät: {fields}",
       "connectToCrm": "Siirry asetuksiin ja yhdistä CRM-alustaan",
       "apiKeyFailed": "API-avaimen rekisteröinti epäonnistui.",
       "noContactFound": "Yhteystietoa ei löytynyt",

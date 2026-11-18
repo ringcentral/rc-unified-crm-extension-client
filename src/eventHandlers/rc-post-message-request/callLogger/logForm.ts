@@ -4,9 +4,9 @@ import logCore from '../../../core/log';
 import calldownPage from '../../../components/calldownPage';
 import { isObjectEmpty, showNotification } from '../../../lib/util';
 import axios from 'axios';
-import dispositionCore from '../../../core/disposition';
+import dispositionCore, { type UpsertDispositionResult } from '../../../core/disposition';
 import logPage from '../../../components/logPage';
-import { getCachedLogPageData } from '../../../lib/logUtil';
+import { getCachedLogPageData, getExistingContacts } from '../../../lib/logUtil';
 import { t } from '../../../i18n';
 
 type UnknownRecord = Record<string, any>;
@@ -50,7 +50,78 @@ function isExistingLogResult(result: UnknownRecord | undefined): boolean {
     return !result?.successful && typeof message === 'string' && message.startsWith('Existing log for session');
 }
 
-function updateLogFromForm(data: UnknownRecord, manifest: UnknownRecord): Promise<UnknownRecord | undefined> {
+// A create form saved into a log App Connect already made, such as a RingCX log made by
+// server-side logging while the wrap-up form was open, can only update that log's subject and
+// note, plus whatever the CRM applies as call dispositions. List the other form choices that
+// won't reach the CRM so the agent can be told.
+async function getChangesNotSavedToExistingLog({ data, manifest, platformName, dispositionSaved }: {
+    data: UnknownRecord;
+    manifest: UnknownRecord;
+    platformName: string;
+    dispositionSaved: boolean;
+}): Promise<string[]> {
+    const formData = data.body.formData;
+    const changes: string[] = [];
+    if (formData.contact === 'createNewContact') {
+        changes.push(t('notifications.warning.existingLogNewContactNotLinked'));
+    }
+    else {
+        // The log keeps the contact it was made with, which we can't look up here. It matches
+        // the agent's choice when the call matched only that one contact.
+        const cachedLogPageData = await getCachedLogPageData();
+        const matchedContacts = cachedLogPageData?.id === data.body.call.sessionId ?
+            getExistingContacts(cachedLogPageData.contactInfo) :
+            [];
+        if (!(matchedContacts.length === 1 && matchedContacts[0].id == formData.contact)) {
+            changes.push(t('notifications.warning.existingLogContactNotChanged'));
+        }
+    }
+    // Custom call log fields reach an existing log only as call dispositions. A CRM can turn
+    // down dispositions it has nothing to apply from, such as Clio without a matter.
+    if (!dispositionSaved) {
+        const callLogFields: UnknownRecord[] = manifest.platforms[platformName].page?.callLog?.additionalFields ?? [];
+        const unsavedFieldNames = callLogFields
+            .filter(f => formData[f.const] && formData[f.const] != 'none')
+            .map(f => f.title ?? f.const);
+        if (unsavedFieldNames.length > 0) {
+            changes.push(t('notifications.warning.existingLogFieldsNotSaved', { fields: unsavedFieldNames.join(', ') }));
+        }
+    }
+    return changes;
+}
+
+function showChangesNotSavedToExistingLog(changes: string[]): void {
+    showNotification({
+        level: 'warning',
+        message: t('notifications.warning.callAlreadyLogged'),
+        ttl: 10000,
+        details: [{
+            title: t('notifications.warning.changesNotSaved'),
+            items: changes.map((text, index) => ({ id: String(index + 1), type: 'text', text }))
+        }]
+    });
+}
+
+// The notification logCore.updateLog shows for its result when asked to
+function showUpdateResultNotification(saveResult: UnknownRecord | undefined, failedMessage: string): void {
+    showNotification({
+        level: saveResult?.returnMessage?.messageType ?? (saveResult?.successful ? 'success' : 'warning'),
+        message: saveResult?.returnMessage?.message ?? (saveResult?.successful ? t('notifications.success.callLogUpdated') : failedMessage),
+        ttl: saveResult?.returnMessage?.ttl ?? 3000,
+        details: saveResult?.returnMessage?.details
+    });
+}
+
+function upsertFormDisposition(data: UnknownRecord, manifest: UnknownRecord, additionalSubmission: UnknownRecord): Promise<UpsertDispositionResult | undefined> {
+    return dispositionCore.upsertDisposition({
+        serverUrl: manifest.serverUrl,
+        logType: 'Call',
+        sessionId: data.body.call.sessionId,
+        dispositions: { ...additionalSubmission, note: data.body.formData.note ?? "" }
+    });
+}
+
+function updateLogFromForm(data: UnknownRecord, manifest: UnknownRecord, isShowNotification = true): Promise<UnknownRecord | undefined> {
     return logCore.updateLog({
         serverUrl: manifest.serverUrl,
         logType: 'Call',
@@ -68,7 +139,7 @@ function updateLogFromForm(data: UnknownRecord, manifest: UnknownRecord): Promis
         from: data.body.call.from,
         to: data.body.call.to,
         activityCompletionReady: data.body.activityCompletionReady ?? false,
-        isShowNotification: true
+        isShowNotification
     });
 }
 
@@ -81,7 +152,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
     void platformInfo;
     void platform;
     const { userSettings } = await chrome.storage.local.get('userSettings') as { userSettings: UnknownRecord };
-    let additionalSubmission = {};
+    const additionalSubmission: UnknownRecord = {};
     const additionalFields = manifest.platforms[platformName].page?.callLog?.additionalFields ?? [];
     const newContactAdditionalFields = manifest.platforms[platformName].page?.newContact?.additionalFields ?? [];
     for (const f of additionalFields.concat(newContactAdditionalFields)) {
@@ -91,6 +162,7 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
     }
     const { implementedInterfaces } = await chrome.storage.local.get({ implementedInterfaces: null }) as { implementedInterfaces?: UnknownRecord | null };
     const supportDisposition = implementedInterfaces?.upsertCallDisposition;
+    const shouldSaveDisposition = !!supportDisposition && !isObjectEmpty(additionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value;
     let saveResult: UnknownRecord | undefined;
     let saveFailedMessage = t('notifications.warning.callLogFailed');
     switch (await resolveFormTriggerType(data)) {
@@ -136,9 +208,29 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                     });
             }
             // Also covers a log made between the lookup above and this save
-            if (loggedBeforeSave || isExistingLogResult(saveResult)) {
+            const savedIntoExistingLog = loggedBeforeSave || isExistingLogResult(saveResult);
+            if (savedIntoExistingLog) {
                 saveFailedMessage = t('notifications.warning.callLogUpdateFailed');
-                saveResult = await updateLogFromForm(data, manifest);
+                // The update can't change the log's contact or custom fields, and the custom
+                // fields reach the log only if the CRM accepts them as dispositions. Hold back the
+                // update's notification until we know, so the agent is warned instead of being
+                // told the save fully succeeded.
+                saveResult = await updateLogFromForm(data, manifest, false);
+                const dispositionResult = shouldSaveDisposition ?
+                    await upsertFormDisposition(data, manifest, additionalSubmission) :
+                    undefined;
+                const changesNotSaved = await getChangesNotSavedToExistingLog({
+                    data,
+                    manifest,
+                    platformName,
+                    dispositionSaved: !!dispositionResult?.successful
+                });
+                if (saveResult?.successful && changesNotSaved.length > 0) {
+                    showChangesNotSavedToExistingLog(changesNotSaved);
+                }
+                else {
+                    showUpdateResultNotification(saveResult, saveFailedMessage);
+                }
             }
             // Optional: schedule callback into Call Back after successful log creation
             try {
@@ -164,13 +256,11 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
                     } catch (e) { /* ignore refresh errors */ }
                 }
             } catch (e) { /* ignore scheduling errors to not block logging */ }
-            if (supportDisposition && !isObjectEmpty(additionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
-                await dispositionCore.upsertDisposition({
-                    serverUrl: manifest.serverUrl,
-                    logType: 'Call',
-                    sessionId: data.body.call.sessionId,
-                    dispositions: { ...additionalSubmission, note: data.body.formData.note ?? "" }
-                });
+            if (shouldSaveDisposition) {
+                // Already saved above for an existing log
+                if (!savedIntoExistingLog) {
+                    await upsertFormDisposition(data, manifest, additionalSubmission);
+                }
                 // update unlogged call page list
                 let { unloggedCallPageDataCache } = await chrome.storage.local.get({ unloggedCallPageDataCache: null }) as { unloggedCallPageDataCache?: UnknownRecord[] | null };
                 if (unloggedCallPageDataCache) {
@@ -188,13 +278,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
         case 'editLog':
             saveFailedMessage = t('notifications.warning.callLogUpdateFailed');
             saveResult = await updateLogFromForm(data, manifest);
-            if (supportDisposition && !isObjectEmpty(additionalSubmission) && !userCore.getOneTimeLogSetting(userSettings).value) {
-                await dispositionCore.upsertDisposition({
-                    serverUrl: manifest.serverUrl,
-                    logType: 'Call',
-                    sessionId: data.body.call.sessionId,
-                    dispositions: { ...additionalSubmission, note: data.body.formData.note ?? "" }
-                });
+            if (shouldSaveDisposition) {
+                await upsertFormDisposition(data, manifest, additionalSubmission);
             }
             break;
     }

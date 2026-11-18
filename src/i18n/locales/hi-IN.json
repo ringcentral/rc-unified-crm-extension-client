@@ -398,6 +398,11 @@
     "warning": {
       "callLogFailed": "कॉल लॉग सहेजने में विफल",
       "callLogUpdateFailed": "कॉल लॉग अपडेट विफल",
+      "callAlreadyLogged": "यह कॉल पहले ही स्वचालित रूप से लॉग हो चुकी है। आपका शीर्षक और नोट उसी लॉग में सहेजे गए।",
+      "changesNotSaved": "सहेजा नहीं गया",
+      "existingLogContactNotChanged": "संपर्क: लॉग उसी संपर्क के साथ रहता है जिसके साथ वह बनाया गया था। ज़रूरत हो तो CRM में बदलें।",
+      "existingLogNewContactNotLinked": "नया संपर्क: इस लॉग से लिंक नहीं है। ज़रूरत हो तो CRM में लिंक करें।",
+      "existingLogFieldsNotSaved": "फ़ील्ड: {fields}",
       "connectToCrm": "कृपया सेटिंग्स में जाकर CRM प्लेटफ़ॉर्म से कनेक्ट करें",
       "apiKeyFailed": "API key पंजीकृत करने में विफल.",
       "noContactFound": "कोई संपर्क नहीं मिला",

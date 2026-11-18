@@ -398,6 +398,11 @@
     "warning": {
       "callLogFailed": "Anrufprotokoll konnte nicht gespeichert werden",
       "callLogUpdateFailed": "Aktualisierung des Anrufprotokolls fehlgeschlagen",
+      "callAlreadyLogged": "Dieser Anruf wurde bereits automatisch protokolliert. Ihr Titel und Ihre Notiz wurden in diesem Protokoll gespeichert.",
+      "changesNotSaved": "Nicht gespeichert",
+      "existingLogContactNotChanged": "Kontakt: Das Protokoll behält den Kontakt, mit dem es erstellt wurde. Ändern Sie ihn bei Bedarf im CRM.",
+      "existingLogNewContactNotLinked": "Neuer Kontakt: nicht mit diesem Protokoll verknüpft. Verknüpfen Sie ihn bei Bedarf im CRM.",
+      "existingLogFieldsNotSaved": "Felder: {fields}",
       "connectToCrm": "Bitte gehen Sie zu den Einstellungen und verbinden Sie sich mit der CRM-Plattform",
       "apiKeyFailed": "API-Schlüssel konnte nicht registriert werden.",
       "noContactFound": "Kein Kontakt gefunden",
