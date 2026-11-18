@@ -138,6 +138,36 @@ describe('admin core', () => {
     expect(readStorage().adminSettings).toEqual({ userSettings: {} });
   });
 
+  it('uploads user mappings without RingCX agent IDs so the server keeps the stored ones', async () => {
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: {} });
+    const adminCore = await loadAdminCore();
+
+    await adminCore.uploadAdminSettings({
+      serverUrl: 'https://server.example',
+      adminSettings: {
+        userSettings: {},
+        userMappings: [
+          { crmUserId: 'crm-1', rcExtensionId: ['ext-1'], rcxAgentIds: { 'ext-1': ['9001'] } },
+          { crmUserId: 'crm-2', rcExtensionId: [] },
+        ],
+      },
+    });
+
+    const expectedSettings = {
+      userSettings: {},
+      userMappings: [
+        { crmUserId: 'crm-1', rcExtensionId: ['ext-1'] },
+        { crmUserId: 'crm-2', rcExtensionId: [] },
+      ],
+    };
+    expect(axios.post).toHaveBeenCalledWith(
+      'https://server.example/admin/settings',
+      { adminSettings: expectedSettings },
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
+    expect(readStorage().adminSettings).toEqual(expectedSettings);
+  });
+
   it('refreshes admin settings, registers admin page, and updates auth display', async () => {
     seedStorage({
       rcUnifiedCrmExtJwt: 'jwt-1',

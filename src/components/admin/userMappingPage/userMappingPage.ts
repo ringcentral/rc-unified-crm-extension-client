@@ -1,10 +1,21 @@
 type UnknownRecord = Record<string, any>;
 
+// RingCX agent IDs of the mapped RingCentral users, as returned by the server user mapping.
+function getRcxAgentIdsLabel(rcUsers: UnknownRecord[]): string {
+    const agentIds = Array.from(new Set(rcUsers.flatMap(rcUser => (
+        Array.isArray(rcUser?.agentIds) ? rcUser.agentIds.map(String) : []
+    ))));
+    if (agentIds.length === 0) {
+        return '';
+    }
+    return ` | RingCX agent ${agentIds.length > 1 ? 'IDs' : 'ID'}: ${agentIds.join(', ')}`;
+}
+
 function getUserMappingPageRender({ userMapping, platformDisplayName, searchWord = '', filter = 'All' }: UnknownRecord): UnknownRecord {
     let userMappingList: UnknownRecord[] = [];
     for (const um of userMapping) {
         if (um.rcUser?.length > 0) {
-            const description = `${um.rcUser[0].name} - ext: ${um.rcUser[0].extensionNumber}` + (um.rcUser.length > 1 ? ` (+${um.rcUser.length - 1} others)` : '');
+            const description = `${um.rcUser[0].name} - ext: ${um.rcUser[0].extensionNumber}` + (um.rcUser.length > 1 ? ` (+${um.rcUser.length - 1} others)` : '') + getRcxAgentIdsLabel(um.rcUser);
             userMappingList.push({
                 const: um.crmUser.id,
                 title: um.crmUser.name,

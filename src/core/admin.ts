@@ -43,15 +43,35 @@ async function getAdminSettings({ serverUrl }: UnknownRecord): Promise<UnknownRe
     }
 }
 
+// The extension cannot discover RingCX agents, so it never sends `rcxAgentIds`: the server then
+// keeps the RingCX agent IDs (saved by the admin console) of every extension that stays mapped.
+// Sending the cached copy instead could restore agent IDs the console has since cleared.
+function withoutRcxAgentIds(adminSettings: UnknownRecord): UnknownRecord {
+    if (!Array.isArray(adminSettings?.userMappings)) {
+        return adminSettings;
+    }
+    return {
+        ...adminSettings,
+        userMappings: adminSettings.userMappings.map((userMapping: UnknownRecord) => {
+            if (!userMapping || typeof userMapping !== 'object') {
+                return userMapping;
+            }
+            const { rcxAgentIds: _rcxAgentIds, ...rest } = userMapping;
+            return rest;
+        }),
+    };
+}
+
 async function uploadAdminSettings({ serverUrl, adminSettings }: UnknownRecord): Promise<any> {
+    const adminSettingsToUpload = withoutRcxAgentIds(adminSettings);
     const uploadAdminSettingsResponse = await axios.post(
         `${serverUrl}/admin/settings`,
         {
-            adminSettings
+            adminSettings: adminSettingsToUpload
         },
         await getRcAccessTokenHeaderConfig(),
     );
-    await chrome.storage.local.set({ adminSettings });
+    await chrome.storage.local.set({ adminSettings: adminSettingsToUpload });
 }
 
 async function refreshAdminSettings(): Promise<UnknownRecord> {

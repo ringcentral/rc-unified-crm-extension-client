@@ -422,6 +422,42 @@ describe('user mapping and reports page renderers', () => {
     ]);
   });
 
+  it('shows RingCX agent IDs of mapped users and finds them by search', async () => {
+    const userMappingPage = await loadPage('../../src/components/admin/userMappingPage/userMappingPage.ts');
+    const mappings = [
+      {
+        crmUser: { id: 'crm-1', name: 'Jane CRM', email: 'jane@example.test' },
+        rcUser: [
+          { extensionId: 'ext-1', name: 'Jane RC', extensionNumber: '101', agentIds: ['9001', '9002'] },
+          { extensionId: 'ext-2', name: 'Backup RC', extensionNumber: '102', agentIds: ['9002'] },
+        ],
+      },
+      {
+        crmUser: { id: 'crm-2', name: 'Alex CRM', email: 'alex@example.test' },
+        rcUser: [{ extensionId: 'ext-3', name: 'Alex RC', extensionNumber: '103', agentIds: [9003] }],
+      },
+      {
+        crmUser: { id: 'crm-3', name: 'Sam CRM', email: 'sam@example.test' },
+        rcUser: [{ extensionId: 'ext-4', name: 'Sam RC', extensionNumber: '104', agentIds: [] }],
+      },
+    ];
+
+    const page = userMappingPage.getUserMappingPageRender({ userMapping: mappings, platformDisplayName: 'Salesforce' });
+    expect(page.schema.properties.userMappingList.oneOf.map((item: { description: string }) => item.description)).toEqual([
+      'Jane RC - ext: 101 (+1 others) | RingCX agent IDs: 9001, 9002',
+      'Alex RC - ext: 103 | RingCX agent ID: 9003',
+      'Sam RC - ext: 104',
+    ]);
+    const searched = userMappingPage.getUserMappingPageRender({
+      userMapping: mappings,
+      platformDisplayName: 'Salesforce',
+      searchWord: '9003',
+    });
+    expect(searched.schema.properties.userMappingList.oneOf).toEqual([
+      expect.objectContaining({ const: 'crm-2' }),
+    ]);
+  });
+
   it('renders unmapped user mapping lists', async () => {
     const userMappingPage = await loadPage('../../src/components/admin/userMappingPage/userMappingPage.ts');
     const mappings = [
