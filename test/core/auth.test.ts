@@ -1319,12 +1319,15 @@ describe('auth core', () => {
     const authCore = await loadAuthCore();
 
     await expect(authCore.onAuthCallback({
-      serverUrl: 'https://server.example',
+      serverUrl: 'https://unified-crm-extension.labs.ringcentral.com',
       callbackUri: 'https://redirect.example/callback?state=platform%3Dbullhorn&code=abc',
       useLicense: false,
     })).resolves.toBe('bullhorn-jwt');
 
     const callbackUrl = vi.mocked(axios.get).mock.calls[0][0] as string;
+    expect(vi.mocked(axios.get).mock.calls[0][1]).toEqual(expect.objectContaining({
+      headers: { 'X-RC-Access-Token': expect.any(String) },
+    }));
     expect(callbackUrl).toContain('tokenUrl=https%3A%2F%2Fauth.bullhorn.example%2Ftoken');
     expect(callbackUrl).toContain('apiUrl=https%3A%2F%2Frest.bullhorn.example');
     expect(callbackUrl).toContain('username=bullhorn-user');
