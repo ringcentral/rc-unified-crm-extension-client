@@ -398,6 +398,11 @@
     "warning": {
       "callLogFailed": "Falha ao salvar o log de chamada",
       "callLogUpdateFailed": "Falha na atualização do log de chamada",
+      "callAlreadyLogged": "Esta chamada já foi registada automaticamente. O seu título e a sua nota foram guardados nesse registo.",
+      "changesNotSaved": "Não guardado",
+      "existingLogContactNotChanged": "Contacto: o registo mantém o contacto com que foi criado. Altere-o no CRM, se necessário.",
+      "existingLogNewContactNotLinked": "Novo contacto: não associado a este registo. Associe-o no CRM, se necessário.",
+      "existingLogFieldsNotSaved": "Campos: {fields}",
       "connectToCrm": "Por favor, vá para Configurações e conecte-se à plataforma CRM",
       "apiKeyFailed": "Falha ao registrar a chave API.",
       "noContactFound": "Nenhum contato encontrado",

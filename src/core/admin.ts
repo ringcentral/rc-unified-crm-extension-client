@@ -3,6 +3,7 @@ import moment from 'moment';
 import adminPage from '../components/admin/adminPage'
 import authCore from '../core/auth'
 import { RcAPI } from '../lib/rcAPI';
+import { getRingCXWebhookHeader, type RingCXWebhookHeader } from '../lib/ringcxWebhookHeader';
 import { parsePhoneNumber } from 'awesome-phonenumber';
 import { getRcAccessToken, getRcAccessTokenHeaderConfig, getRcContactInfo, refreshRCToken, showNotification } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
@@ -42,15 +43,35 @@ async function getAdminSettings({ serverUrl }: UnknownRecord): Promise<UnknownRe
     }
 }
 
+// The extension cannot discover RingCX agents, so it never sends `rcxAgentIds`: the server then
+// keeps the RingCX agent IDs (saved by the admin console) of every extension that stays mapped.
+// Sending the cached copy instead could restore agent IDs the console has since cleared.
+function withoutRcxAgentIds(adminSettings: UnknownRecord): UnknownRecord {
+    if (!Array.isArray(adminSettings?.userMappings)) {
+        return adminSettings;
+    }
+    return {
+        ...adminSettings,
+        userMappings: adminSettings.userMappings.map((userMapping: UnknownRecord) => {
+            if (!userMapping || typeof userMapping !== 'object') {
+                return userMapping;
+            }
+            const { rcxAgentIds: _rcxAgentIds, ...rest } = userMapping;
+            return rest;
+        }),
+    };
+}
+
 async function uploadAdminSettings({ serverUrl, adminSettings }: UnknownRecord): Promise<any> {
+    const adminSettingsToUpload = withoutRcxAgentIds(adminSettings);
     const uploadAdminSettingsResponse = await axios.post(
         `${serverUrl}/admin/settings`,
         {
-            adminSettings
+            adminSettings: adminSettingsToUpload
         },
         await getRcAccessTokenHeaderConfig(),
     );
-    await chrome.storage.local.set({ adminSettings });
+    await chrome.storage.local.set({ adminSettings: adminSettingsToUpload });
 }
 
 async function refreshAdminSettings(): Promise<UnknownRecord> {
@@ -249,7 +270,9 @@ async function enableServerSideLogging({ serverUrl, platform, subscriptionLevel,
                         crmAdapterUrl: serverUrl,
                         subscriptionLevel,
                         loggingByAdmin,
-                        loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false
+                        loggingWithUserAssigned: platform.serverSideLogging?.useAdminAssignedUserToken ? !loggingByAdmin : false,
+                        detailedCallLog: adminSettings?.userSettings?.addCallLogLegs?.value ?? false,
+                        sources
                     },
                     {
                         headers: {
@@ -328,6 +351,49 @@ async function disableServerSideLogging({ platform }: UnknownRecord): Promise<an
             }
         }
     }
+}
+
+// Issues a new RingCX call events URL and header value. The previous ones stop logging immediately.
+async function rotateRingCXWebhookUrl({ platform }: UnknownRecord): Promise<{ ringcxWebhookUrl: string; ringcxWebhookHeader: RingCXWebhookHeader | null }> {
+    if (!platform.serverSideLogging) {
+        throw new Error('Server side logging is not supported.');
+    }
+    const serverDomainUrl = platform.serverSideLogging.url;
+    const rotate = async (token: string) => axios.post(
+        `${serverDomainUrl}/ringcx/webhook-url/rotate`,
+        {},
+        {
+            headers: {
+                Accept: 'application/json',
+                'X-Access-Token': token
+            }
+        }
+    );
+    let { serverSideLoggingToken } = await chromeStorageLocal.get('serverSideLoggingToken');
+    let response;
+    try {
+        if (!serverSideLoggingToken) {
+            serverSideLoggingToken = await authServerSideLogging({ platform });
+        }
+        response = await rotate(serverSideLoggingToken);
+    }
+    catch (e) {
+        if (e?.response?.status === 401) {
+            // Token expired
+            response = await rotate(await authServerSideLogging({ platform }));
+        }
+        else {
+            throw new Error(e?.response?.data?.result?.message || 'Failed to generate the RingCX call events URL.');
+        }
+    }
+    const ringcxWebhookUrl = response?.data?.result?.ringcxWebhookUrl;
+    if (!ringcxWebhookUrl) {
+        throw new Error('Failed to generate the RingCX call events URL.');
+    }
+    return {
+        ringcxWebhookUrl,
+        ringcxWebhookHeader: getRingCXWebhookHeader(response?.data?.result),
+    };
 }
 
 async function updateServerSideDoNotLogNumbers({ platform, doNotLogNumbers }: UnknownRecord): Promise<any> {
@@ -602,6 +668,7 @@ const adminCore = {
     getServerSideLogging,
     enableServerSideLogging,
     disableServerSideLogging,
+    rotateRingCXWebhookUrl,
     updateServerSideDoNotLogNumbers,
     authServerSideLogging,
     getServerSideLoggingAdditionalFieldValues,
@@ -625,6 +692,7 @@ export {
     getServerSideLogging,
     enableServerSideLogging,
     disableServerSideLogging,
+    rotateRingCXWebhookUrl,
     updateServerSideDoNotLogNumbers,
     authServerSideLogging,
     getServerSideLoggingAdditionalFieldValues,

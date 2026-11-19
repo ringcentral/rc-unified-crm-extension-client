@@ -2,6 +2,7 @@ import adminCore from '../../../../core/admin';
 import userCore from '../../../../core/user';
 import { showNotification } from '../../../../lib/util';
 import embeddableServices from '../../../../service/embeddableServices';
+import { renderServerSideLoggingSettingPage } from '../../customizedPage/inputChanged/sections/serverSideLoggingSetting';
 
 type UnknownRecord = Record<string, any>;
 
@@ -23,6 +24,10 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   void platformName;
   responseMessage(data.requestId, { data: 'ok' }); // Response to widget to avoid timeout error
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
+  const savedSources = data.body.button.formData.serverSideLoggingHolder.sources;
+  // With RingCX on, stay on the page so the admin gets the RingCX call events URL.
+  const ringcxEnabled = data.body.button.formData.serverSideLoggingHolder.serverSideLogging != 'Disable'
+    && Array.isArray(savedSources) && savedSources.includes('cx');
   const { adminSettings } = await chrome.storage.local.get('adminSettings') as { adminSettings: UnknownRecord };
   adminSettings.userSettings.serverSideLogging =
   {
@@ -62,13 +67,22 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
   if (updateSSCLFieldsResponse) {
     if (updateSSCLFieldsResponse.successful) {
       showNotification({ level: 'success', message: 'Server side logging do not log numbers updated.', ttl: 5000 });
-      getWidgetFrameWindow().postMessage({
-        type: 'rc-adapter-navigate-to',
-        path: 'goBack',
-      }, '*');
+      if (!ringcxEnabled) {
+        getWidgetFrameWindow().postMessage({
+          type: 'rc-adapter-navigate-to',
+          path: 'goBack',
+        }, '*');
+      }
     }
     else {
       showNotification({ level: updateSSCLFieldsResponse.returnMessage.messageType, message: updateSSCLFieldsResponse.returnMessage.message, ttl: updateSSCLFieldsResponse.returnMessage.ttl });
+    }
+  }
+  if (ringcxEnabled) {
+    try {
+      await renderServerSideLoggingSettingPage({ platform, navigate: false });
+    } catch (e) {
+      console.error('Failed to refresh the server side logging page', e);
     }
   }
   window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');

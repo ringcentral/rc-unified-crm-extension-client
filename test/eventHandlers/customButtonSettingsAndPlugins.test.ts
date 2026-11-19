@@ -1108,6 +1108,166 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
   });
 
+  describe('RingCX call events URL', () => {
+    const webhookUrl = 'https://ssl.example/ringcx/webhooks/token-1';
+    const rotatedUrl = 'https://ssl.example/ringcx/webhooks/token-2';
+    const ringcxHandlerPath = '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/ringcxWebhookUrl.ts';
+
+    function ringcxAdminCore(overrides: Record<string, any> = {}) {
+      return {
+        getServerSideLogging: vi.fn(async () => ({
+          subscribed: true,
+          subscriptionLevel: 'Account',
+          sources: ['ex', 'cx'],
+          ringcxWebhookUrl: rotatedUrl,
+        })),
+        getServerSideLoggingAdditionalFieldValues: vi.fn(async () => ({})),
+        rotateRingCXWebhookUrl: vi.fn(async () => ({
+          ringcxWebhookUrl: rotatedUrl,
+          ringcxWebhookHeader: { name: 'x-ringcx-webhook-secret', value: 'a'.repeat(64) },
+        })),
+        ...overrides,
+      };
+    }
+
+    function widgetMessages() {
+      return getWidgetPostMessages().map(({ message }) => message);
+    }
+
+    function registeredLoggingPage() {
+      return widgetMessages().filter((message) => message?.type === 'rc-adapter-register-customized-page'
+        && message.page?.id === 'serverSideLoggingSetting').at(-1)?.page;
+    }
+
+    beforeEach(() => {
+      seedStorage({ userPermissions: { ringCX: true } });
+    });
+
+    it('stays on the logging page and shows the URL after saving with RingCX', async () => {
+      const loaded = await loadButtonHandler(
+        '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/saveServerSideLogging.ts',
+        { adminCore: ringcxAdminCore() },
+      );
+
+      await loaded.handler.onEvent({
+        data: dataFor({
+          serverSideLoggingHolder: {
+            serverSideLogging: 'Account',
+            activityRecordOwner: 'user',
+            sources: ['ex', 'cx'],
+          },
+        }, 'saveServerSideLoggingButton'),
+        manifest: baseManifest(),
+        platformName: 'salesforce',
+        platform: baseManifest().platforms.salesforce,
+        responseMessage: vi.fn(),
+      });
+
+      expect(loaded.adminCore.enableServerSideLogging).toHaveBeenCalledWith(expect.objectContaining({
+        sources: ['ex', 'cx'],
+      }));
+      const page = registeredLoggingPage();
+      expect(page.formData.ringcxWebhookHolder.ringcxWebhookUrl).toBe(rotatedUrl);
+      expect(widgetMessages()).not.toContainEqual(expect.objectContaining({ type: 'rc-adapter-navigate-to', path: 'goBack' }));
+    });
+
+    it('still saves when refreshing the page fails', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const loaded = await loadButtonHandler(
+        '../../src/eventHandlers/rc-post-message-request/custom-button-click/adminSettings/saveServerSideLogging.ts',
+        {
+          adminCore: ringcxAdminCore({
+            getServerSideLogging: vi.fn(async () => {
+              throw new Error('subscription unavailable');
+            }),
+          }),
+        },
+      );
+
+      await loaded.handler.onEvent({
+        data: dataFor({
+          serverSideLoggingHolder: { serverSideLogging: 'Account', activityRecordOwner: 'user', sources: ['cx'] },
+        }, 'saveServerSideLoggingButton'),
+        manifest: baseManifest(),
+        platformName: 'salesforce',
+        platform: baseManifest().platforms.salesforce,
+        responseMessage: vi.fn(),
+      });
+
+      expect(loaded.adminCore.enableServerSideLogging).toHaveBeenCalled();
+      expect(consoleError).toHaveBeenCalledWith('Failed to refresh the server side logging page', expect.any(Error));
+      expect(window.postMessage).toHaveBeenLastCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
+      consoleError.mockRestore();
+    });
+
+    it('generates a URL and refreshes the page in place', async () => {
+      const loaded = await loadButtonHandler(ringcxHandlerPath, { adminCore: ringcxAdminCore() });
+
+      await loaded.handler.onEvent({
+        data: dataFor({}, 'generateRingcxWebhookUrlButton'),
+        platform: baseManifest().platforms.salesforce,
+      });
+
+      expect(loaded.adminCore.rotateRingCXWebhookUrl).toHaveBeenCalledWith({ platform: baseManifest().platforms.salesforce });
+      expect(registeredLoggingPage().formData.ringcxWebhookHolder.ringcxWebhookUrl).toBe(rotatedUrl);
+      expect(widgetMessages().some((message) => message?.type === 'rc-adapter-navigate-to')).toBe(false);
+      expect(loaded.util.showNotification).toHaveBeenCalledWith({
+        level: 'success',
+        message: 'RingCX call events URL generated.',
+        ttl: 3000,
+      });
+      expect(window.postMessage).toHaveBeenLastCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
+    });
+
+    it('asks for confirmation before regenerating the URL', async () => {
+      const loaded = await loadButtonHandler(ringcxHandlerPath, { adminCore: ringcxAdminCore() });
+      const platform = baseManifest().platforms.salesforce;
+
+      await loaded.handler.onEvent({ data: dataFor({}, 'regenerateRingcxWebhookUrlButton'), platform });
+      expect(loaded.adminCore.rotateRingCXWebhookUrl).not.toHaveBeenCalled();
+      expect(widgetMessages()).toContainEqual(expect.objectContaining({
+        type: 'rc-adapter-register-customized-page',
+        page: expect.objectContaining({ id: 'ringcxWebhookRotatePage' }),
+      }));
+      expect(widgetMessages()).toContainEqual({ type: 'rc-adapter-navigate-to', path: '/customized/ringcxWebhookRotatePage' });
+
+      await loaded.handler.onEvent({ data: dataFor({}, 'cancelRingcxWebhookRotateButton'), platform });
+      expect(widgetMessages().at(-1)).toEqual({ type: 'rc-adapter-navigate-to', path: 'goBack' });
+      expect(loaded.adminCore.rotateRingCXWebhookUrl).not.toHaveBeenCalled();
+
+      await loaded.handler.onEvent({ data: dataFor({}, 'confirmRingcxWebhookRotateButton'), platform });
+      expect(loaded.adminCore.rotateRingCXWebhookUrl).toHaveBeenCalledOnce();
+      // The logging page is refreshed before going back to it.
+      expect(registeredLoggingPage().formData.ringcxWebhookHolder.ringcxWebhookUrl).toBe(rotatedUrl);
+      expect(widgetMessages().at(-1)).toEqual({ type: 'rc-adapter-navigate-to', path: 'goBack' });
+    });
+
+    it.each([
+      ['the service message', new Error('Server side logging for RingCX is not enabled'), 'Server side logging for RingCX is not enabled'],
+      ['a default message', 'offline', 'Failed to generate the RingCX call events URL.'],
+    ])('reports a failed regenerate with %s and stays on the page', async (_name, error, message) => {
+      const loaded = await loadButtonHandler(ringcxHandlerPath, {
+        adminCore: ringcxAdminCore({ rotateRingCXWebhookUrl: vi.fn(async () => { throw error; }) }),
+      });
+
+      await loaded.handler.onEvent({
+        data: dataFor({}, 'confirmRingcxWebhookRotateButton'),
+        platform: baseManifest().platforms.salesforce,
+      });
+
+      expect(loaded.util.showNotification).toHaveBeenCalledWith({ level: 'warning', message, ttl: 5000 });
+      expect(widgetMessages().some((m) => m?.type === 'rc-adapter-navigate-to')).toBe(false);
+      expect(window.postMessage).toHaveBeenLastCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
+    });
+
+    it('ignores unknown buttons', async () => {
+      const loaded = await loadButtonHandler(ringcxHandlerPath, { adminCore: ringcxAdminCore() });
+      await loaded.handler.onEvent({ data: dataFor({}, 'otherButton'), platform: baseManifest().platforms.salesforce });
+      expect(widgetMessages()).toEqual([]);
+      expect(loaded.adminCore.rotateRingCXWebhookUrl).not.toHaveBeenCalled();
+    });
+  });
+
   it('renders selected user plugin configuration with saved config and license status', async () => {
     seedStorage({
       userSettings: {

@@ -32,6 +32,7 @@ describe('disposition core', () => {
     });
     vi.mocked(axios.put).mockResolvedValueOnce({
       data: {
+        successful: true,
         returnMessage: {
           message: 'Disposition updated',
           messageType: 'success',
@@ -41,7 +42,7 @@ describe('disposition core', () => {
     });
     const dispositionCore = await loadDispositionCore();
 
-    await dispositionCore.upsertDisposition({
+    const result = await dispositionCore.upsertDisposition({
       serverUrl: 'https://server.example',
       logType: 'Call',
       sessionId: 'session-1',
@@ -62,12 +63,33 @@ describe('disposition core', () => {
       ttl: 3000,
       details: undefined,
     });
+    expect(result).toEqual({
+      successful: true,
+      returnMessage: { message: 'Disposition updated', messageType: 'success', ttl: 3000 },
+    });
+  });
+
+  it('reports a disposition the CRM turned down without a message', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-token' });
+    // Clio answers this way when the dispositions carry no matter
+    vi.mocked(axios.put).mockResolvedValueOnce({ data: { successful: false } });
+    const dispositionCore = await loadDispositionCore();
+
+    const result = await dispositionCore.upsertDisposition({
+      serverUrl: 'https://server.example',
+      logType: 'Call',
+      sessionId: 'session-1',
+      dispositions: { billableStatus: 'billable' },
+    });
+
+    expect(showNotification).not.toHaveBeenCalled();
+    expect(result).toEqual({ successful: false, returnMessage: undefined });
   });
 
   it('does not call server when JWT is missing', async () => {
     const dispositionCore = await loadDispositionCore();
 
-    await dispositionCore.upsertDisposition({
+    const result = await dispositionCore.upsertDisposition({
       serverUrl: 'https://server.example',
       logType: 'Call',
       sessionId: 'session-1',
@@ -75,5 +97,6 @@ describe('disposition core', () => {
     });
 
     expect(axios.put).not.toHaveBeenCalled();
+    expect(result).toBeUndefined();
   });
 });

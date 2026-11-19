@@ -1,6 +1,133 @@
 type UnknownRecord = Record<string, any>;
 
-function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin, subscribedByOtherAdmin, enableUserMapping, additionalFields = [], additionalFieldValues = {}, userPermissions = {}, sources = [] }: UnknownRecord): UnknownRecord {
+const RINGCX_SETUP_GUIDE_URL = 'https://appconnect.labs.ringcentral.com/users/ringcx/#setting-up-ringcx-logging';
+
+function getRingCXSetupSteps(headerName: string): string[] {
+    return [
+        'In RingCX Admin, go to Settings > Accounts, select the sub-account, and open Integrations > Generic HTTP.',
+        'Paste this URL as the Call Event URL and turn on Send body as JSON.',
+        'Turn on both the Call Ended event and the Outbound call event. Without the Outbound call event, dial group and campaign calls are not sent.',
+        `Add a custom header named ${headerName} with the header value shown above, then save. App Connect rejects call events without this exact header.`,
+        'Repeat for each RingCX sub-account whose calls you want to log.',
+    ];
+}
+
+// The page is rendered from the saved subscription, so the URL appears only once RingCX is a saved
+// source. The URL and the header value are credentials: they are shown read-only here, never logged.
+function getRingCXWebhookSection({ ringcxSaved, ringcxWebhookUrl, ringcxWebhookHeader }: UnknownRecord): UnknownRecord {
+    const properties: UnknownRecord = {};
+    const uiSchema: UnknownRecord = { "ui:collapsible": true };
+    const formData: UnknownRecord = {};
+    if (!ringcxSaved) {
+        properties.ringcxWebhookSaveFirst = {
+            type: 'string',
+            description: 'Turn on server side logging with RingCX selected in Call sources, then save to get the RingCX call events URL.',
+        };
+        uiSchema.ringcxWebhookSaveFirst = {
+            "ui:field": "admonition",
+            "ui:severity": "info",
+        };
+    } else if (!ringcxWebhookUrl) {
+        properties.ringcxWebhookMissing = {
+            type: 'string',
+            description: 'No RingCX call events URL has been generated for this account yet.',
+        };
+        uiSchema.ringcxWebhookMissing = {
+            "ui:field": "typography",
+            "ui:variant": "body1",
+        };
+        properties.generateRingcxWebhookUrlButton = {
+            type: 'string',
+            title: 'Generate URL',
+        };
+        uiSchema.generateRingcxWebhookUrlButton = {
+            "ui:field": "button",
+            "ui:variant": "outlined",
+            "ui:fullWidth": true,
+        };
+    } else {
+        properties.ringcxWebhookDescription = {
+            type: 'string',
+            description: 'RingCX sends a call event to this URL, with the custom header below, when each call ends. Keep the URL and the header value private, like a password.',
+        };
+        uiSchema.ringcxWebhookDescription = {
+            "ui:field": "typography",
+            "ui:variant": "caption1",
+        };
+        // Named after the RingCX Generic HTTP field it is pasted into.
+        properties.ringcxWebhookUrl = {
+            type: 'string',
+            title: 'Call Event URL',
+            readOnly: true,
+        };
+        formData.ringcxWebhookUrl = ringcxWebhookUrl;
+        if (ringcxWebhookHeader) {
+            // Named after the RingCX Generic HTTP custom header fields they are pasted into.
+            properties.ringcxWebhookHeaderName = {
+                type: 'string',
+                title: 'Header name',
+                readOnly: true,
+            };
+            formData.ringcxWebhookHeaderName = ringcxWebhookHeader.name;
+            properties.ringcxWebhookHeaderValue = {
+                type: 'string',
+                title: 'Header value',
+                readOnly: true,
+            };
+            formData.ringcxWebhookHeaderValue = ringcxWebhookHeader.value;
+        } else {
+            // A server that predates the header check returns no header; a new URL comes with one.
+            properties.ringcxWebhookHeaderMissing = {
+                type: 'string',
+                description: 'No custom header value was returned for this URL. Regenerate the URL to get the header RingCX must send.',
+            };
+            uiSchema.ringcxWebhookHeaderMissing = {
+                "ui:field": "admonition",
+                "ui:severity": "warning",
+            };
+        }
+        properties.regenerateRingcxWebhookUrlButton = {
+            type: 'string',
+            title: 'Regenerate URL',
+        };
+        uiSchema.regenerateRingcxWebhookUrlButton = {
+            "ui:field": "button",
+            "ui:variant": "text",
+            "ui:fullWidth": true,
+        };
+        getRingCXSetupSteps(ringcxWebhookHeader?.name ?? 'x-ringcx-webhook-secret').forEach((step, index) => {
+            const key = `ringcxWebhookStep${index + 1}`;
+            properties[key] = {
+                type: 'string',
+                description: `${index + 1}. ${step}`,
+            };
+            uiSchema[key] = {
+                "ui:field": "typography",
+                "ui:variant": "caption1",
+            };
+        });
+    }
+    properties.ringcxSetupGuide = {
+        type: 'string',
+        description: 'RingCX setup guide',
+    };
+    uiSchema.ringcxSetupGuide = {
+        "ui:field": "link",
+        "ui:variant": "body1",
+        "ui:href": RINGCX_SETUP_GUIDE_URL,
+    };
+    return {
+        property: {
+            type: 'object',
+            title: 'RingCX call events URL',
+            properties,
+        },
+        uiSchema,
+        formData,
+    };
+}
+
+function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumbers, loggingByAdmin, subscribedByOtherAdmin, enableUserMapping, additionalFields = [], additionalFieldValues = {}, userPermissions = {}, sources = [], ringcxWebhookUrl = null, ringcxWebhookHeader = null }: UnknownRecord): UnknownRecord {
     const additionalProperties: UnknownRecord = {};
     additionalFields.forEach((field: UnknownRecord) => {
         additionalProperties[field.const] = {
@@ -33,11 +160,14 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
     const sourcesProperty: UnknownRecord = {};
     const sourcesUiSchema: UnknownRecord = {};
     let sourcesFormData = ['ex'];
-    if (userPermissions.ringCX && userPermissions.ringSenseInsights) {
+    // RingCX calls are logged from RingCX call events, so RingSense is not required.
+    const canUseCallSources = !!userPermissions.ringCX;
+    if (canUseCallSources) {
         sourcesFormData = sources;
         sourcesProperty.sources = {
             type: "array",
-            title: "ACE sources",
+            title: "Call sources",
+            description: "Choose which RingCentral products have their calls logged server-side.",
             items: {
                 type: "string",
             },
@@ -68,6 +198,19 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
         };
     } else {
         sourcesFormData = ['ex'];
+    }
+    const ringcxProperty: UnknownRecord = {};
+    const ringcxUiSchema: UnknownRecord = {};
+    const ringcxFormData: UnknownRecord = {};
+    if (canUseCallSources && !subscribedByOtherAdmin) {
+        const ringcxSection = getRingCXWebhookSection({
+            ringcxSaved: subscriptionLevel !== 'Disable' && sources.includes('cx'),
+            ringcxWebhookUrl,
+            ringcxWebhookHeader,
+        });
+        ringcxProperty.ringcxWebhookHolder = ringcxSection.property;
+        ringcxUiSchema.ringcxWebhookHolder = ringcxSection.uiSchema;
+        ringcxFormData.ringcxWebhookHolder = ringcxSection.formData;
     }
     const pageRender: UnknownRecord =
     {
@@ -125,6 +268,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                         }
                     }
                 },
+                ...ringcxProperty,
                 doNotLogNumbersHolder: {
                     readOnly: !!subscribedByOtherAdmin,
                     type: 'object',
@@ -159,6 +303,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
         },
         uiSchema: {
             ...warningUiSchema,
+            ...ringcxUiSchema,
             doNotLogNumbersHolder: {
                 "ui:collapsible": true,
                 doNotLogNumbers: {
@@ -200,6 +345,7 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
                 activityRecordOwner: loggingByAdmin ? 'admin' : 'user',
                 sources: sourcesFormData,
             },
+            ...ringcxFormData,
             doNotLogNumbersHolder: {
                 doNotLogNumbers: doNotLogNumbers,
             },
@@ -216,7 +362,51 @@ function getServerSideLoggingSettingPageRender({ subscriptionLevel, doNotLogNumb
     return pageRender;
 }
 
-export { getServerSideLoggingSettingPageRender };
+function getRingCXWebhookRotatePageRender(): UnknownRecord {
+    return {
+        id: 'ringcxWebhookRotatePage',
+        title: 'Regenerate URL',
+        type: 'page',
+        schema: {
+            type: 'object',
+            required: [],
+            properties: {
+                ringcxWebhookRotateWarning: {
+                    type: 'string',
+                    description: 'Regenerate the RingCX call events URL? The header value changes too. The current URL and header value stop logging calls immediately. Paste the new URL and header value into every RingCX sub-account that uses them.',
+                },
+                confirmRingcxWebhookRotateButton: {
+                    type: 'string',
+                    title: 'Regenerate URL',
+                },
+                cancelRingcxWebhookRotateButton: {
+                    type: 'string',
+                    title: 'Cancel',
+                },
+            },
+        },
+        uiSchema: {
+            ringcxWebhookRotateWarning: {
+                "ui:field": "admonition",
+                "ui:severity": "warning",
+            },
+            confirmRingcxWebhookRotateButton: {
+                "ui:field": "button",
+                "ui:variant": "contained",
+                "ui:fullWidth": true,
+            },
+            cancelRingcxWebhookRotateButton: {
+                "ui:field": "button",
+                "ui:variant": "text",
+                "ui:fullWidth": true,
+            },
+        },
+        formData: {},
+    };
+}
+
+export { getServerSideLoggingSettingPageRender, getRingCXWebhookRotatePageRender, RINGCX_SETUP_GUIDE_URL };
 export default {
     getServerSideLoggingSettingPageRender,
+    getRingCXWebhookRotatePageRender,
 };

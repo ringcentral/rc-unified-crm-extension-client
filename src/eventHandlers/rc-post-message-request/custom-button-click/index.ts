@@ -43,6 +43,7 @@ import logRecordSubmissionPageHandler from './errorLogging/logRecordSubmit';
 
 import saveServerSideLoggingButtonHandler from './adminSettings/saveServerSideLogging';
 import doNotLogNumbersSubmitButtonHandler from './adminSettings/doNotLogNumbersSubmit';
+import ringcxWebhookUrlHandler from './adminSettings/ringcxWebhookUrl';
 import generalHandler from './adminSettings/adminSettingsFormSubmit';
 import refreshAccountDataHandler from './adminSettings/refreshAccountData';
 import managedAuthOrgPageHandler from './adminSettings/managedAuthOrgPage';
@@ -299,6 +300,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
             break;
         case 'doNotLogNumbersSubmitButton':
             await doNotLogNumbersSubmitButtonHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+            break;
+        case 'generateRingcxWebhookUrlButton':
+        case 'regenerateRingcxWebhookUrlButton':
+        case 'confirmRingcxWebhookRotateButton':
+        case 'cancelRingcxWebhookRotateButton':
+            await ringcxWebhookUrlHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
         case 'clearPlatformInfoButton':
             await clearPlatformInfo();

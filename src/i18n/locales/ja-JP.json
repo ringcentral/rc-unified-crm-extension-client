@@ -398,6 +398,11 @@
     "warning": {
       "callLogFailed": "通話ログの保存に失敗しました",
       "callLogUpdateFailed": "通話ログの更新に失敗しました",
+      "callAlreadyLogged": "この通話はすでに自動でログ記録されています。タイトルとメモはそのログに保存されました。",
+      "changesNotSaved": "保存されなかった項目",
+      "existingLogContactNotChanged": "連絡先: ログは記録時の連絡先のままです。必要に応じて CRM で変更してください。",
+      "existingLogNewContactNotLinked": "新しい連絡先: このログにはリンクされていません。必要に応じて CRM でリンクしてください。",
+      "existingLogFieldsNotSaved": "フィールド: {fields}",
       "connectToCrm": "設定に移動してCRMプラットフォームに接続してください",
       "apiKeyFailed": "APIキーの登録に失敗しました。",
       "noContactFound": "連絡先が見つかりません",

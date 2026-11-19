@@ -398,6 +398,11 @@
     "warning": {
       "callLogFailed": "Échec de l'enregistrement du journal d'appel",
       "callLogUpdateFailed": "Échec de la mise à jour du journal d'appel",
+      "callAlreadyLogged": "Cet appel a déjà été journalisé automatiquement. Votre titre et votre note ont été enregistrés dans ce journal.",
+      "changesNotSaved": "Non enregistré",
+      "existingLogContactNotChanged": "Contact : le journal conserve le contact avec lequel il a été créé. Modifiez-le dans le CRM si nécessaire.",
+      "existingLogNewContactNotLinked": "Nouveau contact : non lié à ce journal. Liez-le dans le CRM si nécessaire.",
+      "existingLogFieldsNotSaved": "Champs : {fields}",
       "connectToCrm": "Veuillez aller dans les Paramètres et vous connecter à la plateforme CRM",
       "apiKeyFailed": "Échec de l'enregistrement de la clé API.",
       "noContactFound": "Aucun contact trouvé",
