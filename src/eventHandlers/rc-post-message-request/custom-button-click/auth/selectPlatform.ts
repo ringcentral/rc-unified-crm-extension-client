@@ -3,7 +3,7 @@ import { saveManifest, saveManifestUrl } from '../../../../service/manifestServi
 import hostnameInputPage from '../../../../components/hostnameInputPage';
 import authCore from '../../../../core/auth';
 import baseManifest from '../../../../manifest.json';
-import { getRcInfo } from '../../../../lib/util';
+import { getRcAccessTokenHeaderConfig, getRcInfo } from '../../../../lib/util';
 import embeddableServices from '../../../../service/embeddableServices';
 import { getImplementedInterfaces } from '../../../../service/implementedInterfacesService';
 
@@ -45,12 +45,12 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
     case 'shared':
       let sharedManifestUrl = `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?access=internal&type=connector&accountId=${selectedPlatform.accountId}`;
       try {
-        platformManifestResponse = await axios.get(sharedManifestUrl);
+        platformManifestResponse = await axios.get(sharedManifestUrl, getRcAccessTokenHeaderConfig());
       }
       catch (e: any) {
         if (e.response.status === 404) {
           sharedManifestUrl = `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?access=internal&type=connector&accountId=${selectedPlatform.accountId}`;
-          platformManifestResponse = await axios.get(sharedManifestUrl);
+          platformManifestResponse = await axios.get(sharedManifestUrl, getRcAccessTokenHeaderConfig());
         }
         else {
           throw e;
@@ -61,12 +61,12 @@ export async function onEvent({ data, manifest, platformInfo, platformName, plat
     case 'private':
       let privateManifestUrl = `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?access=internal&type=connector&accountId=${rcInfo.value?.cachedData?.accountInfo?.id}`;
       try {
-        platformManifestResponse = await axios.get(privateManifestUrl);
+        platformManifestResponse = await axios.get(privateManifestUrl, getRcAccessTokenHeaderConfig());
       }
       catch (e: any) {
         if (e.response.status === 404) {
           privateManifestUrl = `${baseManifest.platformPublicListUrl}/${selectedPlatform.id}/manifest?access=internal&type=connector&accountId=${rcInfo.value?.cachedData?.accountInfo?.id}`;
-          platformManifestResponse = await axios.get(privateManifestUrl);
+          platformManifestResponse = await axios.get(privateManifestUrl, getRcAccessTokenHeaderConfig());
         }
         else {
           throw e;
