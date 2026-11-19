@@ -70,6 +70,29 @@ function getRcAccountId(rcInfo: RcInfo): string {
   return accountId === undefined || accountId === null ? '' : String(accountId);
 }
 
+// Shared/private connector manifests on the developer portal require the user's RC access token.
+// Only send it to that exact endpoint so a custom manifest URL never receives the token.
+export function isInternalConnectorManifestUrl(manifestUrl: string): boolean {
+  try {
+    const url = new URL(manifestUrl);
+    const listUrl = new URL(baseManifest.platformPublicListUrl);
+    return url.origin === listUrl.origin
+      && url.pathname.startsWith(`${listUrl.pathname}/`)
+      && url.pathname.endsWith('/manifest')
+      && url.searchParams.get('access') === 'internal';
+  }
+  catch {
+    return false;
+  }
+}
+
+async function getConnectorManifest(manifestUrl: string) {
+  if (!isInternalConnectorManifestUrl(manifestUrl)) {
+    return axios.get(manifestUrl);
+  }
+  return axios.get(manifestUrl, await getRcAccessTokenHeaderConfig());
+}
+
 function asConnectorList(data: unknown): ConnectorListResponse {
   return (data ?? {}) as ConnectorListResponse;
 }
@@ -115,11 +138,11 @@ export async function getPluginDetails({
       pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${pluginId ?? selectedPlugin.id}/manifest?type=plugin`);
       break;
     case 'shared':
-      pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${pluginId ?? selectedPlugin.id}/manifest?access=internal&type=plugin&accountId=${selectedPlugin.accountId}`);
+      pluginManifestResponse = await getConnectorManifest(`${baseManifest.platformPublicListUrl}/${pluginId ?? selectedPlugin.id}/manifest?access=internal&type=plugin&accountId=${selectedPlugin.accountId}`);
       break;
     case 'private': {
       const rcInfo = await getRcInfo() as RcInfo;
-      pluginManifestResponse = await axios.get(`${baseManifest.platformPublicListUrl}/${pluginId ?? selectedPlugin.id}/manifest?access=internal&type=plugin&accountId=${getRcAccountId(rcInfo)}`);
+      pluginManifestResponse = await getConnectorManifest(`${baseManifest.platformPublicListUrl}/${pluginId ?? selectedPlugin.id}/manifest?access=internal&type=plugin&accountId=${getRcAccountId(rcInfo)}`);
       break;
     }
   }
@@ -232,7 +255,7 @@ export async function refreshManifest(): Promise<ManifestValue> {
       await chrome.storage.local.remove('customCrmManifest');
     }
   }
-  const manifestResponse = await axios.get(manifestUrl);
+  const manifestResponse = await getConnectorManifest(manifestUrl);
   const manifest = manifestResponse.data as AppConnectManifest;
   await saveManifest({ manifest });
   return manifest;
@@ -269,7 +292,7 @@ export async function migrateLegacyManifestUrl(): Promise<boolean> {
         const connectorManifestUrl = platformInfo.isPrivate
           ? `${baseManifest.platformPublicListUrl}/${platformInfo.connectorId}/manifest?access=internal&type=connector&accountId=${platformInfo.devRcAccountId}`
           : `${baseManifest.platformPublicListUrl}/${platformInfo.connectorId}/manifest?type=connector`;
-        const connectorManifestResponse = await axios.get(connectorManifestUrl);
+        const connectorManifestResponse = await getConnectorManifest(connectorManifestUrl);
         await saveManifestUrl({ manifestUrl: connectorManifestUrl });
         await saveManifest({ manifest: connectorManifestResponse.data as AppConnectManifest });
       }
@@ -360,6 +383,7 @@ const manifestService = {
   saveManifestUrl,
   refreshManifest,
   migrateLegacyManifestUrl,
+  isInternalConnectorManifestUrl,
 };
 
 export default manifestService;
