@@ -476,6 +476,8 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
 
     expect(axios.get).toHaveBeenCalledWith('https://appconnect.labs.ringcentral.com/public-api/connectors/salesforce/manifest?type=connector');
+    // Public manifests do not need the RC token.
+    expect(vi.mocked(axios.get).mock.calls[0]).toHaveLength(1);
     expect(loaded.manifestService.saveManifestUrl).toHaveBeenCalledWith({
       manifestUrl: 'https://appconnect.labs.ringcentral.com/public-api/connectors/salesforce/manifest?type=connector',
     });
@@ -596,8 +598,13 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       listButtonItemId: 'salesforce=shared',
     });
     expect(axios.get).toHaveBeenCalledTimes(3);
+    const sharedManifestUrl = 'https://appconnect.labs.ringcentral.com/public-api/connectors/salesforce/manifest?access=internal&type=connector&accountId=shared-account';
+    const rcTokenHeaderConfig = { headers: { 'X-RC-Access-Token': expect.any(String) } };
+    // Both the first attempt and the 404 retry carry the RC access token.
+    expect(axios.get).toHaveBeenNthCalledWith(1, sharedManifestUrl, rcTokenHeaderConfig);
+    expect(axios.get).toHaveBeenNthCalledWith(2, sharedManifestUrl, rcTokenHeaderConfig);
     expect(loaded.manifestService.saveManifestUrl).toHaveBeenCalledWith({
-      manifestUrl: 'https://appconnect.labs.ringcentral.com/public-api/connectors/salesforce/manifest?access=internal&type=connector&accountId=shared-account',
+      manifestUrl: sharedManifestUrl,
     });
   });
 
@@ -624,6 +631,11 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
       listButtonItemId: 'salesforce=private',
     });
 
+    expect(axios.get).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('/public-api/connectors/salesforce/manifest?access=internal&type=connector&accountId='),
+      { headers: { 'X-RC-Access-Token': expect.any(String) } },
+    );
     expect(selectLoaded.hostnameInputPage.getHostnameInputPageRender).toHaveBeenCalledWith(expect.objectContaining({
       connectorId: 'salesforce',
       isPrivate: true,

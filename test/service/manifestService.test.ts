@@ -176,8 +176,31 @@ describe('manifestService', () => {
     })).resolves.toEqual({ name: 'Private Plugin' });
 
     expect(axios.get).toHaveBeenNthCalledWith(1, 'https://appconnect.labs.ringcentral.com/public-api/connectors/public-plugin/manifest?type=plugin');
-    expect(axios.get).toHaveBeenNthCalledWith(2, 'https://appconnect.labs.ringcentral.com/public-api/connectors/shared-plugin/manifest?access=internal&type=plugin&accountId=shared-account');
-    expect(axios.get).toHaveBeenNthCalledWith(3, 'https://appconnect.labs.ringcentral.com/public-api/connectors/private-plugin/manifest?access=internal&type=plugin&accountId=account-1');
+    expect(axios.get).toHaveBeenNthCalledWith(
+      2,
+      'https://appconnect.labs.ringcentral.com/public-api/connectors/shared-plugin/manifest?access=internal&type=plugin&accountId=shared-account',
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
+    expect(axios.get).toHaveBeenNthCalledWith(
+      3,
+      'https://appconnect.labs.ringcentral.com/public-api/connectors/private-plugin/manifest?access=internal&type=plugin&accountId=account-1',
+      { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
+    );
+    // Public manifests do not need the RC token.
+    expect(vi.mocked(axios.get).mock.calls[0]).toHaveLength(1);
+  });
+
+  it.each([
+    ['https://appconnect.labs.ringcentral.com/public-api/connectors/c-1/manifest?access=internal&type=connector&accountId=a-1', true],
+    ['https://appconnect.labs.ringcentral.com/public-api/connectors/c-1/manifest?type=connector', false],
+    ['https://appconnect.labs.ringcentral.com/public-api/connectors/internal?access=internal&type=connector', false],
+    ['https://attacker.example/public-api/connectors/c-1/manifest?access=internal&accountId=a-1', false],
+    ['https://appconnect.labs.ringcentral.com.attacker.example/public-api/connectors/c-1/manifest?access=internal', false],
+    ['https://appconnect.labs.ringcentral.com/other/c-1/manifest?access=internal', false],
+    ['not a url', false],
+  ])('detects developer portal internal manifest URL %s', async (manifestUrl, expected) => {
+    const manifestService = await loadManifestService();
+    expect(manifestService.isInternalConnectorManifestUrl(manifestUrl)).toBe(expected);
   });
 
   it('loads plugin details with explicit plugin id and returns undefined for unsupported access', async () => {
@@ -296,6 +319,37 @@ describe('manifestService', () => {
       serverUrl: 'https://server.example',
     });
     expect(axios.get).toHaveBeenCalledWith('https://manifest.example/manifest.json');
+    expect(vi.mocked(axios.get).mock.calls[0]).toHaveLength(1);
+    expect(getRcAccessTokenHeaderConfig).not.toHaveBeenCalled();
+  });
+
+  it('sends the RC access token when refreshing a stored internal connector manifestUrl', async () => {
+    const internalManifestUrl = 'https://appconnect.labs.ringcentral.com/public-api/connectors/private-id/manifest?access=internal&type=connector&accountId=account-1';
+    seedStorage({ manifestUrl: internalManifestUrl });
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: { serverUrl: 'https://server.example', platforms: { salesforce: {} } },
+    });
+    const manifestService = await loadManifestService();
+
+    await manifestService.refreshManifest();
+
+    expect(axios.get).toHaveBeenCalledWith(internalManifestUrl, {
+      headers: { 'X-RC-Access-Token': 'rc-access-token' },
+    });
+  });
+
+  it('does not send the RC access token to a non-portal manifestUrl that claims internal access', async () => {
+    const customManifestUrl = 'https://custom.example/public-api/connectors/x/manifest?access=internal&accountId=account-1';
+    seedStorage({ manifestUrl: customManifestUrl });
+    vi.mocked(axios.get).mockResolvedValueOnce({
+      data: { serverUrl: 'https://server.example', platforms: { salesforce: {} } },
+    });
+    const manifestService = await loadManifestService();
+
+    await manifestService.refreshManifest();
+
+    expect(vi.mocked(axios.get).mock.calls[0]).toEqual([customManifestUrl]);
+    expect(getRcAccessTokenHeaderConfig).not.toHaveBeenCalled();
   });
 
   it('migrates legacy custom manifest storage into manifestUrl when refreshing', async () => {
@@ -496,7 +550,7 @@ describe('manifestService', () => {
       await expect(manifestService.migrateLegacyManifestUrl()).resolves.toBe(true);
 
       const privateUrl = `${publicListUrl}/private-id/manifest?access=internal&type=connector&accountId=acct-9`;
-      expect(axios.get).toHaveBeenCalledWith(privateUrl);
+      expect(axios.get).toHaveBeenCalledWith(privateUrl, { headers: { 'X-RC-Access-Token': 'rc-access-token' } });
       expect(readStorage().manifestUrl).toBe(privateUrl);
       expect(readStorage().customCrmManifestUrl).toBeUndefined();
     });
