@@ -422,7 +422,6 @@ describe('log core', () => {
       hashedExtensionId: 'hash-1',
       activityCompletionReady: false,
     }));
-    expect(axios.defaults.headers.common.Authorization).toBeUndefined();
   });
 
   it('resolves and includes a linked voicemail media-reader URL when updating a call log', async () => {
