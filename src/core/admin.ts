@@ -440,11 +440,11 @@ async function getAdminReportStats({ serverUrl, timezone, timeFrom, timeTo, grou
     }
     const adminReportStatsResp = await axios.get(
         `${serverUrl}/ringcentral/admin/report?timezone=${timezone}&timeFrom=${timeFrom}&timeTo=${timeTo}&groupBy=${groupBy}`,
-        {
+        await getRcAccessTokenHeaderConfig({
             headers: {
                 Accept: 'application/json'
             }
-        }
+        })
     );
     return adminReportStatsResp.data;
 }
