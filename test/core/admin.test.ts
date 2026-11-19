@@ -616,6 +616,10 @@ describe('admin core', () => {
       timeTo: '2026-07-04T00:00:00Z',
       groupBy: 'day',
     })).resolves.toEqual({ totalCalls: 10 });
+    expect(axios.get).toHaveBeenCalledWith(
+      expect.stringContaining('/ringcentral/admin/report?'),
+      { headers: { Accept: 'application/json', 'X-RC-Access-Token': 'rc-access-token' } },
+    );
     await expect(adminCore.getAdminReportStats({
       serverUrl: 'https://server.example',
       timezone: 'Asia/Shanghai',
