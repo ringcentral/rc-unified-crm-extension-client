@@ -1568,12 +1568,12 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     }));
     expect(axios.post).toHaveBeenCalledWith(
       'https://server.example/plugin/register',
-      expect.objectContaining({
+      {
         pluginId: 'plugin-1',
         pluginAccess: 'admin',
-        rcAccountId: '1001',
+        pluginName: 'Plugin One',
         ownerRcAccountId: 'owner-account-1',
-      }),
+      },
       { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
     );
     expect(loaded.pluginPages.getPluginAdminConfigurePageRender).toHaveBeenCalledWith(expect.objectContaining({
@@ -1606,11 +1606,12 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
 
     expect(axios.post).toHaveBeenCalledWith(
       'https://server.example/plugin/register',
-      expect.objectContaining({
+      {
         pluginId: 'plugin-1',
         pluginAccess: 'admin',
-        rcAccountId: '1001',
-      }),
+        pluginName: 'Plugin One',
+        ownerRcAccountId: 'owner-account-1',
+      },
       { headers: { 'X-RC-Access-Token': 'rc-access-token' } },
     );
 
@@ -1733,7 +1734,6 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     expect(axios.delete).toHaveBeenCalledWith('https://server.example/plugin/unregister', {
       headers: { 'X-RC-Access-Token': 'rc-access-token' },
       params: {
-        rcAccountId: '1001',
         pluginName: 'Plugin One',
         pluginId: 'plugin-1',
       },
