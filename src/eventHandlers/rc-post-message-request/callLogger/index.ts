@@ -86,6 +86,10 @@ async function onEvent(options: EventOptions) {
             return;
         }
     }
+    // RingCX calls are logged from the widget's wrap-up with their final data. They never get
+    // the RingEX call log record (`action`, recording upload) that one-time logging waits for,
+    // and RCAdapter.getCallLog cannot find them, so they skip the call data readiness checks.
+    const isRingCXCall = data.body.call?.source === 'ringcx';
     const readinessKey = `call-log-data-ready-${data.body.call.sessionId}`;
     const recordingKey = `rec-link-${data.body.call.sessionId}`;
     const storedData = await chrome.storage.local.get([
@@ -99,7 +103,7 @@ async function onEvent(options: EventOptions) {
     // temporary note page) must not wait for the widget's record/AI lookups.
     const isLiveCall = data.body.call.action === undefined
         && ['CallConnected', 'OnHold'].includes(data.body.call.result ?? data.body.call.telephonyStatus);
-    if (!prepareOnly && data.body.redirect && !isLiveCall && !isCallDataComplete(data.body.call) && typeof RCAdapter.getCallLog === 'function') {
+    if (!prepareOnly && !isRingCXCall && data.body.redirect && !isLiveCall && !isCallDataComplete(data.body.call) && typeof RCAdapter.getCallLog === 'function') {
         try {
             const recoveredCall = extractCallRecord(await RCAdapter.getCallLog({ sessionId: data.body.call.sessionId }));
             if (isCallDataComplete(recoveredCall)) {
@@ -118,29 +122,33 @@ async function onEvent(options: EventOptions) {
         }
     }
 
-    const isFinalDataResult = data.body.call.action !== undefined;
-    const isRecorded = !isObjectEmpty(storedData[recordingKey] ?? {});
-    const hasRecording = !!data.body.call.recording?.link;
-    const readiness = resolveCallLogReadiness({
-        call: data.body.call,
-        previousState: storedData[readinessKey],
-        explicitlyFinal: isFinalDataResult,
-        existingAutoDataReady: isRecorded || !hasRecording,
-    });
-    await chrome.storage.local.set({
-        [readinessKey]: readiness,
-    });
+    let autoReady = true;
+    if (!isRingCXCall) {
+        const isFinalDataResult = data.body.call.action !== undefined;
+        const isRecorded = !isObjectEmpty(storedData[recordingKey] ?? {});
+        const hasRecording = !!data.body.call.recording?.link;
+        const readiness = resolveCallLogReadiness({
+            call: data.body.call,
+            previousState: storedData[readinessKey],
+            explicitlyFinal: isFinalDataResult,
+            existingAutoDataReady: isRecorded || !hasRecording,
+        });
+        await chrome.storage.local.set({
+            [readinessKey]: readiness,
+        });
+        autoReady = readiness.autoReady;
+    }
     data = {
         ...data,
         body: {
             ...data.body,
-            activityCompletionReady: userCore.isAutoActivityCompletionEnabled(userSettings, platform) && readiness.autoReady,
+            activityCompletionReady: userCore.isAutoActivityCompletionEnabled(userSettings, platform) && autoReady,
         },
     };
-    if (!prepareOnly && userCore.shouldWaitForCompleteCallData(userSettings, platform)) {
+    if (!prepareOnly && !isRingCXCall && userCore.shouldWaitForCompleteCallData(userSettings, platform)) {
         const readyForCurrentRequest = data.body.redirect
-            ? readiness.autoReady || isCallDataComplete(data.body.call)
-            : readiness.autoReady;
+            ? autoReady || isCallDataComplete(data.body.call)
+            : autoReady;
         if (!readyForCurrentRequest) {
             if (data.body.redirect) {
                 showNotification({ level: 'warning', message: 'Call data is not yet ready. Please input your custom note while it is preparing data.', ttl: 3000 });
