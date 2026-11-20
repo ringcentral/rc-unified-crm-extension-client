@@ -60,6 +60,7 @@ async function getServiceManifest() {
         return getPreconfiguredServiceManifest();
     }
     const platformName = platform.name;
+    const disableCallPop = platform.disableCallPop === true;
     const customSettings = platform.settings;
     const apptCfg = manifest?.platforms?.[platformInfo.platformName]?.page?.appointment ?? {};
     const appointmentTitle = apptCfg?.title ?? 'Appointments';
@@ -100,7 +101,13 @@ async function getServiceManifest() {
         displayName: platform.displayName,
         customizedPageInputChangedEventPath: '/customizedPage/inputChanged',
         contactMatchPath: '/contacts/match',
-        viewMatchedContactPath: '/contacts/view',
+        // When the connector disables call pop, hide View Contact / View Log buttons
+        ...(disableCallPop ? {
+            messageLoggerHideViewLogButton: true,
+            callLoggerHideViewLogButton: true,
+        } : {
+            viewMatchedContactPath: '/contacts/view',
+        }),
         // Where the embeddable will post button click events to
         buttonEventPath: '/custom-button-click',
         // Direct button registration (older/newer builds may read this)
@@ -582,6 +589,21 @@ async function getServiceManifest() {
                 ]
             }
         ]
+    }
+
+    if (disableCallPop) {
+        // Call pop is disabled by the connector: drop the call pop settings
+        const callPopSettingIds = new Set([
+            'openContactPageFromIncomingCall',
+            'openContactPageFromOutgoingCall',
+            'multiContactMatchBehavior',
+            'openContactPageAfterCreation',
+        ]);
+        const contactsSection = services.settings.find(s => s.id === 'contacts');
+        contactsSection.items = contactsSection.items.filter(i => !callPopSettingIds.has(i.id));
+        if (contactsSection.items.length === 0) {
+            services.settings = services.settings.filter(s => s.id !== 'contacts');
+        }
     }
 
     if (platform.useLicense) {

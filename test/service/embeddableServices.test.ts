@@ -275,6 +275,48 @@ describe('embeddableServices', () => {
     });
   });
 
+  it('shows view contact/log buttons when disableCallPop is absent or false', async () => {
+    for (const disableCallPop of [undefined, false]) {
+      const manifestValue = manifest();
+      if (disableCallPop !== undefined) {
+        (manifestValue.platforms.googleSheets as any).disableCallPop = disableCallPop;
+      }
+      const { embeddableServices } = await loadEmbeddableServices({ manifestValue });
+      const service = await embeddableServices.getServiceManifest();
+
+      expect(service.viewMatchedContactPath).toBe('/contacts/view');
+      expect(service).not.toHaveProperty('messageLoggerHideViewLogButton');
+      expect(service).not.toHaveProperty('callLoggerHideViewLogButton');
+    }
+  });
+
+  it('hides view contact/log buttons when disableCallPop is true', async () => {
+    const manifestValue = manifest();
+    (manifestValue.platforms.googleSheets as any).disableCallPop = true;
+    const { embeddableServices } = await loadEmbeddableServices({ manifestValue });
+    const service = await embeddableServices.getServiceManifest();
+
+    expect(service).not.toHaveProperty('viewMatchedContactPath');
+    expect(service.messageLoggerHideViewLogButton).toBe(true);
+    expect(service.callLoggerHideViewLogButton).toBe(true);
+
+    const contacts = service.settings.find((s: any) => s.id === 'contacts');
+    const ids = (contacts?.items ?? []).map((i: any) => i.id);
+    expect(ids).toEqual(['allowExtensionNumberLogging']);
+  });
+
+  it('keeps call pop settings when disableCallPop is not set', async () => {
+    const { embeddableServices } = await loadEmbeddableServices();
+    const service = await embeddableServices.getServiceManifest();
+    const ids = service.settings.find((s: any) => s.id === 'contacts').items.map((i: any) => i.id);
+    expect(ids).toEqual(expect.arrayContaining([
+      'openContactPageFromIncomingCall',
+      'openContactPageFromOutgoingCall',
+      'multiContactMatchBehavior',
+      'openContactPageAfterCreation',
+    ]));
+  });
+
   it('builds authorized service identity and license metadata', async () => {
     const { service, authCore } = await loadAuthedAdminServiceManifest();
 
