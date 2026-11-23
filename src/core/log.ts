@@ -364,6 +364,7 @@ export async function updateLog({ serverUrl, logType, telephonySessionId, sessio
           const voicemailRecording = voicemailLink || !call
             ? { voicemailLink, voicemailMessageId }
             : await resolveVoicemailRecording(call);
+          const ringCX = call?.source === 'ringcx' ? call.ringcx : undefined;
           const patchBody = {
             telephonySessionId,
             sessionId,
@@ -381,6 +382,14 @@ export async function updateLog({ serverUrl, logType, telephonySessionId, sessio
             direction,
             from,
             to,
+            ...(ringCX && {
+              ringcx: {
+                disposition: { name: ringCX.disposition?.name },
+                queue: { name: ringCX.queue?.name },
+                campaign: { name: ringCX.campaign?.name },
+                dialGroup: { name: ringCX.dialGroup?.name },
+              },
+            }),
             extensionNumber,
             hashedExtensionId,
             activityCompletionReady,

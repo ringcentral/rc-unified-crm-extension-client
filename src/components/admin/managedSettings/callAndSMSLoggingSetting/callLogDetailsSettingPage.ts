@@ -3,6 +3,30 @@ import { t } from '../../../../i18n';
 type UnknownRecord = Record<string, any>;
 
 function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions, serverSideLoggingSubscribed }: UnknownRecord): UnknownRecord {
+    const ringCXProperties: UnknownRecord = {};
+    const ringCXUiSchema: UnknownRecord = {};
+    const ringCXFormData: UnknownRecord = {};
+    if (userPermissions.ringCX) {
+        for (const [key, label] of [
+            ['addRingCXDisposition', 'ringCXDisposition'],
+            ['addRingCXQueueOrCampaign', 'ringCXQueueOrCampaign'],
+        ]) {
+            ringCXProperties[key] = {
+                type: 'object',
+                title: t(`settings.callLogDetails.${label}`),
+                description: t(`settings.callLogDetails.${label}Desc`),
+                properties: {
+                    customizable: { type: 'boolean', title: t('common.labels.customizableByUser') },
+                    value: { type: 'boolean', title: t('common.labels.value') },
+                },
+            };
+            ringCXUiSchema[key] = { 'ui:collapsible': true };
+            ringCXFormData[key] = {
+                customizable: adminUserSettings?.[key]?.customizable ?? true,
+                value: adminUserSettings?.[key]?.value ?? false,
+            };
+        }
+    }
     return {
         id: 'callLogDetailsSettingPage',
         title: t('settings.callLogDetails.groupName'),
@@ -186,6 +210,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                         }
                     }
                 },
+                ...ringCXProperties,
                 addCallLogRecording: {
                     type: 'object',
                     title: t('settings.callLogDetails.recordingLink'),
@@ -332,6 +357,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
             addCallLogResult: {
                 "ui:collapsible": true,
             },
+            ...ringCXUiSchema,
             addCallLogRecording: {
                 "ui:collapsible": true,
             },
@@ -412,6 +438,7 @@ function getCallLogDetailsSettingPageRender({ adminUserSettings, userPermissions
                 customizable: adminUserSettings?.addCallLogResult?.customizable ?? true,
                 value: adminUserSettings?.addCallLogResult?.value ?? false
             },
+            ...ringCXFormData,
             addCallLogRecording: {
                 customizable: adminUserSettings?.addCallLogRecording?.customizable ?? true,
                 value: adminUserSettings?.addCallLogRecording?.value ?? false

@@ -921,6 +921,30 @@ describe('log core', () => {
     expect(axios.defaults.headers.common.Authorization).toBeUndefined();
   });
 
+  it('includes RingCX call details in the wrap-up update', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    vi.mocked(axios.patch).mockResolvedValueOnce({ data: {} });
+    const logCore = await loadLogCore();
+
+    await logCore.updateLog({
+      serverUrl: 'https://server.example',
+      logType: 'Call',
+      sessionId: 'ringcx-1',
+      call: {
+        source: 'ringcx',
+        ringcx: {
+          disposition: { name: 'Resolved' },
+          dialGroup: { name: 'Renewals' },
+          lead: { id: 'lead-1' },
+        },
+      },
+    });
+
+    const [, body] = vi.mocked(axios.patch).mock.calls[0];
+    expect(body).toMatchObject({ ringcx: { disposition: { name: 'Resolved' }, dialGroup: { name: 'Renewals' } } });
+    expect(body).not.toHaveProperty('ringcx.lead');
+  });
+
   it('resolves and includes a linked voicemail media-reader URL when updating a call log', async () => {
     seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
     vi.mocked(axios.get).mockResolvedValueOnce({

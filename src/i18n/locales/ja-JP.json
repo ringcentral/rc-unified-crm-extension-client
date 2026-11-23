@@ -220,6 +220,10 @@
       "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
+      "ringCXDisposition": "RingCXの処理結果",
+      "ringCXDispositionDesc": "RingCX通話で選択した処理結果を含めます",
+      "ringCXQueueOrCampaign": "RingCXのキュー／キャンペーン",
+      "ringCXQueueOrCampaignDesc": "RingCXのキュー名を含めます。キュー名がない場合はキャンペーン名を含めます",
       "groupName": "通話ログ詳細",
       "agentNotes": "エージェント入力メモ",
       "agentNotesDesc": "自分で手動入力したメモを記録",

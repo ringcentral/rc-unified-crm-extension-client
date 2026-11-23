@@ -220,6 +220,10 @@
       "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
+      "ringCXDisposition": "RingCX 통화 처리 결과",
+      "ringCXDispositionDesc": "RingCX 통화에 대해 선택한 처리 결과를 포함합니다",
+      "ringCXQueueOrCampaign": "RingCX 대기열/캠페인",
+      "ringCXQueueOrCampaignDesc": "RingCX 대기열 이름을 포함합니다. 대기열 이름이 없으면 캠페인 이름을 포함합니다",
       "groupName": "통화 로그 세부 정보",
       "agentNotes": "상담원 입력 메모",
       "agentNotesDesc": "직접 수동으로 입력한 메모 기록",

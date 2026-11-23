@@ -220,6 +220,10 @@
       "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
+      "ringCXDisposition": "RingCX 处置结果",
+      "ringCXDispositionDesc": "包含为 RingCX 通话选择的处置结果",
+      "ringCXQueueOrCampaign": "RingCX 队列/营销活动",
+      "ringCXQueueOrCampaignDesc": "包含 RingCX 队列名称。如果没有队列名称，则包含营销活动名称",
       "groupName": "通话日志详情",
       "agentNotes": "坐席输入的备注",
       "agentNotesDesc": "记录您手动输入的备注",

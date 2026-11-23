@@ -293,15 +293,18 @@ describe('managed settings page renderers', () => {
     expect(disabled.uiSchema.addCallLogAiNote['ui:disabled']).toBe(true);
     expect(disabled.uiSchema.addCallLogRingSenseRecordingTranscript['ui:disabled']).toBe(true);
     expect(disabled.schema.properties.addCallLogAiNote.properties.value.description).toEqual(expect.any(String));
+    expect(disabled.schema.properties).not.toHaveProperty('addRingCXDisposition');
+    expect(disabled.formData).not.toHaveProperty('addRingCXQueueOrCampaign');
   });
 
   it('renders call log detail pages with AI and RingSense controls enabled by permissions', async () => {
     const callLogDetailsPage = await loadPage('../../src/components/admin/managedSettings/callAndSMSLoggingSetting/callLogDetailsSettingPage.ts');
     const enabled = callLogDetailsPage.getCallLogDetailsSettingPageRender({
-      adminUserSettings: {},
+      adminUserSettings: { addRingCXDisposition: { customizable: false, value: true } },
       userPermissions: {
         aiNote: true,
         ringSenseInsights: true,
+        ringCX: true,
       },
       serverSideLoggingSubscribed: true,
     });
@@ -309,6 +312,11 @@ describe('managed settings page renderers', () => {
     expect(enabled.uiSchema.addCallLogRingSenseRecordingTranscript['ui:disabled']).toBe(false);
     expect(enabled.schema.properties.addCallLogAiNote.properties.value.description).toBe('');
     expect(enabled.formData.logDateFormat.value).toBe('YYYY-MM-DD hh:mm:ss A');
+    expect(enabled.schema.properties).toHaveProperty('addRingCXQueueOrCampaign');
+    expect(enabled.formData).toMatchObject({
+      addRingCXDisposition: { customizable: false, value: true },
+      addRingCXQueueOrCampaign: { customizable: true, value: false },
+    });
   });
 
   it('renders auto-log preference pages with saved contact preferences', async () => {

@@ -441,6 +441,19 @@ describe('embeddableServices', () => {
     expect(loggingItemIds).toContain('selectedMessageLog');
   });
 
+  it.each([true, false])('shows RingCX call log options only with permission (%s)', async (ringCX) => {
+    seedStorage({ crmAuthed: true, crmUserInfo: { name: 'CRM User' }, userPermissions: { ringCX } });
+    const { embeddableServices } = await loadEmbeddableServices({ manifestValue: manifest() });
+    const service = await embeddableServices.getServiceManifest();
+    const items = service.settings.find((item) => item.id === 'callLogDetails').items;
+    const ringCXItems = items.filter((item) => item.id.startsWith('addRingCX'));
+
+    expect(ringCXItems.map(({ id, value }) => ({ id, value }))).toEqual(ringCX ? [
+      { id: 'addRingCXDisposition', value: false },
+      { id: 'addRingCXQueueOrCampaign', value: false },
+    ] : []);
+  });
+
   it('posts phone-number format and SMS typing side effects to the widget', async () => {
     await loadAuthedAdminServiceManifest();
 

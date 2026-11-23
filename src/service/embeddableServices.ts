@@ -869,6 +869,22 @@ async function getServiceManifest() {
                 readOnly: userCore.getAddCallLogResultSetting(userSettings).readOnly,
                 readOnlyReason: userCore.getAddCallLogResultSetting(userSettings).readOnlyReason
             },
+            ...(userPermissions.ringCX ? [
+                {
+                    id: 'addRingCXDisposition',
+                    type: 'boolean',
+                    name: t('settings.callLogDetails.ringCXDisposition'),
+                    description: t('settings.callLogDetails.ringCXDispositionDesc'),
+                    ...userCore.getCustomSetting(userSettings, 'addRingCXDisposition', false),
+                },
+                {
+                    id: 'addRingCXQueueOrCampaign',
+                    type: 'boolean',
+                    name: t('settings.callLogDetails.ringCXQueueOrCampaign'),
+                    description: t('settings.callLogDetails.ringCXQueueOrCampaignDesc'),
+                    ...userCore.getCustomSetting(userSettings, 'addRingCXQueueOrCampaign', false),
+                },
+            ] : []),
             {
                 id: "addCallLogRecording",
                 type: "boolean",

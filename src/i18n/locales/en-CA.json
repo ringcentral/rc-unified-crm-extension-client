@@ -220,6 +220,10 @@
       "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
+      "ringCXDisposition": "RingCX disposition",
+      "ringCXDispositionDesc": "Include the disposition selected for the RingCX call",
+      "ringCXQueueOrCampaign": "RingCX queue/campaign",
+      "ringCXQueueOrCampaignDesc": "Include the RingCX queue name or, if unavailable, the campaign name",
       "groupName": "Call log details",
       "agentNotes": "Agent-entered notes",
       "agentNotesDesc": "Log the notes manually entered by yourself",

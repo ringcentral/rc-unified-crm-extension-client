@@ -220,6 +220,10 @@
       "clickToSMSFromSharedNumberDesc": "When enabled, click-to-SMS is sent from your shared/company number instead of your direct number (applies to new conversations only)."
     },
     "callLogDetails": {
+      "ringCXDisposition": "Qualification RingCX",
+      "ringCXDispositionDesc": "Inclure la qualification sélectionnée pour l’appel RingCX",
+      "ringCXQueueOrCampaign": "File d’attente/campagne RingCX",
+      "ringCXQueueOrCampaignDesc": "Inclure le nom de la file d’attente RingCX ou, à défaut, celui de la campagne",
       "groupName": "Détails du journal d'appels",
       "agentNotes": "Notes de l'agent",
       "agentNotesDesc": "Journaliser les notes saisies manuellement par vous-même",
