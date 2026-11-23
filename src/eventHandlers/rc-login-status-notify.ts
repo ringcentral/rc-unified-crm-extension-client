@@ -13,7 +13,7 @@ import { reset, identify, group, trackRcLogin, trackRcLogout } from '../lib/anal
 import releaseNotesPage from '../components/releaseNotesPage';
 import adminCore from '../core/admin';
 import logService from '../service/logService';
-import { RcAPI } from '../lib/rcAPI';
+import { resolveAnalyticsRcUserInfo } from '../service/analyticsRcUserInfo';
 import pluginService from '../service/pluginService';
 import { clearRawAnalyticsRequestHeaders, setRawAnalyticsRequestHeaders } from '../lib/analyticsRequestHeaders';
 
@@ -24,6 +24,7 @@ type EventOptions = {
 };
 
 let firstTimeLogoutAbsorbed = false;
+let loginStatusRevision = 0;
 
 function getWidgetFrameWindow(): Window {
   return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
@@ -55,6 +56,8 @@ async function applyAnalyticsIdentity(rcUserInfo: UnknownRecord, extensionInfo: 
 }
 
 export async function onEvent({ data }: EventOptions): Promise<void> {
+  const revision = ++loginStatusRevision;
+  const isCurrent = () => revision === loginStatusRevision;
   // ------------------------------
   // ------Process CRM login-------
   // ------------------------------
@@ -67,8 +70,7 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
   let { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as { rcUnifiedCrmExtJwt?: string };
   const { rcUserInfo: previousRcUserInfo } = await chrome.storage.local.get('rcUserInfo') as { rcUserInfo?: UnknownRecord };
   let rcInfo: UnknownRecord | undefined;
-  let currentRcUserInfo: UnknownRecord | undefined;
-  let analyticsEstablished = false;
+  let crmAnalyticsIdentityStatus: 'not_configured' | 'resolved' | 'recovered' | 'lookup_failed' = 'not_configured';
   // get login status from widget
   const { userPermissions } = await chrome.storage.local.get({ userPermissions: {} }) as { userPermissions: UnknownRecord };
   if (data.loggedIn) {
@@ -94,18 +96,12 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
     if (manifest?.serverUrl) {
       try {
         const extensionInfo = rcInfo.value.cachedData.extensionInfo;
-        const rcAPI = new RcAPI();
-        const userInfoResponse = await rcAPI.getUserInfo({
+        const { userInfo: currentRcUserInfo, recovered } = await resolveAnalyticsRcUserInfo({
           serverUrl: manifest.serverUrl,
-          extensionId: extensionInfo.id,
-          accountId: extensionInfo.account.id,
+          extensionInfo,
+          isCurrent,
         });
-        currentRcUserInfo = {
-          rcUserName: extensionInfo.name,
-          rcUserEmail: extensionInfo.contact.email,
-          rcAccountId: userInfoResponse.accountId,
-          rcExtensionId: userInfoResponse.extensionId,
-        };
+        if (!isCurrent()) return;
         const rcIdentityChanged = !!previousRcUserInfo?.rcAccountId
           && !!previousRcUserInfo?.rcExtensionId
           && (previousRcUserInfo.rcAccountId !== currentRcUserInfo.rcAccountId
@@ -114,13 +110,17 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
           await authCore.clearLocalCrmAuthState();
           rcUnifiedCrmExtJwt = undefined;
         }
+        if (!isCurrent()) return;
         await applyAnalyticsIdentity(currentRcUserInfo, extensionInfo, platformName, manifest);
-        analyticsEstablished = true;
+        crmAnalyticsIdentityStatus = recovered ? 'recovered' : 'resolved';
       }
       catch (e) {
-        reset();
+        if (!isCurrent()) return;
+        crmAnalyticsIdentityStatus = 'lookup_failed';
         clearAnalyticsHeaders();
-        await chrome.storage.local.remove('analyticsIdentity');
+        if (previousRcUserInfo && !storedAnalyticsIdentity) {
+          reset();
+        }
         console.error('Failed to compare RingCentral user identity', e);
       }
     }
@@ -228,33 +228,11 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
     try {
       rcInfo ??= await getRcInfo() as UnknownRecord;
       await setRcAdditionalSubmission({ rcInfo, platform });
-      if (manifest?.serverUrl) {
-        if (!currentRcUserInfo) {
-          const rcAPI = new RcAPI();
-          const userInfoResponse = await rcAPI.getUserInfo({
-            serverUrl: manifest.serverUrl,
-            extensionId: rcInfo.value.cachedData.extensionInfo.id,
-            accountId: rcInfo.value.cachedData.extensionInfo.account.id,
-          });
-          currentRcUserInfo = {
-            rcUserName: rcInfo.value.cachedData.extensionInfo.name,
-            rcUserEmail: rcInfo.value.cachedData.extensionInfo.contact.email,
-            rcAccountId: userInfoResponse.accountId,
-            rcExtensionId: userInfoResponse.extensionId,
-          };
-        }
-        if (!analyticsEstablished) {
-          await applyAnalyticsIdentity(currentRcUserInfo, rcInfo.value.cachedData.extensionInfo, platformName, manifest);
-        }
-      }
       if (platformInfo && platform && authCore.isAdminManagedOAuthEnabled(platform)) {
         await authCore.checkManagedOAuthBeforeCrmVisible({ manifest, platformName, platform });
       }
     }
     catch (e) {
-      reset();
-      clearAnalyticsHeaders();
-      await chrome.storage.local.remove('analyticsIdentity');
       console.error(e);
     }
   }
@@ -266,7 +244,7 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
   // case 1: fresh login
   if (rcLoginStatus === undefined) {
     if (data.loggedIn) {
-      trackRcLogin();
+      trackRcLogin({ crmAnalyticsIdentityStatus });
       rcLoginStatus = true;
       await chrome.storage.local.set({ ['rcLoginStatus']: rcLoginStatus });
       if (manifest?.serverUrl) {
@@ -279,7 +257,7 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
   else {
     // case 2.1: logged in
     if (data.loggedIn && !rcLoginStatus) {
-      trackRcLogin();
+      trackRcLogin({ crmAnalyticsIdentityStatus });
       rcLoginStatus = true;
       await chrome.storage.local.set({ ['rcLoginStatus']: rcLoginStatus });
     }

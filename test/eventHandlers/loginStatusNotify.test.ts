@@ -186,10 +186,10 @@ function rcInfo() {
           records: [{ id: 'SMSSending', available: true }],
         },
         extensionInfo: {
-          id: 'extension-local',
+          id: '101',
           name: 'RC User',
           contact: { email: 'rc@example.test' },
-          account: { id: 'account-local' },
+          account: { id: '900' },
         },
       },
     },
@@ -340,6 +340,22 @@ describe('rc-login-status-notify event handler', () => {
     expect(userCore.updateSSCLToken).not.toHaveBeenCalled();
   });
 
+  it('checks for an account switch when the analytics identity lookup succeeds on retry', async () => {
+    seedStorage({
+      rcUnifiedCrmExtJwt: 'crm-jwt',
+      rcUserInfo: { rcAccountId: 'previous-account', rcExtensionId: 'previous-extension' },
+    });
+    rcApiMocks.getUserInfo.mockRejectedValueOnce(new Error('temporary lookup failure'));
+    const handler = await loadLoginStatusHandler();
+
+    await handler.onEvent({ data: loggedInEventData() });
+
+    expect(rcApiMocks.getUserInfo).toHaveBeenCalledTimes(2);
+    expect(authCore.clearLocalCrmAuthState).toHaveBeenCalledOnce();
+    expect(identify).toHaveBeenCalledWith(expect.objectContaining({ platformName: 'salesforce' }));
+    expect(trackRcLogin).toHaveBeenCalledWith({ crmAnalyticsIdentityStatus: 'recovered' });
+  });
+
   it('registers report, calldown, and appointments tabs after login', async () => {
     await notifyLoggedInWithCrmJwt();
 
@@ -367,8 +383,8 @@ describe('rc-login-status-notify event handler', () => {
       extensionId: 'extension-1',
       rcAccountId: 'account-1',
       platformName: 'salesforce',
-      rcAccountIdRaw: 'account-local',
-      rcExtensionIdRaw: 'extension-local',
+      rcAccountIdRaw: '900',
+      rcExtensionIdRaw: '101',
     });
     expect(group).toHaveBeenCalledWith({ rcAccountId: 'account-1' });
     expect(axios.defaults.headers.common).toMatchObject({
