@@ -3,7 +3,8 @@ import { openDB } from 'idb';
 import { getRcAccessToken, getRcInfo, setRcAdditionalSubmission, showNotification } from '../../src/lib/util.ts';
 import { getPlatformInfo } from '../../src/service/platformService.ts';
 import { getManifest } from '../../src/service/manifestService.ts';
-import { trackCrmLogin, trackCrmLogout, trackPluginEvent } from '../../src/lib/analytics.ts';
+import { trackCrmLogout, trackPluginEvent } from '../../src/lib/analytics.ts';
+import { recordCrmAuthorization } from '../../src/service/crmAuthorizationAnalytics.ts';
 import platformSelectionPage from '../../src/components/platformSelectionPage.ts';
 import authPage from '../../src/components/authPage.ts';
 import managedOAuthSetupPage from '../../src/components/managedOAuthSetupPage.ts';
@@ -30,7 +31,7 @@ vi.mock('idb', () => ({
 }));
 
 vi.mock('../../src/lib/util.ts', () => ({
-  getRcAccessToken: vi.fn(() => 'rc-access-token'),
+  getRcAccessToken: vi.fn(async () => 'rc-access-token'),
   getRcAccessTokenHeaderConfig: vi.fn((config = {}) => ({
     ...config,
     headers: {
@@ -52,9 +53,13 @@ vi.mock('../../src/service/manifestService.ts', () => ({
 }));
 
 vi.mock('../../src/lib/analytics.ts', () => ({
+  getAnalyticsIdentityRevision: vi.fn(() => 4),
   trackPluginEvent: vi.fn(),
-  trackCrmLogin: vi.fn(),
   trackCrmLogout: vi.fn(),
+}));
+
+vi.mock('../../src/service/crmAuthorizationAnalytics.ts', () => ({
+  recordCrmAuthorization: vi.fn(),
 }));
 
 vi.mock('../../src/components/platformSelectionPage.ts', () => ({
@@ -176,6 +181,7 @@ describe('auth core', () => {
     vi.mocked(adminCore.refreshAdminSettings).mockReset().mockResolvedValue({});
     vi.mocked(adminCore.authAppConnectServer).mockReset();
     vi.mocked(userCore.updateSSCLToken).mockReset();
+    vi.mocked(recordCrmAuthorization).mockReset();
   });
 
   it('builds OAuth URLs with default state, encoded values, and plain scopes', async () => {
@@ -453,7 +459,14 @@ describe('auth core', () => {
       message: 'Authorized',
       ttl: 3000,
     });
-    expect(trackCrmLogin).toHaveBeenCalled();
+    expect(recordCrmAuthorization).toHaveBeenCalledOnce();
+    expect(recordCrmAuthorization).toHaveBeenCalledWith(expect.objectContaining({
+      connector: expect.objectContaining({ platformName: 'salesforce', connectorId: 'connector-1' }),
+      extensionInfo: expect.objectContaining({ id: 'extension-1', account: { id: 'account-1' } }),
+      rcAccessToken: 'rc-access-token',
+      analyticsRevision: 4,
+      jwtToken: 'jwt-1',
+    }));
     expect(getWidgetPostMessages().map(({ message }) => message.type)).toEqual(expect.arrayContaining([
       'rc-adapter-update-authorization-status',
       'rc-adapter-navigate-to',
@@ -492,6 +505,18 @@ describe('auth core', () => {
       message: 'Bad API key',
       ttl: 3000,
     });
+  });
+
+  it('does not record API-key authorization analytics without a JWT', async () => {
+    seedStorage({ 'platform-info': { platformName: 'salesforce', hostname: 'crm.example' } });
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { name: 'CRM User' } });
+    const authCore = await loadAuthCore();
+
+    await expect(authCore.apiKeyLogin({
+      serverUrl: 'https://server.example', apiKey: 'api-key', formData: {}, useLicense: false,
+    })).resolves.toBeUndefined();
+
+    expect(recordCrmAuthorization).not.toHaveBeenCalled();
   });
 
   it('shows default API-key login failure notifications when the server omits returnMessage', async () => {
@@ -1218,6 +1243,13 @@ describe('auth core', () => {
       rcUnifiedCrmExtJwt: 'oauth-jwt',
       crmUserInfo: { name: 'OAuth User' },
     });
+    expect(recordCrmAuthorization).toHaveBeenCalledOnce();
+    expect(recordCrmAuthorization).toHaveBeenCalledWith(expect.objectContaining({
+      connector: expect.objectContaining({ platformName: 'salesforce' }),
+      extensionInfo: expect.objectContaining({ id: 'extension-1', account: { id: 'account-1' } }),
+      analyticsRevision: 4,
+      jwtToken: 'oauth-jwt',
+    }));
     expect(getWidgetPostMessages()).toContainEqual({
       message: {
         type: 'rc-adapter-refresh-license-status',
@@ -1272,7 +1304,7 @@ describe('auth core', () => {
       message: 'Needs another step',
       ttl: 5000,
     });
-    expect(trackCrmLogin).not.toHaveBeenCalled();
+    expect(recordCrmAuthorization).not.toHaveBeenCalled();
     expect(readStorage().rcUnifiedCrmExtJwt).toBeUndefined();
   });
 

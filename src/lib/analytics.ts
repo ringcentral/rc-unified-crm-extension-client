@@ -26,6 +26,10 @@ let rawIdentity: AnalyticsPayload = {};
 let identifiedExtensionId: string | undefined;
 let identityRevision = 0;
 
+export function getAnalyticsIdentityRevision(): number {
+    return identityRevision;
+}
+
 function normalizeRawId(value: unknown): string | undefined {
     if (typeof value === 'number') {
         return Number.isSafeInteger(value) && value > 0 ? String(value) : undefined;
@@ -96,13 +100,13 @@ function identify({ platformName: nextPlatformName, rcAccountId, extensionId, rc
     }
     mixpanel.identify(extensionId);
     mixpanel.people.set({
-        crmPlatform: nextPlatformName,
+        ...(nextPlatformName ? { crmPlatform: nextPlatformName } : {}),
         rcAccountId,
         version,
         author,
         ...(process.env.MIXPANEL_RAW_IDS_ENABLED === 'false' ? {} : rawIdentity)
     });
-    platformName = nextPlatformName;
+    platformName = nextPlatformName ?? '';
 }
 
 function group({ rcAccountId }: AnalyticsPayload = {}) {
@@ -179,12 +183,13 @@ function trackFirstTimeSetup() {
         author
     });
 }
-function trackRcLogin() {
+function trackRcLogin(properties: { crmAnalyticsIdentityStatus?: string } = {}) {
     track('Login with RingCentral account', {
         appName,
         via: eventAddedVia,
         version,
-        author
+        author,
+        ...properties
     });
 }
 function trackRcLogout() {
@@ -195,13 +200,13 @@ function trackRcLogout() {
         author
     });
 }
-function trackCrmLogin() {
+function trackCrmLogin(authorizedPlatformName = platformName) {
     track('Login with CRM account', {
         appName,
         via: eventAddedVia,
         version,
         author,
-        crmPlatform: platformName
+        crmPlatform: authorizedPlatformName
     });
 }
 function trackCrmLogout() {

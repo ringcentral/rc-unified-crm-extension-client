@@ -20,9 +20,10 @@ class RcAPI {
         return response.data;
     }
 
-    async getUserInfo({ serverUrl, extensionId, accountId }: UnknownRecord): Promise<UnknownRecord> {
+    async getUserInfo({ serverUrl, extensionId, accountId, timeout }: UnknownRecord): Promise<UnknownRecord> {
+        const url = `${serverUrl}/userInfoHash?extensionId=${extensionId}&accountId=${accountId}`;
         const userInfoHashResponse = await axios.get(
-            `${serverUrl}/userInfoHash?extensionId=${extensionId}&accountId=${accountId}`
+            url, ...(timeout === undefined ? [] : [{ timeout }])
         );
         return userInfoHashResponse.data;
     }

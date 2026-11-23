@@ -2,7 +2,8 @@ import axios from 'axios';
 import { getRcAccessToken, getRcAccessTokenHeaderConfig, getRcInfo, showNotification, setRcAdditionalSubmission } from '../lib/util';
 import { getPlatformInfo } from '../service/platformService';
 import { getManifest as getManifestBase } from '../service/manifestService';
-import { trackCrmLogin, trackCrmLogout, trackPluginEvent } from '../lib/analytics';
+import { getAnalyticsIdentityRevision, trackCrmLogout, trackPluginEvent } from '../lib/analytics';
+import { recordCrmAuthorization } from '../service/crmAuthorizationAnalytics';
 import platformSelectionPage from '../components/platformSelectionPage';
 import embeddableServices from '../service/embeddableServices';
 import authPage from '../components/authPage';
@@ -274,6 +275,7 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }: UnknownR
         const proxyId = platform.proxyId ? platform.proxyId : '';
         const rcInfo = await getRcInfo();
         const rcAccessToken = await getRcAccessToken();
+        const analyticsRevision = getAnalyticsIdentityRevision();
         const rcAdditionalSubmission = await setRcAdditionalSubmission({ rcInfo, platform });
         const res = await axios.post(`${serverUrl}/apiKeyLogin?state=platform=${platformName}`, {
             apiKey,
@@ -300,7 +302,13 @@ async function apiKeyLogin({ serverUrl, apiKey, formData, useLicense }: UnknownR
         const crmUserInfo = { name: res.data.name };
         await chrome.storage.local.set({ crmUserInfo });
         setAuth(true, crmUserInfo.name);
-        trackCrmLogin();
+        if (res.data.jwtToken) {
+            void recordCrmAuthorization({
+                serverUrl, connector: platformInfo['platform-info'],
+                extensionInfo: rcInfo.value.cachedData.extensionInfo,
+                rcAccessToken, jwtToken: res.data.jwtToken, analyticsRevision,
+            });
+        }
         getWidgetFrame().contentWindow.postMessage({
             type: 'rc-adapter-navigate-to',
             path: 'goBack',
@@ -419,6 +427,8 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }: UnknownRec
     // A connector manifest can name a custom adapter. Send RC credentials only to known App Connect servers.
     const isTrustedCallback = trustedOAuthCallbackOrigins.has(callbackDestination.origin)
         && callbackDestination.pathname === '/oauth-callback';
+    const rcAccessToken = await getRcAccessToken();
+    const analyticsRevision = getAnalyticsIdentityRevision();
     const res = isTrustedCallback
         ? await axios.get(oauthCallbackUrl, await getRcAccessTokenHeaderConfig())
         : await axios.get(oauthCallbackUrl);
@@ -432,7 +442,11 @@ async function onAuthCallback({ serverUrl, callbackUri, useLicense }: UnknownRec
     await chrome.storage.local.set({
         ['rcUnifiedCrmExtJwt']: res.data.jwtToken
     });
-    trackCrmLogin();
+    void recordCrmAuthorization({
+        serverUrl, connector: platformInfo['platform-info'],
+        extensionInfo: rcInfo.value.cachedData.extensionInfo,
+        rcAccessToken, jwtToken: res.data.jwtToken, analyticsRevision,
+    });
     if (useLicense) {
         await refreshLicenseStatus({ serverUrl });
     }
