@@ -343,6 +343,8 @@ describe('callLogger index', () => {
     { result: 'OnHold' },
     { result: undefined, telephonyStatus: 'CallConnected' },
     { result: undefined, telephonyStatus: 'OnHold' },
+    { result: 'ResultInProgress', telephonyStatus: 'CallConnected' },
+    { result: 'ResultInProgress', telephonyStatus: 'OnHold' },
   ])('opens a live manual log without waiting for record recovery: %j', async (status) => {
     const { callLogger, logCore, handlers } = await loadCallLoggerIndex();
     seedStorage({ userSettings: {} });

@@ -101,8 +101,9 @@ async function onEvent(options: EventOptions) {
 
     // Live calls have no final record to recover. Opening the manual form (or
     // temporary note page) must not wait for the widget's record/AI lookups.
+    const liveStatuses = ['CallConnected', 'OnHold'];
     const isLiveCall = data.body.call.action === undefined
-        && ['CallConnected', 'OnHold'].includes(data.body.call.result ?? data.body.call.telephonyStatus);
+        && (liveStatuses.includes(data.body.call.result) || liveStatuses.includes(data.body.call.telephonyStatus));
     if (!prepareOnly && !isRingCXCall && data.body.redirect && !isLiveCall && !isCallDataComplete(data.body.call) && typeof RCAdapter.getCallLog === 'function') {
         try {
             const recoveredCall = extractCallRecord(await RCAdapter.getCallLog({ sessionId: data.body.call.sessionId }));
