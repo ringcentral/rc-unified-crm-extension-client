@@ -31,6 +31,7 @@ import rcAdapterAiAssistantSettingsNotifyHandler from './eventHandlers/rc-adapte
 import rcPostMessageRequestHandler from './eventHandlers/rc-post-message-request';
 import rcAdapterPhoneNumberFormatSettingsNotifyHandler from './eventHandlers/rc-adapter-phone-number-format-settings-notify';
 import { syncLocaleToEmbeddableWhenReady } from './lib/embeddableLocale';
+import { INSIGHTLY_GET_API_KEY_ACTION } from './eventHandlers/rc-post-message-request/custom-button-click/auth/insightlyGetApiKey';
 
 // message handlers
 import oauthCallBackHandler from './messageHandlers/oauthCallBack';
@@ -489,12 +490,19 @@ window.addEventListener('message', async (e) => {
         case 'rc-adapter-ai-assistant-settings-notify':
           await rcAdapterAiAssistantSettingsNotifyHandler.onEvent(eventPayload);
           break;
-        case 'rc-post-message-request':
+        case 'rc-post-message-request': {
+          const buttonId = data.body?.button?.id;
+          if (data.path === '/custom-button-click' && typeof buttonId === 'string'
+              && buttonId.split('-')[0] === INSIGHTLY_GET_API_KEY_ACTION
+              && (!e.source || e.source !== getWidgetFrame()?.contentWindow || e.origin !== window.location.origin)) {
+            break;
+          }
           await rcPostMessageRequestHandler.onEvent(eventPayload);
           if (data.path != '/callLogger/inputChanged' && await logRecorder.isRecordingLogs()) {
             logRecorder.logAction({ name: data.type, data });
           }
           break;
+        }
         case "rc-adapter-phone-number-format-settings-notify":
           await rcAdapterPhoneNumberFormatSettingsNotifyHandler.onEvent(eventPayload);
           if (await logRecorder.isRecordingLogs()) {
@@ -562,10 +570,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         break;
       case 'insightlyAuth':
-        await insightlyAuthHandler.onMessage({ request, sendResponse });
-        if (await logRecorder.isRecordingLogs()) {
-          logRecorder.logAction({ name: request.type, data: request });
-        }
+        await insightlyAuthHandler.onMessage({ request, sender });
         break;
       case 'ringsenseRefTrack':
         await ringsenseRefTrackHandler.onMessage({ request, sendResponse });

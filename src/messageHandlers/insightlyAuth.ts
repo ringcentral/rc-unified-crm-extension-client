@@ -6,30 +6,44 @@ import calldownPage from '../components/calldownPage';
 import adminPage from '../components/admin/adminPage';
 import { getManifest } from '../service/manifestService';
 import { getPlatformInfo } from '../service/platformService';
+import { insightlySettingsUrlForHostname, isInsightlyApiUrl } from '../lib/insightlyUrls';
+import { consumeInsightlyImport } from '../eventHandlers/rc-post-message-request/custom-button-click/auth/insightlyGetApiKey';
 
 type UnknownRecord = Record<string, any>;
 
 type MessageHandlerOptions = {
   request: UnknownRecord;
-  sendResponse: (response: { result: string }) => void;
+  sender: chrome.runtime.MessageSender;
 };
 
 function getWidgetFrameWindow(): Window {
   return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
 }
 
-export async function onMessage({ request, sendResponse }: MessageHandlerOptions): Promise<void> {
-  void sendResponse;
-  const manifest = await getManifest() as UnknownRecord;
+export async function onMessage({ request, sender }: MessageHandlerOptions): Promise<void> {
+  const apiKey = typeof request.apiKey === 'string' ? request.apiKey.trim() : '';
+  const apiUrl = request.apiUrl;
+  if (!apiKey || !isInsightlyApiUrl(apiUrl)) {
+    return;
+  }
+  const importOrigin = consumeInsightlyImport(sender);
+  if (!importOrigin) {
+    return;
+  }
   const platformInfo = await getPlatformInfo() as UnknownRecord | null | undefined;
-  const platformName = platformInfo?.platformName ?? '';
-  const platform = manifest?.platforms[platformName];
+  if (platformInfo?.platformName !== 'insightly'
+      || insightlySettingsUrlForHostname(platformInfo.hostname)?.origin !== importOrigin) {
+    return;
+  }
+  const manifest = await getManifest() as UnknownRecord;
+  const platform = manifest?.platforms?.insightly;
+  if (!platform) {
+    return;
+  }
   const returnedToken = await authCore.apiKeyLogin({
     serverUrl: manifest.serverUrl,
-    apiKey: request.apiKey,
-    formData: {
-      apiUrl: request.apiUrl,
-    },
+    apiKey,
+    formData: { apiUrl },
     useLicense: platform.useLicense,
   });
   try {

@@ -66,6 +66,21 @@ async function loadInsightlyHandler() {
   return loadModule('../../src/messageHandlers/insightlyAuth.ts');
 }
 
+const insightlyHostname = 'crm.insightly.com';
+const insightlyOrigin = `https://${insightlyHostname}`;
+const insightlySender = {
+  url: `${insightlyOrigin}/Users/UserSettings`,
+  origin: insightlyOrigin,
+  frameId: 0,
+  tab: { id: 42 },
+};
+
+async function startInsightlyImport() {
+  const { onEvent } = await import('../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/insightlyGetApiKey.ts');
+  vi.mocked(chrome.windows.create).mockResolvedValueOnce({ id: 12, tabs: [insightlySender.tab] });
+  await onEvent({ platformInfo: { hostname: insightlyHostname } });
+}
+
 describe('CRM-specific callback handlers', () => {
   beforeEach(() => {
     vi.mocked(authCore.apiKeyLogin).mockReset();
@@ -101,23 +116,24 @@ describe('CRM-specific callback handlers', () => {
         },
       },
     });
-    vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'insightly' });
+    vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'insightly', hostname: insightlyHostname });
     vi.mocked(authCore.apiKeyLogin).mockResolvedValueOnce('insightly-token');
     const handler = await loadInsightlyHandler();
+    await startInsightlyImport();
 
-    await handler.onMessage({
-      request: {
-        apiKey: 'api-key-1',
-        apiUrl: 'https://insightly.example',
-      },
-      sendResponse: vi.fn(),
-    });
+    const message = {
+      request: { apiKey: 'api-key-1', apiUrl: 'https://api.insightly.com/v3.1' },
+      sender: insightlySender,
+    };
+    await handler.onMessage(message);
+    await handler.onMessage(message);
 
+    expect(authCore.apiKeyLogin).toHaveBeenCalledTimes(1);
     expect(authCore.apiKeyLogin).toHaveBeenCalledWith({
       serverUrl: 'https://server.example',
       apiKey: 'api-key-1',
       formData: {
-        apiUrl: 'https://insightly.example',
+        apiUrl: 'https://api.insightly.com/v3.1',
       },
       useLicense: true,
     });
@@ -132,6 +148,43 @@ describe('CRM-specific callback handlers', () => {
       platform: 'insightly',
     }, '*');
     expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({ type: 'openPopupWindow' });
+  });
+
+  it('ignores unsolicited and invalid Insightly imports without changing the existing CRM session', async () => {
+    seedStorage({ crmAuthed: true, rcUnifiedCrmExtJwt: 'existing-token' });
+    const handler = await loadInsightlyHandler();
+    const request = { apiKey: 'test-key', apiUrl: 'https://api.insightly.com' };
+    await handler.onMessage({ request, sender: insightlySender });
+    await startInsightlyImport();
+
+    for (const sender of [
+      { ...insightlySender, tab: { id: 43 } },
+      { ...insightlySender, frameId: 1 },
+      { ...insightlySender, origin: 'null' },
+      { ...insightlySender, url: 'https://other.example.test/Users/UserSettings' },
+      { ...insightlySender, url: 'https://another.insightly.com/Users/UserSettings', origin: 'https://another.insightly.com' },
+    ]) {
+      await handler.onMessage({ request, sender });
+    }
+    await handler.onMessage({ request: { ...request, apiUrl: 'https://api.example.test' }, sender: insightlySender });
+
+    expect(authCore.apiKeyLogin).not.toHaveBeenCalled();
+    expect(userCore.updateSSCLToken).not.toHaveBeenCalled();
+    expect(readStorage()).toMatchObject({ crmAuthed: true, rcUnifiedCrmExtJwt: 'existing-token' });
+  });
+
+  it('ignores an import after its authorization expires', async () => {
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(0);
+    const handler = await loadInsightlyHandler();
+    await startInsightlyImport();
+    clock.mockReturnValue(10 * 60 * 1000);
+
+    await handler.onMessage({
+      request: { apiKey: 'test-key', apiUrl: 'https://api.insightly.com' },
+      sender: insightlySender,
+    });
+
+    expect(authCore.apiKeyLogin).not.toHaveBeenCalled();
   });
 
   it('registers Insightly report, calldown, and admin pages after a successful API-key login', async () => {
@@ -149,7 +202,7 @@ describe('CRM-specific callback handlers', () => {
         },
       },
     });
-    vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'insightly' });
+    vi.mocked(getPlatformInfo).mockReset().mockResolvedValue({ platformName: 'insightly', hostname: insightlyHostname });
     vi.mocked(authCore.apiKeyLogin).mockResolvedValueOnce('insightly-token');
     vi.mocked(userCore.getShowUserReportTabSetting).mockReturnValue({
       value: true,
@@ -164,13 +217,14 @@ describe('CRM-specific callback handlers', () => {
     vi.mocked(userCore.getUserReportStats).mockResolvedValueOnce({ loggedCalls: 3 });
     vi.mocked(adminCore.refreshAdminSettings).mockResolvedValueOnce({ adminSettings: { enabled: true } });
     const handler = await loadInsightlyHandler();
+    await startInsightlyImport();
 
     await handler.onMessage({
       request: {
         apiKey: 'api-key-2',
-        apiUrl: 'https://insightly.example',
+        apiUrl: 'https://api.na1.insightly.com/v3.1/',
       },
-      sendResponse: vi.fn(),
+      sender: insightlySender,
     });
 
     expect(reportPage.getReportsPageRender).toHaveBeenCalledWith({

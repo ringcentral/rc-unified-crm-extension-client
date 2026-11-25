@@ -123,6 +123,7 @@ export const chromeMock = {
   tabs: {
     query: vi.fn(async () => []),
     sendMessage: vi.fn(async () => ({ result: 'ok' })),
+    update: vi.fn(async (id, updateInfo) => ({ id, ...updateInfo })),
     onUpdated: {
       addListener: vi.fn(),
     },
@@ -183,6 +184,7 @@ export function resetChromeMock() {
   vi.mocked(chromeMock.windows.remove).mockClear();
   vi.mocked(chromeMock.tabs.query).mockClear();
   vi.mocked(chromeMock.tabs.sendMessage).mockClear();
+  vi.mocked(chromeMock.tabs.update).mockClear();
   vi.mocked(chromeMock.alarms.create).mockClear();
   vi.mocked(chromeMock.notifications.create).mockClear();
   vi.mocked(chromeMock.notifications.clear).mockClear();
