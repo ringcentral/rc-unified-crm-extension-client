@@ -75,8 +75,8 @@ describe('CRM authorization analytics', () => {
 
     await recordCrmAuthorization(authorization);
 
-    expect(reset).toHaveBeenCalledBefore(identify);
-    expect(identify).toHaveBeenCalledBefore(trackCrmLogin);
+    expect(reset).toHaveBeenCalledBefore(vi.mocked(identify));
+    expect(identify).toHaveBeenCalledBefore(vi.mocked(trackCrmLogin));
     expect(trackCrmLogin).toHaveBeenCalledExactlyOnceWith('clio');
   });
 
