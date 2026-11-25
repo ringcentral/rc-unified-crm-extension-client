@@ -83,6 +83,7 @@ async function loadRouter() {
       };
       return {
         default: handlers[name],
+        ...(name === 'insightlyGetApiKey' && { INSIGHTLY_GET_API_KEY_ACTION: name }),
       };
     });
   }
@@ -278,7 +279,6 @@ describe('custom button click router', () => {
       ['calldownActionComplete-row-1-action', 'calldownActionComplete'],
       ['calldownActionRemove-row-1-action', 'calldownActionRemove'],
       ['hostnameInputPage-row-1-action', 'hostnameInputPage'],
-      ['insightlyGetApiKey-row-1-action', 'insightlyGetApiKey'],
       ['authPage-row-1-action', 'authPage'],
       ['managedOAuthSetupPage-row-1-action', 'managedOAuthSetupPage'],
       ['selectPlatform-p1=private-action', 'selectPlatform'],
@@ -292,6 +292,20 @@ describe('custom button click router', () => {
       ['errorLogRecordPageStartButton-row-1-action', 'errorLogRecordPageStartButton'],
       ['logRecordSubmitButton-row-1-action', 'logRecordSubmitButton'],
     ]);
+  });
+
+  it('routes the Insightly import button with the current platform configuration', async () => {
+    const { router, handlers } = await loadRouter();
+    const platformInfo = { platformName: 'insightly', hostname: 'crm.insightly.com' };
+
+    await router.onEvent({
+      ...baseContext,
+      data: eventFor({ id: 'insightlyGetApiKey-row-1-action' }),
+      platformInfo,
+      platformName: 'insightly',
+    });
+
+    expect(handlers.insightlyGetApiKey.onEvent).toHaveBeenCalledWith({ platformInfo });
   });
 
   it('routes admin setting actions', async () => {

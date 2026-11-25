@@ -24,7 +24,7 @@ import usermappingEditHandler from './userMapping/usermappingEdit';
 import usermappingRemoveHandler from './userMapping/usermappingRemove';
 
 import hostnameInputPageHandler from './auth/hostnameInputPage';
-import insightlyGetApiKeyHandler from './auth/insightlyGetApiKey';
+import insightlyGetApiKeyHandler, { INSIGHTLY_GET_API_KEY_ACTION } from './auth/insightlyGetApiKey';
 import authPageHandler from './auth/authPage';
 import managedOAuthSetupPageHandler from './auth/managedOAuthSetupPage';
 import factoryResetButtonHandler from './auth/factoryResetButton';
@@ -228,8 +228,8 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform }:
         case 'hostnameInputPage':
             await hostnameInputPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
             break;
-        case 'insightlyGetApiKey':
-            await insightlyGetApiKeyHandler.onEvent({ data, manifest, platformInfo, platformName, platform });
+        case INSIGHTLY_GET_API_KEY_ACTION:
+            await insightlyGetApiKeyHandler.onEvent({ platformInfo });
             break;
         case 'authPage':
             await authPageHandler.onEvent({ data, manifest, platformInfo, platformName, platform });

@@ -7,6 +7,14 @@
 declare var chrome: any;
 
 declare namespace chrome {
+  namespace runtime {
+    type MessageSender = {
+      url?: string;
+      origin?: string;
+      frameId?: number;
+      tab?: { id?: number };
+    };
+  }
   namespace storage {
     type StorageChange = {
       newValue?: unknown;

@@ -1,5 +1,5 @@
 import { loadModule } from '../helpers/loadModule';
-import { getWidgetPostMessages } from '../setup/widgetFrameMock';
+import { getWidgetFrameWindow, getWidgetPostMessages } from '../setup/widgetFrameMock';
 import { readStorage, seedStorage } from '../setup/storageHelpers';
 
 const eventHandlerModules = {
@@ -63,7 +63,7 @@ function createMessageHandlerMock() {
 
 type EventHandlerMock = ReturnType<typeof createEventHandlerMock>;
 type MessageHandlerMock = ReturnType<typeof createMessageHandlerMock>;
-type PopupMessageListener = (event: { data: unknown }) => Promise<void>;
+type PopupMessageListener = (event: { data: unknown; origin?: string; source?: MessageEventSource }) => Promise<void>;
 
 type MockHttpError = Error & {
   config?: {
@@ -90,7 +90,7 @@ function getPopupMessageListener(
   if (typeof listener !== 'function') {
     throw new Error('Popup message listener was not registered');
   }
-  return ({ data }) => Promise.resolve(listener(new MessageEvent('message', { data })));
+  return ({ data, origin, source }) => Promise.resolve(listener(new MessageEvent('message', { data, origin, source })));
 }
 
 async function loadPopupRuntime(options: PopupRuntimeOptions = {}) {
@@ -876,7 +876,6 @@ describe('popup runtime', () => {
       ['c2d', 'c2d'],
       ['c2schedule', 'c2schedule'],
       ['navigate', 'navigate'],
-      ['insightlyAuth', 'insightlyAuth'],
       ['ringsenseRefTrack', 'ringsenseRefTrack'],
       ['controlCall', 'controlCall'],
     ] as const) {
@@ -902,6 +901,38 @@ describe('popup runtime', () => {
     expect(window.postMessage).toHaveBeenCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
   });
 
+  it('accepts the Insightly import button action only from the local widget frame', async () => {
+    const runtime = await loadPopupRuntime();
+    const data = {
+      type: 'rc-post-message-request',
+      path: '/custom-button-click',
+      body: { button: { id: 'insightlyGetApiKey-row-1-action' } },
+    };
+    const origin = window.location.origin;
+    const source = getWidgetFrameWindow();
+
+    await runtime.messageListener({ data, origin, source: window });
+    await runtime.messageListener({ data, origin: 'https://other.example.test', source });
+    expect(runtime.eventHandlers.rcPostMessageRequest.onEvent).not.toHaveBeenCalled();
+
+    await runtime.messageListener({ data, origin, source });
+    expect(runtime.eventHandlers.rcPostMessageRequest.onEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes Chrome sender metadata to the Insightly handler without recording the credentials message', async () => {
+    const runtime = await loadPopupRuntime();
+    runtime.logRecorder.isRecordingLogs.mockResolvedValue(true);
+    const request = { type: 'insightlyAuth', apiKey: 'test-key' };
+    const sender = { frameId: 0, url: 'https://crm.insightly.com/Users/UserSettings' };
+    const sendResponse = vi.fn();
+
+    await runtime.runtimeMessageListener(request, sender, sendResponse);
+
+    expect(runtime.messageHandlers.insightlyAuth.onMessage).toHaveBeenCalledWith({ request, sender });
+    expect(runtime.logRecorder.logAction).not.toHaveBeenCalled();
+    expect(sendResponse).toHaveBeenCalledWith({ result: 'ok' });
+  });
+
   it('skips message recording when log recording is disabled', async () => {
     const runtime = await loadPopupRuntime();
     const sendResponse = vi.fn();
@@ -925,14 +956,12 @@ describe('popup runtime', () => {
       'c2d',
       'c2schedule',
       'navigate',
-      'insightlyAuth',
     ]) {
       await runtime.runtimeMessageListener({ type }, {}, sendResponse);
     }
 
     expect(runtime.eventHandlers.rcLoginStatusNotify.onEvent).toHaveBeenCalled();
     expect(runtime.messageHandlers.oauthCallBack.onMessage).toHaveBeenCalled();
-    expect(runtime.messageHandlers.insightlyAuth.onMessage).toHaveBeenCalled();
     expect(runtime.logRecorder.logAction).not.toHaveBeenCalled();
     expect(sendResponse).toHaveBeenCalledWith({ result: 'ok' });
   });

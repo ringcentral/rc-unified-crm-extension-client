@@ -2,11 +2,13 @@ import { RangeObserver, LibPhoneNumberMatcher } from 'ringcentral-c2d';
 import CustomC2DWidget from '../../src/misc/CustomC2DWidget.ts';
 import userCore from '../../src/core/user.ts';
 import { sendMessageToExtension } from '../../src/lib/sendMessage.ts';
+import { parseInsightlySettingsUrl } from '../../src/lib/insightlyUrls.ts';
 import { initializeShadowRootSupport } from '../../src/lib/c2d/shadowRootSupport.ts';
 import ReactDOM from 'react-dom';
 import i18n from '../../src/i18n/index.ts';
 import { seedStorage } from '../setup/storageHelpers';
 import { getWidgetPostMessages } from '../setup/widgetFrameMock';
+import type {} from 'vitest/jsdom';
 
 type WidgetHandlerName = 'call' | 'text' | 'schedule';
 type WidgetHandler = (phoneNumber: string) => void;
@@ -360,5 +362,34 @@ describe('content click-to-dial initialization', () => {
     sendResponse.mockClear();
     listener({ action: 'fetchBullhornUsername' }, {}, sendResponse);
     expect(sendResponse).toHaveBeenCalledWith({ bullhornUsername: 'bh-user' });
+  });
+});
+
+describe('Insightly credentials on the settings page', () => {
+  it('requires HTTPS and a hostname within the Insightly DNS boundary', () => {
+    expect(parseInsightlySettingsUrl('https://insightly.com/Users/UserSettings')).toBeDefined();
+    expect(parseInsightlySettingsUrl('http://crm.insightly.com/Users/UserSettings')).toBeUndefined();
+    expect(parseInsightlySettingsUrl('https://notinsightly.com/Users/UserSettings')).toBeUndefined();
+  });
+
+  it('reads plain text from the supported settings page and skips missing credentials', async () => {
+    const originalUrl = window.location.href;
+    const { registerInsightlyApiKey } = await loadContentSeams();
+    try {
+      jsdom.reconfigure({ url: 'https://crm.insightly.com/Users/UserSettings' });
+      vi.mocked(sendMessageToExtension).mockClear();
+      registerInsightlyApiKey();
+      expect(sendMessageToExtension).not.toHaveBeenCalled();
+
+      document.body.insertAdjacentHTML('beforeend', `
+        <div id="apikey"> test-key </div>
+        <div id="apiUrl"><a>https://api.na1.insightly.com/v3.1/</a></div>`);
+      registerInsightlyApiKey();
+      expect(sendMessageToExtension).toHaveBeenCalledWith({
+        type: 'insightlyAuth', apiKey: 'test-key', apiUrl: 'https://api.na1.insightly.com/v3.1/',
+      });
+    } finally {
+      jsdom.reconfigure({ url: originalUrl });
+    }
   });
 });

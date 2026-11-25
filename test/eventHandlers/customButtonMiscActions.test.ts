@@ -293,15 +293,23 @@ describe('custom-button miscellaneous action handlers', () => {
 
   it('opens the Insightly API key settings page from platform hostname', async () => {
     const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/insightlyGetApiKey.ts');
+    vi.mocked(chrome.windows.create).mockResolvedValueOnce({ id: 12, tabs: [{ id: 42 }] });
 
     await loaded.handler.onEvent({
-      data: dataFor(),
-      manifest: manifest(),
       platformInfo: {
-        hostname: 'insightly.example',
+        hostname: 'crm.insightly.com',
       },
     });
-    expect(window.open).toHaveBeenCalledWith('https://insightly.example/Users/UserSettings');
+    expect(chrome.windows.create).toHaveBeenCalledWith({ url: 'about:blank', type: 'normal', focused: true });
+    expect(chrome.tabs.update).toHaveBeenCalledWith(42, { url: 'https://crm.insightly.com/Users/UserSettings' });
+  });
+
+  it('does not open the Insightly settings page for an untrusted configured hostname', async () => {
+    const loaded = await loadAction('../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/insightlyGetApiKey.ts');
+
+    await loaded.handler.onEvent({ platformInfo: { hostname: 'crm.example.test' } });
+
+    expect(chrome.windows.create).not.toHaveBeenCalled();
   });
 
   it('opens the issue report page with the current RC user email', async () => {

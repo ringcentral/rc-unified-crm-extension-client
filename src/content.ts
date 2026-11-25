@@ -6,6 +6,7 @@ import ReactDOM from 'react-dom';
 import { RcThemeProvider } from '@ringcentral/juno';
 import axios from 'axios';
 import { sendMessageToExtension } from './lib/sendMessage';
+import { isInsightlyApiUrl, parseInsightlySettingsUrl } from './lib/insightlyUrls';
 import { isObjectEmpty } from './lib/util';
 import InputAwareRegExpMatcher from './lib/c2d/inputAwareRegExpMatcher';
 import { initializeShadowRootSupport } from './lib/c2d/shadowRootSupport';
@@ -346,13 +347,13 @@ if (document.readyState !== 'loading') {
 
 // Unique: Insightly
 export function registerInsightlyApiKey() {
-  if (window.location.pathname === '/Users/UserSettings' && window.location.hostname.includes('insightly.com')) {
-    const insightlyApiKey = (document.querySelector('#apikey') as UnknownRecord).innerHTML;
-    const insightlyApiUrl = (document.querySelector('#apiUrl') as UnknownRecord).firstChild.innerHTML;
-    sendMessageToExtension({
-      type: 'insightlyAuth',
-      apiKey: insightlyApiKey,
-      apiUrl: insightlyApiUrl
-    });
+  if (window.top !== window || !parseInsightlySettingsUrl(window.location.href)) {
+    return;
+  }
+  const apiKey = document.querySelector('#apikey')?.textContent?.trim();
+  const apiUrlElement = document.querySelector('#apiUrl');
+  const apiUrl = (apiUrlElement?.firstElementChild ?? apiUrlElement)?.textContent?.trim();
+  if (apiKey && isInsightlyApiUrl(apiUrl)) {
+    sendMessageToExtension({ type: 'insightlyAuth', apiKey, apiUrl });
   }
 }
