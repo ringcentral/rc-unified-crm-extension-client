@@ -6,6 +6,8 @@ import { isObjectEmpty, showNotification } from '../../../lib/util';
 import axios from 'axios';
 import dispositionCore from '../../../core/disposition';
 import logPage from '../../../components/logPage';
+import { hasProvisionalCallSessionId } from '../../../lib/callLogReadiness';
+import { t } from '../../../i18n';
 
 type UnknownRecord = Record<string, any>;
 
@@ -39,6 +41,10 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
     switch (data.body.formData.triggerType) {
         // Case 1.1: create log
         case 'createLog':
+            if (hasProvisionalCallSessionId(data.body.call)) {
+                showNotification({ level: 'warning', message: t('notifications.warning.provisionalCallSession'), ttl: 3000 });
+                return;
+            }
             let newContactInfo: UnknownRecord = {};
             if (data.body.formData.contact === 'createNewContact') {
                 const createContactResult = await contactCore.createContact({

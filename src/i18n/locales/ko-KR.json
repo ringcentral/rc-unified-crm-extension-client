@@ -394,6 +394,7 @@
     },
     "warning": {
       "callLogFailed": "통화 로그 저장 실패",
+      "provisionalCallSession": "이 통화를 기록하려면 RingEX 통화 기록을 사용할 수 있을 때까지 기다리세요.",
       "callLogUpdateFailed": "통화 로그 업데이트 실패",
       "connectToCrm": "설정으로 이동하여 CRM 플랫폼에 연결하세요",
       "apiKeyFailed": "API 키 등록 실패.",

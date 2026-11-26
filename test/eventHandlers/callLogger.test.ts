@@ -268,6 +268,7 @@ async function loadCreateLog() {
 async function loadLogForm() {
   vi.resetModules();
   vi.doUnmock('../../src/eventHandlers/rc-post-message-request/callLogger/logForm.ts');
+  vi.doMock('../../src/i18n/index.ts', () => ({ t: vi.fn(key => key) }));
   vi.mocked(axios.post).mockReset();
   vi.mocked(axios.post).mockResolvedValue({ data: { ok: true } });
 
@@ -365,6 +366,31 @@ describe('callLogger index', () => {
     expect(RCAdapter.getCallLog).not.toHaveBeenCalled();
     expect(tempLogNotePage.getTempLogNotePageRender).toHaveBeenCalled();
     expect(logCore.getLog).not.toHaveBeenCalled();
+    expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+  });
+
+  it('opens temporary notes for a live provisional call with one-time logging off', async () => {
+    const { callLogger, logCore, tempLogNotePage, handlers } = await loadCallLoggerIndex();
+    seedStorage({ userSettings: { oneTimeLog: { value: false } } });
+    const call = baseCall({
+      sessionId: 's-telephony-1',
+      telephonySessionId: 's-telephony-1',
+      result: 'CallConnected',
+      action: undefined,
+    });
+
+    await callLogger.onEvent({ data: eventFor({ redirect: true, call }), ...context });
+
+    expect(RCAdapter.getCallLog).not.toHaveBeenCalled();
+    expect(logCore.getCachedNote).toHaveBeenCalledWith({ sessionId: 's-telephony-1' });
+    expect(tempLogNotePage.getTempLogNotePageRender).toHaveBeenCalledWith({
+      sessionId: 's-telephony-1',
+      cachedNote: 'cached note',
+    });
+    expect(getWidgetPostMessages()).toContainEqual({
+      message: { type: 'rc-adapter-navigate-to', path: '/customized/tempLogNotePage' },
+      targetOrigin: '*',
+    });
     expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
   });
 
@@ -835,6 +861,98 @@ describe('callLogger index', () => {
       isAutoLog: true,
     }));
   });
+
+  it('waits for the real RingEX session ID before auto logging, even with retro sync off', async () => {
+    const { callLogger, handlers, logCore, util } = await loadCallLoggerIndex();
+    seedStorage({
+      userSettings: {
+        autoLogCall: { value: true },
+        oneTimeLog: { value: false },
+        enableRetroCallLogSync: { value: false },
+      },
+    });
+    const telephonySessionId = 's-telephony-1';
+    const provisionalCall = baseCall({
+      sessionId: telephonySessionId,
+      telephonySessionId,
+      result: 'Disconnected',
+      action: undefined,
+    });
+    const finalCall = baseCall({ sessionId: '1167724682010', telephonySessionId });
+    const recovery = vi.mocked(RCAdapter.getCallLog!);
+    recovery.mockResolvedValueOnce({ call: provisionalCall }).mockResolvedValueOnce(null).mockResolvedValueOnce({ call: finalCall });
+    vi.useFakeTimers();
+    try {
+      const data = eventFor({ triggerType: 'presenceUpdate', call: provisionalCall });
+      await callLogger.onEvent({ data, ...context });
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(util.responseMessage).toHaveBeenCalledWith('request-1', { data: 'ok' });
+      expect(recovery).toHaveBeenCalledExactlyOnceWith({ telephonySessionId });
+      expect(logCore.getLog).not.toHaveBeenCalled();
+      expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+
+      await callLogger.onEvent({ data: { ...data, requestId: 'request-2' }, ...context });
+      await vi.runAllTimersAsync();
+
+      expect(recovery.mock.calls).toEqual([[{ telephonySessionId }], [{ telephonySessionId }], [{ telephonySessionId }]]);
+      expect(logCore.getLog).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ sessionIds: '1167724682010' }));
+      expect(handlers.createLog.onEvent).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+        triggerTypeInUse: 'createLog',
+        isAutoLog: true,
+        data: expect.objectContaining({ body: expect.objectContaining({ triggerType: 'callLogSync', call: finalCall }) }),
+      }));
+      expect(util.responseMessage.mock.calls).toEqual([
+        ['request-1', { data: 'ok' }],
+        ['request-2', { data: 'ok' }],
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('stops retrying a provisional call when its final history event arrives', async () => {
+    const { callLogger, handlers } = await loadCallLoggerIndex();
+    seedStorage({ userSettings: { autoLogCall: { value: true } } });
+    const telephonySessionId = 's-telephony-1';
+    const recovery = vi.mocked(RCAdapter.getCallLog!);
+    recovery.mockResolvedValue(null);
+    vi.useFakeTimers();
+    try {
+      await callLogger.onEvent({
+        data: eventFor({
+          triggerType: 'presenceUpdate',
+          call: baseCall({ sessionId: telephonySessionId, telephonySessionId, result: 'Disconnected', action: undefined }),
+        }),
+        ...context,
+      });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(handlers.createLog.onEvent).not.toHaveBeenCalled();
+
+      await callLogger.onEvent({
+        data: eventFor({ triggerType: 'callLogSync', call: baseCall({ sessionId: '1167724682010', telephonySessionId }) }),
+        ...context,
+      });
+      await vi.runAllTimersAsync();
+
+      expect(recovery).toHaveBeenCalledExactlyOnceWith({ telephonySessionId });
+      expect(handlers.createLog.onEvent).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('still opens an existing call log with the legacy telephony ID in sessionId', async () => {
+    const { callLogger, handlers, logCore, tempLogNotePage } = await loadCallLoggerIndex();
+    const telephonySessionId = 's-telephony-1';
+    const call = baseCall({ sessionId: telephonySessionId, telephonySessionId, action: undefined, result: 'CallConnected' });
+    logCore.getLog.mockResolvedValue({ callLogs: [{ sessionId: telephonySessionId, matched: true }] });
+
+    await callLogger.onEvent({ data: eventFor({ call, redirect: true }), ...context });
+
+    expect(handlers.createLog.onEvent).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ triggerTypeInUse: 'editLog' }));
+    expect(tempLogNotePage.getTempLogNotePageRender).not.toHaveBeenCalled();
+  });
 });
 
 describe('callLogger createLog', () => {
@@ -927,6 +1045,29 @@ describe('callLogger createLog', () => {
         targetOrigin: '*',
       },
     ]));
+  });
+
+  it('uses the live telephony session to find a draft when opening a finalized call', async () => {
+    const { createLog, logCore, logPage } = await loadCreateLog();
+    await createLog.onEvent({
+      data: eventFor({ redirect: true, call: baseCall({ sessionId: '1167724682010' }) }),
+      triggerTypeInUse: 'createLog',
+      contactPhoneNumber: '+16505550100',
+      userSettings: {},
+      existingCalls: [],
+      isAutoLog: false,
+      isCallAutoPopup: false,
+      isExtensionNumber: false,
+      ...context,
+    });
+
+    expect(logCore.getCachedNote).toHaveBeenCalledWith({
+      sessionId: '1167724682010',
+      telephonySessionId: 'telephony-1',
+    });
+    expect(logPage.getLogPageRender).toHaveBeenCalledWith(expect.objectContaining({
+      logInfo: { note: 'cached note', subject: '' },
+    }));
   });
 
   it('auto creates an unknown contact and logs the call with disposition data', async () => {
@@ -1527,6 +1668,38 @@ describe('callLogger createLog', () => {
 });
 
 describe('callLogger logForm', () => {
+  it('rejects a new log from a provisional RingEX form before creating a contact', async () => {
+    seedStorage({ userSettings: {}, implementedInterfaces: { upsertCallDisposition: true } });
+    const { logForm, contactCore, logCore, dispositionCore, util } = await loadLogForm();
+    const telephonySessionId = 's-telephony-1';
+    await logForm.onEvent({
+      data: eventFor({
+        triggerType: 'logForm',
+        call: baseCall({ sessionId: telephonySessionId, telephonySessionId, action: undefined }),
+        formData: {
+          triggerType: 'createLog',
+          contact: 'createNewContact',
+          disposition: 'sale',
+          scheduleCallback: true,
+          callbackDateTime: '2026-07-03T09:00:00Z',
+        },
+      }),
+      contactPhoneNumber: '+16505550100',
+      ...context,
+    });
+
+    expect(util.showNotification).toHaveBeenCalledWith({
+      level: 'warning',
+      message: 'notifications.warning.provisionalCallSession',
+      ttl: 3000,
+    });
+    expect(contactCore.createContact).not.toHaveBeenCalled();
+    expect(logCore.addLog).not.toHaveBeenCalled();
+    expect(logCore.updateLog).not.toHaveBeenCalled();
+    expect(axios.post).not.toHaveBeenCalled();
+    expect(dispositionCore.upsertDisposition).not.toHaveBeenCalled();
+  });
+
   it('creates new-contact call logs, schedules callback, updates disposition, and removes unlogged calls', async () => {
     seedStorage({
       userSettings: {

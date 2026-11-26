@@ -394,6 +394,7 @@
     },
     "warning": {
       "callLogFailed": "Anrufprotokoll konnte nicht gespeichert werden",
+      "provisionalCallSession": "Warten Sie auf den RingEX-Anrufdatensatz, bevor Sie diesen Anruf protokollieren.",
       "callLogUpdateFailed": "Aktualisierung des Anrufprotokolls fehlgeschlagen",
       "connectToCrm": "Bitte gehen Sie zu den Einstellungen und verbinden Sie sich mit der CRM-Plattform",
       "apiKeyFailed": "API-Schlüssel konnte nicht registriert werden.",

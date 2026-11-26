@@ -394,6 +394,7 @@
     },
     "warning": {
       "callLogFailed": "Puhelulokin tallennus epäonnistui",
+      "provisionalCallSession": "Odota RingEX-puhelutietuetta ennen tämän puhelun kirjaamista.",
       "callLogUpdateFailed": "Puhelulokin päivitys epäonnistui",
       "connectToCrm": "Siirry asetuksiin ja yhdistä CRM-alustaan",
       "apiKeyFailed": "API-avaimen rekisteröinti epäonnistui.",

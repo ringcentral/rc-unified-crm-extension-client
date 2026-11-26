@@ -394,6 +394,7 @@
     },
     "warning": {
       "callLogFailed": "Opslaan van oproeplog mislukt",
+      "provisionalCallSession": "Wacht tot de RingEX-oproepgegevens beschikbaar zijn voordat u deze oproep vastlegt.",
       "callLogUpdateFailed": "Bijwerken van oproeplog mislukt",
       "connectToCrm": "Ga naar Instellingen en maak verbinding met het CRM-platform",
       "apiKeyFailed": "Registreren van API-sleutel mislukt.",

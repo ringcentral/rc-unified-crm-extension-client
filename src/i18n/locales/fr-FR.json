@@ -394,6 +394,7 @@
     },
     "warning": {
       "callLogFailed": "Échec de l'enregistrement du journal d'appel",
+      "provisionalCallSession": "Attendez que la fiche d’appel RingEX soit disponible avant de consigner cet appel.",
       "callLogUpdateFailed": "Échec de la mise à jour du journal d'appel",
       "connectToCrm": "Veuillez aller dans les Paramètres et vous connecter à la plateforme CRM",
       "apiKeyFailed": "Échec de l'enregistrement de la clé API.",

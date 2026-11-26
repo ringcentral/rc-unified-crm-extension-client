@@ -4,6 +4,7 @@ import { trackSyncCallLog, trackSyncMessageLog } from '../lib/analytics';
 import { t } from '../i18n';
 import { renderUrlTemplate } from '../lib/urlTemplate';
 import { resolveVoicemailRecording } from '../lib/voicemail';
+import { hasProvisionalCallSessionId } from '../lib/callLogReadiness';
 
 type UnknownRecord = Record<string, any>;
 
@@ -28,6 +29,12 @@ export async function addLog({
   activityCompletionReady,
   isShowNotification = true,
 }: UnknownRecord): Promise<void> {
+  if (logType === 'Call' && hasProvisionalCallSessionId(logInfo)) {
+    if (isShowNotification) {
+      showNotification({ level: 'warning', message: t('notifications.warning.provisionalCallSession'), ttl: 3000 });
+    }
+    return;
+  }
   const { rcUnifiedCrmExtJwt } = await chrome.storage.local.get('rcUnifiedCrmExtJwt') as UnknownRecord;
   const { userSettings } = await chrome.storage.local.get({ userSettings: {} }) as UnknownRecord;
   const { rcAdditionalSubmission } = await chrome.storage.local.get({ rcAdditionalSubmission: {} }) as UnknownRecord;
@@ -217,14 +224,13 @@ export async function cacheCallNote({ sessionId, note }: UnknownRecord): Promise
   await chrome.storage.local.set(noteToCache);
 }
 
-export async function getCachedNote({ sessionId }: UnknownRecord): Promise<any> {
+export async function getCachedNote({ sessionId, telephonySessionId }: UnknownRecord): Promise<any> {
+  if (telephonySessionId && telephonySessionId !== sessionId) {
+    const cachedNotes = await chrome.storage.local.get([sessionId, telephonySessionId]) as UnknownRecord;
+    return cachedNotes[sessionId] ?? cachedNotes[telephonySessionId] ?? '';
+  }
   const cachedNote = await chrome.storage.local.get(sessionId) as UnknownRecord;
-  if (isObjectEmpty(cachedNote)) {
-    return '';
-  }
-  else {
-    return cachedNote[sessionId];
-  }
+  return cachedNote[sessionId] ?? '';
 }
 
 export async function uploadCacheNote({ serverUrl, sessionId }: UnknownRecord): Promise<void> {

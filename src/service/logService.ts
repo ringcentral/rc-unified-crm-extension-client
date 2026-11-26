@@ -5,6 +5,7 @@ import contactCore from '../core/contact';
 import { showNotification, isObjectEmpty, getRcAccessToken } from '../lib/util';
 import logUtil from '../lib/logUtil';
 import { resolveVoicemailRecording } from '../lib/voicemail';
+import { hasProvisionalCallSessionId } from '../lib/callLogReadiness';
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -26,6 +27,7 @@ interface PhoneParty {
 
 interface UnloggedCall extends UnknownRecord {
   sessionId: string;
+  telephonySessionId?: string;
   direction: string;
   from: PhoneParty;
   to: PhoneParty;
@@ -50,7 +52,6 @@ interface SyncCallDataOptions {
   serverUrl: string;
   dataBody: {
     call: UnloggedCall & {
-      telephonySessionId?: string;
       recording?: {
         link?: string;
         contentUri?: string;
@@ -93,6 +94,9 @@ export async function retroAutoCallLog({
     if (effectiveCount >= effectiveTotal) {
       break;
     }
+    if (hasProvisionalCallSessionId(c)) {
+      continue;
+    }
     const contactPhoneNumber = c.direction === 'Inbound' ? c.from.phoneNumber : c.to.phoneNumber;
     const { matched: callContactMatched, returnMessage: callLogContactMatchMessage, contactInfo: callMatchedContact } = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber: contactPhoneNumber, platformName });
     void callLogContactMatchMessage;
@@ -111,7 +115,7 @@ export async function retroAutoCallLog({
       const callLogSubject = c.direction === 'Inbound' ?
         `Inbound Call from ${callMatchedContact[0]?.name ?? ''}` :
         `Outbound Call to ${callMatchedContact[0]?.name ?? ''}`;
-      const note = await logCore.getCachedNote({ sessionId: c.sessionId });
+      const note = await logCore.getCachedNote({ sessionId: c.sessionId, telephonySessionId: c.telephonySessionId });
       const exsitingLog = await logCore.getLog({
         serverUrl: manifest.serverUrl,
         logType: 'Call',
@@ -190,7 +194,7 @@ export async function syncCallData({
   const voicemailRecording = await resolveVoicemailRecording(dataBody.call);
 
   // Get the cached note for this call
-  const note = await logCore.getCachedNote({ sessionId: dataBody.call.sessionId });
+  const note = await logCore.getCachedNote({ sessionId: dataBody.call.sessionId, telephonySessionId: dataBody.call.telephonySessionId });
 
   // case: with recording link ready, definitely recorded, update with link
   if (recordingLink) {

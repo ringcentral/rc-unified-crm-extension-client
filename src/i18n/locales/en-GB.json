@@ -394,6 +394,7 @@
     },
     "warning": {
       "callLogFailed": "Failed to save call log",
+      "provisionalCallSession": "Wait for the RingEX call record before logging this call.",
       "callLogUpdateFailed": "Call log update failed",
       "connectToCrm": "Please go to Settings and connect to CRM platform",
       "apiKeyFailed": "Failed to register api key.",

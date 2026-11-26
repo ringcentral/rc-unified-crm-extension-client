@@ -394,6 +394,7 @@
     },
     "warning": {
       "callLogFailed": "Impossibile salvare il log chiamata",
+      "provisionalCallSession": "Attendi che il registro chiamate di RingEX sia disponibile prima di registrare questa chiamata.",
       "callLogUpdateFailed": "Aggiornamento log chiamata fallito",
       "connectToCrm": "Vai alle Impostazioni e connettiti alla piattaforma CRM",
       "apiKeyFailed": "Impossibile registrare la chiave API.",

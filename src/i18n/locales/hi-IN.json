@@ -394,6 +394,7 @@
     },
     "warning": {
       "callLogFailed": "कॉल लॉग सहेजने में विफल",
+      "provisionalCallSession": "इस कॉल को लॉग करने से पहले RingEX कॉल रिकॉर्ड उपलब्ध होने तक प्रतीक्षा करें।",
       "callLogUpdateFailed": "कॉल लॉग अपडेट विफल",
       "connectToCrm": "कृपया सेटिंग्स में जाकर CRM प्लेटफ़ॉर्म से कनेक्ट करें",
       "apiKeyFailed": "API key पंजीकृत करने में विफल.",

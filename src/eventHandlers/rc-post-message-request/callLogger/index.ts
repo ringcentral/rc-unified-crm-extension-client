@@ -4,6 +4,7 @@ import userCore from '../../../core/user';
 import tempLogNotePage from '../../../components/tempLogNotePage';
 import {
     extractCallRecord,
+    hasProvisionalCallSessionId,
     isCallDataComplete,
     resolveCallLogReadiness,
 } from '../../../lib/callLogReadiness';
@@ -23,13 +24,82 @@ type EventOptions = {
     platform: UnknownRecord;
 };
 
+const pendingCallLookups = new Map<string, symbol>();
+const callLookupDelays = [0, 1000, 3000, 7000, 15000];
+
 function getWidgetFrameWindow(): Window {
     return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
+}
+
+async function getFinalCall(telephonySessionId: string): Promise<UnknownRecord | null> {
+    if (typeof RCAdapter.getCallLog !== 'function') return null;
+    const call = extractCallRecord(await RCAdapter.getCallLog({ telephonySessionId }));
+    return call?.telephonySessionId === telephonySessionId && call.source !== 'ringcx'
+        && call.action !== undefined && isCallDataComplete(call)
+        ? call
+        : null;
+}
+
+async function recoverProvisionalCall(options: EventOptions): Promise<void> {
+    const { data } = options;
+    const { telephonySessionId } = data.body.call;
+    if (pendingCallLookups.has(telephonySessionId) || typeof RCAdapter.getCallLog !== 'function') return;
+
+    const lookup = Symbol();
+    pendingCallLookups.set(telephonySessionId, lookup);
+    try {
+        // The widget's history event can miss a call whose live session key
+        // differs from the history key. Recover it through the shared telephony ID.
+        for (const delay of callLookupDelays) {
+            if (delay) await new Promise(resolve => setTimeout(resolve, delay));
+            if (pendingCallLookups.get(telephonySessionId) !== lookup) return;
+            let call;
+            try {
+                call = await getFinalCall(telephonySessionId);
+            } catch {
+                continue;
+            }
+            if (call && pendingCallLookups.get(telephonySessionId) === lookup) {
+                await onEvent({
+                    ...options,
+                    data: {
+                        ...data,
+                        requestId: undefined,
+                        body: {
+                            ...data.body,
+                            redirect: false,
+                            triggerType: 'callLogSync',
+                            call: { ...data.body.call, ...call },
+                            aiNote: call.aiNote ?? data.body.aiNote,
+                            transcript: call.transcript ?? data.body.transcript,
+                        },
+                    },
+                });
+                return;
+            }
+        }
+    } finally {
+        if (pendingCallLookups.get(telephonySessionId) === lookup) pendingCallLookups.delete(telephonySessionId);
+    }
+}
+
+async function openTemporaryNotePage(sessionId: string): Promise<void> {
+    showNotification({ level: 'warning', message: 'Call data is not yet ready. Please input your custom note while it is preparing data.', ttl: 3000 });
+    const cachedNote = await logCore.getCachedNote({ sessionId });
+    const page = tempLogNotePage.getTempLogNotePageRender({ sessionId, cachedNote });
+    getWidgetFrameWindow().postMessage({ type: 'rc-adapter-register-customized-page', page }, '*');
+    getWidgetFrameWindow().postMessage({ type: 'rc-adapter-navigate-to', path: `/customized/${page.id}` }, '*');
 }
 
 async function onEvent(options: EventOptions) {
     const { manifest, platformInfo, platformName, platform } = options;
     let { data } = options;
+    const respond = (response: UnknownRecord) => {
+        if (data.requestId !== undefined) responseMessage(data.requestId, response);
+    };
+    if (data.body.triggerType === 'callLogSync' && data.body.call.action !== undefined && isCallDataComplete(data.body.call)) {
+        pendingCallLookups.delete(data.body.call.telephonySessionId);
+    }
     if (data.body?.call?.action) {
         const isQueue = await chrome.storage.local.get(`is-call-queue-${data.body.call.sessionId}`) as UnknownRecord;
         if ((data.body.call.result === 'Missed' && isQueue[`is-call-queue-${data.body.call.sessionId}`]?.isQueue) || (data.body.call.delegationType === 'QueueForwarding' && data.body.call.result === 'Answered Elsewhere')) {
@@ -44,7 +114,7 @@ async function onEvent(options: EventOptions) {
                     expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
                 }
             });
-            responseMessage(data.requestId, { data: 'ok' });
+            respond({ data: 'ok' });
             if (data.body.redirect) {
                 showNotification({ level: 'warning', message: 'Cannot log this call. It is answered by someone else.', ttl: 3000 });
             }
@@ -59,7 +129,7 @@ async function onEvent(options: EventOptions) {
             }
         });
         if (data.body?.call?.result === 'Ringing') {
-            responseMessage(data.requestId, { data: 'ok' });
+            respond({ data: 'ok' });
             return;
         }
         if (data.body?.call?.telephonyStatus === 'Ringing' && data.body?.call?.result === 'Disconnected') {
@@ -74,12 +144,19 @@ async function onEvent(options: EventOptions) {
                     expiry: new Date().getTime() + 60000 * 60 * 24 * 30 // 30 days 
                 }
             });
-            responseMessage(data.requestId, { data: 'ok' });
+            respond({ data: 'ok' });
             if (data.body.redirect) {
                 showNotification({ level: 'warning', message: 'Cannot log this call. It is answered by someone else.', ttl: 3000 });
             }
             return;
         }
+    }
+    if (hasProvisionalCallSessionId(data.body.call) && ['presenceUpdate', 'callLogSync'].includes(data.body.triggerType)) {
+        respond({ data: 'ok' });
+        if (data.body.triggerType === 'callLogSync' || ['Disconnected', 'CallConnected'].includes(data.body.call.result)) {
+            void recoverProvisionalCall(options).catch(error => console.error('Failed to recover final RingEX call', error));
+        }
+        return;
     }
     const readinessKey = `call-log-data-ready-${data.body.call.sessionId}`;
     const recordingKey = `rec-link-${data.body.call.sessionId}`;
@@ -96,7 +173,9 @@ async function onEvent(options: EventOptions) {
         && ['CallConnected', 'OnHold'].includes(data.body.call.result ?? data.body.call.telephonyStatus);
     if (data.body.redirect && !isLiveCall && !isCallDataComplete(data.body.call) && typeof RCAdapter.getCallLog === 'function') {
         try {
-            const recoveredCall = extractCallRecord(await RCAdapter.getCallLog({ sessionId: data.body.call.sessionId }));
+            const recoveredCall = hasProvisionalCallSessionId(data.body.call)
+                ? await getFinalCall(data.body.call.telephonySessionId)
+                : extractCallRecord(await RCAdapter.getCallLog({ sessionId: data.body.call.sessionId }));
             if (isCallDataComplete(recoveredCall)) {
                 data = {
                     ...data,
@@ -136,20 +215,8 @@ async function onEvent(options: EventOptions) {
             ? readiness.autoReady || isCallDataComplete(data.body.call)
             : readiness.autoReady;
         if (!readyForCurrentRequest) {
-            if (data.body.redirect) {
-                showNotification({ level: 'warning', message: 'Call data is not yet ready. Please input your custom note while it is preparing data.', ttl: 3000 });
-                const cachedNote = await logCore.getCachedNote({ sessionId: data.body.call.sessionId });
-                const tempLogNotePageRender = tempLogNotePage.getTempLogNotePageRender({ sessionId: data.body.call.sessionId, cachedNote });
-                getWidgetFrameWindow().postMessage({
-                    type: 'rc-adapter-register-customized-page',
-                    page: tempLogNotePageRender
-                });
-                getWidgetFrameWindow().postMessage({
-                    type: 'rc-adapter-navigate-to',
-                    path: `/customized/${tempLogNotePageRender.id}`, // page id
-                }, '*');
-            }
-            responseMessage(data.requestId, { data: 'ok' });
+            if (data.body.redirect) await openTemporaryNotePage(data.body.call.sessionId);
+            respond({ data: 'ok' });
             return;
         }
     }
@@ -163,7 +230,7 @@ async function onEvent(options: EventOptions) {
     if (!allowExtensionNumberLogging) {
         if (isExtensionNumber) {
             showNotification({ level: 'warning', message: 'Extension numbers cannot be logged', ttl: 3000 });
-            responseMessage(data.requestId, { data: 'ok' });
+            respond({ data: 'ok' });
             return;
         }
     }
@@ -198,7 +265,7 @@ async function onEvent(options: EventOptions) {
             isAutoLog = true;
         }
         else {
-            responseMessage(data.requestId, { data: 'ok' });
+            respond({ data: 'ok' });
             return;
         }
     }
@@ -236,11 +303,14 @@ async function onEvent(options: EventOptions) {
             await createLogHandler.onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber });
             break;
         case 'createLog':
+            if (hasProvisionalCallSessionId(data.body.call)) {
+                if (data.body.redirect) await openTemporaryNotePage(data.body.call.sessionId);
+                break;
+            }
             await createLogHandler.onEvent({ data, triggerTypeInUse, manifest, platformInfo, platformName, platform, contactPhoneNumber, userSettings, existingCalls, isAutoLog, isCallAutoPopup, isExtensionNumber });
             break;
     }
-    // response to widget
-    responseMessage(data.requestId, { data: 'ok' });
+    respond({ data: 'ok' });
     window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
 }
 

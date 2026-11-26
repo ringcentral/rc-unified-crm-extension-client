@@ -394,6 +394,7 @@
     },
     "warning": {
       "callLogFailed": "通話ログの保存に失敗しました",
+      "provisionalCallSession": "この通話を記録するには、RingEX の通話履歴が利用できるようになるまでお待ちください。",
       "callLogUpdateFailed": "通話ログの更新に失敗しました",
       "connectToCrm": "設定に移動してCRMプラットフォームに接続してください",
       "apiKeyFailed": "APIキーの登録に失敗しました。",

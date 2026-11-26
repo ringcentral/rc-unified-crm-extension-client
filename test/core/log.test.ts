@@ -44,6 +44,24 @@ async function loadLogCore() {
 }
 
 describe('log core', () => {
+  it('does not post a RingEX call log with a provisional session ID', async () => {
+    seedStorage({ rcUnifiedCrmExtJwt: 'jwt-1' });
+    const logCore = await loadLogCore();
+
+    await logCore.addLog({
+      serverUrl: 'https://server.example',
+      logType: 'Call',
+      logInfo: { sessionId: 's-live-call', telephonySessionId: 's-live-call' },
+    });
+
+    expect(showNotification).toHaveBeenCalledWith({
+      level: 'warning',
+      message: 'notifications.warning.provisionalCallSession',
+      ttl: 3000,
+    });
+    expect(axios.post).not.toHaveBeenCalled();
+  });
+
   it('creates call logs with recording download URL, merged additional submission, and matcher refresh', async () => {
     seedStorage({
       rcUnifiedCrmExtJwt: 'jwt-1',
@@ -674,6 +692,16 @@ describe('log core', () => {
       sessionId: 'session-1',
       note: 'Draft note',
     });
+  });
+
+  it('finds a live call draft after the final session ID arrives and honors an explicitly cleared note', async () => {
+    const logCore = await loadLogCore();
+    await logCore.cacheCallNote({ sessionId: 's-live-call', note: 'Draft from the live call' });
+    const finalCall = { sessionId: '1167724682010', telephonySessionId: 's-live-call' };
+
+    await expect(logCore.getCachedNote(finalCall)).resolves.toBe('Draft from the live call');
+    await logCore.cacheCallNote({ sessionId: finalCall.sessionId, note: '' });
+    await expect(logCore.getCachedNote(finalCall)).resolves.toBe('');
   });
 
   it('opens log URLs and handles missing auth or cache data without server writes', async () => {
