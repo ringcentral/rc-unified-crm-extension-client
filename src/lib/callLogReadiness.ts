@@ -25,6 +25,16 @@ function isRecord(value: unknown): value is UnknownRecord {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+export function hasProvisionalCallSessionId(call: unknown): boolean {
+  return isRecord(call)
+    && call.source !== 'ringcx'
+    // Finalized conference history uses the telephony session as its widget key.
+    && !(call.isConferenceCall === true && call.action !== undefined)
+    && typeof call.telephonySessionId === 'string'
+    && call.telephonySessionId.length > 0
+    && call.sessionId === call.telephonySessionId;
+}
+
 function hasPartyAddress(party: unknown): boolean {
   if (!isRecord(party)) {
     return false;
@@ -47,7 +57,8 @@ export function isCallDataComplete(call: unknown): boolean {
     return false;
   }
 
-  const sessionId = typeof call.sessionId === 'string' && call.sessionId.trim().length > 0;
+  const sessionId = typeof call.sessionId === 'string' && call.sessionId.trim().length > 0
+    && !hasProvisionalCallSessionId(call);
   const direction = call.direction === 'Inbound' || call.direction === 'Outbound';
   const duration = typeof call.duration === 'number'
     && Number.isFinite(call.duration)

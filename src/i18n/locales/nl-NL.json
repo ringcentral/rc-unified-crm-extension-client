@@ -401,6 +401,7 @@
     },
     "warning": {
       "callLogFailed": "Opslaan van oproeplog mislukt",
+      "provisionalCallSession": "Wacht tot de RingEX-oproepgegevens beschikbaar zijn voordat u deze oproep vastlegt.",
       "callLogUpdateFailed": "Bijwerken van oproeplog mislukt",
       "callAlreadyLogged": "Dit gesprek is al automatisch gelogd. Je titel en notitie zijn in die log opgeslagen.",
       "changesNotSaved": "Niet opgeslagen",

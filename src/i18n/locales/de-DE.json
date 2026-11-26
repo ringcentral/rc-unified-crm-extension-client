@@ -401,6 +401,7 @@
     },
     "warning": {
       "callLogFailed": "Anrufprotokoll konnte nicht gespeichert werden",
+      "provisionalCallSession": "Warten Sie auf den RingEX-Anrufdatensatz, bevor Sie diesen Anruf protokollieren.",
       "callLogUpdateFailed": "Aktualisierung des Anrufprotokolls fehlgeschlagen",
       "callAlreadyLogged": "Dieser Anruf wurde bereits automatisch protokolliert. Ihr Titel und Ihre Notiz wurden in diesem Protokoll gespeichert.",
       "changesNotSaved": "Nicht gespeichert",

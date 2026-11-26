@@ -401,6 +401,7 @@
     },
     "warning": {
       "callLogFailed": "통화 로그 저장 실패",
+      "provisionalCallSession": "이 통화를 기록하려면 RingEX 통화 기록을 사용할 수 있을 때까지 기다리세요.",
       "callLogUpdateFailed": "통화 로그 업데이트 실패",
       "callAlreadyLogged": "이 통화는 이미 자동으로 기록되었습니다. 제목과 메모는 해당 기록에 저장되었습니다.",
       "changesNotSaved": "저장되지 않음",

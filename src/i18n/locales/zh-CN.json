@@ -401,6 +401,7 @@
     },
     "warning": {
       "callLogFailed": "保存通话日志失败",
+      "provisionalCallSession": "请等待 RingEX 生成通话记录后再记录此通话。",
       "callLogUpdateFailed": "通话日志更新失败",
       "callAlreadyLogged": "此通话已被自动记录。您的标题和备注已保存到该记录中。",
       "changesNotSaved": "未保存",

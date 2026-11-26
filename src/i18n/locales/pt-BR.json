@@ -401,6 +401,7 @@
     },
     "warning": {
       "callLogFailed": "Falha ao salvar o log de chamada",
+      "provisionalCallSession": "Aguarde o registro da chamada no RingEX antes de registrar esta chamada.",
       "callLogUpdateFailed": "Falha na atualização do log de chamada",
       "callAlreadyLogged": "Esta chamada já foi registrada automaticamente. Seu título e sua nota foram salvos nesse registro.",
       "changesNotSaved": "Não salvo",

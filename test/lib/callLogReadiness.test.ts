@@ -23,6 +23,17 @@ describe('call log readiness', () => {
     expect(isCallDataComplete(completeCall())).toBe(true);
   });
 
+  it('accepts the telephony history key only once the RingEX conference has a final record', () => {
+    const conference = completeCall({
+      sessionId: 's-conference',
+      telephonySessionId: 's-conference',
+      isConferenceCall: true,
+    });
+
+    expect(isCallDataComplete(conference)).toBe(false);
+    expect(isCallDataComplete({ ...conference, action: 'Phone Call' })).toBe(true);
+  });
+
   it.each([
     ['missing start time', { startTime: undefined }],
     ['negative duration', { duration: -1 }],

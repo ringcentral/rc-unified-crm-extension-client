@@ -401,6 +401,7 @@
     },
     "warning": {
       "callLogFailed": "Failed to save call log",
+      "provisionalCallSession": "Wait for the RingEX call record before logging this call.",
       "callLogUpdateFailed": "Call log update failed",
       "callAlreadyLogged": "This call was already logged automatically. Your title and note were saved to that log.",
       "changesNotSaved": "Not saved",

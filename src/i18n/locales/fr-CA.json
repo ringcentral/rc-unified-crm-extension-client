@@ -401,6 +401,7 @@
     },
     "warning": {
       "callLogFailed": "Échec de l'enregistrement du journal d'appel",
+      "provisionalCallSession": "Attendez que la fiche d’appel RingEX soit disponible avant de consigner cet appel.",
       "callLogUpdateFailed": "Échec de la mise à jour du journal d'appel",
       "callAlreadyLogged": "Cet appel a déjà été consigné automatiquement. Votre titre et votre note ont été enregistrés dans ce journal.",
       "changesNotSaved": "Non enregistré",

@@ -401,6 +401,7 @@
     },
     "warning": {
       "callLogFailed": "通話ログの保存に失敗しました",
+      "provisionalCallSession": "この通話を記録するには、RingEX の通話履歴が利用できるようになるまでお待ちください。",
       "callLogUpdateFailed": "通話ログの更新に失敗しました",
       "callAlreadyLogged": "この通話はすでに自動でログ記録されています。タイトルとメモはそのログに保存されました。",
       "changesNotSaved": "保存されなかった項目",

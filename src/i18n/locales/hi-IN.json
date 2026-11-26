@@ -401,6 +401,7 @@
     },
     "warning": {
       "callLogFailed": "कॉल लॉग सहेजने में विफल",
+      "provisionalCallSession": "इस कॉल को लॉग करने से पहले RingEX कॉल रिकॉर्ड उपलब्ध होने तक प्रतीक्षा करें।",
       "callLogUpdateFailed": "कॉल लॉग अपडेट विफल",
       "callAlreadyLogged": "यह कॉल पहले ही स्वचालित रूप से लॉग हो चुकी है। आपका शीर्षक और नोट उसी लॉग में सहेजे गए।",
       "changesNotSaved": "सहेजा नहीं गया",

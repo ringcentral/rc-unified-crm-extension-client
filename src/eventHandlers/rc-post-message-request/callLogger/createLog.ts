@@ -62,7 +62,7 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
             responseMessage(data.requestId, { data: 'ok', noLogForm: callLogContactMatchMessage?.message || t('notifications.warning.noContactFound') });
             return;
         }
-        responseMessage(data.requestId, { data: 'ok' });
+        if (data.requestId !== undefined) responseMessage(data.requestId, { data: 'ok' });
         return;
     }
     for (const cachedContact of cachedContacts) {
@@ -95,7 +95,10 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
     else {
         // RingCX: notes entered on the disposition page prefill a new call log
         const dispositionNote = getDispositionNote(data);
-        logInfo.note = dispositionNote || (await logCore.getCachedNote({ sessionId: data.body.call.sessionId }) ?? "");
+        logInfo.note = dispositionNote || (await logCore.getCachedNote({
+            sessionId: data.body.call.sessionId,
+            telephonySessionId: data.body.call.telephonySessionId,
+        }) ?? "");
     }
     let { hasConflict, autoSelectAdditionalSubmission, requireManualDisposition, conflictType } = await getLogConflictInfo({
         platform,
@@ -200,7 +203,10 @@ async function onEvent({ data, triggerTypeInUse, manifest, platformInfo, platfor
                 `Outbound Call to ${defaultingContact?.name ?? ''}`;
             if (existingCalls?.length > 0 && existingCalls[0]?.matched) {
                 // Ensure we get the most recent cached note
-                const cachedNote = await logCore.getCachedNote({ sessionId: data.body.call.sessionId });
+                const cachedNote = await logCore.getCachedNote({
+                    sessionId: data.body.call.sessionId,
+                    telephonySessionId: data.body.call.telephonySessionId,
+                });
                 const noteToUse = cachedNote || logInfo.note || '';
 
                 await logCore.updateLog({

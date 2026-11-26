@@ -401,6 +401,7 @@
     },
     "warning": {
       "callLogFailed": "Puhelulokin tallennus epäonnistui",
+      "provisionalCallSession": "Odota RingEX-puhelutietuetta ennen tämän puhelun kirjaamista.",
       "callLogUpdateFailed": "Puhelulokin päivitys epäonnistui",
       "callAlreadyLogged": "Tämä puhelu kirjattiin jo automaattisesti. Otsikkosi ja muistiinpanosi tallennettiin siihen kirjaukseen.",
       "changesNotSaved": "Ei tallennettu",

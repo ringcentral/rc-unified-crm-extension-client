@@ -7,6 +7,7 @@ import axios from 'axios';
 import dispositionCore, { type UpsertDispositionResult } from '../../../core/disposition';
 import logPage from '../../../components/logPage';
 import { getCachedLogPageData, getExistingContacts } from '../../../lib/logUtil';
+import { hasProvisionalCallSessionId } from '../../../lib/callLogReadiness';
 import { t } from '../../../i18n';
 
 type UnknownRecord = Record<string, any>;
@@ -168,6 +169,12 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
     switch (await resolveFormTriggerType(data)) {
         // Case 1.1: create log
         case 'createLog':
+            const loggedBeforeSave = isCallLogged(existingCalls, data.body.call.sessionId);
+            if (!loggedBeforeSave && hasProvisionalCallSessionId(data.body.call)) {
+                const message = t('notifications.warning.provisionalCallSession');
+                showNotification({ level: 'warning', message, ttl: 3000 });
+                return { successful: false, message };
+            }
             let newContactInfo: UnknownRecord = {};
             if (data.body.formData.contact === 'createNewContact') {
                 const createContactResult = await contactCore.createContact({
@@ -188,7 +195,6 @@ async function onEvent({ data, manifest, platformInfo, platformName, platform, c
             // The call may have been logged after this create form was built, for example by
             // server-side logging when a RingCX call ends while its wrap-up form is open. Save the
             // form into that log then, as the edit form built after logging would.
-            const loggedBeforeSave = isCallLogged(existingCalls, data.body.call.sessionId);
             if (!loggedBeforeSave) {
                 saveResult = await logCore.addLog(
                     {
