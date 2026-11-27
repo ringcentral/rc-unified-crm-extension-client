@@ -45,6 +45,9 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
         }, '*');
       }
       else if (cachedClickToXRequest.type === 'c2schedule') {
+        if (!platformInfo) {
+          return;
+        }
         try {
           const phoneNumber = cachedClickToXRequest.phoneNumber;
           const res = await contactCore.getContact({ serverUrl: manifest.serverUrl, phoneNumber, platformName, isForceRefresh: true, isToTriggerContactMatch: true });

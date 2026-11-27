@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { NO_CRM_ITEM_CONST } from '../service/noCrmService';
 
 type UnknownRecord = Record<string, any>;
 
@@ -86,6 +87,21 @@ function getPlatformSelectionPageRender({ platformList, searchWord = '', selecte
     if (filterValue !== filterLabels.all) {
         platformListToRender = platformListToRender.filter(um => um.meta === filterValue);
     }
+    // Always the first option, regardless of search or filter.
+    platformListToRender.unshift({
+        const: NO_CRM_ITEM_CONST,
+        title: t('pages.platformSelection.noCrm'),
+        icon: 'https://raw.githubusercontent.com/ringcentral/rc-unified-crm-extension-client/refs/heads/main/public/images/logo48.png',
+        description: t('pages.platformSelection.noCrmDescription'),
+        meta: '',
+        actions: [
+            {
+                id: 'selectPlatform',
+                title: t('pages.platformSelection.noCrmContinue'),
+                icon: 'connect'
+            }
+        ]
+    });
     return {
         id: 'platformSelectionPage',
         title: t('pages.platformSelection.title'),

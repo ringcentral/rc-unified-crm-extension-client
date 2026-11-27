@@ -96,7 +96,10 @@
     },
     "platformSelection": {
       "title": "Select platform",
-      "searchPlaceholder": "Search with filters..."
+      "searchPlaceholder": "Search with filters...",
+      "noCrm": "Do not connect a CRM",
+      "noCrmDescription": "Use App Connect without a CRM",
+      "noCrmContinue": "Continue"
     },
     "log": {
       "saveTo": "Save to {platform}",

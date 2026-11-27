@@ -22,6 +22,12 @@ export async function onMessage({ request, sendResponse }: MessageHandlerOptions
   const manifest = await getManifest() as UnknownRecord;
   const platformInfo = await getPlatformInfo() as UnknownRecord | null | undefined;
   const platformName = platformInfo?.platformName ?? '';
+  // Feedback and support pages are CRM-specific; nothing to show while no CRM is selected.
+  if (!platformInfo && (request.path === '/feedback' || request.path === '/support')) {
+    window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+    sendResponse({ result: 'ok' });
+    return;
+  }
   if (request.path === '/feedback') {
     const feedbackPageRender = feedbackPage.getFeedbackPageRender({ pageConfig: manifest.platforms[platformName].page.feedback, version: manifest.version });
     getWidgetFrameWindow().postMessage({

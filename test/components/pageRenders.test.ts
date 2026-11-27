@@ -385,8 +385,12 @@ describe('basic page renderers', () => {
       selectedPlatform: 'p2=private',
       filter: 'common.labels.all',
     });
-    expect(selection.schema.properties.platforms.oneOf).toHaveLength(1);
+    // "Do not connect a CRM" is always present, plus the one matching CRM.
+    expect(selection.schema.properties.platforms.oneOf).toHaveLength(2);
+    expect(selection.schema.properties.platforms.oneOf[0].const).toBe('none=skip');
+    expect(selection.schema.properties.platforms.oneOf[1].const).toBe('p2=private');
     expect(selection.formData.platforms).toBe('p2=private');
+    expect(selection.formData.platformList.some((p: { id: string }) => p.id === 'none')).toBe(false);
 
     const firstLoadSelection = platformSelectionPage.getPlatformSelectionPageRender({
       platformList: [
@@ -405,7 +409,8 @@ describe('basic page renderers', () => {
       ],
       filter: 'All',
     });
-    expect(firstLoadSelection.schema.properties.platforms.oneOf).toHaveLength(2);
+    expect(firstLoadSelection.schema.properties.platforms.oneOf).toHaveLength(3);
+    expect(firstLoadSelection.schema.properties.platforms.oneOf[0].const).toBe('none=skip');
     expect(firstLoadSelection.formData.platformSearch.filter).toBe('common.labels.all');
   });
 
@@ -423,6 +428,7 @@ describe('basic page renderers', () => {
     const selection = platformSelectionPage.getPlatformSelectionPageRender({ platformList });
 
     expect(selection.schema.properties.platforms.oneOf.map((platform: { const: string }) => platform.const)).toEqual([
+      'none=skip',
       'public-b=public',
       'public-s=public',
       'shared-a=shared',

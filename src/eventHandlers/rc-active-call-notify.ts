@@ -23,6 +23,9 @@ function getWidgetFrameWindow(): Window {
 export async function onEvent({ data, popupContext }: EventOptions): Promise<void> {
   const manifest = await getManifest() as UnknownRecord;
   const platformInfo = await getPlatformInfo();
+  if (!platformInfo) {
+    return;
+  }
   const platformName = platformInfo?.platformName ?? '';
   const platform = manifest?.platforms[platformName];
   if (data.call.queueCall) {

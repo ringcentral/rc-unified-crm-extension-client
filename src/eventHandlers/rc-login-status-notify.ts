@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getPlatformInfo } from '../service/platformService';
+import { clearNoCrmChosen, getNoCrmChosen } from '../service/noCrmService';
 import { getManifest, getPlatformList } from '../service/manifestService';
 import authCore from '../core/auth';
 import userCore from '../core/user';
@@ -107,6 +108,7 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
           && (previousRcUserInfo.rcAccountId !== currentRcUserInfo.rcAccountId
             || previousRcUserInfo.rcExtensionId !== currentRcUserInfo.rcExtensionId);
         if (rcIdentityChanged) {
+          await clearNoCrmChosen();
           await authCore.clearLocalCrmAuthState();
           rcUnifiedCrmExtJwt = undefined;
         }
@@ -131,7 +133,8 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
   // 2. If logged in
   if (data.loggedIn) {
     // 2.1. If no platform info, show platform selection page
-    if (!platformInfo) {
+    // Skipped when the user chose "Do not connect a CRM"; the Select CRM button in settings still opens it.
+    if (!platformInfo && !(await getNoCrmChosen())) {
       const platformList = await getPlatformList();
       await authCore.checkAndOpenPlatformSelectionPage({ platformList });
     }

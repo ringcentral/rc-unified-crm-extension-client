@@ -96,7 +96,10 @@
     },
     "platformSelection": {
       "title": "选择平台",
-      "searchPlaceholder": "使用筛选器搜索..."
+      "searchPlaceholder": "使用筛选器搜索...",
+      "noCrm": "不連接 CRM",
+      "noCrmDescription": "不使用 CRM，直接使用 App Connect",
+      "noCrmContinue": "繼續"
     },
     "log": {
       "saveTo": "保存到 {platform}",

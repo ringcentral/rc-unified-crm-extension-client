@@ -96,7 +96,10 @@
     },
     "platformSelection": {
       "title": "Valitse alusta",
-      "searchPlaceholder": "Hae suodattimilla..."
+      "searchPlaceholder": "Hae suodattimilla...",
+      "noCrm": "Älä yhdistä CRM:ää",
+      "noCrmDescription": "Käytä App Connectia ilman CRM:ää",
+      "noCrmContinue": "Jatka"
     },
     "log": {
       "saveTo": "Tallenna kohteeseen {platform}",

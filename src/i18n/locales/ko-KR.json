@@ -96,7 +96,10 @@
     },
     "platformSelection": {
       "title": "플랫폼 선택",
-      "searchPlaceholder": "필터로 검색..."
+      "searchPlaceholder": "필터로 검색...",
+      "noCrm": "CRM에 연결하지 않음",
+      "noCrmDescription": "CRM 없이 App Connect 사용",
+      "noCrmContinue": "계속"
     },
     "log": {
       "saveTo": "{platform}에 저장",

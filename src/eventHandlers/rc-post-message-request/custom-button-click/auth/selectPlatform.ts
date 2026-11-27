@@ -6,6 +6,7 @@ import baseManifest from '../../../../manifest.json';
 import { getRcAccessTokenHeaderConfig, getRcInfo } from '../../../../lib/util';
 import embeddableServices from '../../../../service/embeddableServices';
 import { getImplementedInterfaces } from '../../../../service/implementedInterfacesService';
+import { NO_CRM_PLATFORM_ID, clearNoCrmChosen, getNoCrmSurveyUrl, setNoCrmChosen } from '../../../../service/noCrmService';
 
 type UnknownRecord = Record<string, any>;
 
@@ -22,11 +23,41 @@ function getWidgetFrameWindow(): Window {
   return document.querySelector<HTMLIFrameElement>('#rc-widget-adapter-frame')!.contentWindow!;
 }
 
+async function onNoCrmSelected(): Promise<void> {
+  await setNoCrmChosen();
+  let rcAccountId: string | number | undefined;
+  let rcExtensionId: string | number | undefined;
+  try {
+    const rcInfo = await getRcInfo();
+    rcAccountId = rcInfo?.value?.cachedData?.extensionInfo?.account?.id;
+    rcExtensionId = rcInfo?.value?.cachedData?.extensionInfo?.id;
+  }
+  catch (e) {
+    console.error('Failed to read RingCentral identity for the no-CRM survey', e);
+  }
+  // Open the survey in a separate browser tab, never inside the App Connect window.
+  window.open(getNoCrmSurveyUrl({ rcAccountId, rcExtensionId }), '_blank', 'noopener');
+  getWidgetFrameWindow().postMessage({
+    type: 'rc-adapter-navigate-to',
+    path: '/dialer',
+  }, '*');
+}
+
 export async function onEvent({ data, manifest, platformInfo, platformName, platform, listButtonItemId }: EventOptions): Promise<void> {
   void platformInfo;
   void platform;
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
   const selectedPlatformId = listButtonItemId.split('=')[0];
+  if (selectedPlatformId === NO_CRM_PLATFORM_ID) {
+    try {
+      await onNoCrmSelected();
+    }
+    finally {
+      window.postMessage({ type: 'rc-log-modal-loading-off' }, '*');
+    }
+    return;
+  }
+  await clearNoCrmChosen();
   const selectedPlatformType = listButtonItemId.split('=')[1];
   const selectedPlatform = data.body.button.formData.platformList.find((platformItem: UnknownRecord) => platformItem.id === selectedPlatformId);
   // eslint-disable-next-line no-param-reassign
