@@ -96,7 +96,10 @@
     },
     "platformSelection": {
       "title": "Platform selecteren",
-      "searchPlaceholder": "Zoeken met filters..."
+      "searchPlaceholder": "Zoeken met filters...",
+      "noCrm": "Geen CRM koppelen",
+      "noCrmDescription": "App Connect gebruiken zonder CRM",
+      "noCrmContinue": "Doorgaan"
     },
     "log": {
       "saveTo": "Opslaan in {platform}",

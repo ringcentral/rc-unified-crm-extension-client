@@ -96,7 +96,10 @@
     },
     "platformSelection": {
       "title": "प्लेटफ़ॉर्म चुनें",
-      "searchPlaceholder": "फ़िल्टर के साथ खोजें..."
+      "searchPlaceholder": "फ़िल्टर के साथ खोजें...",
+      "noCrm": "CRM कनेक्ट न करें",
+      "noCrmDescription": "CRM के बिना App Connect का उपयोग करें",
+      "noCrmContinue": "जारी रखें"
     },
     "log": {
       "saveTo": "{platform} में सहेजें",

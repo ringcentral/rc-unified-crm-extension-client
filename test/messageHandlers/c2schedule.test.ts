@@ -193,7 +193,7 @@ describe('c2schedule message handler', () => {
 
   it('defaults to creating a new contact when no existing contacts match', async () => {
     seedStorage({});
-    vi.mocked(getPlatformInfo).mockResolvedValueOnce(null);
+    vi.mocked(getPlatformInfo).mockResolvedValueOnce({});
     vi.mocked(contactCore.getContact).mockResolvedValueOnce({
       contactInfo: [
         { id: 'new-1', name: 'New', isNewContact: true },
@@ -224,6 +224,22 @@ describe('c2schedule message handler', () => {
       }
       addEventListenerSpy.mockRestore();
     }
+  });
+
+  it('does nothing when no CRM is selected', async () => {
+    seedStorage({});
+    vi.mocked(getPlatformInfo).mockResolvedValueOnce(null);
+    const sendResponse = vi.fn();
+    const handler = await loadC2scheduleHandler();
+
+    await handler.onMessage({
+      request: { phoneNumber: '+16505550200' },
+      sendResponse,
+    });
+
+    expect(sendResponse).toHaveBeenCalledWith({ result: 'ok' });
+    expect(contactCore.getContact).not.toHaveBeenCalled();
+    expect(getSchedulePageRender).not.toHaveBeenCalled();
   });
 
   it('ignores unrelated schedule page events and skips submissions without a callback time', async () => {

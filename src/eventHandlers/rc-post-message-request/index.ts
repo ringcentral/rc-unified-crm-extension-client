@@ -23,6 +23,9 @@ type EventOptions = {
   data: UnknownRecord;
 };
 
+// Paths that must keep working while no CRM is selected: they drive the CRM selection page.
+const NO_CRM_ALLOWED_PATHS = new Set(['/platform-selection', '/customizedPage/inputChanged', '/custom-button-click']);
+
 // Sent by the widget without a user action (call presence changes, call log
 // sync, SMS auto-log), so they prompt the user to connect only once per session
 // instead of once per event.
@@ -53,6 +56,11 @@ async function onEvent({ data }: EventOptions) {
   const platformInfo = await getPlatformInfo() as UnknownRecord;
   const platformName = platformInfo?.platformName ?? '';;
   const platform = manifest?.platforms[platformName];
+  // No CRM selected (e.g. the user chose "Do not connect a CRM"): only the CRM selection flow is handled.
+  if (!platformInfo && !NO_CRM_ALLOWED_PATHS.has(data.path)) {
+    responseMessage(data.requestId, { data: 'ok' });
+    return;
+  }
   if (!crmAuthed && (data.path === '/callLogger' || data.path === '/messageLogger')) {
     notifyConnectCrm(manifest.platforms[platformName].displayName, data.body?.triggerType);
     responseMessage(data.requestId, { data: 'ok' });

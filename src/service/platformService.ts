@@ -28,6 +28,7 @@ export async function clearPlatformInfo(): Promise<void> {
   await chrome.storage.local.remove('isAdmin');
   await chrome.storage.local.remove('crmAuthed');
   await chrome.storage.local.remove('platform-info');
+  await chrome.storage.local.remove('noCrmChosen');
   await chrome.storage.local.remove('crm_extension_bullhornUsername');
   await chrome.storage.local.remove('crm_extension_bullhorn_user_urls');
 }

@@ -18,9 +18,13 @@ function getWidgetFrameWindow(): Window {
 }
 
 export async function onMessage({ request, sendResponse }: MessageHandlerOptions): Promise<void> {
+  const platformInfo = await getPlatformInfo() as UnknownRecord | null | undefined;
+  if (!platformInfo) {
+    sendResponse({ result: 'ok' });
+    return;
+  }
   window.postMessage({ type: 'rc-log-modal-loading-on' }, '*');
   const manifest = await getManifest() as UnknownRecord;
-  const platformInfo = await getPlatformInfo() as UnknownRecord | null | undefined;
   const platformName = platformInfo?.platformName ?? '';
   // resolve contacts for the number and show dropdown
   const phoneNumber = request.phoneNumber;

@@ -503,6 +503,57 @@ describe('custom-button auth, admin settings, and plugin handlers', () => {
     });
   });
 
+  it('remembers "Do not connect a CRM" and opens the prefilled survey in a new tab', async () => {
+    const loaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.ts',
+      {
+        util: {
+          getRcInfo: vi.fn(async () => ({
+            value: { cachedData: { extensionInfo: { id: 222, account: { id: 111 } } } },
+          })),
+        },
+      },
+    );
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+    await loaded.handler.onEvent({
+      data: dataFor({ platformList: [] }, 'selectPlatform'),
+      manifest: baseManifest(),
+      platformName: '',
+      platform: undefined,
+      listButtonItemId: 'none=skip',
+    });
+
+    const openedUrl = new URL(String(openSpy.mock.calls[0][0]));
+    expect(openedUrl.searchParams.get('entry.1862074204')).toBe('111');
+    expect(openedUrl.searchParams.get('entry.23574002')).toBe('222');
+    expect(openSpy.mock.calls[0][1]).toBe('_blank');
+    expect(readStorage().noCrmChosen).toBe(true);
+    expect(readStorage()['platform-info']).toBeUndefined();
+    expect(axios.get).not.toHaveBeenCalled();
+    openSpy.mockRestore();
+  });
+
+  it('clears the no-CRM choice when a connector is selected later', async () => {
+    seedStorage({ noCrmChosen: true });
+    const loaded = await loadButtonHandler(
+      '../../src/eventHandlers/rc-post-message-request/custom-button-click/auth/selectPlatform.ts',
+    );
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: fixedConnectorManifest() });
+
+    await loaded.handler.onEvent({
+      data: dataFor({
+        platformList: [{ id: 'salesforce', name: 'salesforce', displayName: 'Salesforce' }],
+      }, 'selectPlatform'),
+      manifest: baseManifest(),
+      platformName: 'salesforce',
+      platform: baseManifest().platforms.salesforce,
+      listButtonItemId: 'salesforce=public',
+    });
+
+    expect(readStorage().noCrmChosen).toBeUndefined();
+  });
+
   it('retires the legacy customCrmManifestUrl override when a connector is selected', async () => {
     seedStorage({ customCrmManifestUrl: 'https://unified-crm-extension.labs.ringcentral.com/crmManifest' });
     const loaded = await loadButtonHandler(

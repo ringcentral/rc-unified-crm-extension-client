@@ -435,6 +435,27 @@ describe('rc-login-status-notify event handler', () => {
     expect(authCore.setAuth).toHaveBeenCalledWith(false);
   });
 
+  it('skips platform selection on login when the user chose not to connect a CRM', async () => {
+    seedStorage({ noCrmChosen: true });
+    vi.mocked(getPlatformInfo).mockResolvedValueOnce(undefined);
+    vi.mocked(getManifest).mockResolvedValueOnce({
+      serverUrl: 'https://server.example',
+      version: '1.7.35',
+      platforms: {},
+    });
+    const handler = await loadLoginStatusHandler();
+
+    await handler.onEvent({
+      data: {
+        loggedIn: true,
+        features: {},
+      },
+    });
+
+    expect(authCore.checkAndOpenPlatformSelectionPage).not.toHaveBeenCalled();
+    expect(readStorage().noCrmChosen).toBe(true);
+  });
+
   it('auto logs in CRM with the RingCentral access token and keeps syncing when SSCL update fails', async () => {
     const autoLoginManifest = manifest();
     const ssclError = new Error('sscl update failed');

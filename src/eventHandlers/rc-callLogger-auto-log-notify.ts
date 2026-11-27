@@ -27,6 +27,9 @@ export async function onEvent({ data }: EventOptions): Promise<void> {
   const { crmAuthed } = await chrome.storage.local.get({ crmAuthed: false }) as { crmAuthed: boolean };
   const manifest = await getManifest() as UnknownRecord;
   const platformInfo = await getPlatformInfo();
+  if (!platformInfo) {
+    return;
+  }
   const platformName = platformInfo?.platformName ?? '';
   const platform = manifest?.platforms[platformName];
   trackEditSettings({ changedItem: 'auto-call-log', status: data.autoLog });

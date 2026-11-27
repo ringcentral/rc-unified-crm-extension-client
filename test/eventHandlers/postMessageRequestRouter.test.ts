@@ -248,6 +248,47 @@ describe('rc-post-message-request router', () => {
     expect(window.postMessage).toHaveBeenCalledWith({ type: 'rc-log-modal-loading-off' }, '*');
   });
 
+  it('acknowledges CRM-dependent routes without dispatching when no CRM is selected', async () => {
+    vi.mocked(getPlatformInfo).mockResolvedValue(undefined);
+    vi.mocked(authCore.syncCrmAuthedFromStorage).mockResolvedValue(false);
+    const router = await loadPostMessageRouter();
+    const crmPaths = [
+      '/authorize',
+      '/contacts/match',
+      '/contacts/view',
+      '/callLogger',
+      '/callLogger/inputChanged',
+      '/callLogger/match',
+      '/messageLogger',
+      '/messageLogger/inputChanged',
+      '/messageLogger/match',
+      '/settings',
+    ];
+
+    for (const path of crmPaths) {
+      await router.onEvent({ data: { path, requestId: `no-crm-${path}` } });
+      expect(responseMessage).toHaveBeenCalledWith(`no-crm-${path}`, { data: 'ok' });
+    }
+
+    expect(showNotification).not.toHaveBeenCalled();
+    for (const handler of childHandlers()) {
+      expect(handler).not.toHaveBeenCalled();
+    }
+  });
+
+  it('keeps the CRM selection routes working when no CRM is selected', async () => {
+    vi.mocked(getPlatformInfo).mockResolvedValue(undefined);
+    const router = await loadPostMessageRouter();
+
+    await router.onEvent({ data: { path: '/platform-selection', requestId: 'sel-1' } });
+    await router.onEvent({ data: { path: '/custom-button-click', requestId: 'sel-2' } });
+    await router.onEvent({ data: { path: '/customizedPage/inputChanged', requestId: 'sel-3' } });
+
+    expect(authCore.checkAndOpenPlatformSelectionPage).toHaveBeenCalledTimes(1);
+    expect(customButtonClickHandler.onEvent).toHaveBeenCalledTimes(1);
+    expect(customizedPageInputChangedHandler.onEvent).toHaveBeenCalledTimes(1);
+  });
+
   it('routes all post-message child paths with shared request context', async () => {
     const router = await loadPostMessageRouter();
     const routes = [

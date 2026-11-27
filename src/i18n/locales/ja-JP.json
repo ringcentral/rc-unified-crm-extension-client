@@ -96,7 +96,10 @@
     },
     "platformSelection": {
       "title": "プラットフォームを選択",
-      "searchPlaceholder": "フィルターで検索..."
+      "searchPlaceholder": "フィルターで検索...",
+      "noCrm": "CRMに接続しない",
+      "noCrmDescription": "CRMなしでApp Connectを使用する",
+      "noCrmContinue": "続行"
     },
     "log": {
       "saveTo": "{platform}に保存",

@@ -96,7 +96,10 @@
     },
     "platformSelection": {
       "title": "Plattform auswählen",
-      "searchPlaceholder": "Mit Filtern suchen..."
+      "searchPlaceholder": "Mit Filtern suchen...",
+      "noCrm": "Kein CRM verbinden",
+      "noCrmDescription": "App Connect ohne CRM verwenden",
+      "noCrmContinue": "Weiter"
     },
     "log": {
       "saveTo": "Speichern in {platform}",
